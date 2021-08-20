@@ -48,7 +48,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.geniushub.*",
     "homeassistant.components.glances.*",
     "homeassistant.components.google_assistant.*",
-    "homeassistant.components.google_pubsub.*",
     "homeassistant.components.gpmdp.*",
     "homeassistant.components.gree.*",
     "homeassistant.components.growatt_server.*",
@@ -81,7 +80,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.konnected.*",
     "homeassistant.components.kostal_plenticore.*",
     "homeassistant.components.kulersky.*",
-    "homeassistant.components.lifx.*",
     "homeassistant.components.litejet.*",
     "homeassistant.components.litterrobot.*",
     "homeassistant.components.lovelace.*",
@@ -98,7 +96,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.mullvad.*",
     "homeassistant.components.ness_alarm.*",
     "homeassistant.components.nest.legacy.*",
-    "homeassistant.components.netio.*",
     "homeassistant.components.nightscout.*",
     "homeassistant.components.nilu.*",
     "homeassistant.components.nmap_tracker.*",
@@ -112,7 +109,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.*",
     "homeassistant.components.ovo_energy.*",
     "homeassistant.components.ozw.*",
-    "homeassistant.components.panasonic_viera.*",
     "homeassistant.components.philips_js.*",
     "homeassistant.components.ping.*",
     "homeassistant.components.pioneer.*",
@@ -126,11 +122,9 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.ring.*",
     "homeassistant.components.rpi_power.*",
     "homeassistant.components.ruckus_unleashed.*",
-    "homeassistant.components.sabnzbd.*",
     "homeassistant.components.screenlogic.*",
     "homeassistant.components.search.*",
     "homeassistant.components.sense.*",
-    "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
     "homeassistant.components.sma.*",
     "homeassistant.components.smartthings.*",
@@ -196,7 +190,9 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
-# But "strict=true" is applied globally, so we need to list all checks manually.
+# "strict=false" in config files does not turn strict settings off if they've been
+# set in a more general section (it instead means as if strict was not specified at
+# all), so we need to list all checks manually to be able to flip them wholesale.
 STRICT_SETTINGS: Final[list[str]] = [
     "check_untyped_defs",
     "disallow_incomplete_defs",

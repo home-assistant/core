@@ -12,18 +12,28 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_NITROGEN_DIOXIDE,
+    DEVICE_CLASS_NITROGEN_MONOXIDE,
+    DEVICE_CLASS_NITROUS_OXIDE,
+    DEVICE_CLASS_OZONE,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
@@ -41,7 +51,7 @@ from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET: Final = "last_reset"
+ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -50,6 +60,7 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 DEVICE_CLASSES: Final[list[str]] = [
+    DEVICE_CLASS_AQI,  # Air Quality Index
     DEVICE_CLASS_BATTERY,  # % of battery that is left
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
@@ -58,21 +69,35 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
+    DEVICE_CLASS_OZONE,  # Amount of O3 (µg/m³)
+    DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (µg/m³)
+    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of NO  (µg/m³)
+    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (µg/m³)
+    DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
+    DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
+    DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
+    DEVICE_CLASS_SULPHUR_DIOXIDE,  # Amount of SO2 (µg/m³)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
     DEVICE_CLASS_TIMESTAMP,  # timestamp (ISO8601)
     DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
     DEVICE_CLASS_POWER,  # power (W/kW)
     DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
+    DEVICE_CLASS_GAS,  # gas (m³ or ft³)
 ]
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a monotonically increasing total, e.g. an amount of consumed gas
+STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
-STATE_CLASSES: Final[list[str]] = [STATE_CLASS_MEASUREMENT]
+STATE_CLASSES: Final[list[str]] = [
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+]
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
@@ -104,7 +129,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     state_class: str | None = None
-    last_reset: datetime | None = None
+    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
 
 
@@ -112,10 +137,12 @@ class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
-    _attr_last_reset: datetime | None
+    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType = None
     _attr_state_class: str | None
+    _attr_state: None = None  # Subclasses of SensorEntity should not set this
+    _last_reset_reported = False
     _temperature_conversion_reported = False
 
     @property
@@ -128,7 +155,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def last_reset(self) -> datetime | None:
+    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
@@ -149,6 +176,23 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
+            if (
+                self.state_class == STATE_CLASS_MEASUREMENT
+                and not self._last_reset_reported
+            ):
+                self._last_reset_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) with state_class %s has set last_reset. Setting "
+                    "last_reset is deprecated and will be unsupported from Home "
+                    "Assistant Core 2021.11. Please update your configuration if "
+                    "state_class is manually configured, otherwise %s",
+                    self.entity_id,
+                    type(self),
+                    self.state_class,
+                    report_issue,
+                )
+
             return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
@@ -167,6 +211,7 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @final
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
@@ -188,13 +233,10 @@ class SensorEntity(Entity):
 
         return native_unit_of_measurement
 
+    @final
     @property
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
-        # Test if _attr_state has been set in this instance
-        if "_attr_state" in self.__dict__:
-            return self._attr_state
-
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
 

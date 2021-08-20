@@ -161,7 +161,7 @@ class EsphomeSensor(
         return self._static_info.force_update
 
     @esphome_state_property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -172,7 +172,7 @@ class EsphomeSensor(
         return f"{self._state.state:.{self._static_info.accuracy_decimals}f}"
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if not self._static_info.unit_of_measurement:
             return None
@@ -202,7 +202,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
         return self._static_info.icon
 
     @esphome_state_property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         if self._state.missing_state:
             return None

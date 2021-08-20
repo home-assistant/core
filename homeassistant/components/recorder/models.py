@@ -39,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 19
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +51,7 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
+TABLE_STATISTICS_RUNS = "statistics_runs"
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -59,6 +60,7 @@ ALL_TABLES = [
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
 ]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
@@ -110,7 +112,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
@@ -218,7 +220,6 @@ class StatisticData(TypedDict, total=False):
     mean: float
     min: float
     max: float
-    last_reset: datetime | None
     state: float
     sum: float
 
@@ -242,7 +243,6 @@ class Statistics(Base):  # type: ignore
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
-    last_reset = Column(DATETIME_TYPE)
     state = Column(Float())
     sum = Column(Float())
 
@@ -357,6 +357,22 @@ class SchemaChanges(Base):  # type: ignore
             f"<recorder.SchemaChanges("
             f"id={self.change_id}, schema_version={self.schema_version}, "
             f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
+            f")>"
+        )
+
+
+class StatisticsRuns(Base):  # type: ignore
+    """Representation of statistics run."""
+
+    __tablename__ = TABLE_STATISTICS_RUNS
+    run_id = Column(Integer, primary_key=True)
+    start = Column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StatisticsRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
 

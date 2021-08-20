@@ -29,10 +29,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
 
-COVER_NAME = "test_cover"
-ENTITY_ID = f"{COVER_DOMAIN}.{COVER_NAME}"
+ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -41,7 +40,7 @@ ENTITY_ID = f"{COVER_DOMAIN}.{COVER_NAME}"
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: COVER_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                 }
@@ -50,7 +49,7 @@ ENTITY_ID = f"{COVER_DOMAIN}.{COVER_NAME}"
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: COVER_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
@@ -95,12 +94,12 @@ async def test_coil_cover(hass, regs, expected):
     state = await base_test(
         hass,
         {
-            CONF_NAME: COVER_NAME,
+            CONF_NAME: TEST_ENTITY_NAME,
             CONF_INPUT_TYPE: CALL_TYPE_COIL,
             CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
         },
-        COVER_NAME,
+        TEST_ENTITY_NAME,
         COVER_DOMAIN,
         CONF_COVERS,
         None,
@@ -142,11 +141,11 @@ async def test_register_cover(hass, regs, expected):
     state = await base_test(
         hass,
         {
-            CONF_NAME: COVER_NAME,
+            CONF_NAME: TEST_ENTITY_NAME,
             CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
         },
-        COVER_NAME,
+        TEST_ENTITY_NAME,
         COVER_DOMAIN,
         CONF_COVERS,
         None,
@@ -164,7 +163,7 @@ async def test_register_cover(hass, regs, expected):
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: COVER_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 }
@@ -201,7 +200,7 @@ async def test_service_cover_update(hass, mock_modbus, mock_ha):
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: COVER_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                     CONF_ADDRESS: 1234,
                     CONF_STATE_OPEN: 1,
@@ -228,15 +227,15 @@ async def test_restore_state_cover(hass, mock_test_state, mock_modbus):
         {
             CONF_COVERS: [
                 {
-                    CONF_NAME: COVER_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
                 },
                 {
-                    CONF_NAME: f"{COVER_NAME}2",
+                    CONF_NAME: f"{TEST_ENTITY_NAME}2",
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_ADDRESS: 1234,
+                    CONF_ADDRESS: 1235,
                     CONF_SCAN_INTERVAL: 0,
                 },
             ]

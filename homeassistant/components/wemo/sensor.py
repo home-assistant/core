@@ -1,10 +1,11 @@
 """Support for power sensors in WeMo Insight devices."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Callable
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -16,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import Throttle, convert, dt
+from homeassistant.util import Throttle, convert
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoSubscriptionEntity
@@ -98,7 +99,7 @@ class InsightCurrentPower(InsightSensor):
     )
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the current power consumption."""
         return (
             convert(self.wemo.insight_params[self.entity_description.key], float, 0.0)
@@ -113,17 +114,12 @@ class InsightTodayEnergy(InsightSensor):
         key="todaymw",
         name="Today Energy",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     )
 
     @property
-    def last_reset(self) -> datetime:
-        """Return the time when the sensor was initialized."""
-        return dt.start_of_local_day()
-
-    @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the current energy use today."""
         miliwatts = convert(
             self.wemo.insight_params[self.entity_description.key], float, 0.0

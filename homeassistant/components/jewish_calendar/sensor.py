@@ -50,7 +50,7 @@ class JewishCalendarSensor(SensorEntity):
         self._holiday_attrs = {}
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if isinstance(self._state, datetime):
             return self._state.isoformat()
@@ -134,7 +134,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._state is None:
             return None

@@ -89,14 +89,14 @@ class NeatoSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state."""
         if self._state is not None:
             return str(self._state["details"]["charge"])
         return None
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return unit of measurement."""
         return PERCENTAGE
 

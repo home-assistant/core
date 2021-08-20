@@ -4,18 +4,9 @@ from enum import Enum
 import logging
 import math
 
-from miio.airfresh import (
-    LedBrightness as AirfreshLedBrightness,
-    OperationMode as AirfreshOperationMode,
-)
-from miio.airpurifier import (
-    LedBrightness as AirpurifierLedBrightness,
-    OperationMode as AirpurifierOperationMode,
-)
-from miio.airpurifier_miot import (
-    LedBrightness as AirpurifierMiotLedBrightness,
-    OperationMode as AirpurifierMiotOperationMode,
-)
+from miio.airfresh import OperationMode as AirfreshOperationMode
+from miio.airpurifier import OperationMode as AirpurifierOperationMode
+from miio.airpurifier_miot import OperationMode as AirpurifierMiotOperationMode
 import voluptuous as vol
 
 from homeassistant.components.fan import (
@@ -28,7 +19,6 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -53,7 +43,6 @@ from .const import (
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
-    FEATURE_SET_LED_BRIGHTNESS,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -78,7 +67,6 @@ from .const import (
     SERVICE_SET_FAVORITE_LEVEL,
     SERVICE_SET_LEARN_MODE_OFF,
     SERVICE_SET_LEARN_MODE_ON,
-    SERVICE_SET_LED_BRIGHTNESS,
     SERVICE_SET_VOLUME,
 )
 from .device import XiaomiCoordinatedMiioEntity
@@ -103,26 +91,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ATTR_MODEL = "model"
 
 # Air Purifier
-ATTR_HUMIDITY = "humidity"
-ATTR_AIR_QUALITY_INDEX = "aqi"
-ATTR_FILTER_HOURS_USED = "filter_hours_used"
 ATTR_FILTER_LIFE = "filter_life_remaining"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_BUZZER = "buzzer"
 ATTR_CHILD_LOCK = "child_lock"
 ATTR_LED = "led"
-ATTR_LED_BRIGHTNESS = "led_brightness"
-ATTR_MOTOR_SPEED = "motor_speed"
-ATTR_AVERAGE_AIR_QUALITY_INDEX = "average_aqi"
-ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_LEVEL = "level"
 ATTR_FAN_LEVEL = "fan_level"
-ATTR_MOTOR2_SPEED = "motor2_speed"
-ATTR_ILLUMINANCE = "illuminance"
-ATTR_FILTER_RFID_PRODUCT_ID = "filter_rfid_product_id"
-ATTR_FILTER_RFID_TAG = "filter_rfid_tag"
-ATTR_FILTER_TYPE = "filter_type"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_SLEEP_LEARN_COUNT = "sleep_mode_learn_count"
@@ -135,22 +111,12 @@ ATTR_VOLUME = "volume"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
 
-# Air Fresh
-ATTR_CO2 = "co2"
-
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_HUMIDITY: "humidity",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
-    ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_EXTRA_FEATURES: "extra_features",
     ATTR_TURBO_MODE_SUPPORTED: "turbo_mode_supported",
@@ -159,27 +125,18 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
     ATTR_AUTO_DETECT: "auto_detect",
     ATTR_USE_TIME: "use_time",
     ATTR_BUZZER: "buzzer",
-    ATTR_LED_BRIGHTNESS: "led_brightness",
     ATTR_SLEEP_MODE: "sleep_mode",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_USE_TIME: "use_time",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_ILLUMINANCE: "illuminance",
-    ATTR_MOTOR2_SPEED: "motor2_speed",
     ATTR_VOLUME: "volume",
-    # perhaps supported but unconfirmed
     ATTR_AUTO_DETECT: "auto_detect",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
@@ -187,64 +144,31 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_ILLUMINANCE: "illuminance",
-    ATTR_MOTOR2_SPEED: "motor2_speed",
     ATTR_VOLUME: "volume",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_BUZZER: "buzzer",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_ILLUMINANCE: "illuminance",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_HUMIDITY: "humidity",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
-    ATTR_MOTOR_SPEED: "motor_speed",
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_USE_TIME: "use_time",
     ATTR_BUZZER: "buzzer",
-    ATTR_LED_BRIGHTNESS: "led_brightness",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
     ATTR_FAN_LEVEL: "fan_level",
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
     ATTR_LED: "led",
     ATTR_BUZZER: "buzzer",
     ATTR_CHILD_LOCK: "child_lock",
-    ATTR_ILLUMINANCE: "illuminance",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
-    ATTR_MOTOR_SPEED: "motor_speed",
-    # perhaps supported but unconfirmed
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
     ATTR_VOLUME: "volume",
-    ATTR_MOTOR2_SPEED: "motor2_speed",
-    ATTR_FILTER_RFID_PRODUCT_ID: "filter_rfid_product_id",
-    ATTR_FILTER_RFID_TAG: "filter_rfid_tag",
-    ATTR_FILTER_TYPE: "filter_type",
-    ATTR_PURIFY_VOLUME: "purify_volume",
     ATTR_LEARN_MODE: "learn_mode",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
@@ -255,20 +179,11 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
 }
 
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
-    ATTR_TEMPERATURE: "temperature",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
-    ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
-    ATTR_CO2: "co2",
-    ATTR_HUMIDITY: "humidity",
     ATTR_MODE: "mode",
     ATTR_LED: "led",
-    ATTR_LED_BRIGHTNESS: "led_brightness",
     ATTR_BUZZER: "buzzer",
     ATTR_CHILD_LOCK: "child_lock",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
     ATTR_USE_TIME: "use_time",
-    ATTR_MOTOR_SPEED: "motor_speed",
     ATTR_EXTRA_FEATURES: "extra_features",
 }
 
@@ -306,7 +221,6 @@ FEATURE_FLAGS_AIRPURIFIER = (
     FEATURE_SET_BUZZER
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_LED
-    | FEATURE_SET_LED_BRIGHTNESS
     | FEATURE_SET_FAVORITE_LEVEL
     | FEATURE_SET_LEARN_MODE
     | FEATURE_RESET_FILTER
@@ -341,7 +255,6 @@ FEATURE_FLAGS_AIRPURIFIER_3 = (
     | FEATURE_SET_LED
     | FEATURE_SET_FAVORITE_LEVEL
     | FEATURE_SET_FAN_LEVEL
-    | FEATURE_SET_LED_BRIGHTNESS
 )
 
 FEATURE_FLAGS_AIRPURIFIER_V3 = (
@@ -352,16 +265,11 @@ FEATURE_FLAGS_AIRFRESH = (
     FEATURE_SET_BUZZER
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_LED
-    | FEATURE_SET_LED_BRIGHTNESS
     | FEATURE_RESET_FILTER
     | FEATURE_SET_EXTRA_FEATURES
 )
 
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-SERVICE_SCHEMA_LED_BRIGHTNESS = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_BRIGHTNESS): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=2))}
-)
 
 SERVICE_SCHEMA_FAVORITE_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=17))}
@@ -391,10 +299,6 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_LEARN_MODE_ON: {"method": "async_set_learn_mode_on"},
     SERVICE_SET_LEARN_MODE_OFF: {"method": "async_set_learn_mode_off"},
     SERVICE_RESET_FILTER: {"method": "async_reset_filter"},
-    SERVICE_SET_LED_BRIGHTNESS: {
-        "method": "async_set_led_brightness",
-        "schema": SERVICE_SCHEMA_LED_BRIGHTNESS,
-    },
     SERVICE_SET_FAVORITE_LEVEL: {
         "method": "async_set_favorite_level",
         "schema": SERVICE_SCHEMA_FAVORITE_LEVEL,
@@ -516,19 +420,11 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._supported_features = 0
         self._speed_count = 100
         self._preset_modes = []
-        # the speed_list attribute is deprecated, support will end with release 2021.7
-        self._speed_list = []
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    # the speed_list attribute is deprecated, support will end with release 2021.7
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self._speed_list
 
     @property
     def speed_count(self):
@@ -612,9 +508,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             "Turning the miio device on failed.", self._device.on
         )
 
-        # Remove the async_set_speed call is async_set_percentage and async_set_preset_modes have been implemented
-        if speed:
-            await self.async_set_speed(speed)
         # If operation mode was set the device must not be turned on.
         if percentage:
             await self.async_set_percentage(percentage)
@@ -706,61 +599,39 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
-            # SUPPORT_SET_SPEED was disabled
-            # the device supports preset_modes only
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
-            # SUPPORT_SET_SPEED was disabled
-            # the device supports preset_modes only
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO_V7
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO_V7
         elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
-            # SUPPORT_SET_SPEED was disabled
-            # the device supports preset_modes only
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
-            # SUPPORT_SET_SPEED was disabled
-            # the device supports preset_modes only
             self._preset_modes = PRESET_MODES_AIRPURIFIER_3
             self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
             self._speed_count = 3
-            # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER_3
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3
-            # SUPPORT_SET_SPEED was disabled
-            # the device supports preset_modes only
             self._preset_modes = PRESET_MODES_AIRPURIFIER_V3
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = OPERATION_MODES_AIRPURIFIER_V3
         else:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
             self._preset_modes = PRESET_MODES_AIRPURIFIER
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            # the speed_list attribute is deprecated, support will end with release 2021.7
-            self._speed_list = []
 
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
@@ -786,15 +657,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
                 return ranged_value_to_percentage(
                     (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
                 )
-
-        return None
-
-    # the speed attribute is deprecated, support will end with release 2021.7
-    @property
-    def speed(self):
-        """Return the current speed."""
-        if self._state:
-            return AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -827,21 +689,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self.PRESET_MODE_MAPPING[preset_mode],
         )
 
-    # the async_set_speed function is deprecated, support will end with release 2021.7
-    # it is added here only for compatibility with legacy speeds
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if self.supported_features & SUPPORT_SET_SPEED == 0:
-            return
-
-        _LOGGER.debug("Setting the operation mode to: %s", speed)
-
-        await self._try_command(
-            "Setting operation mode of the miio device failed.",
-            self._device.set_mode,
-            AirpurifierOperationMode[speed.title()],
-        )
-
     async def async_set_led_on(self):
         """Turn the led on."""
         if self._device_features & FEATURE_SET_LED == 0:
@@ -860,17 +707,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             "Turning the led of the miio device off failed.",
             self._device.set_led,
             False,
-        )
-
-    async def async_set_led_brightness(self, brightness: int = 2):
-        """Set the led brightness."""
-        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
-            return
-
-        await self._try_command(
-            "Setting the led brightness of the miio device failed.",
-            self._device.set_led_brightness,
-            AirpurifierLedBrightness(brightness),
         )
 
     async def async_set_favorite_level(self, level: int = 1):
@@ -999,15 +835,6 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 
         return None
 
-    # the speed attribute is deprecated, support will end with release 2021.7
-    @property
-    def speed(self):
-        """Return the current speed."""
-        if self._state:
-            return AirpurifierMiotOperationMode(self._mode).name
-
-        return None
-
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
 
@@ -1040,34 +867,6 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
             self._mode = self.PRESET_MODE_MAPPING[preset_mode].value
             self.async_write_ha_state()
 
-    # the async_set_speed function is deprecated, support will end with release 2021.7
-    # it is added here only for compatibility with legacy speeds
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if self.supported_features & SUPPORT_SET_SPEED == 0:
-            return
-
-        _LOGGER.debug("Setting the operation mode to: %s", speed)
-
-        if await self._try_command(
-            "Setting operation mode of the miio device failed.",
-            self._device.set_mode,
-            AirpurifierMiotOperationMode[speed.title()],
-        ):
-            self._mode = AirpurifierMiotOperationMode[speed.title()].value
-            self.async_write_ha_state()
-
-    async def async_set_led_brightness(self, brightness: int = 2):
-        """Set the led brightness."""
-        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
-            return
-
-        await self._try_command(
-            "Setting the led brightness of the miio device failed.",
-            self._device.set_led_brightness,
-            AirpurifierMiotLedBrightness(brightness),
-        )
-
 
 class XiaomiAirFresh(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Fresh."""
@@ -1092,8 +891,6 @@ class XiaomiAirFresh(XiaomiGenericDevice):
 
         self._device_features = FEATURE_FLAGS_AIRFRESH
         self._available_attributes = AVAILABLE_ATTRIBUTES_AIRFRESH
-        # the speed_list attribute is deprecated, support will end with release 2021.7
-        self._speed_list = OPERATION_MODES_AIRFRESH
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
         self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
@@ -1120,15 +917,6 @@ class XiaomiAirFresh(XiaomiGenericDevice):
                 return ranged_value_to_percentage(
                     (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
                 )
-
-        return None
-
-    # the speed attribute is deprecated, support will end with release 2021.7
-    @property
-    def speed(self):
-        """Return the current speed."""
-        if self._state:
-            return AirfreshOperationMode(self._mode).name
 
         return None
 
@@ -1167,23 +955,6 @@ class XiaomiAirFresh(XiaomiGenericDevice):
             self._mode = self.PRESET_MODE_MAPPING[preset_mode].value
             self.async_write_ha_state()
 
-    # the async_set_speed function is deprecated, support will end with release 2021.7
-    # it is added here only for compatibility with legacy speeds
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if self.supported_features & SUPPORT_SET_SPEED == 0:
-            return
-
-        _LOGGER.debug("Setting the operation mode to: %s", speed)
-
-        if await self._try_command(
-            "Setting operation mode of the miio device failed.",
-            self._device.set_mode,
-            AirfreshOperationMode[speed.title()],
-        ):
-            self._mode = AirfreshOperationMode[speed.title()].value
-            self.async_write_ha_state()
-
     async def async_set_led_on(self):
         """Turn the led on."""
         if self._device_features & FEATURE_SET_LED == 0:
@@ -1202,17 +973,6 @@ class XiaomiAirFresh(XiaomiGenericDevice):
             "Turning the led of the miio device off failed.",
             self._device.set_led,
             False,
-        )
-
-    async def async_set_led_brightness(self, brightness: int = 2):
-        """Set the led brightness."""
-        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
-            return
-
-        await self._try_command(
-            "Setting the led brightness of the miio device failed.",
-            self._device.set_led_brightness,
-            AirfreshLedBrightness(brightness),
         )
 
     async def async_set_extra_features(self, features: int = 1):

@@ -124,7 +124,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         return self._name.lower()
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return self._state
 
@@ -229,7 +229,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         return "mdi:cash"
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if "number_of" not in self._sensor_type:
             return self._unit_of_measurement
