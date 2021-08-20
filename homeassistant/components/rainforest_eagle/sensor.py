@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
@@ -85,6 +86,7 @@ async def async_setup_platform(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
+                CONF_HOST: config[CONF_IP_ADDRESS],
                 CONF_CLOUD_ID: config[CONF_CLOUD_ID],
                 CONF_INSTALL_CODE: config[CONF_INSTALL_CODE],
             },
