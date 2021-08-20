@@ -10,10 +10,10 @@ from homeassistant.components.fritzbox.const import (
     DOMAIN as FB_DOMAIN,
 )
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
@@ -73,10 +73,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_total_energy")
     assert state
     assert state.state == "1.234"
-    assert state.attributes[ATTR_LAST_RESET] == "1970-01-01T00:00:00+00:00"
     assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Total Energy"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
 
 
 async def test_turn_on(hass: HomeAssistant, fritz: Mock):

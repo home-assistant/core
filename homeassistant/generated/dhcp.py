@@ -18,6 +18,11 @@ DHCP = [
     },
     {
         "domain": "august",
+        "hostname": "connect",
+        "macaddress": "2C9FFB*"
+    },
+    {
+        "domain": "august",
         "hostname": "august*",
         "macaddress": "E076D0*"
     },
@@ -155,6 +160,10 @@ DHCP = [
         "domain": "rachio",
         "hostname": "rachio-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "rainforest_eagle",
+        "macaddress": "D8D5B9*"
     },
     {
         "domain": "ring",

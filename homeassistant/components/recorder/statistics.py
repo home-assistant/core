@@ -11,19 +11,26 @@ from sqlalchemy import bindparam
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
 
-from homeassistant.const import PRESSURE_PA, TEMP_CELSIUS
+from homeassistant.const import (
+    PRESSURE_PA,
+    TEMP_CELSIUS,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
+import homeassistant.util.volume as volume_util
 
 from .const import DOMAIN
 from .models import (
     StatisticMetaData,
     Statistics,
     StatisticsMeta,
+    StatisticsRuns,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, retryable_database_job, session_scope
@@ -37,7 +44,6 @@ QUERY_STATISTICS = [
     Statistics.mean,
     Statistics.min,
     Statistics.max,
-    Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
 ]
@@ -61,6 +67,11 @@ UNIT_CONVERSIONS = {
     else None,
     TEMP_CELSIUS: lambda x, units: temperature_util.convert(
         x, TEMP_CELSIUS, units.temperature_unit
+    )
+    if x is not None
+    else None,
+    VOLUME_CUBIC_METERS: lambda x, units: volume_util.convert(
+        x, VOLUME_CUBIC_METERS, _configured_unit(VOLUME_CUBIC_METERS, units)
     )
     if x is not None
     else None,
@@ -146,6 +157,12 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     """Compile statistics."""
     start = dt_util.as_utc(start)
     end = start + timedelta(hours=1)
+
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        if session.query(StatisticsRuns).filter_by(start=start).first():
+            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
+            return True
+
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats = []
     for domain, platform in instance.hass.data[DOMAIN].items():
@@ -163,6 +180,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                     instance.hass, session, entity_id, stat["meta"]
                 )
                 session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+        session.add(StatisticsRuns(start=start))
 
     return True
 
@@ -214,6 +232,10 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
         return units.pressure_unit
     if unit == TEMP_CELSIUS:
         return units.temperature_unit
+    if unit == VOLUME_CUBIC_METERS:
+        if units.is_metric:
+            return VOLUME_CUBIC_METERS
+        return VOLUME_CUBIC_FEET
     return unit
 
 
@@ -360,7 +382,6 @@ def _sorted_statistics_to_dict(
                 "mean": convert(db_state.mean, units),
                 "min": convert(db_state.min, units),
                 "max": convert(db_state.max, units),
-                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
                 "state": convert(db_state.state, units),
                 "sum": convert(db_state.sum, units),
             }

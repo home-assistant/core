@@ -1,4 +1,9 @@
 """Constants for the Renault integration tests."""
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_PLUG,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
     CONF_LOCALE,
@@ -13,10 +18,14 @@ from homeassistant.const import (
     CONF_USERNAME,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     POWER_KILO_WATT,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TIME_MINUTES,
@@ -52,12 +61,33 @@ MOCK_VEHICLES = {
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.json",
         },
+        BINARY_SENSOR_DOMAIN: [
+            {
+                "entity_id": "binary_sensor.plugged_in",
+                "unique_id": "vf1aaaaa555777999_plugged_in",
+                "result": STATE_ON,
+                "class": DEVICE_CLASS_PLUG,
+            },
+            {
+                "entity_id": "binary_sensor.charging",
+                "unique_id": "vf1aaaaa555777999_charging",
+                "result": STATE_ON,
+                "class": DEVICE_CLASS_BATTERY_CHARGING,
+            },
+        ],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
                 "unique_id": "vf1aaaaa555777999_battery_autonomy",
                 "result": "141",
                 "unit": LENGTH_KILOMETERS,
+            },
+            {
+                "entity_id": "sensor.battery_available_energy",
+                "unique_id": "vf1aaaaa555777999_battery_available_energy",
+                "result": "31",
+                "unit": ENERGY_KILO_WATT_HOUR,
+                "class": DEVICE_CLASS_ENERGY,
             },
             {
                 "entity_id": "sensor.battery_level",
@@ -90,7 +120,7 @@ MOCK_VEHICLES = {
                 "unique_id": "vf1aaaaa555777999_charging_power",
                 "result": "0.027",
                 "unit": POWER_KILO_WATT,
-                "class": DEVICE_CLASS_ENERGY,
+                "class": DEVICE_CLASS_POWER,
             },
             {
                 "entity_id": "sensor.charging_remaining_time",
@@ -138,12 +168,33 @@ MOCK_VEHICLES = {
             "charge_mode": "charge_mode_schedule.json",
             "cockpit": "cockpit_ev.json",
         },
+        BINARY_SENSOR_DOMAIN: [
+            {
+                "entity_id": "binary_sensor.plugged_in",
+                "unique_id": "vf1aaaaa555777999_plugged_in",
+                "result": STATE_OFF,
+                "class": DEVICE_CLASS_PLUG,
+            },
+            {
+                "entity_id": "binary_sensor.charging",
+                "unique_id": "vf1aaaaa555777999_charging",
+                "result": STATE_OFF,
+                "class": DEVICE_CLASS_BATTERY_CHARGING,
+            },
+        ],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
                 "unique_id": "vf1aaaaa555777999_battery_autonomy",
                 "result": "128",
                 "unit": LENGTH_KILOMETERS,
+            },
+            {
+                "entity_id": "sensor.battery_available_energy",
+                "unique_id": "vf1aaaaa555777999_battery_available_energy",
+                "result": "0",
+                "unit": ENERGY_KILO_WATT_HOUR,
+                "class": DEVICE_CLASS_ENERGY,
             },
             {
                 "entity_id": "sensor.battery_level",
@@ -176,7 +227,7 @@ MOCK_VEHICLES = {
                 "unique_id": "vf1aaaaa555777999_charging_power",
                 "result": STATE_UNKNOWN,
                 "unit": POWER_KILO_WATT,
-                "class": DEVICE_CLASS_ENERGY,
+                "class": DEVICE_CLASS_POWER,
             },
             {
                 "entity_id": "sensor.charging_remaining_time",
@@ -217,12 +268,33 @@ MOCK_VEHICLES = {
             "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_fuel.json",
         },
+        BINARY_SENSOR_DOMAIN: [
+            {
+                "entity_id": "binary_sensor.plugged_in",
+                "unique_id": "vf1aaaaa555777123_plugged_in",
+                "result": STATE_ON,
+                "class": DEVICE_CLASS_PLUG,
+            },
+            {
+                "entity_id": "binary_sensor.charging",
+                "unique_id": "vf1aaaaa555777123_charging",
+                "result": STATE_ON,
+                "class": DEVICE_CLASS_BATTERY_CHARGING,
+            },
+        ],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
                 "unique_id": "vf1aaaaa555777123_battery_autonomy",
                 "result": "141",
                 "unit": LENGTH_KILOMETERS,
+            },
+            {
+                "entity_id": "sensor.battery_available_energy",
+                "unique_id": "vf1aaaaa555777123_battery_available_energy",
+                "result": "31",
+                "unit": ENERGY_KILO_WATT_HOUR,
+                "class": DEVICE_CLASS_ENERGY,
             },
             {
                 "entity_id": "sensor.battery_level",
@@ -255,7 +327,7 @@ MOCK_VEHICLES = {
                 "unique_id": "vf1aaaaa555777123_charging_power",
                 "result": "27.0",
                 "unit": POWER_KILO_WATT,
-                "class": DEVICE_CLASS_ENERGY,
+                "class": DEVICE_CLASS_POWER,
             },
             {
                 "entity_id": "sensor.charging_remaining_time",
@@ -304,6 +376,7 @@ MOCK_VEHICLES = {
             # Ignore,  # charge-mode
         ],
         "endpoints": {"cockpit": "cockpit_fuel.json"},
+        BINARY_SENSOR_DOMAIN: [],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.fuel_autonomy",

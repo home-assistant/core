@@ -53,7 +53,7 @@ async def async_setup_entry(
                     name=monitor.friendly_name,
                     device_class=DEVICE_CLASS_CONNECTIVITY,
                 ),
-                target=monitor.url,
+                monitor=monitor,
             )
             for monitor in coordinator.data
         ],

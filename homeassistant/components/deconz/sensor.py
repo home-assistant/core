@@ -17,6 +17,7 @@ from pydeconz.sensor import (
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -41,7 +42,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
@@ -68,7 +68,7 @@ ICON = {
 }
 
 STATE_CLASS = {
-    Consumption: STATE_CLASS_MEASUREMENT,
+    Consumption: STATE_CLASS_TOTAL_INCREASING,
     Humidity: STATE_CLASS_MEASUREMENT,
     Pressure: STATE_CLASS_MEASUREMENT,
     Temperature: STATE_CLASS_MEASUREMENT,
@@ -160,10 +160,9 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         self._attr_device_class = DEVICE_CLASS.get(type(self._device))
         self._attr_icon = ICON.get(type(self._device))
         self._attr_state_class = STATE_CLASS.get(type(self._device))
-        self._attr_unit_of_measurement = UNIT_OF_MEASUREMENT.get(type(self._device))
-
-        if device.type in Consumption.ZHATYPE:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+        self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT.get(
+            type(self._device)
+        )
 
     @callback
     def async_update_callback(self, force_update=False):
@@ -173,7 +172,7 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.state
 
@@ -217,7 +216,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     TYPE = DOMAIN
 
@@ -240,7 +239,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.secondary_temperature
 
@@ -250,7 +249,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     TYPE = DOMAIN
 
@@ -284,7 +283,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         return f"{self.serial}-battery"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the battery."""
         return self._device.battery
 

@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_CO2,
@@ -44,6 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=None,
             unit_of_measurement=PERCENTAGE,
             icon="mdi:fan",
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxSensor(
             name=f"{name} Extract Air",
@@ -52,6 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             icon=None,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxSensor(
             name=f"{name} Exhaust Air",
@@ -60,6 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             icon=None,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxSensor(
             name=f"{name} Outdoor Air",
@@ -68,6 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             icon=None,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxSensor(
             name=f"{name} Supply Air",
@@ -76,6 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_TEMPERATURE,
             unit_of_measurement=TEMP_CELSIUS,
             icon=None,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxSensor(
             name=f"{name} Humidity",
@@ -84,6 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_HUMIDITY,
             unit_of_measurement=PERCENTAGE,
             icon=None,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxFilterRemainingSensor(
             name=f"{name} Remaining Time For Filter",
@@ -100,6 +106,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=None,
             unit_of_measurement=PERCENTAGE,
             icon="mdi:gauge",
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
         ValloxSensor(
             name=f"{name} CO2",
@@ -108,6 +115,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_CO2,
             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             icon=None,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
     ]
 
@@ -118,13 +126,21 @@ class ValloxSensor(SensorEntity):
     """Representation of a Vallox sensor."""
 
     def __init__(
-        self, name, state_proxy, metric_key, device_class, unit_of_measurement, icon
+        self,
+        name,
+        state_proxy,
+        metric_key,
+        device_class,
+        unit_of_measurement,
+        icon,
+        state_class=None,
     ) -> None:
         """Initialize the Vallox sensor."""
         self._name = name
         self._state_proxy = state_proxy
         self._metric_key = metric_key
         self._device_class = device_class
+        self._state_class = state_class
         self._unit_of_measurement = unit_of_measurement
         self._icon = icon
         self._available = None
@@ -141,7 +157,7 @@ class ValloxSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
@@ -149,6 +165,11 @@ class ValloxSensor(SensorEntity):
     def device_class(self):
         """Return the device class."""
         return self._device_class
+
+    @property
+    def state_class(self):
+        """Return the state class."""
+        return self._state_class
 
     @property
     def icon(self):
@@ -161,7 +182,7 @@ class ValloxSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._state
 

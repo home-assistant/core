@@ -799,7 +799,14 @@ async def test_async_detect_interfaces_setting_empty_route(hass, mock_async_zero
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
     assert mock_zc.mock_calls[0] == call(
-        interfaces=[1, "192.168.1.5", "172.16.1.5", 3], ip_version=IPVersion.All
+        interfaces=[
+            "2001:db8::",
+            "fe80::1234:5678:9abc:def0",
+            "192.168.1.5",
+            "172.16.1.5",
+            "fe80::dead:beef:dead:beef",
+        ],
+        ip_version=IPVersion.All,
     )
 
 
@@ -862,5 +869,6 @@ async def test_async_detect_interfaces_explicitly_set_ipv6(hass, mock_async_zero
         await hass.async_block_till_done()
 
     assert mock_zc.mock_calls[0] == call(
-        interfaces=["192.168.1.5", 1], ip_version=IPVersion.All
+        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef"],
+        ip_version=IPVersion.All,
     )

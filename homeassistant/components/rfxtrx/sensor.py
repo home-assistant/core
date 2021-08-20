@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -38,7 +39,6 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import callback
-from homeassistant.util import dt
 
 from . import (
     CONF_DATA_BITS,
@@ -78,92 +78,91 @@ SENSOR_TYPES = (
         key="Barameter",
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_HPA,
     ),
     RfxtrxSensorEntityDescription(
         key="Battery numeric",
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         convert=_battery_convert,
     ),
     RfxtrxSensorEntityDescription(
         key="Current",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 1",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 2",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 3",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Energy usage",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     ),
     RfxtrxSensorEntityDescription(
         key="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
     ),
     RfxtrxSensorEntityDescription(
         key="Rssi numeric",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         convert=_rssi_convert,
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature2",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Total usage",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Voltage",
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind direction",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=DEGREE,
+        native_unit_of_measurement=DEGREE,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain rate",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
@@ -173,36 +172,34 @@ SENSOR_TYPES = (
     ),
     RfxtrxSensorEntityDescription(
         key="Count",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-        unit_of_measurement="count",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
-        unit_of_measurement="count",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Chill",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind average speed",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind gust",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain total",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=LENGTH_MILLIMETERS,
     ),
     RfxtrxSensorEntityDescription(
         key="Forecast",
@@ -216,7 +213,7 @@ SENSOR_TYPES = (
     RfxtrxSensorEntityDescription(
         key="UV",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=UV_INDEX,
+        native_unit_of_measurement=UV_INDEX,
     ),
 )
 
@@ -313,7 +310,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
                     self._apply_event(get_rfx_object(event))
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if not self._event:
             return None

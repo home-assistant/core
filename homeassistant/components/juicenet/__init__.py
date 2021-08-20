@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
@@ -30,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the JuiceNet component."""
     conf = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})

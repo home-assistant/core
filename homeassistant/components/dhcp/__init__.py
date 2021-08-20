@@ -41,6 +41,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
@@ -58,7 +59,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
 
     async def _initialize(_):

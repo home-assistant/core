@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ARGS,
@@ -83,7 +84,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Habitica service."""
     configs = config.get(DOMAIN, [])
 

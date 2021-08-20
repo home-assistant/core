@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "locale": "\u5730\u533a",
                     "password": "\u5bc6\u7801",
                     "username": "\u7535\u5b50\u90ae\u7bb1"
                 },
