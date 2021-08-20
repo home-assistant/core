@@ -464,7 +464,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._state = None
-        self._state_attrs = {
+        self._attr_extra_state_attributes = {
             ATTR_POWER: None,
             ATTR_BATTERY_LEVEL: None,
             ATTR_CHARGING: None,
@@ -481,11 +481,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Return the state of the device."""
         return self._state
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
-
     async def async_update(self):
         """Fetch state from the miio device."""
         try:
@@ -494,7 +489,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 
             self._attr_available = True
             self._state = state.aqi
-            self._state_attrs.update(
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_POWER: state.power,
                     ATTR_CHARGING: state.usb_power,

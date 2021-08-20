@@ -316,7 +316,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._available_attributes = {}
         self._mode = None
         self._fan_level = None
-        self._state_attrs = {ATTR_MODEL: self._model}
+        self._attr_extra_state_attributes = {ATTR_MODEL: self._model}
         self._device_features = 0
         self._attr_supported_features = 0
         self._speed_count = 100
@@ -342,11 +342,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Return the percentage based speed of the fan."""
         return None
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
-
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
         value = getattr(state, attribute)
@@ -360,14 +355,14 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Fetch state from the device."""
         self._attr_available = True
         self._attr_is_on = self.coordinator.data.is_on
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
                 for key, value in self._available_attributes.items()
             }
         )
-        self._mode = self._state_attrs.get(ATTR_MODE)
-        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL)
+        self._mode = self._attr_extra_state_attributes.get(ATTR_MODE)
+        self._fan_level = self._attr_extra_state_attributes.get(ATTR_FAN_LEVEL)
         self.async_write_ha_state()
 
     #
@@ -470,17 +465,19 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._attr_supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
 
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {attribute: None for attribute in self._available_attributes}
         )
-        self._mode = self._state_attrs.get(ATTR_MODE)
-        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL)
+        self._mode = self._attr_extra_state_attributes.get(ATTR_MODE)
+        self._fan_level = self._attr_extra_state_attributes.get(ATTR_FAN_LEVEL)
 
     @property
     def preset_mode(self):
         """Get the active preset mode."""
         if self.is_on:
-            preset_mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            preset_mode = AirpurifierOperationMode(
+                self._attr_extra_state_attributes[ATTR_MODE]
+            ).name
             return preset_mode if preset_mode in self._preset_modes else None
 
         return None
@@ -489,7 +486,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     def percentage(self):
         """Return the current percentage based speed."""
         if self.is_on:
-            mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE])
+            mode = AirpurifierOperationMode(
+                self._attr_extra_state_attributes[ATTR_MODE]
+            )
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
                     (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
@@ -667,10 +666,10 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
         self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
-        self._state_attrs.update(
+        self._attr_extra_state_attributes.update(
             {attribute: None for attribute in self._available_attributes}
         )
-        self._mode = self._state_attrs.get(ATTR_MODE)
+        self._mode = self._attr_extra_state_attributes.get(ATTR_MODE)
 
     @property
     def preset_mode(self):
