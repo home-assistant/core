@@ -1,6 +1,7 @@
 """Offer Z-Wave JS value updated listening automation rules."""
 from __future__ import annotations
 
+import functools
 import logging
 from typing import Any, Callable
 
@@ -37,7 +38,7 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.split('.')[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
 
 ATTR_FROM = "from"
 ATTR_TO = "to"
@@ -167,12 +168,9 @@ async def async_attach_trigger(
         assert device
         value_id = get_value_id(node, command_class, property_, endpoint, property_key)
         value = node.values[value_id]
-        unsubs.append(
-            node.on(
-                "value updated",
-                lambda event: async_on_value_updated(value, device, event),
-            )
-        )
+        # We need to store the current value and device for the callback
+        callback_func = functools.partial(async_on_value_updated, value, device)
+        unsubs.append(node.on("value updated", lambda event: callback_func(event)))
 
     @callback
     def async_remove() -> None:
