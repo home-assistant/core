@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "cloud_id": "Cloud ID",
+                    "host": "Host",
                     "install_code": "Installation Code"
                 }
             }

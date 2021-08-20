@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
 from . import data
@@ -15,12 +15,20 @@ from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMA
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CLOUD_ID): str,
-        vol.Required(CONF_INSTALL_CODE): str,
-    }
-)
+
+def create_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+    """Create user schema with passed in defaults if available."""
+    if user_input is None:
+        user_input = {}
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
+            vol.Required(CONF_CLOUD_ID, default=user_input.get(CONF_CLOUD_ID)): str,
+            vol.Required(
+                CONF_INSTALL_CODE, default=user_input.get(CONF_INSTALL_CODE)
+            ): str,
+        }
+    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=create_schema(user_input)
             )
 
         await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
@@ -42,7 +50,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             eagle_type, hardware_address = await data.async_get_type(
-                self.hass, user_input[CONF_CLOUD_ID], user_input[CONF_INSTALL_CODE]
+                self.hass,
+                user_input[CONF_CLOUD_ID],
+                user_input[CONF_INSTALL_CODE],
+                user_input[CONF_HOST],
             )
         except data.CannotConnect:
             errors["base"] = "cannot_connect"
@@ -59,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=create_schema(user_input), errors=errors
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
