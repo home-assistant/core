@@ -1,7 +1,6 @@
 """Z-Wave JS trigger dispatcher."""
 from __future__ import annotations
 
-import importlib
 from types import ModuleType
 from typing import Any, Callable, cast
 
@@ -9,12 +8,19 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
+from .triggers import value_updated
+
+TRIGGERS = {
+    "value_updated": value_updated,
+}
+
 
 def _get_trigger_platform(config: ConfigType) -> ModuleType:
     """Return trigger platform."""
-    return importlib.import_module(
-        f"..triggers.{config[CONF_PLATFORM].split('.')[1]}", __name__
-    )
+    platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
+    if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
+        raise ValueError(f"Unknown Z-Wave JS trigger platform {config[CONF_PLATFORM]}")
+    return TRIGGERS[platform_split[1]]
 
 
 async def async_validate_trigger_config(
