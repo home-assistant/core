@@ -13,8 +13,8 @@ USB = [
     },
     {
         "domain": "zwave_js",
-        "vid": "1A86",
-        "pid": "7523"
+        "vid": "10C4",
+        "pid": "8A2A"
     },
     {
         "domain": "zwave_js",
