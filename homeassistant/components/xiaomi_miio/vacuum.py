@@ -356,11 +356,6 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         return attrs
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_XIAOMI
@@ -501,7 +496,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
 
             self._attr_available = True
         except (OSError, DeviceException) as exc:
-            if self._available:
+            if self._attr_available:
                 self._attr_available = False
                 _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
@@ -510,7 +505,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
             # Do not try this if the first fetch timed out.
             # Two timeouts take longer than 10 seconds and trigger a warning.
             # See #52353
-            if self._available:
+            if self._attr_available:
                 self._timers = self._device.timer()
         except DeviceException as exc:
             _LOGGER.debug(

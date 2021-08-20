@@ -478,11 +478,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def native_value(self):
         """Return the state of the device."""
         return self._state
@@ -514,7 +509,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             )
 
         except DeviceException as ex:
-            if self._available:
+            if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -550,11 +545,6 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         self._state = None
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def native_value(self):
         """Return the state of the device."""
         return self._state
@@ -567,7 +557,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
             )
             self._attr_available = True
         except GatewayException as ex:
-            if self._available:
+            if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway illuminance state: %s", ex

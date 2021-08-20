@@ -84,11 +84,6 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._icon
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._air_quality_index
@@ -151,7 +146,7 @@ class AirMonitorS1(AirMonitorB1):
             self._humidity = state.humidity
             self._attr_available = True
         except DeviceException as ex:
-            if self._available:
+            if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -167,7 +162,7 @@ class AirMonitorV1(AirMonitorB1):
             self._air_quality_index = state.aqi
             self._attr_available = True
         except DeviceException as ex:
-            if self._available:
+            if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -207,11 +202,6 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     def icon(self):
         """Return the icon to use for device if any."""
         return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
 
     @property
     def carbon_dioxide(self):

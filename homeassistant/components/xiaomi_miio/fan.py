@@ -354,11 +354,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return True
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs

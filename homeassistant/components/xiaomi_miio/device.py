@@ -75,7 +75,7 @@ class XiaomiMiioEntity(Entity):
         self._device_id = entry.unique_id
         self._unique_id = unique_id
         self._name = name
-        self._attr_available = None
+        self._attr_available = False
 
     @property
     def unique_id(self):

@@ -82,11 +82,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         return self._icon
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -123,7 +118,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         try:
             state = await self.hass.async_add_executor_job(self._gateway.alarm.status)
         except DeviceException as ex:
-            if self._available:
+            if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
