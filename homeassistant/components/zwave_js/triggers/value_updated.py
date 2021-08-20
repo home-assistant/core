@@ -11,12 +11,17 @@ from zwave_js_server.model.value import Value, get_value_id
 
 from homeassistant.components.zwave_js.const import (
     ATTR_COMMAND_CLASS,
+    ATTR_COMMAND_CLASS_NAME,
     ATTR_CURRENT_VALUE,
+    ATTR_CURRENT_VALUE_RAW,
     ATTR_ENDPOINT,
     ATTR_NODE_ID,
     ATTR_PREVIOUS_VALUE,
+    ATTR_PREVIOUS_VALUE_RAW,
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
+    ATTR_PROPERTY_KEY_NAME,
+    ATTR_PROPERTY_NAME,
     DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import (
@@ -107,15 +112,22 @@ async def async_attach_trigger(
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
-        prev_value = event["args"]["prevValue"]
-        curr_value = event["args"]["newValue"]
+        prev_value_raw = event["args"]["prevValue"]
+        prev_value = value.metadata.states.get(str(prev_value_raw), prev_value_raw)
+        curr_value_raw = curr_value = event["args"]["newValue"]
+        curr_value = value.metadata.states.get(str(curr_value_raw), curr_value_raw)
         if event_value != value:
             return
-        for value_to_eval, match in ((prev_value, from_value), (curr_value, to_value)):
+        for value_to_eval, raw_value_to_eval, match in (
+            (prev_value, prev_value_raw, from_value),
+            (curr_value, curr_value_raw, to_value),
+        ):
             if (
                 match != MATCH_ALL
                 and value_to_eval != match
                 and not (isinstance(match, list) and value_to_eval in match)
+                and raw_value_to_eval != match
+                and not (isinstance(match, list) and raw_value_to_eval in match)
             ):
                 return
 
@@ -126,12 +138,17 @@ async def async_attach_trigger(
             CONF_PLATFORM: platform_type,
             ATTR_DEVICE_ID: device.id,
             ATTR_NODE_ID: value.node.node_id,
-            ATTR_COMMAND_CLASS: command_class,
-            ATTR_PROPERTY: property_,
+            ATTR_COMMAND_CLASS: value.command_class,
+            ATTR_COMMAND_CLASS_NAME: value.command_class_name,
+            ATTR_PROPERTY: value.property_,
+            ATTR_PROPERTY_NAME: value.property_name,
             ATTR_ENDPOINT: endpoint,
-            ATTR_PROPERTY_KEY: property_key,
+            ATTR_PROPERTY_KEY: value.property_key,
+            ATTR_PROPERTY_KEY_NAME: value.property_key_name,
             ATTR_PREVIOUS_VALUE: prev_value,
+            ATTR_PREVIOUS_VALUE_RAW: prev_value_raw,
             ATTR_CURRENT_VALUE: curr_value,
+            ATTR_CURRENT_VALUE_RAW: curr_value_raw,
             "description": f"Z-Wave value {value_id} updated on {device_name}",
         }
         if ATTR_ENTITY_ID in config:
