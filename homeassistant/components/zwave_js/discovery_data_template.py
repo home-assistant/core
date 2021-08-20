@@ -185,13 +185,13 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
         if value.command_class == CommandClass.BATTERY:
             return ENTITY_DESC_KEY_BATTERY
 
-        elif value.command_class == CommandClass.METER:
+        if value.command_class == CommandClass.METER:
             scale_type = get_meter_scale_type(value)
             for key, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
                     return key
 
-        elif value.command_class == CommandClass.SENSOR_MULTILEVEL:
+        if value.command_class == CommandClass.SENSOR_MULTILEVEL:
             sensor_type = get_multilevel_sensor_type(value)
             if sensor_type == MultilevelSensorType.TARGET_TEMPERATURE:
                 return ENTITY_DESC_KEY_TARGET_TEMPERATURE

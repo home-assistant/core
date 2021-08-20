@@ -758,7 +758,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                     resolved_data = schema.data_template.resolve_data(value)
                 except UnknownValueData as err:
                     LOGGER.error(
-                        f"Discovery for value {value} will be skipped: {err.args[0]}"
+                        "Discovery for value %s will be skipped: %s", value, err
                     )
                     continue
                 additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(

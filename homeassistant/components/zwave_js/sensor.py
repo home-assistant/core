@@ -1,9 +1,10 @@
 """Representation of Z-Wave sensors."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Mapping, cast
+from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
