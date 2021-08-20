@@ -4,16 +4,16 @@ from __future__ import annotations
 from ipaddress import ip_address, ip_network, summarize_address_range
 from typing import Any
 
-import ifaddr
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import network
 from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
+from homeassistant.components.network.const import MDNS_TARGET_IP
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_HOME_INTERVAL,
@@ -26,22 +26,18 @@ from .const import (
 DEFAULT_NETWORK_PREFIX = 24
 
 
-def get_network():
+async def async_get_network(hass: HomeAssistant) -> str:
     """Search adapters for the network."""
-    adapters = ifaddr.get_adapters()
-    local_ip = get_local_ip()
-    network_prefix = (
-        get_ip_prefix_from_adapters(local_ip, adapters) or DEFAULT_NETWORK_PREFIX
-    )
+    # We want the local ip that is most likely to be
+    # on the LAN and not the WAN so we use MDNS_TARGET_IP
+    local_ip = await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+    network_prefix = DEFAULT_NETWORK_PREFIX
+    for adapter in await network.async_get_adapters(hass):
+        for ipv4 in adapter["ipv4"]:
+            if ipv4["address"] == local_ip:
+                network_prefix = ipv4["network_prefix"]
+                break
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
-
-
-def get_ip_prefix_from_adapters(local_ip, adapters):
-    """Find the network prefix for an adapter."""
-    for adapter in adapters:
-        for ip_cfg in adapter.ips:
-            if local_ip == ip_cfg.ip:
-                return ip_cfg.network_prefix
 
 
 def _normalize_ips_and_network(hosts_str):
@@ -64,19 +60,16 @@ def _normalize_ips_and_network(hosts_str):
             continue
 
         try:
-            ip_addr = ip_address(host)
+            normalized_hosts.append(str(ip_address(host)))
         except ValueError:
             pass
         else:
-            normalized_hosts.append(str(ip_addr))
             continue
 
         try:
-            network = ip_network(host)
+            normalized_hosts.append(str(ip_network(host)))
         except ValueError:
             return None
-        else:
-            normalized_hosts.append(str(network))
 
     return normalized_hosts
 
@@ -100,9 +93,9 @@ def normalize_input(user_input):
 
 
 async def _async_build_schema_with_user_input(hass, user_input, include_options):
-    hosts = user_input.get(CONF_HOSTS, await hass.async_add_executor_job(get_network))
+    hosts = user_input.get(CONF_HOSTS, await async_get_network(hass))
     exclude = user_input.get(
-        CONF_EXCLUDE, await hass.async_add_executor_job(get_local_ip)
+        CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
     )
     schema = {
         vol.Required(CONF_HOSTS, default=hosts): str,
