@@ -101,18 +101,21 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         vid = discovery_info["vid"]
         pid = discovery_info["pid"]
         serial_number = discovery_info["serial_number"]
-        device_path = discovery_info["device"]
+        self._device_path = discovery_info["device"]
         await self.async_set_unique_id(f"{vid}_{pid}_{serial_number}")
         self._abort_if_unique_id_configured(
             updates={
-                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
+                CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
             }
         )
+        auto_detected_data = await detect_radios(self._device_path)
+        if auto_detected_data is None:
+            return self.async_abort("not_zha_device")
         self.context["title_placeholders"] = {
-            CONF_NAME: f"{vid}:{pid} at {device_path}",
+            CONF_NAME: f"{vid}:{pid} at {self._device_path}",
         }
 
-        return await self.async_step_user({CONF_DEVICE_PATH: device_path})
+        return await self.async_step_user({CONF_DEVICE_PATH: self._device_path})
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
