@@ -77,12 +77,15 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         data["host"] = self.host
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Import data."""
         # Only allow 1 instance.
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        assert user_input
         if not await async_verify_local_connection(self.hass, user_input["host"]):
             self.logger.warning(
                 "Aborting import of Almond because we're unable to connect"
