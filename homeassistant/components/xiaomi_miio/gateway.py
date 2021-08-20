@@ -141,12 +141,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         self._sub_device = sub_device
         self._entry = entry
         self._attr_unique_id = sub_device.sid
-        self._name = f"{sub_device.name} ({sub_device.sid})"
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
+        self._attr_name = f"{sub_device.name} ({sub_device.sid})"
 
     @property
     def device_info(self):

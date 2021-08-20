@@ -172,18 +172,13 @@ class XiaomiMiioRemote(RemoteEntity):
 
     def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):
         """Initialize the remote."""
-        self._name = friendly_name
+        self._attr_name = friendly_name
         self._device = device
         self._attr_unique_id = unique_id
         self._slot = slot
         self._timeout = timeout
         self._state = False
         self._commands = commands
-
-    @property
-    def name(self):
-        """Return the name of the remote."""
-        return self._name
 
     @property
     def device(self):

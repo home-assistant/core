@@ -952,7 +952,7 @@ class XiaomiGatewayLight(LightEntity):
     def __init__(self, gateway_device, gateway_name, gateway_device_id):
         """Initialize the XiaomiGatewayLight."""
         self._gateway = gateway_device
-        self._name = f"{gateway_name} Light"
+        self._attr_name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = gateway_device_id
         self._attr_available = False
@@ -967,11 +967,6 @@ class XiaomiGatewayLight(LightEntity):
         return {
             "identifiers": {(DOMAIN, self._gateway_device_id)},
         }
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
 
     @property
     def is_on(self):

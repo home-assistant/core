@@ -74,13 +74,8 @@ class XiaomiMiioEntity(Entity):
         self._mac = entry.data[CONF_MAC]
         self._device_id = entry.unique_id
         self._attr_unique_id = unique_id
-        self._name = name
+        self._attr_name = name
         self._attr_available = False
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
 
     @property
     def device_info(self):
@@ -110,12 +105,7 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
         self._device_id = entry.unique_id
         self._device_name = entry.title
         self._attr_unique_id = unique_id
-        self._name = name
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
+        self._attr_name = name
 
     @property
     def device_info(self):

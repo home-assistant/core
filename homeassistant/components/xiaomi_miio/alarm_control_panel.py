@@ -47,7 +47,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     ):
         """Initialize the entity."""
         self._gateway = gateway_device
-        self._name = gateway_name
+        self._attr_name = gateway_name
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = f"{model}-{mac_address}"
         self._icon = "mdi:shield-home"
@@ -65,11 +65,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         return {
             "identifiers": {(DOMAIN, self._gateway_device_id)},
         }
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
 
     @property
     def icon(self):
