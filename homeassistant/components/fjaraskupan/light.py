@@ -67,7 +67,7 @@ class Light(CoordinatorEntity[State], LightEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        if self._attr_is_on:
+        if self.is_on:
             await self._device.send_command(COMMAND_LIGHT_ON_OFF)
         self.coordinator.async_set_updated_data(self._device.state)
 
