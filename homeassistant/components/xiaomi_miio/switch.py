@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
-    PLATFORM_SCHEMA,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -22,7 +21,6 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_TEMPERATURE,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
 )
 from homeassistant.core import callback
@@ -94,28 +92,6 @@ GATEWAY_SWITCH_VARS = {
     "status_ch2": {KEY_CHANNEL: 2},
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(
-            [
-                "chuangmi.plug.v1",
-                "qmi.powerstrip.v1",
-                "zimi.powerstrip.v2",
-                "chuangmi.plug.m1",
-                "chuangmi.plug.m3",
-                "chuangmi.plug.v2",
-                "chuangmi.plug.v3",
-                "chuangmi.plug.hmi205",
-                "chuangmi.plug.hmi206",
-                "chuangmi.plug.hmi208",
-                "lumi.acpartner.v3",
-            ]
-        ),
-    }
-)
 
 ATTR_AUTO_DETECT = "auto_detect"
 ATTR_BUZZER = "buzzer"

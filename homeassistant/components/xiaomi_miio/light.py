@@ -19,13 +19,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
@@ -36,7 +35,6 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
-    MODELS_LIGHT,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -58,15 +56,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Philips Light"
 DATA_KEY = "light.xiaomi_miio"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(MODELS_LIGHT),
-    }
-)
 
 # The light does not accept cct values < 1
 CCT_MIN = 1

@@ -10,18 +10,11 @@ from miio.airpurifier_miot import OperationMode as AirpurifierMiotOperationMode
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    PLATFORM_SCHEMA,
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.percentage import (
@@ -52,7 +45,6 @@ from .const import (
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
-    MODELS_FAN,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
@@ -68,16 +60,6 @@ DEFAULT_NAME = "Xiaomi Miio Device"
 DATA_KEY = "fan.xiaomi_miio"
 
 CONF_MODEL = "model"
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(MODELS_FAN),
-    }
-)
 
 ATTR_MODEL = "model"
 

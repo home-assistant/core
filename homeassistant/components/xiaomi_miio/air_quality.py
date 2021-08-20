@@ -2,11 +2,9 @@
 import logging
 
 from miio import AirQualityMonitor, AirQualityMonitorCGDN1, DeviceException
-import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.air_quality import AirQualityEntity
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 
 from .const import (
     CONF_DEVICE,
@@ -27,14 +25,6 @@ ATTR_CO2E = "carbon_dioxide_equivalent"
 ATTR_TVOC = "total_volatile_organic_compounds"
 ATTR_TEMP = "temperature"
 ATTR_HUM = "humidity"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 PROP_TO_ATTR = {
     "carbon_dioxide_equivalent": ATTR_CO2E,

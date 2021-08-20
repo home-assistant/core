@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
-    PLATFORM_SCHEMA,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -26,7 +25,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
@@ -46,15 +45,6 @@ from .device import XiaomiMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Vacuum cleaner"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"

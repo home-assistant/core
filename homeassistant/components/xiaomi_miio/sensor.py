@@ -14,10 +14,8 @@ from miio.gateway.gateway import (
     GATEWAY_MODEL_EU,
     GatewayException,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
@@ -29,7 +27,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_GAS,
@@ -46,7 +43,6 @@ from homeassistant.const import (
     TIME_HOURS,
     VOLUME_CUBIC_METERS,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_DEVICE,
@@ -76,14 +72,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Sensor"
 UNIT_LUMEN = "lm"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 ATTR_ACTUAL_SPEED = "actual_speed"
 ATTR_AIR_QUALITY = "air_quality"
