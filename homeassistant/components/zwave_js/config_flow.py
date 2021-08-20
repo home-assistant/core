@@ -333,6 +333,8 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
 
         vid = discovery_info["vid"]
         pid = discovery_info["pid"]
@@ -350,6 +352,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_zwave_device")
 
+        addon_info = await self._async_get_addon_info()
+        if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.NOT_RUNNING):
+            return self.async_abort(reason="already_configured")
+
         await self.async_set_unique_id(
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
@@ -365,7 +371,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             pid,
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
-        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
+        if addon_info.state == AddonState.NOT_INSTALLED:
+            return await self.async_step_install_addon()
+
+        return await self.async_step_configure_addon()
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -451,7 +460,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         if addon_info.state == AddonState.RUNNING:
             addon_config = addon_info.options
-            self.usb_path = addon_config[CONF_ADDON_DEVICE] or self.usb_path
+            self.usb_path = addon_config[CONF_ADDON_DEVICE]
             self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
             return await self.async_step_finish_addon_setup()
 
@@ -506,7 +515,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id:
+        if not self.unique_id or self.context["source"] == config_entries.SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
