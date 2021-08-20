@@ -333,7 +333,7 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
 
 
 def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
-    """Return a generated test integration with a usb matcher."""
+    """Return a generated test integration with a dhcp matcher."""
     return loader.Integration(
         hass,
         f"homeassistant.components.{name}",
