@@ -333,8 +333,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
-        if self._async_in_progress() or self._async_current_entries():
+        if self._async_current_entries():
             return self.async_abort(reason="already_configured")
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
 
         vid = discovery_info["vid"]
         pid = discovery_info["pid"]
@@ -433,7 +435,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Z-Wave JS add-on.
         """
         if self._async_in_progress():
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_in_progress")
 
         self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
         try:
