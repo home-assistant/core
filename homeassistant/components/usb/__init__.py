@@ -138,10 +138,12 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     return True
 
 
-def _usb_device_tuple(usb_device: USBDevice) -> tuple[str, str, str, str]:
+def _usb_device_tuple(usb_device: USBDevice) -> tuple[str, str, str, str, str, str]:
     return (
-        usb_device["device"],
-        usb_device["vid"],
-        usb_device["pid"],
-        usb_device["serial_number"],
+        str(usb_device["device"]),
+        str(usb_device["vid"]),
+        str(usb_device["pid"]),
+        str(usb_device["serial_number"]),
+        str(usb_device["manufacturer"]),
+        str(usb_device["description"]),
     )

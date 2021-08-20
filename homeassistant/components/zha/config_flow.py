@@ -28,10 +28,16 @@ SUPPORTED_PORT_SETTINGS = (
 
 
 def _format_port_human_readable(
-    device: str, serial_number: str, manufacturer: str, vid: str, pid: str
+    device: str,
+    serial_number: str,
+    manufacturer: str,
+    description: str,
+    vid: str,
+    pid: str,
 ) -> str:
     return (
         f"{device}, s/n: {serial_number or 'n/a'}"
+        + (f" - {description}[:26]" if description else "")
         + (f" - {manufacturer}" if manufacturer else "")
         + (f" - {vid}:{pid}" if vid else "")
     )
@@ -57,7 +63,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         device_choices = {
             p.device: _format_port_human_readable(
-                p.device, p.serial_number, p.manufacturer, p.vid, p.pid
+                p.device, p.serial_number, p.manufacturer, p.description, p.vid, p.pid
             )
             for p in ports
         }
@@ -111,7 +117,11 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         pid = discovery_info["pid"]
         serial_number = discovery_info["serial_number"]
         device = discovery_info["device"]
-        await self.async_set_unique_id(f"{vid}:{pid}_{serial_number}")
+        manufacturer = discovery_info["manufacturer"]
+        description = discovery_info["description"]
+        await self.async_set_unique_id(
+            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        )
         self._abort_if_unique_id_configured(
             updates={
                 CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
@@ -134,9 +144,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_zha_device")
         self._device_path = dev_path
         self._title = _format_port_human_readable(
-            self._device_path,
+            device,
             serial_number,
-            discovery_info["manufacturer"],
+            manufacturer,
+            description,
             vid,
             pid,
         )
