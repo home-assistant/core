@@ -463,7 +463,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._available = None
+        self._attr_available = None
         self._state = None
         self._state_attrs = {
             ATTR_POWER: None,
@@ -498,7 +498,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
+            self._attr_available = True
             self._state = state.aqi
             self._state_attrs.update(
                 {
@@ -515,7 +515,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
 
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -546,7 +546,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         self._attr_device_info = {"identifiers": {(DOMAIN, gateway_device_id)}}
         self._gateway = gateway_device
         self.entity_description = description
-        self._available = False
+        self._attr_available = False
         self._state = None
 
     @property
@@ -565,10 +565,10 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
             self._state = await self.hass.async_add_executor_job(
                 self._gateway.get_illumination
             )
-            self._available = True
+            self._attr_available = True
         except GatewayException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway illuminance state: %s", ex
                 )

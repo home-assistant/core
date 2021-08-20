@@ -54,7 +54,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:cloud"
-        self._available = None
+        self._attr_available = None
         self._air_quality_index = None
         self._carbon_dioxide = None
         self._carbon_dioxide_equivalent = None
@@ -73,9 +73,9 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
             self._total_volatile_organic_compounds = round(state.tvoc, 3)
             self._temperature = round(state.temperature, 2)
             self._humidity = round(state.humidity, 2)
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
-            self._available = False
+            self._attr_available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
@@ -149,10 +149,10 @@ class AirMonitorS1(AirMonitorB1):
             self._total_volatile_organic_compounds = state.tvoc
             self._temperature = state.temperature
             self._humidity = state.humidity
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -165,10 +165,10 @@ class AirMonitorV1(AirMonitorB1):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
             self._air_quality_index = state.aqi
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
@@ -185,7 +185,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:cloud"
-        self._available = None
+        self._attr_available = None
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
@@ -198,9 +198,9 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
             self._carbon_dioxide = state.co2
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._particulate_matter_10 = round(state.pm10, 1)
-            self._available = True
+            self._attr_available = True
         except DeviceException as ex:
-            self._available = False
+            self._attr_available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property

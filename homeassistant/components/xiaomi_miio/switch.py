@@ -644,7 +644,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:power-socket"
-        self._available = False
+        self._attr_available = False
         self._state = None
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
@@ -687,7 +687,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
-                self._available = False
+                self._attr_available = False
 
             return False
 
@@ -720,13 +720,13 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
+            self._attr_available = True
             self._state = state.is_on
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_wifi_led_on(self):
@@ -793,7 +793,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
+            self._attr_available = True
             self._state = state.is_on
             self._state_attrs.update(
                 {ATTR_TEMPERATURE: state.temperature, ATTR_LOAD_POWER: state.load_power}
@@ -813,7 +813,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_power_mode(self, mode: str):
@@ -888,7 +888,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
+            self._attr_available = True
             if self._channel_usb:
                 self._state = state.usb_power
             else:
@@ -904,7 +904,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -948,11 +948,11 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._available = True
+            self._attr_available = True
             self._state = state.power_socket == "on"
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)

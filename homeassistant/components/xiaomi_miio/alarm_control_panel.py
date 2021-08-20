@@ -51,7 +51,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._gateway_device_id = gateway_device_id
         self._unique_id = f"{model}-{mac_address}"
         self._icon = "mdi:shield-home"
-        self._available = None
+        self._attr_available = None
         self._state = None
 
     @property
@@ -124,14 +124,14 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
             state = await self.hass.async_add_executor_job(self._gateway.alarm.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
 
-        self._available = True
+        self._attr_available = True
 
         if state == XIAOMI_STATE_ARMED_VALUE:
             self._state = STATE_ALARM_ARMED_AWAY

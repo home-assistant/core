@@ -240,7 +240,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         super().__init__(name, device, entry, unique_id)
 
         self.vacuum_state = None
-        self._available = False
+        self._attr_available = False
 
         self.consumable_state = None
         self.clean_history = None
@@ -499,10 +499,10 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
             self.last_clean = self._device.last_clean_details()
             self.dnd_state = self._device.dnd_status()
 
-            self._available = True
+            self._attr_available = True
         except (OSError, DeviceException) as exc:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
         # Fetch timers separately, see #38285

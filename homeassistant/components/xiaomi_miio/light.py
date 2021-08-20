@@ -258,7 +258,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._brightness = None
-        self._available = False
+        self._attr_available = False
         self._state = None
         self._state_attrs = {}
 
@@ -300,7 +300,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
-                self._available = False
+                self._attr_available = False
 
             return False
 
@@ -333,13 +333,13 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -359,13 +359,13 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -517,13 +517,13 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -576,13 +576,13 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -622,13 +622,13 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -765,13 +765,13 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.ambient
         self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
@@ -921,13 +921,13 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
-        self._available = True
+        self._attr_available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
@@ -960,7 +960,7 @@ class XiaomiGatewayLight(LightEntity):
         self._name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
         self._unique_id = gateway_device_id
-        self._available = False
+        self._attr_available = False
         self._is_on = None
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
@@ -1037,13 +1037,13 @@ class XiaomiGatewayLight(LightEntity):
             )
         except GatewayException as ex:
             if self._available:
-                self._available = False
+                self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway light state: %s", ex
                 )
             return
 
-        self._available = True
+        self._attr_available = True
         self._is_on = state_dict["is_on"]
 
         if self._is_on:

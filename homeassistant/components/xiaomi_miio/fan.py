@@ -312,7 +312,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Initialize the generic Xiaomi device."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._available = False
+        self._attr_available = False
         self._available_attributes = {}
         self._state = None
         self._mode = None
@@ -379,7 +379,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._available = True
+        self._attr_available = True
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {
