@@ -13,8 +13,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_usb
 
-from .const import DOMAIN, FLOW_DISPATCHER, SEEN
+from .const import DOMAIN, FLOW_DISPATCHER, SEEN, USB
 from .flow import FlowDispatcher, USBFlow
 from .models import USBDevice
 
@@ -43,13 +44,17 @@ def _async_process_discovered_usb_device(
     if device_tuple in seen:
         return
     seen.add(device_tuple)
-    flow_dispatcher = domain_data[FLOW_DISPATCHER]
-    flow: USBFlow = {
-        "domain": DOMAIN,
-        "context": {"source": config_entries.SOURCE_USB},
-        "data": dict(device),
-    }
-    flow_dispatcher.create(flow)
+    for matcher in domain_data[USB]:
+        if "vid" in matcher and device["vid"] != matcher["vid"]:
+            continue
+        if "pid" in matcher and device["pid"] != matcher["pid"]:
+            continue
+        flow: USBFlow = {
+            "domain": matcher["domain"],
+            "context": {"source": config_entries.SOURCE_USB},
+            "data": dict(device),
+        }
+        domain_data[FLOW_DISPATCHER].create(flow)
 
 
 @callback
@@ -68,7 +73,8 @@ def scan_serial(hass: HomeAssistant) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the USB Discovery integration."""
     flow_dispatcher = FlowDispatcher(hass)
-    hass.data[DOMAIN] = {SEEN: set(), FLOW_DISPATCHER: flow_dispatcher}
+    usb = await async_get_usb(hass)
+    hass.data[DOMAIN] = {SEEN: set(), FLOW_DISPATCHER: flow_dispatcher, USB: usb}
 
     if not await _async_start_monitor(hass):
         await _async_start_scanner(hass)
