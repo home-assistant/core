@@ -17,7 +17,7 @@ USB = {}
 """.strip()
 
 
-def generate_and_validate(integrations: list[dict[str, str]]):
+def generate_and_validate(integrations: list[dict[str, str]]) -> str:
     """Validate and generate usb data."""
     match_list = []
 
