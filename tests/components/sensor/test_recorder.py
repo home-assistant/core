@@ -911,11 +911,7 @@ def test_compile_hourly_statistics_changing_units_2(
 
     recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(minutes=30))
     wait_recording_done(hass)
-    assert (
-        f"The unit of sensor.test1 is changing, got {{'{unit}', 'cats'}}" in caplog.text
-        or f"The unit of sensor.test1 is changing, got {{'cats', '{unit}'}}"
-        in caplog.text
-    )
+    assert "The unit of sensor.test1 is changing" in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": "cats"}

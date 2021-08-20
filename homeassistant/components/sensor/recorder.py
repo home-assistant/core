@@ -208,7 +208,7 @@ def _normalize_states(
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s is changing, got %s. Generation of long term "
+                        "The unit of %s is changing, got %s, generation of long term "
                         "statistics will be suppressed unless the unit is stable",
                         entity_id,
                         all_units,
