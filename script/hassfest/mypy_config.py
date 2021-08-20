@@ -16,7 +16,6 @@ from .model import Config, Integration
 IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.adguard.*",
     "homeassistant.components.almond.*",
-    "homeassistant.components.analytics.*",
     "homeassistant.components.atag.*",
     "homeassistant.components.awair.*",
     "homeassistant.components.azure_event_hub.*",
