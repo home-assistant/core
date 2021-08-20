@@ -7,6 +7,9 @@
         "data": { "path": "Serial Device Path" },
         "description": "Select serial port for Zigbee radio"
       },
+      "confirm": {
+        "description": "Do you want to setup {name}?"
+      },
       "pick_radio": {
         "data": { "radio_type": "Radio Type" },
         "title": "Radio Type",
