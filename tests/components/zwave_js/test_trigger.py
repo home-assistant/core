@@ -20,10 +20,8 @@ from .common import SCHLAGE_BE469_LOCK_ENTITY
 from tests.common import async_capture_events
 
 
-async def test_if_notification_notification_fires(
-    hass, client, lock_schlage_be469, integration
-):
-    """Test for event.notification.notification trigger firing."""
+async def test_zwave_js_value_updated(hass, client, lock_schlage_be469, integration):
+    """Test for zwave_js.value_updated automation trigger."""
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
     dev_reg = async_get_dev_reg(hass)

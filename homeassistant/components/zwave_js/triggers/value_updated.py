@@ -36,7 +36,9 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_TYPE = f"{DOMAIN}.value_updated"
+# Platform type should be <DOMAIN>.<SUBMODULE_NAME>
+PLATFORM_TYPE = f"{DOMAIN}.{__name__.split('.')[-1]}"
+
 ATTR_FROM = "from"
 ATTR_TO = "to"
 
