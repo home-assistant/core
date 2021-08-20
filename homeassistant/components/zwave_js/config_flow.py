@@ -333,7 +333,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
-        if self._async_current_entries():
+        if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
         vid = discovery_info["vid"]
@@ -419,6 +419,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the Z-Wave JS add-on.
         """
+        if self._async_in_progress():
+            return self.async_abort(reason="already_configured")
+
         self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
         try:
             version_info = await async_get_version_info(self.hass, self.ws_address)
@@ -540,6 +543,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> FlowResult:
         """Return a config entry for the flow."""
+        # Abort any other flows that may be in progress
+        for progress in self._async_in_progress():
+            self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
         return self.async_create_entry(
             title=TITLE,
             data={
