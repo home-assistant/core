@@ -112,12 +112,16 @@ async def async_attach_trigger(
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
-        prev_value_raw = event["args"]["prevValue"]
-        prev_value = value.metadata.states.get(str(prev_value_raw), prev_value_raw)
-        curr_value_raw = curr_value = event["args"]["newValue"]
-        curr_value = value.metadata.states.get(str(curr_value_raw), curr_value_raw)
         if event_value != value:
             return
+
+        # Get previous value and its state value if it exists
+        prev_value_raw = event["args"]["prevValue"]
+        prev_value = value.metadata.states.get(str(prev_value_raw), prev_value_raw)
+        # Get current value and its state value if it exists
+        curr_value_raw = event["args"]["newValue"]
+        curr_value = value.metadata.states.get(str(curr_value_raw), curr_value_raw)
+        # Check from and to values against previous and current values respectively
         for value_to_eval, raw_value_to_eval, match in (
             (prev_value, prev_value_raw, from_value),
             (curr_value, curr_value_raw, to_value),
