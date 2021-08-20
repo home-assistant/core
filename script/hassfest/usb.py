@@ -38,7 +38,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
     return BASE.format(json.dumps(match_list, indent=4))
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate usb file."""
     usb_path = config.root / "homeassistant/generated/usb.py"
     config.cache["usb"] = content = generate_and_validate(integrations)
