@@ -46,6 +46,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow instance."""
         self._device_path = None
         self._radio_type = None
+        self._auto_detected_data = None
+        self._title = None
 
     async def async_step_user(self, user_input=None):
         """Handle a zha config flow start."""
@@ -53,31 +55,31 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        all_ports = {
+        device_choices = {
             p.device: _format_port_human_readable(
                 p.device, p.serial_number, p.manufacturer, p.vid, p.pid
             )
             for p in ports
         }
+        device_to_port = {p.device: p for p in ports}
 
-        if not all_ports:
+        if not device_choices:
             return await self.async_step_pick_radio()
 
-        all_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
+        device_choices[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_pick_radio()
 
-            port = all_ports[user_selection]
+            port = device_to_port[user_selection]
             dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
             auto_detected_data = await detect_radios(dev_path)
             if auto_detected_data is not None:
-                title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
-                title += f" - {port.manufacturer}" if port.manufacturer else ""
+                title = device_choices[user_selection]
                 return self.async_create_entry(
                     title=title,
                     data=auto_detected_data,
@@ -87,7 +89,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._device_path = dev_path
             return await self.async_step_pick_radio()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(all_ports)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(device_choices)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_pick_radio(self, user_input=None):
@@ -108,7 +110,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         vid = discovery_info["vid"]
         pid = discovery_info["pid"]
         serial_number = discovery_info["serial_number"]
-        self._device_path = discovery_info["device"]
+        device = discovery_info["device"]
         await self.async_set_unique_id(f"{vid}:{pid}_{serial_number}")
         self._abort_if_unique_id_configured(
             updates={
@@ -126,20 +128,35 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if flow["handler"] == "deconz":
                 return self.async_abort("not_zha_device")
 
-        auto_detected_data = await detect_radios(self._device_path)
-        if auto_detected_data is None:
+        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
+        self._auto_detected_data = await detect_radios(dev_path)
+        if self._auto_detected_data is None:
             return self.async_abort("not_zha_device")
-        self.context["title_placeholders"] = {
-            CONF_NAME: _format_port_human_readable(
-                self._device_path,
-                serial_number,
-                discovery_info["manufacturer"],
-                vid,
-                pid,
-            )
-        }
+        self._device_path = dev_path
+        self._title = _format_port_human_readable(
+            self._device_path,
+            serial_number,
+            discovery_info["manufacturer"],
+            vid,
+            pid,
+        )
+        self._confirm_only()
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_confirm()
 
-        return await self.async_step_user({CONF_DEVICE_PATH: self._device_path})
+    async def async_step_confirm(self, user_input=None):
+        """Confirm a discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._title,
+                data=self._auto_detected_data,
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placholders={CONF_NAME: self._title},
+            data_schema=vol.Schema({}),
+        )
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
