@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import inspect
 import logging
 from typing import Any, Final, cast, final
 
@@ -45,7 +46,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import BaseEntityDescription, Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -125,12 +126,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @dataclass
-class SensorEntityDescription(BaseEntityDescription):
+class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
-    state_class: str | None = None
     last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
+    state_class: str | None = None
+    unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
+
+    def __post_init__(self) -> None:
+        """Post initialisation processing."""
+        if self.unit_of_measurement:
+            caller = inspect.stack()[2]  # type: ignore[unreachable]
+            module = inspect.getmodule(caller[0])
+            report_issue = self._suggest_report_issue(module)
+            _LOGGER.warning(
+                "%s is setting 'unit_of_measurement' on an instance of "
+                "SensorEntityDescription, this is not valid and will be unsupported "
+                "from Home Assistant 2021.11. Please %s",
+                module.__name__,
+                report_issue,
+            )
+            self.native_unit_of_measurement = self.unit_of_measurement
+
+    def _suggest_report_issue(self, module: Any) -> str:
+        """Suggest to report an issue."""
+        if "custom_components" in module.__file__:
+            report_issue = "report it to the custom component author."
+        else:
+            report_issue = (
+                "create a bug report at "
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+            )
+
+        return report_issue
 
 
 class SensorEntity(Entity):
