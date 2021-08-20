@@ -1,4 +1,5 @@
 """Schema migration helpers."""
+from datetime import timedelta
 import logging
 
 import sqlalchemy
@@ -11,6 +12,8 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
+import homeassistant.util.dt as dt_util
+
 from .models import (
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -18,6 +21,7 @@ from .models import (
     SchemaChanges,
     Statistics,
     StatisticsMeta,
+    StatisticsRuns,
 )
 from .util import session_scope
 
@@ -475,6 +479,13 @@ def _apply_update(engine, session, new_version, old_version):
 
         StatisticsMeta.__table__.create(engine)
         Statistics.__table__.create(engine)
+    elif new_version == 19:
+        # This adds the statistic runs table, insert a fake run to prevent duplicating
+        # statistics.
+        now = dt_util.utcnow()
+        start = now.replace(minute=0, second=0, microsecond=0)
+        start = start - timedelta(hours=1)
+        session.add(StatisticsRuns(start=start))
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -494,6 +505,10 @@ def _inspect_schema_version(engine, session):
     for index in indexes:
         if index["column_names"] == ["time_fired"]:
             # Schema addition from version 1 detected. New DB.
+            now = dt_util.utcnow()
+            start = now.replace(minute=0, second=0, microsecond=0)
+            start = start - timedelta(hours=1)
+            session.add(StatisticsRuns(start=start))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
             return SCHEMA_VERSION
 
