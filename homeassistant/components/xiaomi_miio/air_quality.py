@@ -54,7 +54,6 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._attr_icon = "mdi:cloud"
-        self._attr_available = None
         self._air_quality_index = None
         self._carbon_dioxide = None
         self._carbon_dioxide_equivalent = None
@@ -175,7 +174,6 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         super().__init__(name, device, entry, unique_id)
 
         self._attr_icon = "mdi:cloud"
-        self._attr_available = None
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None

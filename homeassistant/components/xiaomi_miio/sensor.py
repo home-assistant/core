@@ -463,7 +463,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._attr_available = None
         self._state = None
         self._state_attrs = {
             ATTR_POWER: None,

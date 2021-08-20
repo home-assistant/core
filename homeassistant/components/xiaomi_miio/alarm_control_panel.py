@@ -51,7 +51,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = f"{model}-{mac_address}"
         self._attr_icon = "mdi:shield-home"
-        self._attr_available = None
         self._state = None
 
     @property
