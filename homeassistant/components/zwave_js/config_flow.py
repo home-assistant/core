@@ -371,9 +371,22 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             pid,
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_usb_confirm()
+
+    async def async_step_usb_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle USB Discovery confirmation."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="usb_confirm",
+                description_placeholders={CONF_NAME: self._title},
+                data_schema=vol.Schema({}),
+            )
+
+        addon_info = await self._async_get_addon_info()
         if addon_info.state == AddonState.NOT_INSTALLED:
             return await self.async_step_install_addon()
-
         return await self.async_step_configure_addon()
 
     async def async_step_manual(
@@ -456,8 +469,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self.use_addon = True
-        if self._title:
-            self.context["title_placeholders"] = {CONF_NAME: self._title}
 
         addon_info = await self._async_get_addon_info()
 

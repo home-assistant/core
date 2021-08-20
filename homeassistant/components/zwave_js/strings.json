@@ -7,6 +7,9 @@
           "url": "[%key:common::config_flow::data::url%]"
         }
       },
+      "usb_confirm": {
+        "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
+      },
       "on_supervisor": {
         "title": "Select connection method",
         "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
