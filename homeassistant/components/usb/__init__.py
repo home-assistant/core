@@ -135,4 +135,4 @@ class USBDiscovery:
 
     def scan_serial(self) -> None:
         """Scan serial ports."""
-        self.hass.loop.call_soon_threadsafe(self._async_process_ports, comports())
+        self.hass.add_job(self._async_process_ports, comports())
