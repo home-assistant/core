@@ -6,5 +6,8 @@
   "requirements": ["zwave-js-server-python==0.28.0"],
   "codeowners": ["@home-assistant/z-wave"],
   "dependencies": ["http", "websocket_api"],
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "usb": [
+   {"vid":"0658","pid":"0200"}
+  ]
 }

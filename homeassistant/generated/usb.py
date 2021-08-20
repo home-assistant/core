@@ -5,4 +5,10 @@ To update, run python3 -m script.hassfest
 
 # fmt: off
 
-USB = []  # type: ignore
+USB = [
+    {
+        "domain": "zwave_js",
+        "vid": "0658",
+        "pid": "0200"
+    }
+]
