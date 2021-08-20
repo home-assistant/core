@@ -104,7 +104,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         pid = discovery_info["pid"]
         serial_number = discovery_info["serial_number"]
         self._device_path = discovery_info["device"]
-        await self.async_set_unique_id(f"{vid}_{pid}_{serial_number}")
+        await self.async_set_unique_id(f"{vid}:{pid}_{serial_number}")
         self._abort_if_unique_id_configured(
             updates={
                 CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
