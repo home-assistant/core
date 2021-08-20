@@ -27,6 +27,16 @@ SUPPORTED_PORT_SETTINGS = (
 )
 
 
+def _format_port_human_readable(
+    device: str, serial_number: str, manufacturer: str, vid: str, pid: str
+) -> str:
+    return (
+        f"{device}, s/n: {serial_number or 'n/a'}"
+        + (f" - {manufacturer}" if manufacturer else "")
+        + (f" - {vid}:{pid}" if vid else "")
+    )
+
+
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -43,11 +53,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        all_ports = {
-            p.device: f"{p}, s/n: {p.serial_number or 'n/a'}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
-        }
+        all_ports = {p.device: _format_port_human_readable(p) for p in ports}
 
         if not all_ports:
             return await self.async_step_pick_radio()
@@ -112,7 +118,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if auto_detected_data is None:
             return self.async_abort("not_zha_device")
         self.context["title_placeholders"] = {
-            CONF_NAME: f"{vid}:{pid} at {self._device_path}",
+            CONF_NAME: _format_port_human_readable(
+                self._device_path,
+                serial_number,
+                discovery_info["manufacturer"],
+                vid,
+                pid,
+            )
         }
 
         return await self.async_step_user({CONF_DEVICE_PATH: self._device_path})
