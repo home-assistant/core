@@ -272,6 +272,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatDisChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_grid_discharge_today",
@@ -293,6 +294,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eopDischrTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_grid_charged_today",
@@ -307,6 +309,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_solar_production",
@@ -362,6 +365,7 @@ STORAGE_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eToUserTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="storage_load_consumption",
