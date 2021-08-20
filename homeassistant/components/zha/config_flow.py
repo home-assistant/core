@@ -112,8 +112,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: f"{vid}:{pid} at {device_path}",
         }
 
-        self._device_path = device_path
-        return await self.async_step_port_config()
+        return await self.async_step_user({CONF_DEVICE_PATH: device_path})
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
