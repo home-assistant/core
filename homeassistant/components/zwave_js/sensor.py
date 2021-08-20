@@ -1,30 +1,45 @@
 """Representation of Z-Wave sensors."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import (
+    RESET_METER_OPTION_TARGET_VALUE,
+    RESET_METER_OPTION_TYPE,
+    CommandClass,
+    ConfigurationValueType,
+)
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
+from zwave_js_server.util.command_class import get_meter_type
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -34,12 +49,126 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_METER_TYPE, ATTR_VALUE, DATA_CLIENT, DOMAIN, SERVICE_RESET_METER
+from .const import (
+    ATTR_METER_TYPE,
+    ATTR_METER_TYPE_NAME,
+    ATTR_VALUE,
+    DATA_CLIENT,
+    DOMAIN,
+    ENTITY_DESC_KEY_BATTERY,
+    ENTITY_DESC_KEY_CO,
+    ENTITY_DESC_KEY_CO2,
+    ENTITY_DESC_KEY_CURRENT,
+    ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
+    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+    ENTITY_DESC_KEY_HUMIDITY,
+    ENTITY_DESC_KEY_ILLUMINANCE,
+    ENTITY_DESC_KEY_POWER,
+    ENTITY_DESC_KEY_POWER_FACTOR,
+    ENTITY_DESC_KEY_PRESSURE,
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+    ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+    ENTITY_DESC_KEY_TEMPERATURE,
+    ENTITY_DESC_KEY_TIMESTAMP,
+    ENTITY_DESC_KEY_VOLTAGE,
+    SERVICE_RESET_METER,
+)
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_id
 
 LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class ZwaveSensorEntityDescription(SensorEntityDescription):
+    """Base description of a Zwave Sensor entity."""
+
+    info: ZwaveDiscoveryInfo | None = None
+
+
+ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
+    ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_BATTERY,
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_CURRENT: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_CURRENT,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_VOLTAGE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_VOLTAGE,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ENERGY_MEASUREMENT: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    ENTITY_DESC_KEY_POWER: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_POWER,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_POWER_FACTOR: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_POWER_FACTOR,
+        device_class=DEVICE_CLASS_POWER_FACTOR,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_CO: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_CO,
+        device_class=DEVICE_CLASS_CO,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_CO2: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_CO2,
+        device_class=DEVICE_CLASS_CO2,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_HUMIDITY: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_HUMIDITY,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_ILLUMINANCE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ILLUMINANCE,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_PRESSURE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_PRESSURE,
+        device_class=DEVICE_CLASS_PRESSURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_SIGNAL_STRENGTH: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_SIGNAL_STRENGTH,
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TEMPERATURE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TIMESTAMP: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TIMESTAMP,
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TARGET_TEMPERATURE: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TARGET_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=None,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -55,16 +184,25 @@ async def async_setup_entry(
         """Add Z-Wave Sensor."""
         entities: list[ZWaveBaseEntity] = []
 
+        entity_description = ENTITY_DESCRIPTION_KEY_MAP.get(
+            info.platform_data
+        ) or ZwaveSensorEntityDescription("base_sensor")
+        entity_description.info = info
+
         if info.platform_hint == "string_sensor":
-            entities.append(ZWaveStringSensor(config_entry, client, info))
+            entities.append(ZWaveStringSensor(config_entry, client, entity_description))
         elif info.platform_hint == "numeric_sensor":
-            entities.append(ZWaveNumericSensor(config_entry, client, info))
+            entities.append(
+                ZWaveNumericSensor(config_entry, client, entity_description)
+            )
         elif info.platform_hint == "list_sensor":
-            entities.append(ZWaveListSensor(config_entry, client, info))
+            entities.append(ZWaveListSensor(config_entry, client, entity_description))
         elif info.platform_hint == "config_parameter":
-            entities.append(ZWaveConfigParameterSensor(config_entry, client, info))
+            entities.append(
+                ZWaveConfigParameterSensor(config_entry, client, entity_description)
+            )
         elif info.platform_hint == "meter":
-            entities.append(ZWaveMeterSensor(config_entry, client, info))
+            entities.append(ZWaveMeterSensor(config_entry, client, entity_description))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -114,62 +252,16 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         self,
         config_entry: ConfigEntry,
         client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
+        entity_description: ZwaveSensorEntityDescription,
     ) -> None:
         """Initialize a ZWaveSensorBase entity."""
-        super().__init__(config_entry, client, info)
+        assert entity_description.info
+        super().__init__(config_entry, client, entity_description.info)
+        self.entity_description = entity_description
 
         # Entity class attributes
+        self._attr_force_update = True
         self._attr_name = self.generate_name(include_value_name=True)
-        self._attr_device_class = self._get_device_class()
-        self._attr_state_class = self._get_state_class()
-
-    def _get_device_class(self) -> str | None:
-        """
-        Get the device class of the sensor.
-
-        This should be run once during initialization so we don't have to calculate
-        this value on every state update.
-        """
-        if self.info.primary_value.command_class == CommandClass.BATTERY:
-            return DEVICE_CLASS_BATTERY
-        if isinstance(self.info.primary_value.property_, str):
-            property_lower = self.info.primary_value.property_.lower()
-            if "humidity" in property_lower:
-                return DEVICE_CLASS_HUMIDITY
-            if "temperature" in property_lower:
-                return DEVICE_CLASS_TEMPERATURE
-        if self.info.primary_value.metadata.unit == "A":
-            return DEVICE_CLASS_CURRENT
-        if self.info.primary_value.metadata.unit == "W":
-            return DEVICE_CLASS_POWER
-        if self.info.primary_value.metadata.unit == "kWh":
-            return DEVICE_CLASS_ENERGY
-        if self.info.primary_value.metadata.unit == "V":
-            return DEVICE_CLASS_VOLTAGE
-        if self.info.primary_value.metadata.unit == "Lux":
-            return DEVICE_CLASS_ILLUMINANCE
-        return None
-
-    def _get_state_class(self) -> str | None:
-        """
-        Get the state class of the sensor.
-
-        This should be run once during initialization so we don't have to calculate
-        this value on every state update.
-        """
-        if self.info.primary_value.command_class == CommandClass.BATTERY:
-            return STATE_CLASS_MEASUREMENT
-        if isinstance(self.info.primary_value.property_, str):
-            property_lower = self.info.primary_value.property_.lower()
-            if "humidity" in property_lower or "temperature" in property_lower:
-                return STATE_CLASS_MEASUREMENT
-        return None
-
-    @property
-    def force_update(self) -> bool:
-        """Force updates."""
-        return True
 
 
 class ZWaveStringSensor(ZwaveSensorBase):
@@ -216,20 +308,16 @@ class ZWaveNumericSensor(ZwaveSensorBase):
 class ZWaveMeterSensor(ZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
-    ) -> None:
-        """Initialize a ZWaveNumericSensor entity."""
-        super().__init__(config_entry, client, info)
-
-        # Entity class attributes
-        if self.device_class == DEVICE_CLASS_ENERGY:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-        else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+    @property
+    def extra_state_attributes(self) -> Mapping[str, int | str] | None:
+        """Return extra state attributes."""
+        meter_type = get_meter_type(self.info.primary_value)
+        if meter_type:
+            return {
+                ATTR_METER_TYPE: meter_type.value,
+                ATTR_METER_TYPE_NAME: meter_type.name,
+            }
+        return None
 
     async def async_reset_meter(
         self, meter_type: int | None = None, value: int | None = None
@@ -239,9 +327,9 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         primary_value = self.info.primary_value
         options = {}
         if meter_type is not None:
-            options["type"] = meter_type
+            options[RESET_METER_OPTION_TYPE] = meter_type
         if value is not None:
-            options["targetValue"] = value
+            options[RESET_METER_OPTION_TARGET_VALUE] = value
         args = [options] if options else []
         await node.endpoints[primary_value.endpoint].async_invoke_cc_api(
             CommandClass.METER, "reset", *args, wait_for_result=False
@@ -261,10 +349,10 @@ class ZWaveListSensor(ZwaveSensorBase):
         self,
         config_entry: ConfigEntry,
         client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
+        entity_description: ZwaveSensorEntityDescription,
     ) -> None:
         """Initialize a ZWaveListSensor entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, client, entity_description)
 
         # Entity class attributes
         self._attr_name = self.generate_name(
@@ -291,7 +379,7 @@ class ZWaveListSensor(ZwaveSensorBase):
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         # add the value's int value as property for multi-value (list) items
-        return {"value": self.info.primary_value.value}
+        return {ATTR_VALUE: self.info.primary_value.value}
 
 
 class ZWaveConfigParameterSensor(ZwaveSensorBase):
@@ -301,10 +389,10 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         self,
         config_entry: ConfigEntry,
         client: ZwaveClient,
-        info: ZwaveDiscoveryInfo,
+        entity_description: ZwaveSensorEntityDescription,
     ) -> None:
         """Initialize a ZWaveConfigParameterSensor entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, client, entity_description)
         self._primary_value = cast(ConfigurationValue, self.info.primary_value)
 
         # Entity class attributes
@@ -338,7 +426,7 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         if self._primary_value.configuration_value_type == ConfigurationValueType.RANGE:
             return None
         # add the value's int value as property for multi-value (list) items
-        return {"value": self.info.primary_value.value}
+        return {ATTR_VALUE: self.info.primary_value.value}
 
 
 class ZWaveNodeStatusSensor(SensorEntity):
