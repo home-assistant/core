@@ -41,4 +41,4 @@ USB = [
         "vid": "10C4",
         "pid": "EA60"
     }
-]  # type: ignore
+]
