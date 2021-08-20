@@ -83,7 +83,7 @@ class XiaomiMiioEntity(Entity):
         device_info = {
             "identifiers": {(DOMAIN, self._device_id)},
             "manufacturer": "Xiaomi",
-            "name": self._name,
+            "name": self.name,
             "model": self._model,
         }
 
