@@ -61,7 +61,7 @@ class Light(CoordinatorEntity[State], LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.send_dim(int(kwargs[ATTR_BRIGHTNESS] * (100.0 / 255.0)))
         else:
-            if not self._attr_is_on:
+            if not self.is_on:
                 await self._device.send_command(COMMAND_LIGHT_ON_OFF)
         self.coordinator.async_set_updated_data(self._device.state)
 
