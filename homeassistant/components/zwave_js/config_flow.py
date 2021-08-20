@@ -454,7 +454,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         if addon_info.state == AddonState.RUNNING:
             addon_config = addon_info.options
-            self.usb_path = addon_config[CONF_ADDON_DEVICE]
+            self.usb_path = addon_config[CONF_ADDON_DEVICE] or self.usb_path
             self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
             return await self.async_step_finish_addon_setup()
 
