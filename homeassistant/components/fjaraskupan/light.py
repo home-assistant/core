@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -54,7 +54,6 @@ class Light(CoordinatorEntity[State], LightEntity):
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
         self._attr_name = device_info["name"]
-        self._update_from_device_data(coordinator.data)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -71,17 +70,16 @@ class Light(CoordinatorEntity[State], LightEntity):
             await self._device.send_command(COMMAND_LIGHT_ON_OFF)
         self.coordinator.async_set_updated_data(self._device.state)
 
-    def _update_from_device_data(self, data: State | None) -> None:
-        """Handle data update."""
-        if data:
-            self._attr_is_on = data.light_on
-            self._attr_brightness = int(data.dim_level * (255.0 / 100.0))
-        else:
-            self._attr_is_on = False
-            self._attr_brightness = None
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        if data := self.coordinator.data:
+            return data.light_on
+        return False
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        self._update_from_device_data(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness of this light between 0..255."""
+        if data := self.coordinator.data:
+            return int(data.dim_level * (255.0 / 100.0))
+        return None
