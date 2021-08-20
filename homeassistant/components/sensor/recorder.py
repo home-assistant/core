@@ -9,10 +9,8 @@ from typing import Callable
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -49,25 +47,18 @@ from . import ATTR_LAST_RESET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_CLASS_STATISTICS = {
+DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
     STATE_CLASS_MEASUREMENT: {
-        DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
-        DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
-        DEVICE_CLASS_POWER: {"mean", "min", "max"},
-        DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
-        DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
-        None: {"mean", "min", "max"},
         # Deprecated, support will be removed in Home Assistant 2021.11
         DEVICE_CLASS_ENERGY: {"sum"},
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
     },
-    STATE_CLASS_TOTAL_INCREASING: {
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
-        None: {"sum"},
-    },
+    STATE_CLASS_TOTAL_INCREASING: {},
+}
+DEFAULT_STATISTICS = {
+    STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
+    STATE_CLASS_TOTAL_INCREASING: {"sum"},
 }
 
 # Normalized units which will be stored in the statistics table
@@ -127,10 +118,7 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None]]:
     for state in all_sensors:
         if (state_class := state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
-        if (
-            device_class := state.attributes.get(ATTR_DEVICE_CLASS)
-        ) not in DEVICE_CLASS_STATISTICS[state_class]:
-            device_class = None
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         entity_ids.append((state.entity_id, state_class, device_class))
 
     return entity_ids
@@ -257,7 +245,10 @@ def compile_statistics(
     )
 
     for entity_id, state_class, device_class in entities:
-        wanted_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
+        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
+            wanted_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
+        else:
+            wanted_statistics = DEFAULT_STATISTICS[state_class]
 
         if entity_id not in history_list:
             continue
@@ -367,7 +358,10 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
     statistic_ids = {}
 
     for entity_id, state_class, device_class in entities:
-        provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
+        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
+            provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
+        else:
+            provided_statistics = DEFAULT_STATISTICS[state_class]
 
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
