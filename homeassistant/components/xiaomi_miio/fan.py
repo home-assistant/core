@@ -83,6 +83,7 @@ ATTR_TURBO_MODE_SUPPORTED = "turbo_mode_supported"
 ATTR_SLEEP_MODE = "sleep_mode"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
+ATTR_MOTOR_SPEED = "motor_speed"
 
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
@@ -113,7 +114,11 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT = {
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C = {ATTR_MODE: "mode"}
+
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C = {
+    ATTR_MODE: "mode",
+    ATTR_MOTOR_SPEED: "motor_speed",
+}
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
@@ -586,7 +591,6 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         "Auto": AirpurifierMiotOperationMode.Auto,
         "Silent": AirpurifierMiotOperationMode.Silent,
         "Favorite": AirpurifierMiotOperationMode.Favorite,
-        "Fan": AirpurifierMiotOperationMode.Fan,
     }
 
     def __init__(self, name, device, entry, unique_id, coordinator):
