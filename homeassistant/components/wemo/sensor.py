@@ -95,7 +95,7 @@ class InsightCurrentPower(InsightSensor):
         name="Current Power",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
     )
 
     @property
@@ -115,7 +115,7 @@ class InsightTodayEnergy(InsightSensor):
         name="Today Energy",
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     )
 
     @property
