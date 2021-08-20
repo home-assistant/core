@@ -41,7 +41,7 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
-def _normalize_ips_and_network(hosts_str: str) -> None | list[str]:
+def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
 
     normalized_hosts = []
