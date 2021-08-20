@@ -8,7 +8,7 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -99,7 +99,14 @@ async def async_setup_entry(
         for device in location.devices:
             entities.append(
                 LyricClimate(
-                    coordinator, location, device, hass.config.units.temperature_unit
+                    coordinator,
+                    ClimateEntityDescription(
+                        key=f"{device.macID}_thermostat",
+                        name=device.name,
+                    ),
+                    location,
+                    device,
+                    hass.config.units.temperature_unit,
                 )
             )
 
@@ -117,15 +124,18 @@ async def async_setup_entry(
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
     """Defines a Honeywell Lyric climate entity."""
 
+    coordinator: DataUpdateCoordinator
+    entity_description: ClimateEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
+        description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
         temperature_unit: str,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
-        self._name = device.name
         self._temperature_unit = temperature_unit
 
         # Setup supported hvac modes
@@ -150,11 +160,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             device,
             f"{device.macID}_thermostat",
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
+        self.entity_description = description
 
     @property
     def supported_features(self) -> int:
