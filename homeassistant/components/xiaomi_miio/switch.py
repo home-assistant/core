@@ -670,7 +670,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            if self._attr_available:
+            if self.available:
                 _LOGGER.error(mask_error, exc)
                 self._attr_available = False
 
@@ -710,7 +710,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -797,7 +797,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -888,7 +888,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -938,6 +938,6 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)

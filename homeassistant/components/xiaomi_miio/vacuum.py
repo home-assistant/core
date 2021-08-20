@@ -493,7 +493,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
 
             self._attr_available = True
         except (OSError, DeviceException) as exc:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.warning("Got exception while fetching the state: %s", exc)
 
@@ -502,7 +502,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
             # Do not try this if the first fetch timed out.
             # Two timeouts take longer than 10 seconds and trigger a warning.
             # See #52353
-            if self._attr_available:
+            if self.available:
                 self._timers = self._device.timer()
         except DeviceException as exc:
             _LOGGER.debug(

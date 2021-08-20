@@ -284,7 +284,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            if self._attr_available:
+            if self.available:
                 _LOGGER.error(mask_error, exc)
                 self._attr_available = False
 
@@ -318,7 +318,7 @@ class XiaomiPhilipsAbstractLight(XiaomiMiioEntity, LightEntity):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -344,7 +344,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -499,7 +499,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -558,7 +558,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -604,7 +604,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -747,7 +747,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -900,7 +900,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -992,7 +992,7 @@ class XiaomiGatewayLight(LightEntity):
                 self._gateway.light.rgb_status
             )
         except GatewayException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error(
                     "Got exception while fetching the gateway light state: %s", ex

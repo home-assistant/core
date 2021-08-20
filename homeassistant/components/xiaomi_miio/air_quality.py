@@ -140,7 +140,7 @@ class AirMonitorS1(AirMonitorB1):
             self._humidity = state.humidity
             self._attr_available = True
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
@@ -156,7 +156,7 @@ class AirMonitorV1(AirMonitorB1):
             self._air_quality_index = state.aqi
             self._attr_available = True
         except DeviceException as ex:
-            if self._attr_available:
+            if self.available:
                 self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
