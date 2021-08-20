@@ -118,7 +118,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{model} {self.unique_id}", data=user_input
+                    title=f"{model} {self.unique_id}",
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_ID: self.unique_id,
+                    },
                 )
 
         user_input = user_input or {}

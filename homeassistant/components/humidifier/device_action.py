@@ -19,6 +19,8 @@ from homeassistant.helpers.entity import get_capability, get_supported_features
 
 from . import DOMAIN, const
 
+# mypy: disallow-any-generics
+
 SET_HUMIDITY_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): "set_humidity",
@@ -40,7 +42,9 @@ ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DO
 ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)

@@ -21,7 +21,8 @@ _PLATFORM_ALIASES = {
 
 
 async def _async_get_trigger_platform(hass: HomeAssistant, config: ConfigType) -> Any:
-    platform = config[CONF_PLATFORM]
+    platform_and_sub_type = config[CONF_PLATFORM].split(".")
+    platform = platform_and_sub_type[0]
     for alias, triggers in _PLATFORM_ALIASES.items():
         if platform in triggers:
             platform = alias

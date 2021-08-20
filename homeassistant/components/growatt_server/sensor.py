@@ -92,6 +92,7 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="totalEnergy",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="total_maximum_output",
@@ -118,6 +119,7 @@ INVERTER_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         precision=1,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="inverter_voltage_input_1",
@@ -635,6 +637,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_discharge_today",
@@ -649,6 +652,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatDisChargeTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_solar_generation_today",
@@ -663,6 +667,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="epvTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_discharge_w",
@@ -706,6 +711,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="elocalLoadTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_export_to_grid_today",
@@ -720,6 +726,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="etogridTotal",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     # Values from 'mix_system_status' API call
     GrowattSensorEntityDescription(
@@ -836,6 +843,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="etouser_combined",  # This id is not present in the raw API data, it is added by the sensor
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 )
 
@@ -1020,7 +1028,9 @@ class GrowattData:
                 # Dashboard values have units e.g. "kWh" as part of their returned string, so we remove it
                 dashboard_values_for_mix = {
                     # etouser is already used by the results from 'mix_detail' so we rebrand it as 'etouser_combined'
-                    "etouser_combined": dashboard_data["etouser"].replace("kWh", "")
+                    "etouser_combined": float(
+                        dashboard_data["etouser"].replace("kWh", "")
+                    )
                 }
                 self.data = {
                     **mix_info,
