@@ -376,6 +376,13 @@ async def async_attach_trigger(
         )
 
     if trigger_platform == f"{DOMAIN}.value_updated":
+        # Try to get the value to make sure the value ID is valid
+        try:
+            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+            get_zwave_value_from_config(node, config)
+        except (ValueError, vol.Invalid) as err:
+            raise HomeAssistantError("Invalid value specified") from err
+
         zwave_js_config = {
             state.CONF_PLATFORM: trigger_platform,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],

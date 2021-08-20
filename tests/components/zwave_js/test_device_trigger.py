@@ -1317,6 +1317,22 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
             {},
         )
 
+    with pytest.raises(HomeAssistantError):
+        await async_attach_trigger(
+            hass,
+            {
+                "device_id": device.id,
+                "type": "zwave_js.value_updated.value",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": -1234,
+                "property_key": None,
+                "endpoint": None,
+                "from": "open",
+            },
+            None,
+            {},
+        )
+
     with patch(
         "homeassistant.components.zwave_js.device_trigger.async_get_node_from_device_id",
         return_value=None,
