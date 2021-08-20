@@ -129,17 +129,6 @@ class SmappeeActuator(SwitchEntity):
         )
 
     @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if self._actuator_type == "SWITCH":
-            cons = self._service_location.actuators.get(
-                self._actuator_id
-            ).consumption_today
-            if cons is not None:
-                return round(cons / 1000.0, 2)
-        return None
-
-    @property
     def unique_id(
         self,
     ):
