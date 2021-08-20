@@ -59,6 +59,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             for p in ports
         }
+        device_to_port = {p.device: p for p in ports}
 
         if not all_ports:
             return await self.async_step_pick_radio()
@@ -70,7 +71,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_pick_radio()
 
-            port = all_ports[user_selection]
+            port = device_to_port[user_selection]
             dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
@@ -108,7 +109,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         vid = discovery_info["vid"]
         pid = discovery_info["pid"]
         serial_number = discovery_info["serial_number"]
-        self._device_path = discovery_info["device"]
+        device = discovery_info["device"]
         await self.async_set_unique_id(f"{vid}:{pid}_{serial_number}")
         self._abort_if_unique_id_configured(
             updates={
@@ -126,9 +127,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if flow["handler"] == "deconz":
                 return self.async_abort("not_zha_device")
 
-        auto_detected_data = await detect_radios(self._device_path)
-        if auto_detected_data is None:
+        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
+        if await detect_radios(dev_path) is None:
             return self.async_abort("not_zha_device")
+        self._device_path = dev_path
         self.context["title_placeholders"] = {
             CONF_NAME: _format_port_human_readable(
                 self._device_path,
