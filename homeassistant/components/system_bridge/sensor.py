@@ -96,9 +96,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda bridge: round(bridge.memory.free / 1000 ** 3, 2)
-        if bridge.memory.free is not None
-        else None,
+        value=lambda bridge: round(bridge.memory.free / 1000 ** 3, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
@@ -106,9 +104,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        value=lambda bridge: round((bridge.memory.used / bridge.memory.total) * 100, 2)
-        if bridge.memory.used is not None and bridge.memory.total is not None
-        else None,
+        value=lambda bridge: round((bridge.memory.used / bridge.memory.total) * 100, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used",
@@ -117,9 +113,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
-        value=lambda bridge: round(bridge.memory.used / 1000 ** 3, 2)
-        if bridge.memory.used is not None
-        else None,
+        value=lambda bridge: round(bridge.memory.used / 1000 ** 3, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="os",
@@ -134,9 +128,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        value=lambda bridge: round(bridge.processes.load.currentLoad, 2)
-        if bridge.processes.load.currentLoad is not None
-        else None,
+        value=lambda bridge: round(bridge.processes.load.currentLoad, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load_idle",
@@ -145,9 +137,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        value=lambda bridge: round(bridge.processes.load.currentLoadIdle, 2)
-        if bridge.processes.load.currentLoadIdle is not None
-        else None,
+        value=lambda bridge: round(bridge.processes.load.currentLoadIdle, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load_system",
@@ -156,9 +146,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        value=lambda bridge: round(bridge.processes.load.currentLoadSystem, 2)
-        if bridge.processes.load.currentLoadSystem is not None
-        else None,
+        value=lambda bridge: round(bridge.processes.load.currentLoadSystem, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load_user",
@@ -167,9 +155,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        value=lambda bridge: round(bridge.processes.load.currentLoadUser, 2)
-        if bridge.processes.load.currentLoadUser is not None
-        else None,
+        value=lambda bridge: round(bridge.processes.load.currentLoadUser, 2),
     ),
     SystemBridgeSensorEntityDescription(
         key="version",
@@ -181,9 +167,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="version_latest",
         name="Latest Version",
         icon="mdi:counter",
-        value=lambda bridge: bridge.information.updates.version.new
-        if bridge.information.updates is not None
-        else None,
+        value=lambda bridge: bridge.information.updates.version.new,
     ),
 )
 
@@ -203,9 +187,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         value=lambda bridge: str(
             datetime.now() + timedelta(minutes=bridge.battery.timeRemaining)
-        )
-        if bridge.battery.timeRemaining is not None
-        else None,
+        ),
     ),
 )
 
@@ -233,9 +215,7 @@ async def async_setup_entry(
                     icon="mdi:harddisk",
                     value=lambda bridge, i=key: round(
                         bridge.filesystem.fsSize[i]["use"], 2
-                    )
-                    if bridge.filesystem.fsSize[i]["use"] is not None
-                    else None,
+                    ),
                 ),
             )
         )
@@ -279,9 +259,7 @@ async def async_setup_entry(
                         icon="mdi:speedometer",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
-                        ].clockMemory
-                        if bridge.graphics.controllers[i].clockMemory is not None
-                        else None,
+                        ].clockMemory,
                     ),
                 ),
                 SystemBridgeSensor(
@@ -294,9 +272,7 @@ async def async_setup_entry(
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
                             bridge.graphics.controllers[i].memoryFree / 10 ** 3, 2
-                        )
-                        if bridge.graphics.controllers[i].memoryFree is not None
-                        else None,
+                        ),
                     ),
                 ),
                 SystemBridgeSensor(
@@ -314,10 +290,7 @@ async def async_setup_entry(
                             )
                             * 100,
                             2,
-                        )
-                        if bridge.graphics.controllers[i].memoryUsed is not None
-                        and bridge.graphics.controllers[i].memoryTotal is not None
-                        else None,
+                        ),
                     ),
                 ),
                 SystemBridgeSensor(
@@ -331,9 +304,7 @@ async def async_setup_entry(
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
                             bridge.graphics.controllers[i].memoryUsed / 10 ** 3, 2
-                        )
-                        if bridge.graphics.controllers[i].memoryUsed is not None
-                        else None,
+                        ),
                     ),
                 ),
                 SystemBridgeSensor(
@@ -347,9 +318,7 @@ async def async_setup_entry(
                         icon="mdi:fan",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
-                        ].fanSpeed
-                        if bridge.graphics.controllers[i].fanSpeed is not None
-                        else None,
+                        ].fanSpeed,
                     ),
                 ),
                 SystemBridgeSensor(
@@ -363,9 +332,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=POWER_WATT,
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
-                        ].powerDraw
-                        if bridge.graphics.controllers[i].powerDraw is not None
-                        else None,
+                        ].powerDraw,
                     ),
                 ),
                 SystemBridgeSensor(
@@ -379,9 +346,7 @@ async def async_setup_entry(
                         native_unit_of_measurement=TEMP_CELSIUS,
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
-                        ].temperatureGpu
-                        if bridge.graphics.controllers[i].temperatureGpu is not None
-                        else None,
+                        ].temperatureGpu,
                     ),
                 ),
                 SystemBridgeSensor(
@@ -394,9 +359,7 @@ async def async_setup_entry(
                         icon="mdi:percent",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
-                        ].utilizationGpu
-                        if bridge.graphics.controllers[i].utilizationGpu is not None
-                        else None,
+                        ].utilizationGpu,
                     ),
                 ),
             ]
@@ -415,9 +378,7 @@ async def async_setup_entry(
                     icon="mdi:percent",
                     value=lambda bridge: round(
                         bridge.processes.load.cpus[index].load, 2
-                    )
-                    if bridge.processes.load.cpus[index].load is not None
-                    else None,
+                    ),
                 ),
             ),
             SystemBridgeSensor(
@@ -431,9 +392,7 @@ async def async_setup_entry(
                     icon="mdi:percent",
                     value=lambda bridge: round(
                         bridge.processes.load.cpus[index].loadIdle, 2
-                    )
-                    if bridge.processes.load.cpus[index].loadIdle is not None
-                    else None,
+                    ),
                 ),
             ),
             SystemBridgeSensor(
@@ -447,9 +406,7 @@ async def async_setup_entry(
                     icon="mdi:percent",
                     value=lambda bridge: round(
                         bridge.processes.load.cpus[index].loadSystem, 2
-                    )
-                    if bridge.processes.load.cpus[index].loadSystem is not None
-                    else None,
+                    ),
                 ),
             ),
             SystemBridgeSensor(
@@ -463,9 +420,7 @@ async def async_setup_entry(
                     icon="mdi:percent",
                     value=lambda bridge: round(
                         bridge.processes.load.cpus[index].loadUser, 2
-                    )
-                    if bridge.processes.load.cpus[index].loadUser is not None
-                    else None,
+                    ),
                 ),
             ),
         ]
@@ -496,4 +451,7 @@ class SystemBridgeSensor(SystemBridgeDeviceEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state."""
         bridge: Bridge = self.coordinator.data
-        return cast(StateType, self.entity_description.value(bridge))
+        try:
+            return cast(StateType, self.entity_description.value(bridge))
+        except TypeError:
+            return None
