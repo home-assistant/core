@@ -1,14 +1,15 @@
 """Support for System Bridge binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable
+
 from systembridge import Bridge
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     BinarySensorEntity,
-)
-from homeassistant.components.system_bridge.model import (
-    SystemBridgeBinarySensorEntityDescription,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,6 +17,14 @@ from homeassistant.core import HomeAssistant
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
+
+
+@dataclass
+class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing System Bridge binary sensor entities."""
+
+    value: Callable = round
+
 
 BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
@@ -79,6 +88,6 @@ class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return if the binary sensor is currently on or off."""
+        """Return f the binary sensor is currently on or off."""
         bridge: Bridge = self.coordinator.data
         return self.entity_description.value(bridge)

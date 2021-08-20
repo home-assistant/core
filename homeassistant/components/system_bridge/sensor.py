@@ -1,12 +1,17 @@
 """Support for System Bridge sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Final, cast
+from typing import Callable, Final, cast
 
 from systembridge import Bridge
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
@@ -28,7 +33,6 @@ from homeassistant.helpers.typing import StateType
 from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
-from .model import SystemBridgeSensorEntityDescription
 
 ATTR_AVAILABLE: Final = "available"
 ATTR_FILESYSTEM: Final = "filesystem"
@@ -36,6 +40,13 @@ ATTR_MOUNT: Final = "mount"
 ATTR_SIZE: Final = "size"
 ATTR_TYPE: Final = "type"
 ATTR_USED: Final = "used"
+
+
+@dataclass
+class SystemBridgeSensorEntityDescription(SensorEntityDescription):
+    """Class describing System Bridge sensor entities."""
+
+    value: Callable = round
 
 
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
