@@ -8,7 +8,6 @@ from typing import Mapping, cast
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
-    CC_SPECIFIC_METER_TYPE,
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
     CommandClass,
@@ -19,8 +18,6 @@ from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class import get_meter_type
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_BATTERY,
-    ATTR_STATE_CLASS,
     DEVICE_CLASS_ENERGY,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
@@ -61,7 +58,8 @@ from .const import (
     ENTITY_DESC_KEY_CO,
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
-    ENTITY_DESC_KEY_ENERGY,
+    ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
+    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_HUMIDITY,
     ENTITY_DESC_KEY_ILLUMINANCE,
     ENTITY_DESC_KEY_POWER,
@@ -104,11 +102,15 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
-    ENTITY_DESC_KEY_ENERGY: ZwaveSensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY,
+    ENTITY_DESC_KEY_ENERGY_MEASUREMENT: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+    ),
+    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     ENTITY_DESC_KEY_POWER: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_POWER,
@@ -304,21 +306,6 @@ class ZWaveNumericSensor(ZwaveSensorBase):
 
 class ZWaveMeterSensor(ZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        client: ZwaveClient,
-        entity_description: ZwaveSensorEntityDescription,
-    ) -> None:
-        """Initialize a ZWaveNumericSensor entity."""
-        super().__init__(config_entry, client, entity_description)
-
-        # Entity class attributes
-        if self.device_class == DEVICE_CLASS_ENERGY:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-        else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     @property
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
