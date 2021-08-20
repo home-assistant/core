@@ -337,27 +337,35 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
 
+        vid = discovery_info["vid"]
+        pid = discovery_info["pid"]
+        serial_number = discovery_info["serial_number"]
+        device = discovery_info["device"]
+        manufacturer = discovery_info["manufacturer"]
+        description = discovery_info["description"]
         # The Nortek sticks are a special case since they
         # have a Z-Wave and a Zigbee radio. We need to reject
         # the Zigbee radio.
         if (
-            discovery_info["vid"] == "10C4"
-            and discovery_info["pid"] == "8A2A"
+            vid == "10C4"
+            and pid == "8A2A"
             and "Z-Wave" not in discovery_info["description"]
         ):
             return self.async_abort(reason="not_zwave_device")
 
-        dev_path = await self.hass.async_add_executor_job(
-            get_serial_by_id, discovery_info["device"]
+        await self.async_set_unique_id(
+            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
+        self._abort_if_unique_id_configured()
+        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
         self.usb_path = dev_path
         self._title = _format_port_human_readable(
             dev_path,
-            discovery_info["serial_number"],
-            discovery_info["manufacturer"],
-            discovery_info["description"],
-            discovery_info["vid"],
-            discovery_info["pid"],
+            serial_number,
+            manufacturer,
+            description,
+            vid,
+            pid,
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
         return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
