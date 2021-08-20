@@ -43,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
+CONF_PAYLOAD_TEMPLATE = "payload_template"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rest platforms."""
@@ -150,6 +151,7 @@ def create_rest_data_from_config(hass, config):
     resource_template = config.get(CONF_RESOURCE_TEMPLATE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
+    payload_template = config.get(CONF_PAYLOAD_TEMPLATE)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -160,6 +162,10 @@ def create_rest_data_from_config(hass, config):
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.async_render(parse_result=False)
+
+    if payload_template is not None:
+        payload_template.hass = hass
+        payload = payload_template.async_render(parse_result=False)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
