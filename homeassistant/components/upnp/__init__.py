@@ -233,6 +233,7 @@ class UpnpEntity(CoordinatorEntity):
     """Base class for UPnP/IGD entities."""
 
     coordinator: UpnpDataUpdateCoordinator
+    entity_description: UpnpSensorEntityDescription
 
     def __init__(
         self,
@@ -242,7 +243,7 @@ class UpnpEntity(CoordinatorEntity):
         """Initialize the base entities."""
         super().__init__(coordinator)
         self._device = coordinator.device
-        self.entity_description: UpnpSensorEntityDescription = entity_description
+        self.entity_description = entity_description
         self._attr_name = f"{coordinator.device.name} {entity_description.name}"
         self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.key}"
         self._attr_device_info = {
