@@ -163,6 +163,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
+homeassistant/components/fjaraskupan/* @elupus
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flipr/* @cnico
 homeassistant/components/flo/* @dmulcahey
