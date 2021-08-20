@@ -968,7 +968,7 @@ class GrowattData:
     def update(self):
         """Update probe data."""
         self.api.login(self.username, self.password)
-        _LOGGER.debug("Updating data for %s", self.device_id)
+        _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.growatt_type)
         try:
             if self.growatt_type == "total":
                 total_info = self.api.plant_info(self.device_id)
