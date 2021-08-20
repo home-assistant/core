@@ -8,12 +8,17 @@ from typing import TypedDict, cast
 import CO2Signal
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_COUNTRY_CODE, DOMAIN
+from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN
 from .util import get_extra_name
 
 PLATFORMS = ["sensor"]
@@ -66,6 +71,15 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CO2SignalResponse]):
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=15)
         )
         self._entry = entry
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+        if (
+            CONF_COUNTRY_CODE in entry.data
+            and entry.data[CONF_COUNTRY_CODE] is not None
+        ):
+            self._attr_extra_state_attributes.update(
+                {"country_code": entry.data[CONF_COUNTRY_CODE]}
+            )
 
     @property
     def entry_id(self) -> str:

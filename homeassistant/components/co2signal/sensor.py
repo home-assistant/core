@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_NAME,
@@ -27,7 +26,7 @@ from homeassistant.helpers import config_validation as cv, update_coordinator
 from homeassistant.helpers.typing import StateType
 
 from . import CO2SignalCoordinator, CO2SignalResponse
-from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
+from .const import CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -100,10 +99,6 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
             name = f"{extra_name} - {name}"
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {
-            "country_code": coordinator.data["countryCode"],
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, coordinator.entry_id)},
             ATTR_NAME: "CO2 signal",
