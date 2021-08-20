@@ -49,11 +49,12 @@ PROP_TO_ATTR = {
 class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
+    _attr_icon = "mdi:cloud"
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._attr_icon = "mdi:cloud"
         self._air_quality_index = None
         self._carbon_dioxide = None
         self._carbon_dioxide_equivalent = None
@@ -169,11 +170,12 @@ class AirMonitorV1(AirMonitorB1):
 class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for cgllc.airm.cgdn1 device."""
 
+    _attr_icon = "mdi:cloud"
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._attr_icon = "mdi:cloud"
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None

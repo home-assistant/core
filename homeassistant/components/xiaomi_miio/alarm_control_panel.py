@@ -43,6 +43,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     """Representation of the XiaomiGatewayAlarm."""
 
     _attr_supported_features = SUPPORT_ALARM_ARM_AWAY
+    _attr_icon = "mdi:shield-home"
 
     def __init__(
         self, gateway_device, gateway_name, model, mac_address, gateway_device_id
@@ -52,7 +53,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._attr_name = gateway_name
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = f"{model}-{mac_address}"
-        self._attr_icon = "mdi:shield-home"
         self._state = None
 
     @property

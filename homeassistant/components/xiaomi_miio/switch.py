@@ -639,13 +639,13 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
 class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
+    _attr_icon = "mdi:power-socket"
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
 
-        self._attr_icon = "mdi:power-socket"
         self._attr_available = False
-        self._attr_is_on = None
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
