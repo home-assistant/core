@@ -27,7 +27,8 @@ async def test_discovered_by_observer_before_started(hass):
         )
 
     def _create_mock_monitor_observer(monitor, callback, name):
-        hass.async_create_task(callback)
+        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        return MagicMock()
 
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
