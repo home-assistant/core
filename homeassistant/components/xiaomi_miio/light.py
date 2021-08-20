@@ -401,7 +401,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
     _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
     _attr_min_mireds = 175
-    _attr_min_mireds = 333
+    _attr_max_mireds = 333
 
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
