@@ -17,6 +17,7 @@ from zwave_js_server.util.node import (
     async_set_config_parameter,
 )
 
+from homeassistant.components.group import expand_entity_ids
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
@@ -95,7 +96,7 @@ class ZWaveServices:
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
             nodes: set[ZwaveNode] = set()
-            for entity_id in val.pop(ATTR_ENTITY_ID, []):
+            for entity_id in expand_entity_ids(self._hass, val.pop(ATTR_ENTITY_ID, [])):
                 try:
                     nodes.add(
                         async_get_node_from_entity_id(
@@ -152,6 +153,7 @@ class ZWaveServices:
         @callback
         def validate_entities(val: dict[str, Any]) -> dict[str, Any]:
             """Validate entities exist and are from the zwave_js platform."""
+            val[ATTR_ENTITY_ID] = expand_entity_ids(self._hass, val[ATTR_ENTITY_ID])
             for entity_id in val[ATTR_ENTITY_ID]:
                 entry = self._ent_reg.async_get(entity_id)
                 if entry is None or entry.platform != const.DOMAIN:
