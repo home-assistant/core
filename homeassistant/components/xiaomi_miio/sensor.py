@@ -14,23 +14,19 @@ from miio.gateway.gateway import (
     GATEWAY_MODEL_EU,
     GatewayException,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_GAS,
@@ -47,7 +43,6 @@ from homeassistant.const import (
     TIME_HOURS,
     VOLUME_CUBIC_METERS,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_DEVICE,
@@ -77,14 +72,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Sensor"
 UNIT_LUMEN = "lm"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 ATTR_ACTUAL_SPEED = "actual_speed"
 ATTR_AIR_QUALITY = "air_quality"
@@ -324,21 +311,6 @@ MODEL_TO_SENSORS_MAP = {
     MODEL_AIRPURIFIER_PRO: PURIFIER_PRO_SENSORS,
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Sensor via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
