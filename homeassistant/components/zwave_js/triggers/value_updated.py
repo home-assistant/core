@@ -169,8 +169,12 @@ async def async_attach_trigger(
         value_id = get_value_id(node, command_class, property_, endpoint, property_key)
         value = node.values[value_id]
         # We need to store the current value and device for the callback
-        callback_func = functools.partial(async_on_value_updated, value, device)
-        unsubs.append(node.on("value updated", lambda event: callback_func(event)))
+        unsubs.append(
+            node.on(
+                "value updated",
+                functools.partial(async_on_value_updated, value, device),
+            )
+        )
 
     @callback
     def async_remove() -> None:
