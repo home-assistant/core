@@ -140,7 +140,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vid,
             pid,
         )
-        self._confirm_only()
+        self._set_confirm_only()
         self.context["title_placeholders"] = {CONF_NAME: self._title}
         return await self.async_step_confirm()
 
