@@ -954,17 +954,12 @@ class XiaomiGatewayLight(LightEntity):
         self._gateway = gateway_device
         self._name = f"{gateway_name} Light"
         self._gateway_device_id = gateway_device_id
-        self._unique_id = gateway_device_id
+        self._attr_unique_id = gateway_device_id
         self._attr_available = False
         self._is_on = None
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
         self._hs = (0, 0)
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
 
     @property
     def device_info(self):

@@ -615,7 +615,7 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
         super().__init__(coordinator, sub_device, entry)
         self._channel = GATEWAY_SWITCH_VARS[variable][KEY_CHANNEL]
         self._data_key = f"status_ch{self._channel}"
-        self._unique_id = f"{sub_device.sid}-ch{self._channel}"
+        self._attr_unique_id = f"{sub_device.sid}-ch{self._channel}"
         self._name = f"{sub_device.name} ch{self._channel} ({sub_device.sid})"
 
     @property

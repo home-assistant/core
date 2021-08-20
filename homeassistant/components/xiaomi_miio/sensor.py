@@ -520,7 +520,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     def __init__(self, coordinator, sub_device, entry, description):
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
-        self._unique_id = f"{sub_device.sid}-{description.key}"
+        self._attr_unique_id = f"{sub_device.sid}-{description.key}"
         self._name = f"{description.key} ({sub_device.sid})".capitalize()
         self.entity_description = description
 
