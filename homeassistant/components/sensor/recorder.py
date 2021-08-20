@@ -115,8 +115,8 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
 }
 
 # Keep track of entities for which a warning about unsupported unit has been logged
-WARN_UNSUPPORTED_UNIT = set()
-WARN_UNSTABLE_UNIT = set()
+WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
+WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
 
 
 def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None]]:
@@ -181,16 +181,16 @@ def _time_weighted_average(
     return accumulated / (end - start).total_seconds()
 
 
-def _units_same(fstates: list[tuple[float, State]]) -> bool:
+def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     """Return True if all states have the same unit."""
-    states = next(itertools.islice(zip(*fstates), 1, 2))
-    units = iter(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) for state in states)
-    first = next(units)
-    return all(first == x for x in units)
+    return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
 
 
 def _normalize_states(
-    entity_history: list[State], device_class: str | None, entity_id: str
+    hass: HomeAssistant,
+    entity_history: list[State],
+    device_class: str | None,
+    entity_id: str,
 ) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
     unit = None
@@ -201,10 +201,18 @@ def _normalize_states(
             (float(el.state), el) for el in entity_history if _is_number(el.state)
         ]
         if fstates:
-            if not _units_same(fstates):
-                if entity_id not in WARN_UNSTABLE_UNIT:
-                    _LOGGER.warning("The unit of %s is not stable", entity_id)
-                    WARN_UNSTABLE_UNIT.add(entity_id)
+            all_units = _get_units(fstates)
+            if len(all_units) > 1:
+                if WARN_UNSTABLE_UNIT not in hass.data:
+                    hass.data[WARN_UNSTABLE_UNIT] = set()
+                if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
+                    hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
+                    _LOGGER.warning(
+                        "The unit of %s is changing, got %s. Generation of long term "
+                        "statistics will be suppressed unless the unit is stable.",
+                        entity_id,
+                        all_units,
+                    )
                 return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return unit, fstates
@@ -220,8 +228,10 @@ def _normalize_states(
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         # Exclude unsupported units from statistics
         if unit not in UNIT_CONVERSIONS[device_class]:
-            if entity_id not in WARN_UNSUPPORTED_UNIT:
-                WARN_UNSUPPORTED_UNIT.add(entity_id)
+            if WARN_UNSUPPORTED_UNIT not in hass.data:
+                hass.data[WARN_UNSUPPORTED_UNIT] = set()
+            if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
+                hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
             continue
 
@@ -253,7 +263,7 @@ def compile_statistics(
             continue
 
         entity_history = history_list[entity_id]
-        unit, fstates = _normalize_states(entity_history, device_class, entity_id)
+        unit, fstates = _normalize_states(hass, entity_history, device_class, entity_id)
 
         if not fstates:
             continue
@@ -261,12 +271,20 @@ def compile_statistics(
         # Check metadata
         if old_metadata := statistics.get_metadata(hass, entity_id):
             if old_metadata["unit_of_measurement"] != unit:
-                if entity_id not in WARN_UNSTABLE_UNIT:
+                _LOGGER.warning("type: %s", type(WARN_UNSTABLE_UNIT))
+                if WARN_UNSTABLE_UNIT not in hass.data:
+                    hass.data[WARN_UNSTABLE_UNIT] = set()
+                if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
+                    hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The unit of %s does not match the unit of statistics",
+                        "The unit of %s (%s) does not match the unit of already "
+                        "compiled statistics (%s). Generation of long term statistics "
+                        "will be suppressed unless the unit changes back to %s.",
                         entity_id,
+                        unit,
+                        old_metadata["unit_of_measurement"],
+                        unit,
                     )
-                    WARN_UNSTABLE_UNIT.add(entity_id)
                 continue
 
         result[entity_id] = {}

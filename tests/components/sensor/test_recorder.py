@@ -13,7 +13,6 @@ from homeassistant.components.recorder.statistics import (
     list_statistic_ids,
     statistics_during_period,
 )
-from homeassistant.components.sensor import recorder as sensor_recorder
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
@@ -808,7 +807,6 @@ def test_compile_hourly_statistics_changing_units_1(
     hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
 ):
     """Test compiling hourly statistics where units change from one hour to the next."""
-    sensor_recorder.WARN_UNSTABLE_UNIT = set()
     zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
@@ -833,10 +831,7 @@ def test_compile_hourly_statistics_changing_units_1(
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
     wait_recording_done(hass)
-    assert (
-        "The unit of sensor.test1 does not match the unit of statistics"
-        not in caplog.text
-    )
+    assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
@@ -859,7 +854,8 @@ def test_compile_hourly_statistics_changing_units_1(
     recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
     wait_recording_done(hass)
     assert (
-        "The unit of sensor.test1 does not match the unit of statistics" in caplog.text
+        "The unit of sensor.test1 (cats) does not match the unit of already compiled "
+        f"statistics ({native_unit})" in caplog.text
     )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -895,7 +891,6 @@ def test_compile_hourly_statistics_changing_units_2(
     hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
 ):
     """Test compiling hourly statistics where units change during an hour."""
-    sensor_recorder.WARN_UNSTABLE_UNIT = set()
     zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
@@ -916,7 +911,11 @@ def test_compile_hourly_statistics_changing_units_2(
 
     recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(minutes=30))
     wait_recording_done(hass)
-    assert "The unit of sensor.test1 is not stable" in caplog.text
+    assert (
+        f"The unit of sensor.test1 is changing, got {{'{unit}', 'cats'}}" in caplog.text
+        or f"The unit of sensor.test1 is changing, got {{'cats', '{unit}'}}"
+        in caplog.text
+    )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": "cats"}
