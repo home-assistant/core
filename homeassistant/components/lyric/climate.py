@@ -125,6 +125,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         temperature_unit: str,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
+        self._name = device.name
         self._temperature_unit = temperature_unit
 
         # Setup supported hvac modes
@@ -148,9 +149,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             location,
             device,
             f"{device.macID}_thermostat",
-            device.name,
-            None,
         )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
 
     @property
     def supported_features(self) -> int:
