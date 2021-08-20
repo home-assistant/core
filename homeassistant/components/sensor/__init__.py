@@ -139,7 +139,13 @@ class SensorEntityDescription(EntityDescription):
         if self.unit_of_measurement:
             caller = inspect.stack()[2]  # type: ignore[unreachable]
             module = inspect.getmodule(caller[0])
-            report_issue = self._suggest_report_issue(module)
+            if "custom_components" in module.__file__:
+                report_issue = "report it to the custom component author."
+            else:
+                report_issue = (
+                    "create a bug report at "
+                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                )
             _LOGGER.warning(
                 "%s is setting 'unit_of_measurement' on an instance of "
                 "SensorEntityDescription, this is not valid and will be unsupported "
@@ -148,18 +154,6 @@ class SensorEntityDescription(EntityDescription):
                 report_issue,
             )
             self.native_unit_of_measurement = self.unit_of_measurement
-
-    def _suggest_report_issue(self, module: Any) -> str:
-        """Suggest to report an issue."""
-        if "custom_components" in module.__file__:
-            report_issue = "report it to the custom component author."
-        else:
-            report_issue = (
-                "create a bug report at "
-                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-            )
-
-        return report_issue
 
 
 class SensorEntity(Entity):
