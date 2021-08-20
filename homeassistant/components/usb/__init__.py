@@ -21,7 +21,7 @@ from .utils import USBDeviceTupleType, usb_device_from_port, usb_device_tuple
 
 _LOGGER = logging.getLogger(__name__)
 
-# Scanning only happens on non-linux systems
+# Perodic scanning only happens on non-linux systems
 SCAN_INTERVAL = datetime.timedelta(minutes=60)
 
 
