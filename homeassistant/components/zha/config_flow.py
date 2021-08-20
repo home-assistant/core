@@ -144,7 +144,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_zha_device")
         self._device_path = dev_path
         self._title = _format_port_human_readable(
-            device,
+            dev_path,
             serial_number,
             manufacturer,
             description,
