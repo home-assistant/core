@@ -353,6 +353,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             and "Z-Wave" not in discovery_info["description"]
         ):
             return self.async_abort(reason="not_zwave_device")
+        # Zooz uses this vid/pid, but so do 2652 sticks
+        if vid == "10C4" and pid == "EA60" and "2652" in discovery_info["description"]:
+            return self.async_abort(reason="not_zwave_device")
 
         addon_info = await self._async_get_addon_info()
         if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.NOT_RUNNING):
