@@ -37,7 +37,7 @@ def _format_port_human_readable(
 ) -> str:
     if description:
         return (
-            f"{description}[:26] - {device}, s/n: {serial_number or 'n/a'}"
+            f"{description[:26]} - {device}, s/n: {serial_number or 'n/a'}"
             + (f" - {manufacturer}" if manufacturer else "")
             + (f" - {vid}:{pid}" if vid else "")
         )
@@ -142,6 +142,16 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for flow in self.hass.config_entries.flow.async_progress():
             if flow["handler"] == "deconz":
                 return self.async_abort(reason="not_zha_device")
+
+        # The Nortek sticks are a special case since they
+        # have a Z-Wave and a Zigbee radio. We need to reject
+        # the Z-Wave radio.
+        if (
+            vid == "10C4"
+            and pid == "8A2A"
+            and "ZigBee" not in discovery_info["description"]
+        ):
+            return self.async_abort(reason="not_zha_device")
 
         dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
         self._auto_detected_data = await detect_radios(dev_path)
