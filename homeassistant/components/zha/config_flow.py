@@ -29,15 +29,20 @@ SUPPORTED_PORT_SETTINGS = (
 
 def _format_port_human_readable(
     device: str,
-    serial_number: str,
-    manufacturer: str,
-    description: str,
-    vid: str,
-    pid: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | None,
+    pid: str | None,
 ) -> str:
+    if description:
+        return (
+            f"{description}[:26] - {device}, s/n: {serial_number or 'n/a'}"
+            + (f" - {manufacturer}" if manufacturer else "")
+            + (f" - {vid}:{pid}" if vid else "")
+        )
     return (
         f"{device}, s/n: {serial_number or 'n/a'}"
-        + (f" - {description}[:26]" if description else "")
         + (f" - {manufacturer}" if manufacturer else "")
         + (f" - {vid}:{pid}" if vid else "")
     )

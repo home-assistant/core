@@ -10,6 +10,6 @@ class USBDevice(TypedDict):
     device: str
     vid: str
     pid: str
-    serial_number: str
-    manufacturer: str
-    description: str
+    serial_number: str | None
+    manufacturer: str | None
+    description: str | None
