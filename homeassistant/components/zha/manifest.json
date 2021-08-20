@@ -15,6 +15,9 @@
     "zigpy-zigate==0.7.3",
     "zigpy-znp==0.5.3"
   ],
+  "usb": [
+   {"vid":"10C4","pid":"EA60"}
+  ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
     {
