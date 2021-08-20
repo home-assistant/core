@@ -35,17 +35,16 @@ def _format_port_human_readable(
     vid: str | None,
     pid: str | None,
 ) -> str:
+    extended_details = (f" - {manufacturer}" if manufacturer else "") + (
+        f" - {vid}:{pid}" if vid else ""
+    )
+
     if description:
         return (
             f"{description[:26]} - {device}, s/n: {serial_number or 'n/a'}"
-            + (f" - {manufacturer}" if manufacturer else "")
-            + (f" - {vid}:{pid}" if vid else "")
+            + extended_details
         )
-    return (
-        f"{device}, s/n: {serial_number or 'n/a'}"
-        + (f" - {manufacturer}" if manufacturer else "")
-        + (f" - {vid}:{pid}" if vid else "")
-    )
+    return f"{device}, s/n: {serial_number or 'n/a'}" + extended_details
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
