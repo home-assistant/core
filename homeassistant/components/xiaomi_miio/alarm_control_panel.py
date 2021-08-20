@@ -53,7 +53,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._attr_name = gateway_name
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = f"{model}-{mac_address}"
-        self._state = None
+        self._attr_state = None
 
     @property
     def device_id(self):
@@ -66,11 +66,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         return {
             "identifiers": {(DOMAIN, self._gateway_device_id)},
         }
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
@@ -110,11 +105,11 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._attr_available = True
 
         if state == XIAOMI_STATE_ARMED_VALUE:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = STATE_ALARM_ARMED_AWAY
         elif state == XIAOMI_STATE_DISARMED_VALUE:
-            self._state = STATE_ALARM_DISARMED
+            self._attr_state = STATE_ALARM_DISARMED
         elif state == XIAOMI_STATE_ARMING_VALUE:
-            self._state = STATE_ALARM_ARMING
+            self._attr_state = STATE_ALARM_ARMING
         else:
             _LOGGER.warning(
                 "New state (%s) doesn't match expected values: %s/%s/%s",
@@ -123,6 +118,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
                 XIAOMI_STATE_DISARMED_VALUE,
                 XIAOMI_STATE_ARMING_VALUE,
             )
-            self._state = None
+            self._attr_state = None
 
-        _LOGGER.debug("State value: %s", self._state)
+        _LOGGER.debug("State value: %s", self._attr_state)
