@@ -126,12 +126,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # want to use it there instead
         for flow in self.hass.config_entries.flow.async_progress():
             if flow["handler"] == "deconz":
-                return self.async_abort("not_zha_device")
+                return self.async_abort(reason="not_zha_device")
 
         dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
         self._auto_detected_data = await detect_radios(dev_path)
         if self._auto_detected_data is None:
-            return self.async_abort("not_zha_device")
+            return self.async_abort(reason="not_zha_device")
         self._device_path = dev_path
         self._title = _format_port_human_readable(
             self._device_path,
