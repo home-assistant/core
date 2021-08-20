@@ -123,6 +123,7 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
         _LOGGER.debug(
             "Discovered Device at path: %s, trigger scan",
             device.device_path,
+            device.action,
         )
         scan_serial(hass)
 
