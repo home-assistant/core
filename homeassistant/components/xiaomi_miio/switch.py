@@ -643,17 +643,12 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:power-socket"
+        self._attr_icon = "mdi:power-socket"
         self._attr_available = False
         self._state = None
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
 
     @property
     def extra_state_attributes(self):

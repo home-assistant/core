@@ -50,7 +50,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         self._attr_name = gateway_name
         self._gateway_device_id = gateway_device_id
         self._attr_unique_id = f"{model}-{mac_address}"
-        self._icon = "mdi:shield-home"
+        self._attr_icon = "mdi:shield-home"
         self._attr_available = None
         self._state = None
 
@@ -65,11 +65,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         return {
             "identifiers": {(DOMAIN, self._gateway_device_id)},
         }
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
 
     @property
     def state(self):

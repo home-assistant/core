@@ -53,7 +53,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:cloud"
+        self._attr_icon = "mdi:cloud"
         self._attr_available = None
         self._air_quality_index = None
         self._carbon_dioxide = None
@@ -77,11 +77,6 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         except DeviceException as ex:
             self._attr_available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
 
     @property
     def air_quality_index(self):
@@ -179,7 +174,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id)
 
-        self._icon = "mdi:cloud"
+        self._attr_icon = "mdi:cloud"
         self._attr_available = None
         self._carbon_dioxide = None
         self._particulate_matter_2_5 = None
@@ -197,11 +192,6 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         except DeviceException as ex:
             self._attr_available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
 
     @property
     def carbon_dioxide(self):
