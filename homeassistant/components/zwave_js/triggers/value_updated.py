@@ -151,8 +151,6 @@ async def async_attach_trigger(
             ATTR_CURRENT_VALUE_RAW: curr_value_raw,
             "description": f"Z-Wave value {value_id} updated on {device_name}",
         }
-        if ATTR_ENTITY_ID in config:
-            payload[ATTR_ENTITY_ID] = config[ATTR_ENTITY_ID]
 
         hass.async_run_hass_job(job, {"trigger": payload})
 
