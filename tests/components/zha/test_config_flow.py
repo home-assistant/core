@@ -123,6 +123,25 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
 
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_rejects_nortek_zwave(detect_mock, hass):
+    """Test usb flow -- reject the nortek zwave radio."""
+    discovery_info = {
+        "device": "/dev/null",
+        "vid": "10C4",
+        "pid": "8A2A",
+        "serial_number": "612020FD",
+        "description": "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
+        "manufacturer": "Silicon Labs",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery_via_usb_already_setup(detect_mock, hass):
     """Test usb flow -- already setup."""
     await setup.async_setup_component(hass, "persistent_notification", {})
