@@ -11,7 +11,7 @@ from homeassistant.components.rainforest_eagle.const import (
     TYPE_EAGLE_100,
     TYPE_EAGLE_200,
 )
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -58,6 +58,7 @@ async def setup_rainforest_200(hass):
         domain="rainforest_eagle",
         data={
             CONF_CLOUD_ID: MOCK_CLOUD_ID,
+            CONF_HOST: "192.168.1.55",
             CONF_INSTALL_CODE: "abcdefgh",
             CONF_HARDWARE_ADDRESS: "mock-hw-address",
             CONF_TYPE: TYPE_EAGLE_200,
@@ -79,6 +80,7 @@ async def setup_rainforest_100(hass):
         domain="rainforest_eagle",
         data={
             CONF_CLOUD_ID: MOCK_CLOUD_ID,
+            CONF_HOST: "192.168.1.55",
             CONF_INSTALL_CODE: "abcdefgh",
             CONF_HARDWARE_ADDRESS: None,
             CONF_TYPE: TYPE_EAGLE_100,

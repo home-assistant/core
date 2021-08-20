@@ -437,7 +437,7 @@ async def test_get_condition_capabilities_value(
         (98, "DOOR_LOCK"),
         (122, "FIRMWARE_UPDATE_MD"),
         (114, "MANUFACTURER_SPECIFIC"),
-        (113, "ALARM"),
+        (113, "NOTIFICATION"),
         (152, "SECURITY"),
         (99, "USER_CODE"),
         (134, "VERSION"),

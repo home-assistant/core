@@ -318,6 +318,7 @@ omit =
     homeassistant/components/fitbit/*
     homeassistant/components/fixer/sensor.py
     homeassistant/components/fjaraskupan/__init__.py
+    homeassistant/components/fjaraskupan/binary_sensor.py
     homeassistant/components/fjaraskupan/const.py
     homeassistant/components/fjaraskupan/fan.py
     homeassistant/components/fleetgo/device_tracker.py
