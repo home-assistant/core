@@ -10,7 +10,7 @@ from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
@@ -90,17 +90,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_start_scanner(hass: HomeAssistant) -> None:
     """Perodic scan with pyserial."""
-
-    def _scan_serial():
-        scan_serial(hass)
-
-    stop_track = async_track_time_interval(hass, _scan_serial, SCAN_INTERVAL)
-
-    @callback
-    def _async_stop_scanner(*_):
-        stop_track()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scanner)
+    stop_track = async_track_time_interval(
+        hass, lambda now: scan_serial(hass), SCAN_INTERVAL
+    )
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, callback(lambda event: stop_track())
+    )
 
 
 async def _async_start_monitor(hass: HomeAssistant) -> bool:
@@ -130,10 +125,10 @@ async def _async_start_monitor(hass: HomeAssistant) -> bool:
     )
     observer.start()
 
-    async def _async_shutdown_observer(*_):
-        await hass.async_add_executor_job(observer.stop)
+    def _shutdown_observer(event: Event):
+        observer.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_observer)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_observer)
 
     return True
 
