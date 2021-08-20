@@ -10,5 +10,10 @@ USB = [
         "domain": "zwave_js",
         "vid": "0658",
         "pid": "0200"
+    },
+    {
+        "domain": "zwave_js",
+        "vid": "1A86",
+        "pid": "7523"
     }
 ]

@@ -433,6 +433,8 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self.use_addon = True
+        if self._title:
+            self.context["title_placeholders"] = {CONF_NAME: self._title}
 
         addon_info = await self._async_get_addon_info()
 
@@ -469,7 +471,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_start_addon()
 
-        usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        usb_path = addon_config.get(CONF_ADDON_DEVICE) or self.usb_path or ""
         network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
 
         data_schema = vol.Schema(
