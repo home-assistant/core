@@ -29,8 +29,9 @@ class FlowDispatcher:
     def async_start(self, *_: Any) -> None:
         """Start processing pending flows."""
         self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
+        self.hass.async_add_job(self._async_process_pending_flows)
 
+    @callback
     def _async_process_pending_flows(self) -> None:
         for flow in self.pending_flows:
             self.hass.async_create_task(self._init_flow(flow))

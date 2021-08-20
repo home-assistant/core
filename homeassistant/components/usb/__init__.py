@@ -123,7 +123,7 @@ class USBDiscovery:
                 "context": {"source": config_entries.SOURCE_USB},
                 "data": dataclasses.asdict(device),
             }
-            self.flow_dispatcher.create(flow)
+            self.flow_dispatcher.async_create(flow)
 
     @callback
     def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
