@@ -13,14 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import (
-    DeviceRegistry,
-    async_get as async_get_dev_reg,
-)
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    async_get as async_get_ent_reg,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -79,7 +72,7 @@ def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]
 
 @callback
 def async_get_node_from_device_id(
-    hass: HomeAssistant, device_id: str, dev_reg: DeviceRegistry | None = None
+    hass: HomeAssistant, device_id: str, dev_reg: dr.DeviceRegistry | None = None
 ) -> ZwaveNode:
     """
     Get node from a device ID.
@@ -87,7 +80,7 @@ def async_get_node_from_device_id(
     Raises ValueError if device is invalid or node can't be found.
     """
     if not dev_reg:
-        dev_reg = async_get_dev_reg(hass)
+        dev_reg = dr.async_get(hass)
     device_entry = dev_reg.async_get(device_id)
 
     if not device_entry:
@@ -138,8 +131,8 @@ def async_get_node_from_device_id(
 def async_get_node_from_entity_id(
     hass: HomeAssistant,
     entity_id: str,
-    ent_reg: EntityRegistry | None = None,
-    dev_reg: DeviceRegistry | None = None,
+    ent_reg: er.EntityRegistry | None = None,
+    dev_reg: dr.DeviceRegistry | None = None,
 ) -> ZwaveNode:
     """
     Get node from an entity ID.
@@ -147,7 +140,7 @@ def async_get_node_from_entity_id(
     Raises ValueError if entity is invalid.
     """
     if not ent_reg:
-        ent_reg = async_get_ent_reg(hass)
+        ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(entity_id)
 
     if entity_entry is None or entity_entry.platform != DOMAIN:
@@ -157,6 +150,46 @@ def async_get_node_from_entity_id(
     # tied to a device
     assert entity_entry.device_id
     return async_get_node_from_device_id(hass, entity_entry.device_id, dev_reg)
+
+
+@callback
+def async_get_nodes_from_area_id(
+    hass: HomeAssistant,
+    area_id: str,
+    ent_reg: er.EntityRegistry | None = None,
+    dev_reg: dr.DeviceRegistry | None = None,
+) -> set[ZwaveNode]:
+    """Get nodes for all Z-Wave JS devices and entities that are in an area."""
+    nodes: set[ZwaveNode] = set()
+    if ent_reg is None:
+        ent_reg = er.async_get(hass)
+    if dev_reg is None:
+        dev_reg = dr.async_get(hass)
+    # Add devices for all entities in an area that are Z-Wave JS entities
+    nodes.update(
+        {
+            async_get_node_from_device_id(hass, entity.device_id, dev_reg)
+            for entity in er.async_entries_for_area(ent_reg, area_id)
+            if entity.platform == DOMAIN and entity.device_id is not None
+        }
+    )
+    # Add devices in an area that are Z-Wave JS devices
+    for device in dr.async_entries_for_area(dev_reg, area_id):
+        if next(
+            (
+                config_entry_id
+                for config_entry_id in device.config_entries
+                if cast(
+                    ConfigEntry,
+                    hass.config_entries.async_get_entry(config_entry_id),
+                ).domain
+                == DOMAIN
+            ),
+            None,
+        ):
+            nodes.add(async_get_node_from_device_id(hass, device.id, dev_reg))
+
+    return nodes
 
 
 def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveValue:
@@ -183,14 +216,14 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
 def async_get_node_status_sensor_entity_id(
     hass: HomeAssistant,
     device_id: str,
-    ent_reg: EntityRegistry | None = None,
-    dev_reg: DeviceRegistry | None = None,
+    ent_reg: er.EntityRegistry | None = None,
+    dev_reg: dr.DeviceRegistry | None = None,
 ) -> str:
     """Get the node status sensor entity ID for a given Z-Wave JS device."""
     if not ent_reg:
-        ent_reg = async_get_ent_reg(hass)
+        ent_reg = er.async_get(hass)
     if not dev_reg:
-        dev_reg = async_get_dev_reg(hass)
+        dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(device_id)
     if not device:
         raise HomeAssistantError("Invalid Device ID provided")
