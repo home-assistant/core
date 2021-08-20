@@ -1,11 +1,13 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import datetime
 from enum import Enum
 import logging
 
+import async_timeout
 from miio import AirQualityMonitor, DeviceException
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
@@ -48,6 +50,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
+from ...helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -102,20 +105,16 @@ ATTR_PRESSURE = "pressure"
 ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
-ATTR_DND = "do_not_disturb"
 ATTR_DND_START = "do_not_disturb_start"
 ATTR_DND_END = "do_not_disturb_end"
-ATTR_LAST_CLEAN_DETAILS = "last_clean_details"
 ATTR_LAST_CLEAN_TIME = "last_clean_details_duration"
 ATTR_LAST_CLEAN_AREA = "last_clean_details_area"
 ATTR_LAST_CLEAN_START = "last_clean_details_start"
 ATTR_LAST_CLEAN_END = "last_clean_details_end"
-ATTR_CLEAN_HISTORY = "clean_history"
 ATTR_CLEAN_HISTORY_TOTAL_DURATION = "clean_history_total_duration"
 ATTR_CLEAN_HISTORY_TOTAL_AREA = "clean_history_total_area"
 ATTR_CLEAN_HISTORY_COUNT = "clean_history_count"
 ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT = "clean_history_dust_collection_count"
-ATTR_CONSUMABLE_STATUS = "consumable_status"
 ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT = "consumable_status_main_brush_left"
 ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT = "consumable_status_side_brush_left"
 ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "consumable_status_filter_left"
@@ -403,30 +402,21 @@ MODEL_TO_SENSORS_MAP = {
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
 }
 
-VACUUM_DND_SENSORS = {
-    ATTR_DND_START: ATTR_DND_START,
-    ATTR_DND_END: ATTR_DND_END,
-}
-
-VACUUM_LAST_CLEAN_SENSORS = {
-    ATTR_LAST_CLEAN_TIME: ATTR_LAST_CLEAN_TIME,
-    ATTR_LAST_CLEAN_AREA: ATTR_LAST_CLEAN_AREA,
-    ATTR_LAST_CLEAN_START: ATTR_LAST_CLEAN_START,
-    ATTR_LAST_CLEAN_END: ATTR_LAST_CLEAN_END,
-}
-
-VACUUM_CLEAN_HISTORY_SENSORS = {
-    ATTR_CLEAN_HISTORY_TOTAL_DURATION: ATTR_CLEAN_HISTORY_TOTAL_DURATION,
-    ATTR_CLEAN_HISTORY_TOTAL_AREA: ATTR_CLEAN_HISTORY_TOTAL_AREA,
-    ATTR_CLEAN_HISTORY_COUNT: ATTR_CLEAN_HISTORY_COUNT,
-    ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-}
-
-VACUUM_CONSUMABLE_STATUS_SENSORS = {
-    ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
-    ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
-    ATTR_CONSUMABLE_STATUS_FILTER_LEFT: ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
-    ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+VACUUM_SENSORS = {
+    ATTR_DND_START: "dnd_status.start",
+    ATTR_DND_END: "dnd_status.end",
+    ATTR_LAST_CLEAN_TIME: "last_clean_details.duration",
+    ATTR_LAST_CLEAN_AREA: "last_clean_details.area",
+    ATTR_LAST_CLEAN_START: "last_clean_details.start",
+    ATTR_LAST_CLEAN_END: "last_clean_details.end",
+    ATTR_CLEAN_HISTORY_TOTAL_DURATION: "clean_history.total_duration",
+    ATTR_CLEAN_HISTORY_TOTAL_AREA: "clean_history.total_area",
+    ATTR_CLEAN_HISTORY_COUNT: "clean_history.count",
+    ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: "clean_history.dust_collection_count",
+    ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: "consumable_status.main_brush_left",
+    ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: "consumable_status.side_brush_left",
+    ATTR_CONSUMABLE_STATUS_FILTER_LEFT: "consumable_status.filter_left",
+    ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: "consumable_status.sensor_dirty_left",
 }
 
 
@@ -516,67 +506,77 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def async_setup_vacuum_sensors(hass, config_entry, async_add_entities):
     """Set up all the sensors for a vacuum."""
+
+    def create_update_function(hass, callable):
+        async def async_update_data():
+            """Fetch data from the device using async_add_executor_job."""
+            try:
+                async with async_timeout.timeout(10):
+                    return await hass.async_add_executor_job(callable)
+
+            except DeviceException as ex:
+                raise UpdateFailed(ex) from ex
+
+        return async_update_data
+
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     entities = []
+    coordinators = []
 
-    for sensor in VACUUM_DND_SENSORS:
+    for sensor_name, coordinator_method in VACUUM_SENSORS.items():
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"{config_entry.title} {sensor_name.replace('_', ' ').title()}",
+            update_method=create_update_function(
+                hass, getattr(device, coordinator_method.split(".")[0])
+            ),
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=datetime.timedelta(seconds=60),
+        )
+
+        coordinators.append(coordinator.async_config_entry_first_refresh())
+
         entities.append(
-            XiaomiVacuumDnDSensor(
-                f"{config_entry.title} {sensor.replace('_', ' ').title()}",
+            XiaomiGenericSensor(
+                f"{config_entry.title} {sensor_name.replace('_', ' ').title()}",
                 device,
                 config_entry,
-                f"{sensor}_{config_entry.unique_id}",
-                sensor,
-                "_".join(sensor.split(ATTR_DND)[1].split("_")[1:]),
+                f"{sensor_name}_{config_entry.unique_id}",
+                coordinator_method.split(".")[1],
+                coordinator,
+                sensor_config=SENSOR_TYPES[sensor_name],
             )
         )
 
-    for sensor in VACUUM_LAST_CLEAN_SENSORS:
-        entities.append(
-            XiaomiVacuumLastCleanSensor(
-                f"{config_entry.title} {sensor.replace('_', ' ').title()}",
-                device,
-                config_entry,
-                f"{sensor}_{config_entry.unique_id}",
-                sensor,
-                "_".join(sensor.split(ATTR_LAST_CLEAN_DETAILS)[1].split("_")[1:]),
-            )
-        )
-
-    for sensor in VACUUM_CLEAN_HISTORY_SENSORS:
-        entities.append(
-            XiaomiVacuumCleanSummarySensor(
-                f"{config_entry.title} {sensor.replace('_', ' ').title()}",
-                device,
-                config_entry,
-                f"{sensor}_{config_entry.unique_id}",
-                sensor,
-                "_".join(sensor.split(ATTR_CLEAN_HISTORY)[1].split("_")[1:]),
-            )
-        )
-
-    for sensor in VACUUM_CONSUMABLE_STATUS_SENSORS:
-        entities.append(
-            XiaomiVacuumConsumableStatusSensor(
-                f"{config_entry.title} {sensor.replace('_', ' ').title()}",
-                device,
-                config_entry,
-                f"{sensor}_{config_entry.unique_id}",
-                sensor,
-                "_".join(sensor.split(ATTR_CONSUMABLE_STATUS)[1].split("_")[1:]),
-            )
-        )
-
+    await asyncio.wait(coordinators)
     async_add_entities(entities)
 
 
 class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
-    """Representation of a Xiaomi Humidifier sensor."""
+    """Representation of a Xiaomi generic sensor."""
 
-    def __init__(self, name, device, entry, unique_id, coordinator, description):
+    def __init__(
+        self,
+        name,
+        device,
+        entry,
+        unique_id,
+        attribute,
+        coordinator,
+        description,
+        sensor_config=None,
+    ):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
+        self._sensor_config = sensor_config
+        if sensor_config is None:
+            self._sensor_config = SENSOR_TYPES[attribute]
+
+        self._attr_device_class = self._sensor_config.device_class
+        self._attr_state_class = self._sensor_config.state_class
+        self._attr_icon = self._sensor_config.icon
         self._attr_name = name
         self._attr_unique_id = unique_id
         self.entity_description = description
@@ -597,102 +597,29 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             if hasattr(self.coordinator.data, attr)
         }
 
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
+    @classmethod
+    def _extract_value_from_attribute(cls, state, attribute):
         value = getattr(state, attribute)
         if isinstance(value, Enum):
             return value.value
-
-        return value
-
-
-class XiaomiVacuumDeviceStatusStatusSensor(XiaomiMiioEntity, SensorEntity):
-    """
-    This class is to be used as a parent class for all the subclasses of miio.device.DeviceStatus.
-
-    This class abstracts the logic needed to retrieve and convert
-    data retrieved from DeviceStatus to a proper sensor.
-
-    The way this abstraction work is the following:
-    getattr(getattr(device, device_status_attr), status_attr)
-    So, if device is miio.vacuum.Vacuum, and you want to get the DND start time
-    you would pass the following values:
-    device_status_attr: dnd_status
-    status_attr: start
-    """
-
-    def __init__(
-        self,
-        name,
-        device,
-        entry,
-        unique_id,
-        sensor_attribute,
-        device_status_attr,
-        status_attr,
-    ):
-        """
-        Initialize the entity.
-
-        :param device_status_attr: Is that str name of the method/attribute
-                                   that returns the required DeviceStatus.
-                                   This method will be called on device param.
-                                   e.g.: `status`, `last_clean_details`
-        :param status_attr:        Is the str name of the method/attribute
-                                   that should be called on the result of `device_status_attr`
-                                   to get the needed data.
-                                   e.g. `state`
-        """
-
-        super().__init__(name, device, entry, unique_id)
-
-        self._sensor_config = SENSOR_TYPES[sensor_attribute]
-        self._attr_icon = self._sensor_config.icon
-        self._attr_unit_of_measurement = self._sensor_config.unit
-        self._attr_device_class = self._sensor_config.device_class
-        self._attr_available = False
-        self._attr_state = None
-        self._device_status_attr = device_status_attr
-        self._status_attr = status_attr
-        self._attr_entity_registry_enabled_default = False
-
-    async def async_update(self):
-        """Fetch state from the miio device."""
-        try:
-            self._attr_state = await self._extract_state_from_sub_status()
-            _LOGGER.debug("Got new state: %s", self._attr_state)
-
-            self._attr_available = True
-
-        except DeviceException as ex:
-            if self._attr_available:
-                self._attr_available = False
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
-
-    async def _extract_state_from_sub_status(self):
-        state = await self.hass.async_add_executor_job(
-            getattr(self._device, self._device_status_attr)
-        )
-        state = getattr(state, self._status_attr)
-
-        if isinstance(state, datetime.timedelta):
-            return self._parse_time_delta(state)
-        if isinstance(state, datetime.time):
-            return self._parse_datetime_time(state)
-        if isinstance(state, datetime.datetime):
-            return self._parse_datetime_datetime(state)
-        if isinstance(state, datetime.timedelta):
-            return self._parse_time_delta(state)
-        if isinstance(state, float):
-            return state
-        if isinstance(state, int):
-            return state
+        if isinstance(value, datetime.timedelta):
+            return cls._parse_time_delta(value)
+        if isinstance(value, datetime.time):
+            return cls._parse_datetime_time(value)
+        if isinstance(value, datetime.datetime):
+            return cls._parse_datetime_datetime(value)
+        if isinstance(value, datetime.timedelta):
+            return cls._parse_time_delta(value)
+        if isinstance(value, float):
+            return value
+        if isinstance(value, int):
+            return value
 
         _LOGGER.warning(
-            f"could not determine how to parse vacuum device status sensor of type: {type(state)}"
+            f"could not determine how to parse state value of type: {type(value)}"
         )
 
-        return state
+        return value
 
     @staticmethod
     def _parse_time_delta(timedelta: datetime.timedelta) -> int:
@@ -716,78 +643,6 @@ class XiaomiVacuumDeviceStatusStatusSensor(XiaomiMiioEntity, SensorEntity):
     @staticmethod
     def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
         return time.seconds
-
-
-class XiaomiVacuumDnDSensor(XiaomiVacuumDeviceStatusStatusSensor):
-    """Representation of a Xiaomi Vacuum DND status."""
-
-    def __init__(
-        self, name, device, entry, unique_id, sensor_attribute, dnd_status_attr
-    ):
-        """Initialize the entity."""
-        super().__init__(
-            name,
-            device,
-            entry,
-            unique_id,
-            sensor_attribute,
-            "dnd_status",
-            dnd_status_attr,
-        )
-
-
-class XiaomiVacuumLastCleanSensor(XiaomiVacuumDeviceStatusStatusSensor):
-    """Representation of a Xiaomi Vacuum Last clean status."""
-
-    def __init__(
-        self, name, device, entry, unique_id, sensor_attribute, last_clean_attr
-    ):
-        """Initialize the entity."""
-        super().__init__(
-            name,
-            device,
-            entry,
-            unique_id,
-            sensor_attribute,
-            "last_clean_details",
-            last_clean_attr,
-        )
-
-
-class XiaomiVacuumCleanSummarySensor(XiaomiVacuumDeviceStatusStatusSensor):
-    """Representation of a Xiaomi Vacuum clean summary status."""
-
-    def __init__(
-        self, name, device, entry, unique_id, sensor_attribute, clean_summary_attr
-    ):
-        """Initialize the entity."""
-        super().__init__(
-            name,
-            device,
-            entry,
-            unique_id,
-            sensor_attribute,
-            "clean_history",
-            clean_summary_attr,
-        )
-
-
-class XiaomiVacuumConsumableStatusSensor(XiaomiVacuumDeviceStatusStatusSensor):
-    """Representation of a Xiaomi Vacuum consumable status."""
-
-    def __init__(
-        self, name, device, entry, unique_id, sensor_attribute, consumable_status_attr
-    ):
-        """Initialize the entity."""
-        super().__init__(
-            name,
-            device,
-            entry,
-            unique_id,
-            sensor_attribute,
-            "consumable_status",
-            consumable_status_attr,
-        )
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
