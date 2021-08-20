@@ -90,17 +90,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_start_scanner(hass: HomeAssistant) -> None:
     """Perodic scan with pyserial."""
-
-    def _scan_serial():
-        scan_serial(hass)
-
-    stop_track = async_track_time_interval(hass, _scan_serial, SCAN_INTERVAL)
-
-    @callback
-    def _async_stop_scanner(*_):
-        stop_track()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scanner)
+    stop_track = async_track_time_interval(
+        hass, lambda now: scan_serial(hass), SCAN_INTERVAL
+    )
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, callback(lambda event: stop_track())
+    )
 
 
 async def _async_start_monitor(hass: HomeAssistant) -> bool:
