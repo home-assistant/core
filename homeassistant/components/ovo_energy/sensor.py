@@ -52,118 +52,122 @@ async def async_setup_entry(
 
     if coordinator.data:
         if coordinator.data.electricity:
-            entities = [
-                *entities,
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_electricity_reading",
-                        name="OVO Last Electricity Reading",
-                        device_class=DEVICE_CLASS_ENERGY,
-                        state_class=STATE_CLASS_TOTAL_INCREASING,
-                        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                        value=lambda usage: usage.electricity[-1].consumption,
-                    ),
-                    client,
-                ),
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_electricity_cost",
-                        name="OVO Last Electricity Cost",
-                        device_class=DEVICE_CLASS_MONETARY,
-                        state_class=STATE_CLASS_TOTAL_INCREASING,
-                        native_unit_of_measurement=coordinator.data.electricity[
-                            -1
-                        ].cost.currency_unit,
-                        icon="mdi:cash-multiple",
-                        value=lambda usage: usage.electricity[-1].consumption,
-                    ),
-                    client,
-                ),
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_electricity_start_time",
-                        name="OVO Last Electricity Start Time",
-                        entity_registry_enabled_default=False,
-                        device_class=DEVICE_CLASS_TIMESTAMP,
-                        value=lambda usage: dt_util.as_utc(
-                            usage.electricity[-1].interval.start
+            entities.extend(
+                [
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_electricity_reading",
+                            name="OVO Last Electricity Reading",
+                            device_class=DEVICE_CLASS_ENERGY,
+                            state_class=STATE_CLASS_TOTAL_INCREASING,
+                            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                            value=lambda usage: usage.electricity[-1].consumption,
                         ),
+                        client,
                     ),
-                    client,
-                ),
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_electricity_end_time",
-                        name="OVO Last Electricity End Time",
-                        entity_registry_enabled_default=False,
-                        device_class=DEVICE_CLASS_TIMESTAMP,
-                        value=lambda usage: dt_util.as_utc(
-                            usage.electricity[-1].interval.end
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_electricity_cost",
+                            name="OVO Last Electricity Cost",
+                            device_class=DEVICE_CLASS_MONETARY,
+                            state_class=STATE_CLASS_TOTAL_INCREASING,
+                            native_unit_of_measurement=coordinator.data.electricity[
+                                -1
+                            ].cost.currency_unit,
+                            icon="mdi:cash-multiple",
+                            value=lambda usage: usage.electricity[-1].consumption,
                         ),
+                        client,
                     ),
-                    client,
-                ),
-            ]
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_electricity_start_time",
+                            name="OVO Last Electricity Start Time",
+                            entity_registry_enabled_default=False,
+                            device_class=DEVICE_CLASS_TIMESTAMP,
+                            value=lambda usage: dt_util.as_utc(
+                                usage.electricity[-1].interval.start
+                            ),
+                        ),
+                        client,
+                    ),
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_electricity_end_time",
+                            name="OVO Last Electricity End Time",
+                            entity_registry_enabled_default=False,
+                            device_class=DEVICE_CLASS_TIMESTAMP,
+                            value=lambda usage: dt_util.as_utc(
+                                usage.electricity[-1].interval.end
+                            ),
+                        ),
+                        client,
+                    ),
+                ]
+            )
         if coordinator.data.gas:
-            entities = [
-                *entities,
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_gas_reading",
-                        name="OVO Last Gas Reading",
-                        device_class=DEVICE_CLASS_ENERGY,
-                        state_class=STATE_CLASS_TOTAL_INCREASING,
-                        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                        icon="mdi:gas-cylinder",
-                        value=lambda usage: usage.gas[-1].consumption,
-                    ),
-                    client,
-                ),
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_gas_cost",
-                        name="OVO Last Gas Cost",
-                        device_class=DEVICE_CLASS_MONETARY,
-                        state_class=STATE_CLASS_TOTAL_INCREASING,
-                        native_unit_of_measurement=coordinator.data.gas[
-                            -1
-                        ].cost.currency_unit,
-                        icon="mdi:cash-multiple",
-                        value=lambda usage: usage.gas[-1].consumption,
-                    ),
-                    client,
-                ),
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_gas_start_time",
-                        name="OVO Last Gas Start Time",
-                        entity_registry_enabled_default=False,
-                        device_class=DEVICE_CLASS_TIMESTAMP,
-                        value=lambda usage: dt_util.as_utc(
-                            usage.gas[-1].interval.start
+            entities.extend(
+                [
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_gas_reading",
+                            name="OVO Last Gas Reading",
+                            device_class=DEVICE_CLASS_ENERGY,
+                            state_class=STATE_CLASS_TOTAL_INCREASING,
+                            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                            icon="mdi:gas-cylinder",
+                            value=lambda usage: usage.gas[-1].consumption,
                         ),
+                        client,
                     ),
-                    client,
-                ),
-                OVOEnergySensor(
-                    coordinator,
-                    OVOEnergySensorEntityDescription(
-                        key=f"{DOMAIN}_{client.account_id}_last_gas_end_time",
-                        name="OVO Last Gas End Time",
-                        entity_registry_enabled_default=False,
-                        device_class=DEVICE_CLASS_TIMESTAMP,
-                        value=lambda usage: dt_util.as_utc(usage.gas[-1].interval.end),
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_gas_cost",
+                            name="OVO Last Gas Cost",
+                            device_class=DEVICE_CLASS_MONETARY,
+                            state_class=STATE_CLASS_TOTAL_INCREASING,
+                            native_unit_of_measurement=coordinator.data.gas[
+                                -1
+                            ].cost.currency_unit,
+                            icon="mdi:cash-multiple",
+                            value=lambda usage: usage.gas[-1].consumption,
+                        ),
+                        client,
                     ),
-                    client,
-                ),
-            ]
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_gas_start_time",
+                            name="OVO Last Gas Start Time",
+                            entity_registry_enabled_default=False,
+                            device_class=DEVICE_CLASS_TIMESTAMP,
+                            value=lambda usage: dt_util.as_utc(
+                                usage.gas[-1].interval.start
+                            ),
+                        ),
+                        client,
+                    ),
+                    OVOEnergySensor(
+                        coordinator,
+                        OVOEnergySensorEntityDescription(
+                            key=f"{DOMAIN}_{client.account_id}_last_gas_end_time",
+                            name="OVO Last Gas End Time",
+                            entity_registry_enabled_default=False,
+                            device_class=DEVICE_CLASS_TIMESTAMP,
+                            value=lambda usage: dt_util.as_utc(
+                                usage.gas[-1].interval.end
+                            ),
+                        ),
+                        client,
+                    ),
+                ]
+            )
 
     async_add_entities(entities, True)
 
