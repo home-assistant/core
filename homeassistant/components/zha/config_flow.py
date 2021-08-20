@@ -27,6 +27,27 @@ SUPPORTED_PORT_SETTINGS = (
 )
 
 
+def _format_port_human_readable(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | None,
+    pid: str | None,
+) -> str:
+    if description:
+        return (
+            f"{description[:26]} - {device}, s/n: {serial_number or 'n/a'}"
+            + (f" - {manufacturer}" if manufacturer else "")
+            + (f" - {vid}:{pid}" if vid else "")
+        )
+    return (
+        f"{device}, s/n: {serial_number or 'n/a'}"
+        + (f" - {manufacturer}" if manufacturer else "")
+        + (f" - {vid}:{pid}" if vid else "")
+    )
+
+
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -36,6 +57,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow instance."""
         self._device_path = None
         self._radio_type = None
+        self._auto_detected_data = None
+        self._title = None
 
     async def async_step_user(self, user_input=None):
         """Handle a zha config flow start."""
@@ -90,6 +113,74 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pick_radio",
             data_schema=vol.Schema(schema),
+        )
+
+    async def async_step_usb(self, discovery_info: DiscoveryInfoType):
+        """Handle usb discovery."""
+        vid = discovery_info["vid"]
+        pid = discovery_info["pid"]
+        serial_number = discovery_info["serial_number"]
+        device = discovery_info["device"]
+        manufacturer = discovery_info["manufacturer"]
+        description = discovery_info["description"]
+        await self.async_set_unique_id(
+            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        )
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
+            }
+        )
+        # Check if already configured
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        # If they already have a discovery for deconz
+        # we ignore the usb discovery as they probably
+        # want to use it there instead
+        for flow in self.hass.config_entries.flow.async_progress():
+            if flow["handler"] == "deconz":
+                return self.async_abort(reason="not_zha_device")
+
+        # The Nortek sticks are a special case since they
+        # have a Z-Wave and a Zigbee radio. We need to reject
+        # the Z-Wave radio.
+        if (
+            vid == "10C4"
+            and pid == "8A2A"
+            and "ZigBee" not in discovery_info["description"]
+        ):
+            return self.async_abort(reason="not_zha_device")
+
+        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
+        self._auto_detected_data = await detect_radios(dev_path)
+        if self._auto_detected_data is None:
+            return self.async_abort(reason="not_zha_device")
+        self._device_path = dev_path
+        self._title = _format_port_human_readable(
+            dev_path,
+            serial_number,
+            manufacturer,
+            description,
+            vid,
+            pid,
+        )
+        self._set_confirm_only()
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None):
+        """Confirm a discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._title,
+                data=self._auto_detected_data,
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={CONF_NAME: self._title},
+            data_schema=vol.Schema({}),
         )
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):

@@ -8,9 +8,19 @@ import serial.tools.list_ports
 import zigpy.config
 
 from homeassistant import setup
+from homeassistant.components.ssdp import (
+    ATTR_SSDP_LOCATION,
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+)
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_SSDP,
+    SOURCE_USB,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -55,6 +65,133 @@ async def test_discovery(detect_mock, hass):
         },
         CONF_RADIO_TYPE: "znp",
     }
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb(detect_mock, hass):
+    """Test usb flow -- radio detected."""
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+    with patch("homeassistant.components.zha.async_setup_entry"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert "zigbee radio" in result2["title"]
+    assert result2["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "/dev/ttyZIGBEE",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
+async def test_discovery_via_usb_no_radio(detect_mock, hass):
+    """Test usb flow -- no radio detected."""
+    discovery_info = {
+        "device": "/dev/null",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_rejects_nortek_zwave(detect_mock, hass):
+    """Test usb flow -- reject the nortek zwave radio."""
+    discovery_info = {
+        "device": "/dev/null",
+        "vid": "10C4",
+        "pid": "8A2A",
+        "serial_number": "612020FD",
+        "description": "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
+        "manufacturer": "Silicon Labs",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_already_setup(detect_mock, hass):
+    """Test usb flow -- already setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
+    """Test usb flow -- deconz discovered."""
+    result = await hass.config_entries.flow.async_init(
+        "deconz",
+        data={
+            ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
+            ATTR_UPNP_MANUFACTURER_URL: "http://www.dresden-elektronik.de",
+            ATTR_UPNP_SERIAL: "0000000000000000",
+        },
+        context={"source": SOURCE_SSDP},
+    )
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
