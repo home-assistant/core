@@ -10,7 +10,7 @@ from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
@@ -48,13 +48,13 @@ class USBDiscovery:
         self.usb = usb
         self.seen: set[USBDeviceTupleType] = set()
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up USB Discovery."""
         if not await self._async_start_monitor():
             await self._async_start_scanner()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
 
-    async def async_start(self):
+    async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         self.flow_dispatcher.async_start()
         await self.hass.async_add_executor_job(self.scan_serial)
