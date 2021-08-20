@@ -17,7 +17,7 @@ USB = {}
 """.strip()
 
 
-def generate_and_validate(integrations: list[dict[str, str]]):
+def generate_and_validate(integrations: list[dict[str, str]]) -> str:
     """Validate and generate usb data."""
     match_list = []
 
@@ -38,7 +38,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
     return BASE.format(json.dumps(match_list, indent=4))
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate usb file."""
     usb_path = config.root / "homeassistant/generated/usb.py"
     config.cache["usb"] = content = generate_and_validate(integrations)
@@ -57,7 +57,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate usb file."""
     usb_path = config.root / "homeassistant/generated/usb.py"
     with open(str(usb_path), "w") as fp:

@@ -163,6 +163,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
+homeassistant/components/fjaraskupan/* @elupus
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flipr/* @cnico
 homeassistant/components/flo/* @dmulcahey
@@ -374,6 +375,7 @@ homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
 homeassistant/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
+homeassistant/components/p1_monitor/* @klaasnicolaas
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 homeassistant/components/pcal9535a/* @Shulyaka

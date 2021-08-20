@@ -1,10 +1,11 @@
 """Models helper class for the usb integration."""
 from __future__ import annotations
 
-from typing import TypedDict
+from dataclasses import dataclass
 
 
-class USBDevice(TypedDict):
+@dataclass
+class USBDevice:
     """A usb device."""
 
     device: str

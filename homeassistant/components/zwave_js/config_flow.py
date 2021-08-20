@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 import logging
+import os
 from typing import Any
 
 import aiohttp
@@ -13,7 +14,7 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.hassio import is_hassio
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -64,6 +65,27 @@ ADDON_USER_INPUT_MAP = {
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+
+
+def _format_port_human_readable(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | None,
+    pid: str | None,
+) -> str:
+    if description:
+        return (
+            f"{description[:26]} - {device}, s/n: {serial_number or 'n/a'}"
+            + (f" - {manufacturer}" if manufacturer else "")
+            + (f" - {vid}:{pid}" if vid else "")
+        )
+    return (
+        f"{device}, s/n: {serial_number or 'n/a'}"
+        + (f" - {manufacturer}" if manufacturer else "")
+        + (f" - {vid}:{pid}" if vid else "")
+    )
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -286,6 +308,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
+        self._title: str | None = None
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -308,6 +331,30 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
+
+    async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
+        """Handle USB Discovery."""
+        # Currently we do not have a way to probe
+        # a zwave stick to make sure it is actually
+        # a zwave device. This means we can only add vid
+        # and pids that are guaranteed to be zwave devices
+        if not is_hassio(self.hass):
+            return self.async_abort(reason="discovery_requires_supervisor")
+
+        dev_path = await self.hass.async_add_executor_job(
+            get_serial_by_id, discovery_info["device"]
+        )
+        self.usb_path = dev_path
+        self._title = _format_port_human_readable(
+            dev_path,
+            discovery_info["serial_number"],
+            discovery_info["manufacturer"],
+            discovery_info["description"],
+            discovery_info["vid"],
+            discovery_info["pid"],
+        )
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -723,3 +770,15 @@ class InvalidInput(exceptions.HomeAssistantError):
         """Initialize error."""
         super().__init__()
         self.error = error
+
+
+def get_serial_by_id(dev_path: str) -> str:
+    """Return a /dev/serial/by-id match for given device if available."""
+    by_id = "/dev/serial/by-id"
+    if not os.path.isdir(by_id):
+        return dev_path
+
+    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
+        if os.path.realpath(path) == dev_path:
+            return path
+    return dev_path

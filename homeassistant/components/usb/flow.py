@@ -29,14 +29,12 @@ class FlowDispatcher:
     def async_start(self, *_: Any) -> None:
         """Start processing pending flows."""
         self.started = True
-        self.hass.loop.call_soon(self._async_process_pending_flows)
-
-    def _async_process_pending_flows(self) -> None:
         for flow in self.pending_flows:
             self.hass.async_create_task(self._init_flow(flow))
         self.pending_flows = []
 
-    def create(self, flow: USBFlow) -> None:
+    @callback
+    def async_create(self, flow: USBFlow) -> None:
         """Create and add or queue a flow."""
         if self.started:
             self.hass.async_create_task(self._init_flow(flow))
