@@ -59,4 +59,6 @@ class TuyaHaEntity(Entity):
         return self.tuya_device.online
 
     def _send_command(self, commands) -> None:
-        self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
+        self.hass.async_add_executor_job(
+            self.tuya_device_manager.send_commands, self.tuya_device.id, commands
+        )
