@@ -433,7 +433,6 @@ async def test_get_condition_capabilities_value(
     cc_options = [
         (133, "ASSOCIATION"),
         (128, "BATTERY"),
-        (112, "CONFIGURATION"),
         (98, "DOOR_LOCK"),
         (122, "FIRMWARE_UPDATE_MD"),
         (114, "MANUFACTURER_SPECIFIC"),
