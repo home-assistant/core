@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
@@ -29,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(device_state: DeviceState):
+    def _constructor(device_state: DeviceState) -> list[Entity]:
         return [
             RssiSensor(
                 device_state.coordinator, device_state.device, device_state.device_info
