@@ -10,7 +10,7 @@ from aiohttp import hdrs, web, web_exceptions, web_request
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client
-from zwave_js_server.const import CommandClass, LogLevel
+from zwave_js_server.const import CommandClass, InclusionStrategy, LogLevel
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
     FailedCommand,
@@ -386,7 +386,11 @@ async def websocket_add_node(
 ) -> None:
     """Add a node to the Z-Wave network."""
     controller = client.driver.controller
-    include_non_secure = not msg[SECURE]
+
+    if msg[SECURE]:
+        inclusion_strategy = InclusionStrategy.SECURITY_S0
+    else:
+        inclusion_strategy = InclusionStrategy.INSECURE
 
     @callback
     def async_cleanup() -> None:
@@ -454,7 +458,7 @@ async def websocket_add_node(
         ),
     ]
 
-    result = await controller.async_begin_inclusion(include_non_secure)
+    result = await controller.async_begin_inclusion(inclusion_strategy)
     connection.send_result(
         msg[ID],
         result,
@@ -594,8 +598,12 @@ async def websocket_replace_failed_node(
 ) -> None:
     """Replace a failed node with a new node."""
     controller = client.driver.controller
-    include_non_secure = not msg[SECURE]
     node_id = msg[NODE_ID]
+
+    if msg[SECURE]:
+        inclusion_strategy = InclusionStrategy.SECURITY_S0
+    else:
+        inclusion_strategy = InclusionStrategy.INSECURE
 
     @callback
     def async_cleanup() -> None:
@@ -677,7 +685,7 @@ async def websocket_replace_failed_node(
         ),
     ]
 
-    result = await controller.async_replace_failed_node(node_id, include_non_secure)
+    result = await controller.async_replace_failed_node(node_id, inclusion_strategy)
     connection.send_result(
         msg[ID],
         result,
