@@ -94,10 +94,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: DiscoveryInfoType):
         """Handle usb discovery."""
-        # Check if already configured
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         vid = discovery_info["vid"]
         pid = discovery_info["pid"]
         serial_number = discovery_info["serial_number"]
@@ -108,6 +104,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
             }
         )
+        # Check if already configured
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         auto_detected_data = await detect_radios(self._device_path)
         if auto_detected_data is None:
             return self.async_abort("not_zha_device")
