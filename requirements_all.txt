@@ -835,7 +835,7 @@ iammeter==0.1.7
 iaqualink==0.3.90
 
 # homeassistant.components.watson_tts
-ibm-watson==5.1.0
+ibm-watson==5.2.2
 
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
