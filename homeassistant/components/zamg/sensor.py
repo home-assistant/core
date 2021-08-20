@@ -8,6 +8,7 @@ import gzip
 import json
 import logging
 import os
+from typing import Type, Union
 
 from aiohttp.hdrs import USER_AGENT
 import requests
@@ -46,13 +47,15 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
+DTypeT = Union[Type[int], Type[float], Type[str]]
+
 
 @dataclass
 class ZamgRequiredKeysMixin:
     """Mixin for required keys."""
 
     col_heading: str
-    dtype: type[int | float | str]
+    dtype: DTypeT
 
 
 @dataclass
@@ -171,6 +174,10 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
+API_FIELDS: dict[str, tuple[str, DTypeT]] = {
+    desc.col_heading: (desc.key, desc.dtype) for desc in SENSOR_TYPES
+}
+
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_CONDITIONS, default=["temperature"]): vol.All(
@@ -190,7 +197,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZAMG sensor platform."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -297,15 +304,12 @@ class ZamgData:
 
         for row in self.current_observations():
             if row.get("Station") == self._station_id:
-                api_fields = {
-                    desc.col_heading: (desc.key, desc.dtype) for desc in SENSOR_TYPES
-                }
                 self.data = {
-                    api_fields.get(col_heading)[0]: api_fields.get(col_heading)[1](
+                    API_FIELDS[col_heading][0]: API_FIELDS[col_heading][1](
                         v.replace(",", ".")
                     )
                     for col_heading, v in row.items()
-                    if col_heading in api_fields and v
+                    if col_heading in API_FIELDS and v
                 }
                 break
         else:
