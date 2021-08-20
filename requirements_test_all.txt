@@ -1011,6 +1011,7 @@ pyruckus==0.12
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
 
@@ -1094,6 +1095,9 @@ pytraccar==0.9.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==7.0.6
+
+# homeassistant.components.usb
+pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.8.2

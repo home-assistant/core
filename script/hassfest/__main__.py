@@ -18,6 +18,7 @@ from . import (
     services,
     ssdp,
     translations,
+    usb,
     zeroconf,
 )
 from .model import Config, Integration
@@ -34,6 +35,7 @@ INTEGRATION_PLUGINS = [
     translations,
     zeroconf,
     dhcp,
+    usb,
 ]
 HASS_PLUGINS = [
     coverage,
