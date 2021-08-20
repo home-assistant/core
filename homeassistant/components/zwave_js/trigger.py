@@ -5,8 +5,7 @@ import importlib
 
 from homeassistant.const import CONF_PLATFORM
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 def _get_trigger_platform(config):
