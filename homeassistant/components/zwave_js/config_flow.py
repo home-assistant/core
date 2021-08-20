@@ -389,10 +389,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({}),
             )
 
-        addon_info = await self._async_get_addon_info()
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            return await self.async_step_install_addon()
-        return await self.async_step_configure_addon()
+        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
