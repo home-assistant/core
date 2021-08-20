@@ -36,7 +36,7 @@ PARALLEL_UPDATES = 4
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
-    value: Callable = round
+    value: Callable[[OVODailyUsage], StateType] = round
 
 
 async def async_setup_entry(
