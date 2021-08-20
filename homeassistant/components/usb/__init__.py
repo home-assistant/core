@@ -10,137 +10,127 @@ from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
-from .const import DOMAIN, FLOW_DISPATCHER, SEEN, USB
 from .flow import FlowDispatcher, USBFlow
 from .models import USBDevice
+from .utils import USBDeviceTupleType, usb_device_from_port, usb_device_tuple
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(minutes=5)
-
-
-def _usb_device_from_port(port: ListPortInfo) -> USBDevice:
-    return {
-        "device": port.device,
-        "vid": f"{hex(port.vid)[2:]:0>4}".upper(),
-        "pid": f"{hex(port.pid)[2:]:0>4}".upper(),
-        "serial_number": port.serial_number,
-        "manufacturer": port.manufacturer,
-        "description": port.description,
-    }
-
-
-@callback
-def _async_process_discovered_usb_device(
-    hass: HomeAssistant, device: USBDevice
-) -> None:
-    domain_data = hass.data[DOMAIN]
-    seen = domain_data[SEEN]
-    _LOGGER.debug("Discovered USB Device: %s", device)
-    device_tuple = _usb_device_tuple(device)
-    if device_tuple in seen:
-        return
-    seen.add(device_tuple)
-    for matcher in domain_data[USB]:
-        if "vid" in matcher and device["vid"] != matcher["vid"]:
-            continue
-        if "pid" in matcher and device["pid"] != matcher["pid"]:
-            continue
-        flow: USBFlow = {
-            "domain": matcher["domain"],
-            "context": {"source": config_entries.SOURCE_USB},
-            "data": dict(device),
-        }
-        domain_data[FLOW_DISPATCHER].create(flow)
-
-
-@callback
-def _async_process_ports(hass: HomeAssistant, ports: list[ListPortInfo]) -> None:
-    for port in ports:
-        if port.vid is None and port.pid is None:
-            continue
-        _async_process_discovered_usb_device(hass, _usb_device_from_port(port))
-
-
-def scan_serial(hass: HomeAssistant) -> None:
-    """Scan serial ports."""
-    hass.loop.call_soon_threadsafe(_async_process_ports, hass, comports())
+# Scanning only happens on non-linux systems
+SCAN_INTERVAL = datetime.timedelta(minutes=60)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the USB Discovery integration."""
-    flow_dispatcher = FlowDispatcher(hass)
     usb = await async_get_usb(hass)
-    hass.data[DOMAIN] = {SEEN: set(), FLOW_DISPATCHER: flow_dispatcher, USB: usb}
-
-    if not await _async_start_monitor(hass):
-        await _async_start_scanner(hass)
-
-    await hass.async_add_executor_job(scan_serial, hass)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, flow_dispatcher.async_start)
-
+    usb_discovery = USBDiscovery(hass, FlowDispatcher(hass), usb)
+    await usb_discovery.async_setup()
     return True
 
 
-async def _async_start_scanner(hass: HomeAssistant) -> None:
-    """Perodic scan with pyserial."""
-    stop_track = async_track_time_interval(
-        hass, lambda now: scan_serial(hass), SCAN_INTERVAL
-    )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, callback(lambda event: stop_track())
-    )
+class USBDiscovery:
+    """Manage USB Discovery."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        flow_dispatcher: FlowDispatcher,
+        usb: list[dict[str, str]],
+    ) -> None:
+        """Init USB Discovery."""
+        self.hass = hass
+        self.flow_dispatcher = flow_dispatcher
+        self.usb = usb
+        self.seen: set[USBDeviceTupleType] = set()
 
-async def _async_start_monitor(hass: HomeAssistant) -> bool:
-    """Start monitoring hardware with pyudev."""
-    if not sys.platform.startswith("linux"):
-        return False
-    from pyudev import Context, Monitor, MonitorObserver
+    async def async_setup(self):
+        """Set up USB Discovery."""
+        if not await self._async_start_monitor():
+            await self._async_start_scanner()
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
 
-    try:
-        context = Context()
-    except ImportError:
-        return False
+    async def async_start(self):
+        """Start USB Discovery and run a manual scan."""
+        self.flow_dispatcher.async_start()
+        await self.hass.async_add_executor_job(self.scan_serial)
 
-    monitor = Monitor.from_netlink(context)
-    monitor.filter_by(subsystem="tty")
+    async def _async_start_scanner(self) -> None:
+        """Perodic scan with pyserial when the observer is not available."""
+        stop_track = async_track_time_interval(
+            self.hass, lambda now: self.scan_serial(), SCAN_INTERVAL
+        )
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, callback(lambda event: stop_track())
+        )
 
-    def _device_discovered(device):
+    async def _async_start_monitor(self) -> bool:
+        """Start monitoring hardware with pyudev."""
+        if not sys.platform.startswith("linux"):
+            return False
+        from pyudev import (  # pylint: disable=import-outside-toplevel
+            Context,
+            Monitor,
+            MonitorObserver,
+        )
+
+        try:
+            context = Context()
+        except ImportError:
+            return False
+
+        monitor = Monitor.from_netlink(context)
+        monitor.filter_by(subsystem="tty")
+        observer = MonitorObserver(
+            monitor, callback=self._device_discovered, name="usb-observer"
+        )
+        observer.start()
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, lambda event: observer.stop()
+        )
+        return True
+
+    def _device_discovered(self, device):
         if device.action != "add":
             return
         _LOGGER.debug(
-            "Discovered Device at path: %s, triggering scan serial", device.device_path
+            "Discovered Device at path: %s, triggering scan serial",
+            device.device_path,
         )
-        scan_serial(hass)
+        self.scan_serial()
 
-    observer = MonitorObserver(
-        monitor, callback=_device_discovered, name="usb-observer"
-    )
-    observer.start()
+    @callback
+    def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
+        """Process a USB discovery."""
+        _LOGGER.debug("Discovered USB Device: %s", device)
+        device_tuple = usb_device_tuple(device)
+        if device_tuple in self.seen:
+            return
+        self.seen.add(device_tuple)
+        for matcher in self.usb:
+            if "vid" in matcher and device["vid"] != matcher["vid"]:
+                continue
+            if "pid" in matcher and device["pid"] != matcher["pid"]:
+                continue
+            flow: USBFlow = {
+                "domain": matcher["domain"],
+                "context": {"source": config_entries.SOURCE_USB},
+                "data": dict(device),
+            }
+            self.flow_dispatcher.create(flow)
 
-    def _shutdown_observer(event: Event):
-        observer.stop()
+    @callback
+    def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
+        """Process each discovered port."""
+        for port in ports:
+            if port.vid is None and port.pid is None:
+                continue
+            self._async_process_discovered_usb_device(usb_device_from_port(port))
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_observer)
-
-    return True
-
-
-def _usb_device_tuple(
-    usb_device: USBDevice,
-) -> tuple[str, str, str, str | None, str | None, str | None]:
-    return (
-        usb_device["device"],
-        usb_device["vid"],
-        usb_device["pid"],
-        usb_device["serial_number"],
-        usb_device["manufacturer"],
-        usb_device["description"],
-    )
+    def scan_serial(self) -> None:
+        """Scan serial ports."""
+        self.hass.loop.call_soon_threadsafe(self._async_process_ports, comports())
