@@ -400,6 +400,8 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Bulb."""
 
     _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+    _attr_min_mireds = 175
+    _attr_min_mireds = 333
 
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
@@ -411,16 +413,6 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     def color_temp(self):
         """Return the color temperature."""
         return self._color_temp
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return 175
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return 333
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -530,6 +522,9 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
+    _attr_min_mireds = 175
+    _attr_max_mireds = 370
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
@@ -537,16 +532,6 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         self._state_attrs.update(
             {ATTR_NIGHT_LIGHT_MODE: None, ATTR_AUTOMATIC_COLOR_TEMPERATURE: None}
         )
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return 175
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return 370
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -758,6 +743,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Zhirui Bedside Lamp."""
 
     _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+    _attr_min_mireds = 153
+    _attr_max_mireds = 588
 
     def __init__(self, name, device, entry, unique_id):
         """Initialize the light device."""
@@ -774,16 +761,6 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 ATTR_BAND: None,
             }
         )
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return 153
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return 588
 
     @property
     def hs_color(self) -> tuple:
