@@ -10,5 +10,10 @@ USB = [
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60"
+    },
+    {
+        "domain": "zha",
+        "vid": "1CF1",
+        "pid": "0030"
     }
 ]
