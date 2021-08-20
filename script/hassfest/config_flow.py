@@ -41,6 +41,7 @@ def validate_integration(config: Config, integration: Integration):
         or "async_step_ssdp" in config_flow
         or "async_step_zeroconf" in config_flow
         or "async_step_dhcp" in config_flow
+        or "async_step_usb" in config_flow
     )
 
     if not needs_unique_id:
