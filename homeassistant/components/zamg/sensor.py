@@ -99,7 +99,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="wind_max_speed",
         name="Top Wind Speed",
-        device_class=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         col_heading=f"WSG {SPEED_KILOMETERS_PER_HOUR}",
         dtype=float,
     ),
@@ -128,7 +128,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
     ZamgSensorEntityDescription(
         key="precipitation",
         name="Precipitation",
-        device_class=f"l/{AREA_SQUARE_METERS}",
+        native_unit_of_measurement=f"l/{AREA_SQUARE_METERS}",
         col_heading=f"N l/{AREA_SQUARE_METERS}",
         dtype=float,
     ),
