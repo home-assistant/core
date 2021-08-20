@@ -115,7 +115,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         """Initialize the generic Xiaomi device."""
         super().__init__(name, device, entry, unique_id, coordinator=coordinator)
 
-        self._state = None
         self._attributes = {}
         self._available_modes = []
         self._mode = None
@@ -123,11 +122,6 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         self._max_humidity = DEFAULT_MAX_HUMIDITY
         self._humidity_steps = 100
         self._target_humidity = None
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
@@ -166,7 +160,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
             "Turning the miio device on failed.", self._device.on
         )
         if result:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -176,7 +170,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
     def translate_humidity(self, humidity):
@@ -217,7 +211,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._max_humidity = 80
             self._humidity_steps = 10
 
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._attributes.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -227,15 +221,10 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         self._target_humidity = self._attributes[ATTR_TARGET_HUMIDITY]
         self._mode = self._attributes[ATTR_MODE]
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._attributes.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)

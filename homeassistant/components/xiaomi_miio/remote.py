@@ -177,7 +177,7 @@ class XiaomiMiioRemote(RemoteEntity):
         self._attr_unique_id = unique_id
         self._slot = slot
         self._timeout = timeout
-        self._state = False
+        self._attr_is_on = False
         self._commands = commands
 
     @property

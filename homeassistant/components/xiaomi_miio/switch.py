@@ -645,7 +645,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
 
         self._attr_icon = "mdi:power-socket"
         self._attr_available = False
-        self._state = None
+        self._attr_is_on = None
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
@@ -654,11 +654,6 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
@@ -686,7 +681,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         result = await self._try_command("Turning the plug on failed", self._device.on)
 
         if result:
-            self._state = True
+            self._attr_is_on = True
             self._skip_update = True
 
     async def async_turn_off(self, **kwargs):
@@ -696,7 +691,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self._skip_update = True
 
     async def async_update(self):
@@ -711,7 +706,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             _LOGGER.debug("Got new state: %s", state)
 
             self._attr_available = True
-            self._state = state.is_on
+            self._attr_is_on = state.is_on
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
@@ -784,7 +779,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             _LOGGER.debug("Got new state: %s", state)
 
             self._attr_available = True
-            self._state = state.is_on
+            self._attr_is_on = state.is_on
             self._state_attrs.update(
                 {ATTR_TEMPERATURE: state.temperature, ATTR_LOAD_POWER: state.load_power}
             )
@@ -849,7 +844,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             )
 
         if result:
-            self._state = True
+            self._attr_is_on = True
             self._skip_update = True
 
     async def async_turn_off(self, **kwargs):
@@ -864,7 +859,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self._skip_update = True
 
     async def async_update(self):
@@ -880,9 +875,9 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
             self._attr_available = True
             if self._channel_usb:
-                self._state = state.usb_power
+                self._attr_is_on = state.usb_power
             else:
-                self._state = state.is_on
+                self._attr_is_on = state.is_on
 
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
@@ -914,7 +909,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
         )
 
         if result:
-            self._state = True
+            self._attr_is_on = True
             self._skip_update = True
 
     async def async_turn_off(self, **kwargs):
@@ -924,7 +919,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self._skip_update = True
 
     async def async_update(self):
@@ -939,7 +934,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             _LOGGER.debug("Got new state: %s", state)
 
             self._attr_available = True
-            self._state = state.power_socket == "on"
+            self._attr_is_on = state.power_socket == "on"
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:

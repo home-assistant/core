@@ -314,7 +314,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
 
         self._attr_available = False
         self._available_attributes = {}
-        self._state = None
         self._mode = None
         self._fan_level = None
         self._state_attrs = {ATTR_MODEL: self._model}
@@ -358,11 +357,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
         value = getattr(state, attribute)
@@ -375,7 +369,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_available = True
-        self._state = self.coordinator.data.is_on
+        self._attr_is_on = self.coordinator.data.is_on
         self._state_attrs.update(
             {
                 key: self._extract_value_from_attribute(self.coordinator.data, value)
@@ -412,7 +406,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
 
         if result:
-            self._state = True
+            self._attr_is_on = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -422,7 +416,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         )
 
         if result:
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
 
