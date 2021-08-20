@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -27,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
 
-    def _constructor(device_state: DeviceState):
+    def _constructor(device_state: DeviceState) -> list[Entity]:
         return [
             Light(
                 device_state.coordinator, device_state.device, device_state.device_info
