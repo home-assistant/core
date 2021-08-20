@@ -235,6 +235,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
+    _attr_supported_features = SUPPORT_XIAOMI
+
     def __init__(self, name, device, entry, unique_id):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(name, device, entry, unique_id)
@@ -354,11 +356,6 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
             if self.timers:
                 attrs[ATTR_TIMERS] = self.timers
         return attrs
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_XIAOMI
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""

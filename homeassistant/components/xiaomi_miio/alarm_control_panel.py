@@ -42,6 +42,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     """Representation of the XiaomiGatewayAlarm."""
 
+    _attr_supported_features = SUPPORT_ALARM_ARM_AWAY
+
     def __init__(
         self, gateway_device, gateway_name, model, mac_address, gateway_device_id
     ):
@@ -69,11 +71,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""

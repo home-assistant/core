@@ -318,14 +318,9 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._fan_level = None
         self._state_attrs = {ATTR_MODEL: self._model}
         self._device_features = 0
-        self._supported_features = 0
+        self._attr_supported_features = 0
         self._speed_count = 100
         self._preset_modes = []
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
 
     @property
     def speed_count(self):
@@ -447,37 +442,37 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO_V7
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
         elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
-            self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+            self._attr_supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
             self._speed_count = 3
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3
             self._preset_modes = PRESET_MODES_AIRPURIFIER_V3
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
         else:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIIO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
             self._preset_modes = PRESET_MODES_AIRPURIFIER
-            self._supported_features = SUPPORT_PRESET_MODE
+            self._attr_supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
 
         self._state_attrs.update(
@@ -489,7 +484,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     @property
     def preset_mode(self):
         """Get the active preset mode."""
-        if self._state:
+        if self.is_on:
             preset_mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
             return preset_mode if preset_mode in self._preset_modes else None
 
@@ -498,7 +493,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     @property
     def percentage(self):
         """Return the current percentage based speed."""
-        if self._state:
+        if self.is_on:
             mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE])
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
@@ -604,7 +599,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     @property
     def percentage(self):
         """Return the current percentage based speed."""
-        if self._state:
+        if self.is_on:
             return ranged_value_to_percentage((1, 3), self._fan_level)
 
         return None
@@ -612,7 +607,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     @property
     def preset_mode(self):
         """Get the active preset mode."""
-        if self._state:
+        if self.is_on:
             preset_mode = AirpurifierMiotOperationMode(self._mode).name
             return preset_mode if preset_mode in self._preset_modes else None
 
@@ -685,7 +680,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
     @property
     def preset_mode(self):
         """Get the active preset mode."""
-        if self._state:
+        if self.is_on:
             preset_mode = AirfreshOperationMode(self._mode).name
             return preset_mode if preset_mode in self._preset_modes else None
 
@@ -694,7 +689,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
     @property
     def percentage(self):
         """Return the current percentage based speed."""
-        if self._state:
+        if self.is_on:
             mode = AirfreshOperationMode(self._mode)
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
