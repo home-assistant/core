@@ -1,6 +1,7 @@
 """The USB Discovery integration."""
 from __future__ import annotations
 
+import dataclasses
 import datetime
 import logging
 import sys
@@ -17,7 +18,7 @@ from homeassistant.loader import async_get_usb
 
 from .flow import FlowDispatcher, USBFlow
 from .models import USBDevice
-from .utils import USBDeviceTupleType, usb_device_from_port, usb_device_tuple
+from .utils import usb_device_from_port
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class USBDiscovery:
         self.hass = hass
         self.flow_dispatcher = flow_dispatcher
         self.usb = usb
-        self.seen: set[USBDeviceTupleType] = set()
+        self.seen: set[tuple[str, ...]] = set()
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -108,19 +109,19 @@ class USBDiscovery:
     def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
         """Process a USB discovery."""
         _LOGGER.debug("Discovered USB Device: %s", device)
-        device_tuple = usb_device_tuple(device)
+        device_tuple = dataclasses.astuple(device)
         if device_tuple in self.seen:
             return
         self.seen.add(device_tuple)
         for matcher in self.usb:
-            if "vid" in matcher and device["vid"] != matcher["vid"]:
+            if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
-            if "pid" in matcher and device["pid"] != matcher["pid"]:
+            if "pid" in matcher and device.pid != matcher["pid"]:
                 continue
             flow: USBFlow = {
                 "domain": matcher["domain"],
                 "context": {"source": config_entries.SOURCE_USB},
-                "data": dict(device),
+                "data": dataclasses.asdict(device),
             }
             self.flow_dispatcher.create(flow)
 
