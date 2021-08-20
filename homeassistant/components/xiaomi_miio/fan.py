@@ -83,7 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ATTR_MODEL = "model"
 
 # Air Purifier
-ATTR_FILTER_LIFE = "filter_life_remaining"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_BRIGHTNESS = "brightness"
 ATTR_LEVEL = "level"
