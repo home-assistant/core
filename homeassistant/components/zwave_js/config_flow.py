@@ -334,12 +334,18 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
         """Handle USB Discovery."""
-        # Currently we do not have a way to probe
-        # a zwave stick to make sure it is actually
-        # a zwave device. This means we can only add vid
-        # and pids that are guaranteed to be zwave devices
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
+
+        # The Nortek sticks are a special case since they
+        # have a Z-Wave and a Zigbee radio. We need to reject
+        # the Zigbee radio.
+        if (
+            discovery_info["vid"] == "10C4"
+            and discovery_info["pid"] == "8A2A"
+            and "Z-Wave" not in discovery_info["description"]
+        ):
+            return self.async_abort(reason="not_zwave_device")
 
         dev_path = await self.hass.async_add_executor_job(
             get_serial_by_id, discovery_info["device"]
