@@ -10,7 +10,7 @@ from homeassistant.components.rainforest_eagle.const import (
     TYPE_EAGLE_200,
 )
 from homeassistant.components.rainforest_eagle.data import CannotConnect, InvalidAuth
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -33,7 +33,11 @@ async def test_form(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
         )
         await hass.async_block_till_done()
 
@@ -41,6 +45,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["title"] == "abcdef"
     assert result2["data"] == {
         CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.55",
         CONF_CLOUD_ID: "abcdef",
         CONF_INSTALL_CODE: "123456",
         CONF_HARDWARE_ADDRESS: "mock-hw",
@@ -55,12 +60,16 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.rainforest_eagle.data.Eagle100Reader.get_network_info",
+        "aioeagle.EagleHub.get_device_list",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -74,12 +83,16 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.rainforest_eagle.data.Eagle100Reader.get_network_info",
+        "aioeagle.EagleHub.get_device_list",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_CLOUD_ID: "abcdef", CONF_INSTALL_CODE: "123456"},
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
