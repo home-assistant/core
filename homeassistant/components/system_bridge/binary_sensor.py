@@ -84,6 +84,6 @@ class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return f the binary sensor is currently on or off."""
+        """Return the boolean state of the binary sensor."""
         bridge: Bridge = self.coordinator.data
         return self.entity_description.value(bridge)
