@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
+import async_timeout
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
@@ -26,7 +27,8 @@ async def _async_has_devices(hass) -> bool:
 
     async with BleakScanner(detection_callback=detection):
         try:
-            await asyncio.wait_for(event.wait(), CONST_WAIT_TIME)
+            async with async_timeout.timeout(CONST_WAIT_TIME):
+                await event.wait()
         except asyncio.TimeoutError:
             return False
 

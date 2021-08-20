@@ -1,4 +1,4 @@
-"""Support for Tuya fans."""
+"""Support for Fjäråskupan fans."""
 from __future__ import annotations
 
 from fjaraskupan import (
@@ -41,26 +41,30 @@ PRESET_MODES = [
     PRESET_MODE_AFTER_COOKING_MANUAL,
 ]
 
+PRESET_TO_COMMAND = {
+    PRESET_MODE_AFTER_COOKING_MANUAL: COMMAND_AFTERCOOKINGTIMERMANUAL,
+    PRESET_MODE_AFTER_COOKING_AUTO: COMMAND_AFTERCOOKINGTIMERAUTO,
+    PRESET_MODE_NORMAL: COMMAND_AFTERCOOKINGTIMEROFF,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up tuya sensors dynamically through tuya discovery."""
+    """Set up sensors dynamically through discovery."""
 
-    def _constructor(devicestate: DeviceState):
+    def _constructor(device_state: DeviceState):
         return [
-            Fan(devicestate.coordinator, devicestate.device, devicestate.device_info)
+            Fan(device_state.coordinator, device_state.device, device_state.device_info)
         ]
 
-    await async_setup_entry_platform(
-        hass, config_entry, async_add_entities, _constructor
-    )
+    async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
 class Fan(CoordinatorEntity[State], FanEntity):
-    """Fan device."""
+    """Fan entity."""
 
     def __init__(
         self,
@@ -68,7 +72,7 @@ class Fan(CoordinatorEntity[State], FanEntity):
         device: Device,
         device_info: DeviceInfo,
     ) -> None:
-        """Init fan device."""
+        """Init fan entity."""
         super().__init__(coordinator)
         self._device = device
         self._default_on_speed = 25
@@ -108,12 +112,7 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
         async with self._device:
             if preset_mode != self._preset_mode:
-                if preset_mode == PRESET_MODE_AFTER_COOKING_MANUAL:
-                    await self._device.send_command(COMMAND_AFTERCOOKINGTIMERMANUAL)
-                elif preset_mode == PRESET_MODE_AFTER_COOKING_AUTO:
-                    await self._device.send_command(COMMAND_AFTERCOOKINGTIMERAUTO)
-                elif preset_mode == PRESET_MODE_NORMAL:
-                    await self._device.send_command(COMMAND_AFTERCOOKINGTIMEROFF)
+                await self._device.send_command(PRESET_TO_COMMAND[preset_mode])
 
             if preset_mode == PRESET_MODE_NORMAL:
                 await self._device.send_fan_speed(int(new_speed))
@@ -126,13 +125,7 @@ class Fan(CoordinatorEntity[State], FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode == PRESET_MODE_AFTER_COOKING_MANUAL:
-            await self._device.send_command(COMMAND_AFTERCOOKINGTIMERMANUAL)
-        elif preset_mode == PRESET_MODE_AFTER_COOKING_AUTO:
-            await self._device.send_command(COMMAND_AFTERCOOKINGTIMERAUTO)
-        elif preset_mode == PRESET_MODE_NORMAL:
-            await self._device.send_command(COMMAND_AFTERCOOKINGTIMEROFF)
-
+        await self._device.send_command(PRESET_TO_COMMAND[preset_mode])
         self.coordinator.async_set_updated_data(self._device.state)
 
     async def async_turn_off(self, **kwargs) -> None:

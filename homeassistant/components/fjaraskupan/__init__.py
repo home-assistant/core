@@ -93,10 +93,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "manufacturer": "Fjäråskupan",
                 "name": "Fjäråskupan",
             }
-            data = DeviceState(device, coordinator, device_info)
-            state.devices[ble_device.address] = data
+            device_state = DeviceState(device, coordinator, device_info)
+            state.devices[ble_device.address] = device_state
             async_dispatcher_send(
-                hass, DISPATCH_DETECTION, entry.entry_id, ble_device.address
+                hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", device_state
             )
 
     scanner.register_detection_callback(detection_callback)
@@ -106,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup_entry_platform(
+@callback
+def async_setup_entry_platform(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -114,24 +115,21 @@ async def async_setup_entry_platform(
 ) -> None:
     """Set up a platform with added entities."""
 
-    entrystate: EntryState = hass.data[DOMAIN][entry.entry_id]
+    entry_state: EntryState = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            entity
-            for devicestate in entrystate.devices.values()
-            for entity in constructor(devicestate)
-        ]
+        entity
+        for device_state in entry_state.devices.values()
+        for entity in constructor(device_state)
     )
 
     @callback
-    def _detection(entry_id: str, address: str) -> None:
-        if entry_id != entry.entry_id:
-            return
-        devicestate = entrystate.devices[address]
-        async_add_entities(constructor(devicestate))
+    def _detection(device_state: DeviceState) -> None:
+        async_add_entities(constructor(device_state))
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, DISPATCH_DETECTION, _detection)
+        async_dispatcher_connect(
+            hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", _detection
+        )
     )
 
 
@@ -139,7 +137,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        entrystate: EntryState = hass.data[DOMAIN].pop(entry.entry_id)
-        await entrystate.scanner.stop()
+        entry_state: EntryState = hass.data[DOMAIN].pop(entry.entry_id)
+        await entry_state.scanner.stop()
 
     return unload_ok
