@@ -92,6 +92,29 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
+    async def async_step_usb(self, discovery_info: DiscoveryInfoType):
+        """Handle usb discovery."""
+        # Check if already configured
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        vid = discovery_info["vid"]
+        pid = discovery_info["pid"]
+        serial_number = discovery_info["serial_number"]
+        device_path = discovery_info["device"]
+        await self.async_set_unique_id(f"{vid}_{pid}_{serial_number}")
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
+            }
+        )
+        self.context["title_placeholders"] = {
+            CONF_NAME: f"{vid}:{pid} at {device_path}",
+        }
+
+        self._device_path = device_path
+        return await self.async_step_port_config()
+
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.

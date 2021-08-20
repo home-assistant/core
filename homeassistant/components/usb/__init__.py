@@ -8,12 +8,14 @@ import sys
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant import config_entries
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SEEN
+from .const import DOMAIN, FLOW_DISPATCHER, SEEN
+from .flow import FlowDispatcher, USBFlow
 from .models import USBDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +43,13 @@ def _async_process_discovered_usb_device(
     if device_tuple in seen:
         return
     seen.add(device_tuple)
+    flow_dispatcher = domain_data[FLOW_DISPATCHER]
+    flow: USBFlow = {
+        "domain": DOMAIN,
+        "context": {"source": config_entries.SOURCE_USB},
+        "data": dict(device),
+    }
+    flow_dispatcher.create(flow)
 
 
 @callback
@@ -58,12 +67,16 @@ def scan_serial(hass: HomeAssistant) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the USB Discovery integration."""
-    hass.data[DOMAIN] = {SEEN: set()}
+    flow_dispatcher = FlowDispatcher(hass)
+    hass.data[DOMAIN] = {SEEN: set(), FLOW_DISPATCHER: flow_dispatcher}
 
     if not await _async_start_monitor(hass):
         await _async_start_scanner(hass)
 
     await hass.async_add_executor_job(scan_serial, hass)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, flow_dispatcher.async_start)
+
     return True
 
 
