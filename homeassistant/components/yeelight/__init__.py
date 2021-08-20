@@ -317,11 +317,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
+def async_format_model(model: str) -> str:
+    """Generate a more human readable model."""
+    return model.replace("_", " ").title()
+
+
+@callback
+def async_format_id(id_: str) -> str:
+    """Generate a more human readable id."""
+    return hex(int(id_, 16)) if id_ else "None"
+
+
+@callback
+def async_format_model_id(model: str, id_: str) -> str:
+    """Generate a more human readable name."""
+    return f"{async_format_model(model)} {async_format_id(id_)}"
+
+
+@callback
 def _async_unique_name(capabilities: dict) -> str:
     """Generate name from capabilities."""
-    model = str(capabilities["model"]).replace("_", " ").title()
-    short_id = hex(int(capabilities["id"], 16))
-    return f"Yeelight {model} {short_id}"
+    model_id = async_format_model_id(capabilities["model"], capabilities["id"])
+    return f"Yeelight {model_id}"
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
