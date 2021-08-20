@@ -750,7 +750,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         """Initialize the light device."""
         super().__init__(name, device, entry, unique_id)
 
-        self._hs_color = None
+        self._attr_hs_color = None
         self._state_attrs.pop(ATTR_DELAYED_TURN_OFF)
         self._state_attrs.update(
             {
@@ -761,11 +761,6 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 ATTR_BAND: None,
             }
         )
-
-    @property
-    def hs_color(self) -> tuple:
-        """Return the hs color value."""
-        return self._hs_color
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -799,7 +794,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             if result:
-                self._hs_color = hs_color
+                self._attr_hs_color = hs_color
                 self._attr_brightness = brightness
 
         elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
@@ -831,7 +826,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             )
 
             if result:
-                self._hs_color = hs_color
+                self._attr_hs_color = hs_color
 
         elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
@@ -885,7 +880,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         self._color_temp = self.translate(
             state.color_temperature, CCT_MIN, CCT_MAX, self.max_mireds, self.min_mireds
         )
-        self._hs_color = color.color_RGB_to_hs(*state.rgb)
+        self._attr_hs_color = color.color_RGB_to_hs(*state.rgb)
 
         self._state_attrs.update(
             {
@@ -917,7 +912,7 @@ class XiaomiGatewayLight(LightEntity):
         self._attr_available = False
         self._brightness_pct = 100
         self._rgb = (255, 255, 255)
-        self._hs = (0, 0)
+        self._attr_hs_color = (0, 0)
 
     @property
     def device_info(self):
@@ -930,11 +925,6 @@ class XiaomiGatewayLight(LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return int(255 * self._brightness_pct / 100)
-
-    @property
-    def hs_color(self):
-        """Return the hs color value."""
-        return self._hs
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -977,7 +967,7 @@ class XiaomiGatewayLight(LightEntity):
         if self.is_on:
             self._brightness_pct = state_dict["brightness"]
             self._rgb = state_dict["rgb"]
-            self._hs = color.color_RGB_to_hs(*self._rgb)
+            self._attr_hs_color = color.color_RGB_to_hs(*self._rgb)
 
 
 class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
