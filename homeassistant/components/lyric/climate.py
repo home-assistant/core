@@ -192,8 +192,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if not device.hasDualSetpointStatus:
             if self.hvac_mode == HVAC_MODE_COOL:
                 return device.changeableValues.coolSetpoint
-            else:
-                return device.changeableValues.heatSetpoint
+            return device.changeableValues.heatSetpoint
         return None
 
     @property
