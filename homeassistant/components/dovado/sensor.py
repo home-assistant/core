@@ -43,7 +43,6 @@ SENSOR_TYPES: tuple[DovadoSensorEntityDescription, ...] = (
         identifier=SENSOR_NETWORK,
         key="signal strength",
         name="Network",
-        native_unit_of_measurement=None,
         icon="mdi:access-point-network",
     ),
     DovadoSensorEntityDescription(
@@ -57,7 +56,6 @@ SENSOR_TYPES: tuple[DovadoSensorEntityDescription, ...] = (
         identifier=SENSOR_SMS_UNREAD,
         key="sms unread",
         name="SMS unread",
-        native_unit_of_measurement="",
         icon="mdi:message-text-outline",
     ),
     DovadoSensorEntityDescription(
