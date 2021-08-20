@@ -30,6 +30,8 @@ def _usb_device_from_port(port: ListPortInfo) -> USBDevice:
         "vid": f"{hex(port.vid)[2:]:0>4}".upper(),
         "pid": f"{hex(port.pid)[2:]:0>4}".upper(),
         "serial_number": port.serial_number,
+        "manufacturer": port.manufacturer,
+        "description": port.description,
     }
 
 

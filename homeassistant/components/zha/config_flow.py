@@ -43,23 +43,23 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        list_of_ports = [
-            f"{p}, s/n: {p.serial_number or 'n/a'}"
+        all_ports = {
+            p.device: f"{p}, s/n: {p.serial_number or 'n/a'}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
-        ]
+        }
 
-        if not list_of_ports:
+        if not all_ports:
             return await self.async_step_pick_radio()
 
-        list_of_ports.append(CONF_MANUAL_PATH)
+        all_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_pick_radio()
 
-            port = ports[list_of_ports.index(user_selection)]
+            port = all_ports[user_selection]
             dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
@@ -76,7 +76,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._device_path = dev_path
             return await self.async_step_pick_radio()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(all_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_pick_radio(self, user_input=None):
