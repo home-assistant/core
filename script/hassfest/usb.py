@@ -57,7 +57,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate usb file."""
     usb_path = config.root / "homeassistant/generated/usb.py"
     with open(str(usb_path), "w") as fp:
