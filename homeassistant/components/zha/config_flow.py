@@ -119,6 +119,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        # If they already have a discovery for deconz
+        # we ignore the usb discovery as they probably
+        # want to use it there instead
+        for flow in self.hass.config_entries.flow.async_progress():
+            if flow["handler"] == "deconz":
+                return self.async_abort("not_zha_device")
+
         auto_detected_data = await detect_radios(self._device_path)
         if auto_detected_data is None:
             return self.async_abort("not_zha_device")
