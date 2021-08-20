@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_TYPE,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
@@ -67,6 +68,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONF_COST,
         name="Energy Cost",
+        device_class=DEVICE_CLASS_MONETARY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_VALUES,
