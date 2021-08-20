@@ -8,6 +8,7 @@ from typing import Any, Callable
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value, get_value_id
 
 from homeassistant.components.zwave_js.const import (
@@ -63,8 +64,12 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
             vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
             vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-            vol.Optional(ATTR_FROM): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
-            vol.Optional(ATTR_TO): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
+            vol.Optional(ATTR_FROM, default=MATCH_ALL): vol.Any(
+                VALUE_SCHEMA, [VALUE_SCHEMA]
+            ),
+            vol.Optional(ATTR_TO, default=MATCH_ALL): vol.Any(
+                VALUE_SCHEMA, [VALUE_SCHEMA]
+            ),
         },
     ),
     cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
@@ -80,7 +85,7 @@ async def async_attach_trigger(
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    nodes = set()
+    nodes: set[Node] = set()
     if ATTR_DEVICE_ID in config:
         nodes.update(
             {
@@ -96,8 +101,8 @@ async def async_attach_trigger(
             }
         )
 
-    from_value = config.get(ATTR_FROM, MATCH_ALL)
-    to_value = config.get(ATTR_TO, MATCH_ALL)
+    from_value = config[ATTR_FROM]
+    to_value = config[ATTR_TO]
     command_class = config[ATTR_COMMAND_CLASS]
     property_ = config[ATTR_PROPERTY]
     endpoint = config.get(ATTR_ENDPOINT)
@@ -132,9 +137,11 @@ async def async_attach_trigger(
             if (
                 match != MATCH_ALL
                 and value_to_eval != match
-                and not (isinstance(match, list) and value_to_eval in match)
+                and not (
+                    isinstance(match, list)
+                    and (value_to_eval in match or raw_value_to_eval in match)
+                )
                 and raw_value_to_eval != match
-                and not (isinstance(match, list) and raw_value_to_eval in match)
             ):
                 return
 
@@ -161,9 +168,9 @@ async def async_attach_trigger(
 
         hass.async_run_hass_job(job, {"trigger": payload})
 
+    dev_reg = dr.async_get(hass)
     for node in nodes:
         device_identifier = get_device_id(node.client, node)
-        dev_reg = dr.async_get(hass)
         device = dev_reg.async_get_device({device_identifier})
         assert device
         value_id = get_value_id(node, command_class, property_, endpoint, property_key)
