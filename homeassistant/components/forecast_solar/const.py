@@ -101,4 +101,10 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
+    ForecastSolarSensorEntityDescription(
+        key="account_type",
+        name="Account Type",
+        icon="mdi:account",
+        entity_registry_enabled_default=False,
+    ),
 )

@@ -152,6 +152,7 @@ async def test_sensors(
         "sensor.power_production_in_12hours",
         "sensor.power_production_in_24hours",
         "sensor.power_production_next_hour",
+        "sensor.account_type",
     ),
 )
 async def test_disabled_by_default(
@@ -186,6 +187,11 @@ async def test_disabled_by_default(
             "power_production_next_hour",
             "Estimated Power Production - Next Hour",
             "400000",
+        ),
+        (
+            "account_type",
+            "Account Type",
+            "public",
         ),
     ],
 )
