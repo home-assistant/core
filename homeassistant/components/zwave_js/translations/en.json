@@ -63,7 +63,9 @@
             "event.value_notification.basic": "Basic CC event on {subtype}",
             "event.value_notification.central_scene": "Central Scene action on {subtype}",
             "event.value_notification.scene_activation": "Scene Activation on {subtype}",
-            "state.node_status": "Node status changed"
+            "state.node_status": "Node status changed",
+            "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+            "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
         }
     },
     "options": {
@@ -115,6 +117,5 @@
                 "title": "The Z-Wave JS add-on is starting."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }
