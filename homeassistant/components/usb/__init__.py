@@ -95,6 +95,7 @@ class USBDiscovery:
         return True
 
     def _device_discovered(self, device):
+        """Call when the observer discovers a new usb tty device."""
         if device.action != "add":
             return
         _LOGGER.debug(
