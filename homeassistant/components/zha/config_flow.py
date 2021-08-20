@@ -53,7 +53,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        all_ports = {p.device: _format_port_human_readable(p) for p in ports}
+        all_ports = {
+            p.device: _format_port_human_readable(
+                p.device, p.serial_number, p.manufacturer, p.vid, p.pid
+            )
+            for p in ports
+        }
 
         if not all_ports:
             return await self.async_step_pick_radio()
