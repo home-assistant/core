@@ -313,13 +313,13 @@ class RainMachineProgram(RainMachineSwitch):
         """Return a list of active zones associated with this program."""
         return [z for z in self._data["wateringTimes"] if z["active"]]
 
-    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the program off."""
         await self._async_run_switch_coroutine(
             self._controller.programs.stop(self._uid)
         )
 
-    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the program on."""
         await self._async_run_switch_coroutine(
             self._controller.programs.start(self._uid)
@@ -353,11 +353,11 @@ class RainMachineProgram(RainMachineSwitch):
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
 
-    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         await self._async_run_switch_coroutine(self._controller.zones.stop(self._uid))
 
-    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         await self._async_run_switch_coroutine(
             self._controller.zones.start(
