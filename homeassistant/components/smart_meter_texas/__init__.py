@@ -1,6 +1,12 @@
 """The Smart Meter Texas integration."""
 import asyncio
 import logging
+import ssl
+import socket
+import OpenSSL.crypto as crypto
+import certifi
+import re
+import urllib
 
 from smart_meter_texas import Account, Client
 from smart_meter_texas.exceptions import (
@@ -20,6 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    BASE_HOSTNAME,
     DATA_COORDINATOR,
     DATA_SMART_METER,
     DEBOUNCE_COOLDOWN,
@@ -39,7 +46,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     account = Account(username, password)
-    smart_meter_texas_data = SmartMeterTexasData(hass, entry, account)
+
+    sslContext = None
+
+    try:
+        """ Attempt to retrieve the CA Issuers file and load it into the SSL Context"""
+        caiKey = 'CA Issuers - URI:'
+        reIssuersURI = re.compile(r"(https?://+[\w\d:#@%/;$()~_?\+-=\\\.&]*)", re.UNICODE)
+        caIssuersURI = None
+        sslContext = ssl.create_default_context(capath=certifi.where())
+        sslContext.check_hostname = False
+        sslContext.verify_mode = ssl.CERT_NONE
+        with sslContext.wrap_socket(socket.socket(), server_hostname=BASE_HOSTNAME) as s:
+            s.connect((BASE_HOSTNAME, 443))
+            cert_bin = s.getpeercert(True)
+            x509 = crypto.load_certificate(crypto.FILETYPE_ASN1, cert_bin)
+            for idx in range(x509.get_extension_count()):
+                ext = x509.get_extension(idx)
+                short_name = ext.get_short_name()
+                if short_name == b"authorityInfoAccess":
+                    authorityInfoAccess = str(ext)
+                    caiIndx = authorityInfoAccess.find(caiKey)
+                    if (caiIndx > -1):
+                        caiValue = authorityInfoAccess[caiIndx:]
+                        caIssuersURI = reIssuersURI.findall(caiValue)[0]
+
+        if (caIssuersURI != None):
+            with urllib.request.urlopen(caIssuersURI) as certReq:
+                certData = certReq.read()
+                sslContext.load_verify_locations(cafile=certifi.where(), cadata = certData)
+
+        # Re-enable strict checking
+        sslContext.check_hostname = True
+        sslContext.verify_mode = ssl.CERT_REQUIRED
+        sslContext.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | ssl.OP_NO_SSLv3 | ssl.OP_NO_SSLv2
+    except:
+        _LOGGER.error("Failure in establishing ssl context with retrieved CA Issuers file.")
+        sslContext = None
+
+    smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, sslContext)
     try:
         await smart_meter_texas_data.client.authenticate()
     except SmartMeterTexasAuthError:
@@ -87,13 +132,14 @@ class SmartMeterTexasData:
     """Manages coordinatation of API data updates."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, account: Account
+        self, hass: HomeAssistant, entry: ConfigEntry, account: Account, ssl: ssl.SSLContext
     ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account
+        self.sslContext = ssl
         websession = aiohttp_client.async_get_clientsession(hass)
-        self.client = Client(websession, account)
+        self.client = Client(websession, account, sslcontext=self.sslContext)
         self.meters: list = []
 
     async def setup(self):
