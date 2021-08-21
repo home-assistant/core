@@ -1,6 +1,8 @@
 """Provides device triggers for Z-Wave JS."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, ConfigurationValueType
 
@@ -193,7 +195,7 @@ TRIGGER_SCHEMA = vol.Any(
 
 
 def copy_available_params(
-    input_dict: dict, output_dict: dict, params: list[str]
+    input_dict: dict[str, Any], output_dict: dict[str, Any], params: list[str]
 ) -> None:
     """Copy available params from input into output."""
     for param in params:
