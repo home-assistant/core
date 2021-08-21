@@ -26,7 +26,7 @@ from .utils import usb_device_from_port
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_SCAN_COOLDOWN = 1
+REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
 
 
 def human_readable_device_name(
