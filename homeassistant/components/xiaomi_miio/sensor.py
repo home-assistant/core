@@ -1,13 +1,11 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5) and Humidifier."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import datetime
 from enum import Enum
 import logging
 
-import async_timeout
 from miio import AirQualityMonitor, DeviceException
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
@@ -50,7 +48,6 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
-from ...helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -59,6 +56,10 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_VACUUM_CLEAN_HISTORY_STATUS,
+    KEY_VACUUM_CONSUMABLE_STATUS,
+    KEY_VACUUM_DND_STATUS,
+    KEY_VACUUM_LAST_CLEAN_STATUS,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -105,16 +106,20 @@ ATTR_PRESSURE = "pressure"
 ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
+ATTR_DND = "do_not_disturb_"
 ATTR_DND_START = "do_not_disturb_start"
 ATTR_DND_END = "do_not_disturb_end"
+ATTR_LAST_CLEAN = "last_clean_details_"
 ATTR_LAST_CLEAN_TIME = "last_clean_details_duration"
 ATTR_LAST_CLEAN_AREA = "last_clean_details_area"
 ATTR_LAST_CLEAN_START = "last_clean_details_start"
 ATTR_LAST_CLEAN_END = "last_clean_details_end"
+ATTR_CLEAN_HISTORY = "clean_history_"
 ATTR_CLEAN_HISTORY_TOTAL_DURATION = "clean_history_total_duration"
 ATTR_CLEAN_HISTORY_TOTAL_AREA = "clean_history_total_area"
 ATTR_CLEAN_HISTORY_COUNT = "clean_history_count"
 ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT = "clean_history_dust_collection_count"
+ATTR_CONSUMABLE_STATUS = "consumable_status_"
 ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT = "consumable_status_main_brush_left"
 ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT = "consumable_status_side_brush_left"
 ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "consumable_status_filter_left"
@@ -126,6 +131,7 @@ class XiaomiMiioSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a xiaomi aqara or humidifier sensor."""
 
     attributes: tuple = ()
+    parent_key: str | None = None
 
 
 SENSOR_TYPES = {
@@ -242,72 +248,90 @@ SENSOR_TYPES = {
         entity_registry_enabled_default=False,
     ),
     ATTR_DND_START: XiaomiMiioSensorDescription(
-        key=ATTR_DND_START, icon="mdi:fast-forward", device_class=DEVICE_CLASS_TIMESTAMP
+        key=ATTR_DND_START.split(ATTR_DND)[1],
+        icon="mdi:fast-forward",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_DND_STATUS,
     ),
     ATTR_LAST_CLEAN_START: XiaomiMiioSensorDescription(
-        key=ATTR_LAST_CLEAN_START,
+        key=ATTR_LAST_CLEAN_START.split(ATTR_LAST_CLEAN)[1],
         icon="mdi:fast-forward",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
     ),
     ATTR_DND_END: XiaomiMiioSensorDescription(
-        key=ATTR_DND_END, icon="mdi:fast-forward", device_class=DEVICE_CLASS_TIMESTAMP
-    ),
-    ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
-        key=ATTR_LAST_CLEAN_END,
+        key=ATTR_DND_END.split(ATTR_DND)[1],
         icon="mdi:fast-forward",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_DND_STATUS,
+    ),
+    ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
+        key=ATTR_LAST_CLEAN_END.split(ATTR_LAST_CLEAN)[1],
+        icon="mdi:fast-forward",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
     ),
     ATTR_LAST_CLEAN_TIME: XiaomiMiioSensorDescription(
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:fast-forward",
-        key=ATTR_LAST_CLEAN_TIME,
+        key=ATTR_LAST_CLEAN_TIME.split(ATTR_LAST_CLEAN)[1],
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
     ),
     ATTR_LAST_CLEAN_AREA: XiaomiMiioSensorDescription(
         unit_of_measurement=AREA_SQUARE_METERS,
         icon="mdi:fast-forward",
-        key=ATTR_LAST_CLEAN_AREA,
+        key=ATTR_LAST_CLEAN_AREA.split(ATTR_LAST_CLEAN)[1],
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
     ),
     ATTR_CLEAN_HISTORY_TOTAL_DURATION: XiaomiMiioSensorDescription(
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:fast-forward",
-        key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
+        key=ATTR_CLEAN_HISTORY_TOTAL_DURATION.split(ATTR_CLEAN_HISTORY)[1],
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
     ),
     ATTR_CLEAN_HISTORY_TOTAL_AREA: XiaomiMiioSensorDescription(
         unit_of_measurement=AREA_SQUARE_METERS,
         icon="mdi:fast-forward",
-        key=ATTR_CLEAN_HISTORY_TOTAL_AREA,
+        key=ATTR_CLEAN_HISTORY_TOTAL_AREA.split(ATTR_CLEAN_HISTORY)[1],
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
     ),
     ATTR_CLEAN_HISTORY_COUNT: XiaomiMiioSensorDescription(
         unit_of_measurement="",
         icon="mdi:fast-forward",
         state_class="total_increasing",
-        key=ATTR_CLEAN_HISTORY_COUNT,
+        key=ATTR_CLEAN_HISTORY_COUNT.split(ATTR_CLEAN_HISTORY)[1],
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
     ),
     ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: XiaomiMiioSensorDescription(
         unit_of_measurement="",
         icon="mdi:fast-forward",
         state_class="total_increasing",
-        key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
+        key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT.split(ATTR_CLEAN_HISTORY)[1],
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
     ),
     ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: XiaomiMiioSensorDescription(
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
+        key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
     ),
     ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: XiaomiMiioSensorDescription(
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
+        key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
     ),
     ATTR_CONSUMABLE_STATUS_FILTER_LEFT: XiaomiMiioSensorDescription(
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
+        key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
     ),
     ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: XiaomiMiioSensorDescription(
         unit_of_measurement=TIME_SECONDS,
         icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+        key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
     ),
 }
 
@@ -507,49 +531,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_setup_vacuum_sensors(hass, config_entry, async_add_entities):
     """Set up all the sensors for a vacuum."""
 
-    def create_update_function(hass, callable):
-        async def async_update_data():
-            """Fetch data from the device using async_add_executor_job."""
-            try:
-                async with async_timeout.timeout(10):
-                    return await hass.async_add_executor_job(callable)
-
-            except DeviceException as ex:
-                raise UpdateFailed(ex) from ex
-
-        return async_update_data
-
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
     entities = []
-    coordinators = []
 
     for sensor_name, coordinator_method in VACUUM_SENSORS.items():
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{config_entry.title} {sensor_name.replace('_', ' ').title()}",
-            update_method=create_update_function(
-                hass, getattr(device, coordinator_method.split(".")[0])
-            ),
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=datetime.timedelta(seconds=60),
-        )
-
-        coordinators.append(coordinator.async_config_entry_first_refresh())
-
         entities.append(
             XiaomiGenericSensor(
                 f"{config_entry.title} {sensor_name.replace('_', ' ').title()}",
                 device,
                 config_entry,
                 f"{sensor_name}_{config_entry.unique_id}",
-                coordinator_method.split(".")[1],
-                coordinator,
-                sensor_config=SENSOR_TYPES[sensor_name],
+                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                SENSOR_TYPES[sensor_name],
             )
         )
 
-    await asyncio.wait(coordinators)
     async_add_entities(entities)
 
 
@@ -562,28 +558,27 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         device,
         entry,
         unique_id,
-        attribute,
         coordinator,
-        description,
-        sensor_config=None,
+        description: XiaomiMiioSensorDescription,
     ):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
-
-        self._sensor_config = sensor_config
-        if sensor_config is None:
-            self._sensor_config = SENSOR_TYPES[attribute]
-
-        self._attr_device_class = self._sensor_config.device_class
-        self._attr_state_class = self._sensor_config.state_class
-        self._attr_icon = self._sensor_config.icon
+        self._attr_device_class = description.device_class
+        self._attr_state_class = description.state_class
+        self._attr_icon = description.icon
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self.entity_description = description
+        self.entity_description: XiaomiMiioSensorDescription = description
 
     @property
     def native_value(self):
         """Return the state of the device."""
+        if self.entity_description.parent_key is not None:
+            return self._extract_value_from_attribute(
+                self.coordinator.data[self.entity_description.parent_key],
+                self.entity_description.key,
+            )
+
         return self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )

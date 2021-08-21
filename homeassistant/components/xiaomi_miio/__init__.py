@@ -1,4 +1,5 @@
 """Support for Xiaomi Miio."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -30,6 +31,11 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    KEY_VACUUM_CLEAN_HISTORY_STATUS,
+    KEY_VACUUM_CONSUMABLE_STATUS,
+    KEY_VACUUM_DND_STATUS,
+    KEY_VACUUM_LAST_CLEAN_STATUS,
+    KEY_VACUUM_STATUS,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -109,6 +115,48 @@ def get_platforms(config_entry):
     return []
 
 
+def _async_update_data_default(hass, device):
+    async def update():
+        """Fetch data from the device using async_add_executor_job."""
+        try:
+            async with async_timeout.timeout(10):
+                state = await hass.async_add_executor_job(device.status)
+                _LOGGER.debug("Got new state: %s", state)
+                return state
+
+        except DeviceException as ex:
+            raise UpdateFailed(ex) from ex
+
+    return update
+
+
+def _async_update_data_vacuum(hass, device: Vacuum):
+    async def update():
+        """Fetch data from the device using async_add_executor_job."""
+        try:
+            async with async_timeout.timeout(10):
+                results = await asyncio.gather(
+                    hass.async_add_executor_job(device.status),
+                    hass.async_add_executor_job(device.dnd_status),
+                    hass.async_add_executor_job(device.last_clean_details),
+                    hass.async_add_executor_job(device.consumable_status),
+                    hass.async_add_executor_job(device.clean_history),
+                )
+                _LOGGER.debug("Got new vacuum state: %s", results)
+                return {
+                    KEY_VACUUM_STATUS: results[0],
+                    KEY_VACUUM_DND_STATUS: results[1],
+                    KEY_VACUUM_LAST_CLEAN_STATUS: results[2],
+                    KEY_VACUUM_CONSUMABLE_STATUS: results[3],
+                    KEY_VACUUM_CLEAN_HISTORY_STATUS: results[4],
+                }
+
+        except DeviceException as ex:
+            raise UpdateFailed(ex) from ex
+
+    return update
+
+
 async def async_create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
@@ -119,6 +167,7 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device = None
     migrate = False
+    update_method = _async_update_data_default
 
     if (
         model not in MODELS_HUMIDIFIER
@@ -148,6 +197,7 @@ async def async_create_miio_device_and_coordinator(
         device = AirFresh(host, token)
     elif model in MODELS_VACUUM:
         device = Vacuum(host, token)
+        update_method = _async_update_data_vacuum
     else:
         _LOGGER.error(f"Failed to determine xiaomi device for model: {model}")
         return
@@ -162,23 +212,12 @@ async def async_create_miio_device_and_coordinator(
                 hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
             entity_registry.async_remove(entity_id)
 
-    async def async_update_data():
-        """Fetch data from the device using async_add_executor_job."""
-        try:
-            async with async_timeout.timeout(10):
-                state = await hass.async_add_executor_job(device.status)
-                _LOGGER.debug("Got new state: %s", state)
-                return state
-
-        except DeviceException as ex:
-            raise UpdateFailed(ex) from ex
-
     # Create update miio device and coordinator
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=name,
-        update_method=async_update_data,
+        update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=60),
     )
