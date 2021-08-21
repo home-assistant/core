@@ -1,57 +1,33 @@
 """Support for Azure DevOps sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from typing import Any
 
 from aioazuredevops.builds import DevOpsBuild
-from aioazuredevops.client import DevOpsClient
-import aiohttp
 
 from homeassistant.components.azure_devops import AzureDevOpsDeviceEntity
-from homeassistant.components.azure_devops.const import (
-    CONF_ORG,
-    CONF_PROJECT,
-    DATA_AZURE_DEVOPS_CLIENT,
-    DATA_ORG,
-    DATA_PROJECT,
-    DOMAIN,
-)
+from homeassistant.components.azure_devops.const import CONF_ORG, DOMAIN
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=300)
-PARALLEL_UPDATES = 4
-
-BUILDS_QUERY = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
-    client = hass.data[instance_key][DATA_AZURE_DEVOPS_CLIENT]
-    organization = entry.data[DATA_ORG]
-    project = entry.data[DATA_PROJECT]
-    sensors = []
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    _, _, builds = coordinator.data
 
-    try:
-        builds: list[DevOpsBuild] = await client.get_builds(
-            organization, project, BUILDS_QUERY
+    sensors = [
+        AzureDevOpsLatestBuildSensor(
+            coordinator,
+            entry.data[CONF_ORG],
+            key,
         )
-    except aiohttp.ClientError as exception:
-        _LOGGER.warning(exception)
-        raise PlatformNotReady from exception
-
-    for build in builds:
-        sensors.append(
-            AzureDevOpsLatestBuildSensor(client, organization, project, build)
-        )
+        for key, _ in enumerate(builds)
+    ]
 
     async_add_entities(sensors, True)
 
@@ -61,54 +37,50 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
 
     def __init__(
         self,
-        client: DevOpsClient,
+        coordinator: DataUpdateCoordinator,
         organization: str,
-        project: str,
         key: str,
         name: str,
         icon: str,
-        measurement: str = "",
-        unit_of_measurement: str = "",
     ) -> None:
         """Initialize Azure DevOps sensor."""
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self.client = client
-        self.organization = organization
-        self.project = project
-        self._attr_unique_id = "_".join([organization, key])
-
-        super().__init__(organization, project, name, icon)
+        super().__init__(coordinator, organization, key, name, icon)
 
 
 class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
     """Defines a Azure DevOps card count sensor."""
 
     def __init__(
-        self, client: DevOpsClient, organization: str, project: str, build: DevOpsBuild
+        self,
+        coordinator: DataUpdateCoordinator,
+        organization: str,
+        key: int,
     ) -> None:
         """Initialize Azure DevOps sensor."""
-        self.build: DevOpsBuild = build
+        _, _, builds = coordinator.data
+        build: DevOpsBuild = builds[key]
         super().__init__(
-            client,
+            coordinator,
             organization,
-            project,
             f"{build.project.id}_{build.definition.id}_latest_build",
             f"{build.project.name} {build.definition.name} Latest Build",
             "mdi:pipe",
         )
+        self._key = key
 
-    async def _azure_devops_update(self) -> bool:
-        """Update Azure DevOps entity."""
-        try:
-            build: DevOpsBuild = await self.client.get_build(
-                self.organization, self.project, self.build.id
-            )
-        except aiohttp.ClientError as exception:
-            _LOGGER.warning(exception)
-            self._attr_available = False
-            return False
-        self._attr_native_value = build.build_number
-        self._attr_extra_state_attributes = {
+    @property
+    def native_value(self) -> float:
+        """Return the state of the sensor."""
+        _, _, builds = self.coordinator.data
+        build: DevOpsBuild = builds[self._key]
+        return build.build_number
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the entity."""
+        _, _, builds = self.coordinator.data
+        build: DevOpsBuild = builds[self._key]
+        return {
             "definition_id": build.definition.id,
             "definition_name": build.definition.name,
             "id": build.id,
@@ -122,5 +94,3 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             "start_time": build.start_time,
             "finish_time": build.finish_time,
         }
-        self._attr_available = True
-        return True

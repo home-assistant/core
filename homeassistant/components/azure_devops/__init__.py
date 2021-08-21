@@ -1,43 +1,75 @@
 """Support for Azure DevOps."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
+from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
+from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DATA_AZURE_DEVOPS_CLIENT, DOMAIN
+from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
+BUILDS_QUERY = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
-    client = DevOpsClient()
+    client: DevOpsClient = DevOpsClient()
 
-    try:
-        if entry.data[CONF_PAT] is not None:
-            await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
-            if not client.authorized:
-                raise ConfigEntryAuthFailed(
-                    "Could not authorize with Azure DevOps. You may need to update your token"
-                )
-        await client.get_project(entry.data[CONF_ORG], entry.data[CONF_PROJECT])
-    except aiohttp.ClientError as exception:
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
+    async def async_update_data() -> tuple[
+        DevOpsClient, DevOpsProject, list[DevOpsBuild]
+    ]:
+        """Fetch data from Azure DevOps."""
 
-    instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
-    hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CLIENT] = client
+        try:
+            if entry.data[CONF_PAT] is not None:
+                await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
+                if not client.authorized:
+                    raise ConfigEntryAuthFailed(
+                        "Could not authorize with Azure DevOps. You may need to update your token"
+                    )
+            project: DevOpsProject = await client.get_project(
+                entry.data[CONF_ORG], entry.data[CONF_PROJECT]
+            )
+            builds: list[DevOpsBuild] = await client.get_builds(
+                entry.data[CONF_ORG], entry.data[CONF_PROJECT], BUILDS_QUERY
+            )
+            return client, project, builds
+        except (aiohttp.ClientError, aiohttp.ClientError) as exception:
+            raise UpdateFailed from exception
 
-    # Setup components
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=f"{DOMAIN}_coordinator",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=300),
+    )
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_config_entry_first_refresh()
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -45,36 +77,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Azure DevOps config entry."""
-    del hass.data[f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
+    return unload_ok
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-
-class AzureDevOpsEntity(Entity):
+class AzureDevOpsEntity(CoordinatorEntity):
     """Defines a base Azure DevOps entity."""
 
-    def __init__(self, organization: str, project: str, name: str, icon: str) -> None:
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        organization: str,
+        key: str,
+        name: str,
+        icon: str,
+    ) -> None:
         """Initialize the Azure DevOps entity."""
+        super().__init__(coordinator)
+        _, project, _ = coordinator.data
+        self._attr_unique_id = "_".join([organization, key])
         self._attr_name = name
         self._attr_icon = icon
         self.organization = organization
-        self.project = project
-
-    async def async_update(self) -> None:
-        """Update Azure DevOps entity."""
-        if await self._azure_devops_update():
-            self._attr_available = True
-        else:
-            if self._attr_available:
-                _LOGGER.debug(
-                    "An error occurred while updating Azure DevOps sensor",
-                    exc_info=True,
-                )
-            self._attr_available = False
-
-    async def _azure_devops_update(self) -> bool:
-        """Update Azure DevOps entity."""
-        raise NotImplementedError()
+        self.project = project.name
 
 
 class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
