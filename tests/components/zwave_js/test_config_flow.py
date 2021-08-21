@@ -1,6 +1,7 @@
 """Test the Z-Wave JS config flow."""
 import asyncio
-from unittest.mock import DEFAULT, call, patch
+import os
+from unittest.mock import DEFAULT, MagicMock, call, patch, sentinel
 
 import aiohttp
 import pytest
@@ -8,6 +9,7 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.zwave_js import config_flow
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
@@ -17,6 +19,16 @@ ADDON_DISCOVERY_INFO = {
     "addon": "Z-Wave JS",
     "host": "host1",
     "port": 3001,
+}
+
+
+USB_DISCOVERY_INFO = {
+    "device": "/dev/zwave",
+    "pid": "AAAA",
+    "vid": "AAAA",
+    "serial_number": "1234",
+    "description": "zwave radio",
+    "manufacturer": "test",
 }
 
 
@@ -383,6 +395,29 @@ async def test_abort_discovery_with_existing_entry(
     assert entry.data["url"] == "ws://host1:3001"
 
 
+async def test_abort_hassio_discovery_with_existing_flow(
+    hass, supervisor, addon_options
+):
+    """Test hassio discovery flow is aborted when another discovery has happened."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "usb_confirm"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
+
+
 async def test_discovery_addon_not_running(
     hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
 ):
@@ -510,6 +545,46 @@ async def test_discovery_addon_not_installed(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_options):
+    """Test usb discovery flow is aborted when another discovery has happened."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "hassio_confirm"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
+
+
+async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_options):
+    """Test usb discovery flow is aborted when there is an existing entry."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_not_addon(hass, supervisor):
@@ -1794,3 +1869,52 @@ async def test_options_addon_not_installed(
     assert entry.data["integration_created_addon"] is True
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
+
+
+# Lifted from the zha tests
+def test_get_serial_by_id_no_dir():
+    """Test serial by id conversion if there's no /dev/serial/by-id."""
+    p1 = patch("os.path.isdir", MagicMock(return_value=False))
+    p2 = patch("os.scandir")
+    with p1 as is_dir_mock, p2 as scan_mock:
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 0
+
+
+# Lifted from the zha tests
+def test_get_serial_by_id():
+    """Test serial by id conversion."""
+    p1 = patch("os.path.isdir", MagicMock(return_value=True))
+    p2 = patch("os.scandir")
+
+    def _realpath(path):
+        if path is sentinel.matched_link:
+            return sentinel.path
+        return sentinel.serial_link_path
+
+    p3 = patch("os.path.realpath", side_effect=_realpath)
+    with p1 as is_dir_mock, p2 as scan_mock, p3:
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 1
+
+        entry1 = MagicMock(spec_set=os.DirEntry)
+        entry1.is_symlink.return_value = True
+        entry1.path = sentinel.some_path
+
+        entry2 = MagicMock(spec_set=os.DirEntry)
+        entry2.is_symlink.return_value = False
+        entry2.path = sentinel.other_path
+
+        entry3 = MagicMock(spec_set=os.DirEntry)
+        entry3.is_symlink.return_value = True
+        entry3.path = sentinel.matched_link
+
+        scan_mock.return_value = [entry1, entry2, entry3]
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.matched_link
+        assert is_dir_mock.call_count == 2
+        assert scan_mock.call_count == 2

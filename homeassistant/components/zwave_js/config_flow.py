@@ -347,14 +347,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         # The Nortek sticks are a special case since they
         # have a Z-Wave and a Zigbee radio. We need to reject
         # the Zigbee radio.
-        if (
-            vid == "10C4"
-            and pid == "8A2A"
-            and "Z-Wave" not in discovery_info["description"]
-        ):
+        if vid == "10C4" and pid == "8A2A" and "Z-Wave" not in description:
             return self.async_abort(reason="not_zwave_device")
         # Zooz uses this vid/pid, but so do 2652 sticks
-        if vid == "10C4" and pid == "EA60" and "2652" in discovery_info["description"]:
+        if vid == "10C4" and pid == "EA60" and "2652" in description:
             return self.async_abort(reason="not_zwave_device")
 
         addon_info = await self._async_get_addon_info()
