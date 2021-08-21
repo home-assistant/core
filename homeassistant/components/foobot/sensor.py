@@ -43,21 +43,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="time",
         name=ATTR_TIME,
         native_unit_of_measurement=TIME_SECONDS,
-        icon=None,
-        device_class=None,
     ),
     SensorEntityDescription(
         key="pm",
         name=ATTR_PM2_5,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         icon="mdi:cloud",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="tmp",
         name=ATTR_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
@@ -65,28 +61,24 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name=ATTR_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="co2",
         name=ATTR_CARBON_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:molecule-co2",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="voc",
         name=ATTR_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         icon="mdi:cloud",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="allpollu",
         name=ATTR_FOOBOT_INDEX,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
-        device_class=None,
     ),
 )
 
