@@ -145,7 +145,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             vid == "10C4"
             and pid == "8A2A"
-            and "ZigBee" not in discovery_info["description"]
+            and "ZigBee" not in description
         ):
             return self.async_abort(reason="not_zha_device")
 
