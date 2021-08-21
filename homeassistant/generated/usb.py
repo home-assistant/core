@@ -9,43 +9,36 @@ USB = [
     {
         "domain": "zha",
         "vid": "10C4",
-        "pid": "EA60",
-        "description": "slae.sh cc2652rb stick"
+        "pid": "EA60"
     },
     {
         "domain": "zha",
         "vid": "1CF1",
-        "pid": "0030",
-        "description": "Conbee II"
+        "pid": "0030"
     },
     {
         "domain": "zha",
         "vid": "1A86",
-        "pid": "7523",
-        "description": "Electrolama zig-a-zig-ah"
+        "pid": "7523"
     },
     {
         "domain": "zha",
         "vid": "10C4",
-        "pid": "8A2A",
-        "description": "Nortek HUSBZB-1"
+        "pid": "8A2A"
     },
     {
         "domain": "zwave_js",
         "vid": "0658",
-        "pid": "0200",
-        "description": "Aeotec Z-Stick Gen5+"
+        "pid": "0200"
     },
     {
         "domain": "zwave_js",
         "vid": "10C4",
-        "pid": "8A2A",
-        "description": "Nortek HUSBZB-1"
+        "pid": "8A2A"
     },
     {
         "domain": "zwave_js",
         "vid": "10C4",
-        "pid": "EA60",
-        "description": "Zooz ZST10"
+        "pid": "EA60"
     }
 ]
