@@ -53,6 +53,7 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("spider", "config_flow.py"),
     ("starline", "config_flow.py"),
     ("tado", "config_flow.py"),
+    ("tahoma", "scene.py"),
     ("totalconnect", "config_flow.py"),
     ("tradfri", "config_flow.py"),
     ("tuya", "config_flow.py"),
