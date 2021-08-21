@@ -125,7 +125,7 @@ async def async_setup_entry(
                                 device_class=DEVICE_CLASS_TIMESTAMP,
                                 value=lambda device: get_datetime_from_future_time(
                                     device.changeableValues.nextPeriodTime
-                                ),
+                                ).isoformat(),
                             ),
                             location,
                             device,
