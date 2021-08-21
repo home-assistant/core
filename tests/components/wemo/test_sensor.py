@@ -78,62 +78,33 @@ class InsightTestTemplate:
     # in the scope of this test module. They will run using the pywemo_model from
     # this test module (Insight).
     async def test_async_update_locked_multiple_updates(
-        self, hass, pywemo_registry, wemo_entity, pywemo_device
+        self, hass, pywemo_device, wemo_entity
     ):
         """Test that two hass async_update state updates do not proceed at the same time."""
-        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_multiple_updates(
             hass,
-            pywemo_registry,
-            wemo_entity,
             pywemo_device,
-            update_polling_method=pywemo_device.update_insight_params,
+            wemo_entity,
         )
 
     async def test_async_update_locked_multiple_callbacks(
-        self, hass, pywemo_registry, wemo_entity, pywemo_device
+        self, hass, pywemo_device, wemo_entity
     ):
         """Test that two device callback state updates do not proceed at the same time."""
-        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_multiple_callbacks(
             hass,
-            pywemo_registry,
-            wemo_entity,
             pywemo_device,
-            update_polling_method=pywemo_device.update_insight_params,
+            wemo_entity,
         )
 
     async def test_async_update_locked_callback_and_update(
-        self, hass, pywemo_registry, wemo_entity, pywemo_device
+        self, hass, pywemo_device, wemo_entity
     ):
         """Test that a callback and a state update request can't both happen at the same time."""
-        pywemo_device.subscription_update.return_value = False
         await entity_test_helpers.test_async_update_locked_callback_and_update(
             hass,
-            pywemo_registry,
-            wemo_entity,
             pywemo_device,
-            update_polling_method=pywemo_device.update_insight_params,
-        )
-
-    async def test_async_locked_update_with_exception(
-        self, hass, wemo_entity, pywemo_device
-    ):
-        """Test that the entity becomes unavailable when communication is lost."""
-        await entity_test_helpers.test_async_locked_update_with_exception(
-            hass,
             wemo_entity,
-            pywemo_device,
-            update_polling_method=pywemo_device.update_insight_params,
-            expected_state=self.EXPECTED_STATE_VALUE,
-        )
-
-    async def test_async_update_with_timeout_and_recovery(
-        self, hass, wemo_entity, pywemo_device
-    ):
-        """Test that the entity becomes unavailable after a timeout, and that it recovers."""
-        await entity_test_helpers.test_async_update_with_timeout_and_recovery(
-            hass, wemo_entity, pywemo_device, expected_state=self.EXPECTED_STATE_VALUE
         )
 
     async def test_state_unavailable(self, hass, wemo_entity, pywemo_device):
