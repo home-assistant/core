@@ -1,6 +1,9 @@
 """Access point for the HomematicIP Cloud component."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any, Callable
 
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.home import AsyncHome
@@ -25,7 +28,7 @@ class HomematicipAuth:
         """Initialize HomematicIP Cloud client registration."""
         self.hass = hass
         self.config = config
-        self.auth = None
+        self.auth: AsyncAuth = None
 
     async def async_setup(self) -> bool:
         """Connect to HomematicIP for registration."""
@@ -73,14 +76,14 @@ class HomematicipHAP:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
-        self.home = None
+        self.home: AsyncHome = None
 
         self._ws_close_requested = False
-        self._retry_task = None
+        self._retry_task: asyncio.Task | None = None
         self._tries = 0
         self._accesspoint_connected = True
-        self.hmip_device_by_entity_id = {}
-        self.reset_connection_listener = None
+        self.hmip_device_by_entity_id: dict[str, Any] = {}
+        self.reset_connection_listener: Callable | None = None
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
@@ -228,7 +231,11 @@ class HomematicipHAP:
         )
 
     async def get_hap(
-        self, hass: HomeAssistant, hapid: str, authtoken: str, name: str
+        self,
+        hass: HomeAssistant,
+        hapid: str | None,
+        authtoken: str | None,
+        name: str | None,
     ) -> AsyncHome:
         """Create a HomematicIP access point object."""
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
