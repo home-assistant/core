@@ -1755,6 +1755,7 @@ pysensibo==1.0.3
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
 
@@ -1956,6 +1957,9 @@ pytradfri[async]==7.0.6
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.6.2
+
+# homeassistant.components.usb
+pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.8.2
@@ -2482,4 +2486,4 @@ zigpy==0.36.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.28.0
+zwave-js-server-python==0.29.0
