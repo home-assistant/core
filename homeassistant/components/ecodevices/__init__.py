@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -35,13 +35,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Eco-Devices integration."""
+    hass.data.setdefault(DOMAIN, {})
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Eco-Devices from a config entry."""
     config = entry.data
 
-    hass.data.setdefault(DOMAIN, {})
-
-    session = async_get_clientsession(hass)
+    session = async_get_clientsession(hass, False)
 
     controller = EcoDevices(
         config.get(CONF_HOST),
@@ -61,16 +65,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             return await controller.global_get()
         except EcoDevicesInvalidAuthError as err:
-            raise ConfigEntryAuthFailed from err
+            raise UpdateFailed("Authentication error on Eco-Devices") from err
         except EcoDevicesCannotConnectError as err:
             raise UpdateFailed(f"Failed to communicating with API: {err}") from err
+
+    scan_interval = config[CONF_SCAN_INTERVAL]
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(seconds=int(config[CONF_SCAN_INTERVAL])),
+        update_interval=timedelta(seconds=scan_interval),
     )
 
     await coordinator.async_refresh()
@@ -115,15 +121,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_unload(entry, component)
                 for component in PLATFORMS
-            ]
+            )
         )
     )
 
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

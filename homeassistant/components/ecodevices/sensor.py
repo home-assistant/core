@@ -1,27 +1,31 @@
 """Support for the GCE Eco-Devices."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_POWER
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_C1_DEVICE_CLASS,
     CONF_C1_ENABLED,
+    CONF_C1_NAME,
     CONF_C1_UNIT_OF_MEASUREMENT,
     CONF_C2_DEVICE_CLASS,
     CONF_C2_ENABLED,
+    CONF_C2_NAME,
     CONF_C2_UNIT_OF_MEASUREMENT,
     CONF_T1_ENABLED,
+    CONF_T1_NAME,
     CONF_T1_UNIT_OF_MEASUREMENT,
     CONF_T2_ENABLED,
+    CONF_T2_NAME,
     CONF_T2_UNIT_OF_MEASUREMENT,
     CONFIG,
     CONTROLLER,
     COORDINATOR,
-    DEFAULT_C1_NAME,
-    DEFAULT_C2_NAME,
-    DEFAULT_T1_NAME,
-    DEFAULT_T2_NAME,
     DOMAIN,
 )
 
@@ -43,11 +47,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             T1EdDevice(
                 controller,
                 coordinator,
-                "t1",
-                DEFAULT_T1_NAME,
-                config.get(CONF_T1_UNIT_OF_MEASUREMENT),
-                DEVICE_CLASS_POWER,
-                "mdi:flash",
+                input_name="t1",
+                name=config.get(CONF_T1_NAME),
+                unit=config.get(CONF_T1_UNIT_OF_MEASUREMENT),
+                device_class="power",
+                state_class=STATE_CLASS_MEASUREMENT,
+                icon="mdi:flash",
+            )
+        )
+        entities.append(
+            T1TotalEdDevice(
+                controller,
+                coordinator,
+                input_name="t1_total",
+                name=config.get(CONF_T1_NAME) + " Total",
+                unit="Wh",
+                device_class="energy",
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+                icon="mdi:flash",
             )
         )
     if config.get(CONF_T2_ENABLED):
@@ -56,11 +73,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             T2EdDevice(
                 controller,
                 coordinator,
-                "t2",
-                DEFAULT_T2_NAME,
-                config.get(CONF_T2_UNIT_OF_MEASUREMENT),
-                DEVICE_CLASS_POWER,
-                "mdi:flash",
+                input_name="t2",
+                name=config.get(CONF_T2_NAME),
+                unit=config.get(CONF_T2_UNIT_OF_MEASUREMENT),
+                device_class="power",
+                state_class=STATE_CLASS_MEASUREMENT,
+                icon="mdi:flash",
+            )
+        )
+        entities.append(
+            T2TotalEdDevice(
+                controller,
+                coordinator,
+                input_name="t2_total",
+                name=config.get(CONF_T2_NAME) + " Total",
+                unit="Wh",
+                device_class="energy",
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+                icon="mdi:flash",
             )
         )
     if config.get(CONF_C1_ENABLED):
@@ -69,10 +99,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             C1EdDevice(
                 controller,
                 coordinator,
-                "c1",
-                DEFAULT_C1_NAME,
-                config.get(CONF_C1_UNIT_OF_MEASUREMENT),
-                config.get(CONF_C1_DEVICE_CLASS),
+                input_name="c1",
+                name=config.get(CONF_C1_NAME),
+                unit=config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                device_class=config.get(CONF_C1_DEVICE_CLASS),
+                state_class=STATE_CLASS_MEASUREMENT,
+                icon="mdi:counter",
+            )
+        )
+        entities.append(
+            C2TotalEdDevice(
+                controller,
+                coordinator,
+                input_name="c1_total",
+                name=config.get(CONF_C1_NAME) + " Total",
+                unit=config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                device_class=config.get(CONF_C1_DEVICE_CLASS),
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+                icon="mdi:counter",
             )
         )
     if config.get(CONF_C2_ENABLED):
@@ -81,18 +125,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             C2EdDevice(
                 controller,
                 coordinator,
-                "c2",
-                DEFAULT_C2_NAME,
-                config.get(CONF_C2_UNIT_OF_MEASUREMENT),
-                config.get(CONF_C2_DEVICE_CLASS),
+                input_name="c2",
+                name=config.get(CONF_C2_NAME),
+                unit=config.get(CONF_C2_UNIT_OF_MEASUREMENT),
+                device_class=config.get(CONF_C2_DEVICE_CLASS),
+                state_class=STATE_CLASS_MEASUREMENT,
+                icon="mdi:counter",
+            )
+        )
+        entities.append(
+            C2TotalEdDevice(
+                controller,
+                coordinator,
+                input_name="c2_total",
+                name=config.get(CONF_C2_NAME) + " Total",
+                unit=config.get(CONF_C2_UNIT_OF_MEASUREMENT),
+                device_class=config.get(CONF_C2_DEVICE_CLASS),
+                state_class=STATE_CLASS_TOTAL_INCREASING,
+                icon="mdi:counter",
             )
         )
 
     if entities:
-        async_add_entities(entities, True)
+        async_add_entities(entities)
 
 
-class EdDevice(CoordinatorEntity):
+class EdDevice(CoordinatorEntity, SensorEntity):
     """Representation of a generic Eco-Devices sensor."""
 
     def __init__(
@@ -103,30 +161,20 @@ class EdDevice(CoordinatorEntity):
         name,
         unit,
         device_class,
-        icon=None,
+        state_class,
+        icon,
     ):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.controller = controller
         self._input_name = input_name
-        self._name = name
-        self._unit = unit
-        self._device_class = device_class
-        self._icon = icon
-        self._state = None
 
-    @property
-    def device_info(self):
-        """Return device information identifier."""
-        return {
-            "identifiers": {(DOMAIN, self.controller.host)},
-            "via_device": (DOMAIN, self.controller.host),
-        }
-
-    @property
-    def unique_id(self):
-        """Return an unique id."""
-        return "_".join(
+        self._attr_name = name
+        self._attr_unit_of_measurement = unit
+        self._attr_device_class = device_class
+        self._attr_state_class = state_class
+        self._attr_icon = icon
+        self._attr_unique_id = "_".join(
             [
                 DOMAIN,
                 self.controller.host,
@@ -134,26 +182,12 @@ class EdDevice(CoordinatorEntity):
                 self._input_name,
             ]
         )
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, self.controller.host)},
+            "via_device": (DOMAIN, self.controller.host),
+        }
 
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return self._device_class
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit_of_measurement if specified."""
-        return self._unit
-
-    @property
-    def icon(self):
-        """Return the icon if specified."""
-        return self._icon
+        self._state = None
 
 
 class T1EdDevice(EdDevice):
@@ -192,6 +226,15 @@ class T1EdDevice(EdDevice):
             }
 
 
+class T1TotalEdDevice(EdDevice):
+    """Initialize the T1 Total sensor."""
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self.coordinator.data["T1_BASE"]
+
+
 class T2EdDevice(EdDevice):
     """Initialize the T2 sensor."""
 
@@ -228,6 +271,15 @@ class T2EdDevice(EdDevice):
             }
 
 
+class T2TotalEdDevice(EdDevice):
+    """Initialize the T1 Total sensor."""
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self.coordinator.data["T2_BASE"]
+
+
 class C1EdDevice(EdDevice):
     """Initialize the C1 sensor."""
 
@@ -246,6 +298,15 @@ class C1EdDevice(EdDevice):
             }
 
 
+class C1TotalEdDevice(EdDevice):
+    """Initialize the C1 sensor."""
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self.coordinator.data["count0"]
+
+
 class C2EdDevice(EdDevice):
     """Initialize the C2 sensor."""
 
@@ -262,3 +323,12 @@ class C2EdDevice(EdDevice):
                 "total": self.coordinator.data["count1"],
                 "fuel": self.coordinator.data["c1_fuel"],
             }
+
+
+class C2TotalEdDevice(EdDevice):
+    """Initialize the C1 sensor."""
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self.coordinator.data["count1"]
