@@ -249,7 +249,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         self._call_active = False
         if result is None:
             if self._lazy_errors:
-                self._lazy_errors = self._lazy_errors - 1
+                self._lazy_errors -= 1
                 return
             self._lazy_errors = self._lazy_error_count
             self._attr_available = False
