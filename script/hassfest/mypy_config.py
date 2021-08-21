@@ -56,7 +56,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.home_plus_control.*",
     "homeassistant.components.homekit.*",
     "homeassistant.components.homekit_controller.*",
-    "homeassistant.components.homematicip_cloud.*",
     "homeassistant.components.honeywell.*",
     "homeassistant.components.humidifier.*",
     "homeassistant.components.iaqualink.*",
