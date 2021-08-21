@@ -92,15 +92,11 @@ class AzureDevOpsEntity(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
         organization: str,
         key: str,
-        name: str,
-        icon: str,
     ) -> None:
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
         _, project, _ = coordinator.data
         self._attr_unique_id = "_".join([organization, key])
-        self._attr_name = name
-        self._attr_icon = icon
         self.organization = organization
         self.project = project.name
 
