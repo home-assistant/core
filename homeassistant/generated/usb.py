@@ -40,12 +40,12 @@ USB = [
         "domain": "zwave_js",
         "vid": "10C4",
         "pid": "8A2A",
-        "description": "Zooz ZST10"
+        "description": "Nortek HUSBZB-1"
     },
     {
         "domain": "zwave_js",
         "vid": "10C4",
         "pid": "EA60",
-        "description": "Nortek HUSBZB-1"
+        "description": "Zooz ZST10"
     }
 ]
