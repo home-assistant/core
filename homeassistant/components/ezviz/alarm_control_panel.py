@@ -50,14 +50,15 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of a Ezviz alarm control panel."""
 
     coordinator: EzvizDataUpdateCoordinator
+    _name = "Ezviz Alarm"
+    _model = "Ezviz Alarm"
+    _attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+    _attr_code_arm_required = False
 
     def __init__(self, coordinator: EzvizDataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._location_id = "Home"
-        self._state = STATE_ALARM_DISARMED
-        self._name = "Ezviz Alarm"
-        self._model = "Ezviz Alarm"
+        self._attr_state = STATE_ALARM_DISARMED
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -65,12 +66,7 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._state = state.state
-
-    @property
-    def location(self) -> str:
-        """Return the location of the Alarm."""
-        return self._location_id
+        self._attr_state = state.state
 
     @property
     def name(self) -> str:
@@ -83,11 +79,6 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         return self._name
 
     @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        return self._state
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return {
@@ -97,37 +88,35 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
             "manufacturer": MANUFACTURER,
         }
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
-
     def alarm_disarm(self, code: Any = None) -> None:
         """Send disarm command."""
         try:
             service_switch = getattr(DefenseModeType, ATTR_HOME)
             self.coordinator.ezviz_client.api_set_defence_mode(service_switch.value)
-            self._state = STATE_ALARM_DISARMED
 
         except HTTPError as err:
             raise HTTPError("Cannot disarm alarm") from err
+
+        self._attr_state = STATE_ALARM_DISARMED
 
     def alarm_arm_away(self, code: Any = None) -> None:
         """Send arm away command."""
         try:
             service_switch = getattr(DefenseModeType, ATTR_AWAY)
             self.coordinator.ezviz_client.api_set_defence_mode(service_switch.value)
-            self._state = STATE_ALARM_ARMED_AWAY
 
         except HTTPError as err:
             raise HTTPError("Cannot arm alarm") from err
+
+        self._attr_state = STATE_ALARM_ARMED_AWAY
 
     def alarm_arm_night(self, code: Any = None) -> None:
         """Send arm night command."""
         try:
             service_switch = getattr(DefenseModeType, ATTR_SLEEP)
             self.coordinator.ezviz_client.api_set_defence_mode(service_switch.value)
-            self._state = STATE_ALARM_ARMED_NIGHT
 
         except HTTPError as err:
             raise HTTPError("Cannot arm alarm") from err
+
+        self._attr_state = STATE_ALARM_ARMED_NIGHT
