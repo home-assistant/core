@@ -6,7 +6,11 @@ from zwave_js_server.const import CommandClass, ConfigurationValueType
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.homeassistant.triggers import event, state
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -46,7 +50,11 @@ from .helpers import (
     async_get_node_status_sensor_entity_id,
     get_zwave_value_from_config,
 )
-from .triggers.value_updated import ATTR_FROM, ATTR_TO
+from .triggers.value_updated import (
+    ATTR_FROM,
+    ATTR_TO,
+    PLATFORM_TYPE as VALUE_UPDATED_PLATFORM_TYPE,
+)
 
 CONF_SUBTYPE = "subtype"
 CONF_VALUE_ID = "value_id"
@@ -184,6 +192,26 @@ TRIGGER_SCHEMA = vol.Any(
 )
 
 
+def copy_available_params(
+    input_dict: dict, output_dict: dict, params: list[str]
+) -> None:
+    """Copy available params from input into output."""
+    for param in params:
+        if (val := input_dict.get(param)) not in ("", None):
+            output_dict[param] = val
+
+
+def get_trigger_platform_from_type(trigger_type: str) -> str:
+    """Get trigger platform from Z-Wave JS trigger type."""
+    trigger_split = trigger_type.split(".")
+    # Our convention for trigger types is to have the trigger type at the beginning
+    # delimited by a `.`. For zwave_js triggers, there is a `.` in the name
+    trigger_platform = trigger_split[0]
+    if trigger_platform == DOMAIN:
+        return ".".join(trigger_split[:2])
+    return trigger_platform
+
+
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Z-Wave JS devices."""
     dev_reg = device_registry.async_get(hass)
@@ -294,13 +322,33 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-def copy_available_params(
-    input_dict: dict, output_dict: dict, params: list[str]
-) -> None:
-    """Copy available params from input into output."""
-    for param in params:
-        if (val := input_dict.get(param)) not in ("", None):
-            output_dict[param] = val
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get(config[CONF_DEVICE_ID])
+    assert device
+
+    # We return early if the config entry for this device is not ready because we can't
+    # validate the value without knowing the state of the device
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        assert entry
+        if entry.state != ConfigEntryState.LOADED:
+            return config
+
+    trigger_type = config[CONF_TYPE]
+    if get_trigger_platform_from_type(trigger_type) == VALUE_UPDATED_PLATFORM_TYPE:
+        try:
+            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+            get_zwave_value_from_config(node, config)
+        except vol.Invalid as err:
+            raise InvalidDeviceAutomationConfig(err.msg)
+
+    return config
 
 
 async def async_attach_trigger(
@@ -311,12 +359,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
-    trigger_split = trigger_type.split(".")
-    # Our convention for trigger types is to have the trigger type at the beginning
-    # delimited by a `.`. For zwave_js triggers, there is a `.` in the name
-    trigger_platform = trigger_split[0]
-    if trigger_platform == DOMAIN:
-        trigger_platform = ".".join(trigger_split[:2])
+    trigger_platform = get_trigger_platform_from_type(trigger_type)
 
     # Take input data from automation trigger UI and add it to the trigger we are
     # attaching to
@@ -376,13 +419,6 @@ async def async_attach_trigger(
         )
 
     if trigger_platform == f"{DOMAIN}.value_updated":
-        # Try to get the value to make sure the value ID is valid
-        try:
-            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-            get_zwave_value_from_config(node, config)
-        except (ValueError, vol.Invalid) as err:
-            raise HomeAssistantError("Invalid value specified") from err
-
         zwave_js_config = {
             state.CONF_PLATFORM: trigger_platform,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],

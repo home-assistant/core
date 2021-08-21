@@ -7,10 +7,14 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass, ConfigurationValueType
 from zwave_js_server.model.value import ConfigurationValue
 
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import condition, config_validation as cv, device_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -79,9 +83,24 @@ async def async_validate_condition_config(
 ) -> ConfigType:
     """Validate config."""
     config = CONDITION_SCHEMA(config)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get(config[CONF_DEVICE_ID])
+    assert device
+
+    # We return early if the config entry for this device is not ready because we can't
+    # validate the value without knowing the state of the device
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        assert entry
+        if entry.state != ConfigEntryState.LOADED:
+            return config
+
     if config[CONF_TYPE] == VALUE_TYPE:
-        node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-        get_zwave_value_from_config(node, config)
+        try:
+            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+            get_zwave_value_from_config(node, config)
+        except vol.Invalid as err:
+            raise InvalidDeviceAutomationConfig(err.msg)
 
     return config
 
@@ -182,7 +201,7 @@ async def async_get_condition_capabilities(
             ConfigurationValueType.RANGE,
             ConfigurationValueType.MANUAL_ENTRY,
         ):
-            value_schema = vol.Range(min=min_, max=max_)
+            value_schema = vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
         elif config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             value_schema = vol.In(
                 {int(k): v for k, v in config_value.metadata.states.items()}
