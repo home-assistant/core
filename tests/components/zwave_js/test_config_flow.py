@@ -587,6 +587,19 @@ async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_op
     assert result["reason"] == "already_configured"
 
 
+async def test_usb_discovery_requires_supervisor(hass):
+    """Test usb discovery flow is aborted when there is no supervisor."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "discovery_requires_supervisor"
+
+
 async def test_not_addon(hass, supervisor):
     """Test opting out of add-on on Supervisor."""
     await setup.async_setup_component(hass, "persistent_notification", {})
