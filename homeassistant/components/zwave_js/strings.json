@@ -104,6 +104,8 @@
       "event.value_notification.basic": "Basic CC event on {subtype}",
       "event.value_notification.central_scene": "Central Scene action on {subtype}",
       "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+      "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+      "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value",
       "state.node_status": "Node status changed"
     },
     "condition_type": {
