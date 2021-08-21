@@ -97,6 +97,7 @@ homeassistant/components/comfoconnect/* @michaelarnauts
 homeassistant/components/compensation/* @Petro31
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
+homeassistant/components/contec_controllers/* @havivi1986
 homeassistant/components/control4/* @lawtancool
 homeassistant/components/conversation/* @home-assistant/core
 homeassistant/components/coolmaster/* @OnFreund

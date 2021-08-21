@@ -13,6 +13,9 @@ Adafruit-SHT31==1.0.2
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.1.1
 
+# homeassistant.components.contec_controllers
+ContecControllers==1.0.0
+
 # homeassistant.components.homekit
 HAP-python==4.0.0
 
