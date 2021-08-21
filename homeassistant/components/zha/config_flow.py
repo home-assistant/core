@@ -142,11 +142,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # The Nortek sticks are a special case since they
         # have a Z-Wave and a Zigbee radio. We need to reject
         # the Z-Wave radio.
-        if (
-            vid == "10C4"
-            and pid == "8A2A"
-            and "ZigBee" not in description
-        ):
+        if vid == "10C4" and pid == "8A2A" and "ZigBee" not in description:
             return self.async_abort(reason="not_zha_device")
 
         dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
