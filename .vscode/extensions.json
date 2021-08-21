@@ -1,3 +1,7 @@
 {
-  "recommendations": ["esbenp.prettier-vscode", "ms-python.python"]
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "ms-python.python",
+    "ms-vscode-remote.remote-containers",
+  ]
 }
