@@ -65,8 +65,8 @@ NOTIFICATION_NOTIFICATION = "event.notification.notification"
 BASIC_VALUE_NOTIFICATION = "event.value_notification.basic"
 CENTRAL_SCENE_VALUE_NOTIFICATION = "event.value_notification.central_scene"
 SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation"
-CONFIG_PARAMETER_VALUE_UPDATED = f"{DOMAIN}.value_updated.config_parameter"
-VALUE_VALUE_UPDATED = f"{DOMAIN}.value_updated.value"
+CONFIG_PARAMETER_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.config_parameter"
+VALUE_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.value"
 NODE_STATUS = "state.node_status"
 
 VALUE_SCHEMA = vol.Any(
@@ -418,7 +418,7 @@ async def async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
-    if trigger_platform == f"{DOMAIN}.value_updated":
+    if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
         zwave_js_config = {
             state.CONF_PLATFORM: trigger_platform,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],
