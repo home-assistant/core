@@ -22,6 +22,16 @@ ADDON_DISCOVERY_INFO = {
 }
 
 
+USB_DISCOVERY_INFO = {
+    "device": "/dev/zwave",
+    "pid": "AAAA",
+    "vid": "AAAA",
+    "serial_number": "1234",
+    "description": "zwave radio",
+    "manufacturer": "test",
+}
+
+
 @pytest.fixture(name="persistent_notification", autouse=True)
 async def setup_persistent_notification(hass):
     """Set up persistent notification integration."""
@@ -385,6 +395,29 @@ async def test_abort_discovery_with_existing_entry(
     assert entry.data["url"] == "ws://host1:3001"
 
 
+async def test_abort_hassio_discovery_with_existing_flow(
+    hass, supervisor, addon_options
+):
+    """Test hassio discovery flow is aborted when another discovery has happened."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "usb_confirm"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
+
+
 async def test_discovery_addon_not_running(
     hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
 ):
@@ -512,6 +545,46 @@ async def test_discovery_addon_not_installed(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_options):
+    """Test usb discovery flow is aborted when another discovery has happened."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=ADDON_DISCOVERY_INFO,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "hassio_confirm"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
+
+
+async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_options):
+    """Test usb discovery flow is aborted when there is an existing entry."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_not_addon(hass, supervisor):
