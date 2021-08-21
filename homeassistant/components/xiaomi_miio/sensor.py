@@ -558,6 +558,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attr_icon = description.icon
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._attr_entity_registry_enabled_default = False
         self.entity_description: XiaomiMiioSensorDescription = description
 
     @property
