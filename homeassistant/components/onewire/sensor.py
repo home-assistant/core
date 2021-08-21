@@ -370,9 +370,14 @@ class OneWireSensor(OneWireBaseEntity, SensorEntity):
     """Mixin for sensor specific attributes."""
 
     @property
+    def device_class(self) -> str | None:
+        """Return the class of this device."""
+        return SENSOR_TYPES[self._entity_type][1]
+
+    @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return SENSOR_TYPES[self._entity_type][0]
 
     @property
     def state_class(self) -> str | None:

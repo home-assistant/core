@@ -26,7 +26,7 @@ class OneWireBaseEntity(Entity):
 
     def __init__(
         self,
-        name: str,
+        device_name: str,
         device_file: str,
         entity_type: str,
         entity_name: str,
@@ -35,11 +35,9 @@ class OneWireBaseEntity(Entity):
         unique_id: str,
     ) -> None:
         """Initialize the entity."""
-        self._name = f"{name} {entity_name or entity_type.capitalize()}"
+        self._name = f"{device_name} {entity_name or entity_type.capitalize()}"
         self._device_file = device_file
         self._entity_type = entity_type
-        self._device_class = SENSOR_TYPES[entity_type][1]
-        self._unit_of_measurement = SENSOR_TYPES[entity_type][0]
         self._device_info = device_info
         self._state: StateType = None
         self._value_raw: float | None = None
@@ -50,11 +48,6 @@ class OneWireBaseEntity(Entity):
     def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device."""
-        return self._device_class
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -91,7 +84,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            name=device_name,
+            device_name=device_name,
             device_file=entity_path,
             entity_type=entity_specs["type"],
             entity_name=entity_specs["name"],

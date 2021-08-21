@@ -97,9 +97,6 @@ SENSOR_TYPES: dict[str, (str | None, str | None, str | None)] = {
         DEVICE_CLASS_CURRENT,
         STATE_CLASS_MEASUREMENT,
     ),
-    SENSOR_TYPE_SENSED: (None, None, None),
-    SWITCH_TYPE_LATCH: (None, None, None),
-    SWITCH_TYPE_PIO: (None, None, None),
 }
 
 PLATFORMS = [
