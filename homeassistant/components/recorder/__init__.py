@@ -569,6 +569,7 @@ class Recorder(threading.Thread):
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
+    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
