@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import Callable
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -11,7 +10,10 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value, get_value_id
 
-from homeassistant.components.automation import AutomationTriggerInfo
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.zwave_js.const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
@@ -80,7 +82,7 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: Callable,
+    action: AutomationActionType,
     automation_info: AutomationTriggerInfo,
     *,
     platform_type: str = PLATFORM_TYPE,
