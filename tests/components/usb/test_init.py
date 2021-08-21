@@ -241,7 +241,8 @@ async def test_discovered_by_scanner_after_started_no_vid_pid(hass):
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_non_matching_discovered_by_scanner_after_started(hass):
+@pytest.mark.parametrize("exception_type", [ImportError, OSError])
+async def test_non_matching_discovered_by_scanner_after_started(hass, exception_type):
     """Test a device is discovered by the scanner after the started event that does not match."""
     new_usb = [{"domain": "test1", "vid": "4444", "pid": "4444"}]
 
@@ -256,7 +257,7 @@ async def test_non_matching_discovered_by_scanner_after_started(hass):
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
+    with patch("pyudev.Context", side_effect=exception_type), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
         "homeassistant.components.usb.comports", return_value=mock_comports
