@@ -1,6 +1,8 @@
 """Provides device automations for Netatmo."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
@@ -86,7 +88,7 @@ async def async_validate_trigger_config(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     """List device triggers for Netatmo devices."""
     registry = await entity_registry.async_get_registry(hass)
     device_registry = await hass.helpers.device_registry.async_get_registry()
