@@ -167,7 +167,7 @@ async def async_create_miio_device_and_coordinator(
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
         try:
-            async with async_timeout.timeout(20):
+            async with async_timeout.timeout(10):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
