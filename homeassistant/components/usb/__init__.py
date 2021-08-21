@@ -15,8 +15,8 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers import system_info
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
@@ -105,7 +105,7 @@ class USBDiscovery:
             return
         info = await system_info.async_get_system_info(self.hass)
         if info.get("docker") and not info.get("hassio"):
-            return False
+            return
 
         from pyudev import (  # pylint: disable=import-outside-toplevel
             Context,
