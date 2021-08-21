@@ -44,7 +44,7 @@ USB = [
         "pid": "0200",
         "known_devices": [
             "Aeotec Z-Stick Gen5+",
-            "z-wave.me ZMEUZB1"
+            "Z-WaveMe UZB"
         ]
     },
     {
