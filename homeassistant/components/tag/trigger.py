@@ -28,7 +28,7 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for tag_scanned events based on configuration."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     tag_ids = set(config[TAG_ID])
     device_ids = set(config[DEVICE_ID]) if DEVICE_ID in config else None
 

@@ -74,7 +74,7 @@ def _attach_trigger(
     event_type,
     automation_info: AutomationTriggerInfo,
 ):
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     job = HassJob(action)
 
     @callback

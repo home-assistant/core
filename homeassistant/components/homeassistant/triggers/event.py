@@ -43,10 +43,8 @@ async def async_attach_trigger(
     platform_type: str = "event",
 ) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
-    variables = None
-    if automation_info:
-        variables = automation_info.get("variables")
+    trigger_data = automation_info["trigger_data"]
+    variables = automation_info["variables"]
 
     template.attach(hass, config[CONF_EVENT_TYPE])
     event_types = template.render_complex(

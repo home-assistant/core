@@ -37,7 +37,7 @@ async def _handle_webhook(job, trigger_data, hass, webhook_id, request):
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     webhook_id = config.get(CONF_WEBHOOK_ID)
     job = HassJob(action)
     hass.components.webhook.async_register(

@@ -52,7 +52,7 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
-    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    trigger_data = automation_info["trigger_data"]
     registry: DeviceRegistry = await async_get_registry(hass)
     if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
         variables = {

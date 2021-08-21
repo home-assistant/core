@@ -81,9 +81,7 @@ class TriggerSource:
         automation_info: AutomationTriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        trigger_data = (
-            automation_info.get("trigger_data", {}) if automation_info else {}
-        )
+        trigger_data = automation_info["trigger_data"]
 
         def event_handler(char):
             if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
