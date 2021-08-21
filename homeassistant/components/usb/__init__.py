@@ -15,6 +15,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
@@ -24,6 +25,8 @@ from .models import USBDevice
 from .utils import usb_device_from_port
 
 _LOGGER = logging.getLogger(__name__)
+
+REQUEST_SCAN_COOLDOWN = 1
 
 
 def human_readable_device_name(
@@ -83,6 +86,7 @@ class USBDiscovery:
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
+        self._request_debouncer: Debouncer | None = None
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -92,7 +96,7 @@ class USBDiscovery:
     async def async_start(self, event: Event) -> None:
         """Start USB Discovery and run a manual scan."""
         self.flow_dispatcher.async_start()
-        await self.hass.async_add_executor_job(self.scan_serial)
+        await self._async_scan_serial()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
@@ -162,6 +166,22 @@ class USBDiscovery:
         """Scan serial ports."""
         self.hass.add_job(self._async_process_ports, comports())
 
+    async def _async_scan_serial(self) -> None:
+        """Scan serial ports."""
+        self._async_process_ports(await self.hass.async_add_executor_job(comports))
+
+    async def async_request_scan_serial(self) -> None:
+        """Request a serial scan."""
+        if not self._request_debouncer:
+            self._request_debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=REQUEST_SCAN_COOLDOWN,
+                immediate=True,
+                function=self._async_scan_serial,
+            )
+        await self._request_debouncer.async_call()
+
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "usb/scan"})
@@ -174,5 +194,5 @@ async def websocket_usb_scan(
     """Scan for new usb devices."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     if not usb_discovery.observer_active:
-        await hass.async_add_executor_job(usb_discovery.scan_serial)
+        await usb_discovery.async_request_scan_serial()
     connection.send_result(msg["id"])
