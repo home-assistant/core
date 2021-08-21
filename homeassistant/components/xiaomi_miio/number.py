@@ -23,6 +23,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN_P5,
+    FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
@@ -45,6 +46,7 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity
 
+ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_MOTOR_SPEED = "motor_speed"
@@ -110,6 +112,15 @@ NUMBER_TYPES = {
         max_value=140,
         step=30,
         method="async_set_oscillation_angle",
+    ),
+    FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
+        key=ATTR_DELAY_OFF_COUNTDOWN,
+        name="Delay Off Countdown",
+        icon="mdi:fan-off",
+        min_value=0,
+        max_value=480,
+        step=60,
+        method="async_set_delay_off_countdown",
     ),
 }
 
@@ -246,4 +257,12 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Set the volume."""
         return await self._try_command(
             "Setting angle of the miio device failed.", self._device.set_angle, angle
+        )
+
+    async def async_set_delay_off_countdown(self, delay_off_countdown: int):
+        """Set the delay off countdown."""
+        return await self._try_command(
+            "Setting delay off miio device failed.",
+            self._device.delay_off,
+            delay_off_countdown * 60,
         )
