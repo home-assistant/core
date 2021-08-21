@@ -28,6 +28,6 @@
       "name": "tube*"
     }
   ],
-  "after_dependencies": ["zeroconf"],
+  "after_dependencies": ["usb", "zeroconf"],
   "iot_class": "local_polling"
 }
