@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
+import get_ssl_context as get_ssl
 from smart_meter_texas import Account, Client
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
@@ -28,10 +29,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
+    ssl_context = get_ssl.get_ssl_context()
     client_session = aiohttp_client.async_get_clientsession(hass)
     account = Account(data["username"], data["password"])
-    client = Client(client_session, account)
+    client = Client(client_session, account, ssl_context)
 
     try:
         await client.authenticate()
