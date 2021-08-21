@@ -39,8 +39,8 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO,
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_P5,
-    FEATURE_FLAGS_FAN_ZA3,
     FEATURE_RESET_FILTER,
     FEATURE_SET_EXTRA_FEATURES,
     KEY_COORDINATOR,
@@ -699,7 +699,7 @@ class XiaomiFan(XiaomiGenericDevice):
         if self._model == MODEL_FAN_P5:
             self._device_features = FEATURE_FLAGS_FAN_P5
         elif self._model == MODEL_FAN_ZA3:
-            self._device_features = FEATURE_FLAGS_FAN_ZA3
+            self._device_features = FEATURE_FLAGS_FAN
         self._preset_modes = [mode.name for mode in FanOperationMode]
         self._preset_mode = None
         self._supported_features = (

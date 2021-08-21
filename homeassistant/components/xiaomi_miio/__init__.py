@@ -32,7 +32,9 @@ from .const import (
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_FAN_P5,
+    MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
+    MODEL_FAN_ZA4,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -147,7 +149,7 @@ async def async_create_miio_device_and_coordinator(
         device = AirFresh(host, token)
     elif model == MODEL_FAN_P5:
         device = FanP5(host, token)
-    elif model == MODEL_FAN_ZA3:
+    elif model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4):
         device = Fan(host, token)
     else:
         _LOGGER.error(
