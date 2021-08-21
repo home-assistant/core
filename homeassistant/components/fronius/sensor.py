@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyfronius import Fronius
 import voluptuous as vol
@@ -159,16 +160,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    def __init__(self, bridge: Fronius, name, device, add_entities):
+    def __init__(self, bridge, name, device, add_entities):
         """Initialize the sensor."""
-        self.bridge = bridge
-        self._name = name
-        self._device = device
-        self._fetched: dict = {}
+        self.bridge: Fronius = bridge
+        self._name: str = name
+        self._device: int = device
+        self._fetched: dict[str, Any] = {}
         self._available = True
 
-        self.sensors: set = set()
-        self._registered_sensors: set = set()
+        self.sensors: set[str] = set()
+        self._registered_sensors: set[SensorEntity] = set()
         self._add_entities = add_entities
 
     @property
@@ -233,7 +234,7 @@ class FroniusAdapter:
         """Return values of interest."""
 
     @callback
-    def register(self, sensor: SensorEntity):
+    def register(self, sensor):
         """Register child sensor for update subscriptions."""
         self._registered_sensors.add(sensor)
         return lambda: self._registered_sensors.remove(sensor)
