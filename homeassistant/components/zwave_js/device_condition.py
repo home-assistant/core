@@ -193,6 +193,8 @@ async def async_get_condition_capabilities(
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
 
     if config[CONF_TYPE] == VALUE_TYPE:
+        # Only show command classes on this node and exclude Configuration CC since it
+        # is already covered
         return {
             "extra_fields": vol.Schema(
                 {
@@ -200,6 +202,7 @@ async def async_get_condition_capabilities(
                         {
                             CommandClass(cc.id).value: CommandClass(cc.id).name
                             for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            if cc.id != CommandClass.CONFIGURATION
                         }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
