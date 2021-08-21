@@ -59,7 +59,7 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V2,
     MODEL_AIRPURIFIER_V3,
-    MODEL_FAN_P5,
+    MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -352,7 +352,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
         sensors = []
-        if model == MODEL_FAN_P5:
+        if model in MODELS_FAN_MIIO:
             return
         if model in MODEL_TO_SENSORS_MAP:
             sensors = MODEL_TO_SENSORS_MAP[model]
