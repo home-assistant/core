@@ -271,8 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryNotReady from ex
             # Otherwise fall through to discovery
         else:
-            # Since device is passed this cannot throw
-            # an exception
+            # Since device is passed this cannot throw an exception anymore
             await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
             return True
 
@@ -317,13 +316,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def async_format_model(model: str) -> str:
     """Generate a more human readable model."""
-    return str(model).replace("_", " ").title()
+    return model.replace("_", " ").title()
 
 
 @callback
 def async_format_id(id_: str) -> str:
     """Generate a more human readable id."""
-    return str(hex(int(id_, 16))) if id_ else "None"
+    return hex(int(id_, 16)) if id_ else "None"
 
 
 @callback
