@@ -98,6 +98,8 @@ MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
         fan.ATTR_PERCENTAGE,
         fan.ATTR_PRESET_MODE,
         fan.ATTR_PRESET_MODES,
+        fan.ATTR_SPEED_LIST,
+        fan.ATTR_SPEED,
     }
 )
 
@@ -281,6 +283,11 @@ class MqttFan(MqttEntity, FanEntity):
             "STATE_OFF": config[CONF_PAYLOAD_OFF],
             "OSCILLATE_ON_PAYLOAD": config[CONF_PAYLOAD_OSCILLATION_ON],
             "OSCILLATE_OFF_PAYLOAD": config[CONF_PAYLOAD_OSCILLATION_OFF],
+            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
+            "SPEED_LOW": config[CONF_PAYLOAD_LOW_SPEED],
+            "SPEED_MEDIUM": config[CONF_PAYLOAD_MEDIUM_SPEED],
+            "SPEED_HIGH": config[CONF_PAYLOAD_HIGH_SPEED],
+            "SPEED_OFF": config[CONF_PAYLOAD_OFF_SPEED],
             "PERCENTAGE_RESET": config[CONF_PAYLOAD_RESET_PERCENTAGE],
             "PRESET_MODE_RESET": config[CONF_PAYLOAD_RESET_PRESET_MODE],
         }
@@ -365,6 +372,7 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
                 self._percentage = None
+                self._speed = None
                 self.async_write_ha_state()
                 return
             try:
@@ -429,6 +437,51 @@ class MqttFan(MqttEntity, FanEntity):
                 "qos": self._config[CONF_QOS],
             }
             self._preset_mode = None
+
+        # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
+        @callback
+        @log_messages(self.hass, self.entity_id)
+        def speed_received(msg):
+            """Handle new received MQTT message for the speed."""
+            speed_payload = self._value_templates[ATTR_SPEED](msg.payload)
+            if speed_payload == self._payload["SPEED_LOW"]:
+                speed = SPEED_LOW
+            elif speed_payload == self._payload["SPEED_MEDIUM"]:
+                speed = SPEED_MEDIUM
+            elif speed_payload == self._payload["SPEED_HIGH"]:
+                speed = SPEED_HIGH
+            elif speed_payload == self._payload["SPEED_OFF"]:
+                speed = SPEED_OFF
+            else:
+                speed = None
+
+            if speed and speed in self._legacy_speeds_list:
+                self._speed = speed
+            else:
+                _LOGGER.warning(
+                    "'%s' received on topic %s. '%s' is not a valid speed",
+                    msg.payload,
+                    msg.topic,
+                    speed,
+                )
+                return
+
+            if speed in self._legacy_speeds_list_no_off:
+                self._percentage = ordered_list_item_to_percentage(
+                    self._legacy_speeds_list_no_off, speed
+                )
+            elif speed == SPEED_OFF:
+                self._percentage = 0
+
+            self.async_write_ha_state()
+
+        if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
+            topics[CONF_SPEED_STATE_TOPIC] = {
+                "topic": self._topic[CONF_SPEED_STATE_TOPIC],
+                "msg_callback": speed_received,
+                "qos": self._config[CONF_QOS],
+            }
+            self._speed = SPEED_OFF
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -584,6 +637,39 @@ class MqttFan(MqttEntity, FanEntity):
         if self._optimistic_preset_mode:
             self._preset_mode = preset_mode
             self.async_write_ha_state()
+
+    # async_set_speed is deprecated, support will be removed after a quarter (2021.7)
+    async def async_set_speed(self, speed: str) -> None:
+        """Set the speed of the fan.
+
+        This method is a coroutine.
+        """
+        speed_payload = None
+        if speed in self._legacy_speeds_list:
+            if speed == SPEED_LOW:
+                speed_payload = self._payload["SPEED_LOW"]
+            elif speed == SPEED_MEDIUM:
+                speed_payload = self._payload["SPEED_MEDIUM"]
+            elif speed == SPEED_HIGH:
+                speed_payload = self._payload["SPEED_HIGH"]
+            else:
+                speed_payload = self._payload["SPEED_OFF"]
+        else:
+            _LOGGER.warning("'%s' is not a valid speed", speed)
+            return
+
+        if speed_payload:
+            mqtt.async_publish(
+                self.hass,
+                self._topic[CONF_SPEED_COMMAND_TOPIC],
+                speed_payload,
+                self._config[CONF_QOS],
+                self._config[CONF_RETAIN],
+            )
+
+            if self._optimistic_speed and speed_payload:
+                self._speed = speed
+                self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation.

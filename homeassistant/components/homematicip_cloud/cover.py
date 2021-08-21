@@ -72,7 +72,7 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
         return DEVICE_CLASS_BLIND
 
     @property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self) -> int:
         """Return current position of cover."""
         if self._device.primaryShadingLevel is not None:
             return int((1 - self._device.primaryShadingLevel) * 100)
@@ -165,7 +165,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         return DEVICE_CLASS_SHUTTER
 
     @property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self) -> int:
         """Return current position of cover."""
         if self._device.functionalChannels[self._channel].shutterLevel is not None:
             return int(
@@ -314,7 +314,7 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         return DEVICE_CLASS_SHUTTER
 
     @property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self) -> int:
         """Return current position of cover."""
         if self._device.shutterLevel is not None:
             return int((1 - self._device.shutterLevel) * 100)

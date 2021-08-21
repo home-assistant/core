@@ -27,6 +27,24 @@ SUPPORTED_PORT_SETTINGS = (
 )
 
 
+def _format_port_human_readable(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | None,
+    pid: str | None,
+) -> str:
+    device_details = f"{device}, s/n: {serial_number or 'n/a'}"
+    manufacturer_details = f" - {manufacturer}" if manufacturer else ""
+    vendor_details = f" - {vid}:{pid}" if vid else ""
+    full_details = f"{device_details}{manufacturer_details}{vendor_details}"
+
+    if not description:
+        return full_details
+    return f"{description[:26]} - {full_details}"
+
+
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -102,17 +120,14 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device = discovery_info["device"]
         manufacturer = discovery_info["manufacturer"]
         description = discovery_info["description"]
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        if current_entry := await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
-                        CONF_DEVICE_PATH: dev_path,
-                    },
-                }
-            )
+        await self.async_set_unique_id(
+            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        )
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
+            }
+        )
         # Check if already configured
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -130,11 +145,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "8A2A" and "ZigBee" not in description:
             return self.async_abort(reason="not_zha_device")
 
+        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
         self._auto_detected_data = await detect_radios(dev_path)
         if self._auto_detected_data is None:
             return self.async_abort(reason="not_zha_device")
         self._device_path = dev_path
-        self._title = usb.human_readable_device_name(
+        self._title = _format_port_human_readable(
             dev_path,
             serial_number,
             manufacturer,

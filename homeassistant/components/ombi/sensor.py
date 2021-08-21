@@ -20,7 +20,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     ombi = hass.data[DOMAIN]["instance"]
 
-    entities = [OmbiSensor(ombi, description) for description in SENSOR_TYPES]
+    for sensor, sensor_val in SENSOR_TYPES.items():
+        sensor_label = sensor
+        sensor_type = sensor_val["type"]
+        sensor_icon = sensor_val["icon"]
+        sensors.append(OmbiSensor(sensor_label, sensor_type, ombi, sensor_icon))
 
     add_entities(entities, True)
 
@@ -33,7 +37,10 @@ class OmbiSensor(SensorEntity):
         self.entity_description = description
         self._ombi = ombi
 
-        self._attr_name = f"Ombi {description.name}"
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
 
     def update(self):
         """Update the sensor."""

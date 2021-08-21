@@ -806,39 +806,3 @@ async def test_script_this_var_always(hass, caplog):
     # Verify this available to all templates
     assert mock_calls[0].data.get("this_template") == "script.script1"
     assert "Error rendering variables" not in caplog.text
-
-
-async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
-    """Test if last triggered is restored on start."""
-    time = dt_util.utcnow()
-    mock_restore_cache(
-        hass,
-        (
-            State("script.no_last_triggered", STATE_OFF),
-            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
-        ),
-    )
-    hass.state = CoreState.starting
-
-    assert await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "no_last_triggered": {
-                    "sequence": [{"delay": {"seconds": 5}}],
-                },
-                "last_triggered": {
-                    "sequence": [{"delay": {"seconds": 5}}],
-                },
-            },
-        },
-    )
-
-    state = hass.states.get("script.no_last_triggered")
-    assert state
-    assert state.attributes["last_triggered"] is None
-
-    state = hass.states.get("script.last_triggered")
-    assert state
-    assert state.attributes["last_triggered"] == time

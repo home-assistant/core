@@ -1,12 +1,12 @@
 """Config flow for Tasmota."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.mqtt import valid_subscribe_topic
+from homeassistant.components.mqtt import ReceiveMessage, valid_subscribe_topic
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -30,7 +30,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(DOMAIN)
 
         # Validate the topic, will throw if it fails
-        prefix = discovery_info["subscribed_topic"]
+        prefix = cast(ReceiveMessage, discovery_info).subscribed_topic
         if prefix.endswith("/#"):
             prefix = prefix[:-2]
         try:

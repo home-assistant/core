@@ -22,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -139,7 +139,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state == CoreState.not_running or hass.is_running:
+        while hass.is_running:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
@@ -154,7 +154,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.state == CoreState.not_running or hass.is_running:
+                    if hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -181,9 +181,7 @@ async def async_setup_entry(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
             except CancelledError:
-                if stop_listener and (
-                    hass.state == CoreState.not_running or hass.is_running
-                ):
+                if stop_listener and hass.is_running:
                     stop_listener()  # pylint: disable=not-callable
 
                 if transport:

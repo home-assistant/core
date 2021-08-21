@@ -305,14 +305,6 @@ class FroniusPowerFlow(FroniusAdapter):
 class FroniusLoggerInfo(FroniusAdapter):
     """Adapter for the fronius power flow."""
 
-    async def _update(self):
-        """Get the values for the current state."""
-        return await self.bridge.current_logger_info()
-
-
-class FroniusTemplateSensor(SensorEntity):
-    """Sensor for the single values (e.g. pv power, ac power)."""
-
     def __init__(self, parent: FroniusAdapter, key: str) -> None:
         """Initialize a singular value sensor."""
         self._key = key

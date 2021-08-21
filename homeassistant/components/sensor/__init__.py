@@ -86,7 +86,6 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_POWER,  # power (W/kW)
     DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,  # Amount of VOC (µg/m³)
     DEVICE_CLASS_GAS,  # gas (m³ or ft³)
 ]
 

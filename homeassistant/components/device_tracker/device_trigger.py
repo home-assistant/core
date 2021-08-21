@@ -1,7 +1,7 @@
 """Provides device automations for Device Tracker."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 import voluptuous as vol
 

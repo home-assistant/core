@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
-            },
-            "usb_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 {name} z dodatkiem Z-Wave JS?"
             }
         }
     },
@@ -69,9 +66,7 @@
             "event.value_notification.basic": "Podstawowe wydarzenie CC na {subtype}",
             "event.value_notification.central_scene": "Akcja sceny centralnej na {subtype}",
             "event.value_notification.scene_activation": "Aktywacja sceny na {subtype}",
-            "state.node_status": "Zmieni\u0142 si\u0119 stan w\u0119z\u0142a",
-            "zwave_js.value_updated.config_parameter": "zmieni si\u0119 warto\u015b\u0107 parametru konfiguracji {subtype}",
-            "zwave_js.value_updated.value": "zmieni si\u0119 warto\u015b\u0107 na Z-Wave JS"
+            "state.node_status": "Zmieni\u0142 si\u0119 stan w\u0119z\u0142a"
         }
     },
     "options": {

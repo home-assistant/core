@@ -1,5 +1,7 @@
 """Support for power sensors in WeMo Insight devices."""
 import asyncio
+from datetime import timedelta
+from typing import Callable
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -15,44 +17,61 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import convert
+from homeassistant.util import Throttle, convert
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
-from .wemo_device import DeviceCoordinator
+from .entity import WemoSubscriptionEntity
+from .wemo_device import DeviceWrapper
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo sensors."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator):
+    async def _discovered_wemo(device: DeviceWrapper):
         """Handle a discovered Wemo device."""
+
+        @Throttle(SCAN_INTERVAL)
+        def update_insight_params():
+            device.wemo.update_insight_params()
+
         async_add_entities(
-            [InsightCurrentPower(coordinator), InsightTodayEnergy(coordinator)]
+            [
+                InsightCurrentPower(device, update_insight_params),
+                InsightTodayEnergy(device, update_insight_params),
+            ]
         )
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("sensor")
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("sensor")
         )
     )
 
 
-class InsightSensor(WemoEntity, SensorEntity):
+class InsightSensor(WemoSubscriptionEntity, SensorEntity):
     """Common base for WeMo Insight power sensors."""
 
-    @property
-    def name_suffix(self) -> str:
-        """Return the name of the entity if any."""
-        return self.entity_description.name
+    _name_suffix: str
+
+    def __init__(self, device: DeviceWrapper, update_insight_params: Callable) -> None:
+        """Initialize the WeMo Insight power sensor."""
+        super().__init__(device)
+        self._update_insight_params = update_insight_params
 
     @property
-    def unique_id_suffix(self) -> str:
+    def name(self) -> str:
+        """Return the name of the entity if any."""
+        return f"{super().name} {self.entity_description.name}"
+
+    @property
+    def unique_id(self) -> str:
         """Return the id of this entity."""
-        return self.entity_description.key
+        return f"{super().unique_id}_{self.entity_description.key}"
 
     @property
     def available(self) -> str:
@@ -61,6 +80,11 @@ class InsightSensor(WemoEntity, SensorEntity):
             self.entity_description.key in self.wemo.insight_params
             and super().available
         )
+
+    def _update(self, force_update=True) -> None:
+        with self._wemo_exception_handler("update status"):
+            if force_update or not self.wemo.insight_params:
+                self._update_insight_params()
 
 
 class InsightCurrentPower(InsightSensor):

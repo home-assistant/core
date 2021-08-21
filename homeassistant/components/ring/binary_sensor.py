@@ -51,13 +51,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ring = hass.data[DOMAIN][config_entry.entry_id]["api"]
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
-    entities = [
-        RingBinarySensor(config_entry.entry_id, ring, device, description)
-        for device_type in ("doorbots", "authorized_doorbots", "stickup_cams")
-        for description in BINARY_SENSOR_TYPES
-        if device_type in description.category
-        for device in devices[device_type]
-    ]
+    sensors = []
+
+    for device_type in ("doorbots", "authorized_doorbots", "stickup_cams"):
+        for sensor_type, sensor in SENSOR_TYPES.items():
+            if device_type not in sensor[1]:
+                continue
 
     async_add_entities(entities)
 

@@ -1,14 +1,13 @@
 """Support for scanning a network with nmap."""
-from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Callable
 
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -19,10 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 
-from . import NmapDevice, NmapDeviceScanner, short_hostname, signal_device_update
+from . import NmapDeviceScanner, short_hostname, signal_device_update
 from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
@@ -33,8 +30,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOSTS): cv.ensure_list,
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
@@ -44,7 +40,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
     validated_config = config[DEVICE_TRACKER_DOMAIN]
 
@@ -114,7 +110,7 @@ class NmapTrackerEntity(ScannerEntity):
         self._active = active
 
     @property
-    def _device(self) -> NmapDevice:
+    def _device(self) -> bool:
         """Get latest device state."""
         return self._tracked[self._mac_address]
 
@@ -144,10 +140,8 @@ class NmapTrackerEntity(ScannerEntity):
         return self._mac_address
 
     @property
-    def hostname(self) -> str | None:
+    def hostname(self) -> str:
         """Return hostname of the device."""
-        if not self._device.hostname:
-            return None
         return short_hostname(self._device.hostname)
 
     @property
@@ -156,7 +150,7 @@ class NmapTrackerEntity(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac_address)},
@@ -170,7 +164,7 @@ class NmapTrackerEntity(ScannerEntity):
         return False
 
     @property
-    def icon(self) -> str:
+    def icon(self):
         """Return device icon."""
         return "mdi:lan-connect" if self._active else "mdi:lan-disconnect"
 
@@ -180,7 +174,7 @@ class NmapTrackerEntity(ScannerEntity):
         self._active = online
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self):
         """Return the attributes."""
         return {
             "last_time_reachable": self._device.last_update.isoformat(
@@ -190,12 +184,12 @@ class NmapTrackerEntity(ScannerEntity):
         }
 
     @callback
-    def async_on_demand_update(self, online: bool) -> None:
+    def async_on_demand_update(self, online: bool):
         """Update state."""
         self.async_process_update(online)
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self):
         """Register state update callback."""
         self.async_on_remove(
             async_dispatcher_connect(

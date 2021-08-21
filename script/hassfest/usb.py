@@ -33,12 +33,7 @@ def generate_and_validate(integrations: list[dict[str, str]]) -> str:
             continue
 
         for entry in match_types:
-            match_list.append(
-                {
-                    "domain": domain,
-                    **{k: v for k, v in entry.items() if k != "known_devices"},
-                }
-            )
+            match_list.append({"domain": domain, **entry})
 
     return BASE.format(json.dumps(match_list, indent=4))
 

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Final
 
 import aiohttp
 from getmac import get_mac_address
@@ -35,17 +34,19 @@ from .const import (
 )
 
 # Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
-NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
-MAX_SCAN_ATTEMPTS: Final = 16
-OFFLINE_SCANS_TO_MARK_UNAVAILABLE: Final = 3
+NMAP_TRANSIENT_FAILURE = "Assertion failed: htn.toclock_running == true"
+MAX_SCAN_ATTEMPTS = 16
+OFFLINE_SCANS_TO_MARK_UNAVAILABLE = 3
 
 
-def short_hostname(hostname: str) -> str:
+def short_hostname(hostname):
     """Return the first part of the hostname."""
+    if hostname is None:
+        return None
     return hostname.split(".")[0]
 
 
-def human_readable_name(hostname: str, vendor: str, mac_address: str) -> str:
+def human_readable_name(hostname, vendor, mac_address):
     """Generate a human readable name."""
     if hostname:
         return short_hostname(hostname)
@@ -64,7 +65,7 @@ class NmapDevice:
     ipv4: str
     manufacturer: str
     reason: str
-    last_update: datetime
+    last_update: datetime.datetime
     offline_scans: int
 
 
@@ -73,9 +74,9 @@ class NmapTrackedDevices:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        self.tracked: dict[str, NmapDevice] = {}
-        self.ipv4_last_mac: dict[str, str] = {}
-        self.config_entry_owner: dict[str, str] = {}
+        self.tracked: dict = {}
+        self.ipv4_last_mac: dict = {}
+        self.config_entry_owner: dict = {}
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,9 +132,7 @@ def signal_device_update(mac_address) -> str:
 class NmapDeviceScanner:
     """This class scans for devices using nmap."""
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, devices: NmapTrackedDevices
-    ) -> None:
+    def __init__(self, hass, entry, devices):
         """Initialize the scanner."""
         self.devices = devices
         self.home_interval = None
@@ -151,9 +150,9 @@ class NmapDeviceScanner:
         self._exclude = None
         self._scan_interval = None
 
-        self._known_mac_addresses: dict[str, str] = {}
+        self._known_mac_addresses = {}
         self._finished_first_scan = False
-        self._last_results: list[NmapDevice] = []
+        self._last_results = []
         self._mac_vendor_lookup = None
 
     async def async_setup(self):

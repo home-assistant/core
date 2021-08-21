@@ -20,34 +20,6 @@ ADDON_DISCOVERY_INFO = {
 }
 
 
-USB_DISCOVERY_INFO = {
-    "device": "/dev/zwave",
-    "pid": "AAAA",
-    "vid": "AAAA",
-    "serial_number": "1234",
-    "description": "zwave radio",
-    "manufacturer": "test",
-}
-
-NORTEK_ZIGBEE_DISCOVERY_INFO = {
-    "device": "/dev/zigbee",
-    "pid": "8A2A",
-    "vid": "10C4",
-    "serial_number": "1234",
-    "description": "nortek zigbee radio",
-    "manufacturer": "nortek",
-}
-
-CP2652_ZIGBEE_DISCOVERY_INFO = {
-    "device": "/dev/zigbee",
-    "pid": "EA60",
-    "vid": "10C4",
-    "serial_number": "",
-    "description": "cp2652",
-    "manufacturer": "generic",
-}
-
-
 @pytest.fixture(name="persistent_notification", autouse=True)
 async def setup_persistent_notification(hass):
     """Set up persistent notification integration."""

@@ -569,13 +569,8 @@ class Recorder(threading.Thread):
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
 
-    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
-        if self.hass.is_stopping or not self.get_session:
-            # Home Assistant is shutting down
-            return
-
         # Run nightly tasks at 4:12am
         async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
@@ -585,6 +580,29 @@ class Recorder(threading.Thread):
         async_track_time_change(
             self.hass, self.async_hourly_statistics, minute=12, second=0
         )
+
+        # Add tasks for missing statistics runs
+        now = dt_util.utcnow()
+        last_hour = now.replace(minute=0, second=0, microsecond=0)
+        start = now - timedelta(days=self.keep_days)
+        start = start.replace(minute=0, second=0, microsecond=0)
+
+        if not self.get_session:
+            # Home Assistant is shutting down
+            return
+
+        # Find the newest statistics run, if any
+        with session_scope(session=self.get_session()) as session:
+            last_run = session.query(func.max(StatisticsRuns.start)).scalar()
+        if last_run:
+            start = max(start, process_timestamp(last_run) + timedelta(hours=1))
+
+        # Add tasks
+        while start < last_hour:
+            end = start + timedelta(hours=1)
+            _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
+            self.queue.put(StatisticsTask(start))
+            start = start + timedelta(hours=1)
 
     def run(self):
         """Start processing events to save."""

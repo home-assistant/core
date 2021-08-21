@@ -16,7 +16,6 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
-from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
 from homeassistant.components.sensor import STATE_CLASSES_SCHEMA
 from homeassistant.const import (

@@ -102,7 +102,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
 
     TYPE = DOMAIN
 
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_arm_required = False
     _attr_supported_features = (
         SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
     )
@@ -110,7 +110,11 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     def __init__(self, device, gateway) -> None:
         """Set up alarm control panel device."""
         super().__init__(device, gateway)
-        self.alarm_system = get_alarm_system_for_unique_id(gateway, device.uniqueid)
+        self._service_to_device_panel_command = {
+            PANEL_ENTRY_DELAY: self._device.entry_delay,
+            PANEL_EXIT_DELAY: self._device.exit_delay,
+            PANEL_NOT_READY_TO_ARM: self._device.not_ready_to_arm,
+        }
 
     @callback
     def async_update_callback(self, force_update: bool = False) -> None:

@@ -114,12 +114,30 @@ class VolkszaehlerSensor(SensorEntity):
         self.entity_description = description
         self.vz_api = vz_api
 
-        self._attr_name = f"{name} {description.name}"
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} {SENSOR_TYPES[self.type][0]}"
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SENSOR_TYPES[self.type][2]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_TYPES[self.type][1]
 
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
         return self.vz_api.available
+
+    @property
+    def native_value(self):
+        """Return the state of the resources."""
+        return self._state
 
     async def async_update(self):
         """Get the latest data from REST API."""

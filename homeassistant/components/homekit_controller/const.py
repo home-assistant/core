@@ -50,15 +50,10 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
-    CharacteristicsTypes.TEMPERATURE_CURRENT: "sensor",
-    CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: "sensor",
-    CharacteristicsTypes.AIR_QUALITY: "sensor",
-    CharacteristicsTypes.DENSITY_PM25: "sensor",
-    CharacteristicsTypes.DENSITY_PM10: "sensor",
-    CharacteristicsTypes.DENSITY_OZONE: "sensor",
-    CharacteristicsTypes.DENSITY_NO2: "sensor",
-    CharacteristicsTypes.DENSITY_SO2: "sensor",
-    CharacteristicsTypes.DENSITY_VOC: "sensor",
+    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): "sensor",
+    CharacteristicsTypes.get_uuid(
+        CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
+    ): "sensor",
 }
 
 # For legacy reasons, "built-in" characteristic types are in their short form

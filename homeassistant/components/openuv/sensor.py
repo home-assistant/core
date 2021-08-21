@@ -1,7 +1,7 @@
 """Support for OpenUV sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MINUTES, UV_INDEX
 from homeassistant.core import HomeAssistant, callback
@@ -112,21 +112,26 @@ async def async_setup_entry(
     """Set up a OpenUV sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
-    entities = [OpenUvSensor(openuv, description) for description in SENSOR_TYPES]
-    async_add_entities(entities, True)
+    sensors = []
+    for kind, attrs in SENSORS.items():
+        name, icon, unit = attrs
+        sensors.append(OpenUvSensor(openuv, kind, name, icon, unit))
+
+    async_add_entities(sensors, True)
 
 
 class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
 
     def __init__(
-        self,
-        openuv: OpenUV,
-        description: SensorEntityDescription,
+        self, openuv: OpenUV, sensor_type: str, name: str, icon: str, unit: str | None
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(openuv, description.key)
-        self.entity_description = description
+        super().__init__(openuv, sensor_type)
+
+        self._attr_icon = icon
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
 
     @callback
     def update_from_latest_data(self) -> None:

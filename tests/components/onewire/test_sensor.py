@@ -9,14 +9,8 @@ from homeassistant.components.onewire.const import (
     DOMAIN,
     PLATFORMS,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.setup import async_setup_component
 
 from . import (

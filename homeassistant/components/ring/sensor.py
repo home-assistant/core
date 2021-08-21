@@ -20,14 +20,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for a Ring device."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
-    entities = [
-        description.cls(config_entry.entry_id, device, description)
-        for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams")
-        for description in SENSOR_TYPES
-        if device_type in description.category
-        for device in devices[device_type]
-        if not (device_type == "battery" and device.battery_life is None)
-    ]
+    sensors = []
+
+    for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams"):
+        for sensor_type, sensor in SENSOR_TYPES.items():
+            if device_type not in sensor[1]:
+                continue
+
+            for device in devices[device_type]:
+                if device_type == "battery" and device.battery_life is None:
+                    continue
+
+                sensors.append(sensor[6](config_entry.entry_id, device, sensor_type))
 
     async_add_entities(entities)
 
@@ -52,6 +56,11 @@ class RingSensor(RingEntityMixin, SensorEntity):
         self._attr_unique_id = f"{device.id}-{description.key}"
 
     @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         sensor_type = self.entity_description.key
@@ -71,7 +80,12 @@ class RingSensor(RingEntityMixin, SensorEntity):
             return icon_for_battery_level(
                 battery_level=self._device.battery_life, charging=False
             )
-        return self.entity_description.icon
+        return self._icon
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the units of measurement."""
+        return SENSOR_TYPES.get(self._sensor_type)[2]
 
 
 class HealthDataRingSensor(RingSensor):

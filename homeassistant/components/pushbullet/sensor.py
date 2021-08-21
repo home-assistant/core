@@ -114,6 +114,21 @@ class PushBulletNotificationSensor(SensorEntity):
         except (KeyError, TypeError):
             pass
 
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"Pushbullet {self._element}"
+
+    @property
+    def native_value(self):
+        """Return the current state of the sensor."""
+        return self._state
+
+    @property
+    def extra_state_attributes(self):
+        """Return all known attributes of the sensor."""
+        return self._state_attributes
+
 
 class PushBulletNotificationProvider:
     """Provider for an account, leading to one or more sensors."""

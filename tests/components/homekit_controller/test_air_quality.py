@@ -2,7 +2,6 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.homekit_controller.common import setup_test_component

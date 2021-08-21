@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
-            },
-            "usb_confirm": {
-                "description": "Vols configurar {name} amb el complement Z-Wave JS?"
             }
         }
     },
@@ -69,9 +66,7 @@
             "event.value_notification.basic": "Esdeveniment CC b\u00e0sic a {subtype}",
             "event.value_notification.central_scene": "Acci\u00f3 d'escena central a {subtype}",
             "event.value_notification.scene_activation": "Activaci\u00f3 d'escena a {subtype}",
-            "state.node_status": "L'estat del node ha canviat",
-            "zwave_js.value_updated.config_parameter": "Canvi del valor del par\u00e0metre de configuraci\u00f3 {subtype}",
-            "zwave_js.value_updated.value": "Canvi del valor en un valor Z-Wave JS"
+            "state.node_status": "L'estat del node ha canviat"
         }
     },
     "options": {

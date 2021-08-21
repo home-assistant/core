@@ -24,47 +24,15 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="status",
-        name="Charging Status",
-    ),
-    SensorEntityDescription(
-        key="charge_time",
-        name="Charge Time Elapsed",
-        native_unit_of_measurement=TIME_MINUTES,
-    ),
-    SensorEntityDescription(
-        key="ambient_temp",
-        name="Ambient Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="ir_temp",
-        name="IR Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="rtc_temp",
-        name="RTC Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="usage_session",
-        name="Usage this Session",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-    ),
-    SensorEntityDescription(
-        key="usage_total",
-        name="Total Usage",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-    ),
-)
-
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+SENSOR_TYPES = {
+    "status": ["Charging Status", None, None],
+    "charge_time": ["Charge Time Elapsed", TIME_MINUTES, None],
+    "ambient_temp": ["Ambient Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "ir_temp": ["IR Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "rtc_temp": ["RTC Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "usage_session": ["Usage this Session", ENERGY_KILO_WATT_HOUR, None],
+    "usage_total": ["Total Usage", ENERGY_KILO_WATT_HOUR, None],
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -99,6 +67,23 @@ class OpenEVSESensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self.charger = charger
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of this sensor."""
+        return self._unit_of_measurement
 
     def update(self):
         """Get the monitored data from the charger."""

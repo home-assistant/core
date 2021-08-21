@@ -115,12 +115,6 @@ SIMPLE_SENSOR = {
         "state_class": STATE_CLASS_MEASUREMENT,
         "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
-    CharacteristicsTypes.DENSITY_VOC: {
-        "name": "Volatile Organic Compound Density",
-        "device_class": DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-        "state_class": STATE_CLASS_MEASUREMENT,
-        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    },
 }
 
 # For legacy reasons, "built-in" characteristic types are in their short form

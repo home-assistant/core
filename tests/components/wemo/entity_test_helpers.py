@@ -5,14 +5,18 @@ This is not a test module. These test methods are used by the platform test modu
 import asyncio
 import threading
 
-from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.components.wemo import wemo_device
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    STATE_UNAVAILABLE,
+import async_timeout
+import pywemo
+from pywemo.ouimeaux_device.api.service import ActionException
+
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.wemo.const import SIGNAL_WEMO_STATE_PUSH
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 
@@ -20,9 +24,20 @@ def _perform_registry_callback(coordinator):
     """Return a callable method to trigger a state callback from the device."""
 
     async def async_callback():
-        await coordinator.hass.async_add_executor_job(
-            coordinator.subscription_callback, coordinator.wemo, "", ""
+        event = asyncio.Event()
+
+        async def event_callback(e, *args):
+            event.set()
+
+        stop_dispatcher_listener = async_dispatcher_connect(
+            hass, SIGNAL_WEMO_STATE_PUSH, event_callback
         )
+        # Cause a state update callback to be triggered by the device.
+        await hass.async_add_executor_job(
+            pywemo_registry.callbacks[pywemo_device.name], pywemo_device, "", ""
+        )
+        await event.wait()
+        stop_dispatcher_listener()
 
     return async_callback
 
@@ -46,13 +61,8 @@ async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
     """
     event = threading.Event()
     waiting = asyncio.Event()
-    call_count = 0
 
-    def get_state(force_update=None):
-        if force_update is None:
-            return
-        nonlocal call_count
-        call_count += 1
+    def get_update(force_update=True):
         hass.add_job(waiting.set)
         event.wait()
 
@@ -112,16 +122,18 @@ async def test_async_update_locked_multiple_callbacks(hass, pywemo_device, wemo_
     await _async_multiple_call_helper(hass, pywemo_device, callback, callback)
 
 
-async def test_avaliable_after_update(
-    hass, pywemo_registry, pywemo_device, wemo_entity, domain
+async def test_async_locked_update_with_exception(
+    hass,
+    wemo_entity,
+    pywemo_device,
+    update_polling_method=None,
+    expected_state=STATE_OFF,
 ):
-    """Test the avaliability when an On call fails and after an update.
-
-    This test expects that the pywemo_device Mock has been setup to raise an
-    ActionException when the SERVICE_TURN_ON method is called and that the
-    state will be On after the update.
-    """
-    await async_setup_component(hass, domain, {})
+    """Test that the entity becomes unavailable when communication is lost."""
+    assert hass.states.get(wemo_entity.entity_id).state == expected_state
+    await async_setup_component(hass, HA_DOMAIN, {})
+    update_polling_method = update_polling_method or pywemo_device.get_state
+    update_polling_method.side_effect = ActionException
 
     await hass.services.async_call(
         domain,
@@ -131,6 +143,39 @@ async def test_avaliable_after_update(
     )
     assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
 
-    pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
+
+async def test_async_update_with_timeout_and_recovery(
+    hass, wemo_entity, pywemo_device, expected_state=STATE_OFF
+):
+    """Test that the entity becomes unavailable after a timeout, and that it recovers."""
+    assert hass.states.get(wemo_entity.entity_id).state == expected_state
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    event = threading.Event()
+
+    def get_state(*args):
+        event.wait()
+        return 0
+
+    if hasattr(pywemo_device, "bridge_update"):
+        pywemo_device.bridge_update.side_effect = get_state
+    elif isinstance(pywemo_device, pywemo.Insight):
+        pywemo_device.update_insight_params.side_effect = get_state
+    else:
+        pywemo_device.get_state.side_effect = get_state
+    timeout = async_timeout.timeout(0)
+
+    with patch("async_timeout.timeout", return_value=timeout):
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+            blocking=True,
+        )
+
+    assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
+
+    # Check that the entity recovers and is available after the update succeeds.
+    event.set()
     await hass.async_block_till_done()
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+    assert hass.states.get(wemo_entity.entity_id).state == expected_state

@@ -38,49 +38,25 @@ ATTR_CARBON_DIOXIDE = "CO2"
 ATTR_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 ATTR_FOOBOT_INDEX = "index"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="time",
-        name=ATTR_TIME,
-        native_unit_of_measurement=TIME_SECONDS,
-    ),
-    SensorEntityDescription(
-        key="pm",
-        name=ATTR_PM2_5,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:cloud",
-    ),
-    SensorEntityDescription(
-        key="tmp",
-        name=ATTR_TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="hum",
-        name=ATTR_HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:water-percent",
-    ),
-    SensorEntityDescription(
-        key="co2",
-        name=ATTR_CARBON_DIOXIDE,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:molecule-co2",
-    ),
-    SensorEntityDescription(
-        key="voc",
-        name=ATTR_VOLATILE_ORGANIC_COMPOUNDS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        icon="mdi:cloud",
-    ),
-    SensorEntityDescription(
-        key="allpollu",
-        name=ATTR_FOOBOT_INDEX,
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
-    ),
-)
+SENSOR_TYPES = {
+    "time": [ATTR_TIME, TIME_SECONDS, None, None],
+    "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud", None],
+    "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "hum": [ATTR_HUMIDITY, PERCENTAGE, "mdi:water-percent", None],
+    "co2": [
+        ATTR_CARBON_DIOXIDE,
+        CONCENTRATION_PARTS_PER_MILLION,
+        "mdi:molecule-co2",
+        None,
+    ],
+    "voc": [
+        ATTR_VOLATILE_ORGANIC_COMPOUNDS,
+        CONCENTRATION_PARTS_PER_BILLION,
+        "mdi:cloud",
+        None,
+    ],
+    "allpollu": [ATTR_FOOBOT_INDEX, PERCENTAGE, "mdi:percent", None],
+}
 
 SCAN_INTERVAL = timedelta(minutes=10)
 PARALLEL_UPDATES = 1
@@ -135,8 +111,15 @@ class FoobotSensor(SensorEntity):
         self.entity_description = description
         self.foobot_data = data
 
-        self._attr_name = f"Foobot {device['name']} {description.name}"
-        self._attr_unique_id = f"{device['uuid']}_{description.key}"
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SENSOR_TYPES[self.type][3]
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return SENSOR_TYPES[self.type][2]
 
     @property
     def native_value(self):
@@ -146,6 +129,16 @@ class FoobotSensor(SensorEntity):
         except (KeyError, TypeError):
             data = None
         return data
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this entity."""
+        return f"{self._uuid}_{self.type}"
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data."""

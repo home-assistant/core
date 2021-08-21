@@ -533,6 +533,8 @@ class HomeKit:
         if os.path.exists(persist_file):
             self.driver.load()
 
+        self.driver.persist()
+
     async def async_reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
         if not self.bridge:

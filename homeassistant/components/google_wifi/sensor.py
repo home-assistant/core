@@ -132,12 +132,38 @@ class GoogleWifiSensor(SensorEntity):
         """Initialize a Google Wifi sensor."""
         self.entity_description = description
         self._api = api
-        self._attr_name = f"{name}_{description.key}"
+        self._name = name
+        self._state = None
+
+        variable_info = MONITORED_CONDITIONS[variable]
+        self._var_name = variable
+        self._var_units = variable_info[1]
+        self._var_icon = variable_info[2]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name}_{self._var_name}"
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._var_icon
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._var_units
 
     @property
     def available(self):
         """Return availability of Google Wifi API."""
         return self._api.available
+
+    @property
+    def native_value(self):
+        """Return the state of the device."""
+        return self._state
 
     def update(self):
         """Get the latest data from the Google Wifi API."""

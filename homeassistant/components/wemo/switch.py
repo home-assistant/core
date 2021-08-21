@@ -43,8 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     await asyncio.gather(
         *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
         )
     )
 

@@ -155,11 +155,36 @@ class RadarrSensor(SensorEntity):
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
         self.ssl = "https" if conf.get(CONF_SSL) else "http"
-        self.data: list[Any] = []
-        self._attr_name = f"Radarr {description.name}"
-        if description.key == "diskspace":
-            self._attr_native_unit_of_measurement = conf.get(CONF_UNIT)
-        self._attr_available = False
+        self._state = None
+        self.data = []
+        self.type = sensor_type
+        self._name = SENSOR_TYPES[self.type][0]
+        if self.type == "diskspace":
+            self._unit = conf.get(CONF_UNIT)
+        else:
+            self._unit = SENSOR_TYPES[self.type][1]
+        self._icon = SENSOR_TYPES[self.type][2]
+        self._available = False
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "{} {}".format("Radarr", self._name)
+
+    @property
+    def native_value(self):
+        """Return sensor state."""
+        return self._state
+
+    @property
+    def available(self):
+        """Return sensor availability."""
+        return self._available
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of the sensor."""
+        return self._unit
 
     @property
     def extra_state_attributes(self):
@@ -197,7 +222,6 @@ class RadarrSensor(SensorEntity):
 
     def update(self):
         """Update the data for the sensor."""
-        sensor_type = self.entity_description.key
         time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
         start = get_date(time_zone)
         end = get_date(time_zone, self.days)
@@ -216,7 +240,7 @@ class RadarrSensor(SensorEntity):
             return
 
         if res.status_code == HTTP_OK:
-            if sensor_type in ("upcoming", "movies", "commands"):
+            if self.type in ("upcoming", "movies", "commands"):
                 self.data = res.json()
                 self._attr_native_value = len(self.data)
             elif sensor_type == "diskspace":
@@ -228,11 +252,8 @@ class RadarrSensor(SensorEntity):
                     self.data = list(
                         filter(lambda x: x["path"] in self.included, res.json())
                     )
-                self._attr_native_value = "{:.2f}".format(
-                    to_unit(
-                        sum(data["freeSpace"] for data in self.data),
-                        self.native_unit_of_measurement,
-                    )
+                self._state = "{:.2f}".format(
+                    to_unit(sum(data["freeSpace"] for data in self.data), self._unit)
                 )
             elif sensor_type == "status":
                 self.data = res.json()

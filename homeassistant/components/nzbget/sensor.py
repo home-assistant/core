@@ -99,7 +99,9 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         coordinator: NZBGetDataUpdateCoordinator,
         entry_id: str,
         entry_name: str,
-        description: SensorEntityDescription,
+        sensor_type: str,
+        sensor_name: str,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize a new NZBGet sensor."""
         self.entity_description = description
@@ -110,6 +112,24 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
             entry_id=entry_id,
             name=f"{entry_name} {description.name}",
         )
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        if "UpTimeSec" in self._sensor_type:
+            return DEVICE_CLASS_TIMESTAMP
+
+        return None
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the sensor."""
+        return self._unique_id
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        """Return the unit that the state of sensor is expressed in."""
+        return self._unit_of_measurement
 
     @property
     def native_value(self):

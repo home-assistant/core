@@ -287,7 +287,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
-        self._title: str | None = None
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -485,7 +484,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_start_addon()
 
-        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
+        usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
 
         data_schema = vol.Schema(
@@ -509,7 +508,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.context["source"] == config_entries.SOURCE_USB:
+        if not self.unique_id:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -534,10 +533,6 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> FlowResult:
         """Return a config entry for the flow."""
-        # Abort any other flows that may be in progress
-        for progress in self._async_in_progress():
-            self.hass.config_entries.flow.async_abort(progress["flow_id"])
-
         return self.async_create_entry(
             title=TITLE,
             data={

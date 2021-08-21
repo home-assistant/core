@@ -79,6 +79,11 @@ grpcio==1.31.0
 google-cloud-pubsub==2.1.0
 google-api-core<=1.31.2
 
+# Newer versions of cloud pubsub pin a higher version of grpcio. This can
+# be reverted when the grpcio pin is reverted, see:
+# https://github.com/home-assistant/core/issues/53427
+google-cloud-pubsub==2.1.0
+
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 

@@ -646,7 +646,6 @@ omit =
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/modbus.py
-    homeassistant/components/modbus/sensor.py
     homeassistant/components/modbus/validators.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
@@ -1097,8 +1096,6 @@ omit =
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
-    homeassistant/components/tractive/entity.py
-    homeassistant/components/tractive/sensor.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py

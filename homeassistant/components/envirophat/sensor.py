@@ -30,99 +30,24 @@ CONF_USE_LEDS = "use_leds"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="light",
-        name="light",
-        icon="mdi:weather-sunny",
-    ),
-    SensorEntityDescription(
-        key="light_red",
-        name="light_red",
-        icon="mdi:invert-colors",
-    ),
-    SensorEntityDescription(
-        key="light_green",
-        name="light_green",
-        icon="mdi:invert-colors",
-    ),
-    SensorEntityDescription(
-        key="light_blue",
-        name="light_blue",
-        icon="mdi:invert-colors",
-    ),
-    SensorEntityDescription(
-        key="accelerometer_x",
-        name="accelerometer_x",
-        native_unit_of_measurement="G",
-        icon="mdi:earth",
-    ),
-    SensorEntityDescription(
-        key="accelerometer_y",
-        name="accelerometer_y",
-        native_unit_of_measurement="G",
-        icon="mdi:earth",
-    ),
-    SensorEntityDescription(
-        key="accelerometer_z",
-        name="accelerometer_z",
-        native_unit_of_measurement="G",
-        icon="mdi:earth",
-    ),
-    SensorEntityDescription(
-        key="magnetometer_x",
-        name="magnetometer_x",
-        icon="mdi:magnet",
-    ),
-    SensorEntityDescription(
-        key="magnetometer_y",
-        name="magnetometer_y",
-        icon="mdi:magnet",
-    ),
-    SensorEntityDescription(
-        key="magnetometer_z",
-        name="magnetometer_z",
-        icon="mdi:magnet",
-    ),
-    SensorEntityDescription(
-        key="temperature",
-        name="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="pressure",
-        name="pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
-        icon="mdi:gauge",
-    ),
-    SensorEntityDescription(
-        key="voltage_0",
-        name="voltage_0",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
-    ),
-    SensorEntityDescription(
-        key="voltage_1",
-        name="voltage_1",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
-    ),
-    SensorEntityDescription(
-        key="voltage_2",
-        name="voltage_2",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
-    ),
-    SensorEntityDescription(
-        key="voltage_3",
-        name="voltage_3",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
-    ),
-)
-
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+SENSOR_TYPES = {
+    "light": ["light", " ", "mdi:weather-sunny", None],
+    "light_red": ["light_red", " ", "mdi:invert-colors", None],
+    "light_green": ["light_green", " ", "mdi:invert-colors", None],
+    "light_blue": ["light_blue", " ", "mdi:invert-colors", None],
+    "accelerometer_x": ["accelerometer_x", "G", "mdi:earth", None],
+    "accelerometer_y": ["accelerometer_y", "G", "mdi:earth", None],
+    "accelerometer_z": ["accelerometer_z", "G", "mdi:earth", None],
+    "magnetometer_x": ["magnetometer_x", " ", "mdi:magnet", None],
+    "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet", None],
+    "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet", None],
+    "temperature": ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge", None],
+    "voltage_0": ["voltage_0", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_1": ["voltage_1", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_2": ["voltage_2", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "voltage_3": ["voltage_3", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -159,6 +84,35 @@ class EnvirophatSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
+        self._name = SENSOR_TYPES[sensor_types][0]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
+        self.type = sensor_types
+        self._state = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SENSOR_TYPES[self.type][3]
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SENSOR_TYPES[self.type][2]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
 
     def update(self):
         """Get the latest data and updates the states."""

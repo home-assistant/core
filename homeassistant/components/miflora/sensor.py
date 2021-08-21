@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
-    SensorEntityDescription,
 )
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -183,6 +182,16 @@ class MiFloraSensor(SensorEntity):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, on_startup)
 
     @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
     def available(self):
         """Return True if did update since 2h."""
         return self.last_successful_update > (
@@ -193,6 +202,31 @@ class MiFloraSensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of this entity."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the units of measurement."""
+        return self._unit
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
 
     def update(self):
         """

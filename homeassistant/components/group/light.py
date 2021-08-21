@@ -94,7 +94,6 @@ FORWARDED_ATTRIBUTES = frozenset(
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,
         ATTR_TRANSITION,
-        ATTR_WHITE,
         ATTR_WHITE_VALUE,
         ATTR_XY_COLOR,
     }

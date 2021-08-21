@@ -30,26 +30,11 @@ CONF_IS_HAT_ATTACHED = "is_hat_attached"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="temperature",
-        name="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="humidity",
-        name="humidity",
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-    SensorEntityDescription(
-        key="pressure",
-        name="pressure",
-        native_unit_of_measurement="mb",
-    ),
-)
-
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+SENSOR_TYPES = {
+    "temperature": ["temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["humidity", PERCENTAGE, None],
+    "pressure": ["pressure", "mb", None],
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -97,6 +82,26 @@ class SenseHatSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self.data = data
+        self._name = SENSOR_TYPES[sensor_types][0]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
+        self.type = sensor_types
+        self._state = None
+        self._attr_device_class = SENSOR_TYPES[sensor_types][2]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
 
     def update(self):
         """Get the latest data and updates the states."""

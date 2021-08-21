@@ -39,17 +39,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def _discovered_wemo(coordinator: DeviceCoordinator):
         """Handle a discovered Wemo device."""
-        if isinstance(coordinator.wemo, bridge.Bridge):
-            async_setup_bridge(hass, config_entry, async_add_entities, coordinator)
+        if device.wemo.model_name == "Dimmer":
+            async_add_entities([WemoDimmer(device)])
         else:
-            async_add_entities([WemoDimmer(coordinator)])
+            await hass.async_add_executor_job(
+                setup_bridge, hass, device.wemo, async_add_entities
+            )
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("light")
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
         )
     )
 
@@ -209,9 +211,11 @@ class WemoDimmer(WemoEntity, LightEntity):
             brightness = int((brightness / 255) * 100)
             with self._wemo_exception_handler("set brightness"):
                 self.wemo.set_brightness(brightness)
+                self._state = WEMO_ON
         else:
             with self._wemo_exception_handler("turn on"):
                 self.wemo.on()
+                self._state = WEMO_ON
 
         self.schedule_update_ha_state()
 

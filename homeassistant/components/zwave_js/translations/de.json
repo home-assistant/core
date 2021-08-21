@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS Add-on wird gestartet."
-            },
-            "usb_confirm": {
-                "description": "M\u00f6chtest du {name} mit dem Z-Wave JS Add-on einrichten?"
             }
         }
     },
@@ -69,9 +66,7 @@
             "event.value_notification.basic": "Grundlegendes CC-Ereignis auf {subtype}",
             "event.value_notification.central_scene": "Zentrale Szenenaktion auf {subtype}",
             "event.value_notification.scene_activation": "Szenenaktivierung auf {subtype}",
-            "state.node_status": "Knotenstatus ge\u00e4ndert",
-            "zwave_js.value_updated.config_parameter": "Wert\u00e4nderung des Konfigurationsparameters {subtype}",
-            "zwave_js.value_updated.value": "Wert\u00e4nderung bei einem Z-Wave JS Wert"
+            "state.node_status": "Knotenstatus ge\u00e4ndert"
         }
     },
     "options": {

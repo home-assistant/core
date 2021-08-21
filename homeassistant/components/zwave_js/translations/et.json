@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS lisandmoodul k\u00e4ivitub."
-            },
-            "usb_confirm": {
-                "description": "Kas seadistada Z-Wave JS lisandmoodul {name}?"
             }
         }
     },
@@ -69,9 +66,7 @@
             "event.value_notification.basic": "CC p\u00f5his\u00fcndmus {subtype}",
             "event.value_notification.central_scene": "Keskse stseeni tegevus {subtype}",
             "event.value_notification.scene_activation": "Stseeni aktiveerimine saidil {subtype}",
-            "state.node_status": "S\u00f5lme olek muutus",
-            "zwave_js.value_updated.config_parameter": "Seadeparameetri {subtype} v\u00e4\u00e4rtuse muutmine",
-            "zwave_js.value_updated.value": "Z-Wave JS v\u00e4\u00e4rtuse muutus"
+            "state.node_status": "S\u00f5lme olek muutus"
         }
     },
     "options": {

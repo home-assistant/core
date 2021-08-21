@@ -236,7 +236,7 @@ UTILISATION_SENSORS: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     f"{SynoCoreUtilization.API_KEY}:network_up": {
-        ATTR_NAME: "Upload Throughput",
+        ATTR_NAME: "Network Up",
         ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_KILOBYTES_PER_SECOND,
         ATTR_ICON: "mdi:upload",
         ATTR_DEVICE_CLASS: None,
@@ -244,7 +244,7 @@ UTILISATION_SENSORS: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     f"{SynoCoreUtilization.API_KEY}:network_down": {
-        ATTR_NAME: "Download Throughput",
+        ATTR_NAME: "Network Down",
         ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_KILOBYTES_PER_SECOND,
         ATTR_ICON: "mdi:download",
         ATTR_DEVICE_CLASS: None,

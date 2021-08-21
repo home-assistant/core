@@ -98,8 +98,28 @@ class ThinkingCleanerSensor(SensorEntity):
         self.entity_description = description
         self._tc_object = tc_object
         self._update_devices = update_devices
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._state = None
 
-        self._attr_name = f"{tc_object.name} {description.name}"
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._tc_object.name} {SENSOR_TYPES[self.type][0]}"
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SENSOR_TYPES[self.type][2]
+
+    @property
+    def native_value(self):
+        """Return the state of the device."""
+        return self._state
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._unit_of_measurement
 
     def update(self):
         """Update the sensor."""

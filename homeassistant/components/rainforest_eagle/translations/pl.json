@@ -12,7 +12,6 @@
             "user": {
                 "data": {
                     "cloud_id": "Identyfikator chmury",
-                    "host": "Nazwa hosta lub adres IP",
                     "install_code": "Kod instalacji"
                 }
             }

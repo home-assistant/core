@@ -171,7 +171,7 @@ class AzureEventHub:
                 self.hass, self._send_interval, self.async_send
             )
 
-    async def fill_batch(self, client) -> tuple[EventDataBatch, int]:
+    async def fill_batch(self, client) -> None:
         """Return a batch of events formatted for writing.
 
         Uses get_nowait instead of await get, because the functions batches and doesn't wait for each single event, the send function is called.
@@ -209,7 +209,7 @@ class AzureEventHub:
 
         return event_batch, dequeue_count
 
-    def _event_to_filtered_event_data(self, event: Event) -> EventData | None:
+    def _event_to_filtered_event_data(self, event: Event) -> None:
         """Filter event states and create EventData object."""
         state = event.data.get("new_state")
         if (

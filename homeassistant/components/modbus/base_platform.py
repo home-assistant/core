@@ -36,7 +36,6 @@ from .const import (
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STATE_OFF,
@@ -77,8 +76,6 @@ class BasePlatform(Entity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None
-        self._lazy_error_count = entry[CONF_LAZY_ERROR]
-        self._lazy_errors = self._lazy_error_count
 
     @abstractmethod
     async def async_update(self, now=None):
@@ -248,15 +245,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type == CALL_TYPE_COIL:
             self._attr_is_on = bool(result.bits[0] & 1)

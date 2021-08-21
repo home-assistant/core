@@ -37,6 +37,8 @@ INTEGRATION_PLUGINS = [
     translations,
     usb,
     zeroconf,
+    dhcp,
+    usb,
 ]
 HASS_PLUGINS = [
     coverage,

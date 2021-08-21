@@ -13,20 +13,10 @@ from homeassistant.const import (
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="temperature",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key="humidity",
-        name="Humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
-    ),
-)
+SENSOR_TYPES = {
+    "temperature": ["Temperature", TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -56,6 +46,8 @@ class EcobeeSensor(SensorEntity):
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
         self._attr_name = f"{sensor_name} {description.name}"
 
@@ -108,6 +100,13 @@ class EcobeeSensor(SensorEntity):
         return thermostat["runtime"]["connected"]
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
+            return self.type
+        return None
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         if self._state in (
@@ -121,6 +120,11 @@ class EcobeeSensor(SensorEntity):
             return float(self._state) / 10
 
         return self._state
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement this sensor expresses itself in."""
+        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest state of the sensor."""

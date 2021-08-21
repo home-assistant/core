@@ -499,7 +499,6 @@ async def test_hue_events(hass, mock_bridge):
 
     # Fire old event, it should be ignored
     new_sensor_response = dict(new_sensor_response)
-    new_sensor_response["8"] = dict(new_sensor_response["8"])
     new_sensor_response["8"]["state"] = {
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",

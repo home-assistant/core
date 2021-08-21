@@ -128,7 +128,27 @@ class DovadoSensor(SensorEntity):
     def update(self):
         """Update sensor values."""
         self._data.update()
-        self._attr_native_value = self._compute_state()
+        self._state = self._compute_state()
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._data.name} {SENSORS[self._sensor][1]}"
+
+    @property
+    def native_value(self):
+        """Return the sensor state."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        return SENSORS[self._sensor][3]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return SENSORS[self._sensor][2]
 
     @property
     def extra_state_attributes(self):

@@ -82,7 +82,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
                 "type": t_type,
                 "subtype": t_subtype,
             }
-            for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE
+            for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE.keys()
         ),
     ]
     assert_lists_same(triggers, expected_triggers)

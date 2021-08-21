@@ -42,9 +42,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Select devices."""
     registry = await entity_registry.async_get_registry(hass)
     return [
@@ -89,7 +87,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, Any]:
     """List trigger capabilities."""
     try:
         options = get_capability(hass, config[CONF_ENTITY_ID], ATTR_OPTIONS) or []

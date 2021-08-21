@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "The Z-Wave JS add-on is starting."
-            },
-            "usb_confirm": {
-                "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
             }
         }
     },
@@ -123,6 +120,5 @@
                 "title": "The Z-Wave JS add-on is starting."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

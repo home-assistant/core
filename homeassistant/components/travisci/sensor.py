@@ -143,7 +143,20 @@ class TravisCISensor(SensorEntity):
         self._user = user
         self._branch = branch
 
-        self._attr_name = f"{repo_name} {description.name}"
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return SENSOR_TYPES[self._sensor_type][1]
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
 
     @property
     def extra_state_attributes(self):

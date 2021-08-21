@@ -90,13 +90,14 @@ class KebaSensor(SensorEntity):
 
     def __init__(
         self,
-        keba: KebaHandler,
-        entity_type: str,
+        keba,
+        entity_type,
         description: SensorEntityDescription,
-    ) -> None:
+    ):
         """Initialize the KEBA Sensor."""
         self._keba = keba
         self.entity_description = description
+        self._entity_type = entity_type
 
         self._attr_name = f"{keba.device_name} {description.name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"

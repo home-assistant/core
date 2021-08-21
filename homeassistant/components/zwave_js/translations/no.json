@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS-tillegget starter"
-            },
-            "usb_confirm": {
-                "description": "Vil du konfigurere {name} med Z-Wave JS-tillegget?"
             }
         }
     },
@@ -69,9 +66,7 @@
             "event.value_notification.basic": "Grunnleggende CC -hendelse p\u00e5 {subtype}",
             "event.value_notification.central_scene": "Sentral scenehandling p\u00e5 {subtype}",
             "event.value_notification.scene_activation": "Sceneaktivering p\u00e5 {subtype}",
-            "state.node_status": "Nodestatus endret",
-            "zwave_js.value_updated.config_parameter": "Verdiendring p\u00e5 konfigurasjonsparameteren {subtype}",
-            "zwave_js.value_updated.value": "Verdiendring p\u00e5 en Z-Wave JS-verdi"
+            "state.node_status": "Nodestatus endret"
         }
     },
     "options": {

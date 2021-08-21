@@ -21,66 +21,16 @@ from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-
-@dataclass
-class StarlineRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    name_: str
-
-
-@dataclass
-class StarlineSensorEntityDescription(
-    SensorEntityDescription, StarlineRequiredKeysMixin
-):
-    """Describes Starline binary_sensor entity."""
-
-
-SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
-    StarlineSensorEntityDescription(
-        key="battery",
-        name_="Battery",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-    ),
-    StarlineSensorEntityDescription(
-        key="balance",
-        name_="Balance",
-        icon="mdi:cash-multiple",
-    ),
-    StarlineSensorEntityDescription(
-        key="ctemp",
-        name_="Interior Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
-    ),
-    StarlineSensorEntityDescription(
-        key="etemp",
-        name_="Engine Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
-    ),
-    StarlineSensorEntityDescription(
-        key="gsm_lvl",
-        name_="GSM Signal",
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-    StarlineSensorEntityDescription(
-        key="fuel",
-        name_="Fuel Volume",
-        icon="mdi:fuel",
-    ),
-    StarlineSensorEntityDescription(
-        key="errors",
-        name_="OBD Errors",
-        icon="mdi:alert-octagon",
-    ),
-    StarlineSensorEntityDescription(
-        key="mileage",
-        name_="Mileage",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
-        icon="mdi:counter",
-    ),
-)
+SENSOR_TYPES = {
+    "battery": ["Battery", None, ELECTRIC_POTENTIAL_VOLT, None],
+    "balance": ["Balance", None, None, "mdi:cash-multiple"],
+    "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
+    "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, None],
+    "gsm_lvl": ["GSM Signal", None, PERCENTAGE, None],
+    "fuel": ["Fuel Volume", None, None, "mdi:fuel"],
+    "errors": ["OBD Errors", None, None, "mdi:alert-octagon"],
+    "mileage": ["Mileage", None, LENGTH_KILOMETERS, "mdi:counter"],
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -104,7 +54,11 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        description: StarlineSensorEntityDescription,
+        key: str,
+        name: str,
+        device_class: str,
+        unit: str,
+        icon: str,
     ) -> None:
         """Initialize StarLine sensor."""
         super().__init__(account, device, description.key, description.name_)

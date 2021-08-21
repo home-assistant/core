@@ -12,7 +12,6 @@
             "user": {
                 "data": {
                     "cloud_id": "Pilveteenuse ID",
-                    "host": "Host",
                     "install_code": "Paigalduskood"
                 }
             }

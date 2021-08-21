@@ -80,14 +80,13 @@ SENSOR_TYPES: tuple[RainmachineSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         api_category=DATA_PROVISION_SETTINGS,
     ),
-    RainmachineSensorEntityDescription(
-        key=TYPE_FREEZE_TEMP,
-        name="Freeze Protect Temperature",
-        icon="mdi:thermometer",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        entity_registry_enabled_default=True,
-        api_category=DATA_RESTRICTIONS_UNIVERSAL,
+    TYPE_FREEZE_TEMP: (
+        "Freeze Protect Temperature",
+        "mdi:thermometer",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        True,
+        DATA_RESTRICTIONS_UNIVERSAL,
     ),
 )
 
@@ -133,8 +132,13 @@ class RainMachineSensor(RainMachineEntity, SensorEntity):
         description: RainmachineSensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, controller, description.key)
-        self.entity_description = description
+        super().__init__(coordinator, controller, sensor_type)
+
+        self._attr_device_class = device_class
+        self._attr_entity_registry_enabled_default = enabled_by_default
+        self._attr_icon = icon
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit
 
 
 class ProvisionSettingsSensor(RainMachineSensor):

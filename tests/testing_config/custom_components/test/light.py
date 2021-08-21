@@ -66,5 +66,3 @@ class MockLight(MockToggleEntity, LightEntity):
                 "white_value",
             ]:
                 setattr(self, key, value)
-            if key == "white":
-                setattr(self, "brightness", value)

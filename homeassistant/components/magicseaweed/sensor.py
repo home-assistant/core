@@ -142,12 +142,30 @@ class MagicSeaweedSensor(SensorEntity):
         else:
             self._attr_name = f"{hour} {name} {description.name}"
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self._state
 
     @property
     def unit_system(self):
         """Return the unit system of this entity."""
         return self._unit_system
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """Return the entity weather icon, if any."""
+        return ICON
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return self._attrs
 
     def update(self):
         """Get the latest data from Magicseaweed and updates the states."""

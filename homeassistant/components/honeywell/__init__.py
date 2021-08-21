@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config):
         _LOGGER.debug("No devices found")
         return False
 
-    data = HoneywellData(hass, client, username, password, devices)
+    data = HoneywellService(hass, client, username, password, devices[0])
     await data.update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = data
@@ -65,16 +65,16 @@ def get_somecomfort_client(username, password):
         ) from ex
 
 
-class HoneywellData:
+class HoneywellService:
     """Get the latest data and update."""
 
-    def __init__(self, hass, client, username, password, devices):
+    def __init__(self, hass, client, username, password, device):
         """Initialize the data object."""
         self._hass = hass
         self._client = client
         self._username = username
         self._password = password
-        self.devices = devices
+        self.device = device
 
     async def _retry(self) -> bool:
         """Recreate a new somecomfort client.
@@ -93,19 +93,15 @@ class HoneywellData:
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
+            if device.name == self.device.name
         ]
 
-        if len(devices) == 0:
-            _LOGGER.error("Failed to find any devices")
+        if len(devices) != 1:
+            _LOGGER.error("Failed to find device %s", self.device.name)
             return False
 
-        self.devices = devices
+        self.device = devices[0]
         return True
-
-    def _refresh_devices(self):
-        """Refresh each enabled device."""
-        for device in self.devices:
-            device.refresh()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self) -> None:
@@ -113,7 +109,7 @@ class HoneywellData:
         retries = 3
         while retries > 0:
             try:
-                await self._hass.async_add_executor_job(self._refresh_devices)
+                await self._hass.async_add_executor_job(self.device.refresh)
                 break
             except (
                 somecomfort.client.APIRateLimited,
@@ -130,3 +126,7 @@ class HoneywellData:
                     raise exp
 
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
+
+        _LOGGER.debug(
+            "latestData = %s ", self.device._data  # pylint: disable=protected-access
+        )

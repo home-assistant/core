@@ -93,6 +93,12 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
                 ],
                 "speed_range_min": 1,
                 "speed_range_max": 200,
+                # use of speeds is deprecated, support will be removed after a quarter (2021.7)
+                "speeds": ["off", "low"],
+                "payload_off_speed": "speed_OfF",
+                "payload_low_speed": "speed_lOw",
+                "payload_medium_speed": "speed_mEdium",
+                "payload_high_speed": "speed_High",
                 "payload_reset_percentage": "rEset_percentage",
                 "payload_reset_preset_mode": "rEset_preset_mode",
             }
@@ -171,10 +177,29 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     assert "not a valid preset mode" in caplog.text
     caplog.clear()
 
+    # use of speeds is deprecated, support will be removed after a quarter (2021.7)
+    assert state.attributes.get("speed") == fan.SPEED_OFF
+
+    async_fire_mqtt_message(hass, "speed-state-topic", "speed_lOw")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("preset_mode") is None
+
+    async_fire_mqtt_message(hass, "preset-mode-state-topic", "ModeUnknown")
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
+
+    async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("speed") == fan.SPEED_OFF
+
     async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
     assert state.attributes.get(fan.ATTR_SPEED) is None
+
+    async_fire_mqtt_message(hass, "speed-state-topic", "speed_very_high")
+    assert "not a valid speed" in caplog.text
+    caplog.clear()
 
 
 async def test_controlling_state_via_topic_with_different_speed_range(

@@ -51,9 +51,6 @@
             },
             "start_addon": {
                 "title": "De add-on Z-Wave JS wordt gestart."
-            },
-            "usb_confirm": {
-                "description": "Wilt u {naam} instellen met de Z-Wave JS add-on?"
             }
         }
     },
@@ -69,9 +66,7 @@
             "event.value_notification.basic": "Basis CC-evenement op {subtype}",
             "event.value_notification.central_scene": "Centrale Sc\u00e8ne actie op {subtype}",
             "event.value_notification.scene_activation": "Sc\u00e8ne-activering op {subtype}",
-            "state.node_status": "Knooppuntstatus gewijzigd",
-            "zwave_js.value_updated.config_parameter": "Waardeverandering op configuratieparameter {subtype}",
-            "zwave_js.value_updated.value": "Waardeverandering op een Z-Wave JS-waarde"
+            "state.node_status": "Knooppuntstatus gewijzigd"
         }
     },
     "options": {
