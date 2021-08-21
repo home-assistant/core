@@ -1,7 +1,10 @@
 """Support for tag triggers."""
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -22,7 +25,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Listen for tag_scanned events based on configuration."""
     trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}

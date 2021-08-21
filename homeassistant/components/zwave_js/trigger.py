@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from types import ModuleType
-from typing import Any, Callable, cast
+from typing import Callable, cast
 
+from homeassistant.components.automation import AutomationTriggerInfo
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
@@ -41,7 +42,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: Callable,
-    automation_info: dict[str, Any],
+    automation_info: AutomationTriggerInfo,
 ) -> Callable:
     """Attach trigger of specified platform."""
     platform = _get_trigger_platform(config)

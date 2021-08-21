@@ -9,7 +9,10 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -75,7 +78,7 @@ class TriggerSource:
         self,
         config: TRIGGER_SCHEMA,
         action: AutomationActionType,
-        automation_info: dict,
+        automation_info: AutomationTriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         trigger_data = (
@@ -260,7 +263,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_id = config[CONF_DEVICE_ID]
