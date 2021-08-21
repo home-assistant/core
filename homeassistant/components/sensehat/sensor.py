@@ -41,13 +41,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="humidity",
         name="humidity",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=None,
     ),
     SensorEntityDescription(
         key="pressure",
         name="pressure",
         native_unit_of_measurement="mb",
-        device_class=None,
     ),
 )
 
