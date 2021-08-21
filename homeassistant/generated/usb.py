@@ -10,42 +10,57 @@ USB = [
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",
-        "description": "slae.sh cc2652rb stick"
+        "known_devices": [
+            "slae.sh cc2652rb stick"
+        ]
     },
     {
         "domain": "zha",
         "vid": "1CF1",
         "pid": "0030",
-        "description": "Conbee II"
+        "known_devices": [
+            "Conbee II"
+        ]
     },
     {
         "domain": "zha",
         "vid": "1A86",
         "pid": "7523",
-        "description": "Electrolama zig-a-zig-ah"
+        "known_devices": [
+            "Electrolama zig-a-zig-ah"
+        ]
     },
     {
         "domain": "zha",
         "vid": "10C4",
         "pid": "8A2A",
-        "description": "Nortek HUSBZB-1"
+        "known_devices": [
+            "Nortek HUSBZB-1"
+        ]
     },
     {
         "domain": "zwave_js",
         "vid": "0658",
         "pid": "0200",
-        "description": "Aeotec Z-Stick Gen5+"
+        "known_devices": [
+            "Aeotec Z-Stick Gen5+",
+            "z-wave.me ZMEUZB1"
+        ]
     },
     {
         "domain": "zwave_js",
         "vid": "10C4",
         "pid": "8A2A",
-        "description": "Nortek HUSBZB-1"
+        "known_devices": [
+            "Nortek HUSBZB-1"
+        ]
     },
     {
         "domain": "zwave_js",
         "vid": "10C4",
         "pid": "EA60",
-        "description": "Zooz ZST10"
+        "known_devices": [
+            "Zooz ZST10"
+        ]
     }
 ]
