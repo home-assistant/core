@@ -350,7 +350,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if (
             vid == "10C4"
             and pid == "8A2A"
-            and "Z-Wave" not in discovery_info["description"]
+            and "Z-Wave" not in description
         ):
             return self.async_abort(reason="not_zwave_device")
         # Zooz uses this vid/pid, but so do 2652 sticks
