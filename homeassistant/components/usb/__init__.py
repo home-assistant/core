@@ -113,7 +113,7 @@ class USBDiscovery:
 
         try:
             context = Context()
-        except ImportError:
+        except (ImportError, OSError):
             return False
 
         monitor = Monitor.from_netlink(context)
