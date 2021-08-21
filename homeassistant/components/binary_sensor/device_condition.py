@@ -43,6 +43,8 @@ from . import (
     DOMAIN,
 )
 
+# mypy: disallow-any-generics
+
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_BAT_LOW = "is_bat_low"
@@ -266,7 +268,9 @@ def async_condition_from_config(
     return condition.state_from_config(state_config)
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     return {
         "extra_fields": vol.Schema(
