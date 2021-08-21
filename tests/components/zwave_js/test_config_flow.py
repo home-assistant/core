@@ -1,6 +1,7 @@
 """Test the Z-Wave JS config flow."""
 import asyncio
-from unittest.mock import DEFAULT, call, patch
+import os
+from unittest.mock import DEFAULT, MagicMock, call, patch, sentinel
 
 import aiohttp
 import pytest
@@ -8,6 +9,7 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.zwave_js import config_flow
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
@@ -1794,3 +1796,52 @@ async def test_options_addon_not_installed(
     assert entry.data["integration_created_addon"] is True
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
+
+
+# Lifted from the zha tests
+def test_get_serial_by_id_no_dir():
+    """Test serial by id conversion if there's no /dev/serial/by-id."""
+    p1 = patch("os.path.isdir", MagicMock(return_value=False))
+    p2 = patch("os.scandir")
+    with p1 as is_dir_mock, p2 as scan_mock:
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 0
+
+
+# Lifted from the zha tests
+def test_get_serial_by_id():
+    """Test serial by id conversion."""
+    p1 = patch("os.path.isdir", MagicMock(return_value=True))
+    p2 = patch("os.scandir")
+
+    def _realpath(path):
+        if path is sentinel.matched_link:
+            return sentinel.path
+        return sentinel.serial_link_path
+
+    p3 = patch("os.path.realpath", side_effect=_realpath)
+    with p1 as is_dir_mock, p2 as scan_mock, p3:
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 1
+
+        entry1 = MagicMock(spec_set=os.DirEntry)
+        entry1.is_symlink.return_value = True
+        entry1.path = sentinel.some_path
+
+        entry2 = MagicMock(spec_set=os.DirEntry)
+        entry2.is_symlink.return_value = False
+        entry2.path = sentinel.other_path
+
+        entry3 = MagicMock(spec_set=os.DirEntry)
+        entry3.is_symlink.return_value = True
+        entry3.path = sentinel.matched_link
+
+        scan_mock.return_value = [entry1, entry2, entry3]
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.matched_link
+        assert is_dir_mock.call_count == 2
+        assert scan_mock.call_count == 2
