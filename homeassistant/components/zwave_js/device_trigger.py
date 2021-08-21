@@ -497,7 +497,7 @@ async def async_get_trigger_capabilities(
                 {
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
-                            CommandClass(cc.id).value: CommandClass(cc.id).name
+                            CommandClass(cc.id).value: cc.name
                             for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
                             if cc.id != CommandClass.CONFIGURATION
                         }
