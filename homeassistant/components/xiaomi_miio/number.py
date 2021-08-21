@@ -22,9 +22,11 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_FAN_P5,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
+    FEATURE_SET_OSCILLATION_ANGLE,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -37,6 +39,7 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_FAN_P5,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
 )
@@ -45,6 +48,7 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_MOTOR_SPEED = "motor_speed"
+ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
 
 
@@ -98,9 +102,19 @@ NUMBER_TYPES = {
         step=1,
         method="async_set_volume",
     ),
+    FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
+        key=ATTR_OSCILLATION_ANGLE,
+        name="Oscillation Angle",
+        icon="mdi:volume-high",
+        min_value=30,
+        max_value=140,
+        step=30,
+        method="async_set_oscillation_angle",
+    ),
 }
 
 MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -109,7 +123,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
-    MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
 }
 
 
@@ -226,4 +240,10 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             "Setting the volume of the miio device failed.",
             self._device.set_volume,
             volume,
+        )
+
+    async def async_set_oscillation_angle(self, angle: int):
+        """Set the volume."""
+        return await self._try_command(
+            "Setting angle of the miio device failed.", self._device.set_angle, angle
         )
