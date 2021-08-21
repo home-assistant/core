@@ -78,7 +78,6 @@ ATTR_MODEL = "model"
 
 # Air Purifier
 ATTR_BRIGHTNESS = "brightness"
-ATTR_LEVEL = "level"
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_SLEEP_LEARN_COUNT = "sleep_mode_learn_count"
@@ -86,7 +85,6 @@ ATTR_EXTRA_FEATURES = "extra_features"
 ATTR_FEATURES = "features"
 ATTR_TURBO_MODE_SUPPORTED = "turbo_mode_supported"
 ATTR_SLEEP_MODE = "sleep_mode"
-ATTR_VOLUME = "volume"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
 
@@ -109,7 +107,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_USE_TIME: "use_time",
-    ATTR_VOLUME: "volume",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
 }
@@ -117,18 +114,13 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT = {
     ATTR_MODE: "mode",
     ATTR_USE_TIME: "use_time",
-    ATTR_FAN_LEVEL: "fan_level",
 }
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = {
-    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
-    ATTR_VOLUME: "volume",
-}
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = (AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,)
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
     ATTR_MODE: "mode",
-    ATTR_VOLUME: "volume",
     ATTR_SLEEP_TIME: "sleep_time",
     ATTR_SLEEP_LEARN_COUNT: "sleep_mode_learn_count",
     ATTR_EXTRA_FEATURES: "extra_features",
@@ -173,14 +165,6 @@ OPERATION_MODES_AIRFRESH = ["Auto", "Silent", "Interval", "Low", "Middle", "Stro
 PRESET_MODES_AIRFRESH = ["Auto", "Interval"]
 
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-SERVICE_SCHEMA_FAN_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3))}
-)
-
-SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_VOLUME): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100))}
-)
 
 SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_FEATURES): cv.positive_int}
