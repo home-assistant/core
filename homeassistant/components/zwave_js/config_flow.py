@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 import logging
-import os
 from typing import Any
 
 import aiohttp
@@ -13,6 +12,7 @@ import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import usb
 from homeassistant.components.hassio import is_hassio
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -65,24 +65,6 @@ ADDON_USER_INPUT_MAP = {
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
-
-
-def _format_port_human_readable(
-    device: str,
-    serial_number: str | None,
-    manufacturer: str | None,
-    description: str | None,
-    vid: str | None,
-    pid: str | None,
-) -> str:
-    device_details = f"{device}, s/n: {serial_number or 'n/a'}"
-    manufacturer_details = f" - {manufacturer}" if manufacturer else ""
-    vendor_details = f" - {vid}:{pid}" if vid else ""
-    full_details = f"{device_details}{manufacturer_details}{vendor_details}"
-
-    if not description:
-        return full_details
-    return f"{description[:26]} - {full_details}"
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -361,9 +343,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
         self._abort_if_unique_id_configured()
-        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         self.usb_path = dev_path
-        self._title = _format_port_human_readable(
+        self._title = usb.human_readable_device_name(
             dev_path,
             serial_number,
             manufacturer,
@@ -808,15 +790,3 @@ class InvalidInput(exceptions.HomeAssistantError):
         """Initialize error."""
         super().__init__()
         self.error = error
-
-
-def get_serial_by_id(dev_path: str) -> str:
-    """Return a /dev/serial/by-id match for given device if available."""
-    by_id = "/dev/serial/by-id"
-    if not os.path.isdir(by_id):
-        return dev_path
-
-    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-        if os.path.realpath(path) == dev_path:
-            return path
-    return dev_path
