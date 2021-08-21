@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 import os
 from types import MappingProxyType
@@ -9,7 +10,12 @@ from typing import Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
@@ -17,6 +23,7 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     CONF_TYPE,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -40,9 +47,15 @@ from .const import (
     SENSOR_TYPE_WETNESS,
     SENSOR_TYPES,
 )
-from .model import DeviceComponentDescription
+from .model import DeviceComponentDescription, OneWireEntityDescription
 from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
 from .onewirehub import OneWireHub
+
+
+@dataclass
+class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
+    """Class describing OneWire sensor entities."""
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -312,16 +325,25 @@ def get_entities(
                     if is_leaf:
                         entity_specs["type"] = SENSOR_TYPE_WETNESS
                         entity_specs["name"] = f"Wetness {s_id}"
-                entity_path = os.path.join(
-                    os.path.split(device_path)[0], entity_specs["path"]
+                description = OneWireSensorEntityDescription(
+                    key=entity_specs["path"],
+                    device_class=SENSOR_TYPES[entity_specs["type"]][1],
+                    device_file=os.path.join(
+                        os.path.split(device["path"])[0], entity_specs["path"]
+                    ),
+                    device_id=device_id,
+                    entity_registry_enabled_default=not entity_specs.get(
+                        "default_disabled"
+                    ),
+                    name=f"{device_names.get(device_id, device_id)} {entity_specs['name']}",
+                    state_class=SENSOR_TYPES[entity_specs["type"]][2],
+                    native_unit_of_measurement=SENSOR_TYPES[entity_specs["type"]][0],
+                    type=entity_specs["type"],
                 )
                 entities.append(
                     OneWireProxySensor(
-                        device_id=device_id,
-                        device_name=device_names.get(device_id, device_id),
+                        description=description,
                         device_info=device_info,
-                        entity_path=entity_path,
-                        entity_specs=entity_specs,
                         owproxy=onewirehub.owproxy,
                     )
                 )
@@ -332,28 +354,36 @@ def get_entities(
         _LOGGER.debug("Initializing using SysBus %s", base_dir)
         for p1sensor in onewirehub.devices:
             family = p1sensor.mac_address[:2]
-            sensor_id = f"{family}-{p1sensor.mac_address[2:]}"
+            device_id = f"{family}-{p1sensor.mac_address[2:]}"
             if family not in DEVICE_SUPPORT_SYSBUS:
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
-                    sensor_id,
+                    device_id,
                 )
                 continue
 
             device_info = {
-                ATTR_IDENTIFIERS: {(DOMAIN, sensor_id)},
+                ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
                 ATTR_MANUFACTURER: "Maxim Integrated",
                 ATTR_MODEL: family,
-                ATTR_NAME: sensor_id,
+                ATTR_NAME: device_id,
             }
-            device_file = f"/sys/bus/w1/devices/{sensor_id}/w1_slave"
+            description = OneWireSensorEntityDescription(
+                key="temperature",
+                device_class=DEVICE_CLASS_TEMPERATURE,
+                device_file=f"/sys/bus/w1/devices/{device_id}/w1_slave",
+                device_id=device_id,
+                name=f"{device_names.get(device_id, device_id)} temperature",
+                state_class=STATE_CLASS_MEASUREMENT,
+                native_unit_of_measurement=TEMP_CELSIUS,
+                type=SENSOR_TYPE_TEMPERATURE,
+            )
             entities.append(
                 OneWireDirectSensor(
-                    device_names.get(sensor_id, sensor_id),
-                    device_file,
-                    device_info,
-                    p1sensor,
+                    description=description,
+                    device_info=device_info,
+                    owsensor=p1sensor,
                 )
             )
         if not entities:
@@ -368,21 +398,6 @@ def get_entities(
 
 class OneWireSensor(OneWireBaseEntity, SensorEntity):
     """Mixin for sensor specific attributes."""
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device."""
-        return SENSOR_TYPES[self._entity_type][1]
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self._entity_type][0]
-
-    @property
-    def state_class(self) -> str | None:
-        """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return SENSOR_TYPES[self._entity_type][2]
 
 
 class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
@@ -399,22 +414,21 @@ class OneWireDirectSensor(OneWireSensor):
 
     def __init__(
         self,
-        name: str,
-        device_file: str,
+        description: OneWireEntityDescription,
         device_info: DeviceInfo,
         owsensor: OneWireInterface,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            name,
-            device_file,
-            "temperature",
-            "Temperature",
-            device_info,
-            False,
-            device_file,
+            description=description,
+            device_info=device_info,
         )
+        self._attr_unique_id = description.device_file
         self._owsensor = owsensor
+        _LOGGER.debug(
+            "Description: %s",
+            self.entity_description,
+        )
 
     @property
     def native_value(self) -> StateType:
@@ -432,7 +446,7 @@ class OneWireDirectSensor(OneWireSensor):
             except UnsupportResponseException as ex:
                 _LOGGER.debug(
                     "Cannot read from sensor %s (retry attempt %s): %s",
-                    self._device_file,
+                    self.entity_description.device_file,
                     attempts,
                     ex,
                 )
@@ -451,5 +465,9 @@ class OneWireDirectSensor(OneWireSensor):
             InvalidCRCException,
             UnsupportResponseException,
         ) as ex:
-            _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
+            _LOGGER.warning(
+                "Cannot read from sensor %s: %s",
+                self.entity_description.device_file,
+                ex,
+            )
             self._state = None

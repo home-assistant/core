@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_TYPE_OWSERVER, DOMAIN, SWITCH_TYPE_LATCH, SWITCH_TYPE_PIO
-from .model import DeviceComponentDescription
+from .model import DeviceComponentDescription, OneWireEntityDescription
 from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
@@ -198,16 +198,22 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
             ATTR_NAME: device_id,
         }
         for entity_specs in DEVICE_SWITCHES[family]:
-            entity_path = os.path.join(
-                os.path.split(device["path"])[0], entity_specs["path"]
+            description = OneWireEntityDescription(
+                key=entity_specs["path"],
+                device_file=os.path.join(
+                    os.path.split(device["path"])[0], entity_specs["path"]
+                ),
+                device_id=device_id,
+                entity_registry_enabled_default=not entity_specs.get(
+                    "default_disabled"
+                ),
+                name=f"{device_id} {entity_specs['path']}",
+                type=entity_specs["type"],
             )
             entities.append(
                 OneWireProxySwitch(
-                    device_id=device_id,
-                    device_name=device_id,
+                    description=description,
                     device_info=device_info,
-                    entity_path=entity_path,
-                    entity_specs=entity_specs,
                     owproxy=onewirehub.owproxy,
                 )
             )
