@@ -991,7 +991,7 @@ class Recorder(threading.Thread):
 
         self._open_event_session()
 
-    def _schedule_compile_missing_statistics(self, session: Session):
+    def _schedule_compile_missing_statistics(self, session: Session) -> None:
         """Add tasks for missing statistics runs."""
         now = dt_util.utcnow()
         last_hour = now.replace(minute=0, second=0, microsecond=0)
