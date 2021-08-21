@@ -136,10 +136,7 @@ async def async_setup_entry(
                     def get_setpoint_status(status: str, time: str) -> str:
                         if status == PRESET_HOLD_UNTIL:
                             return f"Held until {time}"
-                        return LYRIC_SETPOINT_STATUS_NAMES.get(
-                            device.changeableValues.thermostatSetpointStatus,
-                            None,
-                        )
+                        return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)
 
                     entities.append(
                         LyricSensor(
