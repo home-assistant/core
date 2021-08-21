@@ -434,6 +434,77 @@ async def test_abort_hassio_discovery_with_existing_flow(
     assert result2["reason"] == "already_in_progress"
 
 
+async def test_usb_discovery(
+    hass,
+    supervisor,
+    install_addon,
+    addon_options,
+    get_addon_discovery_info,
+    set_addon_options,
+    start_addon,
+):
+    """Test usb discovery success path."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    import pprint
+
+    pprint.pprint(result)
+
+    assert result["type"] == "progress"
+    assert result["step_id"] == "install_addon"
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert install_addon.call_args == call(hass, "core_zwave_js")
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "configure_addon"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+    )
+
+    assert set_addon_options.call_args == call(
+        hass, "core_zwave_js", {"options": {"device": "/test", "network_key": "abc123"}}
+    )
+
+    assert result["type"] == "progress"
+    assert result["step_id"] == "start_addon"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call(hass, "core_zwave_js")
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"]["usb_path"] == "/test"
+    assert result["data"]["integration_created_addon"] is True
+    assert result["data"]["use_addon"] is True
+    assert result["data"]["network_key"] == "abc123"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_discovery_addon_not_running(
     hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
 ):
@@ -614,6 +685,19 @@ async def test_usb_discovery_requires_supervisor(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "discovery_requires_supervisor"
+
+
+async def test_usb_discovery_already_running(hass, supervisor, addon_running):
+    """Test usb discovery flow is aborted when the addon is running."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
