@@ -44,13 +44,13 @@ async def test_async_register_device_longpress_fails(hass, pywemo_device):
     dr = device_registry.async_get(hass)
     device_entries = list(dr.devices.values())
     assert len(device_entries) == 1
-    device = wemo_device.async_get_device(hass, device_entries[0].id)
+    device = wemo_device.async_get_coordinator(hass, device_entries[0].id)
     assert device.supports_long_press is False
 
 
 async def test_long_press_event(hass, pywemo_registry, wemo_entity):
     """Device fires a long press event."""
-    device = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     got_event = asyncio.Event()
     event_data = {}
 
@@ -83,7 +83,7 @@ async def test_long_press_event(hass, pywemo_registry, wemo_entity):
 
 async def test_subscription_callback(hass, pywemo_registry, wemo_entity):
     """Device processes a registry subscription callback."""
-    device = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = False
 
     got_callback = asyncio.Event()
@@ -105,7 +105,7 @@ async def test_subscription_callback(hass, pywemo_registry, wemo_entity):
 
 async def test_subscription_update_action_exception(hass, pywemo_device, wemo_entity):
     """Device handles ActionException on get_state properly."""
-    device = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = True
 
     pywemo_device.subscription_update.return_value = False
@@ -123,7 +123,7 @@ async def test_subscription_update_action_exception(hass, pywemo_device, wemo_en
 
 async def test_subscription_update_exception(hass, pywemo_device, wemo_entity):
     """Device handles Exception on get_state properly."""
-    device = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     device.last_update_success = True
 
     pywemo_device.subscription_update.return_value = False
@@ -143,7 +143,7 @@ async def test_async_update_data_subscribed(
     hass, pywemo_registry, pywemo_device, wemo_entity
 ):
     """No update happens when the device is subscribed."""
-    device = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    device = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     pywemo_registry.is_subscribed.return_value = True
     pywemo_device.get_state.reset_mock()
     await device._async_update_data()

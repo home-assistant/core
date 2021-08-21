@@ -36,25 +36,25 @@ WEMO_OFF = 0
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo lights."""
 
-    async def _discovered_wemo(device: DeviceCoordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator):
         """Handle a discovered Wemo device."""
-        if isinstance(device.wemo, bridge.Bridge):
-            async_setup_bridge(hass, config_entry, async_add_entities, device)
+        if isinstance(coordinator.wemo, bridge.Bridge):
+            async_setup_bridge(hass, config_entry, async_add_entities, coordinator)
         else:
-            async_add_entities([WemoDimmer(device)])
+            async_add_entities([WemoDimmer(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("light")
         )
     )
 
 
 @callback
-def async_setup_bridge(hass, config_entry, async_add_entities, device):
+def async_setup_bridge(hass, config_entry, async_add_entities, coordinator):
     """Set up a WeMo link."""
     known_light_ids = set()
 
@@ -63,24 +63,24 @@ def async_setup_bridge(hass, config_entry, async_add_entities, device):
         """Check to see if the bridge has any new lights."""
         new_lights = []
 
-        for light_id, light in device.wemo.Lights.items():
+        for light_id, light in coordinator.wemo.Lights.items():
             if light_id not in known_light_ids:
                 known_light_ids.add(light_id)
-                new_lights.append(WemoLight(device, light))
+                new_lights.append(WemoLight(coordinator, light))
 
         if new_lights:
             async_add_entities(new_lights)
 
     async_update_lights()
-    config_entry.async_on_unload(device.async_add_listener(async_update_lights))
+    config_entry.async_on_unload(coordinator.async_add_listener(async_update_lights))
 
 
 class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
-    def __init__(self, device: DeviceCoordinator, light: bridge.Light) -> None:
+    def __init__(self, coordinator: DeviceCoordinator, light: bridge.Light) -> None:
         """Initialize the WeMo light."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self.light = light
         self._unique_id = self.light.uniqueID
         self._model_name = type(self.light).__name__

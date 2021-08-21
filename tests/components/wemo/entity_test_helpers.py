@@ -16,22 +16,22 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 
-def _perform_registry_callback(device_wrapper):
+def _perform_registry_callback(coordinator):
     """Return a callable method to trigger a state callback from the device."""
 
     async def async_callback():
-        await device_wrapper.hass.async_add_executor_job(
-            device_wrapper.subscription_callback, device_wrapper.wemo, "", ""
+        await coordinator.hass.async_add_executor_job(
+            coordinator.subscription_callback, coordinator.wemo, "", ""
         )
 
     return async_callback
 
 
-def _perform_async_update(device_wrapper):
+def _perform_async_update(coordinator):
     """Return a callable method to cause hass to update the state of the entity."""
 
     async def async_callback():
-        await device_wrapper._async_update_data()
+        await coordinator._async_update_data()
 
     return async_callback
 
@@ -89,26 +89,26 @@ async def test_async_update_locked_callback_and_update(
     When a state update is received via a callback from the device at the same time
     as hass is calling `async_update`, verify that only one of the updates proceeds.
     """
-    device_wrapper = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
-    callback = _perform_registry_callback(device_wrapper)
-    update = _perform_async_update(device_wrapper)
+    callback = _perform_registry_callback(coordinator)
+    update = _perform_async_update(coordinator)
     await _async_multiple_call_helper(hass, pywemo_device, callback, update)
 
 
 async def test_async_update_locked_multiple_updates(hass, pywemo_device, wemo_entity):
     """Test that two hass async_update state updates do not proceed at the same time."""
-    device_wrapper = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
-    update = _perform_async_update(device_wrapper)
+    update = _perform_async_update(coordinator)
     await _async_multiple_call_helper(hass, pywemo_device, update, update)
 
 
 async def test_async_update_locked_multiple_callbacks(hass, pywemo_device, wemo_entity):
     """Test that two device callback state updates do not proceed at the same time."""
-    device_wrapper = wemo_device.async_get_device(hass, wemo_entity.device_id)
+    coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
-    callback = _perform_registry_callback(device_wrapper)
+    callback = _perform_registry_callback(coordinator)
     await _async_multiple_call_helper(hass, pywemo_device, callback, callback)
 
 

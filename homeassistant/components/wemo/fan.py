@@ -69,16 +69,16 @@ SET_HUMIDITY_SCHEMA = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator):
         """Handle a discovered Wemo device."""
-        async_add_entities([WemoHumidifier(device)])
+        async_add_entities([WemoHumidifier(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
         )
     )
 
@@ -98,9 +98,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class WemoHumidifier(WemoEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    def __init__(self, device):
+    def __init__(self, coordinator):
         """Initialize the WeMo switch."""
-        super().__init__(device)
+        super().__init__(coordinator)
         if self.wemo.fan_mode != WEMO_FAN_OFF:
             self._last_fan_on_mode = self.wemo.fan_mode
         else:

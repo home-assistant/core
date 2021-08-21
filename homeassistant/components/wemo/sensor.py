@@ -25,16 +25,18 @@ from .wemo_device import DeviceCoordinator
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo sensors."""
 
-    async def _discovered_wemo(device: DeviceCoordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator):
         """Handle a discovered Wemo device."""
-        async_add_entities([InsightCurrentPower(device), InsightTodayEnergy(device)])
+        async_add_entities(
+            [InsightCurrentPower(coordinator), InsightTodayEnergy(coordinator)]
+        )
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("sensor")
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("sensor")
         )
     )
 

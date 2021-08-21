@@ -35,16 +35,16 @@ WEMO_STANDBY = 8
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo switches."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator):
         """Handle a discovered Wemo device."""
-        async_add_entities([WemoSwitch(device)])
+        async_add_entities([WemoSwitch(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
         )
     )
 

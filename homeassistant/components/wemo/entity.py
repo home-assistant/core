@@ -19,11 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 class WemoEntity(CoordinatorEntity):
     """Common methods for Wemo entities."""
 
-    def __init__(self, device: DeviceCoordinator) -> None:
+    def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo device."""
-        super().__init__(device)
-        self.wemo = device.wemo
-        self._device_info = device.device_info
+        super().__init__(coordinator)
+        self.wemo = coordinator.wemo
+        self._device_info = coordinator.device_info
         self._available = True
 
     @property

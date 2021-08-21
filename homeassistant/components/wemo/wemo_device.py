@@ -147,6 +147,6 @@ async def async_register_device(
 
 
 @callback
-def async_get_device(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
+def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
     """Return DeviceCoordinator for device_id."""
     return hass.data[DOMAIN]["devices"][device_id]
