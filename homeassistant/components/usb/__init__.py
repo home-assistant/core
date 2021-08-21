@@ -2,29 +2,28 @@
 from __future__ import annotations
 
 import dataclasses
-import datetime
 import logging
 import os
 import sys
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
+import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
+from .const import DOMAIN
 from .flow import FlowDispatcher, USBFlow
 from .models import USBDevice
 from .utils import usb_device_from_port
 
 _LOGGER = logging.getLogger(__name__)
-
-# Perodic scanning only happens on non-linux systems
-SCAN_INTERVAL = datetime.timedelta(minutes=60)
 
 
 def human_readable_device_name(
@@ -63,6 +62,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     usb = await async_get_usb(hass)
     usb_discovery = USBDiscovery(hass, FlowDispatcher(hass), usb)
     await usb_discovery.async_setup()
+    hass.data[DOMAIN] = usb_discovery
+    websocket_api.async_register_command(hass, websocket_usb_scan)
+
     return True
 
 
@@ -80,11 +82,11 @@ class USBDiscovery:
         self.flow_dispatcher = flow_dispatcher
         self.usb = usb
         self.seen: set[tuple[str, ...]] = set()
+        self.observer_active = False
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
-        if not await self._async_start_monitor():
-            await self._async_start_scanner()
+        await self._async_start_monitor()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
 
     async def async_start(self, event: Event) -> None:
@@ -92,19 +94,10 @@ class USBDiscovery:
         self.flow_dispatcher.async_start()
         await self.hass.async_add_executor_job(self.scan_serial)
 
-    async def _async_start_scanner(self) -> None:
-        """Perodic scan with pyserial when the observer is not available."""
-        stop_track = async_track_time_interval(
-            self.hass, lambda now: self.scan_serial(), SCAN_INTERVAL
-        )
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, callback(lambda event: stop_track())
-        )
-
-    async def _async_start_monitor(self) -> bool:
+    async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""
         if not sys.platform.startswith("linux"):
-            return False
+            return
         from pyudev import (  # pylint: disable=import-outside-toplevel
             Context,
             Monitor,
@@ -114,7 +107,7 @@ class USBDiscovery:
         try:
             context = Context()
         except (ImportError, OSError):
-            return False
+            return
 
         monitor = Monitor.from_netlink(context)
         monitor.filter_by(subsystem="tty")
@@ -125,7 +118,7 @@ class USBDiscovery:
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, lambda event: observer.stop()
         )
-        return True
+        self.observer_active = True
 
     def _device_discovered(self, device):
         """Call when the observer discovers a new usb tty device."""
@@ -168,3 +161,18 @@ class USBDiscovery:
     def scan_serial(self) -> None:
         """Scan serial ports."""
         self.hass.add_job(self._async_process_ports, comports())
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "usb/scan"})
+@websocket_api.async_response
+async def websocket_usb_scan(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+) -> None:
+    """Scan for new usb devices."""
+    usb_discovery: USBDiscovery = hass.data[DOMAIN]
+    if not usb_discovery.observer_active:
+        await hass.async_add_executor_job(usb_discovery.scan_serial)
+    connection.send_result(msg["id"])
