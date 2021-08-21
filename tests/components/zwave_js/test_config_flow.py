@@ -455,10 +455,6 @@ async def test_usb_discovery(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    import pprint
-
-    pprint.pprint(result)
-
     assert result["type"] == "progress"
     assert result["step_id"] == "install_addon"
 
