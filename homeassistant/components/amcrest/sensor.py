@@ -24,7 +24,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_PTZ_PRESET,
         name="PTZ Preset",
-        native_unit_of_measurement=None,
         icon="mdi:camera-iris",
     ),
     SensorEntityDescription(
