@@ -1361,7 +1361,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.2
+yeelight==0.7.3
 
 # homeassistant.components.youless
 youless-api==0.12
