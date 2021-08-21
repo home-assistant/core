@@ -35,13 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    TEST_ENTITY_NAME,
-    TEST_MODBUS_HOST,
-    TEST_PORT_TCP,
-    ReadResult,
-    base_test,
-)
+from .conftest import TEST_ENTITY_NAME, TEST_MODBUS_HOST, TEST_PORT_TCP, ReadResult
 
 ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -137,9 +131,33 @@ async def test_config_light(hass, mock_modbus):
     assert LIGHT_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])
 @pytest.mark.parametrize(
-    "regs,verify,expected",
+    "do_config",
+    [
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                },
+            ],
+        },
+        {
+            CONF_LIGHTS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,config_addon,expected",
     [
         (
             [0x00],
@@ -163,32 +181,14 @@ async def test_config_light(hass, mock_modbus):
         ),
         (
             None,
-            {},
-            STATE_OFF,
+            None,
+            STATE_UNAVAILABLE,
         ),
     ],
 )
-async def test_all_light(hass, call_type, regs, verify, expected):
+async def test_all_light(hass, mock_modbus, mock_do_cycle, expected):
     """Run test for given config."""
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_WRITE_TYPE: call_type,
-            **verify,
-        },
-        TEST_ENTITY_NAME,
-        LIGHT_DOMAIN,
-        CONF_LIGHTS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
