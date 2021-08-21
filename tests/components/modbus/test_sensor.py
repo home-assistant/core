@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_PRECISION,
     CONF_REGISTERS,
     CONF_SCALE,
@@ -62,6 +63,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
+                    CONF_LAZY_ERROR: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DEVICE_CLASS: "battery",
                 }
