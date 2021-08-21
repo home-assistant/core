@@ -1,10 +1,12 @@
 """Tests for the USB Discovery integration."""
 import datetime
+import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, sentinel
 
 import pytest
 
+from homeassistant.components import usb
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -241,7 +243,8 @@ async def test_discovered_by_scanner_after_started_no_vid_pid(hass):
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_non_matching_discovered_by_scanner_after_started(hass):
+@pytest.mark.parametrize("exception_type", [ImportError, OSError])
+async def test_non_matching_discovered_by_scanner_after_started(hass, exception_type):
     """Test a device is discovered by the scanner after the started event that does not match."""
     new_usb = [{"domain": "test1", "vid": "4444", "pid": "4444"}]
 
@@ -256,7 +259,7 @@ async def test_non_matching_discovered_by_scanner_after_started(hass):
         )
     ]
 
-    with patch("pyudev.Context", side_effect=ImportError), patch(
+    with patch("pyudev.Context", side_effect=exception_type), patch(
         "homeassistant.components.usb.async_get_usb", return_value=new_usb
     ), patch(
         "homeassistant.components.usb.comports", return_value=mock_comports
@@ -271,3 +274,82 @@ async def test_non_matching_discovered_by_scanner_after_started(hass):
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
+
+
+def test_get_serial_by_id_no_dir():
+    """Test serial by id conversion if there's no /dev/serial/by-id."""
+    p1 = patch("os.path.isdir", MagicMock(return_value=False))
+    p2 = patch("os.scandir")
+    with p1 as is_dir_mock, p2 as scan_mock:
+        res = usb.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 0
+
+
+def test_get_serial_by_id():
+    """Test serial by id conversion."""
+    p1 = patch("os.path.isdir", MagicMock(return_value=True))
+    p2 = patch("os.scandir")
+
+    def _realpath(path):
+        if path is sentinel.matched_link:
+            return sentinel.path
+        return sentinel.serial_link_path
+
+    p3 = patch("os.path.realpath", side_effect=_realpath)
+    with p1 as is_dir_mock, p2 as scan_mock, p3:
+        res = usb.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 1
+
+        entry1 = MagicMock(spec_set=os.DirEntry)
+        entry1.is_symlink.return_value = True
+        entry1.path = sentinel.some_path
+
+        entry2 = MagicMock(spec_set=os.DirEntry)
+        entry2.is_symlink.return_value = False
+        entry2.path = sentinel.other_path
+
+        entry3 = MagicMock(spec_set=os.DirEntry)
+        entry3.is_symlink.return_value = True
+        entry3.path = sentinel.matched_link
+
+        scan_mock.return_value = [entry1, entry2, entry3]
+        res = usb.get_serial_by_id(sentinel.path)
+        assert res is sentinel.matched_link
+        assert is_dir_mock.call_count == 2
+        assert scan_mock.call_count == 2
+
+
+def test_human_readable_device_name():
+    """Test human readable device name includes the passed data."""
+    name = usb.human_readable_device_name(
+        "/dev/null",
+        "612020FD",
+        "Silicon Labs",
+        "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
+        "10C4",
+        "8A2A",
+    )
+    assert "/dev/null" in name
+    assert "612020FD" in name
+    assert "Silicon Labs" in name
+    assert "HubZ Smart Home Controller - HubZ Z-Wave Com Port"[:26] in name
+    assert "10C4" in name
+    assert "8A2A" in name
+
+    name = usb.human_readable_device_name(
+        "/dev/null",
+        "612020FD",
+        "Silicon Labs",
+        None,
+        "10C4",
+        "8A2A",
+    )
+    assert "/dev/null" in name
+    assert "612020FD" in name
+    assert "Silicon Labs" in name
+    assert "10C4" in name
+    assert "8A2A" in name

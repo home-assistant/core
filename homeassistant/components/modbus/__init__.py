@@ -65,6 +65,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MSG_WAIT,
@@ -136,6 +137,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
+        vol.Optional(CONF_LAZY_ERROR, default=0): cv.positive_int,
     }
 )
 

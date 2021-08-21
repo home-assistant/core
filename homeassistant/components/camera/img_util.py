@@ -69,8 +69,6 @@ class TurboJPEGSingleton:
 
     def __init__(self) -> None:
         """Try to create TurboJPEG only once."""
-        # pylint: disable=unused-private-member
-        # https://github.com/PyCQA/pylint/issues/4681
         try:
             # TurboJPEG checks for libturbojpeg
             # when its created, but it imports
