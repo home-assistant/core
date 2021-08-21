@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for entry in hass.config_entries.async_entries(DOMAIN)
         }:
             hass.async_add_job(
-                hass.config_entries.flow.async_init(  # type: ignore
+                hass.config_entries.flow.async_init(  # type: ignore[arg-type]
                     DOMAIN,
                     context={"source": config_entries.SOURCE_IMPORT},
                     data={

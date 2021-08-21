@@ -24,11 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 class HomematicipAuth:
     """Manages HomematicIP client registration."""
 
+    auth: AsyncAuth
+
     def __init__(self, hass, config) -> None:
         """Initialize HomematicIP Cloud client registration."""
         self.hass = hass
         self.config = config
-        self.auth: AsyncAuth = None
 
     async def async_setup(self) -> bool:
         """Connect to HomematicIP for registration."""
@@ -72,11 +73,12 @@ class HomematicipAuth:
 class HomematicipHAP:
     """Manages HomematicIP HTTP and WebSocket connection."""
 
+    home: AsyncHome
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
-        self.home: AsyncHome = None
 
         self._ws_close_requested = False
         self._retry_task: asyncio.Task | None = None
