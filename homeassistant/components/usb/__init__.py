@@ -16,6 +16,7 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers import system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
 
@@ -102,6 +103,10 @@ class USBDiscovery:
         """Start monitoring hardware with pyudev."""
         if not sys.platform.startswith("linux"):
             return
+        info = await system_info.async_get_system_info(self.hass)
+        if info.get("docker") and not info.get("hassio"):
+            return False
+
         from pyudev import (  # pylint: disable=import-outside-toplevel
             Context,
             Monitor,
