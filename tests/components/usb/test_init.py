@@ -1,5 +1,4 @@
 """Tests for the USB Discovery integration."""
-import datetime
 import os
 import sys
 from unittest.mock import MagicMock, patch, sentinel
@@ -9,11 +8,8 @@ import pytest
 from homeassistant.components import usb
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
 
 from . import slae_sh_device
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.skipif(
@@ -113,8 +109,8 @@ async def test_removal_by_observer_before_started(hass):
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_discovered_by_scanner_after_started(hass):
-    """Test a device is discovered by the scanner after the started event."""
+async def test_discovered_by_websocket_scan(hass, hass_ws_client):
+    """Test a device is discovered from websocket scan."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
     mock_comports = [
@@ -139,15 +135,18 @@ async def test_discovered_by_scanner_after_started(hass):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=1))
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-async def test_discovered_by_scanner_after_started_match_vid_only(hass):
-    """Test a device is discovered by the scanner after the started event only matching vid."""
+async def test_discovered_by_websocket_scan_match_vid_only(hass, hass_ws_client):
+    """Test a device is discovered from websocket scan only matching vid."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
 
     mock_comports = [
@@ -172,15 +171,18 @@ async def test_discovered_by_scanner_after_started_match_vid_only(hass):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=1))
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-async def test_discovered_by_scanner_after_started_match_vid_wrong_pid(hass):
-    """Test a device is discovered by the scanner after the started event only matching vid but wrong pid."""
+async def test_discovered_by_websocket_scan_match_vid_wrong_pid(hass, hass_ws_client):
+    """Test a device is discovered from websocket scan only matching vid but wrong pid."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "9999"}]
 
     mock_comports = [
@@ -205,14 +207,17 @@ async def test_discovered_by_scanner_after_started_match_vid_wrong_pid(hass):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=1))
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
 
 
-async def test_discovered_by_scanner_after_started_no_vid_pid(hass):
-    """Test a device is discovered by the scanner after the started event with no vid or pid."""
+async def test_discovered_by_websocket_no_vid_pid(hass, hass_ws_client):
+    """Test a device is discovered from websocket scan with no vid or pid."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "9999"}]
 
     mock_comports = [
@@ -237,15 +242,20 @@ async def test_discovered_by_scanner_after_started_no_vid_pid(hass):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=1))
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
 
 
 @pytest.mark.parametrize("exception_type", [ImportError, OSError])
-async def test_non_matching_discovered_by_scanner_after_started(hass, exception_type):
-    """Test a device is discovered by the scanner after the started event that does not match."""
+async def test_non_matching_discovered_by_scanner_after_started(
+    hass, exception_type, hass_ws_client
+):
+    """Test a websocket scan that does not match."""
     new_usb = [{"domain": "test1", "vid": "4444", "pid": "4444"}]
 
     mock_comports = [
@@ -270,7 +280,10 @@ async def test_non_matching_discovered_by_scanner_after_started(hass, exception_
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=1))
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
