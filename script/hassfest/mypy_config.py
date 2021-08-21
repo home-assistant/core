@@ -14,7 +14,6 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.adguard.*",
     "homeassistant.components.almond.*",
     "homeassistant.components.analytics.*",
     "homeassistant.components.atag.*",
