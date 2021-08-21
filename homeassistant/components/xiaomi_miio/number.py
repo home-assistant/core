@@ -105,7 +105,7 @@ NUMBER_TYPES = {
     FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
         name="Oscillation Angle",
-        icon="mdi:volume-high",
+        icon="mdi:angle-acute",
         min_value=30,
         max_value=140,
         step=30,
