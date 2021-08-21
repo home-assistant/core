@@ -7,9 +7,11 @@ import math
 from miio.airfresh import OperationMode as AirfreshOperationMode
 from miio.airpurifier import OperationMode as AirpurifierOperationMode
 from miio.airpurifier_miot import OperationMode as AirpurifierMiotOperationMode
+from miio.fan import MoveDirection as FanMoveDirection
 import voluptuous as vol
 
 from homeassistant.components.fan import (
+    SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
@@ -704,7 +706,10 @@ class XiaomiFanP5(XiaomiGenericDevice):
         self._device_features = FEATURE_FLAGS_FAN_P5
         self._preset_modes = list(FAN_PRESET_MODE_VALUES_P5.keys())
         self._supported_features = (
-            SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_PRESET_MODE
+            SUPPORT_SET_SPEED
+            | SUPPORT_OSCILLATE
+            | SUPPORT_PRESET_MODE
+            | SUPPORT_DIRECTION
         )
         self._oscillating = None
         self._percentage = None
@@ -781,7 +786,29 @@ class XiaomiFanP5(XiaomiGenericDevice):
             oscillating,
         )
 
-    def _get_preset_mode(self, percentage: int):
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        if direction == "forward":
+            direction = "right"
+
+        if direction == "reverse":
+            direction = "left"
+
+        if self._oscillating:
+            await self._try_command(
+                "Setting oscillate off of the miio device failed.",
+                self._device.set_oscillate,
+                False,
+            )
+
+        await self._try_command(
+            "Setting move direction of the miio device failed.",
+            self._device.set_rotate,
+            FanMoveDirection(direction),
+        )
+
+    @classmethod
+    def _get_preset_mode(cls, percentage: int):
         """Get current preset mode."""
         for preset_mode, speed in FAN_PRESET_MODE_VALUES_P5.items():
             if percentage == speed:
