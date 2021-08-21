@@ -184,11 +184,11 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = user_input[CONF_HOST]
 
         devices = await _async_discover_roombas(self.hass, self.host)
-        if devices:
-            self.blid = devices[0].blid
-            self.name = devices[0].robot_name
-        else:
+        if not devices:
             return self.async_abort(reason="cannot_connect")
+        self.blid = devices[0].blid
+        self.name = devices[0].robot_name
+            
 
         await self.async_set_unique_id(self.blid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
