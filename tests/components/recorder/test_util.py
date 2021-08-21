@@ -234,6 +234,7 @@ def test_end_incomplete_runs(hass_recorder, caplog):
         run_info = run_information_with_session(session)
         assert isinstance(run_info, RecorderRuns)
         assert run_info.closed_incorrect is False
+
         now = dt_util.utcnow()
         now_without_tz = now.replace(tzinfo=None)
         end_incomplete_runs(session, now)
@@ -242,7 +243,6 @@ def test_end_incomplete_runs(hass_recorder, caplog):
         assert run_info.end == now_without_tz
         session.flush()
 
-    with session_scope(hass=hass) as session:
         later = dt_util.utcnow()
         end_incomplete_runs(session, later)
         run_info = run_information_with_session(session)

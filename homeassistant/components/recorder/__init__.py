@@ -570,6 +570,10 @@ class Recorder(threading.Thread):
 
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
+        if self.hass.is_stopping() or not self.get_session:
+            # Home Assistant is shutting down
+            return
+
         # Run nightly tasks at 4:12am
         async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
@@ -585,10 +589,6 @@ class Recorder(threading.Thread):
         last_hour = now.replace(minute=0, second=0, microsecond=0)
         start = now - timedelta(days=self.keep_days)
         start = start.replace(minute=0, second=0, microsecond=0)
-
-        if not self.get_session:
-            # Home Assistant is shutting down
-            return
 
         # Find the newest statistics run, if any
         with session_scope(session=self.get_session()) as session:
