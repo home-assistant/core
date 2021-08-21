@@ -11,6 +11,7 @@ from miio import (
     AirPurifier,
     AirPurifierMiot,
     DeviceException,
+    FanP5,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -29,6 +30,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_FAN_P5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -141,6 +143,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    elif model == MODEL_FAN_P5:
+        device = FanP5(host, token)
     else:
         _LOGGER.error(
             "Unsupported device found! Please create an issue at "
@@ -163,7 +167,7 @@ async def async_create_miio_device_and_coordinator(
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(20):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
