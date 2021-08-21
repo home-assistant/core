@@ -138,7 +138,7 @@ async def async_setup_entry(
                             return f"Held until {time}"
                         return LYRIC_SETPOINT_STATUS_NAMES.get(
                             device.changeableValues.thermostatSetpointStatus,
-                            "Unknown",
+                            None,
                         )
 
                     entities.append(
