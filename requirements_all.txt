@@ -160,6 +160,9 @@ aiodns==3.0.0
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
+# homeassistant.components.rainforest_eagle
+aioeagle==1.1.0
+
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
@@ -213,7 +216,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.8.2
+aiomusiccast==0.9.1
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -314,6 +317,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
+# homeassistant.components.yeelight
 async-upnp-client==0.20.0
 
 # homeassistant.components.supla
@@ -371,7 +375,7 @@ beautifulsoup4==4.9.3
 bellows==0.26.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.18
+bimmer_connected==0.7.19
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -531,7 +535,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.29
+dsmr_parser==0.30
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.4
@@ -541,9 +545,6 @@ dweepy==0.3.0
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
-
-# homeassistant.components.rainforest_eagle
-eagle200_reader==0.2.4
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.16
@@ -623,6 +624,9 @@ fitbit==0.3.1
 
 # homeassistant.components.fixer
 fixerio==1.0.0a0
+
+# homeassistant.components.fjaraskupan
+fjaraskupan==1.0.0
 
 # homeassistant.components.flipr
 flipr-api==1.4.1
@@ -786,7 +790,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210813.0
+home-assistant-frontend==20210818.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -840,7 +844,6 @@ ibmiotf==0.3.4
 icmplib==3.0
 
 # homeassistant.components.network
-# homeassistant.components.nmap_tracker
 ifaddr==0.1.7
 
 # homeassistant.components.iglo
@@ -979,7 +982,7 @@ micloud==0.3
 miflora==0.7.0
 
 # homeassistant.components.mill
-millheater==0.5.0
+millheater==0.5.2
 
 # homeassistant.components.minio
 minio==4.0.9
@@ -1131,6 +1134,9 @@ orvibo==1.1.1
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.1.12
+
+# homeassistant.components.p1_monitor
+p1monitor == 0.2.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1749,6 +1755,7 @@ pysensibo==1.0.3
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
 
@@ -1951,6 +1958,9 @@ pytradfri[async]==7.0.6
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.6.2
 
+# homeassistant.components.usb
+pyudev==0.22.0
+
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.8.2
 
@@ -1979,7 +1989,7 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.6.6
+pywemo==0.6.7
 
 # homeassistant.components.wilight
 pywilight==0.0.70
@@ -2476,4 +2486,4 @@ zigpy==0.36.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.28.0
+zwave-js-server-python==0.29.0

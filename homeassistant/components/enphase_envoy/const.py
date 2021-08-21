@@ -3,10 +3,10 @@
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
 from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, POWER_WATT
-from homeassistant.util import dt
 
 DOMAIN = "enphase_envoy"
 
@@ -41,9 +41,8 @@ SENSORS = (
         key="lifetime_production",
         name="Lifetime Energy Production",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
     ),
     SensorEntityDescription(
         key="consumption",
@@ -69,9 +68,8 @@ SENSORS = (
         key="lifetime_consumption",
         name="Lifetime Energy Consumption",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
-        last_reset=dt.utc_from_timestamp(0),
     ),
     SensorEntityDescription(
         key="inverters",

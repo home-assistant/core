@@ -163,6 +163,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
+homeassistant/components/fjaraskupan/* @elupus
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flipr/* @cnico
 homeassistant/components/flo/* @dmulcahey
@@ -374,6 +375,7 @@ homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
 homeassistant/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
+homeassistant/components/p1_monitor/* @klaasnicolaas
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 homeassistant/components/pcal9535a/* @Shulyaka
@@ -506,7 +508,7 @@ homeassistant/components/synology_dsm/* @hacf-fr @Quentame @mib1185
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/system_bridge/* @timmo001
-homeassistant/components/tado/* @michaelarnauts @bdraco @noltari
+homeassistant/components/tado/* @michaelarnauts @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
@@ -547,6 +549,7 @@ homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
 homeassistant/components/upnp/* @StevenLooman @ehendrix23
 homeassistant/components/uptimerobot/* @ludeeus
+homeassistant/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @Cereal2nd @brefra

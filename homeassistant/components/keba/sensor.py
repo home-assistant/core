@@ -1,9 +1,12 @@
 """Support for KEBA charging station sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -12,7 +15,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
 )
-from homeassistant.util import dt
 
 from . import DOMAIN
 
@@ -74,8 +76,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Total Energy",
                 native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                 device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_MEASUREMENT,
-                last_reset=dt.utc_from_timestamp(0),
+                state_class=STATE_CLASS_TOTAL_INCREASING,
             ),
         ),
     ]

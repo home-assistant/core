@@ -231,7 +231,7 @@ async def test_light_service_turn(hass, caplog, mock_pymodbus):
                 },
                 {
                     CONF_NAME: f"{TEST_ENTITY_NAME}2",
-                    CONF_ADDRESS: 17,
+                    CONF_ADDRESS: 18,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {},

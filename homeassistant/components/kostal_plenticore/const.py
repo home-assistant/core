@@ -16,13 +16,10 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.util.dt import utc_from_timestamp
 
 DOMAIN = "kostal_plenticore"
 
 ATTR_ENABLED_DEFAULT = "entity_registry_enabled_default"
-
-LAST_RESET_NEVER = utc_from_timestamp(0)
 
 # Defines all entities for process data.
 #
