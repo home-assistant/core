@@ -93,7 +93,7 @@ class KebaSensor(SensorEntity):
         keba: KebaHandler,
         entity_type: str,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the KEBA Sensor."""
         self._keba = keba
         self.entity_description = description
