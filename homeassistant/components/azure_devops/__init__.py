@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Final
 
 from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
@@ -25,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
-BUILDS_QUERY = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
+BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
