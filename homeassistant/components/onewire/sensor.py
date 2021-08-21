@@ -38,6 +38,7 @@ from .const import (
     SENSOR_TYPE_TEMPERATURE,
     SENSOR_TYPE_VOLTAGE,
     SENSOR_TYPE_WETNESS,
+    SENSOR_TYPES,
 )
 from .model import DeviceComponentDescription
 from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
@@ -45,8 +46,9 @@ from .onewirehub import OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_SENSORS: dict[str, list[DeviceComponentDescription]] = {
-    # Family : { SensorType: owfs path }
+
+DEVICE_SENSORS: dict[str, tuple[DeviceComponentDescription, ...]] = {
+    # Family : { owfs path }
     "10": [
         {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
     ],
@@ -371,6 +373,11 @@ class OneWireSensor(OneWireBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return SENSOR_TYPES[self._entity_type][2]
 
 
 class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):

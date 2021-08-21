@@ -5,7 +5,12 @@ from pyownet.protocol import Error as ProtocolError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.onewire.const import DOMAIN, PRESSURE_CBAR
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
@@ -77,6 +82,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -119,6 +125,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.12_111111111111_pressure",
@@ -128,6 +135,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
         SWITCH_DOMAIN: [
@@ -187,6 +195,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "251123",
                 "unit": "count",
                 "class": None,
+                ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
             },
             {
                 "entity_id": "sensor.1d_111111111111_counter_b",
@@ -195,6 +204,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "248125",
                 "unit": "count",
                 "class": None,
+                ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
             },
         ],
     },
@@ -230,6 +240,7 @@ MOCK_OWPROXY_DEVICES = {
                             "result": "251123",
                             "unit": "count",
                             "class": None,
+                            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
                         },
                         {
                             "entity_id": "sensor.1d_111111111111_counter_b",
@@ -239,6 +250,7 @@ MOCK_OWPROXY_DEVICES = {
                             "result": "248125",
                             "unit": "count",
                             "class": None,
+                            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
                         },
                     ],
                 },
@@ -263,6 +275,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -284,6 +297,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity",
@@ -293,6 +307,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_hih3600",
@@ -302,6 +317,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_hih4000",
@@ -311,6 +327,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_hih5030",
@@ -320,6 +337,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_humidity_htm1735",
@@ -329,6 +347,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_pressure",
@@ -338,6 +357,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_illuminance",
@@ -347,6 +367,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": LIGHT_LUX,
                 "class": DEVICE_CLASS_ILLUMINANCE,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_voltage_vad",
@@ -356,6 +377,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": ELECTRIC_POTENTIAL_VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_voltage_vdd",
@@ -365,6 +387,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": ELECTRIC_POTENTIAL_VOLT,
                 "class": DEVICE_CLASS_VOLTAGE,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.26_111111111111_current",
@@ -374,6 +397,7 @@ MOCK_OWPROXY_DEVICES = {
                 "unit": ELECTRIC_CURRENT_AMPERE,
                 "class": DEVICE_CLASS_CURRENT,
                 "disabled": True,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -395,6 +419,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "27.0",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -647,6 +672,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "28.2",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -668,6 +694,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "29.1",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -689,6 +716,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "67.7",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.ef_111111111111_humidity_raw",
@@ -697,6 +725,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "65.5",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.ef_111111111111_temperature",
@@ -705,6 +734,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -730,6 +760,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "41.7",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.ef_111111111112_wetness_1",
@@ -738,6 +769,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "42.5",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.ef_111111111112_moisture_2",
@@ -746,6 +778,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "43.1",
                 "unit": PRESSURE_CBAR,
                 "class": DEVICE_CLASS_PRESSURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.ef_111111111112_moisture_3",
@@ -754,6 +787,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "44.1",
                 "unit": PRESSURE_CBAR,
                 "class": DEVICE_CLASS_PRESSURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -776,6 +810,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "13.9",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.7e_111111111111_pressure",
@@ -784,6 +819,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "1012.2",
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.7e_111111111111_illuminance",
@@ -792,6 +828,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "65.9",
                 "unit": LIGHT_LUX,
                 "class": DEVICE_CLASS_ILLUMINANCE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.7e_111111111111_humidity",
@@ -800,6 +837,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "41.4",
                 "unit": PERCENTAGE,
                 "class": DEVICE_CLASS_HUMIDITY,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -822,6 +860,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "13.9",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
             {
                 "entity_id": "sensor.7e_222222222222_pressure",
@@ -830,6 +869,7 @@ MOCK_OWPROXY_DEVICES = {
                 "result": "1012.2",
                 "unit": PRESSURE_MBAR,
                 "class": DEVICE_CLASS_PRESSURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -852,6 +892,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "25.1",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -872,6 +913,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -891,6 +933,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -910,6 +953,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "30.0",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -928,6 +972,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -946,6 +991,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "28.0",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },
@@ -964,6 +1010,7 @@ MOCK_SYSBUS_DEVICES = {
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
+                ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
             },
         ],
     },

@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
@@ -46,20 +50,56 @@ SENSOR_TYPE_WETNESS = "wetness"
 SWITCH_TYPE_LATCH = "latch"
 SWITCH_TYPE_PIO = "pio"
 
-SENSOR_TYPES: dict[str, list[str | None]] = {
-    # SensorType: [ Unit, DeviceClass ]
-    SENSOR_TYPE_TEMPERATURE: [TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    SENSOR_TYPE_HUMIDITY: [PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    SENSOR_TYPE_PRESSURE: [PRESSURE_MBAR, DEVICE_CLASS_PRESSURE],
-    SENSOR_TYPE_ILLUMINANCE: [LIGHT_LUX, DEVICE_CLASS_ILLUMINANCE],
-    SENSOR_TYPE_WETNESS: [PERCENTAGE, DEVICE_CLASS_HUMIDITY],
-    SENSOR_TYPE_MOISTURE: [PRESSURE_CBAR, DEVICE_CLASS_PRESSURE],
-    SENSOR_TYPE_COUNT: ["count", None],
-    SENSOR_TYPE_VOLTAGE: [ELECTRIC_POTENTIAL_VOLT, DEVICE_CLASS_VOLTAGE],
-    SENSOR_TYPE_CURRENT: [ELECTRIC_CURRENT_AMPERE, DEVICE_CLASS_CURRENT],
-    SENSOR_TYPE_SENSED: [None, None],
-    SWITCH_TYPE_LATCH: [None, None],
-    SWITCH_TYPE_PIO: [None, None],
+SENSOR_TYPES: dict[str, (str | None, str | None, str | None)] = {
+    # SensorType: (Unit, DeviceClass, StateClass)
+    SENSOR_TYPE_TEMPERATURE: (
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_HUMIDITY: (
+        PERCENTAGE,
+        DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_PRESSURE: (
+        PRESSURE_MBAR,
+        DEVICE_CLASS_PRESSURE,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_ILLUMINANCE: (
+        LIGHT_LUX,
+        DEVICE_CLASS_ILLUMINANCE,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_WETNESS: (
+        PERCENTAGE,
+        DEVICE_CLASS_HUMIDITY,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_MOISTURE: (
+        PRESSURE_CBAR,
+        DEVICE_CLASS_PRESSURE,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_COUNT: (
+        "count",
+        None,
+        STATE_CLASS_TOTAL_INCREASING,
+    ),
+    SENSOR_TYPE_VOLTAGE: (
+        ELECTRIC_POTENTIAL_VOLT,
+        DEVICE_CLASS_VOLTAGE,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_CURRENT: (
+        ELECTRIC_CURRENT_AMPERE,
+        DEVICE_CLASS_CURRENT,
+        STATE_CLASS_MEASUREMENT,
+    ),
+    SENSOR_TYPE_SENSED: (None, None, None),
+    SWITCH_TYPE_LATCH: (None, None, None),
+    SWITCH_TYPE_PIO: (None, None, None),
 }
 
 PLATFORMS = [

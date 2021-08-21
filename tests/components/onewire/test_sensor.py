@@ -9,7 +9,7 @@ from homeassistant.components.onewire.const import (
     DOMAIN,
     PLATFORMS,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME
 from homeassistant.setup import async_setup_component
 
@@ -120,10 +120,9 @@ async def test_sensors_on_owserver_coupler(owproxy, hass, device_id):
         assert registry_entry.device_class == expected_sensor["class"]
         assert registry_entry.disabled == expected_sensor.get("disabled", False)
         state = hass.states.get(entity_id)
-        if registry_entry.disabled:
-            assert state is None
-        else:
-            assert state.state == expected_sensor["result"]
+        assert state.state == expected_sensor["result"]
+        for attr in (ATTR_STATE_CLASS,):
+            assert state.attributes[attr] == expected_sensor[attr]
         assert state.attributes["device_file"] == expected_sensor["device_file"]
 
 
@@ -173,6 +172,8 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
             assert state is None
         else:
             assert state.state == expected_entity["result"]
+            for attr in (ATTR_STATE_CLASS,):
+                assert state.attributes[attr] == expected_entity[attr]
             assert state.attributes["device_file"] == expected_entity.get(
                 "device_file", registry_entry.unique_id
             )
@@ -220,3 +221,5 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
         assert registry_entry.device_class == expected_sensor["class"]
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
+        for attr in (ATTR_STATE_CLASS,):
+            assert state.attributes[attr] == expected_sensor[attr]
