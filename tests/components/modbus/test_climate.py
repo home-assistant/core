@@ -6,6 +6,7 @@ from homeassistant.components.climate.const import HVAC_MODE_AUTO
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
+    CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
     DATA_TYPE_FLOAT32,
     DATA_TYPE_FLOAT64,
@@ -49,6 +50,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
                     CONF_COUNT: 2,
+                    CONF_LAZY_ERROR: 10,
                 }
             ],
         },

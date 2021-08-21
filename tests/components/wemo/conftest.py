@@ -35,6 +35,7 @@ async def async_pywemo_registry_fixture():
         registry.semaphore.release()
 
     registry.on.side_effect = on_func
+    registry.is_subscribed.return_value = False
 
     with patch("pywemo.SubscriptionRegistry", return_value=registry):
         yield registry

@@ -8,6 +8,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -54,6 +55,7 @@ ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
+                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
