@@ -1326,7 +1326,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.3
+watchdog==2.1.4
 
 # homeassistant.components.wiffi
 wiffi==1.0.1
