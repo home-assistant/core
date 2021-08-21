@@ -201,7 +201,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         except GuardianError as err:
             LOGGER.error("Error while upgrading firmware: %s", err)
 
-    async def async_turn_off(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the valve off (closed)."""
         try:
             async with self._client:
@@ -213,7 +213,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs: dict[str, Any]) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the valve on (open)."""
         try:
             async with self._client:
