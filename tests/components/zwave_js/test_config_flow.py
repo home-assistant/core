@@ -415,7 +415,6 @@ async def test_abort_hassio_discovery_with_existing_flow(
     hass, supervisor, addon_options
 ):
     """Test hassio discovery flow is aborted when another discovery has happened."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
@@ -444,7 +443,6 @@ async def test_usb_discovery(
     start_addon,
 ):
     """Test usb discovery success path."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
@@ -632,8 +630,6 @@ async def test_discovery_addon_not_installed(
 
 async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_options):
     """Test usb discovery flow is aborted when another discovery has happened."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
@@ -654,8 +650,6 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
 
 async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_options):
     """Test usb discovery flow is aborted when there is an existing entry."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     entry = MockConfigEntry(
         domain=DOMAIN, data={"url": "ws://localhost:3000"}, title=TITLE, unique_id=1234
     )
@@ -672,8 +666,6 @@ async def test_abort_usb_discovery_already_configured(hass, supervisor, addon_op
 
 async def test_usb_discovery_requires_supervisor(hass):
     """Test usb discovery flow is aborted when there is no supervisor."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
@@ -685,8 +677,6 @@ async def test_usb_discovery_requires_supervisor(hass):
 
 async def test_usb_discovery_already_running(hass, supervisor, addon_running):
     """Test usb discovery flow is aborted when the addon is running."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
@@ -707,8 +697,6 @@ async def test_abort_usb_discovery_aborts_specific_devices(
     hass, supervisor, addon_options, discovery_info
 ):
     """Test usb discovery flow is aborted on specific devices."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
