@@ -132,6 +132,15 @@ async def async_setup_entry(
                         )
                     )
                 if device.changeableValues.thermostatSetpointStatus:
+
+                    def get_setpoint_status(status: str, time: str) -> str:
+                        if status == PRESET_HOLD_UNTIL:
+                            return f"Held until {time}"
+                        return LYRIC_SETPOINT_STATUS_NAMES.get(
+                            device.changeableValues.thermostatSetpointStatus,
+                            "Unknown",
+                        )
+
                     entities.append(
                         LyricSensor(
                             coordinator,
@@ -139,12 +148,9 @@ async def async_setup_entry(
                                 key=f"{device.macID}_setpoint_status",
                                 name="Setpoint Status",
                                 icon="mdi:thermostat",
-                                value=lambda device: f"Held until {device.changeableValues.nextPeriodTime}"
-                                if device.changeableValues.thermostatSetpointStatus
-                                == PRESET_HOLD_UNTIL
-                                else LYRIC_SETPOINT_STATUS_NAMES.get(
+                                value=lambda device: get_setpoint_status(
                                     device.changeableValues.thermostatSetpointStatus,
-                                    "Unknown",
+                                    device.changeableValues.nextPeriodTime,
                                 ),
                             ),
                             location,
