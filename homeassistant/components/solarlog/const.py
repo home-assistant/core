@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
 from homeassistant.const import (
@@ -121,8 +122,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield total",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_ac",
@@ -169,8 +169,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SolarLogSensorEntityDescription(
         key="total_power",
