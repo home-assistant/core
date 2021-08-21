@@ -40,6 +40,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN_P5,
+    FEATURE_FLAGS_FAN_ZA3,
     FEATURE_RESET_FILTER,
     FEATURE_SET_EXTRA_FEATURES,
     KEY_COORDINATOR,
@@ -50,6 +51,8 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
     MODEL_FAN_P5,
+    MODEL_FAN_ZA3,
+    MODELS_FAN_MIIO,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
@@ -195,8 +198,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity = XiaomiAirPurifier(name, device, config_entry, unique_id, coordinator)
     elif model.startswith("zhimi.airfresh."):
         entity = XiaomiAirFresh(name, device, config_entry, unique_id, coordinator)
-    elif model == MODEL_FAN_P5:
-        entity = XiaomiFanP5(name, device, config_entry, unique_id, coordinator)
+    elif model in MODELS_FAN_MIIO:
+        entity = XiaomiFan(name, device, config_entry, unique_id, coordinator)
     else:
         return
 
@@ -686,14 +689,17 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         )
 
 
-class XiaomiFanP5(XiaomiGenericDevice):
-    """Representation of a Xiaomi Air Purifier."""
+class XiaomiFan(XiaomiGenericDevice):
+    """Representation of a Xiaomi Fan P5."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._device_features = FEATURE_FLAGS_FAN_P5
+        if self._model == MODEL_FAN_P5:
+            self._device_features = FEATURE_FLAGS_FAN_P5
+        elif self._model == MODEL_FAN_ZA3:
+            self._device_features = FEATURE_FLAGS_FAN_ZA3
         self._preset_modes = [mode.name for mode in FanOperationMode]
         self._preset_mode = None
         self._supported_features = (
