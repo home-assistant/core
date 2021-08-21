@@ -31,7 +31,7 @@ def _perform_async_update(device_wrapper):
     """Return a callable method to cause hass to update the state of the entity."""
 
     async def async_callback():
-        await device_wrapper.async_update_data()
+        await device_wrapper._async_update_data()
 
     return async_callback
 

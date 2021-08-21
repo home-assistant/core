@@ -34,7 +34,6 @@ class DeviceCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=wemo.name,
             update_interval=timedelta(seconds=30),
-            update_method=self.async_update_data,
         )
         self.hass = hass
         self.wemo = wemo
@@ -82,7 +81,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
         else:
             self.async_set_updated_data(None)
 
-    async def async_update_data(self) -> None:
+    async def _async_update_data(self) -> None:
         """Update WeMo state."""
         # No need to poll if the device will push updates.
         registry = self.hass.data[DOMAIN]["registry"]

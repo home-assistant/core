@@ -146,5 +146,5 @@ async def test_async_update_data_subscribed(
     device = wemo_device.async_get_device(hass, wemo_entity.device_id)
     pywemo_registry.is_subscribed.return_value = True
     pywemo_device.get_state.reset_mock()
-    await device.async_update_data()
+    await device._async_update_data()
     pywemo_device.get_state.assert_not_called()
