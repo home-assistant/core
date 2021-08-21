@@ -570,7 +570,7 @@ class Recorder(threading.Thread):
 
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
-        if self.hass.is_stopping() or not self.get_session:
+        if self.hass.is_stopping or not self.get_session:
             # Home Assistant is shutting down
             return
 
