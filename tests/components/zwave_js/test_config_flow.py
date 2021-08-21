@@ -31,6 +31,24 @@ USB_DISCOVERY_INFO = {
     "manufacturer": "test",
 }
 
+NORTEK_ZIGBEE_DISCOVERY_INFO = {
+    "device": "/dev/zigbee",
+    "pid": "8A2A",
+    "vid": "10C4",
+    "serial_number": "1234",
+    "description": "nortek zigbee radio",
+    "manufacturer": "nortek",
+}
+
+CP2652_ZIGBEE_DISCOVERY_INFO = {
+    "device": "/dev/zigbee",
+    "pid": "EA60",
+    "vid": "10C4",
+    "serial_number": "",
+    "description": "cp2652",
+    "manufacturer": "generic",
+}
+
 
 @pytest.fixture(name="persistent_notification", autouse=True)
 async def setup_persistent_notification(hass):
@@ -598,6 +616,28 @@ async def test_usb_discovery_requires_supervisor(hass):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "discovery_requires_supervisor"
+
+
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        NORTEK_ZIGBEE_DISCOVERY_INFO,
+        CP2652_ZIGBEE_DISCOVERY_INFO,
+    ],
+)
+async def test_abort_usb_discovery_aborts_specific_devices(
+    hass, supervisor, addon_options, discovery_info
+):
+    """Test usb discovery flow is aborted on specific devices."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zwave_device"
 
 
 async def test_not_addon(hass, supervisor):
