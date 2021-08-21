@@ -17,6 +17,8 @@ from orangepi import (
     zero,
     zeroplus,
     zeroplus2,
+    pi4,
+    pi4B,
 )
 import voluptuous as vol
 
@@ -44,6 +46,8 @@ PIN_MODES = {
     "zeroplus2": zeroplus2.BOARD,
     "duo": duo.BOARD,
     "neocore2": neocore2.BOARD,
+    "pi4": pi4.BOARD,
+    "pi4B": pi4B.BOARD,
 }
 
 _SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
