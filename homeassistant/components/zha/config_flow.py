@@ -1,7 +1,6 @@
 """Config flow for ZHA."""
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import serial.tools.list_ports
@@ -9,6 +8,7 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -25,24 +25,6 @@ SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
 )
-
-
-def _format_port_human_readable(
-    device: str,
-    serial_number: str | None,
-    manufacturer: str | None,
-    description: str | None,
-    vid: str | None,
-    pid: str | None,
-) -> str:
-    device_details = f"{device}, s/n: {serial_number or 'n/a'}"
-    manufacturer_details = f" - {manufacturer}" if manufacturer else ""
-    vendor_details = f" - {vid}:{pid}" if vid else ""
-    full_details = f"{device_details}{manufacturer_details}{vendor_details}"
-
-    if not description:
-        return full_details
-    return f"{description[:26]} - {full_details}"
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,31 +45,30 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        device_choices = {
-            p.device: _format_port_human_readable(
-                p.device, p.serial_number, p.manufacturer, p.description, p.vid, p.pid
-            )
+        list_of_ports = [
+            f"{p}, s/n: {p.serial_number or 'n/a'}"
+            + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
-        }
-        device_to_port = {p.device: p for p in ports}
+        ]
 
-        if not device_choices:
+        if not list_of_ports:
             return await self.async_step_pick_radio()
 
-        device_choices[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
+        list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_pick_radio()
 
-            port = device_to_port[user_selection]
+            port = ports[list_of_ports.index(user_selection)]
             dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, port.device
+                usb.get_serial_by_id, port.device
             )
             auto_detected_data = await detect_radios(dev_path)
             if auto_detected_data is not None:
-                title = device_choices[user_selection]
+                title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
+                title += f" - {port.manufacturer}" if port.manufacturer else ""
                 return self.async_create_entry(
                     title=title,
                     data=auto_detected_data,
@@ -97,7 +78,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._device_path = dev_path
             return await self.async_step_pick_radio()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(device_choices)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_pick_radio(self, user_input=None):
@@ -146,12 +127,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "8A2A" and "ZigBee" not in description:
             return self.async_abort(reason="not_zha_device")
 
-        dev_path = await self.hass.async_add_executor_job(get_serial_by_id, device)
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         self._auto_detected_data = await detect_radios(dev_path)
         if self._auto_detected_data is None:
             return self.async_abort(reason="not_zha_device")
         self._device_path = dev_path
-        self._title = _format_port_human_readable(
+        self._title = usb.human_readable_device_name(
             dev_path,
             serial_number,
             manufacturer,
@@ -216,7 +197,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._device_path = user_input.get(CONF_DEVICE_PATH)
             if await app_cls.probe(user_input):
                 serial_by_id = await self.hass.async_add_executor_job(
-                    get_serial_by_id, user_input[CONF_DEVICE_PATH]
+                    usb.get_serial_by_id, user_input[CONF_DEVICE_PATH]
                 )
                 user_input[CONF_DEVICE_PATH] = serial_by_id
                 return self.async_create_entry(
@@ -256,15 +237,3 @@ async def detect_radios(dev_path: str) -> dict[str, Any] | None:
             return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: dev_config}
 
     return None
-
-
-def get_serial_by_id(dev_path: str) -> str:
-    """Return a /dev/serial/by-id match for given device if available."""
-    by_id = "/dev/serial/by-id"
-    if not os.path.isdir(by_id):
-        return dev_path
-
-    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-        if os.path.realpath(path) == dev_path:
-            return path
-    return dev_path

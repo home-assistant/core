@@ -1,7 +1,6 @@
 """Tests for ZHA config flow."""
 
-import os
-from unittest.mock import AsyncMock, MagicMock, patch, sentinel
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import serial.tools.list_ports
@@ -400,50 +399,3 @@ async def test_user_port_config(probe_mock, hass):
     )
     assert result["data"][CONF_RADIO_TYPE] == "ezsp"
     assert probe_mock.await_count == 1
-
-
-def test_get_serial_by_id_no_dir():
-    """Test serial by id conversion if there's no /dev/serial/by-id."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=False))
-    p2 = patch("os.scandir")
-    with p1 as is_dir_mock, p2 as scan_mock:
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.path
-        assert is_dir_mock.call_count == 1
-        assert scan_mock.call_count == 0
-
-
-def test_get_serial_by_id():
-    """Test serial by id conversion."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=True))
-    p2 = patch("os.scandir")
-
-    def _realpath(path):
-        if path is sentinel.matched_link:
-            return sentinel.path
-        return sentinel.serial_link_path
-
-    p3 = patch("os.path.realpath", side_effect=_realpath)
-    with p1 as is_dir_mock, p2 as scan_mock, p3:
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.path
-        assert is_dir_mock.call_count == 1
-        assert scan_mock.call_count == 1
-
-        entry1 = MagicMock(spec_set=os.DirEntry)
-        entry1.is_symlink.return_value = True
-        entry1.path = sentinel.some_path
-
-        entry2 = MagicMock(spec_set=os.DirEntry)
-        entry2.is_symlink.return_value = False
-        entry2.path = sentinel.other_path
-
-        entry3 = MagicMock(spec_set=os.DirEntry)
-        entry3.is_symlink.return_value = True
-        entry3.path = sentinel.matched_link
-
-        scan_mock.return_value = [entry1, entry2, entry3]
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.matched_link
-        assert is_dir_mock.call_count == 2
-        assert scan_mock.call_count == 2

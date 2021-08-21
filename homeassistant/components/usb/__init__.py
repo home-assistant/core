@@ -4,6 +4,7 @@ from __future__ import annotations
 import dataclasses
 import datetime
 import logging
+import os
 import sys
 
 from serial.tools.list_ports import comports
@@ -24,6 +25,37 @@ _LOGGER = logging.getLogger(__name__)
 
 # Perodic scanning only happens on non-linux systems
 SCAN_INTERVAL = datetime.timedelta(minutes=60)
+
+
+def human_readable_device_name(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | None,
+    pid: str | None,
+) -> str:
+    """Return a human readable name from USBDevice attributes."""
+    device_details = f"{device}, s/n: {serial_number or 'n/a'}"
+    manufacturer_details = f" - {manufacturer}" if manufacturer else ""
+    vendor_details = f" - {vid}:{pid}" if vid else ""
+    full_details = f"{device_details}{manufacturer_details}{vendor_details}"
+
+    if not description:
+        return full_details
+    return f"{description[:26]} - {full_details}"
+
+
+def get_serial_by_id(dev_path: str) -> str:
+    """Return a /dev/serial/by-id match for given device if available."""
+    by_id = "/dev/serial/by-id"
+    if not os.path.isdir(by_id):
+        return dev_path
+
+    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
+        if os.path.realpath(path) == dev_path:
+            return path
+    return dev_path
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
