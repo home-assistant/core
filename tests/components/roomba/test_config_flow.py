@@ -347,10 +347,14 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_HOST: MOCK_IP},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_no_devices_found_discovery,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
     await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
