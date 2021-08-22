@@ -5,7 +5,7 @@
             "arm_home": "Schakel {entity_name} in voor thuis",
             "arm_night": "Schakel {entity_name} in voor 's nachts",
             "arm_vacation": "Schakel {entity_name} in voor vakantie",
-            "arm_custom_bypass": "Schakel {entity_name} in voor omleiding"
+            "arm_custom_bypass": "Schakel {entity_name} in voor omleiding",
             "disarm": "Schakel {entity_name} uit",
             "trigger": "Laat {entity_name} afgaan"
         },
