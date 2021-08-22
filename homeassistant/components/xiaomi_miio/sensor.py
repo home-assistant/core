@@ -48,6 +48,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
+from ...config_entries import SOURCE_IMPORT
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -106,24 +107,20 @@ ATTR_PRESSURE = "pressure"
 ATTR_PURIFY_VOLUME = "purify_volume"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_WATER_LEVEL = "water_level"
-ATTR_DND = "do_not_disturb_"
-ATTR_DND_START = "do_not_disturb_start"
-ATTR_DND_END = "do_not_disturb_end"
-ATTR_LAST_CLEAN = "last_clean_details_"
-ATTR_LAST_CLEAN_TIME = "last_clean_details_duration"
-ATTR_LAST_CLEAN_AREA = "last_clean_details_area"
-ATTR_LAST_CLEAN_START = "last_clean_details_start"
-ATTR_LAST_CLEAN_END = "last_clean_details_end"
-ATTR_CLEAN_HISTORY = "clean_history_"
-ATTR_CLEAN_HISTORY_TOTAL_DURATION = "clean_history_total_duration"
-ATTR_CLEAN_HISTORY_TOTAL_AREA = "clean_history_total_area"
-ATTR_CLEAN_HISTORY_COUNT = "clean_history_count"
-ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT = "clean_history_dust_collection_count"
-ATTR_CONSUMABLE_STATUS = "consumable_status_"
-ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT = "consumable_status_main_brush_left"
-ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT = "consumable_status_side_brush_left"
-ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "consumable_status_filter_left"
-ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT = "consumable_status_sensor_dirty_left"
+ATTR_DND_START = "start"
+ATTR_DND_END = "end"
+ATTR_LAST_CLEAN_TIME = "duration"
+ATTR_LAST_CLEAN_AREA = "area"
+ATTR_LAST_CLEAN_START = "start"
+ATTR_LAST_CLEAN_END = "end"
+ATTR_CLEAN_HISTORY_TOTAL_DURATION = "total_duration"
+ATTR_CLEAN_HISTORY_TOTAL_AREA = "total_area"
+ATTR_CLEAN_HISTORY_COUNT = "count"
+ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT = "dust_collection_count"
+ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT = "main_brush_left"
+ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT = "side_brush_left"
+ATTR_CONSUMABLE_STATUS_FILTER_LEFT = "filter_left"
+ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
 
 
 @dataclass
@@ -247,106 +244,6 @@ SENSOR_TYPES = {
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
-    ATTR_DND_START: XiaomiMiioSensorDescription(
-        key=ATTR_DND_START.split(ATTR_DND)[1],
-        icon="mdi:fast-forward",
-        name="DnD start",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_DND_STATUS,
-    ),
-    ATTR_LAST_CLEAN_START: XiaomiMiioSensorDescription(
-        key=ATTR_LAST_CLEAN_START.split(ATTR_LAST_CLEAN)[1],
-        icon="mdi:fast-forward",
-        name="Last clean start",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
-    ),
-    ATTR_DND_END: XiaomiMiioSensorDescription(
-        key=ATTR_DND_END.split(ATTR_DND)[1],
-        icon="mdi:fast-forward",
-        name="DnD end",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_DND_STATUS,
-    ),
-    ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
-        key=ATTR_LAST_CLEAN_END.split(ATTR_LAST_CLEAN)[1],
-        icon="mdi:fast-forward",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
-        name="Last clean end",
-    ),
-    ATTR_LAST_CLEAN_TIME: XiaomiMiioSensorDescription(
-        unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
-        key=ATTR_LAST_CLEAN_TIME.split(ATTR_LAST_CLEAN)[1],
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
-        name="Last clean duration",
-    ),
-    ATTR_LAST_CLEAN_AREA: XiaomiMiioSensorDescription(
-        unit_of_measurement=AREA_SQUARE_METERS,
-        icon="mdi:fast-forward",
-        key=ATTR_LAST_CLEAN_AREA.split(ATTR_LAST_CLEAN)[1],
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
-        name="Last clean area",
-    ),
-    ATTR_CLEAN_HISTORY_TOTAL_DURATION: XiaomiMiioSensorDescription(
-        unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
-        key=ATTR_CLEAN_HISTORY_TOTAL_DURATION.split(ATTR_CLEAN_HISTORY)[1],
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
-        name="Clean history total duration",
-    ),
-    ATTR_CLEAN_HISTORY_TOTAL_AREA: XiaomiMiioSensorDescription(
-        unit_of_measurement=AREA_SQUARE_METERS,
-        icon="mdi:fast-forward",
-        key=ATTR_CLEAN_HISTORY_TOTAL_AREA.split(ATTR_CLEAN_HISTORY)[1],
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
-        name="Clean history total area",
-    ),
-    ATTR_CLEAN_HISTORY_COUNT: XiaomiMiioSensorDescription(
-        unit_of_measurement="",
-        icon="mdi:fast-forward",
-        state_class="total_increasing",
-        key=ATTR_CLEAN_HISTORY_COUNT.split(ATTR_CLEAN_HISTORY)[1],
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
-        name="Clean history count",
-    ),
-    ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: XiaomiMiioSensorDescription(
-        unit_of_measurement="",
-        icon="mdi:fast-forward",
-        state_class="total_increasing",
-        key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT.split(ATTR_CLEAN_HISTORY)[1],
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
-        name="Clean history dust collection count",
-    ),
-    ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: XiaomiMiioSensorDescription(
-        unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
-        name="Consumable status main brush left",
-    ),
-    ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: XiaomiMiioSensorDescription(
-        unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
-        name="Consumable status side brush left",
-    ),
-    ATTR_CONSUMABLE_STATUS_FILTER_LEFT: XiaomiMiioSensorDescription(
-        unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
-        name="Consumable status filter left",
-    ),
-    ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: XiaomiMiioSensorDescription(
-        unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
-        key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT.split(ATTR_CONSUMABLE_STATUS)[1],
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
-        name="Consumable status sensor dirty left",
-    ),
 }
 
 HUMIDIFIER_MIIO_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_WATER_LEVEL)
@@ -440,22 +337,142 @@ MODEL_TO_SENSORS_MAP = {
     MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
 }
 
-VACUUM_SENSORS = (
-    ATTR_DND_START,
-    ATTR_DND_END,
-    ATTR_LAST_CLEAN_TIME,
-    ATTR_LAST_CLEAN_AREA,
-    ATTR_LAST_CLEAN_START,
-    ATTR_LAST_CLEAN_END,
-    ATTR_CLEAN_HISTORY_TOTAL_DURATION,
-    ATTR_CLEAN_HISTORY_TOTAL_AREA,
-    ATTR_CLEAN_HISTORY_COUNT,
-    ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-    ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
-    ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
-    ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
-    ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
-)
+VACUUM_SENSORS = {
+    ATTR_DND_START: XiaomiMiioSensorDescription(
+        key=ATTR_DND_START,
+        icon="mdi:fast-forward",
+        name="DnD start",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_DND_STATUS,
+    ),
+    ATTR_DND_END: XiaomiMiioSensorDescription(
+        key=ATTR_DND_END,
+        icon="mdi:fast-forward",
+        name="DnD end",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_DND_STATUS,
+    ),
+    ATTR_LAST_CLEAN_START: XiaomiMiioSensorDescription(
+        key=ATTR_LAST_CLEAN_START,
+        icon="mdi:fast-forward",
+        name="Last clean start",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+    ),
+    ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
+        key=ATTR_LAST_CLEAN_END,
+        icon="mdi:fast-forward",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+        name="Last clean end",
+    ),
+    ATTR_LAST_CLEAN_TIME: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:fast-forward",
+        key=ATTR_LAST_CLEAN_TIME,
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+        name="Last clean duration",
+    ),
+    ATTR_LAST_CLEAN_AREA: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+        icon="mdi:fast-forward",
+        key=ATTR_LAST_CLEAN_AREA,
+        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+        name="Last clean area",
+    ),
+    ATTR_CLEAN_HISTORY_TOTAL_DURATION: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:fast-forward",
+        key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        name="Clean history total duration",
+    ),
+    ATTR_CLEAN_HISTORY_TOTAL_AREA: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=AREA_SQUARE_METERS,
+        icon="mdi:fast-forward",
+        key=ATTR_CLEAN_HISTORY_TOTAL_AREA,
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        name="Clean history total area",
+    ),
+    ATTR_CLEAN_HISTORY_COUNT: XiaomiMiioSensorDescription(
+        native_unit_of_measurement="",
+        icon="mdi:fast-forward",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        key=ATTR_CLEAN_HISTORY_COUNT,
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        name="Clean history count",
+    ),
+    ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: XiaomiMiioSensorDescription(
+        native_unit_of_measurement="",
+        icon="mdi:fast-forward",
+        state_class="total_increasing",
+        key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
+        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        name="Clean history dust collection count",
+    ),
+    ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:fast-forward",
+        key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        name="Consumable status main brush left",
+    ),
+    ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:fast-forward",
+        key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        name="Consumable status side brush left",
+    ),
+    ATTR_CONSUMABLE_STATUS_FILTER_LEFT: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:fast-forward",
+        key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        name="Consumable status filter left",
+    ),
+    ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: XiaomiMiioSensorDescription(
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="mdi:fast-forward",
+        key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        name="Consumable status sensor dirty left",
+    ),
+}
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import Miio configuration from YAML."""
+    _LOGGER.warning(
+        "Loading Xiaomi Miio Sensor via platform setup is deprecated. "
+        "Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
+    device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
+    entities = []
+
+    for sensor, description in VACUUM_SENSORS.items():
+        entities.append(
+            XiaomiGenericSensor(
+                f"{config_entry.title} {description.name}",
+                device,
+                config_entry,
+                f"{sensor}_{config_entry.unique_id}",
+                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                description,
+            )
+        )
+
+    async_add_entities(entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -509,7 +526,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif model in MODELS_PURIFIER_MIOT:
             sensors = PURIFIER_MIOT_SENSORS
         elif model in MODELS_VACUUM:
-            sensors = VACUUM_SENSORS
+            return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
         else:
             unique_id = config_entry.unique_id
             name = config_entry.title
