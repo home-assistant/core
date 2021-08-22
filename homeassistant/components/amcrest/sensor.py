@@ -34,6 +34,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a sensor for an Amcrest IP Camera."""
