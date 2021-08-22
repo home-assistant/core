@@ -37,7 +37,7 @@ def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> byte
     scaling_factor = SUPPORTED_SCALING_FACTORS[-1]
     for supported_sf in SUPPORTED_SCALING_FACTORS:
         supported_ratio = supported_sf[0] / supported_sf[1]
-        if width_ratio > supported_ratio or height_ratio > supported_ratio:
+        if width_ratio >= supported_ratio or height_ratio >= supported_ratio:
             scaling_factor = supported_sf
             break
 
