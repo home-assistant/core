@@ -11,6 +11,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -40,13 +41,7 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import (
-    TEST_ENTITY_NAME,
-    TEST_MODBUS_HOST,
-    TEST_PORT_TCP,
-    ReadResult,
-    base_test,
-)
+from .conftest import TEST_ENTITY_NAME, TEST_MODBUS_HOST, TEST_PORT_TCP, ReadResult
 
 from tests.common import async_fire_time_changed
 
@@ -70,6 +65,7 @@ ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -149,9 +145,33 @@ async def test_config_switch(hass, mock_modbus):
     assert SWITCH_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])
 @pytest.mark.parametrize(
-    "regs,verify,expected",
+    "do_config",
+    [
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                },
+            ],
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,config_addon,expected",
     [
         (
             [0x00],
@@ -175,32 +195,14 @@ async def test_config_switch(hass, mock_modbus):
         ),
         (
             None,
-            {},
+            None,
             STATE_OFF,
         ),
     ],
 )
-async def test_all_switch(hass, call_type, regs, verify, expected):
+async def test_all_switch(hass, mock_modbus, mock_do_cycle, expected):
     """Run test for given config."""
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_WRITE_TYPE: call_type,
-            **verify,
-        },
-        TEST_ENTITY_NAME,
-        SWITCH_DOMAIN,
-        CONF_SWITCHES,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(

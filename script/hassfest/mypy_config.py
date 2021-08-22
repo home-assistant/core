@@ -14,10 +14,7 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.adguard.*",
     "homeassistant.components.almond.*",
-    "homeassistant.components.analytics.*",
-    "homeassistant.components.atag.*",
     "homeassistant.components.awair.*",
     "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
@@ -59,7 +56,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.home_plus_control.*",
     "homeassistant.components.homekit.*",
     "homeassistant.components.homekit_controller.*",
-    "homeassistant.components.homematicip_cloud.*",
     "homeassistant.components.honeywell.*",
     "homeassistant.components.humidifier.*",
     "homeassistant.components.iaqualink.*",
@@ -96,7 +92,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.nest.legacy.*",
     "homeassistant.components.nightscout.*",
     "homeassistant.components.nilu.*",
-    "homeassistant.components.nmap_tracker.*",
     "homeassistant.components.nsw_fuel_station.*",
     "homeassistant.components.nuki.*",
     "homeassistant.components.nws.*",

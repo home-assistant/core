@@ -321,6 +321,8 @@ omit =
     homeassistant/components/fjaraskupan/binary_sensor.py
     homeassistant/components/fjaraskupan/const.py
     homeassistant/components/fjaraskupan/fan.py
+    homeassistant/components/fjaraskupan/light.py
+    homeassistant/components/fjaraskupan/sensor.py
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flic/binary_sensor.py
@@ -644,6 +646,7 @@ omit =
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/modbus.py
+    homeassistant/components/modbus/sensor.py
     homeassistant/components/modbus/validators.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py

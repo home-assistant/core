@@ -213,7 +213,7 @@ async def test_form_user_no_devices_found_discovery_aborts_already_configured(ha
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
+        {CONF_HOST: MOCK_IP},
     )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -250,10 +250,14 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
+
     await hass.async_block_till_done()
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result3["errors"] is None
@@ -275,7 +279,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
         await hass.async_block_till_done()
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"] == "myroomba"
+    assert result4["title"] == "robot_name"
     assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
         CONF_BLID: "BLID",
@@ -309,7 +313,7 @@ async def test_form_user_discover_fails_aborts_already_configured(hass):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
+        {CONF_HOST: MOCK_IP},
     )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -321,12 +325,6 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
 ):
     """Test discovery skipped and we can auto fetch the password then we fail to connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-
-    mocked_roomba = _create_mocked_roomba(
-        connect=RoombaConnectionError,
-        roomba_connected=True,
-        master_state={"state": {"reported": {"name": "myroomba"}}},
-    )
 
     with patch(
         "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
@@ -349,33 +347,18 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
-    await hass.async_block_till_done()
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["errors"] is None
-
     with patch(
-        "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
-        return_value=mocked_roomba,
-    ), patch(
-        "homeassistant.components.roomba.config_flow.RoombaPassword",
-        _mocked_getpassword,
-    ), patch(
-        "homeassistant.components.roomba.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
-            {},
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery",
+        _mocked_no_devices_found_discovery,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_IP},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result4["reason"] == "cannot_connect"
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["reason"] == "cannot_connect"
 
 
 async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass):
@@ -400,10 +383,13 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] is None
@@ -425,7 +411,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(hass
         await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "myroomba"
+    assert result3["title"] == "robot_name"
     assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
         CONF_BLID: "BLID",
@@ -459,10 +445,13 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(has
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] is None
@@ -528,10 +517,13 @@ async def test_form_user_discovery_not_devices_found_and_password_fetch_fails_an
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] is None
@@ -717,10 +709,13 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
     assert result2["errors"] is None
     assert result2["step_id"] == "manual"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
     await hass.async_block_till_done()
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result3["errors"] is None
@@ -742,7 +737,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
         await hass.async_block_till_done()
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"] == "myroomba"
+    assert result4["title"] == "robot_name"
     assert result4["result"].unique_id == "BLID"
     assert result4["data"] == {
         CONF_BLID: "BLID",
@@ -779,10 +774,13 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
     assert result["errors"] is None
     assert result["step_id"] == "manual"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: MOCK_IP, CONF_BLID: "blid"},
-    )
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: MOCK_IP},
+        )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] is None
@@ -804,7 +802,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(hass, discovery_da
         await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "myroomba"
+    assert result3["title"] == "robot_name"
     assert result3["result"].unique_id == "BLID"
     assert result3["data"] == {
         CONF_BLID: "BLID",

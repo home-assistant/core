@@ -1,7 +1,7 @@
 """Provides device automations for Alarm control panel."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Any, Final
 
 import voluptuous as vol
 
@@ -55,7 +55,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     """List device triggers for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers: list[dict[str, str]] = []
