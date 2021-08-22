@@ -32,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt
 
@@ -160,7 +161,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    def __init__(self, bridge, name, device, add_entities):
+    def __init__(
+        self, bridge: Fronius, name: str, device: int, add_entities: AddEntitiesCallback
+    ) -> None:
         """Initialize the sensor."""
         self.bridge: Fronius = bridge
         self._name: str = name
