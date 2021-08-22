@@ -107,7 +107,7 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
 class GasSensor(YoulessBaseSensor):
     """The Youless gas sensor."""
 
-    _attr_unit_of_measurement = VOLUME_CUBIC_METERS
+    _attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
     _attr_device_class = DEVICE_CLASS_GAS
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
@@ -126,7 +126,7 @@ class GasSensor(YoulessBaseSensor):
 class CurrentPowerSensor(YoulessBaseSensor):
     """The current power usage sensor."""
 
-    _attr_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_state_class = STATE_CLASS_MEASUREMENT
 
@@ -145,7 +145,7 @@ class CurrentPowerSensor(YoulessBaseSensor):
 class DeliveryMeterSensor(YoulessBaseSensor):
     """The Youless delivery meter value sensor."""
 
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
@@ -171,7 +171,7 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 class PowerMeterSensor(YoulessBaseSensor):
     """The Youless low meter value sensor."""
 
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
@@ -198,7 +198,7 @@ class PowerMeterSensor(YoulessBaseSensor):
 class ExtraMeterSensor(YoulessBaseSensor):
     """The Youless extra meter value sensor (s0)."""
 
-    _attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_POWER
 
     def __init__(
