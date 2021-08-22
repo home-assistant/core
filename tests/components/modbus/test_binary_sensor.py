@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -44,6 +45,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_SLAVE: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
                     CONF_DEVICE_CLASS: "door",
+                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },

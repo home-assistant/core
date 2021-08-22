@@ -230,7 +230,12 @@ async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
         if not integration.usb:
             continue
         for entry in integration.usb:
-            usb.append({"domain": integration.domain, **entry})
+            usb.append(
+                {
+                    "domain": integration.domain,
+                    **{k: v for k, v in entry.items() if k != "known_devices"},
+                }
+            )
 
     return usb
 

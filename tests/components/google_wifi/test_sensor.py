@@ -75,14 +75,14 @@ def setup_api(hass, data, requests_mock):
     sensor_dict = {}
     with patch("homeassistant.util.dt.now", return_value=now):
         requests_mock.get(resource, text=data, status_code=200)
-        conditions = google_wifi.MONITORED_CONDITIONS.keys()
+        conditions = google_wifi.SENSOR_KEYS
         api = google_wifi.GoogleWifiAPI("localhost", conditions)
-    for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
-        sensor_dict[condition] = {
-            "sensor": google_wifi.GoogleWifiSensor(api, NAME, condition),
-            "name": f"{NAME}_{condition}",
-            "units": cond_list[1],
-            "icon": cond_list[2],
+    for desc in google_wifi.SENSOR_TYPES:
+        sensor_dict[desc.key] = {
+            "sensor": google_wifi.GoogleWifiSensor(api, NAME, desc),
+            "name": f"{NAME}_{desc.key}",
+            "units": desc.native_unit_of_measurement,
+            "icon": desc.icon,
         }
     for name in sensor_dict:
         sensor = sensor_dict[name]["sensor"]
