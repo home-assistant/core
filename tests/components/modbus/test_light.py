@@ -182,7 +182,7 @@ async def test_config_light(hass, mock_modbus):
         (
             None,
             None,
-            STATE_UNAVAILABLE,
+            STATE_OFF,
         ),
     ],
 )

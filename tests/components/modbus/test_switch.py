@@ -196,7 +196,7 @@ async def test_config_switch(hass, mock_modbus):
         (
             None,
             None,
-            STATE_UNAVAILABLE,
+            STATE_OFF,
         ),
     ],
 )
