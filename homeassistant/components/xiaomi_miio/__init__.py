@@ -1,5 +1,4 @@
 """Support for Xiaomi Miio."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -131,30 +130,27 @@ def _async_update_data_default(hass, device):
 
 
 def _async_update_data_vacuum(hass, device: Vacuum):
-    async def update():
+    def update():
+        return {
+            KEY_VACUUM_STATUS: device.status(),
+            KEY_VACUUM_DND_STATUS: device.dnd_status(),
+            KEY_VACUUM_LAST_CLEAN_STATUS: device.last_clean_details(),
+            KEY_VACUUM_CONSUMABLE_STATUS: device.consumable_status(),
+            KEY_VACUUM_CLEAN_HISTORY_STATUS: device.clean_history(),
+        }
+
+    async def update_async():
         """Fetch data from the device using async_add_executor_job."""
         try:
             async with async_timeout.timeout(10):
-                results = await asyncio.gather(
-                    hass.async_add_executor_job(device.status),
-                    hass.async_add_executor_job(device.dnd_status),
-                    hass.async_add_executor_job(device.last_clean_details),
-                    hass.async_add_executor_job(device.consumable_status),
-                    hass.async_add_executor_job(device.clean_history),
-                )
-                _LOGGER.debug("Got new vacuum state: %s", results)
-                return {
-                    KEY_VACUUM_STATUS: results[0],
-                    KEY_VACUUM_DND_STATUS: results[1],
-                    KEY_VACUUM_LAST_CLEAN_STATUS: results[2],
-                    KEY_VACUUM_CONSUMABLE_STATUS: results[3],
-                    KEY_VACUUM_CLEAN_HISTORY_STATUS: results[4],
-                }
+                state = await hass.async_add_executor_job(update)
+                _LOGGER.debug("Got new vacuum state: %s", state)
+                return state
 
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex
 
-    return update
+    return update_async
 
 
 async def async_create_miio_device_and_coordinator(
