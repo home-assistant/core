@@ -26,7 +26,11 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
 )
-from .helpers import async_get_node_from_device_id, get_zwave_value_from_config
+from .helpers import (
+    async_get_node_from_device_id,
+    get_zwave_value_from_config,
+    remove_keys_with_empty_values,
+)
 
 CONF_SUBTYPE = "subtype"
 CONF_VALUE_ID = "value_id"
@@ -71,10 +75,13 @@ VALUE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-CONDITION_SCHEMA = vol.Any(
-    NODE_STATUS_CONDITION_SCHEMA,
-    CONFIG_PARAMETER_CONDITION_SCHEMA,
-    VALUE_CONDITION_SCHEMA,
+CONDITION_SCHEMA = vol.All(
+    remove_keys_with_empty_values,
+    vol.Any(
+        NODE_STATUS_CONDITION_SCHEMA,
+        CONFIG_PARAMETER_CONDITION_SCHEMA,
+        VALUE_CONDITION_SCHEMA,
+    ),
 )
 
 

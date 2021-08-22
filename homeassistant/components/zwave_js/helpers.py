@@ -242,3 +242,21 @@ def async_get_node_status_sensor_entity_id(
         )
 
     return entity_id
+
+
+def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
+    """Remove keys from conofig where the value is an empty string or None."""
+    for key, value in dict(config).items():
+        if value in ("", None):
+            config.pop(key)
+
+    return config
+
+
+def copy_available_params(
+    input_dict: dict[str, Any], output_dict: dict[str, Any], params: list[str]
+) -> None:
+    """Copy available params from input into output."""
+    output_dict.update(
+        {param: input_dict[param] for param in params if param in input_dict}
+    )

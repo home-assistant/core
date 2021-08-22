@@ -1,8 +1,6 @@
 """Provides device triggers for Z-Wave JS."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, ConfigurationValueType
 
@@ -50,7 +48,9 @@ from .const import (
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
+    copy_available_params,
     get_zwave_value_from_config,
+    remove_keys_with_empty_values,
 )
 from .triggers.value_updated import (
     ATTR_FROM,
@@ -78,6 +78,7 @@ VALUE_SCHEMA = vol.Any(
     cv.boolean,
     cv.string,
 )
+
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
     (ENTRY_CONTROL_NOTIFICATION, CommandClass.ENTRY_CONTROL),
@@ -112,7 +113,7 @@ ENTRY_CONTROL_NOTIFICATION_SCHEMA = BASE_EVENT_SCHEMA.extend(
 BASE_VALUE_NOTIFICATION_EVENT_SCHEMA = BASE_EVENT_SCHEMA.extend(
     {
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
-        vol.Required(ATTR_PROPERTY_KEY): vol.Any(None, int, str),
+        vol.Optional(ATTR_PROPERTY_KEY): vol.Any(int, str),
         vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
         vol.Optional(ATTR_VALUE): vol.Coerce(int),
         vol.Required(CONF_SUBTYPE): cv.string,
@@ -182,25 +183,19 @@ VALUE_VALUE_UPDATED_SCHEMA = BASE_VALUE_UPDATED_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = vol.Any(
-    ENTRY_CONTROL_NOTIFICATION_SCHEMA,
-    NOTIFICATION_NOTIFICATION_SCHEMA,
-    BASIC_VALUE_NOTIFICATION_SCHEMA,
-    CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA,
-    SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
-    CONFIG_PARAMETER_VALUE_UPDATED_SCHEMA,
-    VALUE_VALUE_UPDATED_SCHEMA,
-    NODE_STATUS_SCHEMA,
+TRIGGER_SCHEMA = vol.All(
+    remove_keys_with_empty_values,
+    vol.Any(
+        ENTRY_CONTROL_NOTIFICATION_SCHEMA,
+        NOTIFICATION_NOTIFICATION_SCHEMA,
+        BASIC_VALUE_NOTIFICATION_SCHEMA,
+        CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA,
+        SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
+        CONFIG_PARAMETER_VALUE_UPDATED_SCHEMA,
+        VALUE_VALUE_UPDATED_SCHEMA,
+        NODE_STATUS_SCHEMA,
+    ),
 )
-
-
-def copy_available_params(
-    input_dict: dict[str, Any], output_dict: dict[str, Any], params: list[str]
-) -> None:
-    """Copy available params from input into output."""
-    for param in params:
-        if (val := input_dict.get(param)) not in ("", None):
-            output_dict[param] = val
 
 
 def get_trigger_platform_from_type(trigger_type: str) -> str:
