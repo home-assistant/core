@@ -35,9 +35,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="air_quality",
         name="Air Quality",
-        native_unit_of_measurement=None,
-        device_class=None,
-        state_class=None,
     ),
     SensorEntityDescription(
         key="humidity",
@@ -49,16 +46,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="light",
         name="Light",
-        native_unit_of_measurement=None,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=None,
     ),
     SensorEntityDescription(
         key="noise",
         name="Noise",
-        native_unit_of_measurement=None,
-        device_class=None,
-        state_class=None,
     ),
     SensorEntityDescription(
         key="power",
