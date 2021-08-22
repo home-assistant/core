@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyfronius import Fronius
 import voluptuous as vol
@@ -32,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +44,7 @@ TYPE_INVERTER = "inverter"
 TYPE_STORAGE = "storage"
 TYPE_METER = "meter"
 TYPE_POWER_FLOW = "power_flow"
+TYPE_LOGGER_INFO = "logger_info"
 SCOPE_DEVICE = "device"
 SCOPE_SYSTEM = "system"
 
@@ -50,7 +53,13 @@ DEFAULT_DEVICE = 0
 DEFAULT_INVERTER = 1
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
-SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
+SENSOR_TYPES = [
+    TYPE_INVERTER,
+    TYPE_STORAGE,
+    TYPE_METER,
+    TYPE_POWER_FLOW,
+    TYPE_LOGGER_INFO,
+]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
 
 PREFIX_DEVICE_CLASS_MAPPING = [
@@ -138,6 +147,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 adapter_cls = FroniusMeterDevice
         elif sensor_type == TYPE_POWER_FLOW:
             adapter_cls = FroniusPowerFlow
+        elif sensor_type == TYPE_LOGGER_INFO:
+            adapter_cls = FroniusLoggerInfo
         else:
             adapter_cls = FroniusStorage
 
@@ -161,16 +172,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    def __init__(self, bridge, name, device, add_entities):
+    def __init__(
+        self, bridge: Fronius, name: str, device: int, add_entities: AddEntitiesCallback
+    ) -> None:
         """Initialize the sensor."""
         self.bridge = bridge
         self._name = name
         self._device = device
-        self._fetched = {}
+        self._fetched: dict[str, Any] = {}
         self._available = True
 
-        self.sensors = set()
-        self._registered_sensors = set()
+        self.sensors: set[str] = set()
+        self._registered_sensors: set[SensorEntity] = set()
         self._add_entities = add_entities
 
     @property
@@ -287,6 +300,14 @@ class FroniusPowerFlow(FroniusAdapter):
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_power_flow()
+
+
+class FroniusLoggerInfo(FroniusAdapter):
+    """Adapter for the fronius power flow."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.bridge.current_logger_info()
 
 
 class FroniusTemplateSensor(SensorEntity):
