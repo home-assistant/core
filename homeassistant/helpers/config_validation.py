@@ -1307,6 +1307,7 @@ currency = vol.In(
         "BSD",
         "BTN",
         "BWP",
+        "BYN",
         "BYR",
         "BZD",
         "CAD",
