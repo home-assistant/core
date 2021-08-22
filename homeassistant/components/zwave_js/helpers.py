@@ -251,9 +251,7 @@ def async_get_node_status_sensor_entity_id(
 
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     """Remove keys from config where the value is an empty string or None."""
-    return {
-        key: value for key, value in dict(config).items() if value not in ("", None)
-    }
+    return {key: value for key, value in config.items() if value not in ("", None)}
 
 
 def copy_available_params(
@@ -295,13 +293,13 @@ def get_value_state_schema(
 
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
             return vol.In({int(k): v for k, v in value.metadata.states.items()})
-    else:
-        if value.metadata.states:
-            return vol.In({int(k): v for k, v in value.metadata.states.items()})
-        else:
-            return vol.All(
-                vol.Coerce(int),
-                vol.Range(min=value.metadata.min, max=value.metadata.max),
-            )
 
-    return None
+        return None
+
+    if value.metadata.states:
+        return vol.In({int(k): v for k, v in value.metadata.states.items()})
+
+    return vol.All(
+        vol.Coerce(int),
+        vol.Range(min=value.metadata.min, max=value.metadata.max),
+    )
