@@ -63,7 +63,6 @@ from .triggers.value_updated import (
 )
 
 CONF_SUBTYPE = "subtype"
-CONF_VALUE_ID = "value_id"
 
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.notification.entry_control"
