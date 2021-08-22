@@ -1,6 +1,9 @@
 """Interfaces with TotalConnect alarm control panels."""
 import logging
 
+from total_connect_client import ArmingHelper
+from total_connect_client.exceptions import BadResultCodeError
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -94,27 +97,27 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             "triggered_zone": None,
         }
 
-        if self._partition.is_disarmed():
+        if self._partition.arming_state.is_disarmed():
             state = STATE_ALARM_DISARMED
-        elif self._partition.is_armed_night():
+        elif self._partition.arming_state.is_armed_night():
             state = STATE_ALARM_ARMED_NIGHT
-        elif self._partition.is_armed_home():
+        elif self._partition.arming_state.is_armed_home():
             state = STATE_ALARM_ARMED_HOME
-        elif self._partition.is_armed_away():
+        elif self._partition.arming_state.is_armed_away():
             state = STATE_ALARM_ARMED_AWAY
-        elif self._partition.is_armed_custom_bypass():
+        elif self._partition.arming_state.is_armed_custom_bypass():
             state = STATE_ALARM_ARMED_CUSTOM_BYPASS
-        elif self._partition.is_arming():
+        elif self._partition.arming_state.is_arming():
             state = STATE_ALARM_ARMING
-        elif self._partition.is_disarming():
+        elif self._partition.arming_state.is_disarming():
             state = STATE_ALARM_DISARMING
-        elif self._partition.is_triggered_police():
+        elif self._partition.arming_state.is_triggered_police():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Police/Medical"
-        elif self._partition.is_triggered_fire():
+        elif self._partition.arming_state.is_triggered_fire():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Fire/Smoke"
-        elif self._partition.is_triggered_gas():
+        elif self._partition.arming_state.is_triggered_gas():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Carbon Monoxide"
         else:
@@ -138,20 +141,28 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        if self._partition.disarm() is not True:
+        try:
+            ArmingHelper(self._partition).disarm()
+        except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to disarm {self._name}.")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if self._partition.arm_stay() is not True:
+        try:
+            ArmingHelper(self._partition).arm_stay()
+        except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to arm home {self._name}.")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if self._partition.arm_away() is not True:
+        try:
+            ArmingHelper(self._partition).arm_away()
+        except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to arm away {self._name}.")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if self._partition.arm_stay_night() is not True:
+        try:
+            ArmingHelper(self._partition).arm_stay_night()
+        except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to arm night {self._name}.")

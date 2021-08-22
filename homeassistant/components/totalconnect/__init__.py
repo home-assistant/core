@@ -76,7 +76,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
     def sync_update_data(self):
         """Fetch synchronous data from TotalConnect."""
         for location_id in self.client.locations:
-            self.client.locations[location_id].get_armed_status()
+            self.client.locations[location_id].get_panel_meta_data()
 
         # TODO: connection error handling ???
         return True
