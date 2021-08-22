@@ -34,12 +34,23 @@ def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> byte
     width_ratio = width / current_width
     height_ratio = height / current_height
 
-    scaling_factor = SUPPORTED_SCALING_FACTORS[-1]
-    for supported_sf in SUPPORTED_SCALING_FACTORS:
+    scaling_factor = None
+    for idx, supported_sf in enumerate(SUPPORTED_SCALING_FACTORS):
         supported_ratio = supported_sf[0] / supported_sf[1]
-        if width_ratio >= supported_ratio or height_ratio >= supported_ratio:
+        if width_ratio == supported_ratio or height_ratio == supported_ratio:
             scaling_factor = supported_sf
             break
+        if width_ratio > supported_ratio or height_ratio > supported_ratio:
+            # If its not exact, move back one as we want
+            # to make sure we do not undersize the image
+            # and loose clarity
+            if idx == 0:
+                break
+            scaling_factor = SUPPORTED_SCALING_FACTORS[idx - 1]
+            break
+
+    if scaling_factor is None:
+        return cam_image.content
 
     return cast(
         bytes,
