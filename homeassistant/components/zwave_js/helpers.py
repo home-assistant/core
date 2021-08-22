@@ -5,11 +5,16 @@ from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import ConfigurationValueType
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.model.value import (
+    ConfigurationValue,
+    Value as ZwaveValue,
+    get_value_id,
+)
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -245,12 +250,10 @@ def async_get_node_status_sensor_entity_id(
 
 
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
-    """Remove keys from conofig where the value is an empty string or None."""
-    for key, value in dict(config).items():
-        if value in ("", None):
-            config.pop(key)
-
-    return config
+    """Remove keys from config where the value is an empty string or None."""
+    return {
+        key: value for key, value in dict(config).items() if value not in ("", None)
+    }
 
 
 def copy_available_params(
@@ -260,3 +263,36 @@ def copy_available_params(
     output_dict.update(
         {param: input_dict[param] for param in params if param in input_dict}
     )
+
+
+@callback
+def async_is_device_config_entry_not_loaded(
+    hass: HomeAssistant, device_id: str
+) -> bool:
+    """Return whether device's config entries are not loaded."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get(device_id)
+    assert device
+    return any(
+        (entry := hass.config_entries.async_get_entry(entry_id))
+        and entry.state != ConfigEntryState.LOADED
+        for entry_id in device.config_entries
+    )
+
+
+def get_config_value_state_schema(
+    config_value: ConfigurationValue,
+) -> vol.Schema | None:
+    """Return device automation schema for a config entry."""
+    min_ = config_value.metadata.min
+    max_ = config_value.metadata.max
+    if config_value.configuration_value_type in (
+        ConfigurationValueType.RANGE,
+        ConfigurationValueType.MANUAL_ENTRY,
+    ):
+        return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+
+    if config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
+        return vol.In({int(k): v for k, v in config_value.metadata.states.items()})
+
+    return None

@@ -4,17 +4,16 @@ from __future__ import annotations
 from typing import cast
 
 import voluptuous as vol
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv, device_registry
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
@@ -28,6 +27,8 @@ from .const import (
 )
 from .helpers import (
     async_get_node_from_device_id,
+    async_is_device_config_entry_not_loaded,
+    get_config_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -90,17 +91,11 @@ async def async_validate_condition_config(
 ) -> ConfigType:
     """Validate config."""
     config = CONDITION_SCHEMA(config)
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get(config[CONF_DEVICE_ID])
-    assert device
 
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
-    for entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
-        if entry.state != ConfigEntryState.LOADED:
-            return config
+    if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+        return config
 
     if config[CONF_TYPE] == VALUE_TYPE:
         try:
@@ -200,20 +195,10 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        config_value = cast(ConfigurationValue, node.values[value_id])
-        min_ = config_value.metadata.min
-        max_ = config_value.metadata.max
-
-        if config_value.configuration_value_type in (
-            ConfigurationValueType.RANGE,
-            ConfigurationValueType.MANUAL_ENTRY,
-        ):
-            value_schema = vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
-        elif config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            value_schema = vol.In(
-                {int(k): v for k, v in config_value.metadata.states.items()}
-            )
-        else:
+        value_schema = get_config_value_state_schema(
+            cast(ConfigurationValue, node.values[value_id])
+        )
+        if not value_schema:
             return {}
 
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}

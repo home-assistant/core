@@ -1,8 +1,11 @@
 """Provides device triggers for Z-Wave JS."""
 from __future__ import annotations
 
+from typing import cast
+
 import voluptuous as vol
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import CommandClass
+from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -10,7 +13,6 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event, state
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -48,7 +50,9 @@ from .const import (
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
+    async_is_device_config_entry_not_loaded,
     copy_available_params,
+    get_config_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -204,17 +208,10 @@ async def async_validate_trigger_config(
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get(config[CONF_DEVICE_ID])
-    assert device
-
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
-    for entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
-        if entry.state != ConfigEntryState.LOADED:
-            return config
+    if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+        return config
 
     trigger_type = config[CONF_TYPE]
     if get_trigger_platform_from_type(trigger_type) == VALUE_UPDATED_PLATFORM_TYPE:
@@ -502,17 +499,9 @@ async def async_get_trigger_capabilities(
         return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     if trigger_type == CONFIG_PARAMETER_VALUE_UPDATED:
-        # We can be more deliberate about the config parameter schema here because
-        # there are a limited number of types
-        if value.configuration_value_type == ConfigurationValueType.UNDEFINED:
+        value_schema = get_config_value_state_schema(cast(ConfigurationValue, value))
+        if not value_schema:
             return {}
-        if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            value_schema = vol.In({int(k): v for k, v in value.metadata.states.items()})
-        else:
-            value_schema = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=value.metadata.min, max=value.metadata.max),
-            )
         return {
             "extra_fields": vol.Schema(
                 {
