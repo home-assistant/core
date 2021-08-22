@@ -151,7 +151,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption month",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_year",
