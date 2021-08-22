@@ -16,8 +16,3 @@ CURRENCY_EUR = "EUR"
 VOLUME_CM3 = "CM3"
 VOLUME_LHOUR = "L/H"
 VOLUME_LMIN = "L/MIN"
-
-ATTR_DEFAULT_ENABLED = "default_enabled"
-ATTR_INVERTED = "inverted"
-ATTR_MEASUREMENT = "measurement"
-ATTR_SECTION = "section"
