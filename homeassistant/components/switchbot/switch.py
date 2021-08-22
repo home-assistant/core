@@ -1,7 +1,6 @@
 """Support for Switchbot bot."""
 from __future__ import annotations
 
-from asyncio import sleep
 import logging
 
 import voluptuous as vol
@@ -117,11 +116,9 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
 
         async with self.coordinator.api_lock:
             update_ok = await self.hass.async_add_executor_job(self._device.turn_on)
-            sleep(1)
 
         if update_ok:
             self._last_run_success = True
-            self._attr_is_on = True
         else:
             self._last_run_success = False
 
@@ -131,11 +128,9 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
 
         async with self.coordinator.api_lock:
             update_ok = await self.hass.async_add_executor_job(self._device.turn_off)
-            sleep(1)
 
         if update_ok:
             self._last_run_success = True
-            self._attr_is_on = False
         else:
             self._last_run_success = False
 
