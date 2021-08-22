@@ -2,28 +2,28 @@
     "device_automation": {
         "action_type": {
             "arm_away": "Schakel {entity_name} in voor afwezigheid",
+            "arm_custom_bypass": "Schakel {entity_name} in met overbrugging",
             "arm_home": "Schakel {entity_name} in voor thuis",
             "arm_night": "Schakel {entity_name} in voor 's nachts",
             "arm_vacation": "Schakel {entity_name} in voor vakantie",
-            "arm_custom_bypass": "Schakel {entity_name} in voor omleiding",
             "disarm": "Schakel {entity_name} uit",
             "trigger": "Laat {entity_name} afgaan"
         },
         "condition_type": {
             "is_armed_away": "{entity_name} is ingeschakeld voor afwezigheid",
+            "is_armed_custom_bypass": "{entity_name} is ingeschakeld met overbrugging",
             "is_armed_home": "{entity_name} is ingeschakeld voor thuis",
             "is_armed_night": "{entity_name} is ingeschakeld voor 's nachts",
             "is_armed_vacation": "{entity_name} is ingeschakeld voor vakantie",
-            "is_armed_custom_bypass": "{entity_name} is ingeschakeld voor omleiding",
             "is_disarmed": "{entity_name} is uitgeschakeld",
             "is_triggered": "{entity_name} is afgegaan"
         },
         "trigger_type": {
             "armed_away": "{entity_name} ingeschakeld voor afwezigheid",
+            "armed_custom_bypass": "{entity_name} ingeschakeld met overbrugging",
             "armed_home": "{entity_name} ingeschakeld voor thuis",
             "armed_night": "{entity_name} ingeschakeld voor 's nachts",
             "armed_vacation": "{entity_name} ingeschakeld voor vakantie",
-            "armed_custom_bypass": "{entity_name} ingeschakeld voor omleiding",
             "disarmed": "{entity_name} uitgeschakeld",
             "triggered": "{entity_name} afgegaan"
         }
@@ -32,7 +32,7 @@
         "_": {
             "armed": "Ingeschakeld",
             "armed_away": "Ingeschakeld voor afwezigheid",
-            "armed_custom_bypass": "Ingeschakeld voor omleiding",
+            "armed_custom_bypass": "Ingeschakeld met overbrugging",
             "armed_home": "Ingeschakeld voor thuis",
             "armed_night": "Ingeschakeld voor 's nachts",
             "armed_vacation": "Ingeschakeld voor vakantie",
