@@ -104,6 +104,7 @@ TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
+TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -145,6 +146,7 @@ COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
 COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
+COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
 
 TRAITS = []
 
@@ -560,6 +562,40 @@ class DockTrait(_Trait):
         await self.hass.services.async_call(
             self.state.domain,
             vacuum.SERVICE_RETURN_TO_BASE,
+            {ATTR_ENTITY_ID: self.state.entity_id},
+            blocking=True,
+            context=data.context,
+        )
+
+
+@register_trait
+class LocatorTrait(_Trait):
+    """Trait to offer locate functionality.
+
+    https://developers.google.com/actions/smarthome/traits/locator
+    """
+
+    name = TRAIT_LOCATOR
+    commands = [COMMAND_LOCATE]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_LOCATE
+
+    def sync_attributes(self):
+        """Return locator attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return locator query attributes."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a locate command."""
+        await self.hass.services.async_call(
+            self.state.domain,
+            vacuum.SERVICE_LOCATE,
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=True,
             context=data.context,

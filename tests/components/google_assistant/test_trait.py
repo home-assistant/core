@@ -356,6 +356,31 @@ async def test_dock_vacuum(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
+async def test_locate_vacuum(hass):
+    """Test locate trait support for vacuum domain."""
+    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
+    assert trait.LocatorTrait.supported(vacuum.DOMAIN, vacuum.SUPPORT_LOCATE, None, None)
+
+    trt = trait.LocatorTrait(
+        hass,
+        State(
+            "vacuum.bla",
+            vacuum.STATE_IDLE,
+            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_LOCATE}
+        ),
+        BASIC_CONFIG
+    )
+
+    assert trt.sync_attributes() == {}
+
+    assert trt.query_attributes() == {}
+
+    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_LOCATE)
+    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {}, {})
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+
 async def test_startstop_vacuum(hass):
     """Test startStop trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
