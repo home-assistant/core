@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Configura el teu WLED per integrar-lo amb Home Assistant."
+                "description": "Configura la integraci\u00f3 de WLED amb Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir el WLED `{name}` a Home Assistant?",
