@@ -3,8 +3,7 @@ import asyncio
 import logging
 import ssl
 
-import get_ssl_context as get_ssl
-from smart_meter_texas import Account, Client
+from smart_meter_texas import Account, Client, ClientSSLContext
 from smart_meter_texas.exceptions import (
     SmartMeterTexasAPIError,
     SmartMeterTexasAuthError,
@@ -42,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     account = Account(username, password)
 
-    ssl_context = get_ssl.get_ssl_context()
+    ssl_context = await ClientSSLContext.get_ssl_context()
 
     smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, ssl_context)
     try:
