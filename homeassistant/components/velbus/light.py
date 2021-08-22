@@ -21,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus switch based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
+    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
     entities = []
     for channel in cntrl.get_all("light"):
         entities.append(VelbusLight(channel, False))

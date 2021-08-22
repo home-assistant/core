@@ -7,7 +7,8 @@ from .const import DOMAIN
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Velbus switch based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
+    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
     entities = []
     for channel in cntrl.get_all("binary_sensor"):
         entities.append(VelbusBinarySensor(channel))

@@ -1,16 +1,26 @@
 """Support for Velbus devices."""
+from __future__ import annotations
+
 import logging
 
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_MEMO_TEXT, DOMAIN, SERVICE_SET_MEMO_TEXT
+from .const import (
+    CONF_INTERFACE,
+    CONF_MEMO_TEXT,
+    DOMAIN,
+    SERVICE_SCAN,
+    SERVICE_SET_MEMO_TEXT,
+    SERVICE_SYNC,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +29,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
+PLATFORMS = ["switch"]
 
 
 async def async_setup(hass, config):
@@ -42,68 +53,88 @@ async def async_setup(hass, config):
     return True
 
 
+async def velbus_connect_task(
+    controller: Velbus, hass: HomeAssistant, entry_id: str
+) -> None:
+    """Task to offload the long running connect."""
+    # create notification
+    persistent_notification.async_create(
+        hass,
+        "Velbus is scanning the bus, this can take some time.",
+        "Velbus Starting",
+        f"{DOMAIN}-{entry_id}",
+    )
+    # connect
+    await controller.connect()
+    # clear notification
+    persistent_notification.async_dismiss(hass, f"{DOMAIN}-{entry_id}")
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
 
     controller = Velbus(entry.data[CONF_PORT])
-    hass.data[DOMAIN][entry.entry_id] = controller
-    await controller.connect()
+    hass.data[DOMAIN][entry.entry_id] = {}
+    hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
+    hass.data[DOMAIN][entry.entry_id]["tsk"] = hass.async_create_task(
+        velbus_connect_task(controller, hass, entry.entry_id)
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, "scan"):
+    if hass.services.has_service(DOMAIN, SERVICE_SCAN):
         return True
 
-    async def get_entry_id(interface: str):
+    def get_entry_id(interface: str) -> str | None:
         for entry in hass.config_entries.async_entries(DOMAIN):
             if "port" in entry.data and entry.data["port"] == interface:
                 return entry.entry_id
         _LOGGER.warning("Can not find the config entry for: %s", interface)
         return None
 
+    def check_entry_id(interface: str):
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if "port" in entry.data and entry.data["port"] == interface:
+                return interface
+        raise vol.Invalid(
+            "The interface provided is not defined as a port in a Velbus integration"
+        )
+
     async def scan(call):
-        entry_id = await get_entry_id(call.data["interface"])
+        entry_id = get_entry_id(call.data[CONF_INTERFACE])
         if not entry_id:
             return
-        await hass.data[DOMAIN][entry_id].scan()
+        await hass.data[DOMAIN][entry_id]["cntrl"].scan()
 
     hass.services.async_register(
         DOMAIN,
-        "scan",
+        SERVICE_SCAN,
         scan,
-        vol.Schema(
-            {
-                vol.Required("interface"): cv.string,
-            }
-        ),
+        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(check_entry_id, cv.string)}),
     )
 
     async def syn_clock(call):
-        entry_id = await get_entry_id(call.data["interface"])
+        entry_id = get_entry_id(call.data[CONF_INTERFACE])
         if not entry_id:
             return
-        await hass.data[DOMAIN][entry_id].sync_clock()
+        await hass.data[DOMAIN][entry_id]["cntrl"].sync_clock()
 
     hass.services.async_register(
         DOMAIN,
-        "sync_clock",
+        SERVICE_SYNC,
         syn_clock,
-        vol.Schema(
-            {
-                vol.Required("interface"): cv.string,
-            }
-        ),
+        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(check_entry_id, cv.string)}),
     )
 
     async def set_memo_text(call):
         """Handle Memo Text service call."""
-        entry_id = await get_entry_id(call.data["interface"])
+        entry_id = get_entry_id(call.data[CONF_INTERFACE])
         if not entry_id:
             return
         memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
-        await hass.data[DOMAIN][entry_id].get_module(
+        await hass.data[DOMAIN][entry_id]["cntrl"].get_module(
             call.data[CONF_ADDRESS]
         ).set_memo_text(memo_text.async_render())
 
@@ -113,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         set_memo_text,
         vol.Schema(
             {
-                vol.Required("interface"): cv.string,
+                vol.Required(CONF_INTERFACE): vol.All(check_entry_id, cv.string),
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
@@ -128,10 +159,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Remove the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await hass.data[DOMAIN][entry.entry_id].stop()
+    await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
+        hass.services.async_remove(DOMAIN, SERVICE_SCAN)
+        hass.services.async_remove(DOMAIN, SERVICE_SYNC)
+        hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
     return unload_ok
 
 
