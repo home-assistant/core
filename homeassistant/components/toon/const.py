@@ -355,18 +355,3 @@ SENSOR_ENTITIES = {
         ATTR_DEFAULT_ENABLED: False,
     },
 }
-
-SWITCH_ENTITIES = {
-    "thermostat_holiday_mode": {
-        ATTR_NAME: "Holiday Mode",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "holiday_mode",
-        ATTR_ICON: "mdi:airport",
-    },
-    "thermostat_program": {
-        ATTR_NAME: "Thermostat Program",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "program",
-        ATTR_ICON: "mdi:calendar-clock",
-    },
-}
