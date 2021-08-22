@@ -165,9 +165,9 @@ class FroniusAdapter:
         self, bridge: Fronius, name: str, device: int, add_entities: AddEntitiesCallback
     ) -> None:
         """Initialize the sensor."""
-        self.bridge: Fronius = bridge
-        self._name: str = name
-        self._device: int = device
+        self.bridge = bridge
+        self._name = name
+        self._device = device
         self._fetched: dict[str, Any] = {}
         self._available = True
 
