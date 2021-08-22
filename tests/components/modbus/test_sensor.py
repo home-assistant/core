@@ -8,7 +8,6 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_PRECISION,
-    CONF_REGISTERS,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -36,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -132,7 +131,7 @@ async def test_config_sensor(hass, mock_modbus):
     assert SENSOR_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("mock_modbus", [{"testLoad": False}], indirect=True)
+@pytest.mark.parametrize("check_config_loaded", [False])
 @pytest.mark.parametrize(
     "do_config,error_message",
     [
@@ -235,7 +234,20 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
 
 
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,expected",
     [
         (
             {
@@ -504,26 +516,26 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
     ],
 )
-async def test_all_sensor(hass, cfg, regs, expected):
+async def test_all_sensor(hass, mock_modbus, mock_do_cycle, expected):
     """Run test for sensor."""
-
-    state = await base_test(
-        hass,
-        {CONF_NAME: TEST_ENTITY_NAME, CONF_ADDRESS: 1234, **cfg},
-        TEST_ENTITY_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        CONF_REGISTERS,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,expected",
     [
         (
             {
@@ -558,22 +570,9 @@ async def test_all_sensor(hass, cfg, regs, expected):
         ),
     ],
 )
-async def test_struct_sensor(hass, cfg, regs, expected):
+async def test_struct_sensor(hass, mock_modbus, mock_do_cycle, expected):
     """Run test for sensor struct."""
-
-    state = await base_test(
-        hass,
-        {CONF_NAME: TEST_ENTITY_NAME, CONF_ADDRESS: 1234, **cfg},
-        TEST_ENTITY_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
