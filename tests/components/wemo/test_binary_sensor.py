@@ -108,13 +108,9 @@ class TestMaker(EntityTestHelpers):
         return "Maker"
 
     @pytest.fixture
-    def wemo_entity_selector(self):
+    def wemo_entity_suffix(self):
         """Select the MakerBinarySensor entity."""
-
-        def select(entity):
-            return entity.entity_id.endswith(MakerBinarySensor._name_suffix.lower())
-
-        return select
+        return MakerBinarySensor._name_suffix.lower()
 
     @pytest.fixture(name="pywemo_device")
     def pywemo_device_fixture(self, pywemo_device):
@@ -155,13 +151,9 @@ class TestInsight(EntityTestHelpers):
         return "Insight"
 
     @pytest.fixture
-    def wemo_entity_selector(self):
+    def wemo_entity_suffix(self):
         """Select the InsightBinarySensor entity."""
-
-        def select(entity):
-            return entity.entity_id.endswith(InsightBinarySensor._name_suffix.lower())
-
-        return select
+        return InsightBinarySensor._name_suffix.lower()
 
     @pytest.fixture(name="pywemo_device")
     def pywemo_device_fixture(self, pywemo_device):

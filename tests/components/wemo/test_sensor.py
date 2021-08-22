@@ -40,11 +40,11 @@ class InsightTestTemplate:
     EXPECTED_STATE_VALUE: str
     INSIGHT_PARAM_NAME: str
 
-    @pytest.fixture(name="wemo_entity_selector")
+    @pytest.fixture(name="wemo_entity_suffix")
     @classmethod
-    def wemo_entity_selector_fixture(cls):
+    def wemo_entity_suffix_fixture(cls):
         """Select the appropriate entity for the test."""
-        return lambda entity: entity.entity_id.endswith(cls.ENTITY_ID_SUFFIX)
+        return cls.ENTITY_ID_SUFFIX
 
     # Tests that are in common among wemo platforms. These test methods will be run
     # in the scope of this test module. They will run using the pywemo_model from
