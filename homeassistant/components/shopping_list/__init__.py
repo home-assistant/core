@@ -27,6 +27,7 @@ SERVICE_COMPLETE_ITEM = "complete_item"
 SERVICE_INCOMPLETE_ITEM = "incomplete_item"
 SERVICE_COMPLETE_ALL = "complete_all"
 SERVICE_INCOMPLETE_ALL = "incomplete_all"
+SERVICE_CLEAR_COMPLETED_ITEMS = "clear_completed_items"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
@@ -116,6 +117,10 @@ async def async_setup_entry(hass, config_entry):
         """Mark all items in the list as incomplete."""
         await data.async_update_list({"complete": False})
 
+    async def clear_completed_items_service(call):
+        """Clear all completed items from the list."""
+        await data.async_clear_completed()
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
 
@@ -141,6 +146,12 @@ async def async_setup_entry(hass, config_entry):
         DOMAIN,
         SERVICE_INCOMPLETE_ALL,
         incomplete_all_service,
+        schema=SERVICE_LIST_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_COMPLETED_ITEMS,
+        clear_completed_items_service,
         schema=SERVICE_LIST_SCHEMA,
     )
 
