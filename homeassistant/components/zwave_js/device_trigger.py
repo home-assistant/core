@@ -521,8 +521,8 @@ async def async_get_trigger_capabilities(
         return {
             "extra_fields": vol.Schema(
                 {
-                    vol.Optional(state.CONF_FROM): value_schema,
-                    vol.Optional(state.CONF_TO): value_schema,
+                    vol.Optional(ATTR_FROM): value_schema,
+                    vol.Optional(ATTR_TO): value_schema,
                 }
             )
         }
@@ -543,8 +543,8 @@ async def async_get_trigger_capabilities(
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,
                     vol.Optional(ATTR_ENDPOINT): cv.string,
-                    vol.Optional(state.CONF_FROM): cv.string,
-                    vol.Optional(state.CONF_TO): cv.string,
+                    vol.Optional(ATTR_FROM): cv.string,
+                    vol.Optional(ATTR_TO): cv.string,
                 }
             )
         }
