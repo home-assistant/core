@@ -119,13 +119,17 @@ class PlexMediaPlayer(MediaPlayerEntity):
         self.machine_identifier = device.machineIdentifier
         self.session_device = None
 
-        self._available = False
         self._device_protocol_capabilities = None
-        self._name = None
         self._previous_volume_level = 1  # Used in fake muting
-        self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
+
+        self._attr_available = False
+        self._attr_should_poll = False
+        self._attr_state = STATE_IDLE
+        self._attr_unique_id = (
+            f"{self.plex_server.machine_identifier}:{self.machine_identifier}"
+        )
 
         # Initializes other attributes
         self.session = session
@@ -180,10 +184,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if not self.session:
             self.force_idle()
             if not self.device:
-                self._available = False
+                self._attr_available = False
                 return
 
-        self._available = True
+        self._attr_available = True
 
         try:
             device_url = self.device.url("/")
@@ -207,25 +211,15 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if self.username and self.username != self.plex_server.owner:
             # Prepend username for shared/managed clients
             name_parts.insert(0, self.username)
-        self._name = NAME_FORMAT.format(" - ".join(name_parts))
+        self._attr_name = NAME_FORMAT.format(" - ".join(name_parts))
 
     def force_idle(self):
         """Force client to idle."""
-        self._state = STATE_IDLE
+        self._attr_state = STATE_IDLE
         if self.player_source == "session":
             self.device = None
             self.session_device = None
-            self._available = False
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the id of this plex client."""
-        return f"{self.plex_server.machine_identifier}:{self.machine_identifier}"
+            self._attr_available = False
 
     @property
     def session(self):
@@ -239,17 +233,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.session_device = self.session.player
             self.update_state(self.session.state)
         else:
-            self._state = STATE_IDLE
-
-    @property
-    def available(self):
-        """Return the availability of the client."""
-        return self._available
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+            self._attr_state = STATE_IDLE
 
     @property
     @needs_session
@@ -257,27 +241,22 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Return the username of the client owner."""
         return self.session.username
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
     def update_state(self, state):
         """Set the state of the device, handle session termination."""
         if state == "playing":
-            self._state = STATE_PLAYING
+            self._attr_state = STATE_PLAYING
         elif state == "paused":
-            self._state = STATE_PAUSED
+            self._attr_state = STATE_PAUSED
         elif state == "stopped":
             self.session = None
             self.force_idle()
         else:
-            self._state = STATE_IDLE
+            self._attr_state = STATE_IDLE
 
     @property
     def _is_player_active(self):
         """Report if the client is playing media."""
-        return self.state in [STATE_PLAYING, STATE_PAUSED]
+        return self.state in (STATE_PLAYING, STATE_PAUSED)
 
     @property
     def _active_media_plexapi_type(self):
@@ -530,13 +509,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {}
-        for attr in [
+        for attr in (
             "media_content_rating",
             "media_library_title",
             "player_source",
             "media_summary",
             "username",
-        ]:
+        ):
             value = getattr(self, attr, None)
             if value:
                 attributes[attr] = value

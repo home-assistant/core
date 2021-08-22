@@ -63,12 +63,24 @@ def async_setup_forwarded(
         an HTTP 400 status code is thrown.
     """
 
+    try:
+        from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
+
+        # venv users might have already loaded it before it got upgraded so guard for this
+        # This can only happen when people upgrade from before 2021.8.5.
+        if not hasattr(remote, "is_cloud_request"):
+            remote = None
+    except ImportError:
+        remote = None
+
     @middleware
     async def forwarded_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process forwarded data by a reverse proxy."""
-        overrides: dict[str, str] = {}
+        # Skip requests from Remote UI
+        if remote is not None and remote.is_cloud_request.get():
+            return await handler(request)
 
         # Handle X-Forwarded-For
         forwarded_for_headers: list[str] = request.headers.getall(X_FORWARDED_FOR, [])
@@ -119,6 +131,8 @@ def async_setup_forwarded(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
             )
             raise HTTPBadRequest from err
+
+        overrides: dict[str, str] = {}
 
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0

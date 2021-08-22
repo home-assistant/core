@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -44,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigEntry):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Establish connection with MELCloud."""
     if DOMAIN not in config:
         return True

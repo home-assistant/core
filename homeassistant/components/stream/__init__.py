@@ -43,7 +43,6 @@ from .const import (
 )
 from .core import PROVIDERS, IdleTimer, StreamOutput
 from .hls import async_setup_hls
-from .recorder import RecorderOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -264,6 +263,10 @@ class Stream:
         self, video_path: str, duration: int = 30, lookback: int = 5
     ) -> None:
         """Make a .mp4 recording from a provided stream."""
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from .recorder import RecorderOutput
 
         # Check for file access
         if not self.hass.config.is_allowed_path(video_path):

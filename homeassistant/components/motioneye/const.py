@@ -84,6 +84,7 @@ SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal." "{}"
 SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal." "{}"
 
 TYPE_MOTIONEYE_MJPEG_CAMERA: Final = "motioneye_mjpeg_camera"
+TYPE_MOTIONEYE_SWITCH_BASE: Final = f"{DOMAIN}_switch"
 
 WEB_HOOK_SENTINEL_KEY: Final = "src"
 WEB_HOOK_SENTINEL_VALUE: Final = "hass-motioneye"

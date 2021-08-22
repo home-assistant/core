@@ -30,21 +30,25 @@ from homeassistant.components.fritzbox.const import (
     ATTR_STATE_WINDOW_OPEN,
     DOMAIN as FB_DOMAIN,
 )
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
+    PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import MOCK_CONFIG, FritzDeviceClimateMock, setup_config_entry
+from . import FritzDeviceClimateMock, setup_config_entry
+from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.fake_name"
+ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock):
@@ -58,7 +62,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.attributes[ATTR_BATTERY_LEVEL] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 18
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == CONF_FAKE_NAME
     assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT, HVAC_MODE_OFF]
     assert state.attributes[ATTR_MAX_TEMP] == 28
     assert state.attributes[ATTR_MIN_TEMP] == 8
@@ -71,7 +75,15 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_STATE_SUMMER_MODE] == "fake_summer"
     assert state.attributes[ATTR_STATE_WINDOW_OPEN] == "fake_window"
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
+    assert ATTR_STATE_CLASS not in state.attributes
     assert state.state == HVAC_MODE_HEAT
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_battery")
+    assert state
+    assert state.state == "23"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{CONF_FAKE_NAME} Battery"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ATTR_STATE_CLASS not in state.attributes
 
 
 async def test_target_temperature_on(hass: HomeAssistant, fritz: Mock):

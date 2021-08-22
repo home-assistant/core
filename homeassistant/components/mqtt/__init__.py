@@ -9,7 +9,7 @@ import logging
 from operator import attrgetter
 import ssl
 import time
-from typing import Any, Callable, Union
+from typing import Any, Awaitable, Callable, Union, cast
 import uuid
 
 import attr
@@ -73,7 +73,14 @@ from .const import (
     PROTOCOL_311,
 )
 from .discovery import LAST_DISCOVERY
-from .models import Message, MessageCallbackType, PublishPayloadType
+from .models import (
+    AsyncMessageCallbackType,
+    MessageCallbackType,
+    PublishMessage,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,6 +126,7 @@ PLATFORMS = [
     "climate",
     "cover",
     "fan",
+    "humidifier",
     "light",
     "lock",
     "number",
@@ -284,26 +292,36 @@ def async_publish_template(
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
-def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
+AsyncDeprecatedMessageCallbackType = Callable[
+    [str, ReceivePayloadType, int], Awaitable[None]
+]
+DeprecatedMessageCallbackType = Callable[[str, ReceivePayloadType, int], None]
+
+
+def wrap_msg_callback(
+    msg_callback: AsyncDeprecatedMessageCallbackType | DeprecatedMessageCallbackType,
+) -> AsyncMessageCallbackType | MessageCallbackType:
     """Wrap an MQTT message callback to support deprecated signature."""
     # Check for partials to properly determine if coroutine function
     check_func = msg_callback
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func = None
+    wrapper_func: AsyncMessageCallbackType | MessageCallbackType
     if asyncio.iscoroutinefunction(check_func):
 
         @wraps(msg_callback)
-        async def async_wrapper(msg: Any) -> None:
+        async def async_wrapper(msg: ReceiveMessage) -> None:
             """Call with deprecated signature."""
-            await msg_callback(msg.topic, msg.payload, msg.qos)
+            await cast(AsyncDeprecatedMessageCallbackType, msg_callback)(
+                msg.topic, msg.payload, msg.qos
+            )
 
         wrapper_func = async_wrapper
     else:
 
         @wraps(msg_callback)
-        def wrapper(msg: Any) -> None:
+        def wrapper(msg: ReceiveMessage) -> None:
             """Call with deprecated signature."""
             msg_callback(msg.topic, msg.payload, msg.qos)
 
@@ -315,7 +333,10 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
-    msg_callback: MessageCallbackType,
+    msg_callback: AsyncMessageCallbackType
+    | MessageCallbackType
+    | DeprecatedMessageCallbackType
+    | AsyncDeprecatedMessageCallbackType,
     qos: int = DEFAULT_QOS,
     encoding: str | None = "utf-8",
 ):
@@ -334,12 +355,15 @@ async def async_subscribe(
     wrapped_msg_callback = msg_callback
     # If we have 3 parameters with no default value, wrap the callback
     if non_default == 3:
+        module = inspect.getmodule(msg_callback)
         _LOGGER.warning(
             "Signature of MQTT msg_callback '%s.%s' is deprecated",
-            inspect.getmodule(msg_callback).__name__,
+            module.__name__ if module else "<unknown>",
             msg_callback.__name__,
         )
-        wrapped_msg_callback = wrap_msg_callback(msg_callback)
+        wrapped_msg_callback = wrap_msg_callback(
+            cast(DeprecatedMessageCallbackType, msg_callback)
+        )
 
     async_remove = await hass.data[DATA_MQTT].async_subscribe(
         topic,
@@ -378,16 +402,12 @@ def subscribe(
 
 async def _async_setup_discovery(
     hass: HomeAssistant, conf: ConfigType, config_entry
-) -> bool:
+) -> None:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
     """
-    success: bool = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], config_entry
-    )
-
-    return success
+    await discovery.async_start(hass, conf[CONF_DISCOVERY_PREFIX], config_entry)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -502,7 +522,7 @@ async def async_setup_entry(hass, entry):
         unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
 
         def write_dump():
-            with open(hass.config.path("mqtt_dump.txt"), "wt") as fp:
+            with open(hass.config.path("mqtt_dump.txt"), "wt", encoding="utf8") as fp:
                 for msg in messages:
                     fp.write(",".join(msg) + "\n")
 
@@ -539,7 +559,7 @@ class Subscription:
     matcher: Any = attr.ib()
     job: HassJob = attr.ib()
     qos: int = attr.ib(default=0)
-    encoding: str = attr.ib(default="utf-8")
+    encoding: str | None = attr.ib(default="utf-8")
 
 
 class MQTT:
@@ -566,7 +586,7 @@ class MQTT:
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
 
-        self._pending_operations = {}
+        self._pending_operations: dict[str, asyncio.Event] = {}
 
         if self.hass.state == CoreState.running:
             self._ha_started.set()
@@ -659,7 +679,7 @@ class MQTT:
             CONF_WILL_MESSAGE in self.conf
             and ATTR_TOPIC in self.conf[CONF_WILL_MESSAGE]
         ):
-            will_message = Message(**self.conf[CONF_WILL_MESSAGE])
+            will_message = PublishMessage(**self.conf[CONF_WILL_MESSAGE])
         else:
             will_message = None
 
@@ -688,12 +708,12 @@ class MQTT:
             _raise_on_error(msg_info.rc)
         await self._wait_for_mid(msg_info.mid)
 
-    async def async_connect(self) -> str:
+    async def async_connect(self) -> None:
         """Connect to the host. Does not process messages yet."""
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
-        result: int = None
+        result: int | None = None
         try:
             result = await self.hass.async_add_executor_job(
                 self._mqttc.connect,
@@ -770,7 +790,7 @@ class MQTT:
         This method is a coroutine.
         """
         async with self._paho_lock:
-            result: int = None
+            result: int | None = None
             result, mid = await self.hass.async_add_executor_job(
                 self._mqttc.unsubscribe, topic
             )
@@ -781,7 +801,7 @@ class MQTT:
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
         """Perform a paho-mqtt subscription."""
         async with self._paho_lock:
-            result: int = None
+            result: int | None = None
             result, mid = await self.hass.async_add_executor_job(
                 self._mqttc.subscribe, topic, qos
             )
@@ -836,7 +856,7 @@ class MQTT:
                     retain=birth_message.retain,
                 )
 
-            birth_message = Message(**self.conf[CONF_BIRTH_MESSAGE])
+            birth_message = PublishMessage(**self.conf[CONF_BIRTH_MESSAGE])
             asyncio.run_coroutine_threadsafe(
                 publish_birth_message(birth_message), self.hass.loop
             )
@@ -883,7 +903,7 @@ class MQTT:
 
             self.hass.async_run_hass_job(
                 subscription.job,
-                Message(
+                ReceiveMessage(
                     msg.topic,
                     payload,
                     msg.qos,
@@ -952,12 +972,12 @@ class MQTT:
             )
 
 
-def _raise_on_error(result_code: int) -> None:
+def _raise_on_error(result_code: int | None) -> None:
     """Raise error if error result."""
     # pylint: disable=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
-    if result_code != 0:
+    if result_code is not None and result_code != 0:
         raise HomeAssistantError(
             f"Error talking to MQTT: {mqtt.error_string(result_code)}"
         )
@@ -1014,19 +1034,19 @@ async def websocket_remove_device(hass, connection, msg):
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "mqtt/subscribe",
         vol.Required("topic"): valid_subscribe_topic,
     }
 )
+@websocket_api.async_response
 async def websocket_subscribe(hass, connection, msg):
     """Subscribe to a MQTT topic."""
     if not connection.user.is_admin:
         raise Unauthorized
 
-    async def forward_messages(mqttmsg: Message):
+    async def forward_messages(mqttmsg: ReceiveMessage):
         """Forward events to websocket."""
         connection.send_message(
             websocket_api.event_message(
@@ -1047,8 +1067,13 @@ async def websocket_subscribe(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+ConnectionStatusCallback = Callable[[bool], None]
+
+
 @callback
-def async_subscribe_connection_status(hass, connection_status_callback):
+def async_subscribe_connection_status(
+    hass: HomeAssistant, connection_status_callback: ConnectionStatusCallback
+) -> Callable[[], None]:
     """Subscribe to MQTT connection changes."""
     connection_status_callback_job = HassJob(connection_status_callback)
 
@@ -1075,6 +1100,6 @@ def async_subscribe_connection_status(hass, connection_status_callback):
     return unsubscribe
 
 
-def is_connected(hass):
+def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
     return hass.data[DATA_MQTT].connected

@@ -30,12 +30,6 @@ test_async_update_locked_multiple_callbacks = (
 test_async_update_locked_callback_and_update = (
     entity_test_helpers.test_async_update_locked_callback_and_update
 )
-test_async_locked_update_with_exception = (
-    entity_test_helpers.test_async_locked_update_with_exception
-)
-test_async_update_with_timeout_and_recovery = (
-    entity_test_helpers.test_async_update_with_timeout_and_recovery
-)
 
 
 async def test_binary_sensor_registry_state_callback(

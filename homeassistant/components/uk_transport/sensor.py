@@ -93,7 +93,7 @@ class UkTransportSensor(SensorEntity):
 
     TRANSPORT_API_URL_BASE = "https://transportapi.com/v3/uk/"
     _attr_icon = "mdi:train"
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, api_app_id, api_app_key, url):
         """Initialize the sensor."""
@@ -110,7 +110,7 @@ class UkTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -183,12 +183,12 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
-            for key in [
+            for key in (
                 ATTR_ATCOCODE,
                 ATTR_LOCALITY,
                 ATTR_STOP_NAME,
                 ATTR_REQUEST_TIME,
-            ]:
+            ):
                 attrs[key] = self._data.get(key)
             attrs[ATTR_NEXT_BUSES] = self._next_buses
             return attrs

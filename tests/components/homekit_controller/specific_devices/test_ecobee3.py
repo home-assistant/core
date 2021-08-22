@@ -60,7 +60,7 @@ async def test_ecobee3_setup(hass):
     assert climate_state.attributes["max_humidity"] == 50
 
     climate_sensor = entity_registry.async_get("sensor.homew_current_temperature")
-    assert climate_sensor.unique_id == "homekit-123456789012-aid:1-sid:16-cid:16"
+    assert climate_sensor.unique_id == "homekit-123456789012-aid:1-sid:16-cid:19"
 
     occ1 = entity_registry.async_get("binary_sensor.kitchen")
     assert occ1.unique_id == "homekit-AB1C-56"

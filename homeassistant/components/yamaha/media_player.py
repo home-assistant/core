@@ -1,4 +1,6 @@
 """Support for Yamaha Receivers."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -30,6 +32,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CURSOR_TYPE_DOWN,
@@ -96,11 +99,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: None, discovery_info: None) -> None:
+    def __init__(self, config: ConfigType, discovery_info: DiscoveryInfoType) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
-        self.ctrl_url = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
+        self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
         self.source_names = config.get(CONF_SOURCE_NAMES)
         self.zone_ignore = config.get(CONF_ZONE_IGNORE)

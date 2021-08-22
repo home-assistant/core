@@ -52,6 +52,9 @@ class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of a Canary alarm control panel."""
 
     coordinator: CanaryDataUpdateCoordinator
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+    )
 
     def __init__(
         self, coordinator: CanaryDataUpdateCoordinator, location: Location
@@ -59,22 +62,13 @@ class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         """Initialize a Canary security camera."""
         super().__init__(coordinator)
         self._location_id: str = location.location_id
-        self._location_name: str = location.name
+        self._attr_name = location.name
+        self._attr_unique_id = str(self._location_id)
 
     @property
     def location(self) -> Location:
         """Return information about the location."""
         return self.coordinator.data["locations"][self._location_id]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the alarm."""
-        return self._location_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the alarm."""
-        return str(self._location_id)
 
     @property
     def state(self) -> str | None:
@@ -91,11 +85,6 @@ class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
             return STATE_ALARM_ARMED_NIGHT
 
         return None
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

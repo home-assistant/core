@@ -5,17 +5,16 @@ import asyncio
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import logging
+from typing import Final
 
 import aiohttp
 from getmac import get_mac_address
 from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
-from homeassistant.components.device_tracker.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_TRACK_NEW,
-)
+from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -29,7 +28,6 @@ import homeassistant.util.dt as dt_util
 from .const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
-    DEFAULT_TRACK_NEW_DEVICES,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
     PLATFORMS,
@@ -37,19 +35,17 @@ from .const import (
 )
 
 # Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
-NMAP_TRANSIENT_FAILURE = "Assertion failed: htn.toclock_running == true"
-MAX_SCAN_ATTEMPTS = 16
-OFFLINE_SCANS_TO_MARK_UNAVAILABLE = 3
+NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
+MAX_SCAN_ATTEMPTS: Final = 16
+OFFLINE_SCANS_TO_MARK_UNAVAILABLE: Final = 3
 
 
-def short_hostname(hostname):
+def short_hostname(hostname: str) -> str:
     """Return the first part of the hostname."""
-    if hostname is None:
-        return None
     return hostname.split(".")[0]
 
 
-def human_readable_name(hostname, vendor, mac_address):
+def human_readable_name(hostname: str, vendor: str, mac_address: str) -> str:
     """Generate a human readable name."""
     if hostname:
         return short_hostname(hostname)
@@ -68,7 +64,7 @@ class NmapDevice:
     ipv4: str
     manufacturer: str
     reason: str
-    last_update: datetime.datetime
+    last_update: datetime
     offline_scans: int
 
 
@@ -77,9 +73,9 @@ class NmapTrackedDevices:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        self.tracked: dict = {}
-        self.ipv4_last_mac: dict = {}
-        self.config_entry_owner: dict = {}
+        self.tracked: dict[str, NmapDevice] = {}
+        self.ipv4_last_mac: dict[str, str] = {}
+        self.config_entry_owner: dict[str, str] = {}
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -135,7 +131,9 @@ def signal_device_update(mac_address) -> str:
 class NmapDeviceScanner:
     """This class scans for devices using nmap."""
 
-    def __init__(self, hass, entry, devices):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, devices: NmapTrackedDevices
+    ) -> None:
         """Initialize the scanner."""
         self.devices = devices
         self.home_interval = None
@@ -152,22 +150,22 @@ class NmapDeviceScanner:
         self._options = None
         self._exclude = None
         self._scan_interval = None
-        self._track_new_devices = None
 
-        self._known_mac_addresses = {}
+        self._known_mac_addresses: dict[str, str] = {}
         self._finished_first_scan = False
-        self._last_results = []
+        self._last_results: list[NmapDevice] = []
         self._mac_vendor_lookup = None
 
     async def async_setup(self):
         """Set up the tracker."""
         config = self._entry.options
-        self._track_new_devices = config.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW_DEVICES)
         self._scan_interval = timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
         )
-        self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
-        self._exclude = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        hosts_list = cv.ensure_list_csv(config[CONF_HOSTS])
+        self._hosts = [host for host in hosts_list if host != ""]
+        excludes_list = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        self._exclude = [exclude for exclude in excludes_list if exclude != ""]
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
@@ -222,7 +220,7 @@ class NmapDeviceScanner:
         )
         self._mac_vendor_lookup = AsyncMacLookup()
         with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
-            # We don't care of this fails since its only
+            # We don't care if this fails since it only
             # improves the data when we don't have it from nmap
             await self._mac_vendor_lookup.load_vendors()
         self._hass.async_create_task(self._async_scan_devices())
@@ -352,7 +350,11 @@ class NmapDeviceScanner:
                 self._async_increment_device_offline(ipv4, reason)
                 continue
             # Mac address only returned if nmap ran as root
-            mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
+            mac = info["addresses"].get(
+                "mac"
+            ) or await self._hass.async_add_executor_job(
+                partial(get_mac_address, ip=ipv4)
+            )
             if mac is None:
                 self._async_increment_device_offline(ipv4, "No MAC address found")
                 _LOGGER.info("No MAC address found for %s", ipv4)
@@ -362,7 +364,6 @@ class NmapDeviceScanner:
             new = formatted_mac not in devices.tracked
             if (
                 new
-                and not self._track_new_devices
                 and formatted_mac not in devices.tracked
                 and formatted_mac not in self._known_mac_addresses
             ):

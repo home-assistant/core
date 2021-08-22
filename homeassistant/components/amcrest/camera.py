@@ -1,4 +1,6 @@
 """Support for Amcrest IP cameras."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
@@ -181,7 +183,9 @@ class AmcrestCam(Camera):
         finally:
             self._snapshot_task = None
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         _LOGGER.debug("Take snapshot from %s", self._name)
         try:
@@ -361,10 +365,14 @@ class AmcrestCam(Camera):
                     self._brand = "unknown"
             if self._model is None:
                 resp = self._api.device_type.strip()
+                _LOGGER.debug("Device_type=%s", resp)
                 if resp.startswith("type="):
                     self._model = resp.split("=")[-1]
                 else:
                     self._model = "unknown"
+            if self._attr_unique_id is None:
+                self._attr_unique_id = self._api.serial_number.strip()
+                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
@@ -571,7 +579,7 @@ class AmcrestCam(Camera):
     def _goto_preset(self, preset):
         """Move camera position and zoom to preset."""
         try:
-            self._api.go_to_preset(action="start", preset_point_number=preset)
+            self._api.go_to_preset(preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error

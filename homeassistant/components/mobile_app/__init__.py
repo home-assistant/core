@@ -36,7 +36,7 @@ from .webhook import handle_webhook
 PLATFORMS = "sensor", "binary_sensor", "device_tracker"
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_config = await store.async_load()

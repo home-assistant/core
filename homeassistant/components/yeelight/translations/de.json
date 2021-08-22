@@ -7,10 +7,10 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "M\u00f6chten Sie {model} ({host}) einrichten?"
+                "description": "M\u00f6chtest du {model} ({host}) einrichten?"
             },
             "pick_device": {
                 "data": {
@@ -35,7 +35,7 @@
                     "transition": "\u00dcbergangszeit (ms)",
                     "use_music_mode": "Musik-Modus aktivieren"
                 },
-                "description": "Wenn Sie das Modell leer lassen, wird es automatisch erkannt."
+                "description": "Wenn du das Modell leer l\u00e4sst, wird es automatisch erkannt."
             }
         }
     }

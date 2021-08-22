@@ -6,7 +6,7 @@
             "webhook_not_internet_accessible": "Deine Home Assistant-Instanz muss \u00fcber das Internet erreichbar sein, um Webhook-Nachrichten empfangen zu k\u00f6nnen."
         },
         "create_entry": {
-            "default": "Ihr Plaato {device_type} mit dem Namen **{device_name}** wurde erfolgreich eingerichtet!"
+            "default": "Dein Plaato {device_type} mit dem Namen **{device_name}** wurde erfolgreich eingerichtet!"
         },
         "error": {
             "invalid_webhook_device": "Du hast ein Ger\u00e4t gew\u00e4hlt, das das Senden von Daten an einen Webhook nicht unterst\u00fctzt. Es ist nur f\u00fcr die Airlock verf\u00fcgbar",
@@ -16,10 +16,10 @@
         "step": {
             "api_method": {
                 "data": {
-                    "token": "F\u00fcgen Sie hier das Auth Token ein",
+                    "token": "F\u00fcge hier das Auth Token ein",
                     "use_webhook": "Webhook verwenden"
                 },
-                "description": "Um die API abfragen zu k\u00f6nnen, wird ein `auth_token` ben\u00f6tigt, das durch folgende [diese](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) Anweisungen erhalten werden kann\n\n Ausgew\u00e4hltes Ger\u00e4t: **{device_type}** \n\nWenn Sie lieber die eingebaute Webhook-Methode (nur Airlock) verwenden m\u00f6chten, setzen Sie bitte einen Haken und lassen Sie das Auth Token leer",
+                "description": "Um die API abfragen zu k\u00f6nnen, wird ein `auth_token` ben\u00f6tigt, das durch folgende [diese](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) Anweisungen erhalten werden kann\n\n Ausgew\u00e4hltes Ger\u00e4t: **{device_type}** \n\nWenn du lieber die eingebaute Webhook-Methode (nur Airlock) verwenden m\u00f6chtest, setze bitte einen Haken und lasse das Auth Token leer",
                 "title": "API-Methode ausw\u00e4hlen"
             },
             "user": {
@@ -27,7 +27,7 @@
                     "device_name": "Benenne dein Ger\u00e4t",
                     "device_type": "Art des Plaato-Ger\u00e4ts"
                 },
-                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?",
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?",
                 "title": "Plaato Ger\u00e4te einrichten"
             },
             "webhook": {

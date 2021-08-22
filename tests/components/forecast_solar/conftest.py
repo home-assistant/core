@@ -1,9 +1,10 @@
 """Fixtures for Forecast.Solar integration tests."""
 
-import datetime
+from datetime import datetime, timedelta
 from typing import Generator
 from unittest.mock import MagicMock, patch
 
+from forecast_solar import models
 import pytest
 
 from homeassistant.components.forecast_solar.const import (
@@ -16,6 +17,7 @@ from homeassistant.components.forecast_solar.const import (
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -54,24 +56,31 @@ def mock_forecast_solar() -> Generator[None, MagicMock, None]:
         "homeassistant.components.forecast_solar.ForecastSolar", autospec=True
     ) as forecast_solar_mock:
         forecast_solar = forecast_solar_mock.return_value
+        now = datetime(2021, 6, 27, 6, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
-        estimate = MagicMock()
+        estimate = MagicMock(spec=models.Estimate)
+        estimate.now.return_value = now
         estimate.timezone = "Europe/Amsterdam"
-        estimate.energy_production_today = 100
-        estimate.energy_production_tomorrow = 200
-        estimate.power_production_now = 300
-        estimate.power_highest_peak_time_today = datetime.datetime(
-            2021, 6, 27, 13, 0, tzinfo=datetime.timezone.utc
+        estimate.energy_production_today = 100000
+        estimate.energy_production_tomorrow = 200000
+        estimate.power_production_now = 300000
+        estimate.power_highest_peak_time_today = datetime(
+            2021, 6, 27, 13, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE
         )
-        estimate.power_highest_peak_time_tomorrow = datetime.datetime(
-            2021, 6, 27, 14, 0, tzinfo=datetime.timezone.utc
+        estimate.power_highest_peak_time_tomorrow = datetime(
+            2021, 6, 27, 14, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE
         )
-        estimate.power_production_next_hour = 400
-        estimate.power_production_next_6hours = 500
-        estimate.power_production_next_12hours = 600
-        estimate.power_production_next_24hours = 700
-        estimate.energy_current_hour = 800
-        estimate.energy_next_hour = 900
+        estimate.energy_current_hour = 800000
+
+        estimate.power_production_at_time.side_effect = {
+            now + timedelta(hours=1): 400000,
+            now + timedelta(hours=12): 600000,
+            now + timedelta(hours=24): 700000,
+        }.get
+
+        estimate.sum_energy_production.side_effect = {
+            1: 900000,
+        }.get
 
         forecast_solar.estimate.return_value = estimate
         yield forecast_solar

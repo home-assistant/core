@@ -624,7 +624,9 @@ async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
     assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
-async def test_manual_config_with_token(hass, mock_plex_calls):
+async def test_manual_config_with_token(
+    hass, mock_plex_calls, requests_mock, empty_library, empty_payload
+):
     """Test creating via manual configuration with only token."""
 
     result = await hass.config_entries.flow.async_init(
@@ -653,12 +655,18 @@ async def test_manual_config_with_token(hass, mock_plex_calls):
 
     server_id = result["data"][CONF_SERVER_IDENTIFIER]
     mock_plex_server = hass.data[DOMAIN][SERVERS][server_id]
+    mock_url = mock_plex_server.url_in_use
 
-    assert result["title"] == mock_plex_server.url_in_use
+    assert result["title"] == mock_url
     assert result["data"][CONF_SERVER] == mock_plex_server.friendly_name
     assert result["data"][CONF_SERVER_IDENTIFIER] == mock_plex_server.machine_identifier
-    assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server.url_in_use
+    assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_url
     assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+    # Complete Plex integration setup before teardown
+    requests_mock.get(f"{mock_url}/library", text=empty_library)
+    requests_mock.get(f"{mock_url}/library/sections", text=empty_payload)
+    await hass.async_block_till_done()
 
 
 async def test_setup_with_limited_credentials(hass, entry, setup_plex_server):

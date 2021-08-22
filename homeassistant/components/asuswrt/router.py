@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -209,16 +209,16 @@ class AsusWrtRouter:
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
         self._model = "Asus Router"
-        self._sw_v = None
+        self._sw_v: str | None = None
 
         self._devices: dict[str, Any] = {}
         self._connected_devices = 0
         self._connect_error = False
 
-        self._sensors_data_handler: AsusWrtSensorDataHandler = None
+        self._sensors_data_handler: AsusWrtSensorDataHandler | None = None
         self._sensors_coordinator: dict[str, Any] = {}
 
-        self._on_close = []
+        self._on_close: list[Callable] = []
 
         self._options = {
             CONF_DNSMASQ: DEFAULT_DNSMASQ,
@@ -229,7 +229,7 @@ class AsusWrtRouter:
 
     async def setup(self) -> None:
         """Set up a AsusWrt router."""
-        self._api = get_api(self._entry.data, self._options)
+        self._api = get_api(dict(self._entry.data), self._options)
 
         try:
             await self._api.connection.async_connect()
@@ -299,9 +299,9 @@ class AsusWrtRouter:
         )
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
-        for device_mac in self._devices:
+        for device_mac, device in self._devices.items():
             dev_info = wrt_devices.get(device_mac)
-            self._devices[device_mac].update(dev_info, consider_home)
+            device.update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
             if device_mac in self._devices:

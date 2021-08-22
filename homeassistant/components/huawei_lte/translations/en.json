@@ -23,7 +23,7 @@
                     "url": "URL",
                     "username": "Username"
                 },
-                "description": "Enter device access details. Specifying username and password is optional, but enables support for more integration features. On the other hand, use of an authorized connection may cause problems accessing the device web interface from outside Home Assistant while the integration is active, and the other way around.",
+                "description": "Enter device access details.",
                 "title": "Configure Huawei LTE"
             }
         }
@@ -35,7 +35,8 @@
                     "name": "Notification service name (change requires restart)",
                     "recipient": "SMS notification recipients",
                     "track_new_devices": "Track new devices",
-                    "track_wired_clients": "Track wired network clients"
+                    "track_wired_clients": "Track wired network clients",
+                    "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
                 }
             }
         }

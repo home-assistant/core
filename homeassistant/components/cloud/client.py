@@ -148,7 +148,7 @@ class CloudClient(Interface):
             tasks.append(enable_google)
 
         if tasks:
-            await asyncio.gather(*[task(None) for task in tasks])
+            await asyncio.gather(*(task(None) for task in tasks))
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""

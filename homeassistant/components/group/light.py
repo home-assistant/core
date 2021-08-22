@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -55,6 +56,7 @@ DEFAULT_NAME = "Light Group"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN),
     }
 )
@@ -72,8 +74,29 @@ async def async_setup_platform(
 ) -> None:
     """Initialize light.group platform."""
     async_add_entities(
-        [LightGroup(cast(str, config.get(CONF_NAME)), config[CONF_ENTITIES])]
+        [
+            LightGroup(
+                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
+            )
+        ]
     )
+
+
+FORWARDED_ATTRIBUTES = frozenset(
+    {
+        ATTR_BRIGHTNESS,
+        ATTR_COLOR_TEMP,
+        ATTR_EFFECT,
+        ATTR_FLASH,
+        ATTR_HS_COLOR,
+        ATTR_RGB_COLOR,
+        ATTR_RGBW_COLOR,
+        ATTR_RGBWW_COLOR,
+        ATTR_TRANSITION,
+        ATTR_WHITE_VALUE,
+        ATTR_XY_COLOR,
+    }
+)
 
 
 class LightGroup(GroupEntity, light.LightEntity):
@@ -86,13 +109,14 @@ class LightGroup(GroupEntity, light.LightEntity):
     _attr_min_mireds = 154
     _attr_should_poll = False
 
-    def __init__(self, name: str, entity_ids: list[str]) -> None:
+    def __init__(self, unique_id: str | None, name: str, entity_ids: list[str]) -> None:
         """Initialize a light group."""
         self._entity_ids = entity_ids
         self._white_value: int | None = None
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -121,40 +145,10 @@ class LightGroup(GroupEntity, light.LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all lights in the light group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
-
-        if ATTR_BRIGHTNESS in kwargs:
-            data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_HS_COLOR in kwargs:
-            data[ATTR_HS_COLOR] = kwargs[ATTR_HS_COLOR]
-
-        if ATTR_RGB_COLOR in kwargs:
-            data[ATTR_RGB_COLOR] = kwargs[ATTR_RGB_COLOR]
-
-        if ATTR_RGBW_COLOR in kwargs:
-            data[ATTR_RGBW_COLOR] = kwargs[ATTR_RGBW_COLOR]
-
-        if ATTR_RGBWW_COLOR in kwargs:
-            data[ATTR_RGBWW_COLOR] = kwargs[ATTR_RGBWW_COLOR]
-
-        if ATTR_XY_COLOR in kwargs:
-            data[ATTR_XY_COLOR] = kwargs[ATTR_XY_COLOR]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
-
-        if ATTR_WHITE_VALUE in kwargs:
-            data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
-
-        if ATTR_EFFECT in kwargs:
-            data[ATTR_EFFECT] = kwargs[ATTR_EFFECT]
-
-        if ATTR_TRANSITION in kwargs:
-            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
-
-        if ATTR_FLASH in kwargs:
-            data[ATTR_FLASH] = kwargs[ATTR_FLASH]
+        data = {
+            key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
+        }
+        data[ATTR_ENTITY_ID] = self._entity_ids
 
         await self.hass.services.async_call(
             light.DOMAIN,

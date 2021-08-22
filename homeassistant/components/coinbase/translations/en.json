@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Wallet balances to report.",
+                    "exchange_base": "Base currency for exchange rate sensors.",
                     "exchange_rate_currencies": "Exchange rates to report."
                 },
                 "description": "Adjust Coinbase Options"

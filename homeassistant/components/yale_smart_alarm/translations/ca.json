@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "ID d'\u00e0rea",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "ID d'\u00e0rea",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    }
+}

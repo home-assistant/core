@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "title": "A szinkroniz\u00e1l\u00e1s integr\u00e1ci\u00f3j\u00e1nak be\u00e1ll\u00edt\u00e1sa",
+                    "token": "Token",
+                    "url": "URL",
+                    "verify_ssl": "Ellen\u0151rizze az SSL tan\u00fas\u00edtv\u00e1nyt"
+                }
+            }
+        }
+    },
+    "title": "Szinkroniz\u00e1l\u00e1s"
+}

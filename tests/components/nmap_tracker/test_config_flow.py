@@ -4,10 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.device_tracker.const import (
-    CONF_SCAN_INTERVAL,
-    CONF_TRACK_NEW,
-)
+from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
 from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
@@ -33,7 +30,6 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
     assert result["errors"] == {}
 
     schema_defaults = result["data_schema"]({})
-    assert CONF_TRACK_NEW not in schema_defaults
     assert CONF_SCAN_INTERVAL not in schema_defaults
 
     with patch(
@@ -211,8 +207,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_HOME_INTERVAL: 3,
         CONF_HOSTS: "192.168.1.0/24",
         CONF_SCAN_INTERVAL: 120,
-        CONF_OPTIONS: "-F --host-timeout 5s",
-        CONF_TRACK_NEW: True,
+        CONF_OPTIONS: "-F -T4 --min-rate 10 --host-timeout 5s",
     }
 
     with patch(
@@ -227,7 +222,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_OPTIONS: "-sn",
                 CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
                 CONF_SCAN_INTERVAL: 10,
-                CONF_TRACK_NEW: False,
             },
         )
         await hass.async_block_till_done()
@@ -239,7 +233,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_OPTIONS: "-sn",
         CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
         CONF_SCAN_INTERVAL: 10,
-        CONF_TRACK_NEW: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -260,7 +253,6 @@ async def test_import(hass: HomeAssistant) -> None:
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4, 6.4.3.2",
                 CONF_SCAN_INTERVAL: 2000,
-                CONF_TRACK_NEW: False,
             },
         )
         await hass.async_block_till_done()
@@ -274,7 +266,6 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4,6.4.3.2",
         CONF_SCAN_INTERVAL: 2000,
-        CONF_TRACK_NEW: False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

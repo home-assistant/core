@@ -1,8 +1,12 @@
 """Percentage util functions."""
 from __future__ import annotations
 
+from typing import TypeVar
 
-def ordered_list_item_to_percentage(ordered_list: list[str], item: str) -> int:
+T = TypeVar("T")
+
+
+def ordered_list_item_to_percentage(ordered_list: list[T], item: T) -> int:
     """Determine the percentage of an item in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -25,7 +29,7 @@ def ordered_list_item_to_percentage(ordered_list: list[str], item: str) -> int:
     return (list_position * 100) // list_len
 
 
-def percentage_to_ordered_list_item(ordered_list: list[str], percentage: int) -> str:
+def percentage_to_ordered_list_item(ordered_list: list[T], percentage: int) -> T:
     """Find the item that most closely matches the percentage in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
