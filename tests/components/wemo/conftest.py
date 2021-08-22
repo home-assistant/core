@@ -93,3 +93,5 @@ async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
     for entry in entity_registry.entities.values():
         if entry.entity_id.endswith(wemo_entity_suffix):
             return entry
+
+    return None
