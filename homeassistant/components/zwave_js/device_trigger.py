@@ -442,9 +442,7 @@ async def async_get_trigger_capabilities(
     trigger_type = config[CONF_TYPE]
 
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-    value = (
-        get_zwave_value_from_config(node, config) if ATTR_PROPERTY in config else None
-    )
+
     # Add additional fields to the automation trigger UI
     if trigger_type == NOTIFICATION_NOTIFICATION:
         return {
@@ -484,7 +482,7 @@ async def async_get_trigger_capabilities(
         CENTRAL_SCENE_VALUE_NOTIFICATION,
         SCENE_ACTIVATION_VALUE_NOTIFICATION,
     ):
-        value_schema = get_value_state_schema(value)
+        value_schema = get_value_state_schema(get_zwave_value_from_config(node, config))
 
         # We should never get here, but just in case we should add a guard
         if not value_schema:
@@ -493,7 +491,7 @@ async def async_get_trigger_capabilities(
         return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     if trigger_type == CONFIG_PARAMETER_VALUE_UPDATED:
-        value_schema = get_value_state_schema(value)
+        value_schema = get_value_state_schema(get_zwave_value_from_config(node, config))
         if not value_schema:
             return {}
         return {
