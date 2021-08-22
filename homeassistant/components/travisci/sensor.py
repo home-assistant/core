@@ -37,7 +37,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="last_build_id",
         name="Last Build ID",
-        native_unit_of_measurement="",
         icon="mdi:card-account-details",
     ),
     SensorEntityDescription(
@@ -49,25 +48,21 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="last_build_finished_at",
         name="Last Build Finished At",
-        native_unit_of_measurement="",
         icon="mdi:timetable",
     ),
     SensorEntityDescription(
         key="last_build_started_at",
         name="Last Build Started At",
-        native_unit_of_measurement="",
         icon="mdi:timetable",
     ),
     SensorEntityDescription(
         key="last_build_state",
         name="Last Build State",
-        native_unit_of_measurement="",
         icon="mdi:github",
     ),
     SensorEntityDescription(
         key="state",
         name="State",
-        native_unit_of_measurement="",
         icon="mdi:github",
     ),
 )
@@ -132,7 +127,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
     add_entities(entities, True)
-    return True
 
 
 class TravisCISensor(SensorEntity):
