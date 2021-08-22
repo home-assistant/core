@@ -65,14 +65,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="light",
         name="Light intensity",
         native_unit_of_measurement=LIGHT_LUX,
-        icon=None,
         device_class=DEVICE_CLASS_ILLUMINANCE,
     ),
     SensorEntityDescription(
@@ -80,20 +78,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Moisture",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="conductivity",
         name="Conductivity",
         native_unit_of_measurement=CONDUCTIVITY,
         icon="mdi:flash-circle",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="battery",
         name="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         device_class=DEVICE_CLASS_BATTERY,
     ),
 )
