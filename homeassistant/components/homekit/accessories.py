@@ -544,9 +544,9 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
-    def pair(self, *args, **kwargs):
+    def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(*args, **kwargs)
+        success = super().pair(client_uuid, client_public, client_permissions)
         if success:
             dismiss_setup_message(self.hass, self._entry_id)
         return success
