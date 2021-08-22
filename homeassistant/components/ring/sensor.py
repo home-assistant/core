@@ -71,7 +71,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
             return icon_for_battery_level(
                 battery_level=self._device.battery_life, charging=False
             )
-        return f"mdi:{self.entity_description.icon}"
+        return self.entity_description.icon
 
 
 class HealthDataRingSensor(RingSensor):
@@ -208,7 +208,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="last_activity",
         name="Last Activity",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="history",
+        icon="mdi:history",
         device_class=DEVICE_CLASS_TIMESTAMP,
         cls=HistoryRingSensor,
     ),
@@ -216,7 +216,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="last_ding",
         name="Last Ding",
         category=["doorbots", "authorized_doorbots"],
-        icon="history",
+        icon="mdi:history",
         kind="ding",
         device_class=DEVICE_CLASS_TIMESTAMP,
         cls=HistoryRingSensor,
@@ -225,7 +225,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="last_motion",
         name="Last Motion",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="history",
+        icon="mdi:history",
         kind="motion",
         device_class=DEVICE_CLASS_TIMESTAMP,
         cls=HistoryRingSensor,
@@ -234,14 +234,14 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         key="volume",
         name="Volume",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="bell-ring",
+        icon="mdi:bell-ring",
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_category",
         name="WiFi Signal Category",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        icon="wifi",
+        icon="mdi:wifi",
         cls=HealthDataRingSensor,
     ),
     RingSensorEntityDescription(
@@ -249,7 +249,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         name="WiFi Signal Strength",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        icon="wifi",
+        icon="mdi:wifi",
         device_class="signal_strength",
         cls=HealthDataRingSensor,
     ),
