@@ -6,7 +6,6 @@ import logging
 from velbusaio.controller import Velbus
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -56,17 +55,7 @@ async def velbus_connect_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
     """Task to offload the long running connect."""
-    # create notification
-    persistent_notification.async_create(
-        hass,
-        "Velbus is scanning the bus, this can take some time.",
-        "Velbus Starting",
-        f"{DOMAIN}-{entry_id}",
-    )
-    # connect
     await controller.connect()
-    # clear notification
-    persistent_notification.async_dismiss(hass, f"{DOMAIN}-{entry_id}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -110,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         SERVICE_SCAN,
         scan,
-        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(check_entry_id, cv.string)}),
+        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
     )
 
     async def syn_clock(call):
@@ -123,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         SERVICE_SYNC,
         syn_clock,
-        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(check_entry_id, cv.string)}),
+        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
     )
 
     async def set_memo_text(call):
@@ -143,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         set_memo_text,
         vol.Schema(
             {
-                vol.Required(CONF_INTERFACE): vol.All(check_entry_id, cv.string),
+                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
