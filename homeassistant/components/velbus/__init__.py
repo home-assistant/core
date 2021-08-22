@@ -29,7 +29,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
-PLATFORMS = ["switch"]
 
 
 async def async_setup(hass, config):
