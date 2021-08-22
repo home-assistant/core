@@ -66,7 +66,12 @@ class EzvizAlarm(CoordinatorEntity, AlarmControlPanelEntity, RestoreEntity):
         state = await self.async_get_last_state()
         if not state:
             return
-        self._attr_state = state.state
+        if (
+            state.state == STATE_ALARM_DISARMED
+            or STATE_ALARM_ARMED_AWAY
+            or STATE_ALARM_ARMED_NIGHT
+        ):
+            self._attr_state = state.state
 
     @property
     def name(self) -> str:
