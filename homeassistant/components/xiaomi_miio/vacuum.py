@@ -6,7 +6,7 @@ from miio import DeviceException, Vacuum
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA,
+    PLATFORM_SCHEMA,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -25,7 +25,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_TOKEN, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
@@ -59,6 +59,14 @@ ATTR_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
 ATTR_CLEANING_COUNT = "cleaning_count"
 ATTR_CLEANED_TOTAL_AREA = "total_cleaned_area"
 ATTR_CLEANING_TOTAL_TIME = "total_cleaning_time"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 ATTR_ERROR = "error"
 ATTR_RC_DURATION = "duration"
 ATTR_RC_ROTATION = "rotation"
@@ -216,10 +224,6 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         self.vacuum_state = None
         self._available = False
 
-        self.consumable_state = None
-        self.clean_history = None
-        self.dnd_state = None
-        self.last_clean = None
         self._fan_speeds = None
         self._fan_speeds_reverse = None
 
@@ -285,42 +289,10 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         if self.vacuum_state is not None:
             attrs.update(
                 {
-                    ATTR_DO_NOT_DISTURB: STATE_ON
-                    if self.dnd_state.enabled
-                    else STATE_OFF,
-                    ATTR_DO_NOT_DISTURB_START: str(self.dnd_state.start),
-                    ATTR_DO_NOT_DISTURB_END: str(self.dnd_state.end),
-                    # Not working --> 'Cleaning mode':
-                    #    STATE_ON if self.vacuum_state.in_cleaning else STATE_OFF,
-                    ATTR_CLEANING_TIME: int(
-                        self.vacuum_state.clean_time.total_seconds() / 60
-                    ),
-                    ATTR_CLEANED_AREA: int(self.vacuum_state.clean_area),
-                    ATTR_CLEANING_COUNT: int(self.clean_history.count),
-                    ATTR_CLEANED_TOTAL_AREA: int(self.clean_history.total_area),
-                    ATTR_CLEANING_TOTAL_TIME: int(
-                        self.clean_history.total_duration.total_seconds() / 60
-                    ),
-                    ATTR_MAIN_BRUSH_LEFT: int(
-                        self.consumable_state.main_brush_left.total_seconds() / 3600
-                    ),
-                    ATTR_SIDE_BRUSH_LEFT: int(
-                        self.consumable_state.side_brush_left.total_seconds() / 3600
-                    ),
-                    ATTR_FILTER_LEFT: int(
-                        self.consumable_state.filter_left.total_seconds() / 3600
-                    ),
-                    ATTR_SENSOR_DIRTY_LEFT: int(
-                        self.consumable_state.sensor_dirty_left.total_seconds() / 3600
-                    ),
                     ATTR_STATUS: str(self.vacuum_state.state),
                     ATTR_MOP_ATTACHED: self.vacuum_state.is_water_box_attached,
                 }
             )
-
-            if self.last_clean:
-                attrs[ATTR_CLEAN_START] = self.last_clean.start
-                attrs[ATTR_CLEAN_STOP] = self.last_clean.end
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
@@ -467,11 +439,6 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
 
             self._fan_speeds = self._device.fan_speed_presets()
             self._fan_speeds_reverse = {v: k for k, v in self._fan_speeds.items()}
-
-            self.consumable_state = self._device.consumable_status()
-            self.clean_history = self._device.clean_history()
-            self.last_clean = self._device.last_clean_details()
-            self.dnd_state = self._device.dnd_status()
 
             self._available = True
         except (OSError, DeviceException) as exc:
