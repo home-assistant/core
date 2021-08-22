@@ -1,7 +1,7 @@
 """Provides the switchbot DataUpdateCoordinator."""
 from __future__ import annotations
 
-from asyncio import Lock
+from asyncio import Lock, sleep
 from datetime import timedelta
 import logging
 
@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-CONNECT_LOCK = Lock()
 
 
 class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
@@ -27,6 +26,7 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
         api: switchbot,
         retry_count: int,
         scan_timeout: int,
+        api_lock: Lock,
     ) -> None:
         """Initialize global switchbot data updater."""
         self.switchbot_api = api
@@ -38,6 +38,8 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=self.update_interval
         )
+
+        self.api_lock = api_lock
 
     def _update_data(self) -> bool:
         """Fetch device states from switchbot api."""
@@ -53,8 +55,9 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict | None:
         """Fetch data from switchbot."""
 
-        async with CONNECT_LOCK:
+        async with self.api_lock:
             _update_success = await self.hass.async_add_executor_job(self._update_data)
+            sleep(1)
 
         if not _update_success:
             raise UpdateFailed("Unable to fetch switchbot services data")

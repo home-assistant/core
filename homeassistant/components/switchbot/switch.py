@@ -1,6 +1,7 @@
 """Support for Switchbot bot."""
 from __future__ import annotations
 
+from asyncio import sleep
 import logging
 
 import voluptuous as vol
@@ -13,6 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,6 +29,7 @@ from .const import (
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -62,7 +65,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Switchbot based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR]
 
     bot_device = []
 
@@ -99,15 +102,26 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         )
         self._device_class = DEVICE_CLASS_SWITCH
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+        self._attr_state = last_state.state == "off"
+        self._last_run_success = last_state.attributes["last_run_success"]
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn device on."""
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
-        update_ok = await self.hass.async_add_executor_job(self._device.turn_on)
+        async with self.coordinator.api_lock:
+            update_ok = await self.hass.async_add_executor_job(self._device.turn_on)
+            sleep(1)
 
         if update_ok:
             self._last_run_success = True
-            await self.coordinator.async_request_refresh()
+            self._attr_is_on = True
         else:
             self._last_run_success = False
 
@@ -115,11 +129,13 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
 
-        update_ok = await self.hass.async_add_executor_job(self._device.turn_off)
+        async with self.coordinator.api_lock:
+            update_ok = await self.hass.async_add_executor_job(self._device.turn_off)
+            sleep(1)
 
         if update_ok:
             self._last_run_success = True
-            await self.coordinator.async_request_refresh()
+            self._attr_is_on = False
         else:
             self._last_run_success = False
 
@@ -155,7 +171,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         }
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return {
             "identifiers": {(DOMAIN, self._mac.replace(":", ""))},
