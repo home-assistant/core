@@ -280,19 +280,28 @@ def async_is_device_config_entry_not_loaded(
     )
 
 
-def get_config_value_state_schema(
-    config_value: ConfigurationValue,
+def get_value_state_schema(
+    value: ZwaveValue,
 ) -> vol.Schema | None:
     """Return device automation schema for a config entry."""
-    min_ = config_value.metadata.min
-    max_ = config_value.metadata.max
-    if config_value.configuration_value_type in (
-        ConfigurationValueType.RANGE,
-        ConfigurationValueType.MANUAL_ENTRY,
-    ):
-        return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+    if isinstance(value, ConfigurationValue):
+        min_ = value.metadata.min
+        max_ = value.metadata.max
+        if value.configuration_value_type in (
+            ConfigurationValueType.RANGE,
+            ConfigurationValueType.MANUAL_ENTRY,
+        ):
+            return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
 
-    if config_value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-        return vol.In({int(k): v for k, v in config_value.metadata.states.items()})
+        if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
+            return vol.In({int(k): v for k, v in value.metadata.states.items()})
+    else:
+        if value.metadata.states:
+            return vol.In({int(k): v for k, v in value.metadata.states.items()})
+        else:
+            return vol.All(
+                vol.Coerce(int),
+                vol.Range(min=value.metadata.min, max=value.metadata.max),
+            )
 
     return None

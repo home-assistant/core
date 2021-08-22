@@ -1,11 +1,8 @@
 """Provides device triggers for Z-Wave JS."""
 from __future__ import annotations
 
-from typing import cast
-
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -52,7 +49,7 @@ from .helpers import (
     async_get_node_status_sensor_entity_id,
     async_is_device_config_entry_not_loaded,
     copy_available_params,
-    get_config_value_state_schema,
+    get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -487,18 +484,12 @@ async def async_get_trigger_capabilities(
         CENTRAL_SCENE_VALUE_NOTIFICATION,
         SCENE_ACTIVATION_VALUE_NOTIFICATION,
     ):
-        if value.metadata.states:
-            value_schema = vol.In({int(k): v for k, v in value.metadata.states.items()})
-        else:
-            value_schema = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=value.metadata.min, max=value.metadata.max),
-            )
+        value_schema = get_value_state_schema(value)
 
         return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     if trigger_type == CONFIG_PARAMETER_VALUE_UPDATED:
-        value_schema = get_config_value_state_schema(cast(ConfigurationValue, value))
+        value_schema = get_value_state_schema(value)
         if not value_schema:
             return {}
         return {

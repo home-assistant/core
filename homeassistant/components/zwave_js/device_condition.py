@@ -28,7 +28,7 @@ from .const import (
 from .helpers import (
     async_get_node_from_device_id,
     async_is_device_config_entry_not_loaded,
-    get_config_value_state_schema,
+    get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -195,9 +195,7 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        value_schema = get_config_value_state_schema(
-            cast(ConfigurationValue, node.values[value_id])
-        )
+        value_schema = get_value_state_schema(node.values[value_id])
         if not value_schema:
             return {}
 
