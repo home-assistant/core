@@ -1,10 +1,6 @@
 """Constants for the Toon integration."""
 from datetime import timedelta
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
-)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_ENERGY,
@@ -46,63 +42,6 @@ ATTR_DEFAULT_ENABLED = "default_enabled"
 ATTR_INVERTED = "inverted"
 ATTR_MEASUREMENT = "measurement"
 ATTR_SECTION = "section"
-
-BINARY_SENSOR_ENTITIES = {
-    "thermostat_info_boiler_connected_None": {
-        ATTR_NAME: "Boiler Module Connection",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "boiler_module_connected",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
-        ATTR_DEFAULT_ENABLED: False,
-    },
-    "thermostat_info_burner_info_1": {
-        ATTR_NAME: "Boiler Heating",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "heating",
-        ATTR_ICON: "mdi:fire",
-        ATTR_DEFAULT_ENABLED: False,
-    },
-    "thermostat_info_burner_info_2": {
-        ATTR_NAME: "Hot Tap Water",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "hot_tapwater",
-        ATTR_ICON: "mdi:water-pump",
-    },
-    "thermostat_info_burner_info_3": {
-        ATTR_NAME: "Boiler Preheating",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "pre_heating",
-        ATTR_ICON: "mdi:fire",
-        ATTR_DEFAULT_ENABLED: False,
-    },
-    "thermostat_info_burner_info_None": {
-        ATTR_NAME: "Boiler Burner",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "burner",
-        ATTR_ICON: "mdi:fire",
-    },
-    "thermostat_info_error_found_255": {
-        ATTR_NAME: "Boiler Status",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "error_found",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-        ATTR_ICON: "mdi:alert",
-    },
-    "thermostat_info_ot_communication_error_0": {
-        ATTR_NAME: "OpenTherm Connection",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "opentherm_communication_error",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-        ATTR_ICON: "mdi:check-network-outline",
-        ATTR_DEFAULT_ENABLED: False,
-    },
-    "thermostat_program_overridden": {
-        ATTR_NAME: "Thermostat Program Override",
-        ATTR_SECTION: "thermostat",
-        ATTR_MEASUREMENT: "program_overridden",
-        ATTR_ICON: "mdi:gesture-tap",
-    },
-}
 
 SENSOR_ENTITIES = {
     "current_display_temperature": {
