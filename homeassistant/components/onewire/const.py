@@ -2,26 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    LIGHT_LUX,
-    PERCENTAGE,
-    PRESSURE_MBAR,
-    TEMP_CELSIUS,
-)
 
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
@@ -37,67 +19,9 @@ DOMAIN = "onewire"
 
 PRESSURE_CBAR = "cbar"
 
-SENSOR_TYPE_COUNT = "count"
-SENSOR_TYPE_CURRENT = "current"
-SENSOR_TYPE_HUMIDITY = "humidity"
-SENSOR_TYPE_ILLUMINANCE = "illuminance"
-SENSOR_TYPE_MOISTURE = "moisture"
-SENSOR_TYPE_PRESSURE = "pressure"
-SENSOR_TYPE_SENSED = "sensed"
-SENSOR_TYPE_TEMPERATURE = "temperature"
-SENSOR_TYPE_VOLTAGE = "voltage"
-SENSOR_TYPE_WETNESS = "wetness"
-SWITCH_TYPE_LATCH = "latch"
-SWITCH_TYPE_PIO = "pio"
-
-SENSOR_TYPES: dict[str, (str | None, str | None, str | None)] = {
-    # SensorType: (Unit, DeviceClass, StateClass)
-    SENSOR_TYPE_TEMPERATURE: (
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_HUMIDITY: (
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_PRESSURE: (
-        PRESSURE_MBAR,
-        DEVICE_CLASS_PRESSURE,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_ILLUMINANCE: (
-        LIGHT_LUX,
-        DEVICE_CLASS_ILLUMINANCE,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_WETNESS: (
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_MOISTURE: (
-        PRESSURE_CBAR,
-        DEVICE_CLASS_PRESSURE,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_COUNT: (
-        "count",
-        None,
-        STATE_CLASS_TOTAL_INCREASING,
-    ),
-    SENSOR_TYPE_VOLTAGE: (
-        ELECTRIC_POTENTIAL_VOLT,
-        DEVICE_CLASS_VOLTAGE,
-        STATE_CLASS_MEASUREMENT,
-    ),
-    SENSOR_TYPE_CURRENT: (
-        ELECTRIC_CURRENT_AMPERE,
-        DEVICE_CLASS_CURRENT,
-        STATE_CLASS_MEASUREMENT,
-    ),
-}
+READ_MODE_BOOL = "bool"
+READ_MODE_FLOAT = "float"
+READ_MODE_INT = "int"
 
 PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
