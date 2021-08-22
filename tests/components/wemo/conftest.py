@@ -90,15 +90,6 @@ async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    correct_entity = None
-    to_remove = []
     for entry in entity_registry.entities.values():
         if entry.entity_id.endswith(wemo_entity_suffix):
-            correct_entity = entry
-        else:
-            to_remove.append(entry.entity_id)
-
-    for removal in to_remove:
-        entity_registry.async_remove(removal)
-    assert len(entity_registry.entities) == 1
-    return correct_entity
+            return entry
