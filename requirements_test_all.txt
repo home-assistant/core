@@ -337,7 +337,7 @@ datapoint==0.9.8
 debugpy==1.5.1
 
 # homeassistant.components.decora_wifi
-# decora_wifi==1.4
+decora_wifi==1.4
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
