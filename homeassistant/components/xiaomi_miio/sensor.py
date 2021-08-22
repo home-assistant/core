@@ -48,7 +48,6 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
-from ...config_entries import SOURCE_IMPORT
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -439,21 +438,6 @@ VACUUM_SENSORS = {
         name="Consumable status sensor dirty left",
     ),
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Sensor via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):

@@ -195,7 +195,12 @@ async def async_create_miio_device_and_coordinator(
         device = Vacuum(host, token)
         update_method = _async_update_data_vacuum
     else:
-        _LOGGER.error(f"Failed to determine xiaomi device for model: {model}")
+        _LOGGER.error(
+            "Unsupported device found! Please create an issue at "
+            "https://github.com/syssi/xiaomi_airpurifier/issues "
+            "and provide the following data: %s",
+            model,
+        )
         return
 
     if migrate:

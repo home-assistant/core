@@ -6,7 +6,6 @@ from miio import DeviceException, Vacuum
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    PLATFORM_SCHEMA,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -25,7 +24,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
@@ -59,14 +58,6 @@ ATTR_SENSOR_DIRTY_LEFT = "sensor_dirty_left"
 ATTR_CLEANING_COUNT = "cleaning_count"
 ATTR_CLEANED_TOTAL_AREA = "total_cleaned_area"
 ATTR_CLEANING_TOTAL_TIME = "total_cleaning_time"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 ATTR_ERROR = "error"
 ATTR_RC_DURATION = "duration"
 ATTR_RC_ROTATION = "rotation"
