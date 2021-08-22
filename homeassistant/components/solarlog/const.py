@@ -90,7 +90,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield day",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="yield_yesterday",
