@@ -198,6 +198,35 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get(config[CONF_DEVICE_ID])
+    assert device
+
+    # We return early if the config entry for this device is not ready because we can't
+    # validate the value without knowing the state of the device
+    for entry_id in device.config_entries:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        assert entry
+        if entry.state != ConfigEntryState.LOADED:
+            return config
+
+    trigger_type = config[CONF_TYPE]
+    if get_trigger_platform_from_type(trigger_type) == VALUE_UPDATED_PLATFORM_TYPE:
+        try:
+            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+            get_zwave_value_from_config(node, config)
+        except vol.Invalid as err:
+            raise InvalidDeviceAutomationConfig(err.msg)
+
+    return config
+
+
 def get_trigger_platform_from_type(trigger_type: str) -> str:
     """Get trigger platform from Z-Wave JS trigger type."""
     trigger_split = trigger_type.split(".")
@@ -317,35 +346,6 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     )
 
     return triggers
-
-
-async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
-    """Validate config."""
-    config = TRIGGER_SCHEMA(config)
-
-    dev_reg = device_registry.async_get(hass)
-    device = dev_reg.async_get(config[CONF_DEVICE_ID])
-    assert device
-
-    # We return early if the config entry for this device is not ready because we can't
-    # validate the value without knowing the state of the device
-    for entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
-        if entry.state != ConfigEntryState.LOADED:
-            return config
-
-    trigger_type = config[CONF_TYPE]
-    if get_trigger_platform_from_type(trigger_type) == VALUE_UPDATED_PLATFORM_TYPE:
-        try:
-            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-            get_zwave_value_from_config(node, config)
-        except vol.Invalid as err:
-            raise InvalidDeviceAutomationConfig(err.msg)
-
-    return config
 
 
 async def async_attach_trigger(
