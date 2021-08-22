@@ -219,7 +219,7 @@ async def async_validate_trigger_config(
             node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
             get_zwave_value_from_config(node, config)
         except vol.Invalid as err:
-            raise InvalidDeviceAutomationConfig(err.msg)
+            raise InvalidDeviceAutomationConfig(err.msg) from err
 
     return config
 
