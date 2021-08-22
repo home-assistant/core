@@ -1,20 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured",
-            "reauth_successful": "Re-authentication was successful"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
-            "reauth_confirm": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                }
-            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -23,6 +17,5 @@
                 }
             }
         }
-    },
-    "title": "Wallbox"
+    }
 }
