@@ -2,9 +2,8 @@
 from unittest.mock import patch
 
 from total_connect_client.client import TotalConnectClient
-from total_connect_client.location import TotalConnectLocation
-from total_connect_client.partition import TotalConnectPartition
-from total_connect_client.zone import ZONE_STATUS_NORMAL, ZONE_TYPE_SECURITY
+from total_connect_client.const import ArmingState
+from total_connect_client.zone import ZoneStatus, ZoneType
 
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -49,51 +48,51 @@ RESPONSE_AUTHENTICATE_FAILED = {
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.DISARMED,
+    "ArmingState": ArmingState.DISARMED,
 }
 
 PARTITION_ARMED_STAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_STAY,
+    "ArmingState": ArmingState.ARMED_STAY,
 }
 
 PARTITION_ARMED_AWAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": ArmingState.ARMED_AWAY,
 }
 
 PARTITION_ARMED_CUSTOM = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_CUSTOM_BYPASS,
+    "ArmingState": ArmingState.ARMED_CUSTOM_BYPASS,
 }
 
 PARTITION_ARMED_NIGHT = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": ArmingState.ARMED_STAY_NIGHT,
 }
 
 PARTITION_ARMING = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMING,
+    "ArmingState": ArmingState.ARMING,
 }
 PARTITION_DISARMING = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.DISARMING,
+    "ArmingState": ArmingState.DISARMING,
 }
 
 PARTITION_TRIGGERED_POLICE = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ALARMING,
+    "ArmingState": ArmingState.ALARMING,
 }
 
 PARTITION_TRIGGERED_FIRE = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ALARMING_FIRE_SMOKE,
+    "ArmingState": ArmingState.ALARMING_FIRE_SMOKE,
 }
 
 PARTITION_TRIGGERED_CARBON_MONOXIDE = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ALARMING_CARBON_MONOXIDE,
+    "ArmingState": ArmingState.ALARMING_CARBON_MONOXIDE,
 }
 
 PARTITION_UNKNOWN = {
@@ -102,17 +101,17 @@ PARTITION_UNKNOWN = {
 }
 
 
-PARTITION_INFO_DISARMED = {0: PARTITION_DISARMED}
-PARTITION_INFO_ARMED_STAY = {0: PARTITION_ARMED_STAY}
-PARTITION_INFO_ARMED_AWAY = {0: PARTITION_ARMED_AWAY}
-PARTITION_INFO_ARMED_CUSTOM = {0: PARTITION_ARMED_CUSTOM}
-PARTITION_INFO_ARMED_NIGHT = {0: PARTITION_ARMED_NIGHT}
-PARTITION_INFO_ARMING = {0: PARTITION_ARMING}
-PARTITION_INFO_DISARMING = {0: PARTITION_DISARMING}
-PARTITION_INFO_TRIGGERED_POLICE = {0: PARTITION_TRIGGERED_POLICE}
-PARTITION_INFO_TRIGGERED_FIRE = {0: PARTITION_TRIGGERED_FIRE}
-PARTITION_INFO_TRIGGERED_CARBON_MONOXIDE = {0: PARTITION_TRIGGERED_CARBON_MONOXIDE}
-PARTITION_INFO_UNKNOWN = {0: PARTITION_UNKNOWN}
+PARTITION_INFO_DISARMED = [PARTITION_DISARMED]
+PARTITION_INFO_ARMED_STAY = [PARTITION_ARMED_STAY]
+PARTITION_INFO_ARMED_AWAY = [PARTITION_ARMED_AWAY]
+PARTITION_INFO_ARMED_CUSTOM = [PARTITION_ARMED_CUSTOM]
+PARTITION_INFO_ARMED_NIGHT = [PARTITION_ARMED_NIGHT]
+PARTITION_INFO_ARMING = [PARTITION_ARMING]
+PARTITION_INFO_DISARMING = [PARTITION_DISARMING]
+PARTITION_INFO_TRIGGERED_POLICE = [PARTITION_TRIGGERED_POLICE]
+PARTITION_INFO_TRIGGERED_FIRE = [PARTITION_TRIGGERED_FIRE]
+PARTITION_INFO_TRIGGERED_CARBON_MONOXIDE = [PARTITION_TRIGGERED_CARBON_MONOXIDE]
+PARTITION_INFO_UNKNOWN = [PARTITION_UNKNOWN]
 
 PARTITIONS_DISARMED = {"PartitionInfo": PARTITION_INFO_DISARMED}
 PARTITIONS_ARMED_STAY = {"PartitionInfo": PARTITION_INFO_ARMED_STAY}
@@ -131,7 +130,7 @@ PARTITIONS_UNKNOWN = {"PartitionInfo": PARTITION_INFO_UNKNOWN}
 ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
-    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZoneStatus.NORMAL,
     "PartitionId": "1",
 }
 
@@ -182,57 +181,57 @@ METADATA_UNKNOWN["Partitions"] = PARTITIONS_UNKNOWN
 RESPONSE_DISARMED = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_DISARMED,
-    "ArmingState": TotalConnectLocation.DISARMED,
+    "ArmingState": ArmingState.DISARMED,
 }
 RESPONSE_ARMED_STAY = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY,
-    "ArmingState": TotalConnectLocation.ARMED_STAY,
+    "ArmingState": ArmingState.ARMED_STAY,
 }
 RESPONSE_ARMED_AWAY = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
-    "ArmingState": TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": ArmingState.ARMED_AWAY,
 }
 RESPONSE_ARMED_CUSTOM = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_CUSTOM,
-    "ArmingState": TotalConnectLocation.ARMED_CUSTOM_BYPASS,
+    "ArmingState": ArmingState.ARMED_CUSTOM_BYPASS,
 }
 RESPONSE_ARMED_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_NIGHT,
-    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": ArmingState.ARMED_STAY_NIGHT,
 }
 RESPONSE_ARMING = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMING,
-    "ArmingState": TotalConnectLocation.ARMING,
+    "ArmingState": ArmingState.ARMING,
 }
 RESPONSE_DISARMING = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_DISARMING,
-    "ArmingState": TotalConnectLocation.DISARMING,
+    "ArmingState": ArmingState.DISARMING,
 }
 RESPONSE_TRIGGERED_POLICE = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_TRIGGERED_POLICE,
-    "ArmingState": TotalConnectLocation.ALARMING,
+    "ArmingState": ArmingState.ALARMING,
 }
 RESPONSE_TRIGGERED_FIRE = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_TRIGGERED_FIRE,
-    "ArmingState": TotalConnectLocation.ALARMING_FIRE_SMOKE,
+    "ArmingState": ArmingState.ALARMING_FIRE_SMOKE,
 }
 RESPONSE_TRIGGERED_CARBON_MONOXIDE = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_TRIGGERED_CARBON_MONOXIDE,
-    "ArmingState": TotalConnectLocation.ALARMING_CARBON_MONOXIDE,
+    "ArmingState": ArmingState.ALARMING_CARBON_MONOXIDE,
 }
 RESPONSE_UNKNOWN = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_UNKNOWN,
-    "ArmingState": TotalConnectLocation.DISARMED,
+    "ArmingState": ArmingState.DISARMED,
 }
 
 RESPONSE_ARM_SUCCESS = {"ResultCode": TotalConnectClient.ARM_SUCCESS}
@@ -260,13 +259,13 @@ CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
 PARTITION_DETAILS_1 = {
     "PartitionID": 1,
-    "ArmingState": TotalConnectPartition.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test1",
 }
 
 PARTITION_DETAILS_2 = {
     "PartitionID": 2,
-    "ArmingState": TotalConnectPartition.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test2",
 }
 
@@ -283,8 +282,8 @@ ZONE_DETAILS_NORMAL = {
     "Signalstrength": "-1",
     "zoneAdditionalInfo": None,
     "ZoneID": "1",
-    "ZoneStatus": ZONE_STATUS_NORMAL,
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneFlags": None,
 }
