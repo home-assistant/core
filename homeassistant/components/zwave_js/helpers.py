@@ -1,7 +1,7 @@
 """Helper functions for Z-Wave JS integration."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -15,7 +15,7 @@ from zwave_js_server.model.value import (
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.const import CONF_TYPE, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -252,6 +252,16 @@ def async_get_node_status_sensor_entity_id(
 def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     """Remove keys from config where the value is an empty string or None."""
     return {key: value for key, value in config.items() if value not in ("", None)}
+
+
+def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+    """Check type specific schema against config."""
+
+    def _check_type_schema(config: ConfigType) -> ConfigType:
+        """Check type specific schema against config."""
+        return cast(ConfigType, schema_map[str(config[CONF_TYPE])](config))
+
+    return _check_type_schema
 
 
 def copy_available_params(

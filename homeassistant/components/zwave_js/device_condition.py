@@ -28,6 +28,7 @@ from .const import (
 from .helpers import (
     async_get_node_from_device_id,
     async_is_device_config_entry_not_loaded,
+    check_type_schema_map,
     get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
@@ -76,13 +77,21 @@ VALUE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
+TYPE_SCHEMA_MAP = {
+    NODE_STATUS_TYPE: NODE_STATUS_CONDITION_SCHEMA,
+    CONFIG_PARAMETER_TYPE: CONFIG_PARAMETER_CONDITION_SCHEMA,
+    VALUE_TYPE: VALUE_CONDITION_SCHEMA,
+}
+
+
+CONDITION_TYPE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_TYPE): vol.In(TYPE_SCHEMA_MAP)}, extra=vol.ALLOW_EXTRA
+)
+
 CONDITION_SCHEMA = vol.All(
     remove_keys_with_empty_values,
-    vol.Any(
-        NODE_STATUS_CONDITION_SCHEMA,
-        CONFIG_PARAMETER_CONDITION_SCHEMA,
-        VALUE_CONDITION_SCHEMA,
-    ),
+    CONDITION_TYPE_SCHEMA,
+    check_type_schema_map(TYPE_SCHEMA_MAP),
 )
 
 
