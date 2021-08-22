@@ -486,6 +486,10 @@ async def async_get_trigger_capabilities(
     ):
         value_schema = get_value_state_schema(value)
 
+        # We should never get here, but just in case we should add a guard
+        if not value_schema:
+            return {}
+
         return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     if trigger_type == CONFIG_PARAMETER_VALUE_UPDATED:
