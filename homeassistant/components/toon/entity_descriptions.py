@@ -32,7 +32,7 @@ from .binary_sensor import (
     ToonBoilerModuleBinarySensor,
     ToonDisplayBinarySensor,
 )
-from .const import ATTR_MEASUREMENT, CURRENCY_EUR, VOLUME_CM3, VOLUME_LMIN
+from .const import CURRENCY_EUR, VOLUME_CM3, VOLUME_LMIN
 from .sensor import (
     ToonBoilerDeviceSensor,
     ToonDisplayDeviceSensor,
@@ -410,7 +410,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="current_produced",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=ATTR_MEASUREMENT,
+        state_class=STATE_CLASS_MEASUREMENT,
         cls=ToonSolarDeviceSensor,
     ),
     ToonSensorEntityDescription(
