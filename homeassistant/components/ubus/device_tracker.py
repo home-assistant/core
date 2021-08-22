@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,12 +19,16 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
 DHCP_SOFTWARES = ["dnsmasq", "odhcpd", "none"]
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): vol.In(
             DHCP_SOFTWARES
         ),
@@ -76,12 +80,23 @@ class UbusDeviceScanner(DeviceScanner):
         host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        is_https = config[CONF_SSL]
+        verify_https = config[CONF_VERIFY_SSL]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{host}/ubus"
+        if not is_https:
+            protocol = 'http'
+        else:
+            protocol = 'https'
 
-        self.ubus = Ubus(self.url, self.username, self.password)
+            if not verify_https:
+                requests.packages.urllib3.disable_warnings(
+                    InsecureRequestWarning
+                )
+        self.url = f"{protocol}://{host}/ubus"
+
+        self.ubus = Ubus(self.url, self.username, self.password, verify=is_https)
         self.hostapd = []
         self.mac2name = None
         self.success_init = self.ubus.connect() is not None
