@@ -45,14 +45,14 @@ class InsightSensor(WemoEntity, SensorEntity):
     """Common base for WeMo Insight power sensors."""
 
     @property
-    def name(self) -> str:
+    def name_suffix(self) -> str:
         """Return the name of the entity if any."""
-        return f"{super().name} {self.entity_description.name}"
+        return self.entity_description.name
 
     @property
-    def unique_id(self) -> str:
+    def unique_id_suffix(self) -> str:
         """Return the id of this entity."""
-        return f"{super().unique_id}_{self.entity_description.key}"
+        return self.entity_description.key
 
     @property
     def available(self) -> str:
