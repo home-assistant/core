@@ -79,7 +79,7 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         super().__init__(config_entry_id, device)
         self.entity_description = description
         self._ring = ring
-        self._attr_name = f"{self._device.name} {description.name}"
+        self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.id}-{description.key}"
         self._update_alert()
 
