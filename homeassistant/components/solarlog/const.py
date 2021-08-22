@@ -20,7 +20,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.util import dt
 
 DOMAIN = "solarlog"
 
