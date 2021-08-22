@@ -109,7 +109,7 @@ class DanfossAir(SensorEntity):
         self._type = sensor_type
         self._unit = sensor_unit
         self._device_class = device_class
-        self._state_class = state_class
+        self._attr_state_class = state_class
 
     @property
     def name(self):
@@ -120,11 +120,6 @@ class DanfossAir(SensorEntity):
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return self._state_class
 
     @property
     def native_value(self):
