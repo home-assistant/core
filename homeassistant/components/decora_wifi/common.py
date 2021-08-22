@@ -1,7 +1,8 @@
 """Common code for decora_wifi."""
 
+from __future__ import annotations
+
 import logging
-from typing import Dict, List
 
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.iot_switch import IotSwitch
@@ -34,7 +35,7 @@ class DecoraWifiPlatform:
         self._session = DecoraWiFiSession()
         self._email = email
         self._password = password
-        self._iot_switches: Dict[str, IotSwitch] = {
+        self._iot_switches: dict[str, IotSwitch] = {
             platform: [] for platform in PLATFORMS
         }
         self._loggedin = False
@@ -47,12 +48,12 @@ class DecoraWifiPlatform:
         self.apilogout()
 
     @property
-    def lights(self) -> List[IotSwitch]:
+    def lights(self) -> list[IotSwitch]:
         """Get the lights."""
         return self._iot_switches[LIGHT_DOMAIN]
 
     @property
-    def activeplatforms(self) -> List[str]:
+    def activeplatforms(self) -> list[str]:
         """Get the list of platforms which have devices defined."""
         return [p for p in PLATFORMS if self._iot_switches[p]]
 
@@ -94,17 +95,17 @@ class DecoraWifiPlatform:
                     residences = acct.get_residences()
                     for res in residences:
                         switches = res.get_iot_switches()
-                        for sw in switches:
+                        for switch in switches:
                             # Add the switch to the appropriate list in the iot_switches dictionary.
-                            platform = DecoraWifiPlatform.classifydevice(sw)
-                            self._iot_switches[platform].append(sw)
+                            platform = DecoraWifiPlatform.classifydevice(switch)
+                            self._iot_switches[platform].append(switch)
                 elif permission.residenceId is not None:
                     residence = Residence(self._session, permission.residenceId)
                     switches = residence.get_iot_switches()
-                    for sw in switches:
+                    for switch in switches:
                         # Add the switch to the appropriate list in the iot_switches dictionary.
-                        platform = DecoraWifiPlatform.classifydevice(sw)
-                        self._iot_switches[platform].append(sw)
+                        platform = DecoraWifiPlatform.classifydevice(switch)
+                        self._iot_switches[platform].append(switch)
         except ValueError as exc:
             raise DecoraWifiCommFailed from exc
 
@@ -116,7 +117,7 @@ class DecoraWifiPlatform:
 
     def refresh_devices(self):
         """Refresh this object's devices."""
-        self._iot_switches: Dict[str, IotSwitch] = {
+        self._iot_switches: dict[str, IotSwitch] = {
             platform: [] for platform in PLATFORMS
         }
         self._apigetdevices()
@@ -137,7 +138,7 @@ class DecoraWifiPlatform:
         return LIGHT_DOMAIN
 
 
-decorawifisessions: Dict[str, DecoraWifiPlatform] = {}
+decorawifisessions: dict[str, DecoraWifiPlatform] = {}
 
 
 class DecoraWifiEntity(Entity):

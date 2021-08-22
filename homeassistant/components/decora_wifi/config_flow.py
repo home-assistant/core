@@ -25,7 +25,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         self.entry = None
 
-    async def async_step_user(self, user_input=None, errors={}):
+    async def async_step_user(self, user_input=None, errors=None):
         """Prompt for user input to setup decora_wifi."""
 
         data_schema = {
@@ -54,12 +54,18 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 password=self.data[CONF_PASSWORD],
             )
         except DecoraWifiLoginFailed:
-            errors["base"] = "invalid_auth"
+            if errors is None:
+                errors = {"base": "invalid_auth"}
+            else:
+                errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
         except DecoraWifiCommFailed:
-            errors["base"] = "cannot_connect"
+            if errors is None:
+                errors = {"base": "cannot_connect"}
+            else:
+                errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
@@ -70,7 +76,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{CONF_TITLE} - {self.data[CONF_USERNAME]}", data=self.data
         )
 
-    async def async_step_reauth(self, user_input=None, errors={}):
+    async def async_step_reauth(self, user_input=None, errors=None):
         """Re-authenticate a user."""
 
         data_schema = {
@@ -92,12 +98,18 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 password=self.data[CONF_PASSWORD],
             )
         except DecoraWifiLoginFailed:
-            errors["base"] = "invalid_auth"
+            if errors is None:
+                errors = {"base": "invalid_auth"}
+            else:
+                errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
             )
         except DecoraWifiCommFailed:
-            errors["base"] = "cannot_connect"
+            if errors is None:
+                errors = {"base": "cannot_connect"}
+            else:
+                errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
             )
