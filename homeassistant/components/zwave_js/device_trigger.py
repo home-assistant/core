@@ -1,6 +1,8 @@
 """Provides device triggers for Z-Wave JS."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, ConfigurationValueType
 
@@ -184,7 +186,9 @@ TRIGGER_SCHEMA = vol.Any(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Z-Wave JS devices."""
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
