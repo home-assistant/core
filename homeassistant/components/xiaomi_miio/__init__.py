@@ -145,9 +145,10 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    # Pedestal fans
     elif model == MODEL_FAN_P5:
         device = FanP5(host, token)
-    elif model == MODELS_FAN_MIIO:
+    elif model in MODELS_FAN_MIIO:
         device = Fan(host, token, model=model)
     else:
         _LOGGER.error(
