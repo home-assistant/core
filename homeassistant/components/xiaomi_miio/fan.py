@@ -795,6 +795,7 @@ class XiaomiFan(XiaomiGenericDevice):
                 self._device.set_direct_speed,
                 percentage,
             )
+        self._percentage = percentage
 
         if not self.is_on:
             await self.async_turn_on()
@@ -865,4 +866,26 @@ class XiaomiFanP5(XiaomiFan):
             FanOperationMode[preset_mode],
         )
         self._preset_mode = preset_mode
+        self.async_write_ha_state()
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan."""
+        if percentage == 0:
+            await self.async_turn_off()
+            self._state = False
+            self._percentage = 0
+            self.async_write_ha_state()
+            return
+
+        await self._try_command(
+            "Setting fan speed percentage of the miio device failed.",
+            self._device.set_speed,
+            percentage,
+        )
+        self._percentage = percentage
+
+        if not self.is_on:
+            await self.async_turn_on()
+            self._state = True
+
         self.async_write_ha_state()
