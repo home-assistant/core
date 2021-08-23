@@ -552,7 +552,7 @@ async def test_homekit_start(hass, hk_driver, mock_zeroconf, device_reg):
     assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
 
     assert len(device_reg.devices) == 1
-    assert homekit.driver.state.config_version == 2
+    assert homekit.driver.state.config_version == 1
 
 
 async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, mock_zeroconf):
@@ -722,7 +722,7 @@ async def test_homekit_unpair(hass, device_reg, mock_zeroconf):
         homekit.status = STATUS_RUNNING
 
         state = homekit.driver.state
-        state.add_paired_client("client1", "any")
+        state.add_paired_client("client1", "any", b"1")
         formatted_mac = device_registry.format_mac(state.mac)
         hk_bridge_dev = device_reg.async_get_device(
             {}, {(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)}
@@ -761,7 +761,7 @@ async def test_homekit_unpair_missing_device_id(hass, device_reg, mock_zeroconf)
         homekit.status = STATUS_RUNNING
 
         state = homekit.driver.state
-        state.paired_clients = {"client1": "any"}
+        state.add_paired_client("client1", "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
@@ -807,7 +807,7 @@ async def test_homekit_unpair_not_homekit_device(hass, device_reg, mock_zeroconf
         )
 
         state = homekit.driver.state
-        state.paired_clients = {"client1": "any"}
+        state.add_paired_client("client1", "any", b"1")
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
