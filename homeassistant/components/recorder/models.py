@@ -19,8 +19,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.dialects import mysql, oracle, postgresql
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -66,6 +65,12 @@ ALL_TABLES = [
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION, "postgresql")
 )
 
 
@@ -225,22 +230,6 @@ class StatisticData(TypedDict, total=False):
     sum: float
 
 
-@compiles(Float)
-def compile_float(element, compiler, **kw):
-    """Create Float columns as DOUBLE PRECISION.
-
-    Can be removed if SQLAlchemy gains support for generic double, see:
-    https://github.com/sqlalchemy/sqlalchemy/issues/5465
-    """
-    return "DOUBLE"
-
-
-@compiles(Float, "mssql")
-def compile_float_mssql(element, compiler, **kw):
-    """Create Float columns as FLOAT."""
-    return "FLOAT"
-
-
 class Statistics(Base):  # type: ignore
     """Statistics."""
 
@@ -257,11 +246,11 @@ class Statistics(Base):  # type: ignore
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
-    state = Column(Float())
-    sum = Column(Float())
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
