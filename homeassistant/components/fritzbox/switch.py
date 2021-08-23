@@ -3,15 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,7 +15,7 @@ from .const import (
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
-from .model import SwitchExtraAttributes
+from .model import FritzExtraAttributes
 
 
 async def async_setup_entry(
@@ -33,22 +26,8 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if not device.has_switch:
-            continue
-
-        entities.append(
-            FritzboxSwitch(
-                {
-                    ATTR_NAME: f"{device.name}",
-                    ATTR_ENTITY_ID: f"{device.ain}",
-                    ATTR_UNIT_OF_MEASUREMENT: None,
-                    ATTR_DEVICE_CLASS: None,
-                    ATTR_STATE_CLASS: None,
-                },
-                coordinator,
-                ain,
-            )
-        )
+        if device.has_switch:
+            entities.append(FritzboxSwitch(coordinator, ain))
 
     async_add_entities(entities)
 
@@ -72,9 +51,9 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
         await self.coordinator.async_refresh()
 
     @property
-    def extra_state_attributes(self) -> SwitchExtraAttributes:
+    def extra_state_attributes(self) -> FritzExtraAttributes:
         """Return the state attributes of the device."""
-        attrs: SwitchExtraAttributes = {
+        attrs: FritzExtraAttributes = {
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,
         }

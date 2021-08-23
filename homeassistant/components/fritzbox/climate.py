@@ -13,15 +13,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
     ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
@@ -65,22 +60,8 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if not device.has_thermostat:
-            continue
-
-        entities.append(
-            FritzboxThermostat(
-                {
-                    ATTR_NAME: f"{device.name}",
-                    ATTR_ENTITY_ID: f"{device.ain}",
-                    ATTR_UNIT_OF_MEASUREMENT: None,
-                    ATTR_DEVICE_CLASS: None,
-                    ATTR_STATE_CLASS: None,
-                },
-                coordinator,
-                ain,
-            )
-        )
+        if device.has_thermostat:
+            entities.append(FritzboxThermostat(coordinator, ain))
 
     async_add_entities(entities)
 

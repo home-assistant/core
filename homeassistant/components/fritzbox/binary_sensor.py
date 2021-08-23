@@ -1,23 +1,21 @@
 """Support for Fritzbox binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
-    BinarySensorEntity,
-)
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from pyfritzhome.fritzhomedevice import FritzhomeDevice
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.fritzbox.model import FritzBinarySensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from . import FritzBoxSensorEntity
+from .const import (
+    BINARY_SENSOR_DESCRIPTIONS,
+    CONF_COORDINATOR,
+    DOMAIN as FRITZBOX_DOMAIN,
+)
 
 
 async def async_setup_entry(
@@ -28,30 +26,38 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        if not device.has_alarm:
-            continue
-
-        entities.append(
-            FritzboxBinarySensor(
-                {
-                    ATTR_NAME: f"{device.name}",
-                    ATTR_ENTITY_ID: f"{device.ain}",
-                    ATTR_UNIT_OF_MEASUREMENT: None,
-                    ATTR_DEVICE_CLASS: DEVICE_CLASS_WINDOW,
-                    ATTR_STATE_CLASS: None,
-                },
-                coordinator,
-                ain,
-            )
-        )
+        for description in BINARY_SENSOR_DESCRIPTIONS:
+            if callable(description.suitable) and description.suitable(device):
+                entities.append(
+                    FritzboxBinarySensor(
+                        description,
+                        coordinator,
+                        ain,
+                    )
+                )
 
     async_add_entities(entities)
 
 
-class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
+class FritzboxBinarySensor(FritzBoxSensorEntity, BinarySensorEntity):
     """Representation of a binary FRITZ!SmartHome device."""
 
+    entity_description: FritzBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        entity_description: FritzBinarySensorEntityDescription,
+        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        ain: str,
+    ) -> None:
+        """Initialize the FritzBox entity."""
+        super().__init__(entity_description, coordinator, ain)
+        self._attr_name = self.device.name
+        self._attr_unique_id = ain
+
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self.device.alert_state  # type: ignore [no-any-return]
+        if callable(self.entity_description.is_on):
+            return self.entity_description.is_on(self.device)
+        return None

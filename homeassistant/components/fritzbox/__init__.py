@@ -6,12 +6,8 @@ from datetime import timedelta
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 import requests
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -27,8 +23,16 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
-from .model import EntityInfo
+from .const import (
+    ATTR_STATE_DEVICE_LOCKED,
+    ATTR_STATE_LOCKED,
+    CONF_CONNECTIONS,
+    CONF_COORDINATOR,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+)
+from .model import FritzEntityDescription, FritzExtraAttributes
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -128,7 +132,6 @@ class FritzBoxEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
         ain: str,
     ) -> None:
@@ -136,10 +139,8 @@ class FritzBoxEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self.ain = ain
-        self._name = entity_info[ATTR_NAME]
-        self._unique_id = entity_info[ATTR_ENTITY_ID]
-        self._device_class = entity_info[ATTR_DEVICE_CLASS]
-        self._attr_state_class = entity_info[ATTR_STATE_CLASS]
+        self._attr_name = self.device.name
+        self._attr_unique_id = ain
 
     @property
     def available(self) -> bool:
@@ -163,16 +164,26 @@ class FritzBoxEntity(CoordinatorEntity):
         }
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the device."""
-        return self._unique_id
+    def extra_state_attributes(self) -> FritzExtraAttributes:
+        """Return the state attributes of the device."""
+        attrs: FritzExtraAttributes = {
+            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
+            ATTR_STATE_LOCKED: self.device.lock,
+        }
+        return attrs
 
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
 
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class."""
-        return self._device_class
+class FritzBoxSensorEntity(FritzBoxEntity):
+    """Basis FritzBox entity."""
+
+    def __init__(
+        self,
+        entity_description: FritzEntityDescription,
+        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        ain: str,
+    ) -> None:
+        """Initialize the FritzBox entity."""
+        super().__init__(coordinator, ain)
+        self.entity_description = entity_description
+        self._attr_name = f"{self.device.name} {entity_description.name}"
+        self._attr_unique_id = f"{ain}_{entity_description.key}"
