@@ -133,10 +133,13 @@ class EagleSensor(CoordinatorEntity, SensorEntity):
         return f"{self.coordinator.cloud_id}-${self.coordinator.hardware_address}-{self.entity_description.key}"
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.is_connected
+
+    @property
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
-        if not self.coordinator.is_connected:
-            return None
         return self.coordinator.data.get(self.entity_description.key)
 
     @property
