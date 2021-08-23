@@ -109,7 +109,7 @@ class AzureEventHub:
     ) -> None:
         """Initialize the listener."""
         self.hass = hass
-        self.queue: asyncio.PriorityQueue[
+        self.queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
             tuple[int, tuple[float, Event | None]]
         ] = asyncio.PriorityQueue()
         self._client_args = client_args
