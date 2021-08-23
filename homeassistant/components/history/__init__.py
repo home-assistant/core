@@ -12,11 +12,10 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import recorder, websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import history, models as history_models
 from homeassistant.components.recorder.statistics import (
-    clear_statistics,
     list_statistic_ids,
     statistics_during_period,
 )
@@ -179,6 +178,7 @@ async def ws_get_list_statistic_ids(
     connection.send_result(msg["id"], statistic_ids)
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "history/clear_statistics",
@@ -190,11 +190,7 @@ async def ws_clear_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Clear statistics for a list of statistic_ids."""
-    await hass.async_add_executor_job(
-        clear_statistics,
-        hass,
-        msg["statistic_ids"],
-    )
+    hass.data[recorder.DATA_INSTANCE].async_clear_statistics(msg["statistic_ids"])
     connection.send_result(msg["id"])
 
 

@@ -458,15 +458,11 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
     return unit
 
 
-def clear_statistics(hass: HomeAssistant, statistic_ids: list[str]) -> None:
+def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
-    with session_scope(hass=hass) as session:
-        metadata_ids = _get_metadata_ids(hass, session, statistic_ids)
-        session.query(Statistics).filter(
-            Statistics.metadata_id.in_(metadata_ids)
-        ).delete(synchronize_session=False)
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
         session.query(StatisticsMeta).filter(
-            StatisticsMeta.id.in_(metadata_ids)
+            StatisticsMeta.statistic_id.in_(statistic_ids)
         ).delete(synchronize_session=False)
 
 

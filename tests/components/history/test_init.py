@@ -1131,6 +1131,7 @@ async def test_clear_statistics_during_period(hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -1153,6 +1154,7 @@ async def test_clear_statistics_during_period(hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
     await client.send_json(
