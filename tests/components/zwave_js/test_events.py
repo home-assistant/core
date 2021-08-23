@@ -49,6 +49,13 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     assert events[0].data["label"] == "Event value"
     assert events[0].data["value"] == 255
     assert events[0].data["value_raw"] == 255
+    assert events[0].data["entity_id"] == [
+        "switch.smart_plug_with_two_usb_ports",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_3",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_4",
+    ]
 
     # Publish fake Scene Activation value notification
     event = Event(
@@ -85,6 +92,13 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     assert events[1].data["label"] == "Scene ID"
     assert events[1].data["value"] == 16
     assert events[1].data["value_raw"] == 16
+    assert events[1].data["entity_id"] == [
+        "switch.smart_plug_with_two_usb_ports",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_3",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_4",
+    ]
 
     # Publish fake Central Scene value notification
     event = Event(
@@ -132,6 +146,13 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     assert events[2].data["label"] == "Scene 001"
     assert events[2].data["value"] == "KeyPressed3x"
     assert events[2].data["value_raw"] == 4
+    assert events[2].data["entity_id"] == [
+        "switch.smart_plug_with_two_usb_ports",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_3",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_4",
+    ]
 
 
 async def test_notifications(hass, hank_binary_switch, integration, client):
@@ -170,6 +191,13 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[0].data["parameters"]["userId"] == 1
     assert events[0].data["command_class"] == CommandClass.NOTIFICATION
     assert events[0].data["command_class_name"] == "Notification"
+    assert events[0].data["entity_id"] == [
+        "switch.smart_plug_with_two_usb_ports",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_3",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_4",
+    ]
 
     # Publish fake Entry Control CC notification
     event = Event(
@@ -194,6 +222,13 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[1].data["event_data"] == "555"
     assert events[1].data["command_class"] == CommandClass.ENTRY_CONTROL
     assert events[1].data["command_class_name"] == "Entry Control"
+    assert events[1].data["entity_id"] == [
+        "switch.smart_plug_with_two_usb_ports",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_3",
+        "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_4",
+    ]
 
 
 async def test_value_updated(hass, vision_security_zl7432, integration, client):
