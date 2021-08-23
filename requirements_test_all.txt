@@ -622,9 +622,6 @@ oauth2client==4.0.0
 # homeassistant.components.profiler
 objgraph==3.4.1
 
-# homeassistant.components.omnik_inverter
-omnikinverter==0.1.0
-
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
 
