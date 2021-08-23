@@ -339,7 +339,7 @@ MODEL_TO_SENSORS_MAP = {
 VACUUM_SENSORS = {
     ATTR_DND_START: XiaomiMiioSensorDescription(
         key=ATTR_DND_START,
-        icon="mdi:fast-forward",
+        icon="mdi:minus-circle-off",
         name="DnD Start",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_DND_STATUS,
@@ -347,7 +347,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_DND_END: XiaomiMiioSensorDescription(
         key=ATTR_DND_END,
-        icon="mdi:fast-forward",
+        icon="mdi:minus-circle-off",
         name="DnD End",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_DND_STATUS,
@@ -355,7 +355,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_LAST_CLEAN_START: XiaomiMiioSensorDescription(
         key=ATTR_LAST_CLEAN_START,
-        icon="mdi:fast-forward",
+        icon="mdi:clock-time-twelve",
         name="Last Clean Start",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
@@ -363,7 +363,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
         key=ATTR_LAST_CLEAN_END,
-        icon="mdi:fast-forward",
+        icon="mdi:clock-time-twelve",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
         name="Last Clean End",
@@ -371,7 +371,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_LAST_CLEAN_TIME: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
+        icon="mdi:timer-sand",
         key=ATTR_LAST_CLEAN_TIME,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
         name="Last Clean Duration",
@@ -379,7 +379,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_LAST_CLEAN_AREA: XiaomiMiioSensorDescription(
         native_unit_of_measurement=AREA_SQUARE_METERS,
-        icon="mdi:fast-forward",
+        icon="mdi:texture-box",
         key=ATTR_LAST_CLEAN_AREA,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
         name="Last Clean Area",
@@ -387,7 +387,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CLEAN_HISTORY_TOTAL_DURATION: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
+        icon="mdi:timer-sand",
         key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
         name="Clean history total duration",
@@ -395,7 +395,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CLEAN_HISTORY_TOTAL_AREA: XiaomiMiioSensorDescription(
         native_unit_of_measurement=AREA_SQUARE_METERS,
-        icon="mdi:fast-forward",
+        icon="mdi:texture-box",
         key=ATTR_CLEAN_HISTORY_TOTAL_AREA,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
         name="Total Clean Area",
@@ -403,7 +403,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CLEAN_HISTORY_COUNT: XiaomiMiioSensorDescription(
         native_unit_of_measurement="",
-        icon="mdi:fast-forward",
+        icon="mdi:counter",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         key=ATTR_CLEAN_HISTORY_COUNT,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
@@ -412,7 +412,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: XiaomiMiioSensorDescription(
         native_unit_of_measurement="",
-        icon="mdi:fast-forward",
+        icon="mdi:counter",
         state_class="total_increasing",
         key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
@@ -421,7 +421,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
+        icon="mdi:brush",
         key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Main Brush Left",
@@ -429,7 +429,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
+        icon="mdi:brush",
         key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Side Brush Left",
@@ -437,7 +437,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CONSUMABLE_STATUS_FILTER_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
+        icon="mdi:air-filter",
         key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Filter Left",
@@ -445,7 +445,7 @@ VACUUM_SENSORS = {
     ),
     ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:fast-forward",
+        icon="mdi:eye-outline",
         key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Sensor Dirty Left",

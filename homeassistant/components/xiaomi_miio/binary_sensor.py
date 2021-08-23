@@ -65,7 +65,7 @@ VACUUM_SENSORS = {
     ATTR_MOP_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_MOP_ATTACHED,
         name="Mop Attached",
-        icon="mdi:fast-forward",
+        icon="mdi:square-rounded",
         parent_key=KEY_VACUUM_STATUS,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CONNECTIVITY,
@@ -73,7 +73,7 @@ VACUUM_SENSORS = {
     ATTR_WATER_BOX_ATTACHED: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_BOX_ATTACHED,
         name="Water Box Attached",
-        icon="mdi:fast-forward",
+        icon="mdi:water",
         parent_key=KEY_VACUUM_STATUS,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CONNECTIVITY,
@@ -81,7 +81,7 @@ VACUUM_SENSORS = {
     ATTR_WATER_SHORTAGE: XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_SHORTAGE,
         name="Water Shortage",
-        icon="mdi:fast-forward",
+        icon="mdi:water",
         parent_key=KEY_VACUUM_STATUS,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_PROBLEM,
