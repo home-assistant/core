@@ -11,11 +11,9 @@ from miio import (
     AirPurifier,
     AirPurifierMiot,
     DeviceException,
+    Fan,
     FanP5,
-    FanZA1,
-    FanZA4,
 )
-from miio.fan import FanZA3
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
@@ -34,11 +32,9 @@ from .const import (
     KEY_COORDINATOR,
     KEY_DEVICE,
     MODEL_FAN_P5,
-    MODEL_FAN_ZA1,
-    MODEL_FAN_ZA3,
-    MODEL_FAN_ZA4,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -151,12 +147,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirFresh(host, token)
     elif model == MODEL_FAN_P5:
         device = FanP5(host, token)
-    elif model == MODEL_FAN_ZA1:
-        device = FanZA1(host, token)
-    elif model == MODEL_FAN_ZA3:
-        device = FanZA3(host, token)
-    elif model == MODEL_FAN_ZA4:
-        device = FanZA4(host, token)
+    elif model == MODELS_FAN_MIIO:
+        device = Fan(host, token, model=model)
     else:
         _LOGGER.error(
             "Unsupported device found! Please create an issue at "

@@ -126,7 +126,7 @@ NUMBER_TYPES = {
         unit_of_measurement=TIME_MINUTES,
         min_value=0,
         max_value=480,
-        step=60,
+        step=1,
         method="async_set_delay_off_countdown",
     ),
 }
