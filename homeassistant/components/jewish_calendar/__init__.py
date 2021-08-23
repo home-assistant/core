@@ -10,14 +10,14 @@ from homeassistant.helpers.discovery import async_load_platform
 
 DOMAIN = "jewish_calendar"
 
-DEFAULT_NAME = "Jewish Calendar"
-
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
 CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
 CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
 
 CANDLE_LIGHT_DEFAULT = 18
+
+DEFAULT_NAME = "Jewish Calendar"
 
 CONFIG_SCHEMA = vol.Schema(
     {
