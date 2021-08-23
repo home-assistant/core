@@ -3,8 +3,6 @@ Volumio Platform.
 
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
-from __future__ import annotations
-
 from datetime import timedelta
 import json
 
