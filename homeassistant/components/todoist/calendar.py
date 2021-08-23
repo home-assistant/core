@@ -1,6 +1,7 @@
 """Support for Todoist task management (https://todoist.com)."""
 from datetime import datetime, timedelta
 import logging
+from typing import cast
 
 from todoist.api import TodoistAPI
 import voluptuous as vol
@@ -231,9 +232,10 @@ def _parse_due_date(data: dict, gmt_string) -> datetime:
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
-    if dt.parse_datetime(data["date"]).tzinfo is None:
+    nowTime = cast(datetime, dt.parse_datetime(data["date"]))
+    if nowTime.tzinfo is None:
         data["date"] += gmt_string
-    return dt.as_utc(dt.parse_datetime(data["date"]))
+    return dt.as_utc(nowTime)
 
 
 class TodoistProjectDevice(CalendarEventDevice):
