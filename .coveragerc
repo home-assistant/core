@@ -1018,8 +1018,6 @@ omit =
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/coordinator.py
-    homeassistant/components/switcher_kis/sensor.py
-    homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
