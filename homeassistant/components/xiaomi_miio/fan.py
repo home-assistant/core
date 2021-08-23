@@ -692,7 +692,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
 
 
 class XiaomiFan(XiaomiGenericDevice):
-    """Representation of a Xiaomi Fan P5."""
+    """Representation of a Xiaomi Fan."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
