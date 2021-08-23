@@ -72,7 +72,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=12)
         ),
-        name="Estimated Power Production - Next 12 Hours",
+        name="Estimated Power Production - In 12 Hours",
         device_class=DEVICE_CLASS_POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=POWER_WATT,
@@ -82,7 +82,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=24)
         ),
-        name="Estimated Power Production - Next 24 Hours",
+        name="Estimated Power Production - In 24 Hours",
         device_class=DEVICE_CLASS_POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=POWER_WATT,

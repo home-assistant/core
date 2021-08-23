@@ -174,13 +174,13 @@ async def test_disabled_by_default(
     "key,name,value",
     [
         (
-            "power_production_next_12hours",
-            "Estimated Power Production - Next 12 Hours",
+            "power_production_in_12hours",
+            "Estimated Power Production - In 12 Hours",
             "600000",
         ),
         (
-            "power_production_next_24hours",
-            "Estimated Power Production - Next 24 Hours",
+            "power_production_in_24hours",
+            "Estimated Power Production - In 24 Hours",
             "700000",
         ),
         (
