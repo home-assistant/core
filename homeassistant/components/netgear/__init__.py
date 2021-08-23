@@ -3,10 +3,12 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_TRACKED_LIST, DOMAIN, PLATFORMS
+from .errors import CannotLoginException
 from .router import NetgearRouter, convert_tracked_list
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +22,10 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)
-    await router.async_setup()
+    try:
+        await router.async_setup()
+    except CannotLoginException as ex:
+        raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router
