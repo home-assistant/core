@@ -34,7 +34,7 @@ DATA_SCHEMA_PROJECT_TYPE = vol.Schema(
 )
 
 # INDUSTY_SOLUTIONS Schema
-DATA_SCHEMA_INDUSTY_SOLUTIONS = vol.Schema(
+DATA_SCHEMA_INDUSTRY_SOLUTIONS = vol.Schema(
     {
         vol.Required(CONF_ENDPOINT): vol.In(TUYA_ENDPOINT),
         vol.Required(CONF_ACCESS_ID): str,
@@ -111,7 +111,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_SMART_HOME)
             if self.project_type == ProjectType.SMART_HOME
             else self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA_INDUSTY_SOLUTIONS
+                step_id="user", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
             )
         )
 
@@ -154,7 +154,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self.project_type == ProjectType.SMART_HOME
                 else self.async_show_form(
                     step_id="user",
-                    data_schema=DATA_SCHEMA_INDUSTY_SOLUTIONS,
+                    data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
                     errors=errors,
                 )
             )

@@ -9,11 +9,11 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class TuyaHaDevice(Entity):
+class TuyaHaEntity(Entity):
     """Tuya base device."""
 
     def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
-        """Init TuyaHaDevice."""
+        """Init TuyaHaEntity."""
         super().__init__()
 
         self.tuya_device = device

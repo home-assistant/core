@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .base import TuyaHaDevice
+from .base import TuyaHaEntity
 from .const import (
     DOMAIN,
     TUYA_DEVICE_MANAGER,
@@ -63,7 +63,7 @@ async def async_setup_entry(
     """Set up tuya sensors dynamically through tuya discovery."""
     _LOGGER.debug("switch init")
 
-    hass.data[DOMAIN][TUYA_HA_TUYA_MAP].update({DEVICE_DOMAIN: TUYA_SUPPORT_TYPE})
+    hass.data[DOMAIN][TUYA_HA_TUYA_MAP][DEVICE_DOMAIN] = TUYA_SUPPORT_TYPE
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya sensor."""
@@ -125,7 +125,7 @@ def _setup_entities(hass, device_ids: list):
     return entities
 
 
-class TuyaHaSwitch(TuyaHaDevice, SwitchEntity):
+class TuyaHaSwitch(TuyaHaEntity, SwitchEntity):
     """Tuya Switch Device."""
 
     dp_code_switch = DPCODE_SWITCH
@@ -152,7 +152,7 @@ class TuyaHaSwitch(TuyaHaDevice, SwitchEntity):
     @property
     def name(self) -> str | None:
         """Return Tuya device name."""
-        return self.tuya_device.name + self.channel
+        return f"{self.tuya_device.name}{self.channel}"
 
     @property
     def is_on(self) -> bool:
