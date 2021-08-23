@@ -115,11 +115,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7 = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C = {
-    ATTR_MODE: "mode",
-    ATTR_MOTOR_SPEED: "motor_speed",
-}
-
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
     ATTR_MODE: "mode",
@@ -598,7 +593,6 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
-        self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C
         self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
         self._supported_features = SUPPORT_PRESET_MODE
         self._speed_count = 0
@@ -633,13 +627,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         """Fetch state from the device."""
         self._available = True
         self._state = self.coordinator.data.is_on
-        self._state_attrs.update(
-            {
-                key: self._extract_value_from_attribute(self.coordinator.data, value)
-                for key, value in self._available_attributes.items()
-            }
-        )
-        self._mode = self._state_attrs.get(ATTR_MODE)
+        self._mode = self.coordinator.data.mode.name
         self.async_write_ha_state()
 
 
