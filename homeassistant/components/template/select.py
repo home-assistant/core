@@ -1,6 +1,7 @@
 """Support for selects which integrates with other components."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 import voluptuous as vol
@@ -108,10 +109,8 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         super().__init__(availability_template=availability_template)
         self._attr_name = DEFAULT_NAME
         name_template.hass = hass
-        try:
+        with contextlib.suppress(TemplateError):
             self._attr_name = name_template.async_render(parse_result=False)
-        except TemplateError:
-            pass
         self._name_template = name_template
         self._value_template = value_template
         domain = __name__.split(".")[-2]
