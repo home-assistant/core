@@ -5,14 +5,31 @@
             "already_in_progress": "Configuration flow is already in progress",
             "connection_error": "Failed to connect"
         },
+        "error": {
+            "discovery_error": "Failed to discover a Motion Gateway"
+        },
         "flow_title": "Motion Blinds",
         "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
+                "title": "Motion Blinds"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP Address"
+                },
+                "description": "Run the setup again if you want to connect additional Motion Gateways",
+                "title": "Select the Motion Gateway that you wish to connect"
+            },
             "user": {
                 "data": {
                     "api_key": "API Key",
                     "host": "IP Address"
                 },
-                "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
+                "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
                 "title": "Motion Blinds"
             }
         }

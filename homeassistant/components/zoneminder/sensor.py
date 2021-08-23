@@ -4,10 +4,9 @@ import logging
 import voluptuous as vol
 from zoneminder.monitor import TimePeriod
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -57,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ZMSensorMonitors(Entity):
+class ZMSensorMonitors(SensorEntity):
     """Get the status of each ZoneMinder monitor."""
 
     def __init__(self, monitor):
@@ -72,7 +71,7 @@ class ZMSensorMonitors(Entity):
         return f"{self._monitor.name} Status"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -91,7 +90,7 @@ class ZMSensorMonitors(Entity):
         self._is_available = self._monitor.is_available
 
 
-class ZMSensorEvents(Entity):
+class ZMSensorEvents(SensorEntity):
     """Get the number of events for each monitor."""
 
     def __init__(self, monitor, include_archived, sensor_type):
@@ -108,12 +107,12 @@ class ZMSensorEvents(Entity):
         return f"{self._monitor.name} {self.time_period.title}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "Events"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -122,7 +121,7 @@ class ZMSensorEvents(Entity):
         self._state = self._monitor.get_events(self.time_period, self._include_archived)
 
 
-class ZMSensorRunState(Entity):
+class ZMSensorRunState(SensorEntity):
     """Get the ZoneMinder run state."""
 
     def __init__(self, client):
@@ -137,7 +136,7 @@ class ZMSensorRunState(Entity):
         return "Run State"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

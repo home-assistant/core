@@ -3,7 +3,7 @@
 DOMAIN = "adguard"
 
 DATA_ADGUARD_CLIENT = "adguard_client"
-DATA_ADGUARD_VERION = "adguard_version"
+DATA_ADGUARD_VERSION = "adguard_version"
 
 CONF_FORCE = "force"
 

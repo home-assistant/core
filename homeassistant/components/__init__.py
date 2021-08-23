@@ -7,16 +7,16 @@ Component design guidelines:
   format "<DOMAIN>.<OBJECT_ID>".
 - Each component should publish services only under its own domain.
 """
+from __future__ import annotations
+
 import logging
 
-from homeassistant.core import split_entity_id
-
-# mypy: allow-untyped-defs
+from homeassistant.core import HomeAssistant, split_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """Load up the module to call the is_on method.
 
     If there is no entity id given we will check all.

@@ -4,10 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import zabbix
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     zapi = hass.data[zabbix.DOMAIN]
     if not zapi:
-        _LOGGER.error("zapi is None. Zabbix integration hasn't been loaded?")
+        _LOGGER.error("Zabbix integration hasn't been loaded? zapi is None")
         return False
 
     _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
@@ -79,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ZabbixTriggerCountSensor(Entity):
+class ZabbixTriggerCountSensor(SensorEntity):
     """Get the active trigger count for all Zabbix monitored hosts."""
 
     def __init__(self, zApi, name="Zabbix"):
@@ -95,12 +94,12 @@ class ZabbixTriggerCountSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return "issues"
 
@@ -116,7 +115,7 @@ class ZabbixTriggerCountSensor(Entity):
         self._state = len(triggers)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
 

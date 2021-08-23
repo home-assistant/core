@@ -1,8 +1,8 @@
 """The tests for the hassio component."""
 
-from homeassistant.auth.providers.homeassistant import InvalidAuth
+from unittest.mock import Mock, patch
 
-from tests.async_mock import Mock, patch
+from homeassistant.auth.providers.homeassistant import InvalidAuth
 
 
 async def test_auth_success(hass, hassio_client_supervisor):
@@ -66,7 +66,7 @@ async def test_login_error(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 401
+        assert resp.status == 404
         mock_login.assert_called_with("test", "123456")
 
 

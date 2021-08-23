@@ -1,10 +1,14 @@
 """The tests the MQTT alarm control panel component."""
 import copy
 import json
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import alarm_control_panel
+from homeassistant.components.mqtt.alarm_control_panel import (
+    MQTT_ALARM_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -38,12 +42,12 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
 
@@ -541,6 +545,17 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass,
+        mqtt_mock,
+        alarm_control_panel.DOMAIN,
+        DEFAULT_CONFIG,
+        MQTT_ALARM_ATTRIBUTES_BLOCKED,
     )
 
 

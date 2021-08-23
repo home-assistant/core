@@ -1,0 +1,120 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji wykrywania dodatku Z-Wave JS",
+            "addon_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji o dodatku Z-Wave JS",
+            "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku Z-Wave JS",
+            "addon_set_config_failed": "Nie uda\u0142o si\u0119 skonfigurowa\u0107 Z-Wave JS",
+            "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS. Sprawd\u017a konfiguracj\u0119",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_ws_url": "Nieprawid\u0142owy URL websocket",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "progress": {
+            "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 kilka minut.",
+            "start_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 uruchamianie dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 chwil\u0119."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Klucz sieci",
+                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
+            },
+            "hassio_confirm": {
+                "title": "Skonfiguruj integracj\u0119 Z-Wave JS z dodatkiem Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "Rozpocz\u0119\u0142a si\u0119 instalacja dodatku Z-Wave JS"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "U\u017cyj dodatku Z-Wave JS Supervisor"
+                },
+                "description": "Czy chcesz skorzysta\u0107 z dodatku Z-Wave JS Supervisor?",
+                "title": "Wybierz metod\u0119 po\u0142\u0105czenia"
+            },
+            "start_addon": {
+                "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
+            }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Warto\u015b\u0107 parametru jest {subtype}",
+            "node_status": "Stan w\u0119z\u0142a",
+            "value": "Aktualna warto\u015b\u0107 warto\u015bci Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Wys\u0142ano powiadomienie kontroli wpisu",
+            "event.notification.notification": "Wys\u0142ano powiadomienie",
+            "event.value_notification.basic": "Podstawowe wydarzenie CC na {subtype}",
+            "event.value_notification.central_scene": "Akcja sceny centralnej na {subtype}",
+            "event.value_notification.scene_activation": "Aktywacja sceny na {subtype}",
+            "state.node_status": "Zmieni\u0142 si\u0119 stan w\u0119z\u0142a"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji wykrywania dodatku Z-Wave JS",
+            "addon_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji o dodatku Z-Wave JS",
+            "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku Z-Wave JS",
+            "addon_set_config_failed": "Nie uda\u0142o si\u0119 skonfigurowa\u0107 Z-Wave JS",
+            "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "different_device": "Pod\u0142\u0105czone urz\u0105dzenie USB nie jest takie samo, jak wcze\u015bniej skonfigurowane dla tego wpisu konfiguracyjnego. Zamiast tego, utw\u00f3rz nowy wpis konfiguracyjny dla nowego urz\u0105dzenia."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_ws_url": "Nieprawid\u0142owy URL websocket",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "progress": {
+            "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 kilka minut.",
+            "start_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 uruchamianie dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 chwil\u0119."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emulacja sprz\u0119tu",
+                    "log_level": "Poziom loga",
+                    "network_key": "Klucz sieci",
+                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "Rozpocz\u0119\u0142a si\u0119 instalacja dodatku Z-Wave JS"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "U\u017cyj dodatku Z-Wave JS Supervisor"
+                },
+                "description": "Czy chcesz skorzysta\u0107 z dodatku Z-Wave JS Supervisor?",
+                "title": "Wybierz metod\u0119 po\u0142\u0105czenia"
+            },
+            "start_addon": {
+                "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

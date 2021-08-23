@@ -6,15 +6,15 @@ from pathlib import Path
 from sense_hat import SenseHat
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,9 +25,9 @@ CONF_IS_HAT_ATTACHED = "is_hat_attached"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", PERCENTAGE],
-    "pressure": ["pressure", "mb"],
+    "temperature": ["temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["humidity", PERCENTAGE, None],
+    "pressure": ["pressure", "mb", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class SenseHatSensor(Entity):
+class SenseHatSensor(SensorEntity):
     """Representation of a Sense HAT sensor."""
 
     def __init__(self, data, sensor_types):
@@ -78,6 +78,7 @@ class SenseHatSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
         self.type = sensor_types
         self._state = None
+        self._attr_device_class = SENSOR_TYPES[sensor_types][2]
 
     @property
     def name(self):
@@ -85,12 +86,12 @@ class SenseHatSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

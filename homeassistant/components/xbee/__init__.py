@@ -9,6 +9,7 @@ import xbee_helper.const as xb_const
 from xbee_helper.device import convert_adc
 from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
@@ -21,9 +22,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = "xbee"
+_LOGGER = logging.getLogger(__name__)
 
 SIGNAL_XBEE_FRAME_RECEIVED = "xbee_frame_received"
 
@@ -59,7 +60,6 @@ PLATFORM_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the connection to the XBee Zigbee device."""
-
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
     try:
@@ -366,8 +366,10 @@ class XBeeDigitalOut(XBeeDigitalIn):
         self._state = self._config.state2bool[pin_state]
 
 
-class XBeeAnalogIn(Entity):
+class XBeeAnalogIn(SensorEntity):
     """Representation of a GPIO pin configured as an analog input."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, config, device):
         """Initialize the XBee analog in device."""
@@ -414,14 +416,9 @@ class XBeeAnalogIn(Entity):
         return self._config.should_poll
 
     @property
-    def state(self):
+    def sensor_state(self):
         """Return the state of the entity."""
         return self._value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return PERCENTAGE
 
     def update(self):
         """Get the latest reading from the ADC."""

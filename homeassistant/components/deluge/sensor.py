@@ -4,7 +4,7 @@ import logging
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None
@@ -68,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class DelugeSensor(Entity):
+class DelugeSensor(SensorEntity):
     """Representation of a Deluge sensor."""
 
     def __init__(self, sensor_type, deluge_client, client_name):
@@ -88,7 +87,7 @@ class DelugeSensor(Entity):
         return f"{self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -98,7 +97,7 @@ class DelugeSensor(Entity):
         return self._available
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

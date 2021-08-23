@@ -3,10 +3,10 @@ from datetime import datetime
 import logging
 import time
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class RepetierSensor(Entity):
+class RepetierSensor(SensorEntity):
     """Class to create and populate a Repetier Sensor."""
 
     def __init__(self, api, temp_id, name, printer_id, sensor_type):
@@ -59,6 +59,7 @@ class RepetierSensor(Entity):
         self._printer_id = printer_id
         self._sensor_type = sensor_type
         self._state = None
+        self._attr_device_class = SENSOR_TYPES[self._sensor_type][4]
 
     @property
     def available(self) -> bool:
@@ -66,7 +67,7 @@ class RepetierSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return sensor attributes."""
         return self._attributes
 
@@ -76,7 +77,7 @@ class RepetierSensor(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return SENSOR_TYPES[self._sensor_type][1]
 
@@ -91,7 +92,7 @@ class RepetierSensor(Entity):
         return False
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         return self._state
 
@@ -133,7 +134,7 @@ class RepetierTempSensor(RepetierSensor):
     """Represent a Repetier temp sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         if self._state is None:
             return None
@@ -155,7 +156,7 @@ class RepetierJobSensor(RepetierSensor):
     """Represent a Repetier job sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensor state."""
         if self._state is None:
             return None

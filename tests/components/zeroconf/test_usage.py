@@ -1,16 +1,18 @@
 """Test Zeroconf multiple instance protection."""
+from unittest.mock import Mock, patch
+
 import zeroconf
 
 from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.components.zeroconf.usage import install_multiple_zeroconf_catcher
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
-
 DOMAIN = "zeroconf"
 
 
-async def test_multiple_zeroconf_instances(hass, mock_zeroconf, caplog):
+async def test_multiple_zeroconf_instances(
+    hass, mock_async_zeroconf, mock_zeroconf, caplog
+):
     """Test creating multiple zeroconf throws without an integration."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -24,7 +26,9 @@ async def test_multiple_zeroconf_instances(hass, mock_zeroconf, caplog):
     assert "Zeroconf" in caplog.text
 
 
-async def test_multiple_zeroconf_instances_gives_shared(hass, mock_zeroconf, caplog):
+async def test_multiple_zeroconf_instances_gives_shared(
+    hass, mock_async_zeroconf, mock_zeroconf, caplog
+):
     """Test creating multiple zeroconf gives the shared instance to an integration."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 

@@ -7,7 +7,7 @@ import sys
 from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, HTTP_OK
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -34,7 +34,6 @@ DATA_RANGE_AC_OFF = "range_ac_off"
 CONF_INTERVAL = "update_interval"
 CONF_CHARGING_INTERVAL = "update_interval_charging"
 CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_REGION = "region"
 CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
 CONF_FORCE_MILES = "force_miles"
 
@@ -46,7 +45,7 @@ DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
 RESTRICTED_BATTERY = 2
 RESTRICTED_INTERVAL = timedelta(hours=12)
 
-MAX_RESPONSE_ATTEMPTS = 10
+MAX_RESPONSE_ATTEMPTS = 3
 
 PYCARWINGS2_SLEEP = 30
 
@@ -82,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LEAF_COMPONENTS = ["sensor", "switch", "binary_sensor"]
+PLATFORMS = ["sensor", "switch", "binary_sensor"]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -95,7 +94,7 @@ START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 
 def setup(hass, config):
-    """Set up the Nissan Leaf component."""
+    """Set up the Nissan Leaf integration."""
 
     async def async_handle_update(service):
         """Handle service to update leaf data from Nissan servers."""
@@ -136,7 +135,7 @@ def setup(hass, config):
 
     def setup_leaf(car_config):
         """Set up a car."""
-        _LOGGER.debug("Logging into You+Nissan...")
+        _LOGGER.debug("Logging into You+Nissan")
 
         username = car_config[CONF_USERNAME]
         password = car_config[CONF_PASSWORD]
@@ -171,8 +170,8 @@ def setup(hass, config):
         data_store = LeafDataStore(hass, leaf, car_config)
         hass.data[DATA_LEAF][leaf.vin] = data_store
 
-        for component in LEAF_COMPONENTS:
-            load_platform(hass, component, DOMAIN, {}, car_config)
+        for platform in PLATFORMS:
+            load_platform(hass, platform, DOMAIN, {}, car_config)
 
         async_track_point_in_utc_time(
             hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE
@@ -193,6 +192,14 @@ def setup(hass, config):
     )
 
     return True
+
+
+def _extract_start_date(battery_info):
+    """Extract the server date from the battery response."""
+    try:
+        return battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+    except KeyError:
+        return None
 
 
 class LeafDataStore:
@@ -272,7 +279,6 @@ class LeafDataStore:
 
     async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
-
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
             return
@@ -326,20 +332,24 @@ class LeafDataStore:
         self.request_in_progress = False
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
-    @staticmethod
-    def _extract_start_date(battery_info):
-        """Extract the server date from the battery response."""
-        try:
-            return battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
-        except KeyError:
-            return None
-
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
-
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
+            start_date = None
+            try:
+                start_server_info = await self.hass.async_add_executor_job(
+                    self.leaf.get_latest_battery_status
+                )
+            except TypeError:  # pycarwings2 can fail if Nissan returns nothing
+                _LOGGER.debug("Battery status check returned nothing")
+            else:
+                if not start_server_info:
+                    _LOGGER.debug("Battery status check failed")
+                else:
+                    start_date = _extract_start_date(start_server_info)
+            await asyncio.sleep(1)  # Critical sleep
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
             if not request:
                 _LOGGER.error("Battery update request failed")
@@ -367,7 +377,19 @@ class LeafDataStore:
                     server_info = await self.hass.async_add_executor_job(
                         self.leaf.get_latest_battery_status
                     )
-                    return server_info
+                    if not start_date or (
+                        server_info and start_date != _extract_start_date(server_info)
+                    ):
+                        return server_info
+                    # get_status_from_update returned {"resultFlag": "1"}
+                    # but the data didn't change, make a fresh request.
+                    await asyncio.sleep(1)  # Critical sleep
+                    request = await self.hass.async_add_executor_job(
+                        self.leaf.request_update
+                    )
+                    if not request:
+                        _LOGGER.error("Battery update request failed")
+                        return None
 
             _LOGGER.debug(
                 "%s attempts exceeded return latest data from server",
@@ -382,13 +404,12 @@ class LeafDataStore:
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status")
             return None
-        except KeyError:
+        except (KeyError, TypeError):
             _LOGGER.error("An error occurred parsing response from server")
             return None
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
-
         try:
             return await self.hass.async_add_executor_job(
                 self.leaf.get_latest_hvac_status
@@ -454,7 +475,7 @@ class LeafEntity(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return default attributes for Nissan leaf entities."""
         return {
             "next_update": self.car.next_update,

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "no_units": "Kan geen AirTouch 4-groepen vinden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Stel uw AirTouch 4 verbindingsgegevens in."
+            }
+        }
+    }
+}

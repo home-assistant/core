@@ -3,5 +3,6 @@
   "name": "Pocket Casts",
   "documentation": "https://www.home-assistant.io/integrations/pocketcasts",
   "requirements": ["pycketcasts==1.0.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

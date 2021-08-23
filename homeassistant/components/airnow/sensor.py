@@ -1,7 +1,9 @@
 """Support for the AirNow sensor service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
@@ -20,7 +22,6 @@ from .const import (
 
 ATTRIBUTION = "Data provided by AirNow"
 
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
@@ -59,32 +60,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class AirNowSensor(CoordinatorEntity):
+class AirNowSensor(CoordinatorEntity, SensorEntity):
     """Define an AirNow sensor."""
 
     def __init__(self, coordinator, kind):
         """Initialize."""
         super().__init__(coordinator)
         self.kind = kind
-        self._device_class = None
         self._state = None
-        self._icon = None
-        self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_name = f"AirNow {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
+        self._attr_icon = SENSOR_TYPES[self.kind][ATTR_ICON]
+        self._attr_device_class = SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[self.kind][ATTR_UNIT]
+        self._attr_unique_id = f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
 
     @property
-    def name(self):
-        """Return the name."""
-        return f"AirNow {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         self._state = self.coordinator.data[self.kind]
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.kind == ATTR_API_AQI:
             self._attrs[SENSOR_AQI_ATTR_DESCR] = self.coordinator.data[
@@ -95,24 +93,3 @@ class AirNowSensor(CoordinatorEntity):
             ]
 
         return self._attrs
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        self._icon = SENSOR_TYPES[self.kind][ATTR_ICON]
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return SENSOR_TYPES[self.kind][ATTR_DEVICE_CLASS]
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.kind][ATTR_UNIT]

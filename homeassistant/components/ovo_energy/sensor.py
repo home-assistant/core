@@ -1,11 +1,15 @@
 """Support for OVO Energy sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import DEVICE_CLASS_ENERGY, DEVICE_CLASS_MONETARY
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OVOEnergyDeviceEntity
@@ -16,7 +20,7 @@ PARALLEL_UPDATES = 4
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up OVO Energy sensor based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
@@ -53,8 +57,10 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class OVOEnergySensor(OVOEnergyDeviceEntity):
+class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Defines a OVO Energy sensor."""
+
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     def __init__(
         self,
@@ -63,15 +69,17 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
         key: str,
         name: str,
         icon: str,
-        unit_of_measurement: str = "",
+        device_class: str | None,
+        unit_of_measurement: str | None,
     ) -> None:
         """Initialize OVO Energy sensor."""
+        self._attr_device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
         super().__init__(coordinator, client, key, name, icon)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -79,7 +87,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity):
 class OVOEnergyLastElectricityReading(OVOEnergySensor):
     """Defines a OVO Energy last reading sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy):
+    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy) -> None:
         """Initialize OVO Energy sensor."""
 
         super().__init__(
@@ -88,11 +96,12 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
             f"{client.account_id}_last_electricity_reading",
             "OVO Last Electricity Reading",
             "mdi:flash",
+            DEVICE_CLASS_ENERGY,
             "kWh",
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -100,7 +109,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
         return usage.electricity[-1].consumption
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -114,7 +123,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
 class OVOEnergyLastGasReading(OVOEnergySensor):
     """Defines a OVO Energy last reading sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy):
+    def __init__(self, coordinator: DataUpdateCoordinator, client: OVOEnergy) -> None:
         """Initialize OVO Energy sensor."""
 
         super().__init__(
@@ -123,11 +132,12 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
             f"{DOMAIN}_{client.account_id}_last_gas_reading",
             "OVO Last Gas Reading",
             "mdi:gas-cylinder",
+            DEVICE_CLASS_ENERGY,
             "kWh",
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
@@ -135,7 +145,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
         return usage.gas[-1].consumption
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
@@ -151,7 +161,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, client: OVOEnergy, currency: str
-    ):
+    ) -> None:
         """Initialize OVO Energy sensor."""
         super().__init__(
             coordinator,
@@ -159,11 +169,12 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
             f"{DOMAIN}_{client.account_id}_last_electricity_cost",
             "OVO Last Electricity Cost",
             "mdi:cash-multiple",
+            DEVICE_CLASS_MONETARY,
             currency,
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -171,7 +182,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
         return usage.electricity[-1].cost.amount
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -187,7 +198,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, client: OVOEnergy, currency: str
-    ):
+    ) -> None:
         """Initialize OVO Energy sensor."""
         super().__init__(
             coordinator,
@@ -195,11 +206,12 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
             f"{DOMAIN}_{client.account_id}_last_gas_cost",
             "OVO Last Gas Cost",
             "mdi:cash-multiple",
+            DEVICE_CLASS_MONETARY,
             currency,
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
@@ -207,7 +219,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
         return usage.gas[-1].cost.amount
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:

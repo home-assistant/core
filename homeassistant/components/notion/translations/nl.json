@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze gebruikersnaam is al in gebruik."
+            "already_configured": "Account is al geconfigureerd"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam/E-mailadres"
+                    "username": "Gebruikersnaam"
                 },
                 "title": "Vul uw gegevens informatie"
             }

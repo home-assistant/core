@@ -1,7 +1,9 @@
 """Home automation channels module for Zigbee Home Automation."""
-from typing import Coroutine, Optional
+from __future__ import annotations
 
-import zigpy.zcl.clusters.homeautomation as homeautomation
+from collections.abc import Coroutine
+
+from zigpy.zcl.clusters import homeautomation
 
 from .. import registries
 from ..const import (
@@ -76,14 +78,14 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         )
 
     @property
-    def divisor(self) -> Optional[int]:
+    def divisor(self) -> int | None:
         """Return active power divisor."""
         return self.cluster.get(
             "ac_power_divisor", self.cluster.get("power_divisor", 1)
         )
 
     @property
-    def multiplier(self) -> Optional[int]:
+    def multiplier(self) -> int | None:
         """Return active power divisor."""
         return self.cluster.get(
             "ac_power_multiplier", self.cluster.get("power_multiplier", 1)

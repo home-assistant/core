@@ -73,7 +73,7 @@ class PALoopbackSwitch(SwitchEntity):
             self._pa_svr.connect()
 
             for module in self._pa_svr.module_list():
-                if not module.name == "module-loopback":
+                if module.name != "module-loopback":
                     continue
 
                 if f"sink={self._sink_name}" not in module.argument:

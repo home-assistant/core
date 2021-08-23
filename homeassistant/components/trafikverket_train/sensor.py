@@ -6,7 +6,7 @@ import logging
 from pytrafikverket import TrafikverketTrain
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,8 +115,10 @@ def next_departuredate(departure):
     return next_weekday(today_date, WEEKDAYS.index(departure[0]))
 
 
-class TrainSensor(Entity):
+class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(self, train_api, name, from_station, to_station, weekday, time):
         """Initialize the sensor."""
@@ -153,7 +154,7 @@ class TrainSensor(Entity):
         self._delay_in_minutes = self._state.get_delay_time()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._state is None:
             return None
@@ -178,11 +179,6 @@ class TrainSensor(Entity):
         }
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -193,7 +189,7 @@ class TrainSensor(Entity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the departure state."""
         state = self._state
         if state is not None:

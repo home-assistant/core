@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .board import FirmataBoard
 from .const import (
@@ -122,7 +123,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Firmata domain."""
     # Delete specific entries that no longer exist in the config
     if hass.config_entries.async_entries(DOMAIN):
@@ -184,7 +185,9 @@ async def async_setup_entry(
         if config_entry.entry_id in hass.data[DOMAIN]:
             await board.async_reset()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_shutdown)
+    )
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

@@ -1,49 +1,74 @@
 """Support for the LiteJet lighting system."""
-from pylitejet import LiteJet
+import logging
+
+import pylitejet
+from serial import SerialException
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PORT
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
-CONF_EXCLUDE_NAMES = "exclude_names"
-CONF_INCLUDE_SWITCHES = "include_switches"
+from .const import CONF_EXCLUDE_NAMES, CONF_INCLUDE_SWITCHES, DOMAIN, PLATFORMS
 
-DOMAIN = "litejet"
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PORT): cv.string,
-                vol.Optional(CONF_EXCLUDE_NAMES): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PORT): cv.string,
+                    vol.Optional(CONF_EXCLUDE_NAMES): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
 def setup(hass, config):
     """Set up the LiteJet component."""
+    if DOMAIN in config and not hass.config_entries.async_entries(DOMAIN):
+        # No config entry exists and configuration.yaml config exists, trigger the import flow.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+    return True
 
-    url = config[DOMAIN].get(CONF_PORT)
 
-    hass.data["litejet_system"] = LiteJet(url)
-    hass.data["litejet_config"] = config[DOMAIN]
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up LiteJet via a config entry."""
+    port = entry.data[CONF_PORT]
 
-    discovery.load_platform(hass, "light", DOMAIN, {}, config)
-    if config[DOMAIN].get(CONF_INCLUDE_SWITCHES):
-        discovery.load_platform(hass, "switch", DOMAIN, {}, config)
-    discovery.load_platform(hass, "scene", DOMAIN, {}, config)
+    try:
+        system = pylitejet.LiteJet(port)
+    except SerialException as ex:
+        _LOGGER.error("Error connecting to the LiteJet MCP at %s", port, exc_info=ex)
+        raise ConfigEntryNotReady from ex
+
+    hass.data[DOMAIN] = system
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-def is_ignored(hass, name):
-    """Determine if a load, switch, or scene should be ignored."""
-    for prefix in hass.data["litejet_config"].get(CONF_EXCLUDE_NAMES, []):
-        if name.startswith(prefix):
-            return True
-    return False
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a LiteJet config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        hass.data[DOMAIN].close()
+        hass.data.pop(DOMAIN)
+
+    return unload_ok

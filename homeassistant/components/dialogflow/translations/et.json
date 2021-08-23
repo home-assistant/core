@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "description": "Kas oled kindel, et soovid seadistada Dialogflow?",
-                "title": "Seadistage Dialogflow veebihaak"
+                "title": "Seadista Dialogflow veebihaak"
             }
         }
     }

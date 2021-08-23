@@ -1,8 +1,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+# Synchronize with homeassistant/core.py:async_stop
 ENV \
-    S6_SERVICES_GRACETIME=60000
+    S6_SERVICES_GRACETIME=220000
 
 WORKDIR /usr/src
 

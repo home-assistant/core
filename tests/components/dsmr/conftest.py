@@ -1,16 +1,16 @@
 """Common test tools."""
 import asyncio
+from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
 from dsmr_parser.obis_references import (
     EQUIPMENT_IDENTIFIER,
     EQUIPMENT_IDENTIFIER_GAS,
     LUXEMBOURG_EQUIPMENT_IDENTIFIER,
+    P1_MESSAGE_TIMESTAMP,
 )
 from dsmr_parser.objects import CosemObject
 import pytest
-
-from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -45,6 +45,7 @@ async def dsmr_connection_send_validate_fixture(hass):
     protocol.telegram = {
         EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
         EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
+        P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
     }
 
     async def connection_factory(*args, **kwargs):
@@ -57,6 +58,10 @@ async def dsmr_connection_send_validate_fixture(hass):
                 EQUIPMENT_IDENTIFIER_GAS: CosemObject(
                     [{"value": "123456789", "unit": ""}]
                 ),
+            }
+        if args[1] == "5S":
+            protocol.telegram = {
+                P1_MESSAGE_TIMESTAMP: CosemObject([{"value": "12345678", "unit": ""}]),
             }
 
         return (transport, protocol)

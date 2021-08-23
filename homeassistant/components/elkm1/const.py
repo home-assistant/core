@@ -3,7 +3,7 @@
 from elkm1_lib.const import Max
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CODE
+from homeassistant.const import ATTR_CODE, CONF_ZONE
 
 DOMAIN = "elkm1"
 
@@ -17,8 +17,6 @@ CONF_PLC = "plc"
 CONF_SETTING = "setting"
 CONF_TASK = "task"
 CONF_THERMOSTAT = "thermostat"
-CONF_ZONE = "zone"
-CONF_PREFIX = "prefix"
 
 
 BARE_TEMP_FAHRENHEIT = "F"

@@ -1,0 +1,28 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidity": "Setel kelembaban untuk {entity_name}",
+            "set_mode": "Ubah mode di {entity_name}",
+            "toggle": "Nyala/matikan {entity_name}",
+            "turn_off": "Matikan {entity_name}",
+            "turn_on": "Nyalakan {entity_name}"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} disetel ke mode tertentu",
+            "is_off": "{entity_name} mati",
+            "is_on": "{entity_name} nyala"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "Kelembapan target {entity_name} berubah",
+            "turned_off": "{entity_name} dimatikan",
+            "turned_on": "{entity_name} dinyalakan"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Mati",
+            "on": "Nyala"
+        }
+    },
+    "title": "Pelembab"
+}

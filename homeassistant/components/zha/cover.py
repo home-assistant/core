@@ -1,8 +1,9 @@
 """Support for ZHA covers."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
-from typing import List, Optional
 
 from zigpy.zcl.foundation import Status
 
@@ -176,13 +177,15 @@ class ZhaCover(ZhaEntity, CoverEntity):
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
+    _attr_device_class = DEVICE_CLASS_SHADE
+
     def __init__(
         self,
         unique_id: str,
         zha_device: ZhaDeviceType,
-        channels: List[ChannelType],
+        channels: list[ChannelType],
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
@@ -199,12 +202,7 @@ class Shade(ZhaEntity, CoverEntity):
         return self._position
 
     @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SHADE
-
-    @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return True if shade is closed."""
         if self._is_open is None:
             return None
@@ -288,10 +286,7 @@ class Shade(ZhaEntity, CoverEntity):
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_DAMPER
+    _attr_device_class = DEVICE_CLASS_DAMPER
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
@@ -301,7 +296,7 @@ class KeenVent(Shade):
             self._on_off_channel.on(),
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        if any([isinstance(result, Exception) for result in results]):
+        if any(isinstance(result, Exception) for result in results):
             self.debug("couldn't open cover")
             return
 

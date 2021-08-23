@@ -1,23 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc7a5\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.",
-            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c \uc0c1\uc5d0 \ubc1c\uacac\ub41c \uc7a5\uce58\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328"
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "pick_device": {
                 "data": {
-                    "device": "\uc7a5\uce58"
+                    "device": "\uae30\uae30"
                 }
             },
             "user": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8"
                 },
-                "description": "\ud638\uc2a4\ud2b8\ub97c \ube44\uc6cc\ub450\uba74 \uc7a5\uce58\ub97c \ucc3e\ub294 \ub370 \uac80\uc0c9\uc774 \uc0ac\uc6a9\ub429\ub2c8\ub2e4."
+                "description": "\ud638\uc2a4\ud2b8\ub97c \ube44\uc6cc \ub450\uba74 \uae30\uae30\ub97c \ucc3e\ub294 \ub370 \uac80\uc0c9\uc774 \uc0ac\uc6a9\ub429\ub2c8\ub2e4"
             }
         }
     },
@@ -25,11 +25,11 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "\ubaa8\ub378(\uc120\ud0dd \uc0ac\ud56d)",
-                    "nightlight_switch": "\uc57c\uac04 \uc870\uba85 \uc2a4\uc704\uce58 \uc0ac\uc6a9",
-                    "save_on_change": "\ubcc0\uacbd\uc2dc \uc0c1\ud0dc \uc800\uc7a5",
+                    "model": "\ubaa8\ub378 (\uc120\ud0dd \uc0ac\ud56d)",
+                    "nightlight_switch": "\uc57c\uac04 \uc870\uba85 \uc804\ud658 \uc0ac\uc6a9\ud558\uae30",
+                    "save_on_change": "\ubcc0\uacbd \uc2dc \uc0c1\ud0dc\ub97c \uc800\uc7a5\ud558\uae30",
                     "transition": "\uc804\ud658 \uc2dc\uac04(ms)",
-                    "use_music_mode": "\uc74c\uc545 \ubaa8\ub4dc \ud65c\uc131\ud654"
+                    "use_music_mode": "\uc74c\uc545 \ubaa8\ub4dc \ud65c\uc131\ud654\ud558\uae30"
                 },
                 "description": "\ubaa8\ub378\uc744 \ube44\uc6cc \ub450\uba74 \uc790\ub3d9\uc73c\ub85c \uac80\uc0c9\ub429\ub2c8\ub2e4."
             }

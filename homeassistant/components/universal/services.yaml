@@ -1,2 +1,3 @@
 reload:
-  description: Reload all universal entities.
+  name: Reload
+  description: Reload all universal entities

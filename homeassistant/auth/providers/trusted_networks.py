@@ -3,17 +3,31 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
-from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_network
-from typing import Any, Dict, List, Optional, Union, cast
+from __future__ import annotations
+
+from collections.abc import Mapping
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
+from typing import Any, Dict, List, Union, cast
 
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
-from ..models import Credentials, UserMeta
+from .. import InvalidAuthError
+from ..models import Credentials, RefreshToken, UserMeta
+
+# mypy: disallow-any-generics
 
 IPAddress = Union[IPv4Address, IPv6Address]
 IPNetwork = Union[IPv4Network, IPv6Network]
@@ -46,10 +60,6 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
 )
 
 
-class InvalidAuthError(HomeAssistantError):
-    """Raised when try to access from untrusted networks."""
-
-
 class InvalidUserError(HomeAssistantError):
     """Raised when try to login as invalid user."""
 
@@ -64,21 +74,32 @@ class TrustedNetworksAuthProvider(AuthProvider):
     DEFAULT_TITLE = "Trusted Networks"
 
     @property
-    def trusted_networks(self) -> List[IPNetwork]:
+    def trusted_networks(self) -> list[IPNetwork]:
         """Return trusted networks."""
         return cast(List[IPNetwork], self.config[CONF_TRUSTED_NETWORKS])
 
     @property
-    def trusted_users(self) -> Dict[IPNetwork, Any]:
+    def trusted_users(self) -> dict[IPNetwork, Any]:
         """Return trusted users per network."""
         return cast(Dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
+
+    @property
+    def trusted_proxies(self) -> list[IPNetwork]:
+        """Return trusted proxies in the system."""
+        if not self.hass.http:
+            return []
+
+        return [
+            ip_network(trusted_proxy)
+            for trusted_proxy in self.hass.http.trusted_proxies
+        ]
 
     @property
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -87,31 +108,29 @@ class TrustedNetworksAuthProvider(AuthProvider):
             user for user in users if not user.system_generated and user.is_active
         ]
         for ip_net, user_or_group_list in self.trusted_users.items():
-            if ip_addr in ip_net:
-                user_list = [
-                    user_id
-                    for user_id in user_or_group_list
-                    if isinstance(user_id, str)
-                ]
-                group_list = [
-                    group[CONF_GROUP]
-                    for group in user_or_group_list
-                    if isinstance(group, dict)
-                ]
-                flattened_group_list = [
-                    group for sublist in group_list for group in sublist
-                ]
-                available_users = [
-                    user
-                    for user in available_users
-                    if (
-                        user.id in user_list
-                        or any(
-                            [group.id in flattened_group_list for group in user.groups]
-                        )
-                    )
-                ]
-                break
+            if ip_addr not in ip_net:
+                continue
+
+            user_list = [
+                user_id for user_id in user_or_group_list if isinstance(user_id, str)
+            ]
+            group_list = [
+                group[CONF_GROUP]
+                for group in user_or_group_list
+                if isinstance(group, dict)
+            ]
+            flattened_group_list = [
+                group for sublist in group_list for group in sublist
+            ]
+            available_users = [
+                user
+                for user in available_users
+                if (
+                    user.id in user_list
+                    or any(group.id in flattened_group_list for group in user.groups)
+                )
+            ]
+            break
 
         return TrustedNetworksLoginFlow(
             self,
@@ -121,20 +140,29 @@ class TrustedNetworksAuthProvider(AuthProvider):
         )
 
     async def async_get_or_create_credentials(
-        self, flow_result: Dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         user_id = flow_result["user"]
 
         users = await self.store.async_get_users()
         for user in users:
-            if not user.system_generated and user.is_active and user.id == user_id:
-                for credential in await self.async_credentials():
-                    if credential.data["user_id"] == user_id:
-                        return credential
-                cred = self.async_create_credentials({"user_id": user_id})
-                await self.store.async_link_user(user, cred)
-                return cred
+            if user.id != user_id:
+                continue
+
+            if user.system_generated:
+                continue
+
+            if not user.is_active:
+                continue
+
+            for credential in await self.async_credentials():
+                if credential.data["user_id"] == user_id:
+                    return credential
+
+            cred = self.async_create_credentials({"user_id": user_id})
+            await self.store.async_link_user(user, cred)
+            return cred
 
         # We only allow login as exist user
         raise InvalidUserError
@@ -163,6 +191,20 @@ class TrustedNetworksAuthProvider(AuthProvider):
         ):
             raise InvalidAuthError("Not in trusted_networks")
 
+        if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
+            raise InvalidAuthError("Can't allow access from a proxy server")
+
+    @callback
+    def async_validate_refresh_token(
+        self, refresh_token: RefreshToken, remote_ip: str | None = None
+    ) -> None:
+        """Verify a refresh token is still valid."""
+        if remote_ip is None:
+            raise InvalidAuthError(
+                "Unknown remote ip can't be used for trusted network provider."
+            )
+        self.async_validate_access(ip_address(remote_ip))
+
 
 class TrustedNetworksLoginFlow(LoginFlow):
     """Handler for the login flow."""
@@ -171,7 +213,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
         self,
         auth_provider: TrustedNetworksAuthProvider,
         ip_addr: IPAddress,
-        available_users: Dict[str, Optional[str]],
+        available_users: dict[str, str | None],
         allow_bypass_login: bool,
     ) -> None:
         """Initialize the login flow."""
@@ -181,8 +223,8 @@ class TrustedNetworksLoginFlow(LoginFlow):
         self._allow_bypass_login = allow_bypass_login
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the step of the form."""
         try:
             cast(

@@ -2,6 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
@@ -31,9 +32,10 @@ class MatrixNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send the message to the Matrix server."""
         target_rooms = kwargs.get(ATTR_TARGET) or [self._default_room]
-
         service_data = {ATTR_TARGET: target_rooms, ATTR_MESSAGE: message}
-
+        data = kwargs.get(ATTR_DATA)
+        if data is not None:
+            service_data[ATTR_DATA] = data
         return self.hass.services.call(
             DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data
         )

@@ -1,4 +1,6 @@
 """Define tests for the ReCollect Waste config flow."""
+from unittest.mock import patch
+
 from aiorecollect.errors import RecollectError
 
 from homeassistant import data_entry_flow
@@ -10,7 +12,6 @@ from homeassistant.components.recollect_waste import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_FRIENDLY_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

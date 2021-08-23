@@ -1,5 +1,14 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
         "step": {
             "user": {
                 "data": {
@@ -16,7 +25,7 @@
             "init": {
                 "data": {
                     "enable_wake_on_start": "\uc2dc\ub3d9 \uc2dc \ucc28\ub7c9 \uae68\uc6b0\uae30",
-                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9(\ucd08)"
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
                 }
             }
         }

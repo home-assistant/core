@@ -5,21 +5,18 @@ import voluptuous as vol
 
 from homeassistant.components import frontend
 from homeassistant.config import async_hass_config_yaml, async_process_component_config
-from homeassistant.const import CONF_FILENAME
-from homeassistant.core import callback
+from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
-from homeassistant.util import sanitize_path
 
 from . import dashboard, resources, websocket
 from .const import (
     CONF_ICON,
-    CONF_MODE,
     CONF_REQUIRE_ADMIN,
-    CONF_RESOURCES,
     CONF_SHOW_IN_SIDEBAR,
     CONF_TITLE,
     CONF_URL_PATH,
@@ -37,7 +34,7 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
 )
-from .system_health import system_health_info  # NOQA
+from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +44,7 @@ YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_path),
+        vol.Required(CONF_FILENAME): cv.path,
     }
 )
 
@@ -70,14 +67,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Lovelace commands."""
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
 
-    async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
+    async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
         try:
             conf = await async_hass_config_yaml(hass)

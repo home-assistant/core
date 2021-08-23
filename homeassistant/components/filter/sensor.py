@@ -1,4 +1,6 @@
 """Allows the creation of a sensor that filters state property."""
+from __future__ import annotations
+
 from collections import Counter, deque
 from copy import copy
 from datetime import timedelta
@@ -6,16 +8,17 @@ from functools import partial
 import logging
 from numbers import Number
 import statistics
-from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import history
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.recorder import history
 from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorEntity,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -29,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util.decorator import Registry
@@ -139,7 +141,9 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): vol.Any(
-            cv.entity_domain(SENSOR_DOMAIN), cv.entity_domain(BINARY_SENSOR_DOMAIN)
+            cv.entity_domain(SENSOR_DOMAIN),
+            cv.entity_domain(BINARY_SENSOR_DOMAIN),
+            cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
@@ -175,7 +179,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SensorFilter(name, entity_id, filters)])
 
 
-class SensorFilter(Entity):
+class SensorFilter(SensorEntity):
     """Representation of a Filter Sensor."""
 
     def __init__(self, name, entity_id, filters):
@@ -205,7 +209,7 @@ class SensorFilter(Entity):
             self.async_write_ha_state()
             return
 
-        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._state = new_state.state
             self.async_write_ha_state()
             return
@@ -328,7 +332,7 @@ class SensorFilter(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -338,7 +342,7 @@ class SensorFilter(Entity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
 
@@ -348,7 +352,7 @@ class SensorFilter(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity}
 
@@ -391,8 +395,8 @@ class Filter:
         self,
         name,
         window_size: int = 1,
-        precision: Optional[int] = None,
-        entity: Optional[str] = None,
+        precision: int | None = None,
+        entity: str | None = None,
     ):
         """Initialize common attributes.
 
@@ -401,7 +405,7 @@ class Filter:
         :param entity: used for debugging only
         """
         if isinstance(window_size, int):
-            self.states = deque(maxlen=window_size)
+            self.states: deque = deque(maxlen=window_size)
             self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
         else:
             self.states = deque(maxlen=0)
@@ -450,7 +454,7 @@ class Filter:
 
 
 @FILTERS.register(FILTER_NAME_RANGE)
-class RangeFilter(Filter):
+class RangeFilter(Filter, SensorEntity):
     """Range filter.
 
     Determines if new state is in the range of upper_bound and lower_bound.
@@ -460,9 +464,9 @@ class RangeFilter(Filter):
     def __init__(
         self,
         entity,
-        precision: Optional[int] = DEFAULT_PRECISION,
-        lower_bound: Optional[float] = None,
-        upper_bound: Optional[float] = None,
+        precision: int | None = DEFAULT_PRECISION,
+        lower_bound: float | None = None,
+        upper_bound: float | None = None,
     ):
         """Initialize Filter.
 
@@ -472,7 +476,7 @@ class RangeFilter(Filter):
         super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
@@ -505,7 +509,7 @@ class RangeFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_OUTLIER)
-class OutlierFilter(Filter):
+class OutlierFilter(Filter, SensorEntity):
     """BASIC outlier filter.
 
     Determines if new state is in a band around the median.
@@ -518,7 +522,7 @@ class OutlierFilter(Filter):
         """
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
         self._store_raw = True
 
     def _filter_state(self, new_state):
@@ -543,7 +547,7 @@ class OutlierFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_LOWPASS)
-class LowPassFilter(Filter):
+class LowPassFilter(Filter, SensorEntity):
     """BASIC Low Pass Filter."""
 
     def __init__(self, window_size, precision, entity, time_constant: int):
@@ -567,7 +571,7 @@ class LowPassFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_TIME_SMA)
-class TimeSMAFilter(Filter):
+class TimeSMAFilter(Filter, SensorEntity):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
@@ -613,7 +617,7 @@ class TimeSMAFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)
-class ThrottleFilter(Filter):
+class ThrottleFilter(Filter, SensorEntity):
     """Throttle Filter.
 
     One sample per window.
@@ -636,7 +640,7 @@ class ThrottleFilter(Filter):
 
 
 @FILTERS.register(FILTER_NAME_TIME_THROTTLE)
-class TimeThrottleFilter(Filter):
+class TimeThrottleFilter(Filter, SensorEntity):
     """Time Throttle Filter.
 
     One sample per time period.

@@ -7,7 +7,7 @@ import uuid
 import brottsplatskartan
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,30 +77,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([BrottsplatskartanSensor(bpk, name)], True)
 
 
-class BrottsplatskartanSensor(Entity):
+class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
     def __init__(self, bpk, name):
         """Initialize the Brottsplatskartan sensor."""
-        self._attributes = {}
         self._brottsplatskartan = bpk
-        self._name = name
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
+        self._attr_name = name
 
     def update(self):
         """Update device state."""
@@ -117,6 +99,8 @@ class BrottsplatskartanSensor(Entity):
             incident_type = incident.get("title_type")
             incident_counts[incident_type] += 1
 
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
-        self._attributes.update(incident_counts)
-        self._state = len(incidents)
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
+        }
+        self._attr_extra_state_attributes.update(incident_counts)
+        self._attr_native_value = len(incidents)

@@ -1,2 +1,3 @@
 update:
+  name: Update
   description: Updates the data we have for all your ring devices

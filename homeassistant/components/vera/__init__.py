@@ -1,8 +1,10 @@
 """Support for Vera devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, TypeVar
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -23,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -61,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up for Vera controllers."""
     hass.data[DOMAIN] = {}
 
@@ -81,38 +84,35 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do setup of vera."""
     # Use options entered during initial config flow or provided from configuration.yml
-    if config_entry.data.get(CONF_LIGHTS) or config_entry.data.get(CONF_EXCLUDE):
+    if entry.data.get(CONF_LIGHTS) or entry.data.get(CONF_EXCLUDE):
         hass.config_entries.async_update_entry(
-            entry=config_entry,
-            data=config_entry.data,
+            entry=entry,
+            data=entry.data,
             options=new_options(
-                config_entry.data.get(CONF_LIGHTS, []),
-                config_entry.data.get(CONF_EXCLUDE, []),
+                entry.data.get(CONF_LIGHTS, []),
+                entry.data.get(CONF_EXCLUDE, []),
             ),
         )
 
-    saved_light_ids = config_entry.options.get(CONF_LIGHTS, [])
-    saved_exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
+    saved_light_ids = entry.options.get(CONF_LIGHTS, [])
+    saved_exclude_ids = entry.options.get(CONF_EXCLUDE, [])
 
-    base_url = config_entry.data[CONF_CONTROLLER]
+    base_url = entry.data[CONF_CONTROLLER]
     light_ids = fix_device_id_list(saved_light_ids)
     exclude_ids = fix_device_id_list(saved_exclude_ids)
 
     # If the ids were corrected. Update the config entry.
     if light_ids != saved_light_ids or exclude_ids != saved_exclude_ids:
         hass.config_entries.async_update_entry(
-            entry=config_entry, options=new_options(light_ids, exclude_ids)
+            entry=entry, options=new_options(light_ids, exclude_ids)
         )
 
     # Initialize the Vera controller.
     subscription_registry = SubscriptionRegistry(hass)
     controller = veraApi.VeraController(base_url, subscription_registry)
-    await hass.async_add_executor_job(controller.start)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.stop)
 
     try:
         all_devices = await hass.async_add_executor_job(controller.get_devices)
@@ -140,17 +140,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         controller=controller,
         devices=vera_devices,
         scenes=vera_scenes,
-        config_entry=config_entry,
+        config_entry=entry,
     )
 
-    set_controller_data(hass, config_entry, controller_data)
+    set_controller_data(hass, entry, controller_data)
 
     # Forward the config data to the necessary platforms.
     for platform in get_configured_platforms(controller_data):
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    def stop_subscription(event):
+        """Stop SubscriptionRegistry updates."""
+        controller.stop()
+
+    await hass.async_add_executor_job(controller.start)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+    )
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
@@ -168,7 +178,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-def map_vera_device(vera_device: veraApi.VeraDevice, remap: List[int]) -> str:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+def map_vera_device(vera_device: veraApi.VeraDevice, remap: list[int]) -> str:
     """Map vera classes to Home Assistant types."""
 
     type_map = {
@@ -183,7 +198,7 @@ def map_vera_device(vera_device: veraApi.VeraDevice, remap: List[int]) -> str:
         veraApi.VeraSwitch: "switch",
     }
 
-    def map_special_case(instance_class: Type, entity_type: str) -> str:
+    def map_special_case(instance_class: type, entity_type: str) -> str:
         if instance_class is veraApi.VeraSwitch and vera_device.device_id in remap:
             return "light"
         return entity_type
@@ -204,7 +219,9 @@ DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
 class VeraDevice(Generic[DeviceType], Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device: DeviceType, controller_data: ControllerData):
+    def __init__(
+        self, vera_device: DeviceType, controller_data: ControllerData
+    ) -> None:
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller_data.controller
@@ -228,18 +245,20 @@ class VeraDevice(Generic[DeviceType], Entity):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
+    def update(self):
+        """Force a refresh from the device if the device is unavailable."""
+        refresh_needed = self.vera_device.should_poll or not self.available
+        _LOGGER.debug("%s: update called (refresh=%s)", self._name, refresh_needed)
+        if refresh_needed:
+            self.vera_device.refresh()
+
     @property
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def should_poll(self) -> bool:
-        """Get polling requirement from vera device."""
-        return self.vera_device.should_poll
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attr = {}
 
@@ -271,6 +290,11 @@ class VeraDevice(Generic[DeviceType], Entity):
         attr["Vera Device Id"] = self.vera_device.vera_device_id
 
         return attr
+
+    @property
+    def available(self):
+        """If device communications have failed return false."""
+        return not self.vera_device.comm_failure
 
     @property
     def unique_id(self) -> str:

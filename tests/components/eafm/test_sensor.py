@@ -5,7 +5,7 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -31,12 +31,11 @@ async def async_setup_test_fixture(hass, mock_get_station, initial_value):
         entry_id="VikingRecorder1234",
         data={"station": "L1234"},
         title="Viking Recorder",
-        connection_class=config_entries.CONN_CLASS_CLOUD_PUSH,
     )
     entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, "eafm", {})
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     await hass.async_block_till_done()
 
     async def poll(value):
@@ -428,5 +427,8 @@ async def test_unload_entry(hass, mock_get_station):
 
     assert await entry.async_unload(hass)
 
-    # And the entity should be gone
-    assert not hass.states.get("sensor.my_station_water_level_stage")
+    # And the entity should be unavailable
+    assert (
+        hass.states.get("sensor.my_station_water_level_stage").state
+        == STATE_UNAVAILABLE
+    )

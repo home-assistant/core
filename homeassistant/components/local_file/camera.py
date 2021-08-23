@@ -1,25 +1,17 @@
 """Camera that loads a picture from a local file."""
+from __future__ import annotations
+
 import logging
 import mimetypes
 import os
 
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    CAMERA_SERVICE_SCHEMA,
-    PLATFORM_SCHEMA,
-    Camera,
-)
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_FILE_PATH,
-    DATA_LOCAL_FILE,
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_UPDATE_FILE_PATH,
-)
+from .const import DATA_LOCAL_FILE, DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +22,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(CONF_FILE_PATH): cv.string}
+CAMERA_SERVICE_UPDATE_FILE_PATH = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(CONF_FILE_PATH): cv.string,
+    }
 )
 
 
@@ -80,7 +75,9 @@ class LocalFile(Camera):
         if content is not None:
             self.content_type = content
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         try:
             with open(self._file_path, "rb") as file:
@@ -91,6 +88,7 @@ class LocalFile(Camera):
                 self._name,
                 self._file_path,
             )
+        return None
 
     def check_file_path_access(self, file_path):
         """Check that filepath given is readable."""
@@ -111,6 +109,6 @@ class LocalFile(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera state attributes."""
         return {"file_path": self._file_path}

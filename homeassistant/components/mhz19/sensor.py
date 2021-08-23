@@ -5,16 +5,17 @@ import logging
 from pmsensor import co2sensor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_CO2,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -30,8 +31,8 @@ ATTR_CO2_CONCENTRATION = "co2_concentration"
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_CO2 = "co2"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION],
+    SENSOR_TEMPERATURE: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION, DEVICE_CLASS_CO2],
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -69,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class MHZ19Sensor(Entity):
+class MHZ19Sensor(SensorEntity):
     """Representation of an CO2 sensor."""
 
     def __init__(self, mhz_client, sensor_type, temp_unit, name):
@@ -81,6 +82,7 @@ class MHZ19Sensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._ppm = None
         self._temperature = None
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):
@@ -88,12 +90,12 @@ class MHZ19Sensor(Entity):
         return f"{self._name}: {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._ppm if self._sensor_type == SENSOR_CO2 else self._temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -107,7 +109,7 @@ class MHZ19Sensor(Entity):
         self._ppm = data.get(SENSOR_CO2)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         result = {}
         if self._sensor_type == SENSOR_TEMPERATURE and self._ppm is not None:

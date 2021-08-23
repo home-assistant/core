@@ -19,8 +19,7 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Temperatura nadstropja",
-                    "precision": "Natan\u010dnost"
+                    "floor_temperature": "Temperatura nadstropja"
                 },
                 "description": "Mo\u017enosti za prehod OpenTherm"
             }

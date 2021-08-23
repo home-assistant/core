@@ -1,5 +1,6 @@
 """Tests for arcam fmj receivers."""
 from math import isclose
+from unittest.mock import ANY, MagicMock, Mock, PropertyMock, patch
 
 from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceCodes
 import pytest
@@ -12,8 +13,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import ATTR_ENTITY_ID
 
 from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_UUID
-
-from tests.async_mock import ANY, MagicMock, Mock, PropertyMock, patch
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",
@@ -200,9 +199,9 @@ async def test_sound_mode(player, state, mode, mode_sel, mode_2ch, mode_mch):
 async def test_sound_mode_list(player, state):
     """Test sound mode list."""
     player._get_2ch = Mock(return_value=True)  # pylint: disable=W0212
-    assert sorted(player.sound_mode_list) == sorted([x.name for x in DecodeMode2CH])
+    assert sorted(player.sound_mode_list) == sorted(x.name for x in DecodeMode2CH)
     player._get_2ch = Mock(return_value=False)  # pylint: disable=W0212
-    assert sorted(player.sound_mode_list) == sorted([x.name for x in DecodeModeMCH])
+    assert sorted(player.sound_mode_list) == sorted(x.name for x in DecodeModeMCH)
 
 
 async def test_sound_mode_zone_x(player, state):

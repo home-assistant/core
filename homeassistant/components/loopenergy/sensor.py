@@ -4,14 +4,13 @@ import logging
 import pyloopenergy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class LoopEnergyDevice(Entity):
+class LoopEnergySensor(SensorEntity):
     """Implementation of an Loop Energy base sensor."""
 
     def __init__(self, controller):
@@ -98,7 +97,7 @@ class LoopEnergyDevice(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -108,7 +107,7 @@ class LoopEnergyDevice(Entity):
         return False
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -116,7 +115,7 @@ class LoopEnergyDevice(Entity):
         self.schedule_update_ha_state(True)
 
 
-class LoopEnergyElec(LoopEnergyDevice):
+class LoopEnergyElec(LoopEnergySensor):
     """Implementation of an Loop Energy Electricity sensor."""
 
     def __init__(self, controller):
@@ -133,7 +132,7 @@ class LoopEnergyElec(LoopEnergyDevice):
         self._state = round(self._controller.electricity_useage, 2)
 
 
-class LoopEnergyGas(LoopEnergyDevice):
+class LoopEnergyGas(LoopEnergySensor):
     """Implementation of an Loop Energy Gas sensor."""
 
     def __init__(self, controller):

@@ -9,13 +9,16 @@ from . import (
     config_flow,
     coverage,
     dependencies,
+    dhcp,
     json,
     manifest,
     mqtt,
+    mypy_config,
     requirements,
     services,
     ssdp,
     translations,
+    usb,
     zeroconf,
 )
 from .model import Config, Integration
@@ -31,9 +34,12 @@ INTEGRATION_PLUGINS = [
     ssdp,
     translations,
     zeroconf,
+    dhcp,
+    usb,
 ]
 HASS_PLUGINS = [
     coverage,
+    mypy_config,
 ]
 
 
@@ -119,7 +125,7 @@ def main():
             if plugin is requirements and not config.specific_integrations:
                 print()
             plugin.validate(integrations, config)
-            print(" done in {:.2f}s".format(monotonic() - start))
+            print(f" done in {monotonic() - start:.2f}s")
         except RuntimeError as err:
             print()
             print()
@@ -181,7 +187,7 @@ def print_integrations_status(config, integrations, *, show_fixable_errors=True)
         print(f"Integration {integration.domain}{extra}:")
         for error in integration.errors:
             if show_fixable_errors or not error.fixable:
-                print("*", error)
+                print("*", "[ERROR]", error)
         for warning in integration.warnings:
             print("*", "[WARNING]", warning)
         print()

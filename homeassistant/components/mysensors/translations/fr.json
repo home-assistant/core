@@ -1,0 +1,80 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "duplicate_persistence_file": "Fichier de persistance d\u00e9j\u00e0 utilis\u00e9",
+            "duplicate_topic": "Sujet d\u00e9j\u00e0 utilis\u00e9",
+            "invalid_auth": "Authentification invalide",
+            "invalid_device": "Appareil non valide",
+            "invalid_ip": "Adresse IP non valide",
+            "invalid_persistence_file": "Fichier de persistance non valide",
+            "invalid_port": "Num\u00e9ro de port non valide",
+            "invalid_publish_topic": "Sujet de publication non valide",
+            "invalid_serial": "Port s\u00e9rie non valide",
+            "invalid_subscribe_topic": "Sujet d'abonnement non valide",
+            "invalid_version": "Version de MySensors non valide",
+            "not_a_number": "Veuillez saisir un nombre",
+            "port_out_of_range": "Le num\u00e9ro de port doit \u00eatre au moins 1 et au plus 65535",
+            "same_topic": "Les sujets de souscription et de publication sont identiques",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "duplicate_persistence_file": "Fichier de persistance d\u00e9j\u00e0 utilis\u00e9",
+            "duplicate_topic": "Sujet d\u00e9j\u00e0 utilis\u00e9",
+            "invalid_auth": "Authentification invalide",
+            "invalid_device": "Appareil non valide",
+            "invalid_ip": "Adresse IP non valide",
+            "invalid_persistence_file": "Fichier de persistance non valide",
+            "invalid_port": "Num\u00e9ro de port non valide",
+            "invalid_publish_topic": "Sujet de publication non valide",
+            "invalid_serial": "Port s\u00e9rie non valide",
+            "invalid_subscribe_topic": "Sujet d'abonnement non valide",
+            "invalid_version": "Version de MySensors non valide",
+            "mqtt_required": "L'int\u00e9gration MQTT n'est pas configur\u00e9e",
+            "not_a_number": "Veuillez saisir un nombre",
+            "port_out_of_range": "Le num\u00e9ro de port doit \u00eatre au moins 1 et au plus 65535",
+            "same_topic": "Les sujets de souscription et de publication sont identiques",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "fichier de persistance (laissez vide pour g\u00e9n\u00e9rer automatiquement)",
+                    "retain": "mqtt conserver",
+                    "topic_in_prefix": "pr\u00e9fixe pour les sujets d\u2019entr\u00e9e (topic_in_prefix)",
+                    "topic_out_prefix": "pr\u00e9fixe pour les sujets de sortie (topic_out_prefix)",
+                    "version": "Version de MySensors"
+                },
+                "description": "Configuration de la passerelle MQTT"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "d\u00e9bit en bauds",
+                    "device": "Port s\u00e9rie",
+                    "persistence_file": "fichier de persistance (laissez vide pour g\u00e9n\u00e9rer automatiquement)",
+                    "version": "Version de MySensors"
+                },
+                "description": "Configuration de la passerelle s\u00e9rie"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "Adresse IP de la passerelle",
+                    "persistence_file": "fichier de persistance (laisser vide pour g\u00e9n\u00e9rer automatiquement)",
+                    "tcp_port": "port",
+                    "version": "Version de MySensors"
+                },
+                "description": "Configuration de la passerelle Ethernet"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "Type de passerelle"
+                },
+                "description": "Choisissez la m\u00e9thode de connexion \u00e0 la passerelle"
+            }
+        }
+    },
+    "title": "MySensors"
+}

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "general_error": "Beklenmeyen hata",
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131",
+            "location_not_found": "Konum bulunamad\u0131"
+        },
+        "step": {
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                },
+                "description": "Bir enlem / boylam\u0131 izlemek i\u00e7in AirVisual bulut API'sini kullan\u0131n.",
+                "title": "Bir Co\u011frafyay\u0131 Yap\u0131land\u0131rma"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "city": "\u015eehir",
+                    "country": "\u00dclke",
+                    "state": "durum"
+                },
+                "title": "Bir Co\u011frafyay\u0131 Yap\u0131land\u0131rma"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Ana Bilgisayar",
+                    "password": "Parola"
+                },
+                "description": "Ki\u015fisel bir AirVisual \u00fcnitesini izleyin. Parola, \u00fcnitenin kullan\u0131c\u0131 aray\u00fcz\u00fcnden al\u0131nabilir."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "AirVisual'\u0131 yap\u0131land\u0131r\u0131n"
+            }
+        }
+    }
+}

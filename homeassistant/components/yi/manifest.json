@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/yi",
   "requirements": ["aioftp==0.12.0"],
   "dependencies": ["ffmpeg"],
-  "codeowners": ["@bachya"]
+  "codeowners": ["@bachya"],
+  "iot_class": "local_polling"
 }

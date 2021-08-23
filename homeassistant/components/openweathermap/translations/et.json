@@ -17,7 +17,7 @@
                     "mode": "Re\u017eiim",
                     "name": "Sidumise nimi"
                 },
-                "description": "Seadistage OpenWeatherMapi sidumine. API-v\u00f5tme loomiseks minge aadressile https://openweathermap.org/appid",
+                "description": "Seadista OpenWeatherMapi sidumine. API-v\u00f5tme loomiseks mine aadressile https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

@@ -2,17 +2,18 @@
 from airly.exceptions import AirlyError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airly.const import DOMAIN
+from homeassistant.components.airly.const import CONF_USE_NEAREST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
 )
 
-from . import API_POINT_URL
+from . import API_NEAREST_URL, API_POINT_URL
 
 from tests.common import MockConfigEntry, load_fixture, patch
 
@@ -54,6 +55,11 @@ async def test_invalid_location(hass, aioclient_mock):
     """Test that errors are shown when location is invalid."""
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
 
+    aioclient_mock.get(
+        API_NEAREST_URL,
+        exc=AirlyError(HTTP_NOT_FOUND, {"message": "Installation was not found"}),
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
@@ -88,3 +94,24 @@ async def test_create_entry(hass, aioclient_mock):
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is False
+
+
+async def test_create_entry_with_nearest_method(hass, aioclient_mock):
+    """Test that the user step works with nearest method."""
+
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_no_station.json"))
+
+    aioclient_mock.get(API_NEAREST_URL, text=load_fixture("airly_valid_station.json"))
+
+    with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == CONFIG[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+    assert result["data"][CONF_USE_NEAREST] is True

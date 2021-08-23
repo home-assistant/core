@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge is al geconfigureerd.",
-            "already_in_progress": "Bridge configuratie is al in volle gang."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met bridge",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_key": "Mislukt om te registreren met de meegeleverde sleutel. Als dit blijft gebeuren, probeer dan de gateway opnieuw op te starten.",
             "timeout": "Time-out bij validatie van code"
         },

@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Hyperion effects to show",
                     "priority": "Hyperion priority to use for colors and effects"
                 }
             }

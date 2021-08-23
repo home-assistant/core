@@ -1,5 +1,5 @@
 """Support for deCONZ climate devices."""
-from typing import Optional
+from __future__ import annotations
 
 from pydeconz.sensor import Thermostat
 
@@ -26,7 +26,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
+from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -97,7 +97,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_climate
         )
@@ -110,6 +110,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
     TYPE = DOMAIN
+    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, device, gateway):
         """Set up thermostat device."""
@@ -127,18 +128,13 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             value: key for key, value in self._hvac_mode_to_deconz.items()
         }
 
-        self._features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
 
         if "fanmode" in device.raw["config"]:
-            self._features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= SUPPORT_FAN_MODE
 
         if "preset" in device.raw["config"]:
-            self._features |= SUPPORT_PRESET_MODE
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._features
+            self._attr_supported_features |= SUPPORT_PRESET_MODE
 
     # Fan control
 
@@ -195,7 +191,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     # Preset control
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return preset mode."""
         return DECONZ_TO_PRESET_MODE.get(self._device.preset)
 
@@ -239,12 +235,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         await self._device.async_set_config(data)
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 
@@ -253,5 +244,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         if self._device.valve is not None:
             attr[ATTR_VALVE] = self._device.valve
+
+        if self._device.locked is not None:
+            attr[ATTR_LOCKED] = self._device.locked
 
         return attr

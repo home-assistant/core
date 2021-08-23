@@ -1,19 +1,14 @@
 """Config flow for BMW ConnectedDrive integration."""
-import logging
-
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import DOMAIN  # pylint: disable=unused-import
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REGION, CONF_USE_LOCATION
-
-_LOGGER = logging.getLogger(__name__)
-
+from . import DOMAIN
+from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_USE_LOCATION
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -47,7 +42,6 @@ class BMWConnectedDriveConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BMW ConnectedDrive."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

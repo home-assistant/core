@@ -1,19 +1,28 @@
 """Tests for ZHA config flow."""
 
-import os
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import serial.tools.list_ports
 import zigpy.config
 
 from homeassistant import setup
+from homeassistant.components.ssdp import (
+    ATTR_SSDP_LOCATION,
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+)
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_SSDP,
+    SOURCE_USB,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 
@@ -26,6 +35,184 @@ def com_port():
     port.description = "Some serial port"
 
     return port
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery(detect_mock, hass):
+    """Test zeroconf flow -- radio detected."""
+    service_info = {
+        "host": "192.168.1.200",
+        "port": 6053,
+        "hostname": "_tube_zb_gw._tcp.local.",
+        "properties": {"name": "tube_123456"},
+    }
+    flow = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "socket://192.168.1.200:6638"
+    assert result["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "socket://192.168.1.200:6638",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb(detect_mock, hass):
+    """Test usb flow -- radio detected."""
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+    with patch("homeassistant.components.zha.async_setup_entry"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert "zigbee radio" in result2["title"]
+    assert result2["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "/dev/ttyZIGBEE",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=False)
+async def test_discovery_via_usb_no_radio(detect_mock, hass):
+    """Test usb flow -- no radio detected."""
+    discovery_info = {
+        "device": "/dev/null",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_rejects_nortek_zwave(detect_mock, hass):
+    """Test usb flow -- reject the nortek zwave radio."""
+    discovery_info = {
+        "device": "/dev/null",
+        "vid": "10C4",
+        "pid": "8A2A",
+        "serial_number": "612020FD",
+        "description": "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
+        "manufacturer": "Silicon Labs",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_already_setup(detect_mock, hass):
+    """Test usb flow -- already setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
+    """Test usb flow -- deconz discovered."""
+    result = await hass.config_entries.flow.async_init(
+        "deconz",
+        data={
+            ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
+            ATTR_UPNP_MANUFACTURER_URL: "http://www.dresden-elektronik.de",
+            ATTR_UPNP_SERIAL: "0000000000000000",
+        },
+        context={"source": SOURCE_SSDP},
+    )
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_already_setup(detect_mock, hass):
+    """Test zeroconf flow -- radio detected."""
+    service_info = {
+        "host": "192.168.1.200",
+        "port": 6053,
+        "hostname": "_tube_zb_gw._tcp.local.",
+        "properties": {"name": "tube_123456"},
+    }
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
@@ -74,6 +261,7 @@ async def test_user_flow_not_detected(detect_mock, hass):
     assert detect_mock.await_args[0][0] == port.device
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_flow_show_form(hass):
     """Test user step form."""
     result = await hass.config_entries.flow.async_init(
@@ -83,6 +271,18 @@ async def test_user_flow_show_form(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
+async def test_user_flow_show_manual(hass):
+    """Test user flow manual entry when no comport detected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_radio"
 
 
 async def test_user_flow_manual(hass):
@@ -199,50 +399,3 @@ async def test_user_port_config(probe_mock, hass):
     )
     assert result["data"][CONF_RADIO_TYPE] == "ezsp"
     assert probe_mock.await_count == 1
-
-
-def test_get_serial_by_id_no_dir():
-    """Test serial by id conversion if there's no /dev/serial/by-id."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=False))
-    p2 = patch("os.scandir")
-    with p1 as is_dir_mock, p2 as scan_mock:
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.path
-        assert is_dir_mock.call_count == 1
-        assert scan_mock.call_count == 0
-
-
-def test_get_serial_by_id():
-    """Test serial by id conversion."""
-    p1 = patch("os.path.isdir", MagicMock(return_value=True))
-    p2 = patch("os.scandir")
-
-    def _realpath(path):
-        if path is sentinel.matched_link:
-            return sentinel.path
-        return sentinel.serial_link_path
-
-    p3 = patch("os.path.realpath", side_effect=_realpath)
-    with p1 as is_dir_mock, p2 as scan_mock, p3:
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.path
-        assert is_dir_mock.call_count == 1
-        assert scan_mock.call_count == 1
-
-        entry1 = MagicMock(spec_set=os.DirEntry)
-        entry1.is_symlink.return_value = True
-        entry1.path = sentinel.some_path
-
-        entry2 = MagicMock(spec_set=os.DirEntry)
-        entry2.is_symlink.return_value = False
-        entry2.path = sentinel.other_path
-
-        entry3 = MagicMock(spec_set=os.DirEntry)
-        entry3.is_symlink.return_value = True
-        entry3.path = sentinel.matched_link
-
-        scan_mock.return_value = [entry1, entry2, entry3]
-        res = config_flow.get_serial_by_id(sentinel.path)
-        assert res is sentinel.matched_link
-        assert is_dir_mock.call_count == 2
-        assert scan_mock.call_count == 2

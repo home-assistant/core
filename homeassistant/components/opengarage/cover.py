@@ -92,7 +92,7 @@ class OpenGarageCover(CoverEntity):
         self._open_garage = open_garage
         self._state = None
         self._state_before_move = None
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
         self._available = True
         self._device_id = device_id
 
@@ -107,9 +107,9 @@ class OpenGarageCover(CoverEntity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def is_closed(self):
@@ -154,11 +154,11 @@ class OpenGarageCover(CoverEntity):
 
         _LOGGER.debug("%s status: %s", self._name, self._state)
         if status.get("rssi") is not None:
-            self._device_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
+            self._extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
         if status.get("dist") is not None:
-            self._device_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
+            self._extra_state_attributes[ATTR_DISTANCE_SENSOR] = status.get("dist")
         if self._state is not None:
-            self._device_state_attributes[ATTR_DOOR_STATE] = self._state
+            self._extra_state_attributes[ATTR_DOOR_STATE] = self._state
 
         self._available = True
 

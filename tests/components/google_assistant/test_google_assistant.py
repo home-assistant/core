@@ -134,8 +134,8 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
-    assert sorted([dev["id"] for dev in devices]) == sorted(
-        [dev["id"] for dev in DEMO_DEVICES]
+    assert sorted(dev["id"] for dev in devices) == sorted(
+        dev["id"] for dev in DEMO_DEVICES
     )
 
     for dev in devices:
@@ -473,4 +473,4 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
     assert dehumidifier.attributes.get(humidifier.ATTR_HUMIDITY) == 45
 
     hygrostat = hass_fixture.states.get("humidifier.hygrostat")
-    assert hygrostat.attributes.get(humidifier.ATTR_MODE) == "eco"
+    assert hygrostat.attributes.get(const.ATTR_MODE) == "eco"

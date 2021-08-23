@@ -1,11 +1,11 @@
 """Test the python_script component."""
 import logging
+from unittest.mock import mock_open, patch
 
 from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import mock_open, patch
 from tests.common import patch_yaml_files
 
 
@@ -179,6 +179,20 @@ for i in [1, 2]:
     assert hass.states.is_state("hello.2", "world")
 
 
+async def test_using_enumerate(hass):
+    """Test that enumerate is accepted and executed."""
+    source = """
+for index, value in enumerate(["earth", "mars"]):
+    hass.states.set('hello.{}'.format(index), value)
+    """
+
+    hass.async_add_job(execute, hass, "test.py", source, {})
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state("hello.0", "earth")
+    assert hass.states.is_state("hello.1", "mars")
+
+
 async def test_unpacking_sequence(hass, caplog):
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)
@@ -306,6 +320,7 @@ async def test_service_descriptions(hass):
 
     service_descriptions1 = (
         "hello:\n"
+        "  name: ABC\n"
         "  description: Description of hello.py.\n"
         "  fields:\n"
         "    fake_param:\n"
@@ -333,6 +348,7 @@ async def test_service_descriptions(hass):
 
     assert len(descriptions) == 1
 
+    assert descriptions[DOMAIN]["hello"]["name"] == "ABC"
     assert descriptions[DOMAIN]["hello"]["description"] == "Description of hello.py."
     assert (
         descriptions[DOMAIN]["hello"]["fields"]["fake_param"]["description"]
@@ -343,6 +359,8 @@ async def test_service_descriptions(hass):
         == "This is a test of python_script.hello"
     )
 
+    # Verify default name = file name
+    assert descriptions[DOMAIN]["world_beer"]["name"] == "world_beer"
     assert descriptions[DOMAIN]["world_beer"]["description"] == ""
     assert bool(descriptions[DOMAIN]["world_beer"]["fields"]) is False
 

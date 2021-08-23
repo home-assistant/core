@@ -1,34 +1,25 @@
 """Support for UPnP/IGD Sensors."""
-from datetime import timedelta
-from typing import Any, Mapping
+from __future__ import annotations
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import UpnpDataUpdateCoordinator, UpnpEntity
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
-    CONFIG_ENTRY_SCAN_INTERVAL,
-    CONFIG_ENTRY_UDN,
     DATA_PACKETS,
     DATA_RATE_PACKETS_PER_SECOND,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_COORDINATORS,
-    DOMAIN_DEVICES,
     KIBIBYTE,
-    LOGGER as _LOGGER,
+    LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     TIMESTAMP,
 )
-from .device import Device
 
 SENSOR_TYPES = {
     BYTES_RECEIVED: {
@@ -71,72 +62,50 @@ SENSOR_TYPES = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ) -> None:
     """Old way of setting up UPnP/IGD sensors."""
-    _LOGGER.debug(
+    LOGGER.debug(
         "async_setup_platform: config: %s, discovery: %s", config, discovery_info
     )
 
 
 async def async_setup_entry(
-    hass, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    data = config_entry.data
-    if CONFIG_ENTRY_UDN in data:
-        udn = data[CONFIG_ENTRY_UDN]
-    else:
-        # any device will do
-        udn = list(hass.data[DOMAIN][DOMAIN_DEVICES])[0]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
-
-    update_interval_sec = config_entry.options.get(
-        CONFIG_ENTRY_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    update_interval = timedelta(seconds=update_interval_sec)
-    _LOGGER.debug("update_interval: %s", update_interval)
-    _LOGGER.debug("Adding sensors")
-    coordinator = DataUpdateCoordinator[Mapping[str, Any]](
-        hass,
-        _LOGGER,
-        name=device.name,
-        update_method=device.async_get_traffic_data,
-        update_interval=update_interval,
-    )
-    await coordinator.async_refresh()
-    hass.data[DOMAIN][DOMAIN_COORDINATORS][udn] = coordinator
+    LOGGER.debug("Adding sensors")
 
     sensors = [
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_SENT]),
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_RECEIVED]),
-        RawUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_SENT]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_SENT]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_RECEIVED]),
-        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_SENT]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
+        RawUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_RECEIVED]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[BYTES_SENT]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_RECEIVED]),
+        DerivedUpnpSensor(coordinator, SENSOR_TYPES[PACKETS_SENT]),
     ]
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
-class UpnpSensor(CoordinatorEntity):
+class UpnpSensor(UpnpEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Mapping[str, Any]],
-        device: Device,
-        sensor_type: Mapping[str, str],
-        update_multiplier: int = 2,
+        coordinator: UpnpDataUpdateCoordinator,
+        sensor_type: dict[str, str],
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
-        self._device = device
         self._sensor_type = sensor_type
-        self._update_counter_max = update_multiplier
-        self._update_counter = 0
+        self._attr_name = f"{coordinator.device.name} {sensor_type['name']}"
+        self._attr_unique_id = f"{coordinator.device.udn}_{sensor_type['unique_id']}"
 
     @property
     def icon(self) -> str:
@@ -146,43 +115,21 @@ class UpnpSensor(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        device_value_key = self._sensor_type["device_value_key"]
-        return (
-            self.coordinator.last_update_success
-            and device_value_key in self.coordinator.data
+        return super().available and self.coordinator.data.get(
+            self._sensor_type["device_value_key"]
         )
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self._sensor_type['name']}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self._sensor_type['unique_id']}"
-
-    @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._sensor_type["unit"]
-
-    @property
-    def device_info(self) -> Mapping[str, Any]:
-        """Get device info."""
-        return {
-            "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
-            "name": self._device.name,
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model_name,
-        }
 
 
 class RawUpnpSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
         value = self.coordinator.data[device_value_key]
@@ -194,24 +141,18 @@ class RawUpnpSensor(UpnpSensor):
 class DerivedUpnpSensor(UpnpSensor):
     """Representation of a UNIT Sent/Received per second sensor."""
 
-    def __init__(self, coordinator, device, sensor_type) -> None:
+    def __init__(self, coordinator: UpnpDataUpdateCoordinator, sensor_type) -> None:
         """Initialize sensor."""
-        super().__init__(coordinator, device, sensor_type)
+        super().__init__(coordinator, sensor_type)
         self._last_value = None
         self._last_timestamp = None
+        self._attr_name = f"{coordinator.device.name} {sensor_type['derived_name']}"
+        self._attr_unique_id = (
+            f"{coordinator.device.udn}_{sensor_type['derived_unique_id']}"
+        )
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self._sensor_type['derived_name']}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self._sensor_type['derived_unique_id']}"
-
-    @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return self._sensor_type["derived_unit"]
 
@@ -220,7 +161,7 @@ class DerivedUpnpSensor(UpnpSensor):
         return current_value < self._last_value
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]
@@ -238,10 +179,10 @@ class DerivedUpnpSensor(UpnpSensor):
         if self._sensor_type["unit"] == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
-        if delta_time.seconds == 0:
+        if delta_time.total_seconds() == 0:
             # Prevent division by 0.
             return None
-        derived = delta_value / delta_time.seconds
+        derived = delta_value / delta_time.total_seconds()
 
         # Store current values for future use.
         self._last_value = current_value

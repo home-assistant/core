@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Kon niet verbinden"
         },
-        "flow_title": "Canary: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "Argumenten doorgegeven aan ffmpeg voor camera's",
                     "timeout": "Time-out verzoek (seconden)"
                 }
             }

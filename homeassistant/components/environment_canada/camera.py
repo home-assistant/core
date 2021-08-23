@@ -1,7 +1,9 @@
 """Support for the Environment Canada radar imagery."""
+from __future__ import annotations
+
 import datetime
 
-from env_canada import ECRadar  # pylint: disable=import-error
+from env_canada import ECRadar
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -68,7 +70,9 @@ class ECCamera(Camera):
         self.image = None
         self.timestamp = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         self.update()
         return self.image
@@ -81,7 +85,7 @@ class ECCamera(Camera):
         return "Environment Canada Radar"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_ATTRIBUTION: CONF_ATTRIBUTION, ATTR_UPDATED: self.timestamp}
 

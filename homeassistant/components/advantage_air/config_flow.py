@@ -22,7 +22,7 @@ class AdvantageAirConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config Advantage Air API connection."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
     DOMAIN = DOMAIN
 
     async def async_step_user(self, user_input=None):

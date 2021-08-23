@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 import async_timeout
 
 from homeassistant.components.notify import (
@@ -36,6 +37,7 @@ from .const import (
     ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
     DATA_NOTIFY,
+    DATA_PUSH_CHANNEL,
     DOMAIN,
 )
 from .util import supports_push
@@ -77,23 +79,22 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".")[0],
+        str(resetsAtTime).split(".", maxsplit=1)[0],
     )
 
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
-    session = async_get_clientsession(hass)
-    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(session)
+    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(hass)
     return service
 
 
 class MobileAppNotificationService(BaseNotificationService):
     """Implement the notification service for mobile_app."""
 
-    def __init__(self, session):
+    def __init__(self, hass):
         """Initialize the service."""
-        self._session = session
+        self._hass = hass
 
     @property
     def targets(self):
@@ -104,10 +105,12 @@ class MobileAppNotificationService(BaseNotificationService):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
-        if kwargs.get(ATTR_TITLE) is not None:
-            # Remove default title from notifications.
-            if kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT:
-                data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+        # Remove default title from notifications.
+        if (
+            kwargs.get(ATTR_TITLE) is not None
+            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
+        ):
+            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
         targets = kwargs.get(ATTR_TARGET)
 
@@ -117,7 +120,13 @@ class MobileAppNotificationService(BaseNotificationService):
         if kwargs.get(ATTR_DATA) is not None:
             data[ATTR_DATA] = kwargs.get(ATTR_DATA)
 
+        local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
+
         for target in targets:
+            if target in local_push_channels:
+                local_push_channels[target](data)
+                continue
+
             entry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
             entry_data = entry.data
 
@@ -125,7 +134,8 @@ class MobileAppNotificationService(BaseNotificationService):
             push_token = app_data[ATTR_PUSH_TOKEN]
             push_url = app_data[ATTR_PUSH_URL]
 
-            data[ATTR_PUSH_TOKEN] = push_token
+            target_data = dict(data)
+            target_data[ATTR_PUSH_TOKEN] = push_token
 
             reg_info = {
                 ATTR_APP_ID: entry_data[ATTR_APP_ID],
@@ -134,14 +144,16 @@ class MobileAppNotificationService(BaseNotificationService):
             if ATTR_OS_VERSION in entry_data:
                 reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
 
-            data["registration_info"] = reg_info
+            target_data["registration_info"] = reg_info
 
             try:
                 with async_timeout.timeout(10):
-                    response = await self._session.post(push_url, json=data)
+                    response = await async_get_clientsession(self._hass).post(
+                        push_url, json=target_data
+                    )
                     result = await response.json()
 
-                if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
+                if response.status in (HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED):
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
                     continue
 
@@ -168,3 +180,5 @@ class MobileAppNotificationService(BaseNotificationService):
 
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout sending notification to %s", push_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error sending notification to %s: %r", push_url, err)

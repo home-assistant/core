@@ -86,7 +86,7 @@ async def test_registration_encryption(hass, hass_client):
     container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
 
     resp = await api_client.post(
-        "/api/webhook/{}".format(register_json[CONF_WEBHOOK_ID]), json=container
+        f"/api/webhook/{register_json[CONF_WEBHOOK_ID]}", json=container
     )
 
     assert resp.status == 200

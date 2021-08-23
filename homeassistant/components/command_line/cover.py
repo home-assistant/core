@@ -107,11 +107,6 @@ class CommandCover(CoverEntity):
 
         return success
 
-    def _query_state_value(self, command):
-        """Execute state command for return value."""
-        _LOGGER.info("Running state value command: %s", command)
-        return check_output_or_log(command, self._timeout)
-
     @property
     def should_poll(self):
         """Only poll if we have state command."""
@@ -138,10 +133,8 @@ class CommandCover(CoverEntity):
 
     def _query_state(self):
         """Query for the state."""
-        if not self._command_state:
-            _LOGGER.error("No state command specified")
-            return
-        return self._query_state_value(self._command_state)
+        _LOGGER.info("Running state value command: %s", self._command_state)
+        return check_output_or_log(self._command_state, self._timeout)
 
     def update(self):
         """Update device state."""

@@ -45,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Efekty Hyperiona do pokazania",
                     "priority": "Hyperion ma pierwsze\u0144stwo w u\u017cyciu dla kolor\u00f3w i efekt\u00f3w"
                 }
             }

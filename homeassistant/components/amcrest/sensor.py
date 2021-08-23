@@ -4,9 +4,9 @@ import logging
 
 from amcrest import AmcrestError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class AmcrestSensor(Entity):
+class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
     def __init__(self, name, device, sensor_type):
@@ -61,12 +61,12 @@ class AmcrestSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 
@@ -76,7 +76,7 @@ class AmcrestSensor(Entity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit_of_measurement
 

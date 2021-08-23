@@ -1,4 +1,6 @@
 """Test zha analog output."""
+from unittest.mock import call, patch
+
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
@@ -16,7 +18,6 @@ from .common import (
     send_attributes_report,
 )
 
-from tests.async_mock import call, patch
 from tests.common import mock_coro
 
 

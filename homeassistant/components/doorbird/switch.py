@@ -17,8 +17,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     config_entry_id = config_entry.entry_id
 
-    doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
-    doorstation_info = hass.data[DOMAIN][config_entry_id][DOOR_STATION_INFO]
+    data = hass.data[DOMAIN][config_entry_id]
+    doorstation = data[DOOR_STATION]
+    doorstation_info = data[DOOR_STATION_INFO]
 
     relays = doorstation_info["RELAYS"]
     relays.append(IR_RELAY)

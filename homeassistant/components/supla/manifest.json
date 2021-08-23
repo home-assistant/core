@@ -3,5 +3,6 @@
   "name": "Supla",
   "documentation": "https://www.home-assistant.io/integrations/supla",
   "requirements": ["asyncpysupla==0.0.5"],
-  "codeowners": ["@mwegrzynek"]
+  "codeowners": ["@mwegrzynek"],
+  "iot_class": "cloud_polling"
 }

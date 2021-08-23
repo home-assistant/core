@@ -5,7 +5,21 @@
             "already_in_progress": "Konfiguratioun's Oflaf ass schon am gaang",
             "connection_error": "Feeler beim verbannen"
         },
+        "error": {
+            "discovery_error": "Feeler beim Entdecken vun enger Motion Gateway"
+        },
         "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel"
+                },
+                "description": "Du brauchs de 16 stellegen API Schl\u00ebssel, kuck https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key fir w\u00e9ider Instruktiounen"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP Adresse"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API Schl\u00ebssel",

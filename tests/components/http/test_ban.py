@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 from ipaddress import ip_address
 import os
+from unittest.mock import Mock, mock_open, patch
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -23,7 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
-from tests.async_mock import Mock, mock_open, patch
 from tests.common import async_mock_service
 
 SUPERVISOR_IP = "1.2.3.4"
@@ -166,7 +166,9 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         resp = await client.get("/")
         assert resp.status == 401
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS) + 1
-        m_open.assert_called_once_with(hass.config.path(IP_BANS_FILE), "a")
+        m_open.assert_called_once_with(
+            hass.config.path(IP_BANS_FILE), "a", encoding="utf8"
+        )
 
         resp = await client.get("/")
         assert resp.status == HTTP_FORBIDDEN
@@ -174,8 +176,8 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
 
         assert len(notification_calls) == 3
         assert (
-            "Login attempt or request with invalid authentication from example.com (200.201.202.204) (Python"
-            in notification_calls[0].data["message"]
+            notification_calls[0].data["message"]
+            == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
         )
 
 

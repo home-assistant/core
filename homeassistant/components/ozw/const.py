@@ -25,6 +25,7 @@ PLATFORMS = [
     SWITCH_DOMAIN,
 ]
 MANAGER = "manager"
+NODES_VALUES = "nodes_values"
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"
@@ -39,6 +40,9 @@ ATTR_SCENE_ID = "scene_id"
 ATTR_SCENE_LABEL = "scene_label"
 ATTR_SCENE_VALUE_ID = "scene_value_id"
 ATTR_SCENE_VALUE_LABEL = "scene_value_label"
+
+# Config entry data and options
+MIGRATED = "migrated"
 
 # Service specific
 SERVICE_ADD_NODE = "add_node"

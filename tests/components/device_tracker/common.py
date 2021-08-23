@@ -15,15 +15,15 @@ from homeassistant.components.device_tracker import (
     DOMAIN,
     SERVICE_SEE,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import GPSType, HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import GPSType
 from homeassistant.loader import bind_hass
 
 
 @callback
 @bind_hass
 def async_see(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     mac: str = None,
     dev_id: str = None,
     host_name: str = None,

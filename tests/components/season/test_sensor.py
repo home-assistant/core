@@ -1,5 +1,6 @@
 """The tests for the Season sensor platform."""
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -13,8 +14,6 @@ from homeassistant.components.season.sensor import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 HEMISPHERE_NORTHERN = {
     "homeassistant": {"latitude": "48.864716", "longitude": "2.349014"},

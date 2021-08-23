@@ -1,5 +1,5 @@
 """Provides device actions for switches."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -9,6 +9,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
+
+# mypy: disallow-any-generics
 
 ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
 
@@ -25,6 +27,8 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions."""
     return await toggle_entity.async_get_actions(hass, device_id, DOMAIN)

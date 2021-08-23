@@ -18,11 +18,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    ATTR_CONTROLLER_ID,
     ATTR_IHC_ID,
     ATTR_VALUE,
     CONF_AUTOSETUP,
@@ -54,7 +55,7 @@ DOMAIN = "ihc"
 
 IHC_CONTROLLER = "controller"
 IHC_INFO = "info"
-IHC_PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
+PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
 
 
 def validate_name(config):
@@ -186,13 +187,18 @@ AUTO_SETUP_SCHEMA = vol.Schema(
 )
 
 SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_IHC_ID): cv.positive_int, vol.Required(ATTR_VALUE): cv.boolean}
+    {
+        vol.Required(ATTR_IHC_ID): cv.positive_int,
+        vol.Required(ATTR_VALUE): cv.boolean,
+        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+    }
 )
 
 SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_IHC_ID): cv.positive_int,
         vol.Required(ATTR_VALUE): vol.Coerce(int),
+        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
     }
 )
 
@@ -200,14 +206,20 @@ SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_IHC_ID): cv.positive_int,
         vol.Required(ATTR_VALUE): vol.Coerce(float),
+        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
     }
 )
 
-PULSE_SCHEMA = vol.Schema({vol.Required(ATTR_IHC_ID): cv.positive_int})
+PULSE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_IHC_ID): cv.positive_int,
+        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+    }
+)
 
 
 def setup(hass, config):
-    """Set up the IHC platform."""
+    """Set up the IHC integration."""
     conf = config.get(DOMAIN)
     for index, controller_conf in enumerate(conf):
         if not ihc_setup(hass, config, controller_conf, index):
@@ -217,8 +229,7 @@ def setup(hass, config):
 
 
 def ihc_setup(hass, config, conf, controller_id):
-    """Set up the IHC component."""
-
+    """Set up the IHC integration."""
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
@@ -237,17 +248,19 @@ def ihc_setup(hass, config, conf, controller_id):
     # Store controller configuration
     ihc_key = f"ihc{controller_id}"
     hass.data[ihc_key] = {IHC_CONTROLLER: ihc_controller, IHC_INFO: conf[CONF_INFO]}
-    setup_service_functions(hass, ihc_controller)
+    # We only want to register the service functions once for the first controller
+    if controller_id == 0:
+        setup_service_functions(hass)
     return True
 
 
 def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
     """Get manual configuration for IHC devices."""
-    for component in IHC_PLATFORMS:
+    for platform in PLATFORMS:
         discovery_info = {}
-        if component in conf:
-            component_setup = conf.get(component)
-            for sensor_cfg in component_setup:
+        if platform in conf:
+            platform_setup = conf.get(platform)
+            for sensor_cfg in platform_setup:
                 name = sensor_cfg[CONF_NAME]
                 device = {
                     "ihc_id": sensor_cfg[CONF_ID],
@@ -268,14 +281,11 @@ def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
                 }
                 discovery_info[name] = device
         if discovery_info:
-            discovery.load_platform(hass, component, DOMAIN, discovery_info, config)
+            discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
 
 
-def autosetup_ihc_products(
-    hass: HomeAssistantType, config, ihc_controller, controller_id
-):
+def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
-
     project_xml = ihc_controller.get_project()
     if not project_xml:
         _LOGGER.error("Unable to read project from IHC controller")
@@ -292,21 +302,23 @@ def autosetup_ihc_products(
     except vol.Invalid as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
+
     groups = project.findall(".//group")
-    for component in IHC_PLATFORMS:
-        component_setup = auto_setup_conf[component]
-        discovery_info = get_discovery_info(component_setup, groups, controller_id)
+    for platform in PLATFORMS:
+        platform_setup = auto_setup_conf[platform]
+        discovery_info = get_discovery_info(platform_setup, groups, controller_id)
         if discovery_info:
-            discovery.load_platform(hass, component, DOMAIN, discovery_info, config)
+            discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
+
     return True
 
 
-def get_discovery_info(component_setup, groups, controller_id):
-    """Get discovery info for specified IHC component."""
+def get_discovery_info(platform_setup, groups, controller_id):
+    """Get discovery info for specified IHC platform."""
     discovery_data = {}
     for group in groups:
         groupname = group.attrib["name"]
-        for product_cfg in component_setup:
+        for product_cfg in platform_setup:
             products = group.findall(product_cfg[CONF_XPATH])
             for product in products:
                 nodes = product.findall(product_cfg[CONF_NODE])
@@ -329,30 +341,39 @@ def get_discovery_info(component_setup, groups, controller_id):
     return discovery_data
 
 
-def setup_service_functions(hass: HomeAssistantType, ihc_controller):
+def setup_service_functions(hass: HomeAssistant):
     """Set up the IHC service functions."""
+
+    def _get_controller(call):
+        controller_id = call.data[ATTR_CONTROLLER_ID]
+        ihc_key = f"ihc{controller_id}"
+        return hass.data[ihc_key][IHC_CONTROLLER]
 
     def set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
         value = call.data[ATTR_VALUE]
+        ihc_controller = _get_controller(call)
         ihc_controller.set_runtime_value_bool(ihc_id, value)
 
     def set_runtime_value_int(call):
         """Set a IHC runtime integer value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
         value = call.data[ATTR_VALUE]
+        ihc_controller = _get_controller(call)
         ihc_controller.set_runtime_value_int(ihc_id, value)
 
     def set_runtime_value_float(call):
         """Set a IHC runtime float value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
         value = call.data[ATTR_VALUE]
+        ihc_controller = _get_controller(call)
         ihc_controller.set_runtime_value_float(ihc_id, value)
 
     async def async_pulse_runtime_input(call):
         """Pulse a IHC controller input function."""
         ihc_id = call.data[ATTR_IHC_ID]
+        ihc_controller = _get_controller(call)
         await async_pulse(hass, ihc_controller, ihc_id)
 
     hass.services.register(

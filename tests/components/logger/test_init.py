@@ -1,14 +1,13 @@
 """The tests for the Logger component."""
 from collections import defaultdict
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components import logger
 from homeassistant.components.logger import LOGSEVERITY
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"
@@ -24,6 +23,74 @@ def restore_logging_class():
     klass = logging.getLoggerClass()
     yield
     logging.setLoggerClass(klass)
+
+
+async def test_log_filtering(hass, caplog):
+    """Test logging filters."""
+
+    assert await async_setup_component(
+        hass,
+        "logger",
+        {
+            "logger": {
+                "default": "warning",
+                "logs": {
+                    "test.filter": "info",
+                },
+                "filters": {
+                    "test.filter": [
+                        "doesntmatchanything",
+                        ".*shouldfilterall.*",
+                        "^filterthis:.*",
+                        "in the middle",
+                    ],
+                    "test.other_filter": [".*otherfilterer"],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    filter_logger = logging.getLogger("test.filter")
+
+    def msg_test(logger, result, message, *args):
+        logger.error(message, *args)
+        formatted_message = message % args
+        assert (formatted_message in caplog.text) == result
+        caplog.clear()
+
+    msg_test(
+        filter_logger, False, "this line containing shouldfilterall should be filtered"
+    )
+    msg_test(filter_logger, True, "this line should not be filtered filterthis:")
+    msg_test(filter_logger, False, "this in the middle should be filtered")
+    msg_test(filter_logger, False, "filterthis: should be filtered")
+    msg_test(filter_logger, False, "format string shouldfilter%s", "all")
+    msg_test(filter_logger, True, "format string shouldfilter%s", "not")
+
+    # Filtering should work even if log level is modified
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"test.filter": "warning"},
+        blocking=True,
+    )
+    assert filter_logger.getEffectiveLevel() == logging.WARNING
+    msg_test(
+        filter_logger,
+        False,
+        "this line containing shouldfilterall should still be filtered",
+    )
+
+    # Filtering should be scoped to a service
+    msg_test(
+        filter_logger, True, "this line containing otherfilterer should not be filtered"
+    )
+    msg_test(
+        logging.getLogger("test.other_filter"),
+        False,
+        "this line containing otherfilterer SHOULD be filtered",
+    )
 
 
 async def test_setting_level(hass):
@@ -166,9 +233,9 @@ async def test_can_set_level(hass):
         logger.DOMAIN, "set_level", {f"{UNCONFIG_NS}.any": "debug"}, blocking=True
     )
 
-    logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
-    logging.getLogger(f"{UNCONFIG_NS}.any").level == logging.DEBUG
-    logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
+    assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
+    assert logging.getLogger(f"{UNCONFIG_NS}.any").level == logging.DEBUG
+    assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
 
     await hass.services.async_call(
         logger.DOMAIN, "set_default_level", {"level": "debug"}, blocking=True

@@ -1,1 +1,1 @@
-{"water_temperature": 70.0, "intended_boiler_temperature": 70.0, "modulation_level": 0.01, "heating_state": true}
+{"water_temperature": 70.0, "intended_boiler_temperature": 70.0, "modulation_level": 1, "heating_state": true}

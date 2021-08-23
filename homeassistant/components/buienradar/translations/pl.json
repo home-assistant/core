@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+        },
+        "error": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "Kod kraju do wy\u015bwietlania obraz\u00f3w z kamer.",
+                    "delta": "Odst\u0119p czasu w sekundach mi\u0119dzy aktualizacjami obrazu z kamery",
+                    "timeframe": "Czas w minutach poprzedzaj\u0105cy prognoz\u0119 opad\u00f3w"
+                }
+            }
+        }
+    }
+}

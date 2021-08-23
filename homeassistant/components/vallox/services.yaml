@@ -1,27 +1,57 @@
 set_profile:
+  name: Set profile
   description: Set the ventilation profile.
   fields:
     profile:
-      description: "Set to any of: Home, Away, Boost, Fireplace"
-      example: Away
+      name: Profile
+      description: "Set profile."
+      required: true
+      selector:
+        select:
+          options:
+            - 'Away'
+            - 'Boost'
+            - 'Fireplace'
+            - 'Home'
 
 set_profile_fan_speed_home:
+  name: Set profile fan speed hom
   description: Set the fan speed of the Home profile.
   fields:
     fan_speed:
-      description: Fan speed in %. Integer, between 0 and 100.
-      example: 50
+      name: Fan speed
+      description: Fan speed.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
 
 set_profile_fan_speed_away:
+  name: Set profile fan speed away
   description: Set the fan speed of the Away profile.
   fields:
     fan_speed:
-      description: Fan speed in %. Integer, between 0 and 100.
-      example: 25
+      name: Fan speed
+      description: Fan speed.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'
 
 set_profile_fan_speed_boost:
+  name: Set profile fan speed boost
   description: Set the fan speed of the Boost profile.
   fields:
     fan_speed:
-      description: Fan speed in %. Integer, between 0 and 100.
-      example: 65
+      name: Fan speed
+      description: Fan speed.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: '%'

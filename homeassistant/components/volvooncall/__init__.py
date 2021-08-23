@@ -8,6 +8,7 @@ from volvooncall import Connection
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -32,14 +33,13 @@ _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
-CONF_REGION = "region"
 CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"
 
 SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
-COMPONENTS = {
+PLATFORMS = {
     "sensor": "sensor",
     "binary_sensor": "binary_sensor",
     "lock": "lock",
@@ -146,7 +146,7 @@ async def async_setup(hass, config):
         for instrument in (
             instrument
             for instrument in dashboard.instruments
-            if instrument.component in COMPONENTS and is_enabled(instrument.slug_attr)
+            if instrument.component in PLATFORMS and is_enabled(instrument.slug_attr)
         ):
 
             data.instruments.add(instrument)
@@ -154,7 +154,7 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    COMPONENTS[instrument.component],
+                    PLATFORMS[instrument.component],
                     DOMAIN,
                     (vehicle.vin, instrument.component, instrument.attr),
                     config,
@@ -277,7 +277,7 @@ class VolvoEntity(Entity):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return dict(
             self.instrument.attributes,

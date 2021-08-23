@@ -1,10 +1,10 @@
 """The tests for the Radarr platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 def mocked_exception(*args, **kwargs):
@@ -211,11 +211,11 @@ async def test_diskspace_no_paths(hass):
 
         entity = hass.states.get("sensor.radarr_disk_space")
         assert entity is not None
-        assert "263.10" == entity.state
-        assert "mdi:harddisk" == entity.attributes["icon"]
-        assert DATA_GIGABYTES == entity.attributes["unit_of_measurement"]
-        assert "Radarr Disk Space" == entity.attributes["friendly_name"]
-        assert "263.10/465.42GB (56.53%)" == entity.attributes["/data"]
+        assert entity.state == "263.10"
+        assert entity.attributes["icon"] == "mdi:harddisk"
+        assert entity.attributes["unit_of_measurement"] == DATA_GIGABYTES
+        assert entity.attributes["friendly_name"] == "Radarr Disk Space"
+        assert entity.attributes["/data"] == "263.10/465.42GB (56.53%)"
 
 
 async def test_diskspace_paths(hass):
@@ -240,11 +240,11 @@ async def test_diskspace_paths(hass):
 
         entity = hass.states.get("sensor.radarr_disk_space")
         assert entity is not None
-        assert "263.10" == entity.state
-        assert "mdi:harddisk" == entity.attributes["icon"]
-        assert DATA_GIGABYTES == entity.attributes["unit_of_measurement"]
-        assert "Radarr Disk Space" == entity.attributes["friendly_name"]
-        assert "263.10/465.42GB (56.53%)" == entity.attributes["/data"]
+        assert entity.state == "263.10"
+        assert entity.attributes["icon"] == "mdi:harddisk"
+        assert entity.attributes["unit_of_measurement"] == DATA_GIGABYTES
+        assert entity.attributes["friendly_name"] == "Radarr Disk Space"
+        assert entity.attributes["/data"] == "263.10/465.42GB (56.53%)"
 
 
 async def test_commands(hass):
@@ -269,11 +269,11 @@ async def test_commands(hass):
 
         entity = hass.states.get("sensor.radarr_commands")
         assert entity is not None
-        assert 1 == int(entity.state)
-        assert "mdi:code-braces" == entity.attributes["icon"]
-        assert "Commands" == entity.attributes["unit_of_measurement"]
-        assert "Radarr Commands" == entity.attributes["friendly_name"]
-        assert "pending" == entity.attributes["RescanMovie"]
+        assert int(entity.state) == 1
+        assert entity.attributes["icon"] == "mdi:code-braces"
+        assert entity.attributes["unit_of_measurement"] == "Commands"
+        assert entity.attributes["friendly_name"] == "Radarr Commands"
+        assert entity.attributes["RescanMovie"] == "pending"
 
 
 async def test_movies(hass):
@@ -298,11 +298,11 @@ async def test_movies(hass):
 
         entity = hass.states.get("sensor.radarr_movies")
         assert entity is not None
-        assert 1 == int(entity.state)
-        assert "mdi:television" == entity.attributes["icon"]
-        assert "Movies" == entity.attributes["unit_of_measurement"]
-        assert "Radarr Movies" == entity.attributes["friendly_name"]
-        assert "false" == entity.attributes["Assassin's Creed (2016)"]
+        assert int(entity.state) == 1
+        assert entity.attributes["icon"] == "mdi:television"
+        assert entity.attributes["unit_of_measurement"] == "Movies"
+        assert entity.attributes["friendly_name"] == "Radarr Movies"
+        assert entity.attributes["Assassin's Creed (2016)"] == "false"
 
 
 async def test_upcoming_multiple_days(hass):
@@ -327,11 +327,11 @@ async def test_upcoming_multiple_days(hass):
 
         entity = hass.states.get("sensor.radarr_upcoming")
         assert entity is not None
-        assert 1 == int(entity.state)
-        assert "mdi:television" == entity.attributes["icon"]
-        assert "Movies" == entity.attributes["unit_of_measurement"]
-        assert "Radarr Upcoming" == entity.attributes["friendly_name"]
-        assert "2017-01-27T00:00:00Z" == entity.attributes["Resident Evil (2017)"]
+        assert int(entity.state) == 1
+        assert entity.attributes["icon"] == "mdi:television"
+        assert entity.attributes["unit_of_measurement"] == "Movies"
+        assert entity.attributes["friendly_name"] == "Radarr Upcoming"
+        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00Z"
 
 
 @pytest.mark.skip
@@ -357,11 +357,11 @@ async def test_upcoming_today(hass):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
         entity = hass.states.get("sensor.radarr_upcoming")
-        assert 1 == int(entity.state)
-        assert "mdi:television" == entity.attributes["icon"]
-        assert "Movies" == entity.attributes["unit_of_measurement"]
-        assert "Radarr Upcoming" == entity.attributes["friendly_name"]
-        assert "2017-01-27T00:00:00Z" == entity.attributes["Resident Evil (2017)"]
+        assert int(entity.state) == 1
+        assert entity.attributes["icon"] == "mdi:television"
+        assert entity.attributes["unit_of_measurement"] == "Movies"
+        assert entity.attributes["friendly_name"] == "Radarr Upcoming"
+        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00Z"
 
 
 async def test_system_status(hass):
@@ -384,10 +384,10 @@ async def test_system_status(hass):
         await hass.async_block_till_done()
         entity = hass.states.get("sensor.radarr_status")
         assert entity is not None
-        assert "0.2.0.210" == entity.state
-        assert "mdi:information" == entity.attributes["icon"]
-        assert "Radarr Status" == entity.attributes["friendly_name"]
-        assert "4.8.13.1" == entity.attributes["osVersion"]
+        assert entity.state == "0.2.0.210"
+        assert entity.attributes["icon"] == "mdi:information"
+        assert entity.attributes["friendly_name"] == "Radarr Status"
+        assert entity.attributes["osVersion"] == "4.8.13.1"
 
 
 async def test_ssl(hass):
@@ -411,11 +411,11 @@ async def test_ssl(hass):
         await hass.async_block_till_done()
         entity = hass.states.get("sensor.radarr_upcoming")
         assert entity is not None
-        assert 1 == int(entity.state)
-        assert "mdi:television" == entity.attributes["icon"]
-        assert "Movies" == entity.attributes["unit_of_measurement"]
-        assert "Radarr Upcoming" == entity.attributes["friendly_name"]
-        assert "2017-01-27T00:00:00Z" == entity.attributes["Resident Evil (2017)"]
+        assert int(entity.state) == 1
+        assert entity.attributes["icon"] == "mdi:television"
+        assert entity.attributes["unit_of_measurement"] == "Movies"
+        assert entity.attributes["friendly_name"] == "Radarr Upcoming"
+        assert entity.attributes["Resident Evil (2017)"] == "2017-01-27T00:00:00Z"
 
 
 async def test_exception_handling(hass):
@@ -438,4 +438,4 @@ async def test_exception_handling(hass):
         await hass.async_block_till_done()
         entity = hass.states.get("sensor.radarr_upcoming")
         assert entity is not None
-        assert "unavailable" == entity.state
+        assert entity.state == "unavailable"

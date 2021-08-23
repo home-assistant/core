@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim belirteci"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Eri\u015fim Belirteci"
+                }
+            }
+        }
+    }
+}

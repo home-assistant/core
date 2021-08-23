@@ -1,13 +1,10 @@
 """Internal discovery service for  iZone AC."""
-
-import logging
-
 import pizone
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -17,8 +14,6 @@ from .const import (
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryService(pizone.Listener):
@@ -52,7 +47,7 @@ class DiscoveryService(pizone.Listener):
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
 
-async def async_start_discovery_service(hass: HomeAssistantType):
+async def async_start_discovery_service(hass: HomeAssistant):
     """Set up the pizone internal discovery."""
     disco = hass.data.get(DATA_DISCOVERY_SERVICE)
     if disco:
@@ -78,7 +73,7 @@ async def async_start_discovery_service(hass: HomeAssistantType):
     return disco
 
 
-async def async_stop_discovery_service(hass: HomeAssistantType):
+async def async_stop_discovery_service(hass: HomeAssistant):
     """Stop the discovery service."""
     disco = hass.data.get(DATA_DISCOVERY_SERVICE)
     if not disco:

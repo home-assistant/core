@@ -1,7 +1,7 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
 import logging
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error, no-name-in-module
+from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -155,7 +155,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
         return self._thermostat.max_temp
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         dev_specific = {
             ATTR_STATE_AWAY_END: self._thermostat.away_end,

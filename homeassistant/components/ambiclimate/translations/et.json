@@ -9,7 +9,7 @@
             "default": "Ambiclimate autentimine \u00f5nnestus"
         },
         "error": {
-            "follow_link": "Enne Esita nupu  vajutamist j\u00e4rgige linki ja autentige",
+            "follow_link": "Enne Esita nupu  vajutamist j\u00e4rgi linki ja autendi",
             "no_token": "Ambiclimate ei ole autenditud"
         },
         "step": {

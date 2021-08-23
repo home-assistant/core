@@ -1,7 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured_device": "Le p\u00e9riph\u00e9rique est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "backoff": "L'appareil n'accepte pas les demandes d'appariement pour le moment (vous avez peut-\u00eatre saisi un code PIN non valide trop de fois), r\u00e9essayez plus tard.",
+            "device_did_not_pair": "Aucune tentative pour terminer l'appairage n'a \u00e9t\u00e9 effectu\u00e9e \u00e0 partir de l'appareil.",
+            "invalid_config": "La configuration de cet appareil est incompl\u00e8te. Veuillez r\u00e9essayer de l'ajouter.",
+            "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
+            "unknown": "Erreur inattendue"
+        },
         "error": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "invalid_auth": "Autentification invalide",
             "no_devices_found": "Aucun appareil d\u00e9tect\u00e9 sur le r\u00e9seau",
             "no_usable_service": "Un dispositif a \u00e9t\u00e9 trouv\u00e9, mais aucun moyen d\u2019\u00e9tablir un lien avec lui. Si vous continuez \u00e0 voir ce message, essayez de sp\u00e9cifier son adresse IP ou de red\u00e9marrer votre Apple TV.",
             "unknown": "Erreur innatendue"
@@ -19,9 +29,12 @@
             "pair_with_pin": {
                 "data": {
                     "pin": "Code PIN"
-                }
+                },
+                "description": "L'appairage est requis pour le protocole `{protocol}`. Veuillez saisir le code PIN affich\u00e9 \u00e0 l'\u00e9cran. Les z\u00e9ros doivent \u00eatre omis, c'est-\u00e0-dire entrer 123 si le code affich\u00e9 est 0123.",
+                "title": "Appairage"
             },
             "reconfigure": {
+                "description": "Cette Apple TV rencontre des difficult\u00e9s de connexion et doit \u00eatre reconfigur\u00e9e.",
                 "title": "Reconfiguration de l'appareil"
             },
             "service_problem": {

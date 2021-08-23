@@ -84,11 +84,9 @@ class WiLightParent:
     async def async_reset(self):
         """Reset api."""
 
-        # If the initialization was wrong.
-        if self._api is None:
-            return True
-
-        self._api.client.stop()
+        # If the initialization was not wrong.
+        if self._api is not None:
+            self._api.client.stop()
 
 
 def create_api_device(host):

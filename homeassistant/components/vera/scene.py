@@ -1,12 +1,14 @@
 """Support for Vera scenes."""
-from typing import Any, Callable, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import pyvera as veraApi
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from .common import ControllerData, get_controller_data
@@ -16,19 +18,21 @@ from .const import VERA_ID_FORMAT
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
     async_add_entities(
-        [VeraScene(device, controller_data) for device in controller_data.scenes]
+        [VeraScene(device, controller_data) for device in controller_data.scenes], True
     )
 
 
 class VeraScene(Scene):
     """Representation of a Vera scene entity."""
 
-    def __init__(self, vera_scene: veraApi.VeraScene, controller_data: ControllerData):
+    def __init__(
+        self, vera_scene: veraApi.VeraScene, controller_data: ControllerData
+    ) -> None:
         """Initialize the scene."""
         self.vera_scene = vera_scene
         self.controller = controller_data.controller
@@ -53,6 +57,6 @@ class VeraScene(Scene):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the scene."""
         return {"vera_scene_id": self.vera_scene.vera_scene_id}

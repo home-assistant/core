@@ -27,5 +27,21 @@
                 "description": "P\u0159ed nastaven\u00edm mus\u00ed b\u00fdt za\u0159\u00edzen\u00ed nap\u00e1jen\u00e9 z baterie probuzeno stisknut\u00edm tla\u010d\u00edtka na dan\u00e9m za\u0159\u00edzen\u00ed."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Tla\u010d\u00edtko",
+            "button1": "Prvn\u00ed tla\u010d\u00edtko",
+            "button2": "Druh\u00e9 tla\u010d\u00edtko",
+            "button3": "T\u0159et\u00ed tla\u010d\u00edtko"
+        },
+        "trigger_type": {
+            "double": "\"{subtype}\" stisknuto dvakr\u00e1t",
+            "long": "\"{subtype}\" stisknuto dlouze",
+            "long_single": "\"{subtype}\" stisknuto dlouze a pak jednou",
+            "single": "\"{subtype}\" stisknuto jednou",
+            "single_long": "\"{subtype}\" stisknuto jednou a pak dlouze",
+            "triple": "\"{subtype}\" stisknuto t\u0159ikr\u00e1t"
+        }
     }
 }

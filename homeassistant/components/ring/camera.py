@@ -1,13 +1,14 @@
 """This component provides support to the Ring Door Bell camera."""
-import asyncio
+from __future__ import annotations
+
 from datetime import timedelta
 from itertools import chain
 import logging
 
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import requests
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -18,7 +19,7 @@ from homeassistant.util import dt as dt_util
 from . import ATTRIBUTION, DOMAIN
 from .entity import RingEntityMixin
 
-FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
+FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +43,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    def __init__(self, config_entry_id, ffmpeg, device):
+    def __init__(self, config_entry_id, ffmpeg_manager, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__(config_entry_id, device)
 
         self._name = self._device.name
-        self._ffmpeg = ffmpeg
+        self._ffmpeg_manager = ffmpeg_manager
         self._last_event = None
         self._last_video_id = None
         self._video_url = None
@@ -93,7 +94,7 @@ class RingCam(RingEntityMixin, Camera):
         return self._device.id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -101,27 +102,23 @@ class RingCam(RingEntityMixin, Camera):
             "last_video_id": self._last_video_id,
         }
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary)
-
         if self._video_url is None:
             return
 
-        image = await asyncio.shield(
-            ffmpeg.get_image(
-                self._video_url,
-                output_format=IMAGE_JPEG,
-            )
+        return await ffmpeg.async_get_image(
+            self.hass, self._video_url, width=width, height=height
         )
-        return image
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         if self._video_url is None:
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary)
+        stream = CameraMjpeg(self._ffmpeg_manager.binary)
         await stream.open_camera(self._video_url)
 
         try:
@@ -130,7 +127,7 @@ class RingCam(RingEntityMixin, Camera):
                 self.hass,
                 request,
                 stream_reader,
-                self._ffmpeg.ffmpeg_stream_content_type,
+                self._ffmpeg_manager.ffmpeg_stream_content_type,
             )
         finally:
             await stream.close()

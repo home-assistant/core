@@ -4,18 +4,20 @@ import threading
 from time import monotonic, sleep
 
 import bme680  # pylint: disable=import-error
-from smbus import SMBus  # pylint: disable=import-error
+from smbus import SMBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,11 +56,11 @@ SENSOR_PRESS = "pressure"
 SENSOR_GAS = "gas"
 SENSOR_AQ = "airquality"
 SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", PERCENTAGE],
-    SENSOR_PRESS: ["Pressure", "mb"],
-    SENSOR_GAS: ["Gas Resistance", "Ohms"],
-    SENSOR_AQ: ["Air Quality", PERCENTAGE],
+    SENSOR_TEMP: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_HUMID: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    SENSOR_PRESS: ["Pressure", "mb", DEVICE_CLASS_PRESSURE],
+    SENSOR_GAS: ["Gas Resistance", "Ohms", None],
+    SENSOR_AQ: ["Air Quality", PERCENTAGE, None],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS, SENSOR_AQ]
 OVERSAMPLING_VALUES = {0, 1, 2, 4, 8, 16}
@@ -131,7 +133,6 @@ def _setup_bme680(config):
     sensor_handler = None
     sensor = None
     try:
-        # pylint: disable=no-member
         i2c_address = config[CONF_I2C_ADDRESS]
         bus = SMBus(config[CONF_I2C_BUS])
         sensor = bme680.BME680(i2c_address, bus)
@@ -317,49 +318,36 @@ class BME680Handler:
         return hum_score + gas_score
 
 
-class BME680Sensor(Entity):
+class BME680Sensor(SensorEntity):
     """Implementation of the BME680 sensor."""
 
     def __init__(self, bme680_client, sensor_type, temp_unit, name):
         """Initialize the sensor."""
-        self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self.bme680_client = bme680_client
         self.temp_unit = temp_unit
         self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return self._unit_of_measurement
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
         await self.hass.async_add_executor_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
-            temperature = round(self.bme680_client.sensor_data.temperature, 1)
+            self._attr_native_value = round(
+                self.bme680_client.sensor_data.temperature, 1
+            )
             if self.temp_unit == TEMP_FAHRENHEIT:
-                temperature = round(celsius_to_fahrenheit(temperature), 1)
-            self._state = temperature
+                self._attr_native_value = round(celsius_to_fahrenheit(self.state), 1)
         elif self.type == SENSOR_HUMID:
-            self._state = round(self.bme680_client.sensor_data.humidity, 1)
+            self._attr_native_value = round(self.bme680_client.sensor_data.humidity, 1)
         elif self.type == SENSOR_PRESS:
-            self._state = round(self.bme680_client.sensor_data.pressure, 1)
+            self._attr_native_value = round(self.bme680_client.sensor_data.pressure, 1)
         elif self.type == SENSOR_GAS:
-            self._state = int(round(self.bme680_client.sensor_data.gas_resistance, 0))
+            self._attr_native_value = int(
+                round(self.bme680_client.sensor_data.gas_resistance, 0)
+            )
         elif self.type == SENSOR_AQ:
             aq_score = self.bme680_client.sensor_data.air_quality
             if aq_score is not None:
-                self._state = round(aq_score, 1)
+                self._attr_native_value = round(aq_score, 1)
