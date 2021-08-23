@@ -14,6 +14,7 @@ from .const import (
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
 )
+from .entity import TractiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,29 +46,22 @@ async def create_trackable_entity(client, trackable):
     )
 
 
-class TractiveDeviceTracker(TrackerEntity):
+class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
+
+    _attr_icon = "mdi:paw"
 
     def __init__(self, user_id, trackable, tracker_details, hw_info, pos_report):
         """Initialize tracker entity."""
-        self._user_id = user_id
+        super().__init__(user_id, trackable, tracker_details)
 
         self._battery_level = hw_info["battery_level"]
         self._latitude = pos_report["latlong"][0]
         self._longitude = pos_report["latlong"][1]
         self._accuracy = pos_report["pos_uncertainty"]
-        self._tracker_id = tracker_details["_id"]
 
         self._attr_name = f"{self._tracker_id} {trackable['details']['name']}"
         self._attr_unique_id = trackable["_id"]
-        self._attr_icon = "mdi:paw"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._tracker_id)},
-            "name": f"Tractive ({self._tracker_id})",
-            "manufacturer": "Tractive GmbH",
-            "sw_version": tracker_details["fw_version"],
-            "model": tracker_details["model_number"],
-        }
 
     @property
     def source_type(self):
