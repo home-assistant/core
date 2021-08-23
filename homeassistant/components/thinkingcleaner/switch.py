@@ -23,20 +23,14 @@ SWITCH_TYPES: tuple[ToggleEntityDescription, ...] = (
     ToggleEntityDescription(
         key="clean",
         name="Clean",
-        None,
-        None,
     ),
     ToggleEntityDescription(
         key="dock",
         name="Dock",
-        None,
-        None,
     ),
     ToggleEntityDescription(
         key="find",
         name="Find",
-        None,
-        None,
     ),
 )
 
