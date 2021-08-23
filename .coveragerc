@@ -1086,6 +1086,7 @@ omit =
     homeassistant/components/toon/climate.py
     homeassistant/components/toon/const.py
     homeassistant/components/toon/coordinator.py
+    homeassistant/components/toon/entity_descriptions.py
     homeassistant/components/toon/helpers.py
     homeassistant/components/toon/models.py
     homeassistant/components/toon/oauth2.py
