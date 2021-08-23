@@ -594,7 +594,7 @@ class LocatorTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a locate command."""
-        if (params["silence"]):
+        if (params.get("silence", False)):
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
                 "Silencing a Locate request is not yet supported",
