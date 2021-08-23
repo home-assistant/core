@@ -1,6 +1,7 @@
 """Support for numbers which integrates with other components."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 import voluptuous as vol
@@ -119,10 +120,8 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._attr_name = DEFAULT_NAME
         self._name_template = name_template
         name_template.hass = hass
-        try:
+        with contextlib.suppress(TemplateError):
             self._attr_name = name_template.async_render(parse_result=False)
-        except TemplateError:
-            pass
         self._value_template = value_template
         domain = __name__.split(".")[-2]
         self._command_set_value = Script(
