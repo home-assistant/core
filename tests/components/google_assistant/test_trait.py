@@ -376,9 +376,13 @@ async def test_locate_vacuum(hass):
     assert trt.query_attributes() == {}
 
     calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_LOCATE)
-    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {}, {})
+    await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": False}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": True}, {})
+    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
 async def test_startstop_vacuum(hass):

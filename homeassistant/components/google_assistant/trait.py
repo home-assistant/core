@@ -74,6 +74,7 @@ from .const import (
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
+    ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NO_AVAILABLE_CHANNEL,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
@@ -593,6 +594,12 @@ class LocatorTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a locate command."""
+        if (params["silence"]):
+            raise SmartHomeError(
+                ERR_FUNCTION_NOT_SUPPORTED,
+                "Silencing a Locate request is not yet supported",
+            )
+
         await self.hass.services.async_call(
             self.state.domain,
             vacuum.SERVICE_LOCATE,
