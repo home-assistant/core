@@ -20,6 +20,8 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
+import homeassistant.helpers.config_validation as cv
+
 from .const import (
     CONF_CONSIDER_HOME,
     CONF_TRACKED_LIST,
@@ -38,13 +40,12 @@ def convert_tracked_list(tracked_list_str):
     """Convert tracked list string to a list."""
     tracked_list = []
     tracked_list_unformatted = []
+
+    # remove '[' and ']' chars
+    tracked_list_str = tracked_list_str.replace("]", "").replace("[", "")
+
     if tracked_list_str:
-        tracked_list_unformatted = (
-            tracked_list_str.replace(" ", "")
-            .replace("]", "")
-            .replace("[", "")
-            .split(",")
-        )
+        tracked_list_unformatted = cv.ensure_list_csv(tracked_list_str)
 
     for mac in tracked_list_unformatted:
         tracked_list.append(format_mac(mac))
