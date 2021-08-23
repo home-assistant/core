@@ -125,7 +125,7 @@ class ComfoConnectFan(FanEntity):
     def set_percentage(self, percentage: int):
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
-
+        manual_cmd = None
         if percentage is None:
             cmd = CMD_MODE_AUTO
         elif percentage == 0:
@@ -135,7 +135,7 @@ class ComfoConnectFan(FanEntity):
             manual_cmd = CMD_MODE_MANUAL
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
-        if manual_cmd:
+        if manual_cmd is not None:
             self._ccb.comfoconnect.cmd_rmi_request(manual_cmd)
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
 
