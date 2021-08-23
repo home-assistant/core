@@ -1,11 +1,34 @@
 """Test Wallbox Switch component."""
+import json
+
 import pytest
 import requests_mock
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.wallbox import CONF_MAX_CHARGING_CURRENT_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 
 from tests.components.wallbox import entry, setup_integration
+from tests.components.wallbox.const import (
+    CONF_ERROR,
+    CONF_JWT,
+    CONF_MOCK_NUMBER_ENTITY_ID,
+    CONF_STATUS,
+    CONF_TTL,
+    CONF_USER_ID,
+)
+
+authorisation_response = json.loads(
+    json.dumps(
+        {
+            CONF_JWT: "fakekeyhere",
+            CONF_USER_ID: 12345,
+            CONF_TTL: 145656758,
+            CONF_ERROR: "false",
+            CONF_STATUS: 200,
+        }
+    )
+)
 
 
 async def test_wallbox_number_class(hass):
@@ -16,12 +39,12 @@ async def test_wallbox_number_class(hass):
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            json=authorisation_response,
             status_code=200,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            text='{ "maxChargingCurrent":20}',
+            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=200,
         )
 
@@ -29,7 +52,7 @@ async def test_wallbox_number_class(hass):
             "number",
             SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.mock_title_max_charging_current",
+                ATTR_ENTITY_ID: CONF_MOCK_NUMBER_ENTITY_ID,
                 ATTR_VALUE: 20,
             },
             blocking=True,
@@ -45,12 +68,12 @@ async def test_wallbox_number_class_connection_error(hass):
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            json=authorisation_response,
             status_code=200,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            text='{ "maxChargingCurrent":20}',
+            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=404,
         )
 
@@ -60,7 +83,7 @@ async def test_wallbox_number_class_connection_error(hass):
                 "number",
                 SERVICE_SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.mock_title_max_charging_current",
+                    ATTR_ENTITY_ID: CONF_MOCK_NUMBER_ENTITY_ID,
                     ATTR_VALUE: 20,
                 },
                 blocking=True,

@@ -1,7 +1,12 @@
 """Test Wallbox Init Component."""
+import json
+
 import requests_mock
 
-from homeassistant.components.wallbox import CONF_CONNECTIONS
+from homeassistant.components.wallbox import (
+    CONF_CONNECTIONS,
+    CONF_MAX_CHARGING_CURRENT_KEY,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -13,6 +18,25 @@ from tests.components.wallbox import (
     setup_integration,
     setup_integration_connection_error,
     setup_integration_read_only,
+)
+from tests.components.wallbox.const import (
+    CONF_ERROR,
+    CONF_JWT,
+    CONF_STATUS,
+    CONF_TTL,
+    CONF_USER_ID,
+)
+
+authorisation_response = json.loads(
+    json.dumps(
+        {
+            CONF_JWT: "fakekeyhere",
+            CONF_USER_ID: 12345,
+            CONF_TTL: 145656758,
+            CONF_ERROR: "false",
+            CONF_STATUS: 200,
+        }
+    )
 )
 
 
@@ -45,12 +69,12 @@ async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant):
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            json=authorisation_response,
             status_code=403,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            text='{ "maxChargingCurrent":20}',
+            json=json.loads(json.dumps({CONF_MAX_CHARGING_CURRENT_KEY: 20})),
             status_code=403,
         )
 
@@ -71,7 +95,7 @@ async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant):
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            json=authorisation_response,
             status_code=200,
         )
         mock_request.get(

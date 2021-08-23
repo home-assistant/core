@@ -11,7 +11,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_CONNECTIONS, CONF_ROUND, CONF_SENSOR_TYPES, CONF_STATION, DOMAIN
+from .const import (
+    CONF_CONNECTIONS,
+    CONF_DATA_KEY,
+    CONF_MAX_CHARGING_CURRENT_KEY,
+    CONF_ROUND,
+    CONF_SENSOR_TYPES,
+    CONF_STATION,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +70,9 @@ class WallboxHub(DataUpdateCoordinator):
         try:
             self._authenticate()
             data = self._wallbox.getChargerStatus(self._station)
-            data["max_charging_current"] = data["config_data"]["max_charging_current"]
+            data[CONF_MAX_CHARGING_CURRENT_KEY] = data[CONF_DATA_KEY][
+                CONF_MAX_CHARGING_CURRENT_KEY
+            ]
 
             filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
@@ -122,17 +132,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox
 
-    try:
-        await wallbox.async_set_charging_current(wallbox.data["max_charging_current"])
-    except InvalidAuth:
-        platforms_create = (platform for platform in PLATFORMS if platform != "number")
-    else:
-        platforms_create = (platform for platform in PLATFORMS)
+    for platform in PLATFORMS:
 
-    for platform in platforms_create:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+        if platform != "number":
+
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+        else:
+            try:
+                await wallbox.async_set_charging_current(
+                    wallbox.data[CONF_MAX_CHARGING_CURRENT_KEY]
+                )
+            except InvalidAuth:
+                pass
+            else:
+                hass.async_create_task(
+                    hass.config_entries.async_forward_entry_setup(entry, platform)
+                )
 
     return True
 
@@ -141,7 +158,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN]["connections"].pop(entry.entry_id)
+        hass.data[DOMAIN][CONF_CONNECTIONS].pop(entry.entry_id)
 
     return unload_ok
 
