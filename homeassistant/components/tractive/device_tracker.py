@@ -49,6 +49,8 @@ async def create_trackable_entity(client, trackable):
 class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     """Tractive device tracker."""
 
+    _attr_icon = "mdi:paw"
+
     def __init__(self, user_id, trackable, tracker_details, hw_info, pos_report):
         """Initialize tracker entity."""
         super().__init__(user_id, trackable, tracker_details)
@@ -60,7 +62,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
         self._attr_name = f"{self._tracker_id} {trackable['details']['name']}"
         self._attr_unique_id = trackable["_id"]
-        self._attr_icon = "mdi:paw"
 
     @property
     def source_type(self):
