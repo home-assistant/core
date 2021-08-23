@@ -116,10 +116,12 @@ class JewishCalendarSensor(SensorEntity):
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self._type == "holiday":
-            self._holiday_attrs["id"] = after_shkia_date.holiday_name
-            self._holiday_attrs["type"] = after_shkia_date.holiday_type.name
-            self._holiday_attrs["type_id"] = after_shkia_date.holiday_type.value
-            return after_shkia_date.holiday_description
+            self._holiday_attrs = {
+                "id": after_shkia_date.holiday_name,
+                "type": after_shkia_date.holiday_type.name,
+                "type_id": after_shkia_date.holiday_type.value,
+            }
+            return after_shkia_date.holiday_description or None
         if self._type == "omer_count":
             return after_shkia_date.omer_day
         if self._type == "daf_yomi":
