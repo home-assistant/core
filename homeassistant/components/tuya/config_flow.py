@@ -1,5 +1,8 @@
 """Config flow for Tuya."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import (
@@ -155,7 +158,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
         self._conf_devs_id = None
-        self._conf_devs_option = {}
+        self._conf_devs_option: dict[str, Any] = {}
         self._form_error = None
 
     def _get_form_error(self):
