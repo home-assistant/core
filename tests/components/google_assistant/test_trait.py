@@ -359,16 +359,18 @@ async def test_dock_vacuum(hass):
 async def test_locate_vacuum(hass):
     """Test locate trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
-    assert trait.LocatorTrait.supported(vacuum.DOMAIN, vacuum.SUPPORT_LOCATE, None, None)
+    assert trait.LocatorTrait.supported(
+        vacuum.DOMAIN, vacuum.SUPPORT_LOCATE, None, None
+    )
 
     trt = trait.LocatorTrait(
         hass,
         State(
             "vacuum.bla",
             vacuum.STATE_IDLE,
-            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_LOCATE}
+            {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_LOCATE},
         ),
-        BASIC_CONFIG
+        BASIC_CONFIG,
     )
 
     assert trt.sync_attributes() == {}
