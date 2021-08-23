@@ -142,11 +142,11 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        if user_input and not self.placeholders.get(CONF_URL):
-            self.placeholders[CONF_URL] = user_input.get(CONF_URL)
-
-        if not user_input:
+        if user_input is None:
             return await self._show_setup_form()
+
+        if self.placeholders.get(CONF_URL) is None:
+            self.placeholders[CONF_URL] = user_input.get(CONF_URL)
 
         url = self.placeholders.get(CONF_URL)
         host = user_input.get(CONF_HOST)
