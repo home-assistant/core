@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOVING,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -31,14 +32,28 @@ SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
-SENSOR_ATTRS_MAP = {
-    SENSOR_KIND_AP_INFO: ("Onboard AP Enabled", DEVICE_CLASS_CONNECTIVITY),
-    SENSOR_KIND_LEAK_DETECTED: ("Leak Detected", DEVICE_CLASS_MOISTURE),
-    SENSOR_KIND_MOVED: ("Recently Moved", DEVICE_CLASS_MOVING),
-}
+SENSOR_DESCRIPTION_AP_ENABLED = BinarySensorEntityDescription(
+    key=SENSOR_KIND_AP_INFO,
+    name="Onboard AP Enabled",
+    device_class=DEVICE_CLASS_CONNECTIVITY,
+)
+SENSOR_DESCRIPTION_LEAK_DETECTED = BinarySensorEntityDescription(
+    key=SENSOR_KIND_LEAK_DETECTED,
+    name="Leak Detected",
+    device_class=DEVICE_CLASS_MOISTURE,
+)
+SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
+    key=SENSOR_KIND_MOVED, name="Recently Moved", device_class=DEVICE_CLASS_MOVING
+)
 
-PAIRED_SENSOR_SENSORS = [SENSOR_KIND_LEAK_DETECTED, SENSOR_KIND_MOVED]
-VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_AP_INFO, SENSOR_KIND_LEAK_DETECTED]
+PAIRED_SENSOR_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    SENSOR_DESCRIPTION_LEAK_DETECTED,
+    SENSOR_DESCRIPTION_MOVED,
+)
+VALVE_CONTROLLER_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    SENSOR_DESCRIPTION_AP_ENABLED,
+    SENSOR_DESCRIPTION_LEAK_DETECTED,
+)
 
 
 async def async_setup_entry(
@@ -54,18 +69,8 @@ async def async_setup_entry(
         ]
 
         entities = []
-        for kind in PAIRED_SENSOR_SENSORS:
-            name, device_class = SENSOR_ATTRS_MAP[kind]
-            entities.append(
-                PairedSensorBinarySensor(
-                    entry,
-                    coordinator,
-                    kind,
-                    name,
-                    device_class,
-                    None,
-                )
-            )
+        for description in PAIRED_SENSOR_SENSORS:
+            entities.append(PairedSensorBinarySensor(entry, coordinator, description))
 
         async_add_entities(entities)
 
@@ -81,16 +86,10 @@ async def async_setup_entry(
     sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = []
 
     # Add all valve controller-specific binary sensors:
-    for kind in VALVE_CONTROLLER_SENSORS:
-        name, device_class = SENSOR_ATTRS_MAP[kind]
+    for description in VALVE_CONTROLLER_SENSORS:
         sensors.append(
             ValveControllerBinarySensor(
-                entry,
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
-                kind,
-                name,
-                device_class,
-                None,
+                entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
             )
         )
 
@@ -98,18 +97,8 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
         entry.entry_id
     ].values():
-        for kind in PAIRED_SENSOR_SENSORS:
-            name, device_class = SENSOR_ATTRS_MAP[kind]
-            sensors.append(
-                PairedSensorBinarySensor(
-                    entry,
-                    coordinator,
-                    kind,
-                    name,
-                    device_class,
-                    None,
-                )
-            )
+        for description in PAIRED_SENSOR_SENSORS:
+            sensors.append(PairedSensorBinarySensor(entry, coordinator, description))
 
     async_add_entities(sensors)
 
@@ -121,22 +110,19 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
         self,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinator, kind, name, device_class, icon)
+        super().__init__(entry, coordinator, description)
 
         self._attr_is_on = True
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._kind == SENSOR_KIND_LEAK_DETECTED:
+        if self._description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_is_on = self.coordinator.data["wet"]
-        elif self._kind == SENSOR_KIND_MOVED:
+        elif self._description.key == SENSOR_KIND_MOVED:
             self._attr_is_on = self.coordinator.data["moved"]
 
 
@@ -147,27 +133,24 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
         self,
         entry: ConfigEntry,
         coordinators: dict[str, DataUpdateCoordinator],
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, coordinators, kind, name, device_class, icon)
+        super().__init__(entry, coordinators, description)
 
         self._attr_is_on = True
 
     async def _async_continue_entity_setup(self) -> None:
         """Add an API listener."""
-        if self._kind == SENSOR_KIND_AP_INFO:
+        if self._description.key == SENSOR_KIND_AP_INFO:
             self.async_add_coordinator_update_listener(API_WIFI_STATUS)
-        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
+        elif self._description.key == SENSOR_KIND_LEAK_DETECTED:
             self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._kind == SENSOR_KIND_AP_INFO:
+        if self._description.key == SENSOR_KIND_AP_INFO:
             self._attr_available = self.coordinators[
                 API_WIFI_STATUS
             ].last_update_success
@@ -181,7 +164,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
                     )
                 }
             )
-        elif self._kind == SENSOR_KIND_LEAK_DETECTED:
+        elif self._description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_available = self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success

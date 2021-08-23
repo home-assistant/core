@@ -7,7 +7,7 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -91,7 +91,11 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
     ) -> None:
         """Initialize."""
         super().__init__(
-            entry, coordinators, "valve", "Valve Controller", None, "mdi:water"
+            entry,
+            coordinators,
+            SwitchEntityDescription(
+                key="valve", name="Valve Controller", icon="mdi:water"
+            ),
         )
 
         self._attr_is_on = True
