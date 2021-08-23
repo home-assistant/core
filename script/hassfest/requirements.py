@@ -84,7 +84,7 @@ def validate(integrations: dict[str, Integration], config: Config):
 def validate_requirements_format(integration: Integration) -> bool:
     """Validate requirements format.
 
-    Returns if an error was added.
+    Returns if valid.
     """
     start_errors = len(integration.errors)
 
@@ -112,7 +112,7 @@ def validate_requirements_format(integration: Integration) -> bool:
             )
             continue
 
-    return len(integration.errors) > start_errors
+    return len(integration.errors) == start_errors
 
 
 def validate_requirements(integration: Integration):
