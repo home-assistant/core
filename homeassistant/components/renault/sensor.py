@@ -1,7 +1,23 @@
 """Support for Renault sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from dataclasses import dataclass
+from typing import Generic, Optional, TypeVar, cast
+
+from renault_api.kamereon.enums import ChargeState, PlugState
+from renault_api.kamereon.models import (
+    KamereonVehicleBatteryStatusData,
+    KamereonVehicleChargeModeData,
+    KamereonVehicleCockpitData,
+    KamereonVehicleHvacStatusData,
+)
+
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -18,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_CLASS_CHARGE_MODE,
@@ -25,15 +42,150 @@ from .const import (
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from .renault_entities import (
-    RenaultBatteryDataEntity,
-    RenaultChargeModeDataEntity,
-    RenaultCockpitDataEntity,
-    RenaultDataEntity,
-    RenaultHVACDataEntity,
-)
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
-from .renault_vehicle import RenaultVehicleProxy
+
+
+@dataclass
+class RenaultSensorEntityDescription(SensorEntityDescription, RenaultEntityDescription):
+    """Class describing Renault sensor entities."""
+
+    rounding: bool | None = None
+
+
+SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
+    RenaultSensorEntityDescription(
+        key="battery_level",
+        coordinator="battery",
+        data_key="batteryLevel",
+        device_class=DEVICE_CLASS_BATTERY,
+        entity_class="RenaultBatterySensor",
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="charge_state",
+        coordinator="battery",
+        data_key="chargingStatus",
+        device_class=DEVICE_CLASS_CHARGE_STATE,
+        entity_class="RenaultBatteryChargeStateSensor",
+        name="Charge State",
+    ),
+    RenaultSensorEntityDescription(
+        key="charging_remaining_time",
+        coordinator="battery",
+        data_key="chargingRemainingTime",
+        entity_class="RenaultBatterySensor",
+        icon="mdi:timer",
+        name="Charging Remaining Time",
+        native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="charging_power",
+        coordinator="battery",
+        data_key="chargingInstantaneousPower",
+        device_class=DEVICE_CLASS_POWER,
+        entity_class="RenaultBatteryChargingPowerSensor",
+        name="Charging Power",
+        native_unit_of_measurement=POWER_KILO_WATT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="plug_state",
+        coordinator="battery",
+        data_key="plugStatus",
+        device_class=DEVICE_CLASS_PLUG_STATE,
+        entity_class="RenaultBatteryPlugStateSensor",
+        name="Plug State",
+    ),
+    RenaultSensorEntityDescription(
+        key="battery_autonomy",
+        coordinator="battery",
+        data_key="batteryAutonomy",
+        entity_class="RenaultBatterySensor",
+        icon="mdi:ev-station",
+        name="Battery Autonomy",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="battery_available_energy",
+        coordinator="battery",
+        data_key="batteryAvailableEnergy",
+        entity_class="RenaultBatterySensor",
+        device_class=DEVICE_CLASS_ENERGY,
+        name="Battery Available Energy",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="battery_temperature",
+        coordinator="battery",
+        data_key="batteryTemperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        entity_class="RenaultBatterySensor",
+        name="Battery Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="mileage",
+        coordinator="cockpit",
+        data_key="totalMileage",
+        entity_class="RenaultCockpitSensor",
+        icon="mdi:sign-direction",
+        name="Mileage",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        rounding=True,
+    ),
+    RenaultSensorEntityDescription(
+        key="fuel_autonomy",
+        coordinator="cockpit",
+        data_key="fuelAutonomy",
+        entity_class="RenaultCockpitSensor",
+        icon="mdi:gas-station",
+        name="Fuel Autonomy",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        requires_fuel=True,
+        rounding=True,
+    ),
+    RenaultSensorEntityDescription(
+        key="fuel_quantity",
+        coordinator="cockpit",
+        data_key="fuelQuantity",
+        entity_class="RenaultCockpitSensor",
+        icon="mdi:fuel",
+        name="Fuel Quantity",
+        native_unit_of_measurement=VOLUME_LITERS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        requires_fuel=True,
+        rounding=True,
+    ),
+    RenaultSensorEntityDescription(
+        key="outside_temperature",
+        coordinator="hvac_status",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        data_key="externalTemperature",
+        entity_class="RenaultHvacStatusSensor",
+        name="Outside Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="charge_mode",
+        coordinator="charge_mode",
+        data_key="chargeMode",
+        device_class=DEVICE_CLASS_CHARGE_MODE,
+        entity_class="RenaultChargeModeSensor",
+        name="Charge Mode",
+    ),
+)
+
+T = TypeVar("T")
 
 
 async def async_setup_entry(
@@ -45,213 +197,113 @@ async def async_setup_entry(
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[SensorEntity] = []
     for vehicle in proxy.vehicles.values():
-        if "cockpit" in vehicle.coordinators:
-            entities.append(RenaultMileageSensor(vehicle, "Mileage"))
-            if vehicle.details.uses_fuel():
-                entities.append(RenaultFuelAutonomySensor(vehicle, "Fuel Autonomy"))
-                entities.append(RenaultFuelQuantitySensor(vehicle, "Fuel Quantity"))
-        if "hvac_status" in vehicle.coordinators:
-            entities.append(
-                RenaultOutsideTemperatureSensor(vehicle, "Outside Temperature")
-            )
-        if "battery" in vehicle.coordinators:
-            entities.append(RenaultBatteryLevelSensor(vehicle, "Battery Level"))
-            entities.append(RenaultChargeStateSensor(vehicle, "Charge State"))
-            entities.append(
-                RenaultChargingRemainingTimeSensor(vehicle, "Charging Remaining Time")
-            )
-            entities.append(RenaultChargingPowerSensor(vehicle, "Charging Power"))
-            entities.append(RenaultPlugStateSensor(vehicle, "Plug State"))
-            entities.append(RenaultBatteryAutonomySensor(vehicle, "Battery Autonomy"))
-            entities.append(
-                RenaultBatteryAvailableEnergySensor(vehicle, "Battery Available Energy")
-            )
-            entities.append(
-                RenaultBatteryTemperatureSensor(vehicle, "Battery Temperature")
-            )
-        if "charge_mode" in vehicle.coordinators:
-            entities.append(RenaultChargeModeSensor(vehicle, "Charge Mode"))
+        for description in SENSOR_TYPES:
+            if description.coordinator in vehicle.coordinators:
+                create_entity = True
+                if description.requires_fuel:
+                    create_entity = vehicle.details.uses_fuel()
+                if create_entity:
+                    EntityClass = globals()[description.entity_class]
+                    entities.append(EntityClass(vehicle, description))
     async_add_entities(entities)
 
 
-class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity, SensorEntity):
-    """Battery autonomy sensor."""
+class RenaultSensor(Generic[T], RenaultDataEntity[Optional[T]], SensorEntity):
+    """Mixin for sensor specific attributes."""
 
-    _attr_icon = "mdi:ev-station"
-    _attr_native_unit_of_measurement = LENGTH_KILOMETERS
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        return self.data.batteryAutonomy if self.data else None
-
-
-class RenaultBatteryAvailableEnergySensor(RenaultBatteryDataEntity, SensorEntity):
-    """Battery available energy sensor."""
-
-    _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    entity_description: RenaultSensorEntityDescription
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> StateType:
         """Return the state of this entity."""
-        return self.data.batteryAvailableEnergy if self.data else None
+        raw_value = self.data
+        if raw_value is None:
+            return None
+        if self.entity_description.rounding:
+            return round(cast(float, raw_value))
+        return raw_value
 
 
-class RenaultBatteryLevelSensor(RenaultBatteryDataEntity, SensorEntity):
-    """Battery Level sensor."""
-
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        return self.data.batteryLevel if self.data else None
+class RenaultBatterySensor(RenaultSensor[KamereonVehicleBatteryStatusData]):
+    """Renault battery sensor."""
 
 
-class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity, SensorEntity):
-    """Battery Temperature sensor."""
-
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        return self.data.batteryTemperature if self.data else None
-
-
-class RenaultChargeModeSensor(RenaultChargeModeDataEntity, SensorEntity):
-    """Charge Mode sensor."""
-
-    _attr_device_class = DEVICE_CLASS_CHARGE_MODE
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of this entity."""
-        return self.data.chargeMode if self.data else None
+class RenaultChargeModeSensor(RenaultSensor[KamereonVehicleChargeModeData]):
+    """Renault charge mode sensor."""
 
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if self.data and self.data.chargeMode == "schedule_mode":
+        if self.data == "schedule_mode":
             return "mdi:calendar-clock"
         return "mdi:calendar-remove"
 
 
-class RenaultChargeStateSensor(RenaultBatteryDataEntity, SensorEntity):
-    """Charge State sensor."""
+class RenaultCockpitSensor(RenaultSensor[KamereonVehicleCockpitData]):
+    """Renault cockpit sensor."""
 
-    _attr_device_class = DEVICE_CLASS_CHARGE_STATE
+
+class RenaultHvacStatusSensor(RenaultSensor[KamereonVehicleHvacStatusData]):
+    """Renault hvac status sensor."""
+
+
+class RenaultBatteryChargeStateSensor(RenaultBatterySensor):
+    """Charge State sensor."""
 
     @property
     def native_value(self) -> str | None:
         """Return the state of this entity."""
-        charging_status = self.data.get_charging_status() if self.data else None
-        return charging_status.name.lower() if charging_status is not None else None
+        charging_status = (
+            self.coordinator.data.get_charging_status()
+            if self.coordinator.data
+            else None
+        )
+        return charging_status.name.lower() if charging_status else None
 
     @property
     def icon(self) -> str:
         """Icon handling."""
-        return "mdi:flash" if self.is_charging else "mdi:flash-off"
+        if (
+            self.coordinator.data is None
+            or self.coordinator.data.get_charging_status()
+            != ChargeState.CHARGE_IN_PROGRESS
+        ):
+            return "mdi:flash-off"
+        return "mdi:flash"
 
 
-class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity, SensorEntity):
-    """Charging Remaining Time sensor."""
-
-    _attr_icon = "mdi:timer"
-    _attr_native_unit_of_measurement = TIME_MINUTES
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        return self.data.chargingRemainingTime if self.data else None
-
-
-class RenaultChargingPowerSensor(RenaultBatteryDataEntity, SensorEntity):
+class RenaultBatteryChargingPowerSensor(RenaultBatterySensor):
     """Charging Power sensor."""
-
-    _attr_device_class = DEVICE_CLASS_POWER
-    _attr_native_unit_of_measurement = POWER_KILO_WATT
 
     @property
     def native_value(self) -> float | None:
         """Return the state of this entity."""
-        if not self.data or self.data.chargingInstantaneousPower is None:
+        raw_value = self.data
+        if raw_value is None:
             return None
         if self.vehicle.details.reports_charging_power_in_watts():
             # Need to convert to kilowatts
-            return self.data.chargingInstantaneousPower / 1000
-        return self.data.chargingInstantaneousPower
+            return cast(float, raw_value) / 1000
+        return cast(float, raw_value)
 
 
-class RenaultFuelAutonomySensor(RenaultCockpitDataEntity, SensorEntity):
-    """Fuel autonomy sensor."""
-
-    _attr_icon = "mdi:gas-station"
-    _attr_native_unit_of_measurement = LENGTH_KILOMETERS
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        if not self.data or self.data.fuelAutonomy is None:
-            return None
-        return round(self.data.fuelAutonomy)
-
-
-class RenaultFuelQuantitySensor(RenaultCockpitDataEntity, SensorEntity):
-    """Fuel quantity sensor."""
-
-    _attr_icon = "mdi:fuel"
-    _attr_native_unit_of_measurement = VOLUME_LITERS
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        if not self.data or self.data.fuelQuantity is None:
-            return None
-        return round(self.data.fuelQuantity)
-
-
-class RenaultMileageSensor(RenaultCockpitDataEntity, SensorEntity):
-    """Mileage sensor."""
-
-    _attr_icon = "mdi:sign-direction"
-    _attr_native_unit_of_measurement = LENGTH_KILOMETERS
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of this entity."""
-        if not self.data or self.data.totalMileage is None:
-            return None
-        return round(self.data.totalMileage)
-
-
-class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity, SensorEntity):
-    """HVAC Outside Temperature sensor."""
-
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of this entity."""
-        return self.data.externalTemperature if self.data else None
-
-
-class RenaultPlugStateSensor(RenaultBatteryDataEntity, SensorEntity):
+class RenaultBatteryPlugStateSensor(RenaultBatterySensor):
     """Plug State sensor."""
-
-    _attr_device_class = DEVICE_CLASS_PLUG_STATE
 
     @property
     def native_value(self) -> str | None:
         """Return the state of this entity."""
-        plug_status = self.data.get_plug_status() if self.data else None
-        return plug_status.name.lower() if plug_status is not None else None
+        plug_status = (
+            self.coordinator.data.get_plug_status() if self.coordinator.data else None
+        )
+        return plug_status.name.lower() if plug_status else None
 
     @property
     def icon(self) -> str:
         """Icon handling."""
-        return "mdi:power-plug" if self.is_plugged_in else "mdi:power-plug-off"
+        if (
+            self.coordinator.data is None
+            or self.coordinator.data.get_plug_status() != PlugState.PLUGGED
+        ):
+            return "mdi:power-plug-off"
+        return "mdi:power-plug"
