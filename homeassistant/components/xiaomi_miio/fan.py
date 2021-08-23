@@ -51,9 +51,6 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
     MODEL_FAN_P5,
-    MODEL_FAN_ZA1,
-    MODEL_FAN_ZA3,
-    MODEL_FAN_ZA4,
     MODELS_FAN_MIIO,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
@@ -706,7 +703,7 @@ class XiaomiFan(XiaomiGenericDevice):
         if self._model == MODEL_FAN_P5:
             self._device_features = FEATURE_FLAGS_FAN_P5
             self._preset_modes = [mode.name for mode in FanOperationMode]
-        elif self._model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4):
+        else:
             self._device_features = FEATURE_FLAGS_FAN
             self._preset_modes = [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
             self._nature_mode = False
