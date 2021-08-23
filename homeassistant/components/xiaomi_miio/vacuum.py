@@ -28,9 +28,14 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
+from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_VACUUM_STATUS,
+    KEY_VACUUM_TIMER,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -120,7 +125,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
         vacuum = Vacuum(host, token)
 
-        mirobo = MiroboVacuum(name, vacuum, config_entry, unique_id)
+        mirobo = MiroboVacuum(
+            name,
+            vacuum,
+            config_entry,
+            unique_id,
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+        )
         entities.append(mirobo)
 
         platform = entity_platform.async_get_current_platform()
@@ -208,7 +219,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    def __init__(self, name, device, entry, unique_id):
+    def __init__(
+        self, name, device, entry, unique_id, coordinator: DataUpdateCoordinator
+    ):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(name, device, entry, unique_id)
 
@@ -219,6 +232,8 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         self._fan_speeds_reverse = None
 
         self._timers = None
+
+        self._coordinator = coordinator
 
     @property
     def state(self):
@@ -425,30 +440,17 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
     def update(self):
         """Fetch state from the device."""
         try:
-            state = self._device.status()
-            self.vacuum_state = state
+            self.vacuum_state = self._coordinator.data[KEY_VACUUM_STATUS]
 
             self._fan_speeds = self._device.fan_speed_presets()
             self._fan_speeds_reverse = {v: k for k, v in self._fan_speeds.items()}
+            self._timers = self._coordinator.data[KEY_VACUUM_TIMER]
 
             self._available = True
         except (OSError, DeviceException) as exc:
             if self._available:
                 self._available = False
                 _LOGGER.warning("Got exception while fetching the state: %s", exc)
-
-        # Fetch timers separately, see #38285
-        try:
-            # Do not try this if the first fetch timed out.
-            # Two timeouts take longer than 10 seconds and trigger a warning.
-            # See #52353
-            if self._available:
-                self._timers = self._device.timer()
-        except DeviceException as exc:
-            _LOGGER.debug(
-                "Unable to fetch timers, this may happen on some devices: %s", exc
-            )
-            self._timers = []
 
     async def async_clean_zone(self, zone, repeats=1):
         """Clean selected area for the number of repeats indicated."""

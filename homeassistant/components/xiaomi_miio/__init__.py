@@ -35,6 +35,7 @@ from .const import (
     KEY_VACUUM_DND_STATUS,
     KEY_VACUUM_LAST_CLEAN_STATUS,
     KEY_VACUUM_STATUS,
+    KEY_VACUUM_TIMER,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -131,13 +132,26 @@ def _async_update_data_default(hass, device):
 
 def _async_update_data_vacuum(hass, device: Vacuum):
     def update():
-        return {
+        data = {
             KEY_VACUUM_STATUS: device.status(),
             KEY_VACUUM_DND_STATUS: device.dnd_status(),
             KEY_VACUUM_LAST_CLEAN_STATUS: device.last_clean_details(),
             KEY_VACUUM_CONSUMABLE_STATUS: device.consumable_status(),
             KEY_VACUUM_CLEAN_HISTORY_STATUS: device.clean_history(),
         }
+
+        # See https://github.com/home-assistant/core/issues/38285 for reason on
+        # Why timers must be fetched separately.
+        try:
+            data[KEY_VACUUM_TIMER] = device.timer()
+        except DeviceException as ex:
+            _LOGGER.debug(
+                "Unable to fetch timers, this may happen on some devices: %s", ex
+            )
+
+            data[KEY_VACUUM_TIMER] = []
+
+        return data
 
     async def update_async():
         """Fetch data from the device using async_add_executor_job."""
