@@ -97,10 +97,7 @@ class ComedHourlyPricingSensor(SensorEntity):
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
             sensor_type = self.entity_description.key
-            if (
-                sensor_type == CONF_FIVE_MINUTE
-                or sensor_type == CONF_CURRENT_HOUR_AVERAGE
-            ):
+            if sensor_type in (CONF_FIVE_MINUTE, CONF_CURRENT_HOUR_AVERAGE):
                 url_string = _RESOURCE
                 if sensor_type == CONF_FIVE_MINUTE:
                     url_string += "?type=5minutefeed"
