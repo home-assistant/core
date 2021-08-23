@@ -150,12 +150,6 @@ class Segment:
         if not self.hls_playlist_template:
             # This is a placeholder where the rendered parts will be inserted
             self.hls_playlist_template.append("{}")
-        if not self.hls_playlist_parts:
-            self.hls_playlist_parts.append(
-                "#EXT-X-PROGRAM-DATE-TIME:"
-                + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-                + "Z"
-            )
         if render_parts:
             for http_range_start, part in itertools.islice(
                 self.parts_by_byterange.items(),
@@ -168,9 +162,9 @@ class Segment:
                     f'@{http_range_start}"{",INDEPENDENT=YES" if part.has_keyframe else ""}'
                 )
         if self.complete:
-            # Reconstruct the playlist_template. The placeholder now goes on the same line
-            # as the first element to avoid an extra newline when the template has no parts
-            # (non LL-HLS). The parts themselves will include a trailing newline.
+            # Construct the final playlist_template. The placeholder will share a line with
+            # the first element to avoid an extra newline when we don't render any parts.
+            # Append an empty string to create a trailing newline when we do render parts
             self.hls_playlist_parts.append("")
             self.hls_playlist_template = []
             # Logically EXT-X-DISCONTINUITY would make sense above the parts, but Apple's
@@ -178,9 +172,15 @@ class Segment:
             if last_stream_id != self.stream_id:
                 self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
             # Add the remaining segment metadata
-            self.hls_playlist_template.append(
-                f"#EXTINF:{self.duration:.3f},\n./segment/{self.sequence}.m4s",
+            self.hls_playlist_template.extend(
+                [
+                    "#EXT-X-PROGRAM-DATE-TIME:"
+                    + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+                    + "Z",
+                    f"#EXTINF:{self.duration:.3f},\n./segment/{self.sequence}.m4s",
+                ]
             )
+            # The placeholder now goes on the same line as the first element
             self.hls_playlist_template[0] = "{}" + self.hls_playlist_template[0]
 
         # Store intermediate playlist data in member variables for reuse

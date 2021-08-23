@@ -88,11 +88,7 @@ def make_segment_with_parts(
     segment, num_parts, independent_period, discontinuity=False
 ):
     """Create a playlist response for a segment including part segments."""
-    response = [
-        "#EXT-X-PROGRAM-DATE-TIME:"
-        + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-        + "Z"
-    ]
+    response = []
     for i in range(num_parts):
         length, start = http_range_from_part(i)
         response.append(
@@ -102,6 +98,9 @@ def make_segment_with_parts(
         response.append("#EXT-X-DISCONTINUITY")
     response.extend(
         [
+            "#EXT-X-PROGRAM-DATE-TIME:"
+            + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            + "Z",
             f"#EXTINF:{SEGMENT_DURATION:.3f},",
             f"./segment/{segment}.m4s",
         ]

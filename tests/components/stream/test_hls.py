@@ -20,6 +20,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import (
+    FAKE_TIME,
     DefaultSegment as Segment,
     generate_h264_video,
 )
@@ -66,6 +67,9 @@ def make_segment(segment, discontinuity=False):
     response = ["#EXT-X-DISCONTINUITY"] if discontinuity else []
     response.extend(
         [
+            "#EXT-X-PROGRAM-DATE-TIME:"
+            + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            + "Z",
             f"#EXTINF:{SEGMENT_DURATION:.3f},",
             f"./segment/{segment}.m4s",
         ]
