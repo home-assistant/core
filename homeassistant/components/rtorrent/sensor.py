@@ -38,7 +38,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_CURRENT_STATUS,
         name="Status",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -53,32 +52,26 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TYPE_ALL_TORRENTS,
         name="All Torrents",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_STOPPED_TORRENTS,
         name="Stopped Torrents",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_COMPLETE_TORRENTS,
         name="Complete Torrents",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_UPLOADING_TORRENTS,
         name="Uploading Torrents",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOADING_TORRENTS,
         name="Downloading Torrents",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_ACTIVE_TORRENTS,
         name="Active Torrents",
-        native_unit_of_measurement=None,
     ),
 )
 
