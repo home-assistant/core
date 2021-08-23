@@ -136,7 +136,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.placeholders[
             CONF_URL
         ] = f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/"
-        return await self._show_setup_form()
+        return await async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -146,7 +146,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.placeholders[CONF_URL] = user_input.get(CONF_URL)
 
         if not user_input:
-            return await self._show_setup_form(user_input, errors)
+            return await self._show_setup_form()
 
         url = self.placeholders.get(CONF_URL)
         host = user_input.get(CONF_HOST)
