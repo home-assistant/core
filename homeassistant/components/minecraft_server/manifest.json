@@ -1,6 +1,7 @@
 {
   "domain": "minecraft_server",
   "name": "Minecraft Server",
+  "version": "1.0.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
   "requirements": ["aiodns==3.0.0", "getmac==0.8.2", "mcstatus==6.0.0"],
