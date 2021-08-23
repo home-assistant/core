@@ -1,12 +1,13 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
+from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
 import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_CONNECTIONS,
@@ -18,7 +19,6 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up Awair sensor entity based on a config entry."""
@@ -161,7 +161,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return False
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state, rounding off to reasonable values."""
         state: float
         sensor_type = self.entity_description.key
@@ -233,7 +233,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return info
 
     @property
-    def _air_data(self) -> AwairResult | None:
+    def _air_data(self) -> AirData | None:
         """Return the latest data for our device, or None."""
         result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
         if result:
