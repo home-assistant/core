@@ -68,7 +68,7 @@ async def test_clear_completed_items(hass, sl_setup):
 
     assert len(hass.data[DOMAIN].items) == 2
 
-    await hass.data[DOMAIN].async_clear_completed_items()
+    await hass.data[DOMAIN].async_clear_completed()
 
     assert len(hass.data[DOMAIN].items) == 1
 
