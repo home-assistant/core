@@ -16,6 +16,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import history, models as history_models
 from homeassistant.components.recorder.statistics import (
+    clear_statistics,
     list_statistic_ids,
     statistics_during_period,
 )
@@ -104,6 +105,7 @@ async def async_setup(hass, config):
         ws_get_statistics_during_period
     )
     hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
+    hass.components.websocket_api.async_register_command(ws_clear_statistics)
 
     return True
 
@@ -175,6 +177,25 @@ async def ws_get_list_statistic_ids(
         msg.get("statistic_type"),
     )
     connection.send_result(msg["id"], statistic_ids)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/clear_statistics",
+        vol.Required("statistic_ids"): [str],
+    }
+)
+@websocket_api.async_response
+async def ws_clear_statistics(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Clear statistics for a list of statistic_ids."""
+    await hass.async_add_executor_job(
+        clear_statistics,
+        hass,
+        msg["statistic_ids"],
+    )
+    connection.send_result(msg["id"])
 
 
 class HistoryPeriodView(HomeAssistantView):
