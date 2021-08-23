@@ -595,22 +595,19 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
         self._preset_modes = list(self.PRESET_MODE_MAPPING.keys())
         self._supported_features = SUPPORT_PRESET_MODE
-        self._speed_count = 0
+        self._speed_count = 1
 
     @property
     def preset_mode(self):
         """Get the active preset mode."""
-        if self._state:
+        if self.coordinator.data.is_on:
             preset_mode = AirpurifierMiotOperationMode(self._mode).name
             return preset_mode if preset_mode in self._preset_modes else None
 
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the fan.
-
-        This method is a coroutine.
-        """
+        """Set the preset mode of the fan."""
         if preset_mode not in self.preset_modes:
             _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
             return
