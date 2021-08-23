@@ -186,7 +186,7 @@ async def test_config_fan(hass, mock_modbus):
         ),
     ],
 )
-async def test_all_fan(hass, mock_modbus, mock_do_cycle, expected):
+async def test_all_fan(hass, mock_do_cycle, expected):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 

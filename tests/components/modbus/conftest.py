@@ -113,7 +113,7 @@ async def mock_modbus(
 
 
 @pytest.fixture
-async def mock_do_cycle(hass):
+async def mock_do_cycle(hass, mock_modbus):
     """Trigger update call with time_changed event."""
     now = dt_util.utcnow() + timedelta(seconds=90)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):

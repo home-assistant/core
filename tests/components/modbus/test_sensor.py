@@ -516,7 +516,7 @@ async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, capl
         ),
     ],
 )
-async def test_all_sensor(hass, mock_modbus, mock_do_cycle, expected):
+async def test_all_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor."""
     assert hass.states.get(ENTITY_ID).state == expected
 
@@ -570,7 +570,7 @@ async def test_all_sensor(hass, mock_modbus, mock_do_cycle, expected):
         ),
     ],
 )
-async def test_struct_sensor(hass, mock_modbus, mock_do_cycle, expected):
+async def test_struct_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor struct."""
     assert hass.states.get(ENTITY_ID).state == expected
 
