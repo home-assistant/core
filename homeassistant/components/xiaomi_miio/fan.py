@@ -705,20 +705,17 @@ class XiaomiFan(XiaomiGenericDevice):
 
         if self._model == MODEL_FAN_P5:
             self._device_features = FEATURE_FLAGS_FAN_P5
-            self._supported_features = (
-                SUPPORT_SET_SPEED
-                | SUPPORT_OSCILLATE
-                | SUPPORT_PRESET_MODE
-                | SUPPORT_DIRECTION
-            )
             self._preset_modes = [mode.name for mode in FanOperationMode]
         elif self._model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4):
             self._device_features = FEATURE_FLAGS_FAN
-            self._supported_features = (
-                SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
-            )
             self._preset_modes = [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
             self._nature_mode = False
+        self._supported_features = (
+            SUPPORT_SET_SPEED
+            | SUPPORT_OSCILLATE
+            | SUPPORT_PRESET_MODE
+            | SUPPORT_DIRECTION
+        )
         self._preset_mode = None
         self._oscillating = None
         self._percentage = None
