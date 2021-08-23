@@ -30,6 +30,7 @@ from .const import (
     FEATURE_SET_BRIGHTNESS_LEVEL,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
+    FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
     FEATURE_SET_OSCILLATION_ANGLE_MAX_140,
@@ -146,7 +147,8 @@ NUMBER_TYPES = {
         max_value=480,
         step=1,
         method="async_set_delay_off_countdown",
-    FEATURE_SET_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
+    ),
+    FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
         name="Led Brightness",
         icon="mdi:brightness-6",
