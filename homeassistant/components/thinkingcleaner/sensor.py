@@ -28,14 +28,10 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="state",
         name="State",
-        native_unit_of_measurement=None,
-        icon=None,
     ),
     SensorEntityDescription(
         key="capacity",
         name="Capacity",
-        native_unit_of_measurement=None,
-        icon=None,
     ),
 )
 
