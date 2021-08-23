@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {model} ({host})\uff1f"
