@@ -905,7 +905,9 @@ omit =
     homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/sendgrid/notify.py
-    homeassistant/components/sense/*
+    homeassistant/components/sense/__init__.py
+    homeassistant/components/sense/binary_sensor.py
+    homeassistant/components/sense/sensor.py
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
     homeassistant/components/sensibo/climate.py
