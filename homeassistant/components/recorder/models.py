@@ -10,7 +10,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Float,
+    Double,
     ForeignKey,
     Identity,
     Index,
@@ -39,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 19
+SCHEMA_VERSION = 20
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -240,11 +240,11 @@ class Statistics(Base):  # type: ignore
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
-    state = Column(Float())
-    sum = Column(Float())
+    mean = Column(Double())
+    min = Column(Double())
+    max = Column(Double())
+    state = Column(Double())
+    sum = Column(Double())
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
