@@ -145,7 +145,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.tuya.*",
     "homeassistant.components.unifi.*",
     "homeassistant.components.upnp.*",
-    "homeassistant.components.velbus.*",
     "homeassistant.components.vera.*",
     "homeassistant.components.verisure.*",
     "homeassistant.components.vizio.*",
