@@ -36,6 +36,7 @@ class AmcrestSensorEntityDescription(BinarySensorEntityDescription):
     """Describe Amcrest sensor entity."""
 
     event_code: str | None = None
+    should_poll: bool = False
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,47 +44,74 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
 _ONLINE_SCAN_INTERVAL = timedelta(seconds=60 - BINARY_SENSOR_SCAN_INTERVAL_SECS)
 
-BINARY_SENSOR_AUDIO_DETECTED = "audio_detected"
-BINARY_SENSOR_AUDIO_DETECTED_POLLED = "audio_detected_polled"
-BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
-BINARY_SENSOR_MOTION_DETECTED_POLLED = "motion_detected_polled"
-BINARY_SENSOR_ONLINE = "online"
-BINARY_SENSOR_CROSSLINE_DETECTED = "crossline_detected"
-BINARY_SENSOR_CROSSLINE_DETECTED_POLLED = "crossline_detected_polled"
-BINARY_POLLED_SENSORS = [
-    BINARY_SENSOR_AUDIO_DETECTED_POLLED,
-    BINARY_SENSOR_MOTION_DETECTED_POLLED,
-    BINARY_SENSOR_ONLINE,
-]
-_AUDIO_DETECTED_PARAMS = ("Audio Detected", DEVICE_CLASS_SOUND, "AudioMutation")
-_MOTION_DETECTED_PARAMS = ("Motion Detected", DEVICE_CLASS_MOTION, "VideoMotion")
-_CROSSLINE_DETECTED_PARAMS = (
-    "CrossLine Detected",
-    DEVICE_CLASS_MOTION,
-    "CrossLineDetection",
-)
-RAW_BINARY_SENSORS = {
-    BINARY_SENSOR_AUDIO_DETECTED: _AUDIO_DETECTED_PARAMS,
-    BINARY_SENSOR_AUDIO_DETECTED_POLLED: _AUDIO_DETECTED_PARAMS,
-    BINARY_SENSOR_MOTION_DETECTED: _MOTION_DETECTED_PARAMS,
-    BINARY_SENSOR_MOTION_DETECTED_POLLED: _MOTION_DETECTED_PARAMS,
-    BINARY_SENSOR_CROSSLINE_DETECTED: _CROSSLINE_DETECTED_PARAMS,
-    BINARY_SENSOR_CROSSLINE_DETECTED_POLLED: _CROSSLINE_DETECTED_PARAMS,
-    BINARY_SENSOR_ONLINE: ("Online", DEVICE_CLASS_CONNECTIVITY, None),
-}
-BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = tuple(
+_AUDIO_DETECTED_KEY = "audio_detected"
+_AUDIO_DETECTED_POLLED_KEY = "audio_detected_polled"
+_AUDIO_DETECTED_NAME = "Audio Detected"
+_AUDIO_DETECTED_EVENT_CODE = "AudioMutation"
+
+_CROSSLINE_DETECTED_KEY = "crossline_detected"
+_CROSSLINE_DETECTED_POLLED_KEY = "crossline_detected_polled"
+_CROSSLINE_DETECTED_NAME = "CrossLine Detected"
+_CROSSLINE_DETECTED_EVENT_CODE = "CrossLineDetection"
+
+_MOTION_DETECTED_KEY = "motion_detected"
+_MOTION_DETECTED_POLLED_KEY = "motion_detected_polled"
+_MOTION_DETECTED_NAME = "Motion Detected"
+_MOTION_DETECTED_EVENT_CODE = "VideoMotion"
+
+_ONLINE_KEY = "online"
+
+BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
     AmcrestSensorEntityDescription(
-        key=key,
-        device_class=device_class,
-        name=name,
-        event_code=event_code,
-    )
-    for key, (name, device_class, event_code) in RAW_BINARY_SENSORS.items()
+        key=_AUDIO_DETECTED_KEY,
+        name=_AUDIO_DETECTED_NAME,
+        device_class=DEVICE_CLASS_SOUND,
+        event_code=_AUDIO_DETECTED_EVENT_CODE,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_AUDIO_DETECTED_POLLED_KEY,
+        name=_AUDIO_DETECTED_NAME,
+        device_class=DEVICE_CLASS_SOUND,
+        event_code=_AUDIO_DETECTED_EVENT_CODE,
+        should_poll=True,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_CROSSLINE_DETECTED_KEY,
+        name=_CROSSLINE_DETECTED_NAME,
+        device_class=DEVICE_CLASS_MOTION,
+        event_code=_CROSSLINE_DETECTED_EVENT_CODE,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_CROSSLINE_DETECTED_POLLED_KEY,
+        name=_CROSSLINE_DETECTED_NAME,
+        device_class=DEVICE_CLASS_MOTION,
+        event_code=_CROSSLINE_DETECTED_EVENT_CODE,
+        should_poll=True,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_MOTION_DETECTED_KEY,
+        name=_MOTION_DETECTED_NAME,
+        device_class=DEVICE_CLASS_MOTION,
+        event_code=_MOTION_DETECTED_EVENT_CODE,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_MOTION_DETECTED_POLLED_KEY,
+        name=_MOTION_DETECTED_NAME,
+        device_class=DEVICE_CLASS_MOTION,
+        event_code=_MOTION_DETECTED_EVENT_CODE,
+        should_poll=True,
+    ),
+    AmcrestSensorEntityDescription(
+        key=_ONLINE_KEY,
+        name="Online",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+    ),
 )
 BINARY_SENSOR_KEYS = [description.key for description in BINARY_SENSORS]
 _EXCLUSIVE_OPTIONS = [
-    {BINARY_SENSOR_MOTION_DETECTED, BINARY_SENSOR_MOTION_DETECTED_POLLED},
-    {BINARY_SENSOR_CROSSLINE_DETECTED, BINARY_SENSOR_CROSSLINE_DETECTED_POLLED},
+    {_AUDIO_DETECTED_KEY, _AUDIO_DETECTED_POLLED_KEY},
+    {_MOTION_DETECTED_KEY, _MOTION_DETECTED_POLLED_KEY},
+    {_CROSSLINE_DETECTED_KEY, _CROSSLINE_DETECTED_POLLED_KEY},
 ]
 
 _UPDATE_MSG = "Updating %s binary sensor"
@@ -126,19 +154,17 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._api = device.api
         self.entity_description = entity_description
         self._attr_name = f"{name} {entity_description.name}"
-        self._attr_should_poll = entity_description.key in BINARY_POLLED_SENSORS
+        self._attr_should_poll = entity_description.should_poll
         self._unsub_dispatcher = []
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return (
-            self.entity_description.key == BINARY_SENSOR_ONLINE or self._api.available
-        )
+        return self.entity_description.key == _ONLINE_KEY or self._api.available
 
     def update(self):
         """Update entity."""
-        if self.entity_description.key == BINARY_SENSOR_ONLINE:
+        if self.entity_description.key == _ONLINE_KEY:
             self._update_online()
         else:
             self._update_others()
@@ -171,7 +197,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     async def async_on_demand_update(self):
         """Update state."""
-        if self.entity_description.key == BINARY_SENSOR_ONLINE:
+        if self.entity_description.key == _ONLINE_KEY:
             _LOGGER.debug(_UPDATE_MSG, self.name)
             self._attr_is_on = self._api.available
             self.async_write_ha_state()
@@ -196,7 +222,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         )
         if (
             self.entity_description.event_code
-            and self.entity_description.key not in BINARY_POLLED_SENSORS
+            and not self.entity_description.should_poll
         ):
             self._unsub_dispatcher.append(
                 async_dispatcher_connect(
