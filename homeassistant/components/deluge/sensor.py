@@ -35,7 +35,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="current_status",
         name="Status",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="download_speed",
