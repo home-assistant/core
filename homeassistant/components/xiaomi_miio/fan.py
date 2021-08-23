@@ -244,7 +244,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._available_attributes = {}
         self._state = None
         self._mode = None
-        self._fan_level = None
+        self._fan_level = 0
         self._state_attrs = {ATTR_MODEL: self._model}
         self._device_features = 0
         self._supported_features = 0
@@ -316,7 +316,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             }
         )
         self._mode = self._state_attrs.get(ATTR_MODE)
-        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL)
+        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL, 0)
         self.async_write_ha_state()
 
     #
@@ -423,7 +423,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             {attribute: None for attribute in self._available_attributes}
         )
         self._mode = self._state_attrs.get(ATTR_MODE)
-        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL)
+        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL, 0)
 
     @property
     def preset_mode(self):
