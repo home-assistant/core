@@ -1,4 +1,5 @@
 """Image processing for cameras."""
+from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, cast
@@ -15,7 +16,28 @@ if TYPE_CHECKING:
     from . import Image
 
 
-def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> bytes:
+def find_supported_scaling_factor(
+    current_width: int, current_height: int, target_width: int, target_height: int
+) -> tuple[int, int] | None:
+    """Find a supported scaling factor to scale the image.
+
+    If there is no exact match, we use one size up to ensure
+    the image remains crisp.
+    """
+    for idx, supported_sf in enumerate(SUPPORTED_SCALING_FACTORS):
+        ratio = supported_sf[0] / supported_sf[1]
+        width_after_scale = current_width * ratio
+        height_after_scale = current_height * ratio
+        if width_after_scale == target_width and height_after_scale == target_height:
+            return supported_sf
+        if width_after_scale < target_width or height_after_scale < target_height:
+            return None if idx == 0 else SUPPORTED_SCALING_FACTORS[idx - 1]
+
+    # Giant image, the most we can reduce by is 1/8
+    return SUPPORTED_SCALING_FACTORS[-1]
+
+
+def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
     """Scale a camera image as close as possible to one of the supported scaling factors."""
     turbo_jpeg = TurboJPEGSingleton.instance()
     if not turbo_jpeg:
@@ -31,23 +53,9 @@ def scale_jpeg_camera_image(cam_image: "Image", width: int, height: int) -> byte
     if current_width <= width or current_height <= height:
         return cam_image.content
 
-    width_ratio = width / current_width
-    height_ratio = height / current_height
-
-    scaling_factor = None
-    for idx, supported_sf in enumerate(SUPPORTED_SCALING_FACTORS):
-        supported_ratio = supported_sf[0] / supported_sf[1]
-        if width_ratio == supported_ratio or height_ratio == supported_ratio:
-            scaling_factor = supported_sf
-            break
-        if width_ratio > supported_ratio or height_ratio > supported_ratio:
-            # If its not exact, move back one as we want
-            # to make sure we do not undersize the image
-            # and loose clarity
-            if idx == 0:
-                break
-            scaling_factor = SUPPORTED_SCALING_FACTORS[idx - 1]
-            break
+    scaling_factor = find_supported_scaling_factor(
+        current_width, current_height, width, height
+    )
 
     if scaling_factor is None:
         return cam_image.content
@@ -74,7 +82,7 @@ class TurboJPEGSingleton:
     __instance = None
 
     @staticmethod
-    def instance() -> "TurboJPEG":
+    def instance() -> TurboJPEG:
         """Singleton for TurboJPEG."""
         if TurboJPEGSingleton.__instance is None:
             TurboJPEGSingleton()

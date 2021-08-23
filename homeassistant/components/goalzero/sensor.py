@@ -110,6 +110,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Wifi Strength",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="timestamp",
