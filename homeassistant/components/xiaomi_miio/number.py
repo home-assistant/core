@@ -309,7 +309,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             delay_off_countdown * 60,
         )
 
-    async def async_set_brightness_level(self, level: int):
+    async def async_set_led_brightness_level(self, level: int):
         """Set the led brightness level."""
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
