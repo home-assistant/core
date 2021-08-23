@@ -293,10 +293,21 @@ def compile_statistics(
                 reset = False
                 if old_state is None:
                     reset = True
+                    _LOGGER.info(
+                        "Compiling initial sum statistics for %s, zero point set to %s",
+                        entity_id,
+                        fstate,
+                    )
                 elif state_class == STATE_CLASS_TOTAL_INCREASING and (
                     old_state is None or (new_state is not None and fstate < new_state)
                 ):
                     reset = True
+                    _LOGGER.info(
+                        "Detected new cycle for %s, zero point set to %s (old zero point %s)",
+                        entity_id,
+                        fstate,
+                        new_state,
+                    )
 
                 if reset:
                     # The sensor has been reset, update the sum
