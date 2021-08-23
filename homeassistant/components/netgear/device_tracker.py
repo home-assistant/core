@@ -117,6 +117,14 @@ class NetgearDeviceEntity(ScannerEntity):
 
         return name
 
+    def get_hostname(self, device):
+        """Return the hostname of the given device or None if we don't know."""
+        hostname = device["name"]
+        if name == "--":
+            return None
+
+        return hostname
+
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
@@ -162,6 +170,11 @@ class NetgearDeviceEntity(ScannerEntity):
     def mac_address(self) -> str:
         """Return the mac address."""
         return self._mac
+
+    @property
+    def hostname(self) -> str:
+        """Return the hostname."""
+        return self._hostname
 
     @property
     def icon(self) -> str:
