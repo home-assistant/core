@@ -151,7 +151,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.vizio.*",
     "homeassistant.components.volumio.*",
     "homeassistant.components.wemo.*",
-    "homeassistant.components.wink.*",
     "homeassistant.components.withings.*",
     "homeassistant.components.xbox.*",
     "homeassistant.components.xiaomi_aqara.*",
