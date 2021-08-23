@@ -1,5 +1,5 @@
 """Support for Notion sensors."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
@@ -9,8 +9,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import NotionEntity
 from .const import DATA_COORDINATOR, DOMAIN, LOGGER, SENSOR_TEMPERATURE
 
-SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ("Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    SENSOR_TEMPERATURE: SensorEntityDescription(
+        key=SENSOR_TEMPERATURE,
+        name="Temperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    )
 }
 
 
@@ -22,12 +27,10 @@ async def async_setup_entry(
 
     sensor_list = []
     for task_id, task in coordinator.data["tasks"].items():
-        if task["task_type"] not in SENSOR_TYPES:
+        if task["task_type"] not in SENSOR_DESCRIPTIONS:
             continue
 
-        name, device_class, unit = SENSOR_TYPES[task["task_type"]]
         sensor = coordinator.data["sensors"][task["sensor_id"]]
-
         sensor_list.append(
             NotionSensor(
                 coordinator,
@@ -35,9 +38,7 @@ async def async_setup_entry(
                 sensor["id"],
                 sensor["bridge"]["id"],
                 sensor["system_id"],
-                name,
-                device_class,
-                unit,
+                SENSOR_DESCRIPTIONS[task["task_type"]],
             )
         )
 
@@ -54,16 +55,14 @@ class NotionSensor(NotionEntity, SensorEntity):
         sensor_id: str,
         bridge_id: str,
         system_id: str,
-        name: str,
-        device_class: str,
-        unit: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
-            coordinator, task_id, sensor_id, bridge_id, system_id, name, device_class
+            coordinator, task_id, sensor_id, bridge_id, system_id, description
         )
 
-        self._attr_native_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @callback
     def _async_update_from_latest_data(self) -> None:
