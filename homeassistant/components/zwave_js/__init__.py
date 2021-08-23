@@ -112,6 +112,19 @@ def register_node_in_dev_reg(
     return device
 
 
+@callback
+def entity_ids_for_device_id(
+    ent_reg: entity_registry.EntityRegistry, device_id: str
+) -> list[str]:
+    """Return entity ids for a device id."""
+    return [
+        entity.entity_id
+        for entity in entity_registry.async_entries_for_device(
+            ent_reg, device_id, include_disabled_entities=False
+        )
+    ]
+
+
 async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
@@ -242,16 +255,17 @@ async def async_setup_entry(  # noqa: C901
     def async_on_node_removed(node: ZwaveNode) -> None:
         """Handle node removed event."""
         # grab device in device registry attached to this node
-        dev_id = get_device_id(client, node)
-        device = dev_reg.async_get_device({dev_id})
+        device = dev_reg.async_get_device({get_device_id(client, node)})
+        assert device
         # note: removal of entity registry entry is handled by core
-        dev_reg.async_remove_device(device.id)  # type: ignore
-        registered_unique_ids.pop(device.id, None)  # type: ignore
+        dev_reg.async_remove_device(device.id)
+        registered_unique_ids.pop(device.id, None)
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        assert device
         raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
@@ -262,7 +276,8 @@ async def async_setup_entry(  # noqa: C901
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
+                ATTR_ENTITY_ID: entity_ids_for_device_id(ent_reg, device.id),
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
@@ -281,11 +296,13 @@ async def async_setup_entry(  # noqa: C901
     ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        assert device
         event_data = {
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: client.driver.controller.home_id,
-            ATTR_DEVICE_ID: device.id,  # type: ignore
+            ATTR_DEVICE_ID: device.id,
+            ATTR_ENTITY_ID: entity_ids_for_device_id(ent_reg, device.id),
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
