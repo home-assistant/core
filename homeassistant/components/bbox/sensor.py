@@ -60,7 +60,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="number_of_reboots",
         name="Number of reboot",
-        native_unit_of_measurement=None,
         icon="mdi:restart",
     ),
 )
@@ -69,7 +68,6 @@ SENSOR_TYPES_UPTIME: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="uptime",
         name="Uptime",
-        native_unit_of_measurement=None,
         icon="mdi:clock",
     ),
 )
