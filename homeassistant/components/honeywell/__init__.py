@@ -93,7 +93,6 @@ class HoneywellData:
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
-            if any(x.name == device.name for x in self.devices)
         ]
 
         if len(devices) == 0:
