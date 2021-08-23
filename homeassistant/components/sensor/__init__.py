@@ -133,6 +133,7 @@ class SensorEntityDescription(EntityDescription):
     native_unit_of_measurement: str | None = None
     state_class: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
+    register_by_default: bool | None = None
 
     def __post_init__(self) -> None:
         """Post initialisation processing."""
