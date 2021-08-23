@@ -15,7 +15,6 @@ from .model import Config, Integration
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.awair.*",
-    "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.cert_expiry.*",
