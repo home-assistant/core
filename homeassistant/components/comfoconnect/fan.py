@@ -9,6 +9,8 @@ from pycomfoconnect import (
     CMD_FAN_MODE_HIGH,
     CMD_FAN_MODE_LOW,
     CMD_FAN_MODE_MEDIUM,
+    CMD_MODE_AUTO,
+    CMD_MODE_MANUAL,
     SENSOR_FAN_SPEED_MODE,
 )
 
@@ -29,6 +31,7 @@ CMD_MAPPING = {
     1: CMD_FAN_MODE_LOW,
     2: CMD_FAN_MODE_MEDIUM,
     3: CMD_FAN_MODE_HIGH,
+    4: CMD_MODE_AUTO
 }
 
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
@@ -124,13 +127,16 @@ class ComfoConnectFan(FanEntity):
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
 
         if percentage is None:
-            cmd = CMD_FAN_MODE_LOW
+            cmd = CMD_MODE_AUTO
         elif percentage == 0:
             cmd = CMD_FAN_MODE_AWAY
+            manual_cmd = CMD_MODE_MANUAL
         else:
+            manual_cmd = CMD_MODE_MANUAL
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
-
+        if manual_cmd:
+            self._ccb.comfoconnect.cmd_rmi_request(manual_cmd)
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
 
         # Update current mode
