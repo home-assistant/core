@@ -911,6 +911,7 @@ async def test_statistics_during_period(
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }

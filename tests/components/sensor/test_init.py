@@ -45,10 +45,11 @@ async def test_deprecated_last_reset(hass, caplog, enable_custom_integrations):
 
     assert (
         "Entity sensor.test (<class 'custom_components.test.sensor.MockSensor'>) "
-        "with state_class measurement has set last_reset. Setting last_reset is "
-        "deprecated and will be unsupported from Home Assistant Core 2021.11. Please "
-        "update your configuration if state_class is manually configured, otherwise "
-        "report it to the custom component author."
+        "with state_class measurement has set last_reset. Setting last_reset for "
+        "entities with state_class other than 'total' is deprecated and will be "
+        "removed from Home Assistant Core 2021.10. Please update your configuration if "
+        "state_class is manually configured, otherwise report it to the custom "
+        "component author."
     ) in caplog.text
 
 
