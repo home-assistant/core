@@ -627,7 +627,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         """Fetch state from the device."""
         self._available = True
         self._state = self.coordinator.data.is_on
-        self._mode = self.coordinator.data.mode.name
+        self._mode = self.coordinator.data.mode.value
         self.async_write_ha_state()
 
 
