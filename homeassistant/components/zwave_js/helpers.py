@@ -1,16 +1,21 @@
 """Helper functions for Z-Wave JS integration."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import ConfigurationValueType
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
+from zwave_js_server.model.value import (
+    ConfigurationValue,
+    Value as ZwaveValue,
+    get_value_id,
+)
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_TYPE, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -242,3 +247,69 @@ def async_get_node_status_sensor_entity_id(
         )
 
     return entity_id
+
+
+def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
+    """Remove keys from config where the value is an empty string or None."""
+    return {key: value for key, value in config.items() if value not in ("", None)}
+
+
+def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+    """Check type specific schema against config."""
+
+    def _check_type_schema(config: ConfigType) -> ConfigType:
+        """Check type specific schema against config."""
+        return cast(ConfigType, schema_map[str(config[CONF_TYPE])](config))
+
+    return _check_type_schema
+
+
+def copy_available_params(
+    input_dict: dict[str, Any], output_dict: dict[str, Any], params: list[str]
+) -> None:
+    """Copy available params from input into output."""
+    output_dict.update(
+        {param: input_dict[param] for param in params if param in input_dict}
+    )
+
+
+@callback
+def async_is_device_config_entry_not_loaded(
+    hass: HomeAssistant, device_id: str
+) -> bool:
+    """Return whether device's config entries are not loaded."""
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get(device_id)
+    assert device
+    return any(
+        (entry := hass.config_entries.async_get_entry(entry_id))
+        and entry.state != ConfigEntryState.LOADED
+        for entry_id in device.config_entries
+    )
+
+
+def get_value_state_schema(
+    value: ZwaveValue,
+) -> vol.Schema | None:
+    """Return device automation schema for a config entry."""
+    if isinstance(value, ConfigurationValue):
+        min_ = value.metadata.min
+        max_ = value.metadata.max
+        if value.configuration_value_type in (
+            ConfigurationValueType.RANGE,
+            ConfigurationValueType.MANUAL_ENTRY,
+        ):
+            return vol.All(vol.Coerce(int), vol.Range(min=min_, max=max_))
+
+        if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
+            return vol.In({int(k): v for k, v in value.metadata.states.items()})
+
+        return None
+
+    if value.metadata.states:
+        return vol.In({int(k): v for k, v in value.metadata.states.items()})
+
+    return vol.All(
+        vol.Coerce(int),
+        vol.Range(min=value.metadata.min, max=value.metadata.max),
+    )
