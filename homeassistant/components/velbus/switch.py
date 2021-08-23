@@ -28,10 +28,19 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self._channel.is_on()
 
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return the state attributes of the sun."""
+        return {
+            "Forced on": self._channel.is_forced_on(),
+            "Inhibit": self._channel.is_inhibit(),
+            "Disabled": self._channel.is_disabled(),
+        }
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         await self._channel.turn_on()
 
-    async def async_turn_off(self, **kwargs: any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         await self._channel.turn_off()

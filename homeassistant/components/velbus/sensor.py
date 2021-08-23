@@ -90,3 +90,13 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         if self._is_counter:
             return STATE_CLASS_TOTAL_INCREASING
         return STATE_CLASS_MEASUREMENT
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of the sun."""
+        if self._channel.is_temperature():
+            return {
+                "Max": self._channel.get_max(),
+                "Min": self._channel.get_min(),
+            }
+        return {}

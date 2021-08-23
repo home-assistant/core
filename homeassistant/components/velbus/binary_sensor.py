@@ -19,6 +19,6 @@ class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     """Representation of a Velbus Binary Sensor."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the sensor is on."""
         return self._channel.is_closed()
