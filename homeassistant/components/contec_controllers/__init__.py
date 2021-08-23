@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .contec_tracer import ContecTracer
 
-PLATFORMS = ["light", "cover", "binary_sensor"]
+PLATFORMS = ["light"]
 
 _LOGGER = logging.getLogger(__name__)
 
