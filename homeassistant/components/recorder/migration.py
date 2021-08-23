@@ -488,18 +488,32 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
         session.add(StatisticsRuns(start=start))
     elif new_version == 20:
         # This changed the precision of statistics from float to double
-        _modify_columns(
-            connection,
-            engine,
-            "statistics",
-            [
-                "mean DOUBLE",
-                "min DOUBLE",
-                "max DOUBLE",
-                "state DOUBLE",
-                "sum DOUBLE",
-            ],
-        )
+        if engine.dialect.name == "mysql":
+            _modify_columns(
+                connection,
+                engine,
+                "statistics",
+                [
+                    "mean DOUBLE",
+                    "min DOUBLE",
+                    "max DOUBLE",
+                    "state DOUBLE",
+                    "sum DOUBLE",
+                ],
+            )
+        elif engine.dialect.name in ["oracle", "postgresql"]:
+            _modify_columns(
+                connection,
+                engine,
+                "statistics",
+                [
+                    "mean DOUBLE PRECISION",
+                    "min DOUBLE PRECISION",
+                    "max DOUBLE PRECISION",
+                    "state DOUBLE PRECISION",
+                    "sum DOUBLE PRECISION",
+                ],
+            )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
