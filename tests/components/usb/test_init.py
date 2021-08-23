@@ -12,11 +12,37 @@ from homeassistant.setup import async_setup_component
 from . import slae_sh_device
 
 
+@pytest.fixture(name="operating_system")
+def mock_operating_system():
+    """Mock running Home Assistant Operating system."""
+    with patch(
+        "homeassistant.components.usb.system_info.async_get_system_info",
+        return_value={
+            "hassio": True,
+            "docker": True,
+        },
+    ):
+        yield
+
+
+@pytest.fixture(name="docker")
+def mock_docker():
+    """Mock running Home Assistant in docker container."""
+    with patch(
+        "homeassistant.components.usb.system_info.async_get_system_info",
+        return_value={
+            "hassio": False,
+            "docker": True,
+        },
+    ):
+        yield
+
+
 @pytest.mark.skipif(
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
-async def test_discovered_by_observer_before_started(hass):
+async def test_discovered_by_observer_before_started(hass, operating_system):
     """Test a device is discovered by the observer before started."""
 
     async def _mock_monitor_observer_callback(callback):
@@ -65,7 +91,7 @@ async def test_discovered_by_observer_before_started(hass):
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
 )
-async def test_removal_by_observer_before_started(hass):
+async def test_removal_by_observer_before_started(hass, operating_system):
     """Test a device is removed by the observer before started."""
 
     async def _mock_monitor_observer_callback(callback):
@@ -284,6 +310,54 @@ async def test_non_matching_discovered_by_scanner_after_started(
         await ws_client.send_json({"id": 1, "type": "usb/scan"})
         response = await ws_client.receive_json()
         assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 0
+
+
+@pytest.mark.skipif(
+    not sys.platform.startswith("linux"),
+    reason="Only works on linux",
+)
+async def test_not_discovered_by_observer_before_started_on_docker(hass, docker):
+    """Test a device is not discovered since observer is not running on bare docker."""
+
+    async def _mock_monitor_observer_callback(callback):
+        await hass.async_add_executor_job(
+            callback, MagicMock(action="add", device_path="/dev/new")
+        )
+
+    def _create_mock_monitor_observer(monitor, callback, name):
+        hass.async_create_task(_mock_monitor_observer_callback(callback))
+        return MagicMock()
+
+    new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch(
+        "pyudev.MonitorObserver", new=_create_mock_monitor_observer
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+
+    with patch("homeassistant.components.usb.comports", return_value=[]), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0

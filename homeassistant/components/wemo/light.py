@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
@@ -105,6 +106,7 @@ class WemoLight(WemoEntity, LightEntity):
         """Return the device info."""
         return {
             "name": self.name,
+            "connections": {(CONNECTION_ZIGBEE, self._unique_id)},
             "identifiers": {(WEMO_DOMAIN, self._unique_id)},
             "model": self._model_name,
             "manufacturer": "Belkin",

@@ -256,6 +256,7 @@ DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
 DEVICE_CLASS_VOLTAGE: Final = "voltage"
+DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 DEVICE_CLASS_GAS: Final = "gas"
 
 # #### STATES ####

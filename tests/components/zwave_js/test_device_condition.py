@@ -10,6 +10,9 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.zwave_js import DOMAIN, device_condition
 from homeassistant.components.zwave_js.helpers import get_zwave_value_from_config
 from homeassistant.exceptions import HomeAssistantError
@@ -519,6 +522,7 @@ async def test_get_condition_capabilities_config_parameter(
         {
             "name": "value",
             "required": True,
+            "type": "integer",
             "valueMin": 0,
             "valueMax": 124,
         }
@@ -564,6 +568,30 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
             )
             == {}
         )
+
+    INVALID_CONFIG = {
+        "condition": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "value",
+        "command_class": CommandClass.DOOR_LOCK.value,
+        "property": 9999,
+        "property_key": 9999,
+        "endpoint": 9999,
+        "value": 9999,
+    }
+
+    # Test that invalid config raises exception
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
+
+    # Unload entry so we can verify that validation will pass on an invalid config
+    # since we return early
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert (
+        await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
+        == INVALID_CONFIG
+    )
 
 
 async def test_get_value_from_config_failure(

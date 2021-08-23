@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Amfitri\u00f3"
                 },
-                "description": "No s'ha descobert cap Roomba ni cap Braava a la teva xarxa. El BLID \u00e9s la part del nom d'amfitri\u00f3 del dispositiu despr\u00e9s de `iRobot-` o `Roomba-`. Segueix els passos de la documentaci\u00f3 seg\u00fcent: {auth_help_url}",
+                "description": "No s'ha descobert cap Roomba o Braava a la teva xarxa.",
                 "title": "Connecta't al dispositiu manualment"
             },
             "user": {

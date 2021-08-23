@@ -1136,7 +1136,7 @@ orvibo==1.1.1
 ovoenergy==1.1.12
 
 # homeassistant.components.p1_monitor
-p1monitor == 0.2.0
+p1monitor==0.2.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1472,7 +1472,7 @@ pyfreedompro==1.1.0
 pyfritzhome==0.6.2
 
 # homeassistant.components.fronius
-pyfronius==0.5.5
+pyfronius==0.6.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3

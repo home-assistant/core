@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem zha",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
@@ -8,6 +9,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Typ radia"

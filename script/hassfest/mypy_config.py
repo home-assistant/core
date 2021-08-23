@@ -14,9 +14,7 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.almond.*",
     "homeassistant.components.awair.*",
-    "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.cert_expiry.*",
@@ -122,7 +120,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sma.*",
     "homeassistant.components.smartthings.*",
     "homeassistant.components.smarttub.*",
-    "homeassistant.components.smarty.*",
     "homeassistant.components.solaredge.*",
     "homeassistant.components.somfy.*",
     "homeassistant.components.somfy_mylink.*",
