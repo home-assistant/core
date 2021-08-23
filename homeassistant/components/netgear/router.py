@@ -103,7 +103,6 @@ class NetgearRouter:
 
         self.devices = {}
 
-        self.listeners = []
         self._unsub_dispatcher = None
 
     def _setup(self) -> None:

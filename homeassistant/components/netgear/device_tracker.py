@@ -73,7 +73,7 @@ async def async_setup_entry(
         """Update the values of the router."""
         add_entities(router, async_add_entities, tracked)
 
-    router.listeners.append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
     )
 
