@@ -135,6 +135,8 @@ class EagleSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
+        if not self.coordinator.is_connected:
+            return None
         return self.coordinator.data.get(self.entity_description.key)
 
     @property
