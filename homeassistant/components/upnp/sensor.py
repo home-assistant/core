@@ -58,7 +58,7 @@ SENSOR_ENTITY_DESCRIPTIONS: dict[str, tuple[UpnpSensorEntityDescription, ...]] =
         ),
         UpnpSensorEntityDescription(
             key=ROUTER_IP,
-            name="IP",
+            name="External IP",
             icon="mdi:server-network",
             format="s",
         ),
@@ -127,7 +127,7 @@ async def async_setup_entry(
             entity_description=entity_description,
         )
         for entity_description in SENSOR_ENTITY_DESCRIPTIONS[RAW_SENSOR]
-        if coordinator.data.get(entity_description.key) or False
+        if coordinator.data.get(entity_description.key) is not None
     )
 
     entities.append(
@@ -136,7 +136,7 @@ async def async_setup_entry(
             entity_description=entity_description,
         )
         for entity_description in SENSOR_ENTITY_DESCRIPTIONS[DERIVED_SENSOR]
-        if coordinator.data.get(entity_description.key) or False
+        if coordinator.data.get(entity_description.key) is not None
     )
 
     async_add_entities(entities)
@@ -144,14 +144,6 @@ async def async_setup_entry(
 
 class UpnpSensor(UpnpEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
-
-    def __init__(
-        self,
-        coordinator: UpnpDataUpdateCoordinator,
-        entity_description: UpnpSensorEntityDescription,
-    ) -> None:
-        """Initialize the base sensor."""
-        super().__init__(coordinator, entity_description)
 
 
 class RawUpnpSensor(UpnpSensor):

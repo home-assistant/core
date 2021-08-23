@@ -36,7 +36,7 @@ async def async_setup_entry(
             entity_description=entity_description,
         )
         for entity_description in BINARYSENSOR_ENTITY_DESCRIPTIONS
-        if coordinator.data.get(entity_description.key) or False
+        if coordinator.data.get(entity_description.key) is not None
     )
 
 
