@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.energy import data
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.components.sensor.recorder import compile_statistics
@@ -17,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_MONETARY,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.setup import async_setup_component
@@ -93,6 +95,11 @@ async def test_cost_sensor_price_entity(
     def _compile_statistics(_):
         return compile_statistics(hass, now, now + timedelta(seconds=1))
 
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+    }
+
     await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -136,7 +143,7 @@ async def test_cost_sensor_price_entity(
         hass.states.async_set(
             usage_sensor_entity_id,
             initial_energy,
-            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            energy_attributes,
         )
     hass.states.async_set("sensor.energy_price", "1")
 
@@ -155,9 +162,7 @@ async def test_cost_sensor_price_entity(
             hass.states.async_set(
                 usage_sensor_entity_id,
                 "0",
-                {
-                    ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-                },
+                energy_attributes,
             )
             await hass.async_block_till_done()
 
@@ -176,7 +181,7 @@ async def test_cost_sensor_price_entity(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+        energy_attributes,
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -200,7 +205,7 @@ async def test_cost_sensor_price_entity(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14.5",
-        {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+        energy_attributes,
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -216,7 +221,7 @@ async def test_cost_sensor_price_entity(
     hass.states.async_set(
         usage_sensor_entity_id,
         "4",
-        {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+        energy_attributes,
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -226,7 +231,7 @@ async def test_cost_sensor_price_entity(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+        energy_attributes,
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -241,6 +246,10 @@ async def test_cost_sensor_price_entity(
 
 async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
     """Test energy cost price from sensor entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+    }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -269,7 +278,7 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
     hass.states.async_set(
         "sensor.energy_consumption",
         10000,
-        {"unit_of_measurement": ENERGY_WATT_HOUR},
+        energy_attributes,
     )
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -282,7 +291,7 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
     hass.states.async_set(
         "sensor.energy_consumption",
         20000,
-        {"unit_of_measurement": ENERGY_WATT_HOUR},
+        energy_attributes,
     )
     await hass.async_block_till_done()
 
@@ -292,6 +301,10 @@ async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
 
 async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     """Test gas cost price from sensor entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+    }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -314,7 +327,7 @@ async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     hass.states.async_set(
         "sensor.gas_consumption",
         100,
-        {"unit_of_measurement": VOLUME_CUBIC_METERS},
+        energy_attributes,
     )
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -327,9 +340,71 @@ async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     hass.states.async_set(
         "sensor.gas_consumption",
         200,
-        {"unit_of_measurement": VOLUME_CUBIC_METERS},
+        energy_attributes,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.gas_consumption_cost")
     assert state.state == "50.0"
+
+
+@pytest.mark.parametrize("state_class", [None, STATE_CLASS_TOTAL])
+async def test_cost_sensor_wrong_state_class(
+    hass, hass_storage, caplog, state_class
+) -> None:
+    """Test energy sensor rejects wrong state_class."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: state_class,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": 0.5,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        10000,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN
+    assert (
+        f"Found unexpected state_class {state_class} for sensor.energy_consumption"
+        in caplog.text
+    )
+
+    # Energy use bumped to 10 kWh
+    hass.states.async_set(
+        "sensor.energy_consumption",
+        20000,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_consumption_cost")
+    assert state.state == STATE_UNKNOWN

@@ -6,6 +6,7 @@ import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
@@ -221,6 +222,16 @@ class EnergyCostSensor(SensorEntity):
         )
 
         if energy_state is None:
+            return
+
+        if (
+            state_class := energy_state.attributes.get(ATTR_STATE_CLASS)
+        ) != STATE_CLASS_TOTAL_INCREASING:
+            _LOGGER.warning(
+                "Found unexpected state_class %s for %s",
+                state_class,
+                energy_state.entity_id,
+            )
             return
 
         try:
