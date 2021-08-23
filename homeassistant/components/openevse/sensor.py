@@ -28,14 +28,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="status",
         name="Charging Status",
-        native_unit_of_measurement=None,
-        device_class=None,
     ),
     SensorEntityDescription(
         key="charge_time",
         name="Charge Time Elapsed",
         native_unit_of_measurement=TIME_MINUTES,
-        device_class=None,
     ),
     SensorEntityDescription(
         key="ambient_temp",
@@ -59,13 +56,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="usage_session",
         name="Usage this Session",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=None,
     ),
     SensorEntityDescription(
         key="usage_total",
         name="Total Usage",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=None,
     ),
 )
 
