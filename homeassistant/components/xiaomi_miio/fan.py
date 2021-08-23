@@ -778,7 +778,6 @@ class XiaomiFan(XiaomiGenericDevice):
         """Set the percentage of the fan."""
         if percentage == 0:
             await self.async_turn_off()
-            self._state = False
             self._percentage = 0
             self.async_write_ha_state()
             return
@@ -799,7 +798,6 @@ class XiaomiFan(XiaomiGenericDevice):
 
         if not self.is_on:
             await self.async_turn_on()
-            self._state = True
 
         self.async_write_ha_state()
 
@@ -872,7 +870,6 @@ class XiaomiFanP5(XiaomiFan):
         """Set the percentage of the fan."""
         if percentage == 0:
             await self.async_turn_off()
-            self._state = False
             self._percentage = 0
             self.async_write_ha_state()
             return
@@ -886,6 +883,5 @@ class XiaomiFanP5(XiaomiFan):
 
         if not self.is_on:
             await self.async_turn_on()
-            self._state = True
 
         self.async_write_ha_state()
