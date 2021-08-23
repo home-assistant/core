@@ -67,8 +67,8 @@ async def async_setup_entry(
     for vehicle in proxy.vehicles.values():
         for description in BINARY_SENSOR_TYPES:
             if description.coordinator in vehicle.coordinators:
-                EntityClass = globals()[description.entity_class]
-                entities.append(EntityClass(vehicle, description))
+                entity_class = globals()[description.entity_class]
+                entities.append(entity_class(vehicle, description))
     async_add_entities(entities)
 
 

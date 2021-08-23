@@ -203,8 +203,8 @@ async def async_setup_entry(
                 if description.requires_fuel:
                     create_entity = vehicle.details.uses_fuel()
                 if create_entity:
-                    EntityClass = globals()[description.entity_class]
-                    entities.append(EntityClass(vehicle, description))
+                    entity_class = globals()[description.entity_class]
+                    entities.append(entity_class(vehicle, description))
     async_add_entities(entities)
 
 

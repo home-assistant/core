@@ -1,8 +1,9 @@
 """Base classes for Renault entities."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Generic, Mapping, Optional, TypeVar, cast
+from typing import Any, Generic, Optional, TypeVar, cast
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
