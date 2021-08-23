@@ -101,7 +101,8 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
 
         self._attr_name = name
         self._attr_extra_state_attributes = {
-            "country_code": coordinator.data["countryCode"],
+            # It's documented as being available but it's currently not.
+            "country_code": coordinator.data.get("countryCode"),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
         self._attr_device_info = {

@@ -91,6 +91,7 @@ homeassistant/components/cisco_webex_teams/* @fbradyirl
 homeassistant/components/climacell/* @raman325
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus @ctalkington
+homeassistant/components/co2signal/* @balloob
 homeassistant/components/coinbase/* @tombrien
 homeassistant/components/color_extractor/* @GenericStudent
 homeassistant/components/comfoconnect/* @michaelarnauts
