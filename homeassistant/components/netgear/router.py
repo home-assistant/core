@@ -185,6 +185,7 @@ class NetgearRouter:
             if not self.devices.get(device_mac):
                 new_device = True
 
+            # ntg_device is a namedtuple from the collections module that needs conversion to a dict through ._asdict method
             self.devices[device_mac] = ntg_device._asdict()
             self.devices[device_mac]["mac"] = device_mac
             self.devices[device_mac]["last_seen"] = now
