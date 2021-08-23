@@ -65,9 +65,7 @@ SENSOR_DESC_POWER = SensorEntityDescription(
 SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
-    native_unit_of_measurement=None,
     icon="mdi:window",
-    device_class=None,
 )
 
 
