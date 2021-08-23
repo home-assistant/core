@@ -61,6 +61,15 @@ def test_scale_jpeg_camera_image():
 
     assert jpeg_bytes == EMPTY_8_6_JPEG
 
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=640, first_height=480, second_width=640, second_height=480
+    )
+    with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
+        TurboJPEGSingleton()
+        jpeg_bytes = scale_jpeg_camera_image(camera_image, 320, 480)
+
+    assert jpeg_bytes == EMPTY_16_12_JPEG
+
 
 def test_turbojpeg_load_failure():
     """Handle libjpegturbo not being installed."""

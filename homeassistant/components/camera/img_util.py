@@ -50,13 +50,9 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
     except OSError:
         return cam_image.content
 
-    if current_width <= width or current_height <= height:
-        return cam_image.content
-
     scaling_factor = find_supported_scaling_factor(
         current_width, current_height, width, height
     )
-
     if scaling_factor is None:
         return cam_image.content
 
