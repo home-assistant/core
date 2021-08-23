@@ -50,11 +50,11 @@ SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
     native_unit_of_measurement=TIME_MINUTES,
 )
 
-PAIRED_SENSOR_SENSORS: tuple[SensorEntityDescription, ...] = (
+PAIRED_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SENSOR_DESCRIPTION_BATTERY,
     SENSOR_DESCRIPTION_TEMPERATURE,
 )
-VALVE_CONTROLLER_SENSORS: tuple[SensorEntityDescription, ...] = (
+VALVE_CONTROLLER_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SENSOR_DESCRIPTION_TEMPERATURE,
     SENSOR_DESCRIPTION_UPTIME,
 )
@@ -73,7 +73,7 @@ async def async_setup_entry(
         ]
 
         entities = []
-        for description in PAIRED_SENSOR_SENSORS:
+        for description in PAIRED_SENSOR_DESCRIPTIONS:
             entities.append(PairedSensorSensor(entry, coordinator, description))
 
         async_add_entities(entities, True)
@@ -90,7 +90,7 @@ async def async_setup_entry(
     sensors: list[PairedSensorSensor | ValveControllerSensor] = []
 
     # Add all valve controller-specific binary sensors:
-    for description in VALVE_CONTROLLER_SENSORS:
+    for description in VALVE_CONTROLLER_DESCRIPTIONS:
         sensors.append(
             ValveControllerSensor(
                 entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
@@ -101,7 +101,7 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
         entry.entry_id
     ].values():
-        for description in PAIRED_SENSOR_SENSORS:
+        for description in PAIRED_SENSOR_DESCRIPTIONS:
             sensors.append(PairedSensorSensor(entry, coordinator, description))
 
     async_add_entities(sensors)

@@ -46,11 +46,11 @@ SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
     key=SENSOR_KIND_MOVED, name="Recently Moved", device_class=DEVICE_CLASS_MOVING
 )
 
-PAIRED_SENSOR_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+PAIRED_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     SENSOR_DESCRIPTION_LEAK_DETECTED,
     SENSOR_DESCRIPTION_MOVED,
 )
-VALVE_CONTROLLER_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+VALVE_CONTROLLER_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     SENSOR_DESCRIPTION_AP_ENABLED,
     SENSOR_DESCRIPTION_LEAK_DETECTED,
 )
@@ -69,7 +69,7 @@ async def async_setup_entry(
         ]
 
         entities = []
-        for description in PAIRED_SENSOR_SENSORS:
+        for description in PAIRED_SENSOR_DESCRIPTIONS:
             entities.append(PairedSensorBinarySensor(entry, coordinator, description))
 
         async_add_entities(entities)
@@ -86,7 +86,7 @@ async def async_setup_entry(
     sensors: list[PairedSensorBinarySensor | ValveControllerBinarySensor] = []
 
     # Add all valve controller-specific binary sensors:
-    for description in VALVE_CONTROLLER_SENSORS:
+    for description in VALVE_CONTROLLER_DESCRIPTIONS:
         sensors.append(
             ValveControllerBinarySensor(
                 entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
@@ -97,7 +97,7 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
         entry.entry_id
     ].values():
-        for description in PAIRED_SENSOR_SENSORS:
+        for description in PAIRED_SENSOR_DESCRIPTIONS:
             sensors.append(PairedSensorBinarySensor(entry, coordinator, description))
 
     async_add_entities(sensors)
