@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import json
-from typing import Any
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -38,8 +37,6 @@ from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
 from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
-
-_CONFIGURING: dict[str, Any] = {}
 
 SUPPORT_VOLUMIO = (
     SUPPORT_PAUSE
