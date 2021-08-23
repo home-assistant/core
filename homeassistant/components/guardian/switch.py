@@ -39,6 +39,12 @@ SERVICE_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
 
+SWITCH_KIND_VALVE = "valve"
+
+SWITCH_DESCRIPTION_VALVE = SwitchEntityDescription(
+    key=SWITCH_KIND_VALVE, name="Valve Controller", icon="mdi:water"
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -90,13 +96,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         coordinators: dict[str, DataUpdateCoordinator],
     ) -> None:
         """Initialize."""
-        super().__init__(
-            entry,
-            coordinators,
-            SwitchEntityDescription(
-                key="valve", name="Valve Controller", icon="mdi:water"
-            ),
-        )
+        super().__init__(entry, coordinators, SWITCH_DESCRIPTION_VALVE)
 
         self._attr_is_on = True
         self._client = client

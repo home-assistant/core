@@ -217,13 +217,11 @@ class GuardianEntity(CoordinatorEntity):
         self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_class = description.device_class
         self._attr_device_info = {"manufacturer": "Elexa"}
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
-        self._attr_icon = description.icon
-        self._attr_name = description.name
-        self._description = description
         self._entry = entry
+        self._type = description.key
+        self.entity_description = description
 
     @callback
     def _async_update_from_latest_data(self) -> None:
