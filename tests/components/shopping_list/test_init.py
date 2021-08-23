@@ -59,7 +59,7 @@ async def test_clear_completed_items(hass, sl_setup):
         hass,
         "test",
         "HassShoppingListAddItem",
-        {"item": {"value": "beer", "complete": True}},
+        {"item": {"value": "beer"}},
     )
 
     await intent.async_handle(
@@ -68,13 +68,12 @@ async def test_clear_completed_items(hass, sl_setup):
 
     assert len(hass.data[DOMAIN].items) == 2
 
+    # Update a single attribute, other attributes shouldn't change
+    await hass.data[DOMAIN].async_update_list({"complete": True})
+
     await hass.data[DOMAIN].async_clear_completed()
 
-    assert len(hass.data[DOMAIN].items) == 1
-
-    cheese = hass.data[DOMAIN].items[0]
-    assert cheese["name"] == "cheese"
-    assert cheese["complete"] is False
+    assert len(hass.data[DOMAIN].items) == 0
 
 
 async def test_recent_items_intent(hass, sl_setup):
