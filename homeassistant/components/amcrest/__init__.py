@@ -48,7 +48,7 @@ from .const import (
     SERVICE_UPDATE,
 )
 from .helpers import service_signal
-from .sensor import SENSORS
+from .sensor import SENSOR_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ AMCREST_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique(), check_binary_sensors
         ),
         vol.Optional(CONF_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
+            cv.ensure_list, [vol.In(SENSOR_KEYS)], vol.Unique()
         ),
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }
