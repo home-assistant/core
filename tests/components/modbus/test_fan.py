@@ -157,30 +157,35 @@ async def test_config_fan(hass, mock_modbus):
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,config_addon,expected",
+    "register_words,do_exception,config_addon,expected",
     [
         (
             [0x00],
+            False,
             {CONF_VERIFY: {}},
             STATE_OFF,
         ),
         (
             [0x01],
+            False,
             {CONF_VERIFY: {}},
             STATE_ON,
         ),
         (
             [0xFE],
+            False,
             {CONF_VERIFY: {}},
             STATE_OFF,
         ),
         (
-            None,
+            [0x00],
+            True,
             {CONF_VERIFY: {}},
             STATE_UNAVAILABLE,
         ),
         (
-            None,
+            [0x00],
+            True,
             None,
             STATE_OFF,
         ),
