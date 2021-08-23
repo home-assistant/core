@@ -14,13 +14,12 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
-
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CONSIDER_HOME,
