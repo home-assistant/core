@@ -88,6 +88,9 @@ async def async_setup(hass, config):
     async def install_zwave(service):
         await _install_zwave(hass, service)
 
+    async def start_sip_server(service):
+        await _start_sip_server(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "cec_command", cec_command)
@@ -111,6 +114,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
     hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
     hass.services.async_register(DOMAIN, "install_zwave", install_zwave)
+    hass.services.async_register(DOMAIN, "start_sip_server", start_sip_server)
     if ais_global.has_front_clock():
         hass.services.async_register(
             DOMAIN, "set_clock_display_text", set_clock_display_text
@@ -636,3 +640,11 @@ async def _install_zwave(hass, call):
         stdout=None,
         stderr=None,
     )
+
+
+async def _start_sip_server(hass, call):
+    if not ais_global.has_root():
+        return
+
+    comm = r"su -c 'am start -n com.aispeaker.sipserver/.USipServerActivity --ez start_from_ais true'"
+    await _run(comm)

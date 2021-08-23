@@ -1,10 +1,23 @@
-# Describes the format for available AIS cloud services
+# Describes the format for available AIS shell services
+
+set_clock_display_text:
+  description: 'Wyświetlenie tesktu na wyświetlaczu bramki DEV3'
+  fields:
+    text:
+      description: 'Tekst do wyświetlenia'
+      example: 'AI5'
+      selector:
+        text:
+
+
 cec_command:
   description: Wysłanie komendy HDMI-CEC, dostpne komendy https://www.cec-o-matic.com
   fields:
     command:
       description: komenda, np. 0x40 0x04 (One Touch Play from Playback 1 to TV), 0x40 0x36 (System Standby from Playback 1 to TV),
       example: '0x40 0x04'
+      selector:
+        text:
 
 change_host_name:
   description: Zmiana nazwy hosta urządzenia
@@ -12,6 +25,8 @@ change_host_name:
     hostname:
       description: Nowa nazwa hosta
       example: 'ais-dom'
+      selector:
+        text:
 
 execute_command:
   description: Wykonanie komendy w konsoli
@@ -19,6 +34,8 @@ execute_command:
     command:
       description: Komenda do wykonania
       example: 'touch /data/data/pl.sviete.dom/files/home/1.txt'
+      selector:
+        text:
 
 execute_script:
   description: Uruchomienie skryptu w konsoli
@@ -26,6 +43,8 @@ execute_script:
     script:
       description: Skrypt do wykonania
       example: '/data/data/pl.sviete.dom/.ais/upgrade_ais.sh'
+      selector:
+        text:
 
 key_event:
   description: Symulacja naciśnięcia przycisku w systemie
@@ -33,6 +52,8 @@ key_event:
     key_code:
       description: kod przycisku
       example: 'KEYCODE_BACK'
+      selector:
+        text:
 
 led:
   description: Sterowanie diodą led umieszczoną z przodu urządzenia
@@ -40,6 +61,8 @@ led:
     brightness:
       description: Parametr do przekazania, 0 - czerwony, 255 - niebieski, timer - utuchomienie funkcji mrugania, heartbeat - uruchomienie funkcji bicia serca. Inne funkcje to (none, rc-feedback, nand-disk, oneshot, backlight, emmc, sd, sdio, breathe, scpi, scpistop, disturb, rfkill0, rfkill1).
       example: '255'
+      selector:
+        text:
 
 set_scaling_governor:
   description: Ustawienie trybu zarządzania częstotliwością procesora.
@@ -47,6 +70,8 @@ set_scaling_governor:
     scaling:
       description: Tryb zarządzania częstotliwością procesora. Domyślnie interactive, inne możliwe wartości to hotplug i performance.
       example: 'interactive'
+      selector:
+        text:
 
 set_io_scheduler:
   description: Ustawienie trybu zarządzania danymi wchodzącymi i wychodzącymi
@@ -54,6 +79,8 @@ set_io_scheduler:
     scheduler:
       description: Tryb zarządzania I/O. Domyślnie noop, inne możliwe wartości to deadline cfq.
       example: 'noop'
+      selector:
+        text:
 
 restart_pm2_service:
   description: Restart serwisu PM2 (ais, ftp, mqtt, tunnel, webssh...)
@@ -61,3 +88,8 @@ restart_pm2_service:
     service:
       description: Serwis do restartu
       example: 'tunnel'
+      selector:
+        text:
+
+start_sip_server:
+  description: Uruchomienie serwera SIP na bramce

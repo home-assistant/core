@@ -435,6 +435,8 @@ def has_root():
 
 def has_front_clock():
     if platform.machine() == "x86_64":
+        # return True for test on x86_64
+        # return True
         return False
 
     import subprocess

@@ -8,6 +8,7 @@
    - service: ais_shell_command.set_io_scheduler
      data:
        scheduler: noop
+   - service: ais_shell_command.start_sip_server
    - delay: '6'
    - service: ais_ai_service.publish_command_to_frame
      data:
