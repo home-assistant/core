@@ -118,7 +118,7 @@ class NetgearDeviceEntity(ScannerEntity):
         return name
 
     @callback
-    def update_device(self) -> None:
+    def async_update_device(self) -> None:
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
