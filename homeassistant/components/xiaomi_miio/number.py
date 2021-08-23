@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import DEGREE, TIME_MINUTES
 from homeassistant.core import callback
 
 from .const import (
@@ -112,6 +113,7 @@ NUMBER_TYPES = {
         key=ATTR_OSCILLATION_ANGLE,
         name="Oscillation Angle",
         icon="mdi:angle-acute",
+        unit_of_measurement=DEGREE,
         min_value=30,
         max_value=140,
         step=30,
@@ -121,6 +123,7 @@ NUMBER_TYPES = {
         key=ATTR_DELAY_OFF_COUNTDOWN,
         name="Delay Off Countdown",
         icon="mdi:fan-off",
+        unit_of_measurement=TIME_MINUTES,
         min_value=0,
         max_value=480,
         step=60,
