@@ -143,8 +143,6 @@ class NotionEntity(CoordinatorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        self._attr_device_class = description.device_class
-
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
         self._attr_device_info = {
@@ -165,6 +163,7 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._system_id = system_id
         self._task_id = task_id
+        self.entity_description = description
 
     @property
     def available(self) -> bool:

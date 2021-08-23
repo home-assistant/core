@@ -35,10 +35,14 @@ from .const import (
 
 BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
     SENSOR_BATTERY: BinarySensorEntityDescription(
-        key=SENSOR_BATTERY, name="Low Battery", device_class=DEVICE_CLASS_BATTERY
+        key=SENSOR_BATTERY,
+        name="Low Battery",
+        device_class=DEVICE_CLASS_BATTERY,
     ),
     SENSOR_DOOR: BinarySensorEntityDescription(
-        key=SENSOR_DOOR, name="Door", device_class=DEVICE_CLASS_DOOR
+        key=SENSOR_DOOR,
+        name="Door",
+        device_class=DEVICE_CLASS_DOOR,
     ),
     SENSOR_GARAGE_DOOR: BinarySensorEntityDescription(
         key=SENSOR_GARAGE_DOOR,
@@ -46,16 +50,24 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
         device_class=DEVICE_CLASS_GARAGE_DOOR,
     ),
     SENSOR_LEAK: BinarySensorEntityDescription(
-        key=SENSOR_LEAK, name="Leak Detector", device_class=DEVICE_CLASS_MOISTURE
+        key=SENSOR_LEAK,
+        name="Leak Detector",
+        device_class=DEVICE_CLASS_MOISTURE,
     ),
     SENSOR_MISSING: BinarySensorEntityDescription(
-        key=SENSOR_MISSING, name="Missing", device_class=DEVICE_CLASS_CONNECTIVITY
+        key=SENSOR_MISSING,
+        name="Missing",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
     ),
     SENSOR_SAFE: BinarySensorEntityDescription(
-        key=SENSOR_SAFE, name="Safe", device_class=DEVICE_CLASS_DOOR
+        key=SENSOR_SAFE,
+        name="Safe",
+        device_class=DEVICE_CLASS_DOOR,
     ),
     SENSOR_SLIDING: BinarySensorEntityDescription(
-        key=SENSOR_SLIDING, name="Sliding Door/Window", device_class=DEVICE_CLASS_DOOR
+        key=SENSOR_SLIDING,
+        name="Sliding Door/Window",
+        device_class=DEVICE_CLASS_DOOR,
     ),
     SENSOR_SMOKE_CO: BinarySensorEntityDescription(
         key=SENSOR_SMOKE_CO,
@@ -81,24 +93,20 @@ async def async_setup_entry(
     """Set up Notion sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
-    sensor_list = []
-    for task_id, task in coordinator.data["tasks"].items():
-        if task["task_type"] not in BINARY_SENSOR_DESCRIPTIONS:
-            continue
-
-        sensor = coordinator.data["sensors"][task["sensor_id"]]
-        sensor_list.append(
+    async_add_entities(
+        [
             NotionBinarySensor(
                 coordinator,
                 task_id,
-                sensor["id"],
-                sensor["bridge"]["id"],
-                sensor["system_id"],
+                coordinator.data["sensors"][task["sensor_id"]]["id"],
+                coordinator.data["sensors"][task["sensor_id"]]["bridge"]["id"],
+                coordinator.data["sensors"][task["sensor_id"]]["system_id"],
                 BINARY_SENSOR_DESCRIPTIONS[task["task_type"]],
             )
-        )
-
-    async_add_entities(sensor_list)
+            for task_id, task in coordinator.data["tasks"].items()
+            if task["task_type"] in BINARY_SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
 class NotionBinarySensor(NotionEntity, BinarySensorEntity):
