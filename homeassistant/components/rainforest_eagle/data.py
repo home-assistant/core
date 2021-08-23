@@ -147,8 +147,13 @@ class EagleDataCoordinator(DataUpdateCoordinator):
                 hub, self.hardware_address
             )
 
+        is_connected = self.eagle200_meter.is_connected
+
         async with async_timeout.timeout(30):
             data = await self.eagle200_meter.get_device_query()
+
+        if is_connected and not self.eagle200_meter.is_connected:
+            _LOGGER.warning("Lost connection with electricity meter")
 
         _LOGGER.debug("API data: %s", data)
         return {var["Name"]: var["Value"] for var in data.values()}
