@@ -10,7 +10,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Double,
+    Float,
     ForeignKey,
     Identity,
     Index,
@@ -20,6 +20,7 @@ from sqlalchemy import (
     distinct,
 )
 from sqlalchemy.dialects import mysql
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -224,6 +225,16 @@ class StatisticData(TypedDict, total=False):
     sum: float
 
 
+@compiles(Float)
+def compile_float(element, compiler, **kw):
+    """Create Float columns as DOUBLE.
+
+    Can be removed if SQLAlchemy gains support for generic double, see:
+    https://github.com/sqlalchemy/sqlalchemy/issues/5465
+    """
+    return "DOUBLE"
+
+
 class Statistics(Base):  # type: ignore
     """Statistics."""
 
@@ -240,11 +251,11 @@ class Statistics(Base):  # type: ignore
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Double())
-    min = Column(Double())
-    max = Column(Double())
-    state = Column(Double())
-    sum = Column(Double())
+    mean = Column(Float())
+    min = Column(Float())
+    max = Column(Float())
+    state = Column(Float())
+    sum = Column(Float())
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
