@@ -190,10 +190,7 @@ class NetgearRouter:
             self.devices[device_mac]["last_seen"] = now
 
         for device in self.devices.values():
-            if now - device["last_seen"] <= self._consider_home:
-                device["active"] = True
-            else:
-                device["active"] = False
+            device["active"] = now - device["last_seen"] <= self._consider_home
 
         async_dispatcher_send(self.hass, self.signal_device_update)
 
