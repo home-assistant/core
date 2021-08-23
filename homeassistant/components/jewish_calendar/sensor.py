@@ -37,91 +37,76 @@ TIME_SENSORS = (
         key="first_light",
         name="Alot Hashachar",
         icon="mdi:weather-sunset-up",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="talit",
         name="Talit and Tefillin",
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="gra_end_shma",
         name='Latest time for Shma Gr"a',
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="mga_end_shma",
         name='Latest time for Shma MG"A',
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="gra_end_tfila",
         name='Latest time for Tefilla Gr"a',
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="mga_end_tfila",
         name='Latest time for Tefilla MG"A',
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="big_mincha",
         name="Mincha Gedola",
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="small_mincha",
         name="Mincha Ketana",
         icon="mdi:calendar-clock",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="plag_mincha",
         name="Plag Hamincha",
         icon="mdi:weather-sunset-down",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="sunset",
         name="Shkia",
         icon="mdi:weather-sunset",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="first_stars",
         name="T'set Hakochavim",
         icon="mdi:weather-night",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
         name="Upcoming Shabbat Candle Lighting",
         icon="mdi:candle",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_havdalah",
         name="Upcoming Shabbat Havdalah",
         icon="mdi:weather-night",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="upcoming_candle_lighting",
         name="Upcoming Candle Lighting",
         icon="mdi:candle",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     SensorEntityDescription(
         key="upcoming_havdalah",
         name="Upcoming Havdalah",
         icon="mdi:weather-night",
-        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
 )
 
@@ -245,6 +230,8 @@ class JewishCalendarSensor(SensorEntity):
 
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
+
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
     def native_value(self):
