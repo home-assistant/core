@@ -63,7 +63,7 @@ HUMIDIFIER_PLATFORMS = [
     "switch",
 ]
 LIGHT_PLATFORMS = ["light"]
-VACUUM_PLATFORMS = ["vacuum", "sensor"]
+VACUUM_PLATFORMS = ["vacuum", "sensor", "binary_sensor"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 

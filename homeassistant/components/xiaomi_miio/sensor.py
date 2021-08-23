@@ -343,7 +343,7 @@ VACUUM_SENSORS = {
         name="DnD Start",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_DND_STATUS,
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_DND_END: XiaomiMiioSensorDescription(
         key=ATTR_DND_END,
@@ -351,7 +351,7 @@ VACUUM_SENSORS = {
         name="DnD End",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_DND_STATUS,
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_LAST_CLEAN_START: XiaomiMiioSensorDescription(
         key=ATTR_LAST_CLEAN_START,
@@ -359,7 +359,7 @@ VACUUM_SENSORS = {
         name="Last Clean Start",
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
-        register_by_default=True,
+        entity_registry_enabled_default=True,
     ),
     ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
         key=ATTR_LAST_CLEAN_END,
@@ -367,7 +367,7 @@ VACUUM_SENSORS = {
         device_class=DEVICE_CLASS_TIMESTAMP,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
         name="Last Clean End",
-        register_by_default=True,
+        entity_registry_enabled_default=True,
     ),
     ATTR_LAST_CLEAN_TIME: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -375,7 +375,7 @@ VACUUM_SENSORS = {
         key=ATTR_LAST_CLEAN_TIME,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
         name="Last Clean Duration",
-        register_by_default=True,
+        entity_registry_enabled_default=True,
     ),
     ATTR_LAST_CLEAN_AREA: XiaomiMiioSensorDescription(
         native_unit_of_measurement=AREA_SQUARE_METERS,
@@ -383,7 +383,7 @@ VACUUM_SENSORS = {
         key=ATTR_LAST_CLEAN_AREA,
         parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
         name="Last Clean Area",
-        register_by_default=True,
+        entity_registry_enabled_default=True,
     ),
     ATTR_CLEAN_HISTORY_TOTAL_DURATION: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -391,7 +391,7 @@ VACUUM_SENSORS = {
         key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
         name="Clean history total duration",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CLEAN_HISTORY_TOTAL_AREA: XiaomiMiioSensorDescription(
         native_unit_of_measurement=AREA_SQUARE_METERS,
@@ -399,7 +399,7 @@ VACUUM_SENSORS = {
         key=ATTR_CLEAN_HISTORY_TOTAL_AREA,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
         name="Total Clean Area",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CLEAN_HISTORY_COUNT: XiaomiMiioSensorDescription(
         native_unit_of_measurement="",
@@ -408,7 +408,7 @@ VACUUM_SENSORS = {
         key=ATTR_CLEAN_HISTORY_COUNT,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
         name="Total Clean Count",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT: XiaomiMiioSensorDescription(
         native_unit_of_measurement="",
@@ -417,7 +417,7 @@ VACUUM_SENSORS = {
         key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
         parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
         name="Total Dust Collection Count",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -425,7 +425,7 @@ VACUUM_SENSORS = {
         key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Main Brush Left",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -433,7 +433,7 @@ VACUUM_SENSORS = {
         key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Side Brush Left",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CONSUMABLE_STATUS_FILTER_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -441,7 +441,7 @@ VACUUM_SENSORS = {
         key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Filter Left",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
     ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
@@ -449,7 +449,7 @@ VACUUM_SENSORS = {
         key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
         parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
         name="Sensor Dirty Left",
-        register_by_default=False,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -575,8 +575,10 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self.entity_description: XiaomiMiioSensorDescription = description
 
-        if description.register_by_default is not None:
-            self._attr_entity_registry_enabled_default = description.register_by_default
+        if description.entity_registry_enabled_default is not None:
+            self._attr_entity_registry_enabled_default = (
+                description.entity_registry_enabled_default
+            )
         else:
             self._attr_entity_registry_enabled_default = False
 
