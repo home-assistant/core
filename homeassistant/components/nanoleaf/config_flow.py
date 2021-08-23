@@ -91,6 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle Nanoleaf discovery."""
         host = discovery_info["host"]
+        # The name is unique and printed on the device and cannot be changed.
         name = discovery_info["name"].replace(f".{discovery_info['type']}", "")
         await self.async_set_unique_id(name)
         self._abort_if_unique_id_configured({CONF_HOST: host})
@@ -104,10 +105,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 load_json, self.hass.config.path(CONFIG_FILE)
             ),
         )
-        self.nanoleaf.token = self.discovery_conf.get(host, {}).get("token")  # < 2021.4
         self.nanoleaf.token = self.discovery_conf.get(self.device_id, {}).get(
-            "token", self.nanoleaf.token
-        )  # >= 2021.4
+            "token",  # >= 2021.4
+            self.discovery_conf.get(host, {}).get("token"),  # < 2021.4
+        )
         if self.nanoleaf.token is not None:
             self.context["source"] = config_entries.SOURCE_INTEGRATION_DISCOVERY
             _LOGGER.warning(
@@ -187,14 +188,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(name)
         self._abort_if_unique_id_configured({CONF_HOST: self.nanoleaf.host})
 
-        # Show successfully imported instructions and optionally update the Nanoleaf config file
-        if self.context["source"] == config_entries.SOURCE_IMPORT:
-            persistent_notification.async_create(
-                self.hass,
-                f"Nanoleaf {name} has been successfully imported. Please remove the light with host {self.nanoleaf.host} from your configuration.yaml.",
-                f"Imported Nanoleaf {name}",
-            )
-        elif self.context["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY:
+        if self.context["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY:
             if self.nanoleaf.host in self.discovery_conf:
                 self.discovery_conf.pop(self.nanoleaf.host)
             if self.device_id in self.discovery_conf:
