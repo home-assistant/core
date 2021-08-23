@@ -1853,7 +1853,7 @@ python-forecastio==1.4.0
 # python-gammu==3.1
 
 # homeassistant.components.gc100
-python-gc100==1.0.3a
+python-gc100==1.0.3a0
 
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0

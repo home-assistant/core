@@ -24,18 +24,19 @@ from . import (
 from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
-    json,
     codeowners,
     config_flow,
     dependencies,
+    dhcp,
+    json,
     manifest,
     mqtt,
+    requirements,
     services,
     ssdp,
     translations,
-    zeroconf,
-    dhcp,
     usb,
+    zeroconf,
 ]
 HASS_PLUGINS = [
     coverage,
@@ -102,9 +103,6 @@ def main():
         return 1
 
     plugins = [*INTEGRATION_PLUGINS]
-
-    if config.requirements:
-        plugins.append(requirements)
 
     if config.specific_integrations:
         integrations = {}

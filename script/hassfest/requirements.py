@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from stdlib_list import stdlib_list
 from tqdm import tqdm
 
@@ -61,6 +62,12 @@ def normalize_package_name(requirement: str) -> str:
 
 def validate(integrations: dict[str, Integration], config: Config):
     """Handle requirements for integrations."""
+    # Check if we are doing format-only validation.
+    if not config.requirements:
+        for integration in integrations.values():
+            validate_requirements_format(integration)
+        return
+
     ensure_cache()
 
     # check for incompatible requirements
@@ -74,8 +81,42 @@ def validate(integrations: dict[str, Integration], config: Config):
         validate_requirements(integration)
 
 
+def validate_requirements_format(integration: Integration) -> bool:
+    """Validate requirements format.
+
+    Returns if an error was added.
+    """
+    start_errors = len(integration.errors)
+
+    for req in integration.requirements:
+        if " " in req:
+            integration.add_error(
+                "requirements",
+                f'Requirement "{req}" contains a space',
+            )
+            continue
+
+        pkg, sep, version = req.partition("==")
+
+        if not sep:
+            integration.add_error(
+                "requirements",
+                'Requirements need to be pinned "<pkg name>==<version>".',
+            )
+            continue
+
+        if AwesomeVersion(version).strategy == AwesomeVersionStrategy.UNKNOWN:
+            integration.add_error("requirements", "Unable to parse package version.")
+            continue
+
+    return len(integration.errors) > start_errors
+
+
 def validate_requirements(integration: Integration):
     """Validate requirements."""
+    if not validate_requirements_format(integration):
+        return
+
     # Some integrations have not been fixed yet so are allowed to have violations.
     if integration.domain in IGNORE_VIOLATIONS:
         return
