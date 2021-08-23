@@ -31,7 +31,7 @@ CMD_MAPPING = {
     1: CMD_FAN_MODE_LOW,
     2: CMD_FAN_MODE_MEDIUM,
     3: CMD_FAN_MODE_HIGH,
-    4: CMD_MODE_AUTO
+    4: CMD_MODE_AUTO,
 }
 
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
