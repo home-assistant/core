@@ -227,12 +227,18 @@ class StatisticData(TypedDict, total=False):
 
 @compiles(Float)
 def compile_float(element, compiler, **kw):
-    """Create Float columns as DOUBLE.
+    """Create Float columns as DOUBLE PRECISION.
 
     Can be removed if SQLAlchemy gains support for generic double, see:
     https://github.com/sqlalchemy/sqlalchemy/issues/5465
     """
     return "DOUBLE"
+
+
+@compiles(Float, "mssql")
+def compile_float_mssql(element, compiler, **kw):
+    """Create Float columns as FLOAT."""
+    return "FLOAT"
 
 
 class Statistics(Base):  # type: ignore
