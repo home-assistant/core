@@ -67,7 +67,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     entities = [
         ComedHourlyPricingSensor(
-            hass.loop,
             websession,
             variable[CONF_OFFSET],
             variable.get(CONF_NAME),
@@ -86,12 +85,9 @@ class ComedHourlyPricingSensor(SensorEntity):
 
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    def __init__(
-        self, loop, websession, offset, name, description: SensorEntityDescription
-    ):
+    def __init__(self, websession, offset, name, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
-        self.loop = loop
         self.websession = websession
         if name:
             self._attr_name = name
