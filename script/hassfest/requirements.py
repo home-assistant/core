@@ -98,7 +98,7 @@ def validate_requirements_format(integration: Integration) -> bool:
 
         pkg, sep, version = req.partition("==")
 
-        if not sep:
+        if not sep and integration.core:
             integration.add_error(
                 "requirements",
                 f'Requirement {req} need to be pinned "<pkg name>==<version>".',
@@ -106,7 +106,10 @@ def validate_requirements_format(integration: Integration) -> bool:
             continue
 
         if AwesomeVersion(version).strategy == AwesomeVersionStrategy.UNKNOWN:
-            integration.add_error("requirements", f"Unable to parse package version ({version}) for {pkg}.")
+            integration.add_error(
+                "requirements",
+                f"Unable to parse package version ({version}) for {pkg}.",
+            )
             continue
 
     return len(integration.errors) > start_errors
