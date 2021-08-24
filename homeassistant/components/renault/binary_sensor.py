@@ -86,4 +86,4 @@ class RenaultBatteryBinarySensor(RenaultBinarySensor[KamereonVehicleBatteryStatu
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.entity_description.on_value == self.data
+        return self.data == self.entity_description.on_value

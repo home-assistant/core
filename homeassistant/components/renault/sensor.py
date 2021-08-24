@@ -263,13 +263,9 @@ class RenaultBatteryChargeStateSensor(RenaultBatterySensor):
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if (
-            self.coordinator.data is None
-            or self.coordinator.data.get_charging_status()
-            != ChargeState.CHARGE_IN_PROGRESS
-        ):
-            return "mdi:flash-off"
-        return "mdi:flash"
+        if self.data == ChargeState.CHARGE_IN_PROGRESS.value:
+            return "mdi:flash"
+        return "mdi:flash-off"
 
 
 class RenaultBatteryChargingPowerSensor(RenaultBatterySensor):
@@ -301,9 +297,6 @@ class RenaultBatteryPlugStateSensor(RenaultBatterySensor):
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if (
-            self.coordinator.data is None
-            or self.coordinator.data.get_plug_status() != PlugState.PLUGGED
-        ):
-            return "mdi:power-plug-off"
-        return "mdi:power-plug"
+        if self.data == PlugState.PLUGGED.value:
+            return "mdi:power-plug"
+        return "mdi:power-plug-off"
