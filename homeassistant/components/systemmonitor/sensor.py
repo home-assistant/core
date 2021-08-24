@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -152,7 +153,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
         name="Network in",
         unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:server-network",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory=True,
     ),
     SystemMonitorSensorEntityDescription(
@@ -160,21 +161,21 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
         name="Network out",
         unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:server-network",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory=True,
     ),
     SystemMonitorSensorEntityDescription(
         key="packets_in",
         name="Packets in",
         icon="mdi:server-network",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory=True,
     ),
     SystemMonitorSensorEntityDescription(
         key="packets_out",
         name="Packets out",
         icon="mdi:server-network",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory=True,
     ),
     SystemMonitorSensorEntityDescription(
