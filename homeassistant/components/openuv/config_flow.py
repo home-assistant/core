@@ -72,11 +72,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_form()
 
-        if user_input.get(CONF_LATITUDE):
-            identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
-        else:
-            identifier = "Default Coordinates"
-
+        identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
 
