@@ -30,12 +30,8 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         _properties = CONF_SENSOR_TYPES[CONF_MAX_CHARGING_CURRENT_KEY]
         self._coordinator = coordinator
         self._attr_name = f"{config.title} {_properties[CONF_NAME]}"
-        self._device_class = _properties[CONF_DEVICE_CLASS]
-
-    @property
-    def min_value(self):
-        """Return the minimum available current."""
-        return 6
+        self._attr_min_value = 6
+        self._attr_device_class = _properties[CONF_DEVICE_CLASS]
 
     @property
     def max_value(self):
@@ -46,11 +42,6 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     def value(self):
         """Return the state of the sensor."""
         return self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
-
-    @property
-    def device_class(self):
-        """Return the state of the sensor."""
-        return self._device_class
 
     async def async_set_value(self, value: float):
         """Set the value of the entity."""
