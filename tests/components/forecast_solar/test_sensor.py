@@ -142,7 +142,7 @@ async def test_sensors(
     assert device_entry.manufacturer == "Forecast.Solar"
     assert device_entry.name == "Solar Production Forecast"
     assert device_entry.entry_type == ENTRY_TYPE_SERVICE
-    assert not device_entry.model
+    # assert device_entry.model == 
     assert not device_entry.sw_version
 
 
@@ -152,7 +152,6 @@ async def test_sensors(
         "sensor.power_production_in_12hours",
         "sensor.power_production_in_24hours",
         "sensor.power_production_next_hour",
-        "sensor.account_type",
     ),
 )
 async def test_disabled_by_default(
@@ -187,11 +186,6 @@ async def test_disabled_by_default(
             "power_production_next_hour",
             "Estimated Power Production - Next Hour",
             "400000",
-        ),
-        (
-            "account_type",
-            "Account Type",
-            "public",
         ),
     ],
 )
