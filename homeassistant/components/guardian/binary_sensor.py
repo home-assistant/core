@@ -43,7 +43,9 @@ SENSOR_DESCRIPTION_LEAK_DETECTED = BinarySensorEntityDescription(
     device_class=DEVICE_CLASS_MOISTURE,
 )
 SENSOR_DESCRIPTION_MOVED = BinarySensorEntityDescription(
-    key=SENSOR_KIND_MOVED, name="Recently Moved", device_class=DEVICE_CLASS_MOVING
+    key=SENSOR_KIND_MOVED,
+    name="Recently Moved",
+    device_class=DEVICE_CLASS_MOVING,
 )
 
 PAIRED_SENSOR_DESCRIPTIONS = (
@@ -123,9 +125,9 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._type == SENSOR_KIND_LEAK_DETECTED:
+        if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_is_on = self.coordinator.data["wet"]
-        elif self._type == SENSOR_KIND_MOVED:
+        elif self.entity_description.key == SENSOR_KIND_MOVED:
             self._attr_is_on = self.coordinator.data["moved"]
 
 
@@ -145,15 +147,15 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
 
     async def _async_continue_entity_setup(self) -> None:
         """Add an API listener."""
-        if self._type == SENSOR_KIND_AP_INFO:
+        if self.entity_description.key == SENSOR_KIND_AP_INFO:
             self.async_add_coordinator_update_listener(API_WIFI_STATUS)
-        elif self._type == SENSOR_KIND_LEAK_DETECTED:
+        elif self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._type == SENSOR_KIND_AP_INFO:
+        if self.entity_description.key == SENSOR_KIND_AP_INFO:
             self._attr_available = self.coordinators[
                 API_WIFI_STATUS
             ].last_update_success
@@ -167,7 +169,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
                     )
                 }
             )
-        elif self._type == SENSOR_KIND_LEAK_DETECTED:
+        elif self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_available = self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success

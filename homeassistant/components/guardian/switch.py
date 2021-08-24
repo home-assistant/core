@@ -42,7 +42,9 @@ SERVICE_UPGRADE_FIRMWARE = "upgrade_firmware"
 SWITCH_KIND_VALVE = "valve"
 
 SWITCH_DESCRIPTION_VALVE = SwitchEntityDescription(
-    key=SWITCH_KIND_VALVE, name="Valve Controller", icon="mdi:water"
+    key=SWITCH_KIND_VALVE,
+    name="Valve Controller",
+    icon="mdi:water",
 )
 
 

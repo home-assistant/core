@@ -220,7 +220,6 @@ class GuardianEntity(CoordinatorEntity):
         self._attr_device_info = {"manufacturer": "Elexa"}
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._entry = entry
-        self._type = description.key
         self.entity_description = description
 
     @callback

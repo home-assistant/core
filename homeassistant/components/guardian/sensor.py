@@ -115,9 +115,9 @@ class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._type == SENSOR_KIND_BATTERY:
+        if self.entity_description.key == SENSOR_KIND_BATTERY:
             self._attr_native_value = self.coordinator.data["battery"]
-        elif self._type == SENSOR_KIND_TEMPERATURE:
+        elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self._attr_native_value = self.coordinator.data["temperature"]
 
 
@@ -126,20 +126,20 @@ class ValveControllerSensor(ValveControllerEntity, SensorEntity):
 
     async def _async_continue_entity_setup(self) -> None:
         """Register API interest (and related tasks) when the entity is added."""
-        if self._type == SENSOR_KIND_TEMPERATURE:
+        if self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._type == SENSOR_KIND_TEMPERATURE:
+        if self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self._attr_available = self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success
             self._attr_native_value = self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].data["temperature"]
-        elif self._type == SENSOR_KIND_UPTIME:
+        elif self.entity_description.key == SENSOR_KIND_UPTIME:
             self._attr_available = self.coordinators[
                 API_SYSTEM_DIAGNOSTICS
             ].last_update_success
