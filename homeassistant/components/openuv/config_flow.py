@@ -92,7 +92,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a SimpliSafe options flow."""
+    """Handle a OpenUV options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
