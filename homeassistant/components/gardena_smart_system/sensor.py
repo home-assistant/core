@@ -25,23 +25,28 @@ from .const import (
     GARDENA_LOCATION,
 )
 
-
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "ambient_temperature": [TEMP_CELSIUS, "mdi:thermometer", DEVICE_CLASS_TEMPERATURE],
+SOIL_SENSOR_TYPES = {
     "soil_temperature": [TEMP_CELSIUS, "mdi:thermometer", DEVICE_CLASS_TEMPERATURE],
     "soil_humidity": ["%", "mdi:water-percent", DEVICE_CLASS_HUMIDITY],
-    "light_intensity": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
     ATTR_BATTERY_LEVEL: [PERCENTAGE, "mdi:battery", DEVICE_CLASS_BATTERY],
 }
 
+SENSOR_TYPES = {**{
+    "ambient_temperature": [TEMP_CELSIUS, "mdi:thermometer", DEVICE_CLASS_TEMPERATURE],
+    "light_intensity": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
+}, **SOIL_SENSOR_TYPES}
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Perform the setup for Gardena sensor devices."""
     entities = []
     for sensor in hass.data[DOMAIN][GARDENA_LOCATION].find_device_by_type("SENSOR"):
         for sensor_type in SENSOR_TYPES:
+            entities.append(GardenaSensor(sensor, sensor_type))
+
+    for sensor in hass.data[DOMAIN][GARDENA_LOCATION].find_device_by_type("SOIL_SENSOR"):
+        for sensor_type in SOIL_SENSOR_TYPES:
             entities.append(GardenaSensor(sensor, sensor_type))
 
     for mower in hass.data[DOMAIN][GARDENA_LOCATION].find_device_by_type("MOWER"):
@@ -82,11 +87,6 @@ class GardenaSensor(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def available(self):
-        """Return True if the device is available."""
-        return self._device.rf_link_state == 'ONLINE'
 
     @property
     def unique_id(self) -> str:

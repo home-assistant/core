@@ -112,7 +112,7 @@ class GardenaSmartWaterControl(SwitchEntity):
     @property
     def available(self):
         """Return True if the device is available."""
-        return self._device.valve_state != "UNAVAILABLE" and self._device.rf_link_state =='ONLINE'
+        return self._device.valve_state != "UNAVAILABLE"
 
     def error(self):
         """Return the error message."""
@@ -139,25 +139,11 @@ class GardenaSmartWaterControl(SwitchEntity):
     def turn_on(self, **kwargs):
         """Start watering."""
         duration = self.option_smart_watering_duration * 60
-        try:
-            self._device.start_seconds_to_override(duration)
-        except:
-            try:
-                self._device.start_seconds_to_override(duration)
-            except:
-                self._device.valve_state = "UNAVAILABLE"
-        ii=0
+        self._device.start_seconds_to_override(duration)
 
     def turn_off(self, **kwargs):
         """Stop watering."""
-        try:
-            self._device.stop_until_next_task()
-        except:
-            try:
-                self._device.stop_until_next_task()
-            except:
-                self._device.valve_state = "UNAVAILABLE"
-        ii=0
+        self._device.stop_until_next_task()
 
     @property
     def device_info(self):
