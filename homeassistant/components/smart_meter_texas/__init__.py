@@ -102,7 +102,7 @@ class SmartMeterTexasData:
         self.account = account
         self.ssl_context = ssl
         websession = aiohttp_client.async_get_clientsession(hass)
-        self.client = Client(websession, account, ssl_context=self.ssl_context)
+        self.client = Client(websession, account, ssl_context=ssl_context)
         self.meters: list = []
 
     async def setup(self):
