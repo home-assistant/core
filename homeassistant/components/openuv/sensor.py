@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import OpenUV, OpenUvEntity
+from . import OpenUvEntity
 from .const import (
     DATA_CLIENT,
     DATA_UV,
@@ -42,7 +42,7 @@ UV_LEVEL_HIGH = "High"
 UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
         name="Current Ozone Level",
@@ -59,7 +59,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=TYPE_CURRENT_UV_LEVEL,
         name="Current UV Level",
         icon="mdi:weather-sunny",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
@@ -111,22 +110,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
-    entities = [OpenUvSensor(openuv, description) for description in SENSOR_TYPES]
-    async_add_entities(entities, True)
+    async_add_entities(
+        [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
+    )
 
 
 class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
-
-    def __init__(
-        self,
-        openuv: OpenUV,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(openuv, description.key)
-        self.entity_description = description
 
     @callback
     def update_from_latest_data(self) -> None:
