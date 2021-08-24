@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     ATTR_BOT,
@@ -50,7 +51,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_mac(self, data) -> None:
         """Try to connect to Switchbot device and create entry if successful."""
-        await self.async_set_unique_id(data[CONF_MAC].replace(":", ""))
+        await self.async_set_unique_id(format_mac(data[CONF_MAC]))
         self._abort_if_unique_id_configured()
 
         # Validate bluetooth device mac.
@@ -117,7 +118,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         import_config[CONF_MAC] = import_config[CONF_MAC].replace("-", ":").lower()
 
-        await self.async_set_unique_id(import_config[CONF_MAC].replace(":", ""))
+        await self.async_set_unique_id(format_mac(import_config[CONF_MAC]))
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
