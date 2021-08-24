@@ -126,6 +126,14 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         """Return hardware address of meter."""
         return self.entry.data[CONF_HARDWARE_ADDRESS]
 
+    @property
+    def is_connected(self):
+        """Return if the hub is connected to the electric meter."""
+        if self.eagle200_meter:
+            return self.eagle200_meter.is_connected
+
+        return True
+
     async def _async_update_data_200(self):
         """Get the latest data from the Eagle-200 device."""
         if self.eagle200_meter is None:
@@ -139,8 +147,13 @@ class EagleDataCoordinator(DataUpdateCoordinator):
                 hub, self.hardware_address
             )
 
+        is_connected = self.eagle200_meter.is_connected
+
         async with async_timeout.timeout(30):
             data = await self.eagle200_meter.get_device_query()
+
+        if is_connected and not self.eagle200_meter.is_connected:
+            _LOGGER.warning("Lost connection with electricity meter")
 
         _LOGGER.debug("API data: %s", data)
         return {var["Name"]: var["Value"] for var in data.values()}
