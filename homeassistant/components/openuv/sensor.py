@@ -42,7 +42,7 @@ UV_LEVEL_HIGH = "High"
 UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
         name="Current Ozone Level",
