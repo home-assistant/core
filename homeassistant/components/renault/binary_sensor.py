@@ -63,7 +63,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[BinarySensorEntity] = []
+    entities: list[RenaultBinarySensor] = []
     for vehicle in proxy.vehicles.values():
         for description in BINARY_SENSOR_TYPES:
             if description.coordinator in vehicle.coordinators:
