@@ -940,7 +940,7 @@ def test_has_at_most_one_key():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ({}, {"beer": None}, {"soda": None}):
+    for value in ({}, {"beer": None}, {"soda": None}, {vol.Optional("soda"): None}):
         schema(value)
 
 
@@ -952,7 +952,7 @@ def test_has_at_least_one_key():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ({"beer": None}, {"soda": None}):
+    for value in ({"beer": None}, {"soda": None}, {vol.Required("soda"): None}):
         schema(value)
 
 
