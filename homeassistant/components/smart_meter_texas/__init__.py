@@ -96,7 +96,7 @@ class SmartMeterTexasData:
         hass: HomeAssistant,
         entry: ConfigEntry,
         account: Account,
-        ssl: ssl.SSLContext,
+        ssl_context: ssl.SSLContext,
     ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
