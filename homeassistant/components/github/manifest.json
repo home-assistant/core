@@ -6,7 +6,8 @@
     "aiogithubapi==21.8.0"
   ],
   "codeowners": [
-    "@timmo001"
+    "@timmo001",
+    "@ludeeus"
   ],
   "iot_class": "cloud_polling"
 }
