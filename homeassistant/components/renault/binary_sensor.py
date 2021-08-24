@@ -60,10 +60,6 @@ class RenaultBinarySensor(RenaultDataEntity[T], BinarySensorEntity):
 
     entity_description: RenaultBinarySensorEntityDescription
 
-
-class RenaultBatteryBinarySensor(RenaultBinarySensor[KamereonVehicleBatteryStatusData]):
-    """Renault battery binary sensor."""
-
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -76,7 +72,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
         coordinator="battery",
         data_key="plugStatus",
         device_class=DEVICE_CLASS_PLUG,
-        entity_class=RenaultBatteryBinarySensor,
+        entity_class=RenaultBinarySensor[KamereonVehicleBatteryStatusData],
         name="Plugged In",
         on_value=PlugState.PLUGGED.value,
     ),
@@ -85,7 +81,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
         coordinator="battery",
         data_key="chargingStatus",
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
-        entity_class=RenaultBatteryBinarySensor,
+        entity_class=RenaultBinarySensor[KamereonVehicleBatteryStatusData],
         name="Charging",
         on_value=ChargeState.CHARGE_IN_PROGRESS.value,
     ),
