@@ -116,7 +116,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
                                 CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW
                             )
                         },
-                    ): float,
+                    ): vol.Coerce(float),
                     vol.Optional(
                         CONF_TO_WINDOW,
                         description={
@@ -124,7 +124,7 @@ class OpenUvOptionsFlowHandler(config_entries.OptionsFlow):
                                 CONF_FROM_WINDOW, DEFAULT_TO_WINDOW
                             )
                         },
-                    ): float,
+                    ): vol.Coerce(float),
                 }
             ),
         )
