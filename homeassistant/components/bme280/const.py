@@ -6,6 +6,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 
 # Common
@@ -26,7 +27,7 @@ SENSOR_TEMP = "temperature"
 SENSOR_HUMID = "humidity"
 SENSOR_PRESS = "pressure"
 SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TEMP: ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     SENSOR_HUMID: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
     SENSOR_PRESS: ["Pressure", "mb", DEVICE_CLASS_PRESSURE],
 }
