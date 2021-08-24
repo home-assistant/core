@@ -27,7 +27,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import color
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .const import (
+    COLOR_MODE,
+    COLOR_TEMP_MODE,
+    CONF_COORDINATOR,
+    DOMAIN as FRITZBOX_DOMAIN,
+)
 from .model import EntityInfo
 
 SUPPORTED_COLOR_MODES = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
@@ -114,8 +119,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color value."""
-        # Don't return hue and saturation unless in color mode
-        if self.device.color_mode != "1":
+        if self.device.color_mode != COLOR_MODE:
             return None
 
         hue = self.device.hue
@@ -126,8 +130,7 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value."""
-        # Don't return color temperature unless in color temperature mode
-        if self.device.color_mode != "4":
+        if self.device.color_mode != COLOR_TEMP_MODE:
             return None
 
         kelvin = self.device.color_temp

@@ -4,7 +4,11 @@ from unittest.mock import Mock
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import (
+    COLOR_MODE,
+    COLOR_TEMP_MODE,
+    DOMAIN as FB_DOMAIN,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -38,7 +42,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
-    device.color_mode = "4"
+    device.color_mode = COLOR_TEMP_MODE
     device.color_temp = 2700
 
     assert await setup_config_entry(
@@ -55,13 +59,13 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
 
 
 async def test_setup_color(hass: HomeAssistant, fritz: Mock):
-    """Test setup of platform."""
+    """Test setup of platform in color mode."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
-    device.color_mode = "1"
+    device.color_mode = COLOR_MODE
     device.hue = 100
     device.saturation = 70 * 255.0 / 100.0
 
@@ -100,7 +104,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock):
 
 
 async def test_turn_on_color(hass: HomeAssistant, fritz: Mock):
-    """Test turn device on."""
+    """Test turn device on in color mode."""
     device = FritzDeviceLightMock()
     device.get_color_temps.return_value = [2700, 6500]
     device.get_colors.return_value = {
