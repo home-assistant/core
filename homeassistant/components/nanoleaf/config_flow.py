@@ -72,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 last_step=False,
                 errors={"base": "unknown"},
             )
-        return self.async_show_form(step_id="link")
+        return await self.async_step_link()
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
@@ -117,7 +117,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_setup_finish()
 
         self.context["title_placeholders"] = {"name": name}
-        return self.async_show_form(step_id="link")
+        return await self.async_step_link()
+
+    async def async_handle_unavailable(self):
+        """Handle unavailable device."""
+        if self.context["source"] == config_entries.SOURCE_USER:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_SCHEMA,
+                errors={"base": "cannot_connect"},
+                last_step=False,
+            )
+        return self.async_abort(reason="cannot_connect")
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
@@ -133,12 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="link", errors={"base": "not_allowing_new_tokens"}
             )
         except Unavailable:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=USER_SCHEMA,
-                errors={"base": "cannot_connect"},
-                last_step=False,
-            )
+            return await self.async_handle_unavailable()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
@@ -161,12 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 pynanoleaf_get_info, self.nanoleaf
             )
         except Unavailable:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=USER_SCHEMA,
-                errors={"base": "cannot_connect"},
-                last_step=False,
-            )
+            return await self.async_handle_unavailable()
         except InvalidToken:
             return self.async_show_form(
                 step_id="link", errors={"base": "invalid_token"}

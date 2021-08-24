@@ -219,6 +219,51 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
 
 
+async def test_homekit_discovery_link_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test homekit discovery and abort if device is unavailable."""
+    homekit = "_hap._tcp.local"
+    with patch(
+        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
+        return_value={"name": TEST_NAME},
+    ), patch(
+        "homeassistant.components.nanoleaf.config_flow.load_json",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={
+                "host": TEST_HOST,
+                "name": f"{TEST_NAME}.{homekit}",
+                "type": homekit,
+                "properties": {"id": TEST_DEVICE_ID},
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+
+    assert context["title_placeholders"] == {"name": TEST_NAME}
+    assert context["unique_id"] == TEST_NAME
+
+    with patch(
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
+        side_effect=Unavailable("message"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_import_config(hass: HomeAssistant) -> None:
     """Test configuration import."""
     with patch(
