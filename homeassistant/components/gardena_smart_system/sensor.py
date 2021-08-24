@@ -136,3 +136,7 @@ class GardenaSensor(Entity):
             "manufacturer": "Gardena",
             "model": self._device.model_type,
         }
+    @property
+    def available(self):
+        """Return True if the device is available."""
+        return self._device.rf_link_state == 'ONLINE'

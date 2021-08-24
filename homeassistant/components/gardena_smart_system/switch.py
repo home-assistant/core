@@ -112,7 +112,7 @@ class GardenaSmartWaterControl(SwitchEntity):
     @property
     def available(self):
         """Return True if the device is available."""
-        return self._device.valve_state != "UNAVAILABLE"
+        return self._device.valve_state != "UNAVAILABLE" and self._device.rf_link_state =='ONLINE'
 
     def error(self):
         """Return the error message."""
@@ -139,11 +139,23 @@ class GardenaSmartWaterControl(SwitchEntity):
     def turn_on(self, **kwargs):
         """Start watering."""
         duration = self.option_smart_watering_duration * 60
-        self._device.start_seconds_to_override(duration)
+        try:
+            self._device.start_seconds_to_override(duration)
+        except:
+            try:
+                self._device.start_seconds_to_override(duration)
+            except:
+                self._device.valve_state = "UNAVAILABLE"
 
     def turn_off(self, **kwargs):
         """Stop watering."""
-        self._device.stop_until_next_task()
+        try:
+            self._device.stop_until_next_task()
+        except:
+            try:
+                self._device.stop_until_next_task()
+            except:
+                self._device.valve_state = "UNAVAILABLE"
 
     @property
     def device_info(self):
@@ -325,7 +337,7 @@ class GardenaSmartIrrigationControl(SwitchEntity):
     @property
     def available(self):
         """Return True if the device is available."""
-        return self._device.valves[self._valve_id]["state"] != "UNAVAILABLE"
+        return self._device.valves[self._valve_id]["state"] != "UNAVAILABLE" and self._device.rf_link_state =='ONLINE'
 
     def error(self):
         """Return the error message."""
@@ -350,11 +362,23 @@ class GardenaSmartIrrigationControl(SwitchEntity):
     def turn_on(self, **kwargs):
         """Start watering."""
         duration = self.option_smart_irrigation_duration * 60
-        self._device.start_seconds_to_override(duration, self._valve_id)
+        try:
+            self._device.start_seconds_to_override(duration, self._valve_id)
+        except:
+            try:
+                self._device.start_seconds_to_override(duration, self._valve_id)
+            except:
+                self._device.valves[self._valve_id]["state"] = "UNAVAILABLE"
 
     def turn_off(self, **kwargs):
         """Stop watering."""
-        self._device.stop_until_next_task(self._valve_id)
+        try:
+            self._device.stop_until_next_task(self._valve_id)
+        except:
+            try:
+                self._device.stop_until_next_task(self._valve_id)
+            except:
+                self._device.valves[self._valve_id]["state"] = "UNAVAILABLE"
 
     @property
     def device_info(self):
