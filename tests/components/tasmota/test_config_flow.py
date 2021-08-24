@@ -1,6 +1,5 @@
 """Test config flow."""
 from homeassistant import config_entries
-from homeassistant.components.mqtt.models import ReceiveMessage
 
 from tests.common import MockConfigEntry
 
@@ -19,9 +18,14 @@ async def test_mqtt_abort_if_existing_entry(hass, mqtt_mock):
 
 async def test_mqtt_abort_invalid_topic(hass, mqtt_mock):
     """Check MQTT flow aborts if discovery topic is invalid."""
-    discovery_info = ReceiveMessage(
-        "", "", 0, False, subscribed_topic="custom_prefix/##"
-    )
+    discovery_info = {
+        "topic": "",
+        "payload": "",
+        "qos": 0,
+        "retain": False,
+        "subscribed_topic": "custom_prefix/##",
+        "timestamp": None,
+    }
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
@@ -31,9 +35,14 @@ async def test_mqtt_abort_invalid_topic(hass, mqtt_mock):
 
 async def test_mqtt_setup(hass, mqtt_mock) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
-    discovery_info = ReceiveMessage(
-        "", "", 0, False, subscribed_topic="custom_prefix/123/#"
-    )
+    discovery_info = {
+        "topic": "",
+        "payload": "",
+        "qos": 0,
+        "retain": False,
+        "subscribed_topic": "custom_prefix/123/#",
+        "timestamp": None,
+    }
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )

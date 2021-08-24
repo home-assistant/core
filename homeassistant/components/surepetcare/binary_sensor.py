@@ -28,7 +28,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    entities: list[SurepyEntity] = []
+    entities: list[SurepyEntity | Pet | Hub | DeviceConnectivity] = []
 
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
@@ -112,7 +112,7 @@ class Hub(SurePetcareBinarySensor):
                 ),
             }
         else:
-            self._attr_extra_state_attributes = None
+            self._attr_extra_state_attributes = {}
         _LOGGER.debug("%s -> state: %s", self.name, state)
         self.async_write_ha_state()
 
@@ -139,7 +139,7 @@ class Pet(SurePetcareBinarySensor):
                 "where": state.where,
             }
         else:
-            self._attr_extra_state_attributes = None
+            self._attr_extra_state_attributes = {}
         _LOGGER.debug("%s -> state: %s", self.name, state)
         self.async_write_ha_state()
 
@@ -171,6 +171,6 @@ class DeviceConnectivity(SurePetcareBinarySensor):
                 "hub_rssi": f'{state["signal"]["hub_rssi"]:.2f}',
             }
         else:
-            self._attr_extra_state_attributes = None
+            self._attr_extra_state_attributes = {}
         _LOGGER.debug("%s -> state: %s", self.name, state)
         self.async_write_ha_state()

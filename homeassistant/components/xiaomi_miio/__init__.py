@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan", "sensor"]
+FAN_PLATFORMS = ["fan", "number", "select", "sensor", "switch"]
 HUMIDIFIER_PLATFORMS = [
     "binary_sensor",
     "humidifier",

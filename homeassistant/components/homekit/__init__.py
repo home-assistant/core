@@ -44,6 +44,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import (  # noqa: F401
@@ -187,7 +188,7 @@ def _async_get_entries_by_name(current_entries):
     return {entry.data.get(CONF_NAME, BRIDGE_NAME): entry for entry in current_entries}
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -531,11 +532,6 @@ class HomeKit:
         # as pyhap uses a random one until state is restored
         if os.path.exists(persist_file):
             self.driver.load()
-            self.driver.state.config_version += 1
-            if self.driver.state.config_version > 65535:
-                self.driver.state.config_version = 1
-
-        self.driver.persist()
 
     async def async_reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
@@ -687,6 +683,7 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
+        self.driver.async_persist()
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:

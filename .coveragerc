@@ -36,6 +36,9 @@ omit =
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
+    homeassistant/components/airtouch4/__init__.py
+    homeassistant/components/airtouch4/climate.py
+    homeassistant/components/airtouch4/const.py
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/*
@@ -314,6 +317,12 @@ omit =
     homeassistant/components/firmata/switch.py
     homeassistant/components/fitbit/*
     homeassistant/components/fixer/sensor.py
+    homeassistant/components/fjaraskupan/__init__.py
+    homeassistant/components/fjaraskupan/binary_sensor.py
+    homeassistant/components/fjaraskupan/const.py
+    homeassistant/components/fjaraskupan/fan.py
+    homeassistant/components/fjaraskupan/light.py
+    homeassistant/components/fjaraskupan/sensor.py
     homeassistant/components/fleetgo/device_tracker.py
     homeassistant/components/flexit/climate.py
     homeassistant/components/flic/binary_sensor.py
@@ -375,6 +384,7 @@ omit =
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
+    homeassistant/components/google_pubsub/__init__.py
     homeassistant/components/google_travel_time/__init__.py
     homeassistant/components/google_travel_time/helpers.py
     homeassistant/components/google_travel_time/sensor.py
@@ -636,6 +646,7 @@ omit =
     homeassistant/components/modbus/cover.py
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/modbus.py
+    homeassistant/components/modbus/sensor.py
     homeassistant/components/modbus/validators.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
@@ -834,7 +845,6 @@ omit =
     homeassistant/components/rainmachine/binary_sensor.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
-    homeassistant/components/rainforest_eagle/sensor.py
     homeassistant/components/raspihats/*
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
@@ -895,7 +905,9 @@ omit =
     homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/sendgrid/notify.py
-    homeassistant/components/sense/*
+    homeassistant/components/sense/__init__.py
+    homeassistant/components/sense/binary_sensor.py
+    homeassistant/components/sense/sensor.py
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
     homeassistant/components/sensibo/climate.py
@@ -990,6 +1002,7 @@ omit =
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/binary_sensor.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
@@ -1084,6 +1097,8 @@ omit =
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
+    homeassistant/components/tractive/entity.py
+    homeassistant/components/tractive/sensor.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py

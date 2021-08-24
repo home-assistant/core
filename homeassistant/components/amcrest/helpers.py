@@ -1,4 +1,6 @@
 """Helpers for amcrest component."""
+from __future__ import annotations
+
 import logging
 
 from .const import DOMAIN
@@ -12,7 +14,7 @@ def service_signal(service: str, *args: str) -> str:
 def log_update_error(
     logger: logging.Logger,
     action: str,
-    name: str,
+    name: str | None,
     entity_type: str,
     error: Exception,
     level: int = logging.ERROR,

@@ -10,7 +10,10 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_UPDATE,
+)
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -81,8 +84,8 @@ UPGRADE_BINARY_SENSORS: dict[str, EntityInfo] = {
     f"{SynoCoreUpgrade.API_KEY}:update_available": {
         ATTR_NAME: "Update available",
         ATTR_UNIT_OF_MEASUREMENT: None,
-        ATTR_ICON: "mdi:update",
-        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_UPDATE,
         ENTITY_ENABLE: True,
         ATTR_STATE_CLASS: None,
     },
@@ -233,7 +236,7 @@ UTILISATION_SENSORS: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     f"{SynoCoreUtilization.API_KEY}:network_up": {
-        ATTR_NAME: "Network Up",
+        ATTR_NAME: "Upload Throughput",
         ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_KILOBYTES_PER_SECOND,
         ATTR_ICON: "mdi:upload",
         ATTR_DEVICE_CLASS: None,
@@ -241,7 +244,7 @@ UTILISATION_SENSORS: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     f"{SynoCoreUtilization.API_KEY}:network_down": {
-        ATTR_NAME: "Network Down",
+        ATTR_NAME: "Download Throughput",
         ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_KILOBYTES_PER_SECOND,
         ATTR_ICON: "mdi:download",
         ATTR_DEVICE_CLASS: None,

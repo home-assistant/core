@@ -30,6 +30,7 @@ from .models import (
     StatisticMetaData,
     Statistics,
     StatisticsMeta,
+    StatisticsRuns,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, retryable_database_job, session_scope
@@ -43,7 +44,6 @@ QUERY_STATISTICS = [
     Statistics.mean,
     Statistics.min,
     Statistics.max,
-    Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
 ]
@@ -157,6 +157,12 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     """Compile statistics."""
     start = dt_util.as_utc(start)
     end = start + timedelta(hours=1)
+
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        if session.query(StatisticsRuns).filter_by(start=start).first():
+            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
+            return True
+
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats = []
     for domain, platform in instance.hass.data[DOMAIN].items():
@@ -174,6 +180,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                     instance.hass, session, entity_id, stat["meta"]
                 )
                 session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+        session.add(StatisticsRuns(start=start))
 
     return True
 
@@ -375,7 +382,6 @@ def _sorted_statistics_to_dict(
                 "mean": convert(db_state.mean, units),
                 "min": convert(db_state.min, units),
                 "max": convert(db_state.max, units),
-                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
                 "state": convert(db_state.state, units),
                 "sum": convert(db_state.sum, units),
             }

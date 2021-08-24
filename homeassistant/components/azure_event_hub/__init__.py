@@ -5,9 +5,9 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any
+from typing import Any, Callable
 
-from azure.eventhub import EventData
+from azure.eventhub import EventData, EventDataBatch
 from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential
 from azure.eventhub.exceptions import EventHubError
 import voluptuous as vol
@@ -109,14 +109,16 @@ class AzureEventHub:
     ) -> None:
         """Initialize the listener."""
         self.hass = hass
-        self.queue = asyncio.PriorityQueue()
+        self.queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
+            tuple[int, tuple[float, Event | None]]
+        ] = asyncio.PriorityQueue()
         self._client_args = client_args
         self._conn_str_client = conn_str_client
         self._entities_filter = entities_filter
         self._send_interval = send_interval
         self._max_delay = max_delay + send_interval
-        self._listener_remover = None
-        self._next_send_remover = None
+        self._listener_remover: Callable[[], None] | None = None
+        self._next_send_remover: Callable[[], None] | None = None
         self.shutdown = False
 
     async def async_start(self) -> None:
@@ -169,7 +171,7 @@ class AzureEventHub:
                 self.hass, self._send_interval, self.async_send
             )
 
-    async def fill_batch(self, client) -> None:
+    async def fill_batch(self, client) -> tuple[EventDataBatch, int]:
         """Return a batch of events formatted for writing.
 
         Uses get_nowait instead of await get, because the functions batches and doesn't wait for each single event, the send function is called.
@@ -207,7 +209,7 @@ class AzureEventHub:
 
         return event_batch, dequeue_count
 
-    def _event_to_filtered_event_data(self, event: Event) -> None:
+    def _event_to_filtered_event_data(self, event: Event) -> EventData | None:
         """Filter event states and create EventData object."""
         state = event.data.get("new_state")
         if (

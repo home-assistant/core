@@ -384,10 +384,14 @@ class AmcrestCam(Camera):
                     self._brand = "unknown"
             if self._model is None:
                 resp = self._api.device_type.strip()
+                _LOGGER.debug("Device_type=%s", resp)
                 if resp.startswith("type="):
                     self._model = resp.split("=")[-1]
                 else:
                     self._model = "unknown"
+            if self._attr_unique_id is None:
+                self._attr_unique_id = self._api.serial_number.strip()
+                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()

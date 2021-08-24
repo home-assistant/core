@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable
 
 from amcrest import AmcrestError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,11 +26,22 @@ SCAN_INTERVAL = timedelta(seconds=SENSOR_SCAN_INTERVAL_SECS)
 
 SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
-# Sensor types are defined like: Name, units, icon
-SENSORS = {
-    SENSOR_PTZ_PRESET: ("PTZ Preset", None, "mdi:camera-iris"),
-    SENSOR_SDCARD: ("SD Used", PERCENTAGE, "mdi:sd"),
-}
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_PTZ_PRESET,
+        name="PTZ Preset",
+        icon="mdi:camera-iris",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_SDCARD,
+        name="SD Used",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:sd",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 
 async def async_setup_platform(
@@ -45,10 +56,12 @@ async def async_setup_platform(
 
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
+    sensors = discovery_info[CONF_SENSORS]
     async_add_entities(
         [
-            AmcrestSensor(name, device, sensor_type)
-            for sensor_type in discovery_info[CONF_SENSORS]
+            AmcrestSensor(name, device, description)
+            for description in SENSOR_TYPES
+            if description.key in sensors
         ],
         True,
     )
@@ -57,42 +70,17 @@ async def async_setup_platform(
 class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
-    def __init__(self, name: str, device: AmcrestDevice, sensor_type: str) -> None:
+    def __init__(
+        self, name: str, device: AmcrestDevice, description: SensorEntityDescription
+    ) -> None:
         """Initialize a sensor for Amcrest camera."""
-        self._name = f"{name} {SENSORS[sensor_type][0]}"
+        self.entity_description = description
         self._signal_name = name
         self._api = device.api
-        self._sensor_type = sensor_type
-        self._state: int | str | None = None
-        self._attrs: dict[str, str | None] = {}
-        self._unit_of_measurement: str | None = SENSORS[sensor_type][1]
-        self._icon: str = SENSORS[sensor_type][2]
         self._unsub_dispatcher: Callable[[], None] | None = None
 
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self) -> int | str | None:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the units of measurement."""
-        return self._unit_of_measurement
+        self._attr_name = f"{name} {description.name}"
+        self._attr_extra_state_attributes = {}
 
     @property
     def available(self) -> bool:
@@ -103,32 +91,35 @@ class AmcrestSensor(SensorEntity):
         """Get the latest data and updates the state."""
         if not self.available:
             return
-        _LOGGER.debug("Updating %s sensor", self._name)
+        _LOGGER.debug("Updating %s sensor", self.name)
 
+        sensor_type = self.entity_description.key
         try:
-            if self._sensor_type == SENSOR_PTZ_PRESET:
-                self._state = self._api.ptz_presets_count
+            if sensor_type == SENSOR_PTZ_PRESET:
+                self._attr_native_value = self._api.ptz_presets_count
 
-            elif self._sensor_type == SENSOR_SDCARD:
+            elif sensor_type == SENSOR_SDCARD:
                 storage = self._api.storage_all
                 try:
-                    self._attrs[
+                    self._attr_extra_state_attributes[
                         "Total"
                     ] = f"{storage['total'][0]:.2f} {storage['total'][1]}"
                 except ValueError:
-                    self._attrs[
+                    self._attr_extra_state_attributes[
                         "Total"
                     ] = f"{storage['total'][0]} {storage['total'][1]}"
                 try:
-                    self._attrs[
+                    self._attr_extra_state_attributes[
                         "Used"
                     ] = f"{storage['used'][0]:.2f} {storage['used'][1]}"
                 except ValueError:
-                    self._attrs["Used"] = f"{storage['used'][0]} {storage['used'][1]}"
+                    self._attr_extra_state_attributes[
+                        "Used"
+                    ] = f"{storage['used'][0]} {storage['used'][1]}"
                 try:
-                    self._state = f"{storage['used_percent']:.2f}"
+                    self._attr_native_value = f"{storage['used_percent']:.2f}"
                 except ValueError:
-                    self._state = storage["used_percent"]
+                    self._attr_native_value = storage["used_percent"]
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
