@@ -91,7 +91,6 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         name="OVO Last Gas Cost",
         device_class=DEVICE_CLASS_MONETARY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        # native_unit_of_measurement=coordinator.data.gas[-1].cost.currency_unit,
         icon="mdi:cash-multiple",
         value=lambda usage: usage.gas[-1].consumption,
     ),
