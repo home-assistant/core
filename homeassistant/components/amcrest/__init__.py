@@ -218,16 +218,15 @@ def _monitor_events(
     hass: HomeAssistant,
     name: str,
     api: AmcrestChecker,
-    event_codes: list[str],
+    event_codes: set[str],
 ) -> None:
-    event_codes_set = set(event_codes)
     while True:
         api.available_flag.wait()
         try:
             for code, payload in api.event_actions("All", retries=5):
                 event_data = {"camera": name, "event": code, "payload": payload}
                 hass.bus.fire("amcrest", event_data)
-                if code in event_codes_set:
+                if code in event_codes:
                     signal = service_signal(SERVICE_EVENT, name, code)
                     start = any(
                         str(key).lower() == "action" and str(val).lower() == "start"
@@ -245,7 +244,7 @@ def _start_event_monitor(
     hass: HomeAssistant,
     name: str,
     api: AmcrestChecker,
-    event_codes: list[str],
+    event_codes: set[str],
 ) -> None:
     thread = threading.Thread(
         target=_monitor_events,
@@ -296,7 +295,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         discovery.load_platform(hass, CAMERA, DOMAIN, {CONF_NAME: name}, config)
 
-        event_codes = []
+        event_codes = set()
         if binary_sensors:
             discovery.load_platform(
                 hass,
@@ -305,12 +304,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
                 config,
             )
-            maybe_event_codes = [
+            event_codes = {
                 sensor.event_code
                 for sensor in BINARY_SENSORS
-                if sensor.key in binary_sensors and not sensor.should_poll
-            ]
-            event_codes = [code for code in maybe_event_codes if code is not None]
+                if sensor.key in binary_sensors
+                and not sensor.should_poll
+                and sensor.event_code is not None
+            }
 
         _start_event_monitor(hass, name, api, event_codes)
 
