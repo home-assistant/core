@@ -884,7 +884,7 @@ def make_entity_service_schema(
                 },
                 extra=extra,
             ),
-            has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+            has_at_least_one_key(*(str(k) for k in ENTITY_SERVICE_FIELDS.keys())),
         )
     )
 
