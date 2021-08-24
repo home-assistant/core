@@ -1,7 +1,5 @@
 """A entity class for Tractive integration."""
 
-from homeassistant.helpers.entity import Entity
-
 from .const import DOMAIN
 
 
