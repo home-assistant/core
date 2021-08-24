@@ -822,14 +822,13 @@ class XiaomiFan(XiaomiGenericDevice):
                 False,
             )
             self._oscillating = False
+            self.async_write_ha_state()
 
         await self._try_command(
             "Setting move direction of the miio device failed.",
             self._device.set_rotate,
             FanMoveDirection(FAN_DIRECTIONS_MAP[direction]),
         )
-
-        self.async_write_ha_state()
 
 
 class XiaomiFanP5(XiaomiFan):
