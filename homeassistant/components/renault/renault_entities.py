@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Generic, Optional, TypeVar, cast
+from typing import Any, Optional, TypeVar, cast
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
@@ -13,13 +13,18 @@ from .renault_vehicle import RenaultVehicleProxy
 
 
 @dataclass
-class RenaultEntityDescription(EntityDescription):
+class RenaultRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    coordinator: str
+    data_key: str
+
+
+@dataclass
+class RenaultEntityDescription(EntityDescription, RenaultRequiredKeysMixin):
     """Class describing Renault entities."""
 
-    coordinator: str = ""
-    data_key: str = ""
-    entity_class: str = ""
-    requires_fuel: bool = False
+    requires_fuel: bool | None = None
 
 
 ATTR_LAST_UPDATE = "last_update"
@@ -27,7 +32,7 @@ ATTR_LAST_UPDATE = "last_update"
 T = TypeVar("T")
 
 
-class RenaultDataEntity(Generic[T], CoordinatorEntity[Optional[T]], Entity):
+class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
     """Implementation of a Renault entity with a data coordinator."""
 
     entity_description: RenaultEntityDescription
