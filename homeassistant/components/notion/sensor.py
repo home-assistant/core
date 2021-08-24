@@ -8,14 +8,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import NotionEntity
 from .const import DATA_COORDINATOR, DOMAIN, LOGGER, SENSOR_TEMPERATURE
 
-SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    SENSOR_TEMPERATURE: SensorEntityDescription(
+SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-    )
-}
+    ),
+)
 
 
 async def async_setup_entry(
@@ -29,13 +29,15 @@ async def async_setup_entry(
             NotionSensor(
                 coordinator,
                 task_id,
-                coordinator.data["sensors"][task["sensor_id"]]["id"],
-                coordinator.data["sensors"][task["sensor_id"]]["bridge"]["id"],
-                coordinator.data["sensors"][task["sensor_id"]]["system_id"],
-                SENSOR_DESCRIPTIONS[task["task_type"]],
+                sensor["id"],
+                sensor["bridge"]["id"],
+                sensor["system_id"],
+                description,
             )
             for task_id, task in coordinator.data["tasks"].items()
-            if task["task_type"] in SENSOR_DESCRIPTIONS
+            for description in SENSOR_DESCRIPTIONS
+            if description.key == task["task_type"]
+            and (sensor := coordinator.data["sensors"][task["sensor_id"]])
         ]
     )
 

@@ -33,58 +33,58 @@ from .const import (
     SENSOR_WINDOW_HINGED_VERTICAL,
 )
 
-BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
-    SENSOR_BATTERY: BinarySensorEntityDescription(
+BINARY_SENSOR_DESCRIPTIONS = (
+    BinarySensorEntityDescription(
         key=SENSOR_BATTERY,
         name="Low Battery",
         device_class=DEVICE_CLASS_BATTERY,
     ),
-    SENSOR_DOOR: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_DOOR,
         name="Door",
         device_class=DEVICE_CLASS_DOOR,
     ),
-    SENSOR_GARAGE_DOOR: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_GARAGE_DOOR,
         name="Garage Door",
         device_class=DEVICE_CLASS_GARAGE_DOOR,
     ),
-    SENSOR_LEAK: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_LEAK,
         name="Leak Detector",
         device_class=DEVICE_CLASS_MOISTURE,
     ),
-    SENSOR_MISSING: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_MISSING,
         name="Missing",
         device_class=DEVICE_CLASS_CONNECTIVITY,
     ),
-    SENSOR_SAFE: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_SAFE,
         name="Safe",
         device_class=DEVICE_CLASS_DOOR,
     ),
-    SENSOR_SLIDING: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_SLIDING,
         name="Sliding Door/Window",
         device_class=DEVICE_CLASS_DOOR,
     ),
-    SENSOR_SMOKE_CO: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_SMOKE_CO,
         name="Smoke/Carbon Monoxide Detector",
         device_class=DEVICE_CLASS_SMOKE,
     ),
-    SENSOR_WINDOW_HINGED_HORIZONTAL: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_WINDOW_HINGED_HORIZONTAL,
         name="Hinged Window",
         device_class=DEVICE_CLASS_WINDOW,
     ),
-    SENSOR_WINDOW_HINGED_VERTICAL: BinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key=SENSOR_WINDOW_HINGED_VERTICAL,
         name="Hinged Window",
         device_class=DEVICE_CLASS_WINDOW,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -98,13 +98,15 @@ async def async_setup_entry(
             NotionBinarySensor(
                 coordinator,
                 task_id,
-                coordinator.data["sensors"][task["sensor_id"]]["id"],
-                coordinator.data["sensors"][task["sensor_id"]]["bridge"]["id"],
-                coordinator.data["sensors"][task["sensor_id"]]["system_id"],
-                BINARY_SENSOR_DESCRIPTIONS[task["task_type"]],
+                sensor["id"],
+                sensor["bridge"]["id"],
+                sensor["system_id"],
+                description,
             )
             for task_id, task in coordinator.data["tasks"].items()
-            if task["task_type"] in BINARY_SENSOR_DESCRIPTIONS
+            for description in BINARY_SENSOR_DESCRIPTIONS
+            if description.key == task["task_type"]
+            and (sensor := coordinator.data["sensors"][task["sensor_id"]])
         ]
     )
 
