@@ -167,12 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.nanoleaf.host,
                 self.nanoleaf.token,
             )
-            return self.async_show_form(
-                step_id="user",
-                data_schema=USER_SCHEMA,
-                errors={"base": "unknown"},
-                last_step=False,
-            )
+            return self.async_abort(reason="unknown")
         name = info["name"]
 
         await self.async_set_unique_id(name)

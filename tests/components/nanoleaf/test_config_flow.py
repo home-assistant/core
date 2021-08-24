@@ -199,10 +199,8 @@ async def test_user_exception(hass: HomeAssistant) -> None:
             result["flow_id"],
             {},
         )
-    assert result5["type"] == "form"
-    assert result5["step_id"] == "user"
-    assert result5["errors"] == {"base": "unknown"}
-    assert not result5["last_step"]
+    assert result5["type"] == "abort"
+    assert result5["reason"] == "unknown"
 
 
 async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
