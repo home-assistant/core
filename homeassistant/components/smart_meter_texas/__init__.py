@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     account = Account(username, password)
 
-    client_ssl_context = ClientSSLContext() 
+    client_ssl_context = ClientSSLContext()
     ssl_context = await client_ssl_context.get_ssl_context()
 
     smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, ssl_context)
@@ -97,14 +97,13 @@ class SmartMeterTexasData:
         hass: HomeAssistant,
         entry: ConfigEntry,
         account: Account,
-        ssl: ssl.SSLContext,
+        ssl_context: ssl.SSLContext,
     ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account
-        self.ssl_context = ssl
         websession = aiohttp_client.async_get_clientsession(hass)
-        self.client = Client(websession, account, ssl_context=self.ssl_context)
+        self.client = Client(websession, account, ssl_context=ssl_context)
         self.meters: list = []
 
     async def setup(self):
