@@ -177,14 +177,9 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
-        self._sensor_type = description.key
-
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_should_poll = False
-        self._attr_name = description.name
-        self._attr_unique_id = (
-            f"{openuv.client.latitude}_{openuv.client.longitude}_{self._sensor_type}"
-        )
+        self._attr_unique_id = f"{openuv.client.latitude}_{openuv.client.longitude}_{self.entity_description.key}"
         self.entity_description = description
         self.openuv = openuv
 
