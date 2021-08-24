@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     PERCENTAGE,
     TIME_MINUTES,
+    TIME_SECONDS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -139,7 +140,7 @@ SENSOR_TYPES = (
     TractiveSensorEntityDescription(
         key=ATTR_LIVE_TRACKING_REMAINING,
         name="Live tracking remaining time",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=TIME_SECONDS,
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
