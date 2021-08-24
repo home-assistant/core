@@ -401,6 +401,7 @@ def test_entity_service_schema():
         {"optional": "value", "entity_id": "light.kitchen"},
         {"required": 1},
         {"required": 2, "area_id": "kitchen", "foo": "bar"},
+        {"required": "str", "area_id": "kitchen"},
     )
     for value in options:
         with pytest.raises(vol.MultipleInvalid):
