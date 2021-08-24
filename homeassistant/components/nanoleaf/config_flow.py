@@ -72,30 +72,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 last_step=False,
                 errors={"base": "unknown"},
             )
-        return self.async_show_form(step_id="link")
+        return await self.async_step_link()
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
-        _LOGGER.debug(
-            "Zeroconf discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
-            discovery_info,
-            self.context,
-            self._async_in_progress(),
-            self._async_in_progress(include_uninitialized=True),
-        )
+        _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
         return await self._async_discovery_handler(discovery_info)
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle Nanoleaf Homekit discovery."""
-        _LOGGER.debug(
-            "Homekit discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
-            discovery_info,
-            self.context,
-            self._async_in_progress(),
-            self._async_in_progress(include_uninitialized=True),
-        )
+        _LOGGER.debug("Homekit discovered: %s", discovery_info)
         return await self._async_discovery_handler(discovery_info)
 
     async def _async_discovery_handler(
@@ -105,29 +93,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info["host"]
         # The name is unique and printed on the device and cannot be changed.
         name = discovery_info["name"].replace(f".{discovery_info['type']}", "")
-        _LOGGER.debug(
-            "About to set unique_id discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
-            discovery_info,
-            self.context,
-            self._async_in_progress(),
-            self._async_in_progress(include_uninitialized=True),
-        )
         await self.async_set_unique_id(name)
-        _LOGGER.debug(
-            "Did set unique_id discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
-            discovery_info,
-            self.context,
-            self._async_in_progress(),
-            self._async_in_progress(include_uninitialized=True),
-        )
         self._abort_if_unique_id_configured({CONF_HOST: host})
-        _LOGGER.debug(
-            "Did abort if unique_id discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
-            discovery_info,
-            self.context,
-            self._async_in_progress(),
-            self._async_in_progress(include_uninitialized=True),
-        )
         self.nanoleaf = Nanoleaf(host)
 
         # Import from discovery integration
@@ -150,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_setup_finish()
 
         self.context["title_placeholders"] = {"name": name}
-        return self.async_show_form(step_id="link")
+        return await self.async_step_link()
 
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
@@ -166,12 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="link", errors={"base": "not_allowing_new_tokens"}
             )
         except Unavailable:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=USER_SCHEMA,
-                errors={"base": "cannot_connect"},
-                last_step=False,
-            )
+            return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
@@ -194,12 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 pynanoleaf_get_info, self.nanoleaf
             )
         except Unavailable:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=USER_SCHEMA,
-                errors={"base": "cannot_connect"},
-                last_step=False,
-            )
+            return self.async_abort(reason="cannot_connect")
         except InvalidToken:
             return self.async_show_form(
                 step_id="link", errors={"base": "invalid_token"}

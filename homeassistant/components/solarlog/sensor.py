@@ -97,7 +97,7 @@ class SolarlogData:
             self.data["consumptionTOTAL"] = self.api.consumption_total / 1000
             self.data["totalPOWER"] = self.api.total_power
             self.data["alternatorLOSS"] = self.api.alternator_loss
-            self.data["CAPACITY"] = round(self.api.capacity, 3)
+            self.data["CAPACITY"] = round(self.api.capacity * 100, 0)
             self.data["EFFICIENCY"] = round(self.api.efficiency * 100, 0)
             self.data["powerAVAILABLE"] = self.api.power_available
             self.data["USAGE"] = round(self.api.usage * 100, 0)

@@ -641,7 +641,7 @@ fnvhash==0.1.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==2.0.0
+forecast_solar==2.1.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1853,7 +1853,7 @@ python-forecastio==1.4.0
 # python-gammu==3.1
 
 # homeassistant.components.gc100
-python-gc100==1.0.3a
+python-gc100==1.0.3a0
 
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
