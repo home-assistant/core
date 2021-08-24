@@ -255,7 +255,7 @@ WHEELCHAIR_BOARDING_DEFAULT = STATE_UNKNOWN
 WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {  # type: ignore
+    {
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_DATA): cv.string,
@@ -490,7 +490,7 @@ def setup_platform(
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
-    offset = config.get(CONF_OFFSET)
+    offset = datetime.timedelta(seconds=float(config.get(CONF_OFFSET, 0)))
     include_tomorrow = config[CONF_TOMORROW]
 
     if not os.path.exists(gtfs_dir):
@@ -541,10 +541,10 @@ class GTFSDepartureSensor(SensorEntity):
         self._icon = ICON
         self._name = ""
         self._state: str | None = None
-        self._attributes = {}
+        self._attributes: dict[str, float | str] = {}
 
         self._agency = None
-        self._departure = {}
+        self._departure: dict[str, Any] = {}
         self._destination = None
         self._origin = None
         self._route = None
@@ -559,7 +559,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def native_value(self) -> str | None:  # type: ignore
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
