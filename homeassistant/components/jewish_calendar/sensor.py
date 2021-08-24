@@ -121,7 +121,7 @@ class JewishCalendarSensor(SensorEntity):
                 "type": after_shkia_date.holiday_type.name,
                 "type_id": after_shkia_date.holiday_type.value,
             }
-            return after_shkia_date.holiday_description or None
+            return after_shkia_date.holiday_description
         if self._type == "omer_count":
             return after_shkia_date.omer_day
         if self._type == "daf_yomi":
