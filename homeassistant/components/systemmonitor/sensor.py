@@ -429,13 +429,12 @@ class SystemMonitorSensor(SensorEntity):
         self._attr_name: str = f"{sensor_description.name} {argument}".rstrip()
         self._attr_unique_id: str = slugify(f"{sensor_description.key}_{argument}")
         self._sensor_registry = sensor_registry
-        self._type: str = sensor_description.key
         self._argument: str = argument
 
     @property
     def data(self) -> SensorData:
         """Return registry entry for the data."""
-        return self._sensor_registry[(self._type, self._argument)]
+        return self._sensor_registry[(self.entity_description.key, self._argument)]
 
     @property
     def native_value(self) -> str | None:
