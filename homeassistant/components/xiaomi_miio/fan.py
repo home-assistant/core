@@ -810,6 +810,8 @@ class XiaomiFan(XiaomiGenericDevice):
             self._device.set_oscillate,
             oscillating,
         )
+        self._oscillating = True
+        self.async_write_ha_state()
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
