@@ -233,12 +233,12 @@ def _parse_due_date(data: dict, gmt_string) -> datetime | None:
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
-    nowTime = dt.parse_datetime(data["date"])
-    if not nowTime:
+    nowtime = dt.parse_datetime(data["date"])
+    if not nowtime:
         return None
-    if nowTime.tzinfo is None:
+    if nowtime.tzinfo is None:
         data["date"] += gmt_string
-    return dt.as_utc(nowTime)
+    return dt.as_utc(nowtime)
 
 
 class TodoistProjectDevice(CalendarEventDevice):
