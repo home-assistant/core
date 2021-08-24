@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
+from typing import Callable, cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -59,6 +59,7 @@ class RenaultSensorEntityDescription(
 ):
     """Class describing Renault sensor entities."""
 
+    icon_lambda: Callable[[RenaultDataEntity[T]], str] | None = None
     rounding: bool | None = None
 
 
@@ -85,6 +86,13 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     entity_description: RenaultSensorEntityDescription
 
     @property
+    def icon(self) -> str:
+        """Icon handling."""
+        if self.entity_description.icon_lambda is None:
+            return super().icon
+        return self.entity_description.icon_lambda(self)
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of this entity."""
         raw_value = self.data
@@ -101,13 +109,6 @@ class RenaultBatterySensor(RenaultSensor[KamereonVehicleBatteryStatusData]):
 
 class RenaultChargeModeSensor(RenaultSensor[KamereonVehicleChargeModeData]):
     """Renault charge mode sensor."""
-
-    @property
-    def icon(self) -> str:
-        """Icon handling."""
-        if self.data == "schedule_mode":
-            return "mdi:calendar-clock"
-        return "mdi:calendar-remove"
 
 
 class RenaultCockpitSensor(RenaultSensor[KamereonVehicleCockpitData]):
@@ -130,13 +131,6 @@ class RenaultBatteryChargeStateSensor(RenaultBatterySensor):
             else None
         )
         return charging_status.name.lower() if charging_status else None
-
-    @property
-    def icon(self) -> str:
-        """Icon handling."""
-        if self.data == ChargeState.CHARGE_IN_PROGRESS.value:
-            return "mdi:flash"
-        return "mdi:flash-off"
 
 
 class RenaultBatteryChargingPowerSensor(RenaultBatterySensor):
@@ -165,13 +159,6 @@ class RenaultBatteryPlugStateSensor(RenaultBatterySensor):
         )
         return plug_status.name.lower() if plug_status else None
 
-    @property
-    def icon(self) -> str:
-        """Icon handling."""
-        if self.data == PlugState.PLUGGED.value:
-            return "mdi:power-plug"
-        return "mdi:power-plug-off"
-
 
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
     RenaultSensorEntityDescription(
@@ -190,6 +177,9 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="chargingStatus",
         device_class=DEVICE_CLASS_CHARGE_STATE,
         entity_class=RenaultBatteryChargeStateSensor,
+        icon_lambda=lambda x: "mdi:flash"
+        if x.data == ChargeState.CHARGE_IN_PROGRESS.value
+        else "mdi:flash-off",
         name="Charge State",
     ),
     RenaultSensorEntityDescription(
@@ -218,6 +208,9 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="plugStatus",
         device_class=DEVICE_CLASS_PLUG_STATE,
         entity_class=RenaultBatteryPlugStateSensor,
+        icon_lambda=lambda x: "mdi:power-plug"
+        if x.data == PlugState.PLUGGED.value
+        else "mdi:power-plug-off",
         name="Plug State",
     ),
     RenaultSensorEntityDescription(
@@ -301,6 +294,9 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="chargeMode",
         device_class=DEVICE_CLASS_CHARGE_MODE,
         entity_class=RenaultChargeModeSensor,
+        icon_lambda=lambda x: "mdi:calendar-clock"
+        if x.data == "schedule_mode"
+        else "mdi:calendar-remove",
         name="Charge Mode",
     ),
 )
