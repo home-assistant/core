@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Optional, TypeVar, cast
 
+from renault_api.kamereon.models import KamereonVehicleDataAttributes
+
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -29,7 +31,7 @@ class RenaultEntityDescription(EntityDescription, RenaultRequiredKeysMixin):
 
 ATTR_LAST_UPDATE = "last_update"
 
-T = TypeVar("T")
+T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 
 class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeVar
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
@@ -19,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription, T
 from .renault_hub import RenaultHub
 
 
@@ -38,9 +37,6 @@ class RenaultBinarySensorEntityDescription(
     RenaultBinarySensorRequiredKeysMixin,
 ):
     """Class describing Renault binary sensor entities."""
-
-
-T = TypeVar("T")
 
 
 async def async_setup_entry(

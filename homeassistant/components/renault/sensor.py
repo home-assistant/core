@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeVar, cast
+from typing import cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -42,7 +42,7 @@ from .const import (
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription, T
 from .renault_hub import RenaultHub
 
 
@@ -60,9 +60,6 @@ class RenaultSensorEntityDescription(
     """Class describing Renault sensor entities."""
 
     rounding: bool | None = None
-
-
-T = TypeVar("T")
 
 
 async def async_setup_entry(
