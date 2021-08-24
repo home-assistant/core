@@ -22,14 +22,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome switch from ConfigEntry."""
-    entities: list[FritzboxSwitch] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
-    for ain, device in coordinator.data.items():
-        if device.has_switch:
-            entities.append(FritzboxSwitch(coordinator, ain))
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            FritzboxSwitch(coordinator, ain)
+            for ain, device in coordinator.data.items()
+            if device.has_switch
+        ]
+    )
 
 
 class FritzboxSwitch(FritzBoxEntity, SwitchEntity):

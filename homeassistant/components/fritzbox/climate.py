@@ -56,14 +56,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    entities: list[FritzboxThermostat] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
-    for ain, device in coordinator.data.items():
-        if device.has_thermostat:
-            entities.append(FritzboxThermostat(coordinator, ain))
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            FritzboxThermostat(coordinator, ain)
+            for ain, device in coordinator.data.items()
+            if device.has_thermostat
+        ]
+    )
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
