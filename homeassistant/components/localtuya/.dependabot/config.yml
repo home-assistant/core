@@ -1,0 +1,19 @@
+version: 1
+update_configs:
+  - package_manager: "python"
+    directory: "/"
+    update_schedule: "live"
+    default_reviewers:
+      - postlund
+      - rospogrigio
+      - ultratoto14
+    default_labels:
+      - dependencies
+    default_assignees:
+      - postlund
+      - rospogrigio
+      - ultratoto14
+    automerged_updates:
+      - match:
+          dependency_type: "all"
+          update_type: "all"

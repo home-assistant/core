@@ -63,7 +63,7 @@ class DBAccess:
 class ROIStatusChanger:
 
     def __init__(self):
-        self.theDB = DBAccess('/home/dionisis/PycharmProjects/Guard/SQLLiteDB/TrackedObjects.db')
+        self.theDB = DBAccess('/mnt/GuardFolders/Database/TrackedObjectsDim.db')
 
     def setROIStatus(self,ID,status):
         self.theDB.setStatus(ID,status)

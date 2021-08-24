@@ -1,0 +1,9 @@
+black==21.4b0
+codespell==2.0.0
+flake8==3.9.2
+mypy==0.901
+pydocstyle==6.1.1
+cryptography==3.2
+pylint==2.8.2
+pylint-strict-informational==0.1
+homeassistant==2021.1.4

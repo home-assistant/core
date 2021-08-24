@@ -1,0 +1,15 @@
+reload:
+  description: Reload localtuya and re-process yaml configuration.
+
+set_dp:
+  description: Change the value of a datapoint (DP)
+  fields:
+    device_id:
+      description: Device ID of device to change datapoint value for
+      example: 11100118278aab4de001
+    dp:
+      description: Datapoint index
+      example: 1
+    value:
+      description: New value to set
+      example: False
