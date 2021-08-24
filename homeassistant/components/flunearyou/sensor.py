@@ -1,7 +1,7 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -38,20 +38,65 @@ SENSOR_TYPE_USER_NO_SYMPTOMS = "none"
 SENSOR_TYPE_USER_SYMPTOMS = "symptoms"
 SENSOR_TYPE_USER_TOTAL = "total"
 
-CDC_SENSORS = [
-    (SENSOR_TYPE_CDC_LEVEL, "CDC Level", "mdi:biohazard", None),
-    (SENSOR_TYPE_CDC_LEVEL2, "CDC Level 2", "mdi:biohazard", None),
-]
+CDC_SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CDC_LEVEL,
+        name="CDC Level",
+        icon="mdi:biohazard",
+        native_unit_of_measurement=None,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CDC_LEVEL2,
+        name="CDC Level 2",
+        icon="mdi:biohazard",
+        native_unit_of_measurement=None,
+    ),
+)
 
-USER_SENSORS = [
-    (SENSOR_TYPE_USER_CHICK, "Avian Flu Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_DENGUE, "Dengue Fever Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_FLU, "Flu Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_LEPTO, "Leptospirosis Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_NO_SYMPTOMS, "No Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_SYMPTOMS, "Flu-like Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_TOTAL, "Total Symptoms", "mdi:alert", "reports"),
-]
+USER_SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_CHICK,
+        name="Avian Flu Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_DENGUE,
+        name="Dengue Fever Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_FLU,
+        name="Flu Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_LEPTO,
+        name="Leptospirosis Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_NO_SYMPTOMS,
+        name="No Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_SYMPTOMS,
+        name="Flu-like Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_TOTAL,
+        name="Total Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+)
 
 EXTENDED_SENSOR_TYPE_MAPPING = {
     SENSOR_TYPE_USER_FLU: "ili",
@@ -66,32 +111,16 @@ async def async_setup_entry(
     """Set up Flu Near You sensors based on a config entry."""
     coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
-    sensors: list[CdcSensor | UserSensor] = []
-
-    for (sensor_type, name, icon, unit) in CDC_SENSORS:
-        sensors.append(
-            CdcSensor(
-                coordinators[CATEGORY_CDC_REPORT],
-                entry,
-                sensor_type,
-                name,
-                icon,
-                unit,
-            )
-        )
-
-    for (sensor_type, name, icon, unit) in USER_SENSORS:
-        sensors.append(
-            UserSensor(
-                coordinators[CATEGORY_USER_REPORT],
-                entry,
-                sensor_type,
-                name,
-                icon,
-                unit,
-            )
-        )
-
+    sensors: list[CdcSensor | UserSensor] = [
+        CdcSensor(coordinators[CATEGORY_CDC_REPORT], entry, description)
+        for description in CDC_SENSOR_DESCRIPTIONS
+    ]
+    sensors.extend(
+        [
+            UserSensor(coordinators[CATEGORY_USER_REPORT], entry, description)
+            for description in USER_SENSOR_DESCRIPTIONS
+        ]
+    )
     async_add_entities(sensors)
 
 
@@ -102,23 +131,20 @@ class FluNearYouSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         entry: ConfigEntry,
-        sensor_type: str,
-        name: str,
-        icon: str,
-        unit: str | None,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._sensor_type = description.key
+
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_icon = icon
-        self._attr_name = name
+        self._attr_name = description.name
         self._attr_unique_id = (
             f"{entry.data[CONF_LATITUDE]},"
-            f"{entry.data[CONF_LONGITUDE]}_{sensor_type}"
+            f"{entry.data[CONF_LONGITUDE]}_{self._sensor_type}"
         )
-        self._attr_native_unit_of_measurement = unit
         self._entry = entry
-        self._sensor_type = sensor_type
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
