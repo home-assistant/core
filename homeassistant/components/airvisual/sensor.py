@@ -14,10 +14,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -63,17 +68,19 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_LEVEL,
         name="Air Pollution Level",
+        device_class=DEVICE_CLASS_POLLUTANT_LEVEL,
         icon="mdi:gauge",
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
         name="Air Quality Index",
-        icon="mdi:chart-line",
+        device_class=DEVICE_CLASS_AQI,
         native_unit_of_measurement="AQI",
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_POLLUTANT,
         name="Main Pollutant",
+        device_class=DEVICE_CLASS_POLLUTANT_LABEL,
         icon="mdi:chemical-weapon",
     ),
 )
@@ -83,7 +90,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
         name="Air Quality Index",
-        icon="mdi:chart-line",
+        device_class=DEVICE_CLASS_AQI,
         native_unit_of_measurement="AQI",
     ),
     SensorEntityDescription(
@@ -107,19 +114,19 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_PM_0_1,
         name="PM 0.1",
-        icon="mdi:sprinkler",
+        device_class=DEVICE_CLASS_PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_1_0,
         name="PM 1.0",
-        icon="mdi:sprinkler",
+        device_class=DEVICE_CLASS_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_2_5,
         name="PM 2.5",
-        icon="mdi:sprinkler",
+        device_class=DEVICE_CLASS_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
@@ -131,7 +138,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_VOC,
         name="VOC",
-        icon="mdi:sprinkler",
+        device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
 )
@@ -209,11 +216,6 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, description)
 
-        if self._kind == SENSOR_KIND_LEVEL:
-            self._attr_device_class = DEVICE_CLASS_POLLUTANT_LEVEL
-        elif self._kind == SENSOR_KIND_POLLUTANT:
-            self._attr_device_class = DEVICE_CLASS_POLLUTANT_LABEL
-
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: config_entry.data.get(CONF_CITY),
@@ -222,7 +224,7 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
             }
         )
         self._attr_name = f"{GEOGRAPHY_SENSOR_LOCALES[locale]} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{self._kind}"
+        self._attr_unique_id = f"{config_entry.unique_id}_{locale}_{description.key}"
         self._config_entry = config_entry
         self._locale = locale
 
@@ -239,16 +241,16 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         except KeyError:
             return
 
-        if self._kind == SENSOR_KIND_LEVEL:
+        if self.entity_description.key == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
             [(self._attr_native_value, self._attr_icon)] = [
                 (name, icon)
                 for (floor, ceiling), (name, icon) in POLLUTANT_LEVELS.items()
                 if floor <= aqi <= ceiling
             ]
-        elif self._kind == SENSOR_KIND_AQI:
+        elif self.entity_description.key == SENSOR_KIND_AQI:
             self._attr_native_value = data[f"aqi{self._locale}"]
-        elif self._kind == SENSOR_KIND_POLLUTANT:
+        elif self.entity_description.key == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
             self._attr_native_value = symbol
             self._attr_extra_state_attributes.update(
@@ -298,7 +300,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         self._attr_name = (
             f"{coordinator.data['settings']['node_name']} Node/Pro: {description.name}"
         )
-        self._attr_unique_id = f"{coordinator.data['serial_number']}_{self._kind}"
+        self._attr_unique_id = f"{coordinator.data['serial_number']}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -317,7 +319,7 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
-        if self._kind == SENSOR_KIND_AQI:
+        if self.entity_description.key == SENSOR_KIND_AQI:
             if self.coordinator.data["settings"]["is_aqi_usa"]:
                 self._attr_native_value = self.coordinator.data["measurements"][
                     "aqi_us"
@@ -326,23 +328,23 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
                 self._attr_native_value = self.coordinator.data["measurements"][
                     "aqi_cn"
                 ]
-        elif self._kind == SENSOR_KIND_BATTERY_LEVEL:
+        elif self.entity_description.key == SENSOR_KIND_BATTERY_LEVEL:
             self._attr_native_value = self.coordinator.data["status"]["battery"]
-        elif self._kind == SENSOR_KIND_CO2:
+        elif self.entity_description.key == SENSOR_KIND_CO2:
             self._attr_native_value = self.coordinator.data["measurements"].get("co2")
-        elif self._kind == SENSOR_KIND_HUMIDITY:
+        elif self.entity_description.key == SENSOR_KIND_HUMIDITY:
             self._attr_native_value = self.coordinator.data["measurements"].get(
                 "humidity"
             )
-        elif self._kind == SENSOR_KIND_PM_0_1:
+        elif self.entity_description.key == SENSOR_KIND_PM_0_1:
             self._attr_native_value = self.coordinator.data["measurements"].get("pm0_1")
-        elif self._kind == SENSOR_KIND_PM_1_0:
+        elif self.entity_description.key == SENSOR_KIND_PM_1_0:
             self._attr_native_value = self.coordinator.data["measurements"].get("pm1_0")
-        elif self._kind == SENSOR_KIND_PM_2_5:
+        elif self.entity_description.key == SENSOR_KIND_PM_2_5:
             self._attr_native_value = self.coordinator.data["measurements"].get("pm2_5")
-        elif self._kind == SENSOR_KIND_TEMPERATURE:
+        elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self._attr_native_value = self.coordinator.data["measurements"].get(
                 "temperature_C"
             )
-        elif self._kind == SENSOR_KIND_VOC:
+        elif self.entity_description.key == SENSOR_KIND_VOC:
             self._attr_native_value = self.coordinator.data["measurements"].get("voc")
