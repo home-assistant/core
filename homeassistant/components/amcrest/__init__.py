@@ -34,12 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_s
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
 
-from .binary_sensor import (
-    BINARY_POLLED_SENSORS,
-    BINARY_SENSOR_KEYS,
-    BINARY_SENSORS,
-    check_binary_sensors,
-)
+from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
 from .const import (
     CAMERAS,
@@ -285,8 +280,7 @@ def setup(hass, config):
             event_codes = [
                 sensor.event_code
                 for sensor in BINARY_SENSORS
-                if sensor.key in binary_sensors
-                and sensor.key not in BINARY_POLLED_SENSORS
+                if sensor.key in binary_sensors and not sensor.should_poll
             ]
 
         _start_event_monitor(hass, name, api, event_codes)
