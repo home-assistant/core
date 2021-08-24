@@ -1,8 +1,6 @@
 """Tests for the Rituals Perfume Genie switch platform."""
 from __future__ import annotations
 
-from unittest.mock import patch
-
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.rituals_perfume_genie.const import COORDINATORS, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -56,16 +54,14 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_ON
 
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.RitualsDataUpdateCoordinator._async_update_data",
-        return_value=None,
-    ) as mock_update:
-        await hass.services.async_call(
-            "homeassistant",
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: ["switch.genie"]},
-            blocking=True,
-        )
+    call_count_before_update = diffuser.update_data.call_count
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ["switch.genie"]},
+        blocking=True,
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.genie")
@@ -73,7 +69,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
     assert coordinator.last_update_success
-    mock_update.assert_called_once()
+    assert diffuser.update_data.call_count == call_count_before_update + 1
 
 
 async def test_set_switch_state(hass: HomeAssistant) -> None:
