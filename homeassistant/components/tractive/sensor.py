@@ -16,7 +16,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_DAILY_GOAL,
+    ATTR_LIVE_TRACKING_REMAINING,
     ATTR_MINUTES_ACTIVE,
+    ATTR_TRACKER_STATE,
     DOMAIN,
     SERVER_UNAVAILABLE,
     TRACKER_ACTIVITY_STATUS_UPDATED,
@@ -61,7 +63,9 @@ class TractiveHardwareSensor(TractiveSensor):
     @callback
     def handle_hardware_status_update(self, event):
         """Handle hardware status update."""
-        self._attr_native_value = event[self.entity_description.key]
+        if (_state := event[self.entity_description.key]) is None:
+            return
+        self._attr_native_value = _state
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -133,6 +137,17 @@ SENSOR_TYPES = (
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
+        key=ATTR_LIVE_TRACKING_REMAINING,
+        name="Live tracking remaining time",
+        native_unit_of_measurement=TIME_MINUTES,
+        entity_class=TractiveHardwareSensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_TRACKER_STATE,
+        name="Tracker state",
+        entity_class=TractiveHardwareSensor,
+    ),
+    TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
         name="Minutes Active",
         icon="mdi:clock-time-eight-outline",
@@ -144,7 +159,7 @@ SENSOR_TYPES = (
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Tractive device trackers."""
+    """Set up Tractive sensors."""
     client = hass.data[DOMAIN][entry.entry_id]
 
     trackables = await client.trackable_objects()

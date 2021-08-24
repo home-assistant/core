@@ -3,7 +3,10 @@
 import asyncio
 import logging
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import (
+    SOURCE_TYPE_BLUETOOTH,
+    SOURCE_TYPE_GPS,
+)
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -59,6 +62,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._latitude = pos_report["latlong"][0]
         self._longitude = pos_report["latlong"][1]
         self._accuracy = pos_report["pos_uncertainty"]
+        self._source_type = pos_report["sensor_used"]
 
         self._attr_name = f"{self._tracker_id} {trackable['details']['name']}"
         self._attr_unique_id = trackable["_id"]
@@ -66,7 +70,11 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        if self._source_type == "GPS":
+            return SOURCE_TYPE_GPS
+        if self._source_type == "PHONE":
+            return SOURCE_TYPE_BLUETOOTH
+        return None
 
     @property
     def latitude(self):
@@ -99,6 +107,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._latitude = event["latitude"]
         self._longitude = event["longitude"]
         self._accuracy = event["accuracy"]
+        self._source_type = event["sensor_used"]
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -108,6 +117,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         self._longitude = None
         self._accuracy = None
         self._battery_level = None
+        self._source_type = None
         self._attr_available = False
         self.async_write_ha_state()
 

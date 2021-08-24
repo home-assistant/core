@@ -20,7 +20,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_DAILY_GOAL,
+    ATTR_LIVE_TRACKING_REMAINING,
     ATTR_MINUTES_ACTIVE,
+    ATTR_TRACKER_STATE,
     DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
@@ -88,6 +90,8 @@ class TractiveClient:
         self._client = client
         self._user_id = user_id
         self._listen_task = None
+        self._last_hw_time = 0
+        self._last_pos_time = 0
 
     @property
     def user_id(self):
@@ -124,10 +128,16 @@ class TractiveClient:
                     if event["message"] == "activity_update":
                         self._send_activity_update(event)
                     else:
-                        if "hardware" in event:
+                        if "hardware" in event and self._last_hw_time != event[
+                            "hardware"
+                        ].get("time"):
+                            self._last_hw_time = event["hardware"]["time"]
                             self._send_hardware_update(event)
 
-                        if "position" in event:
+                        if "position" in event and self._last_pos_time != event[
+                            "position"
+                        ].get("time"):
+                            self._last_pos_time = event["position"]["time"]
                             self._send_position_update(event)
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
@@ -142,7 +152,13 @@ class TractiveClient:
                 continue
 
     def _send_hardware_update(self, event):
-        payload = {ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"]}
+        payload = {
+            ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
+            ATTR_LIVE_TRACKING_REMAINING: event.get("live_tracking", {}).get(
+                "remaining"
+            ),
+            ATTR_TRACKER_STATE: event.get("tracker_state"),
+        }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
         )
@@ -161,6 +177,7 @@ class TractiveClient:
             "latitude": event["position"]["latlong"][0],
             "longitude": event["position"]["latlong"][1],
             "accuracy": event["position"]["accuracy"],
+            "sensor_used": event["position"]["sensor_used"],
         }
         self._dispatch_tracker_event(
             TRACKER_POSITION_UPDATED, event["tracker_id"], payload
