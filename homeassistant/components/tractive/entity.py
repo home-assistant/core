@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class TractiveEntity(Entity):
+class TractiveEntity:
     """Tractive entity class."""
 
     def __init__(self, user_id, trackable, tracker_details):
