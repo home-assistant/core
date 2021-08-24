@@ -29,16 +29,17 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(DOMAIN)
 
-        # Validate the topic, will throw if it fails
-        prefix = discovery_info["subscribed_topic"]
-        if prefix.endswith("/#"):
-            prefix = prefix[:-2]
-        try:
-            valid_subscribe_topic(f"{prefix}/#")
-        except vol.Invalid:
+        # Validate the message, abort if it fails
+        if not discovery_info["topic"].endswith("/config"):
+            # Not a Tasmota discovery message
+            return self.async_abort(reason="invalid_discovery_info")
+        if not discovery_info["payload"]:
+            # Empty payload, the Tasmota is not configured for native discovery
             return self.async_abort(reason="invalid_discovery_info")
 
-        self._prefix = prefix
+        # "tasmota/discovery/#" is hardcoded in Tasmota's manifest
+        assert discovery_info["subscribed_topic"] == "tasmota/discovery/#"
+        self._prefix = "tasmota/discovery"
 
         return await self.async_step_confirm()
 
