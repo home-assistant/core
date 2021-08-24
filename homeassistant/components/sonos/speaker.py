@@ -647,12 +647,13 @@ class SonosSpeaker:
 
     def update_group_for_uid(self, uid: str) -> None:
         """Update group topology if uid is missing."""
-        if uid in self._group_members_missing:
-            missing_zone = self.hass.data[DATA_SONOS].discovered[uid].zone_name
-            _LOGGER.debug(
-                "%s was missing, adding to %s group", missing_zone, self.zone_name
-            )
-            self.update_groups()
+        if uid not in self._group_members_missing:
+            return
+        missing_zone = self.hass.data[DATA_SONOS].discovered[uid].zone_name
+        _LOGGER.debug(
+            "%s was missing, adding to %s group", missing_zone, self.zone_name
+        )
+        self.update_groups()
 
     @callback
     def async_update_groups(self, event: SonosEvent) -> None:
