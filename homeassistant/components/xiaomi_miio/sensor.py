@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import datetime
-from enum import Enum
 import logging
 
 from miio import AirQualityMonitor, DeviceException
@@ -48,6 +46,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 
+from . import VacuumCoordinatorDataAttributes
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -56,10 +55,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_VACUUM_CLEAN_HISTORY_STATUS,
-    KEY_VACUUM_CONSUMABLE_STATUS,
-    KEY_VACUUM_DND_STATUS,
-    KEY_VACUUM_LAST_CLEAN_STATUS,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CB1,
@@ -342,7 +337,7 @@ VACUUM_SENSORS = {
         icon="mdi:minus-circle-off",
         name="DnD Start",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_DND_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.dnd_status,
         entity_registry_enabled_default=False,
     ),
     ATTR_DND_END: XiaomiMiioSensorDescription(
@@ -350,7 +345,7 @@ VACUUM_SENSORS = {
         icon="mdi:minus-circle-off",
         name="DnD End",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_DND_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.dnd_status,
         entity_registry_enabled_default=False,
     ),
     ATTR_LAST_CLEAN_START: XiaomiMiioSensorDescription(
@@ -358,38 +353,34 @@ VACUUM_SENSORS = {
         icon="mdi:clock-time-twelve",
         name="Last Clean Start",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
-        entity_registry_enabled_default=True,
+        parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
     ),
     ATTR_LAST_CLEAN_END: XiaomiMiioSensorDescription(
         key=ATTR_LAST_CLEAN_END,
         icon="mdi:clock-time-twelve",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean End",
-        entity_registry_enabled_default=True,
     ),
     ATTR_LAST_CLEAN_TIME: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
         key=ATTR_LAST_CLEAN_TIME,
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean Duration",
-        entity_registry_enabled_default=True,
     ),
     ATTR_LAST_CLEAN_AREA: XiaomiMiioSensorDescription(
         native_unit_of_measurement=AREA_SQUARE_METERS,
         icon="mdi:texture-box",
         key=ATTR_LAST_CLEAN_AREA,
-        parent_key=KEY_VACUUM_LAST_CLEAN_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last Clean Area",
-        entity_registry_enabled_default=True,
     ),
     ATTR_CLEAN_HISTORY_TOTAL_DURATION: XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
         key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
         name="Clean history total duration",
         entity_registry_enabled_default=False,
     ),
@@ -397,7 +388,7 @@ VACUUM_SENSORS = {
         native_unit_of_measurement=AREA_SQUARE_METERS,
         icon="mdi:texture-box",
         key=ATTR_CLEAN_HISTORY_TOTAL_AREA,
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
         name="Total Clean Area",
         entity_registry_enabled_default=False,
     ),
@@ -406,7 +397,7 @@ VACUUM_SENSORS = {
         icon="mdi:counter",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         key=ATTR_CLEAN_HISTORY_COUNT,
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
         name="Total Clean Count",
         entity_registry_enabled_default=False,
     ),
@@ -415,7 +406,7 @@ VACUUM_SENSORS = {
         icon="mdi:counter",
         state_class="total_increasing",
         key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-        parent_key=KEY_VACUUM_CLEAN_HISTORY_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
         name="Total Dust Collection Count",
         entity_registry_enabled_default=False,
     ),
@@ -423,7 +414,7 @@ VACUUM_SENSORS = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:brush",
         key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Main Brush Left",
         entity_registry_enabled_default=False,
     ),
@@ -431,7 +422,7 @@ VACUUM_SENSORS = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:brush",
         key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Side Brush Left",
         entity_registry_enabled_default=False,
     ),
@@ -439,7 +430,7 @@ VACUUM_SENSORS = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:air-filter",
         key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Filter Left",
         entity_registry_enabled_default=False,
     ),
@@ -447,7 +438,7 @@ VACUUM_SENSORS = {
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:eye-outline",
         key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
-        parent_key=KEY_VACUUM_CONSUMABLE_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Sensor Dirty Left",
         entity_registry_enabled_default=False,
     ),
@@ -587,7 +578,7 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         """Return the state of the device."""
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
-                self.coordinator.data[self.entity_description.parent_key],
+                getattr(self.coordinator.data, self.entity_description.parent_key),
                 self.entity_description.key,
             )
 
@@ -603,53 +594,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
             for attr in self.entity_description.attributes
             if hasattr(self.coordinator.data, attr)
         }
-
-    @classmethod
-    def _extract_value_from_attribute(cls, state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-        if isinstance(value, datetime.timedelta):
-            return cls._parse_time_delta(value)
-        if isinstance(value, datetime.time):
-            return cls._parse_datetime_time(value)
-        if isinstance(value, datetime.datetime):
-            return cls._parse_datetime_datetime(value)
-        if isinstance(value, datetime.timedelta):
-            return cls._parse_time_delta(value)
-        if isinstance(value, float):
-            return value
-        if isinstance(value, int):
-            return value
-
-        _LOGGER.warning(
-            f"could not determine how to parse state value of type: {type(value)}"
-        )
-
-        return value
-
-    @staticmethod
-    def _parse_time_delta(timedelta: datetime.timedelta) -> int:
-        return timedelta.seconds
-
-    @staticmethod
-    def _parse_datetime_time(time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(
-            hour=time.hour, minute=time.minute, second=0, microsecond=0
-        )
-
-        if time < datetime.datetime.now():
-            time += datetime.timedelta(days=1)
-
-        return time.isoformat()
-
-    @staticmethod
-    def _parse_datetime_datetime(time: datetime.datetime) -> str:
-        return time.isoformat()
-
-    @staticmethod
-    def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
-        return time.seconds
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):

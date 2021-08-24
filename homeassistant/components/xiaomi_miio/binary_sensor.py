@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 import logging
 from typing import Callable
 
@@ -13,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 
+from . import VacuumCoordinatorDataAttributes
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -20,7 +20,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_VACUUM_STATUS,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -66,7 +65,7 @@ VACUUM_SENSORS = {
         key=ATTR_MOP_ATTACHED,
         name="Mop Attached",
         icon="mdi:square-rounded",
-        parent_key=KEY_VACUUM_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CONNECTIVITY,
     ),
@@ -74,7 +73,7 @@ VACUUM_SENSORS = {
         key=ATTR_WATER_BOX_ATTACHED,
         name="Water Box Attached",
         icon="mdi:water",
-        parent_key=KEY_VACUUM_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_CONNECTIVITY,
     ),
@@ -82,7 +81,7 @@ VACUUM_SENSORS = {
         key=ATTR_WATER_SHORTAGE,
         name="Water Shortage",
         icon="mdi:water",
-        parent_key=KEY_VACUUM_STATUS,
+        parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
         device_class=DEVICE_CLASS_PROBLEM,
     ),
@@ -153,19 +152,16 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self.entity_description: XiaomiMiioBinarySensorDescription = description
-        if description.entity_registry_enabled_default is not None:
-            self._attr_entity_registry_enabled_default = (
-                description.entity_registry_enabled_default
-            )
-        else:
-            self._attr_entity_registry_enabled_default = False
+        self._attr_entity_registry_enabled_default = (
+            description.entity_registry_enabled_default
+        )
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
-                self.coordinator.data[self.entity_description.parent_key],
+                getattr(self.coordinator.data, self.entity_description.parent_key),
                 self.entity_description.key,
             )
 
@@ -176,17 +172,3 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
             return self.entity_description.value(state)
 
         return state
-
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-        if isinstance(value, bool):
-            return value
-
-        _LOGGER.warning(
-            f"could not determine how to parse state value of type: {type(value)}"
-        )
-
-        return value

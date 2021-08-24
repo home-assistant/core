@@ -1,4 +1,6 @@
 """Code to handle a Xiaomi Device."""
+import datetime
+from enum import Enum
 from functools import partial
 import logging
 
@@ -157,3 +159,53 @@ class XiaomiCoordinatedMiioEntity(CoordinatorEntity):
                 _LOGGER.error(mask_error, exc)
 
             return False
+
+    @classmethod
+    def _extract_value_from_attribute(cls, state, attribute):
+        value = getattr(state, attribute)
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, datetime.timedelta):
+            return cls._parse_time_delta(value)
+        if isinstance(value, datetime.time):
+            return cls._parse_datetime_time(value)
+        if isinstance(value, datetime.datetime):
+            return cls._parse_datetime_datetime(value)
+        if isinstance(value, datetime.timedelta):
+            return cls._parse_time_delta(value)
+        if isinstance(value, float):
+            return value
+        if isinstance(value, int):
+            return value
+
+        _LOGGER.warning(
+            "could not determine how to parse state value of type %s for state %s and attribute %s",
+            type(value),
+            type(state),
+            attribute,
+        )
+
+        return value
+
+    @staticmethod
+    def _parse_time_delta(timedelta: datetime.timedelta) -> int:
+        return timedelta.seconds
+
+    @staticmethod
+    def _parse_datetime_time(time: datetime.time) -> str:
+        time = datetime.datetime.now().replace(
+            hour=time.hour, minute=time.minute, second=0, microsecond=0
+        )
+
+        if time < datetime.datetime.now():
+            time += datetime.timedelta(days=1)
+
+        return time.isoformat()
+
+    @staticmethod
+    def _parse_datetime_datetime(time: datetime.datetime) -> str:
+        return time.isoformat()
+
+    @staticmethod
+    def _parse_datetime_timedelta(time: datetime.timedelta) -> int:
+        return time.seconds

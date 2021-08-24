@@ -1,6 +1,8 @@
 """Support for Xiaomi Miio."""
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import List
 
 import async_timeout
 from miio import (
@@ -10,8 +12,14 @@ from miio import (
     AirHumidifierMjjsq,
     AirPurifier,
     AirPurifierMiot,
+    CleaningDetails,
+    CleaningSummary,
+    ConsumableStatus,
     DeviceException,
+    DNDStatus,
+    Timer,
     Vacuum,
+    VacuumStatus,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -30,12 +38,6 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    KEY_VACUUM_CLEAN_HISTORY_STATUS,
-    KEY_VACUUM_CONSUMABLE_STATUS,
-    KEY_VACUUM_DND_STATUS,
-    KEY_VACUUM_LAST_CLEAN_STATUS,
-    KEY_VACUUM_STATUS,
-    KEY_VACUUM_TIMER,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_HUMIDIFIER,
@@ -130,26 +132,57 @@ def _async_update_data_default(hass, device):
     return update
 
 
+@dataclass(frozen=True)
+class VacuumCoordinatorData:
+    """A class that holds the vacuum data retrieved by the coordinator."""
+
+    status: VacuumStatus
+    dnd_status: DNDStatus
+    last_clean_details: CleaningDetails
+    consumable_status: ConsumableStatus
+    clean_history_status: CleaningSummary
+    timer: List[Timer]
+
+
+@dataclass(init=False, frozen=True)
+class VacuumCoordinatorDataAttributes:
+    """
+    A class that holds attribute names for VacuumCoordinatorData.
+
+    These attributes can be used in methods like `getattr` when a generic solutions is needed.
+    See homeassistant.components.xiaomi_miio.device.XiaomiCoordinatedMiioEntity._extract_value_from_attribute for
+    an example.
+    """
+
+    status: str = "status"
+    dnd_status: str = "dnd_status"
+    last_clean_details: str = "last_clean_details"
+    consumable_status: str = "consumable_status"
+    clean_history_status: str = "clean_history_status"
+    timer: str = "timer"
+
+
 def _async_update_data_vacuum(hass, device: Vacuum):
-    def update():
-        data = {
-            KEY_VACUUM_STATUS: device.status(),
-            KEY_VACUUM_DND_STATUS: device.dnd_status(),
-            KEY_VACUUM_LAST_CLEAN_STATUS: device.last_clean_details(),
-            KEY_VACUUM_CONSUMABLE_STATUS: device.consumable_status(),
-            KEY_VACUUM_CLEAN_HISTORY_STATUS: device.clean_history(),
-        }
+    def update() -> VacuumCoordinatorData:
+        timer = []
 
         # See https://github.com/home-assistant/core/issues/38285 for reason on
         # Why timers must be fetched separately.
         try:
-            data[KEY_VACUUM_TIMER] = device.timer()
+            timer = device.timer()
         except DeviceException as ex:
             _LOGGER.debug(
                 "Unable to fetch timers, this may happen on some devices: %s", ex
             )
 
-            data[KEY_VACUUM_TIMER] = []
+        data = VacuumCoordinatorData(
+            device.status(),
+            device.dnd_status(),
+            device.last_clean_details(),
+            device.consumable_status(),
+            device.clean_history(),
+            timer,
+        )
 
         return data
 
@@ -178,6 +211,7 @@ async def async_create_miio_device_and_coordinator(
     device = None
     migrate = False
     update_method = _async_update_data_default
+    coordinator_class = DataUpdateCoordinator
 
     if (
         model not in MODELS_HUMIDIFIER
@@ -208,6 +242,7 @@ async def async_create_miio_device_and_coordinator(
     elif model in MODELS_VACUUM:
         device = Vacuum(host, token)
         update_method = _async_update_data_vacuum
+        coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     else:
         _LOGGER.error(
             "Unsupported device found! Please create an issue at "
@@ -228,7 +263,7 @@ async def async_create_miio_device_and_coordinator(
             entity_registry.async_remove(entity_id)
 
     # Create update miio device and coordinator
-    coordinator = DataUpdateCoordinator(
+    coordinator = coordinator_class(
         hass,
         _LOGGER,
         name=name,

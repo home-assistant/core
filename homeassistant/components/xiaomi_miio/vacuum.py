@@ -28,14 +28,13 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
 
+from . import VacuumCoordinatorData
 from ...helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
-    KEY_VACUUM_STATUS,
-    KEY_VACUUM_TIMER,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -296,7 +295,6 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
             attrs.update(
                 {
                     ATTR_STATUS: str(self.vacuum_state.state),
-                    ATTR_MOP_ATTACHED: self.vacuum_state.is_water_box_attached,
                 }
             )
 
@@ -440,11 +438,13 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
     def update(self):
         """Fetch state from the device."""
         try:
-            self.vacuum_state = self._coordinator.data[KEY_VACUUM_STATUS]
+            # Type hint hack, this should always eval to true
+            if isinstance(self._coordinator.data, VacuumCoordinatorData):
+                self.vacuum_state = self._coordinator.data.status
+                self._timers = self._coordinator.data.timer
 
             self._fan_speeds = self._device.fan_speed_presets()
             self._fan_speeds_reverse = {v: k for k, v in self._fan_speeds.items()}
-            self._timers = self._coordinator.data[KEY_VACUUM_TIMER]
 
             self._available = True
         except (OSError, DeviceException) as exc:

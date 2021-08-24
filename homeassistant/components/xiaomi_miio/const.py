@@ -18,12 +18,6 @@ CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 # Keys
 KEY_COORDINATOR = "coordinator"
 KEY_DEVICE = "device"
-KEY_VACUUM_STATUS = "vacuum_status"
-KEY_VACUUM_DND_STATUS = "vacuum_dnd_status"
-KEY_VACUUM_LAST_CLEAN_STATUS = "vacuum_last_clean_status"
-KEY_VACUUM_CLEAN_HISTORY_STATUS = "vacuum_clean_history_status"
-KEY_VACUUM_CONSUMABLE_STATUS = "vacuum_consumable_status"
-KEY_VACUUM_TIMER = "vacuum_timer"
 
 # Attributes
 ATTR_AVAILABLE = "available"
