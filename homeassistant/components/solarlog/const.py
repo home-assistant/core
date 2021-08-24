@@ -165,7 +165,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SolarLogSensorEntityDescription(
-        key="installed_peak_power",
+        key="total_power",
         json_key="totalPOWER",
         name="installed peak power",
         icon="mdi:solar-power",
