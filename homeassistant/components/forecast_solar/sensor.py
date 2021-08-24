@@ -61,7 +61,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
             ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
             ATTR_NAME: "Solar Production Forecast",
             ATTR_MANUFACTURER: "Forecast.Solar",
-            ATTR_MODEL: self.coordinator.data.account_type.value,
+            ATTR_MODEL: coordinator.data.account_type.value,
             ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
         }
 
