@@ -23,15 +23,13 @@ _FAN_SPEED_INPUT_SELECT = "input_select.fan_speed"
 _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
 
 
+@pytest.mark.parametrize("count,domain", [(1, "vacuum")])
 @pytest.mark.parametrize(
-    "length,count,parm1,parm2,domain,config",
+    "parm1,parm2,config",
     [
         (
-            1,
-            1,
             STATE_UNKNOWN,
             None,
-            "vacuum",
             {
                 "vacuum": {
                     "platform": "template",
@@ -42,37 +40,8 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
             },
         ),
         (
-            0,
-            0,
-            None,
-            None,
-            "vacuum",
-            {
-                "vacuum": {
-                    "platform": "template",
-                    "vacuums": {"test_vacuum": {"value_template": "{{ 'on' }}"}},
-                }
-            },
-        ),
-        (
-            0,
-            0,
-            None,
-            None,
-            "vacuum",
-            {
-                "platform": "template",
-                "vacuums": {
-                    "test_vacuum": {"start": {"service": "script.vacuum_start"}}
-                },
-            },
-        ),
-        (
-            1,
-            1,
             STATE_CLEANING,
             100,
-            "vacuum",
             {
                 "vacuum": {
                     "platform": "template",
@@ -87,11 +56,8 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
             },
         ),
         (
-            1,
-            1,
             STATE_UNKNOWN,
             None,
-            "vacuum",
             {
                 "vacuum": {
                     "platform": "template",
@@ -106,11 +72,8 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
             },
         ),
         (
-            1,
-            1,
             STATE_UNKNOWN,
             None,
-            "vacuum",
             {
                 "vacuum": {
                     "platform": "template",
@@ -127,11 +90,31 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
         ),
     ],
 )
-async def test_configs(hass, length, parm1, parm2, start_ha):
+async def test_valid_configs(hass, count, parm1, parm2, start_ha):
     """Test: configs."""
-    assert len(hass.states.async_all()) == length
-    if length:
-        _verify(hass, parm1, parm2)
+    assert len(hass.states.async_all()) == count
+    _verify(hass, parm1, parm2)
+
+
+@pytest.mark.parametrize("count,domain", [(0, "vacuum")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {"test_vacuum": {"value_template": "{{ 'on' }}"}},
+            }
+        },
+        {
+            "platform": "template",
+            "vacuums": {"test_vacuum": {"start": {"service": "script.vacuum_start"}}},
+        },
+    ],
+)
+async def test_invalid_configs(hass, count, start_ha):
+    """Test: configs."""
+    assert len(hass.states.async_all()) == count
 
 
 @pytest.mark.parametrize(
