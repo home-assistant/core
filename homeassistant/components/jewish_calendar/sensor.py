@@ -214,7 +214,7 @@ class JewishCalendarSensor(SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         if self._description.key != "holiday":
             return {}
