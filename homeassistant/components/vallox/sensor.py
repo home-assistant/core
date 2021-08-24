@@ -164,7 +164,6 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         key="remaining_time_for_filter",
         name="Remaining Time For Filter",
         metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
-        icon="mdi:filter",
         device_class=DEVICE_CLASS_TIMESTAMP,
         sensor_type=ValloxFilterRemainingSensor,
     ),
