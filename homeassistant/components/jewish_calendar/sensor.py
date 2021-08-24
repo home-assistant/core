@@ -19,16 +19,30 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SENSORS = (
-    SensorEntityDescription(key="date", name="Date", icon="mdi:judaism"),
     SensorEntityDescription(
-        key="weekly_portion", name="Parshat Hashavua", icon="mdi:book-open-variant"
-    ),
-    SensorEntityDescription(key="holiday", name="Holiday", icon="mdi:calendar-star"),
-    SensorEntityDescription(
-        key="omer_count", name="Day of the Omer", icon="mdi:counter"
+        key="date",
+        name="Date",
+        icon="mdi:judaism",
     ),
     SensorEntityDescription(
-        key="daf_yomi", name="Daf Yomi", icon="mdi:book-open-variant"
+        key="weekly_portion",
+        name="Parshat Hashavua",
+        icon="mdi:book-open-variant",
+    ),
+    SensorEntityDescription(
+        key="holiday",
+        name="Holiday",
+        icon="mdi:calendar-star",
+    ),
+    SensorEntityDescription(
+        key="omer_count",
+        name="Day of the Omer",
+        icon="mdi:counter",
+    ),
+    SensorEntityDescription(
+        key="daf_yomi",
+        name="Daf Yomi",
+        icon="mdi:book-open-variant",
     ),
 )
 
