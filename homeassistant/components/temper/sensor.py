@@ -67,19 +67,9 @@ class TemperSensor(SensorEntity):
         """Initialize the sensor."""
         self.scale = scaling["scale"]
         self.offset = scaling["offset"]
-        self.current_value = None
-        self._name = name
         self.set_temper_device(temper_device)
 
-    @property
-    def name(self):
-        """Return the name of the temperature sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the entity."""
-        return self.current_value
+        self._attr_name = name
 
     def set_temper_device(self, temper_device):
         """Assign the underlying device for this sensor."""
@@ -92,7 +82,7 @@ class TemperSensor(SensorEntity):
         """Retrieve latest state."""
         try:
             sensor_value = self.temper_device.get_temperature("celsius")
-            self.current_value = round(sensor_value, 1)
+            self._attr_native_value = round(sensor_value, 1)
         except OSError:
             _LOGGER.error(
                 "Failed to get temperature. The device address may"
