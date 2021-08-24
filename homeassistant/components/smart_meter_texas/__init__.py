@@ -1,7 +1,6 @@
 """The Smart Meter Texas integration."""
 import asyncio
 import logging
-import ssl
 
 from smart_meter_texas import Account, Client, ClientSSLContext
 from smart_meter_texas.exceptions import (
