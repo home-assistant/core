@@ -16,8 +16,8 @@ TEST_DEVICE_ID = "5E:2E:EA:XX:XX:XX"
 TEST_OTHER_DEVICE_ID = "5E:2E:EA:YY:YY:YY"
 
 
-async def test_user_unavailable(hass: HomeAssistant) -> None:
-    """Test we handle Unavailable errors."""
+async def test_user_unavailable_user_step(hass: HomeAssistant) -> None:
+    """Test we handle Unavailable errors when host is not available in user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -36,42 +36,54 @@ async def test_user_unavailable(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
     assert not result2["last_step"]
 
+
+async def test_user_unavailable_link_step(hass: HomeAssistant) -> None:
+    """Test we abort if the device becomes unavailable in the link step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         return_value=None,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: TEST_HOST,
             },
         )
-    assert result3["step_id"] == "link"
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "link"
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         side_effect=Unavailable("message"),
     ):
-        result4 = await hass.config_entries.flow.async_configure(
+        result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
         )
-    assert result4["type"] == "form"
-    assert result4["step_id"] == "user"
-    assert result4["errors"] == {"base": "cannot_connect"}
-    assert not result4["last_step"]
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "cannot_connect"
 
+
+async def test_user_unavailable_setup_finish(hass: HomeAssistant) -> None:
+    """Test we abort if the device becomes unavailable during setup_finish."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
         return_value=None,
     ):
-        result5 = await hass.config_entries.flow.async_configure(
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: TEST_HOST,
             },
         )
-    assert result5["step_id"] == "link"
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "link"
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
@@ -80,14 +92,12 @@ async def test_user_unavailable(hass: HomeAssistant) -> None:
         "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
         side_effect=Unavailable("message"),
     ):
-        result6 = await hass.config_entries.flow.async_configure(
+        result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
         )
-    assert result6["type"] == "form"
-    assert result6["step_id"] == "user"
-    assert result6["errors"] == {"base": "cannot_connect"}
-    assert not result6["last_step"]
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "cannot_connect"
 
 
 async def test_user_not_authorizing_new_tokens(hass: HomeAssistant) -> None:
@@ -241,7 +251,6 @@ async def test_homekit_discovery_link_unavailable(
                 "properties": {"id": TEST_DEVICE_ID},
             },
         )
-
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
@@ -250,7 +259,6 @@ async def test_homekit_discovery_link_unavailable(
         for flow in hass.config_entries.flow.async_progress()
         if flow["flow_id"] == result["flow_id"]
     )
-
     assert context["title_placeholders"] == {"name": TEST_NAME}
     assert context["unique_id"] == TEST_NAME
 
@@ -259,7 +267,6 @@ async def test_homekit_discovery_link_unavailable(
         side_effect=Unavailable("message"),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
 

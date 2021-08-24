@@ -119,17 +119,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": name}
         return await self.async_step_link()
 
-    async def async_handle_unavailable(self):
-        """Handle unavailable device."""
-        if self.context["source"] == config_entries.SOURCE_USER:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=USER_SCHEMA,
-                errors={"base": "cannot_connect"},
-                last_step=False,
-            )
-        return self.async_abort(reason="cannot_connect")
-
     async def async_step_link(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -144,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="link", errors={"base": "not_allowing_new_tokens"}
             )
         except Unavailable:
-            return await self.async_handle_unavailable()
+            return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
@@ -167,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 pynanoleaf_get_info, self.nanoleaf
             )
         except Unavailable:
-            return await self.async_handle_unavailable()
+            return self.async_abort(reason="cannot_connect")
         except InvalidToken:
             return self.async_show_form(
                 step_id="link", errors={"base": "invalid_token"}
