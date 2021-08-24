@@ -176,6 +176,7 @@ FLOWS = [
     "myq",
     "mysensors",
     "nam",
+    "nanoleaf",
     "neato",
     "nest",
     "netatmo",

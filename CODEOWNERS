@@ -326,6 +326,7 @@ homeassistant/components/myq/* @bdraco @ehendrix23
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nam/* @bieniu
+homeassistant/components/nanoleaf/* @milanmeu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt

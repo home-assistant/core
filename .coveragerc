@@ -685,7 +685,9 @@ omit =
     homeassistant/components/myq/cover.py
     homeassistant/components/myq/light.py
     homeassistant/components/nad/media_player.py
+    homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/light.py
+    homeassistant/components/nanoleaf/util.py
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
