@@ -50,6 +50,7 @@ from .const import (
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
     SONOS_SEEN,
+    SONOS_SPEAKER_ADDED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
     SONOS_STATE_UPDATED,
@@ -196,6 +197,7 @@ class SonosSpeaker:
         self.sonos_group_entities: list[str] = []
         self.soco_snapshot: Snapshot | None = None
         self.snapshot_group: list[SonosSpeaker] | None = None
+        self._group_members_missing: set[str] = set()
 
     def setup(self) -> None:
         """Run initial setup of the speaker."""
@@ -211,6 +213,11 @@ class SonosSpeaker:
         )
         self._reboot_dispatcher = dispatcher_connect(
             self.hass, f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted
+        )
+        self._group_dispatcher = dispatcher_connect(
+            self.hass,
+            SONOS_SPEAKER_ADDED,
+            self.update_group_for_uid,
         )
 
         if battery_info := fetch_battery_info_or_none(self.soco):
@@ -240,6 +247,7 @@ class SonosSpeaker:
         }
 
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
+        dispatcher_send(self.hass, SONOS_SPEAKER_ADDED, self.soco.uid)
 
     #
     # Entity management
@@ -637,6 +645,15 @@ class SonosSpeaker:
         """Update group topology when polling."""
         self.hass.add_job(self.create_update_groups_coro())
 
+    def update_group_for_uid(self, uid: str) -> None:
+        """Update group topology if uid is missing."""
+        if uid in self._group_members_missing:
+            missing_zone = self.hass.data[DATA_SONOS].discovered[uid].zone_name
+            _LOGGER.debug(
+                "%s was missing, adding to %s group", missing_zone, self.zone_name
+            )
+            self.update_groups()
+
     @callback
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
@@ -658,7 +675,7 @@ class SonosSpeaker:
                     slave_uids = [
                         p.uid
                         for p in self.soco.group.members
-                        if p.uid != coordinator_uid
+                        if p.uid != coordinator_uid and p.is_visible
                     ]
 
             return [coordinator_uid] + slave_uids
@@ -690,11 +707,19 @@ class SonosSpeaker:
             for uid in group:
                 speaker = self.hass.data[DATA_SONOS].discovered.get(uid)
                 if speaker:
+                    self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
                     entity_id = entity_registry.async_get_entity_id(
                         MP_DOMAIN, DOMAIN, uid
                     )
                     sonos_group_entities.append(entity_id)
+                else:
+                    self._group_members_missing.add(uid)
+                    _LOGGER.debug(
+                        "%s group member unavailable (%s), will try again",
+                        self.zone_name,
+                        uid,
+                    )
 
             if self.sonos_group_entities == sonos_group_entities:
                 # Useful in polling mode for speakers with stereo pairs or surrounds
