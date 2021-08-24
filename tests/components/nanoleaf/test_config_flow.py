@@ -283,7 +283,6 @@ async def test_import_config(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -305,10 +304,8 @@ async def test_import_config_invalid_token(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"base": "invalid_token"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_token"
 
 
 async def test_import_last_discovery_integration_host_zeroconf(

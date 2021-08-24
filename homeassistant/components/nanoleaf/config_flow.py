@@ -158,9 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Unavailable:
             return self.async_abort(reason="cannot_connect")
         except InvalidToken:
-            return self.async_show_form(
-                step_id="link", errors={"base": "invalid_token"}
-            )
+            return self.async_abort(reason="invalid_token")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with Nanoleaf at %s with token %s",
