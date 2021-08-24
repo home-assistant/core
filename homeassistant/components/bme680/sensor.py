@@ -83,13 +83,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_GAS,
         name="Gas Resistance",
         native_unit_of_measurement="Ohms",
-        device_class=None,
     ),
     SensorEntityDescription(
         key=SENSOR_AQ,
         name="Air Quality",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=None,
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
