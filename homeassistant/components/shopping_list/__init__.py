@@ -12,7 +12,15 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_ITEM,
+    SERVICE_CLEAR_COMPLETED_ITEMS,
+    SERVICE_COMPLETE_ALL,
+    SERVICE_COMPLETE_ITEM,
+    SERVICE_INCOMPLETE_ALL,
+    SERVICE_INCOMPLETE_ITEM,
+)
 
 ATTR_COMPLETE = "complete"
 
@@ -22,12 +30,6 @@ EVENT = "shopping_list_updated"
 ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
 PERSISTENCE = ".shopping_list.json"
 
-SERVICE_ADD_ITEM = "add_item"
-SERVICE_COMPLETE_ITEM = "complete_item"
-SERVICE_INCOMPLETE_ITEM = "incomplete_item"
-SERVICE_COMPLETE_ALL = "complete_all"
-SERVICE_INCOMPLETE_ALL = "incomplete_all"
-SERVICE_CLEAR_COMPLETED_ITEMS = "clear_completed_items"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
