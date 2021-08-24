@@ -255,7 +255,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         return dt_util.as_utc(self._state).isoformat()
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         attrs: dict[str, str] = {}
 
