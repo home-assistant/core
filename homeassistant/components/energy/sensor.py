@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
@@ -277,7 +278,7 @@ class EnergyCostSensor(SensorEntity):
             )
             return
 
-        if energy < float(self._last_energy_sensor_state):
+        if reset_detected(energy, float(self._last_energy_sensor_state)):
             # Energy meter was reset, reset cost sensor too
             self._reset(0)
         # Update with newly incurred cost

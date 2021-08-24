@@ -309,6 +309,78 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,factor",
+    [("energy", "kWh", "kWh", 1)],
+)
+def test_compile_hourly_sum_statistics_total_increasing_small_dip(
+    hass_recorder, caplog, device_class, unit, native_unit, factor
+):
+    """Test small dips in sensor readings do not trigger a reset."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": "total_increasing",
+        "unit_of_measurement": unit,
+    }
+    seq = [10, 15, 20, 19, 30, 40, 50, 60, 70]
+
+    four, eight, states = record_meter_states(
+        hass, zero, "sensor.test1", attributes, seq
+    )
+    hist = history.get_significant_states(
+        hass, zero - timedelta.resolution, eight + timedelta.resolution
+    )
+    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    wait_recording_done(hass)
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
+    wait_recording_done(hass)
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "state": approx(factor * seq[2]),
+                "sum": approx(factor * 10.0),
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "state": approx(factor * seq[5]),
+                "sum": approx(factor * 30.0),
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "state": approx(factor * seq[8]),
+                "sum": approx(factor * 60.0),
+            },
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
 def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()

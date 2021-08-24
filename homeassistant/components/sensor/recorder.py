@@ -225,6 +225,11 @@ def _normalize_states(
     return DEVICE_CLASS_UNITS[key], fstates
 
 
+def reset_detected(state: float, previous_state: float | None) -> bool:
+    """Test if a total_increasing sensor has been reset."""
+    return previous_state is not None and state < 0.9 * previous_state
+
+
 def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
@@ -299,7 +304,7 @@ def compile_statistics(
                         fstate,
                     )
                 elif state_class == STATE_CLASS_TOTAL_INCREASING and (
-                    old_state is None or (new_state is not None and fstate < new_state)
+                    old_state is None or reset_detected(fstate, new_state)
                 ):
                     reset = True
                     _LOGGER.info(
