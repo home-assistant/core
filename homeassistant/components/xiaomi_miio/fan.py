@@ -172,6 +172,11 @@ SERVICE_TO_METHOD = {
     },
 }
 
+FAN_DIRECTIONS_MAP = {
+    "forward": "right",
+    "reverse": "left",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fan from a config entry."""
@@ -808,24 +813,21 @@ class XiaomiFan(XiaomiGenericDevice):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if direction == "forward":
-            direction = "right"
-
-        if direction == "reverse":
-            direction = "left"
-
         if self._oscillating:
             await self._try_command(
                 "Setting oscillate off of the miio device failed.",
                 self._device.set_oscillate,
                 False,
             )
+            self._oscillating = False
 
         await self._try_command(
             "Setting move direction of the miio device failed.",
             self._device.set_rotate,
-            FanMoveDirection(direction),
+            FanMoveDirection(FAN_DIRECTIONS_MAP[direction]),
         )
+
+        self.async_write_ha_state()
 
 
 class XiaomiFanP5(XiaomiFan):
