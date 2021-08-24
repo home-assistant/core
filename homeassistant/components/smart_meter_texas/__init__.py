@@ -41,7 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     account = Account(username, password)
 
-    ssl_context = await ClientSSLContext.get_ssl_context()
+    client_ssl_context = ClientSSLContext() 
+    ssl_context = await client_ssl_context.get_ssl_context()
 
     smart_meter_texas_data = SmartMeterTexasData(hass, entry, account, ssl_context)
     try:
