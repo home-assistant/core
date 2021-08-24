@@ -42,6 +42,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, State
+import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 import homeassistant.util.volume as volume_util
@@ -273,11 +274,13 @@ def compile_statistics(
             stat["mean"] = _time_weighted_average(fstates, start, end)
 
         if "sum" in wanted_statistics:
+            last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
             last_stats = statistics.get_last_statistics(hass, 1, entity_id)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
+                last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 new_state = old_state = last_stats[entity_id][0]["state"]
                 _sum = last_stats[entity_id][0]["sum"]
 
@@ -291,7 +294,13 @@ def compile_statistics(
                     continue
 
                 reset = False
-                if old_state is None:
+                if (
+                    state_class != STATE_CLASS_TOTAL_INCREASING
+                    and (last_reset := state.attributes.get("last_reset"))
+                    != old_last_reset
+                ):
+                    reset = True
+                elif old_state is None and last_reset is None:
                     reset = True
                     _LOGGER.info(
                         "Compiling initial sum statistics for %s, zero point set to %s",
@@ -315,13 +324,23 @@ def compile_statistics(
                         _sum += new_state - old_state
                     # ..and update the starting point
                     new_state = fstate
-                    # Force a new cycle to start at 0
-                    if old_state is not None:
+                    old_last_reset = last_reset
+                    # Force a new cycle for STATE_CLASS_TOTAL_INCREASING to start at 0
+                    if (
+                        state_class == STATE_CLASS_TOTAL_INCREASING
+                        and old_state is not None
+                    ):
                         old_state = 0.0
                     else:
                         old_state = new_state
                 else:
                     new_state = fstate
+
+            # Deprecated, will be removed in Home Assistant 2021.11
+            if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
+                # No valid updates
+                result.pop(entity_id)
+                continue
 
             if new_state is None or old_state is None:
                 # No valid updates
@@ -330,6 +349,8 @@ def compile_statistics(
 
             # Update the sum with the last state
             _sum += new_state - old_state
+            if last_reset is not None:
+                stat["last_reset"] = dt_util.parse_datetime(last_reset)
             stat["sum"] = _sum
             stat["state"] = new_state
 
