@@ -16,6 +16,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -114,20 +115,17 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         entry: ConfigEntry,
-        sensor_type: str,
-        name: str,
-        icon: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self._sensor_type = description.key
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_icon = icon
-        self._attr_name = name
-        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
-        self._attr_native_unit_of_measurement = "index"
+        self._attr_name = description.name
+        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{self._sensor_type}"
         self._entry = entry
-        self._type = sensor_type
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:

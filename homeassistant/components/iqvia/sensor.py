@@ -1,6 +1,7 @@
 """Support for IQVIA sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from statistics import mean
 
 import numpy as np
@@ -60,6 +61,13 @@ RATING_MAPPING = [
 TREND_FLAT = "Flat"
 TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
+
+
+@dataclass
+class IQVIARequiredKeysMixin:
+    """Mixin for required keys."""
+
+    sensor_type: IQVIAEntity
 
 
 async def async_setup_entry(
