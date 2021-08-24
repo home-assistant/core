@@ -60,7 +60,7 @@ class RenaultSensorEntityDescription(
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultDataEntity[T]], str] | None = None
-    rounding: bool | None = None
+    value_lambda: Callable[[RenaultDataEntity[T]], StateType] | None = None
 
 
 async def async_setup_entry(
@@ -86,7 +86,7 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     entity_description: RenaultSensorEntityDescription
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon handling."""
         if self.entity_description.icon_lambda is None:
             return super().icon
@@ -95,12 +95,11 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of this entity."""
-        raw_value = self.data
-        if raw_value is None:
+        if self.data is None:
             return None
-        if self.entity_description.rounding:
-            return round(cast(float, raw_value))
-        return raw_value
+        if self.entity_description.value_lambda is None:
+            return self.data
+        return self.entity_description.value_lambda(self)
 
 
 class RenaultBatterySensor(RenaultSensor[KamereonVehicleBatteryStatusData]):
@@ -177,9 +176,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="chargingStatus",
         device_class=DEVICE_CLASS_CHARGE_STATE,
         entity_class=RenaultBatteryChargeStateSensor,
-        icon_lambda=lambda x: "mdi:flash"
-        if x.data == ChargeState.CHARGE_IN_PROGRESS.value
-        else "mdi:flash-off",
+        icon_lambda=lambda x: (
+            "mdi:flash"
+            if x.data == ChargeState.CHARGE_IN_PROGRESS.value
+            else "mdi:flash-off"
+        ),
         name="Charge State",
     ),
     RenaultSensorEntityDescription(
@@ -208,9 +209,11 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="plugStatus",
         device_class=DEVICE_CLASS_PLUG_STATE,
         entity_class=RenaultBatteryPlugStateSensor,
-        icon_lambda=lambda x: "mdi:power-plug"
-        if x.data == PlugState.PLUGGED.value
-        else "mdi:power-plug-off",
+        icon_lambda=lambda x: (
+            "mdi:power-plug"
+            if x.data == PlugState.PLUGGED.value
+            else "mdi:power-plug-off"
+        ),
         name="Plug State",
     ),
     RenaultSensorEntityDescription(
@@ -252,7 +255,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Mileage",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        rounding=True,
+        value_lambda=lambda x: round(cast(float, x.data)),
     ),
     RenaultSensorEntityDescription(
         key="fuel_autonomy",
@@ -264,7 +267,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=STATE_CLASS_MEASUREMENT,
         requires_fuel=True,
-        rounding=True,
+        value_lambda=lambda x: round(cast(float, x.data)),
     ),
     RenaultSensorEntityDescription(
         key="fuel_quantity",
@@ -276,7 +279,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=STATE_CLASS_MEASUREMENT,
         requires_fuel=True,
-        rounding=True,
+        value_lambda=lambda x: round(cast(float, x.data)),
     ),
     RenaultSensorEntityDescription(
         key="outside_temperature",
@@ -294,9 +297,9 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="chargeMode",
         device_class=DEVICE_CLASS_CHARGE_MODE,
         entity_class=RenaultChargeModeSensor,
-        icon_lambda=lambda x: "mdi:calendar-clock"
-        if x.data == "schedule_mode"
-        else "mdi:calendar-remove",
+        icon_lambda=lambda x: (
+            "mdi:calendar-clock" if x.data == "schedule_mode" else "mdi:calendar-remove"
+        ),
         name="Charge Mode",
     ),
 )
