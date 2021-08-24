@@ -183,7 +183,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     async def async_set_value(self, value):
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
-        if await method(value):
+        if await method(int(value)):
             self._attr_value = value
             self.async_write_ha_state()
 
