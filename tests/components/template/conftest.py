@@ -13,13 +13,13 @@ def calls(hass):
 
 
 @pytest.fixture
-async def start_ha(hass, do_count, do_domain, do_config, caplog):
+async def start_ha(hass, count, domain, config, caplog):
     """Do setup of integration."""
-    with assert_setup_component(do_count, do_domain):
+    with assert_setup_component(count, domain):
         assert await async_setup_component(
             hass,
-            do_domain,
-            do_config,
+            domain,
+            config,
         )
 
     await hass.async_block_till_done()

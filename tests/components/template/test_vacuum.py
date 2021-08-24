@@ -24,7 +24,7 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
 
 
 @pytest.mark.parametrize(
-    "do_len,do_count,do_parm1,do_parm2,do_domain,do_config",
+    "length,count,parm1,parm2,domain,config",
     [
         (
             1,
@@ -127,15 +127,15 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
         ),
     ],
 )
-async def test_configs(hass, do_len, do_parm1, do_parm2, start_ha):
+async def test_configs(hass, length, parm1, parm2, start_ha):
     """Test: configs."""
-    assert len(hass.states.async_all()) == do_len
-    if do_len:
-        _verify(hass, do_parm1, do_parm2)
+    assert len(hass.states.async_all()) == length
+    if length:
+        _verify(hass, parm1, parm2)
 
 
 @pytest.mark.parametrize(
-    "do_count,do_domain,do_config",
+    "count,domain,config",
     [
         (
             1,
@@ -166,7 +166,7 @@ async def test_templates_with_entities(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "do_count,do_domain,do_config",
+    "count,domain,config",
     [
         (
             1,
@@ -204,7 +204,7 @@ async def test_available_template_with_entities(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "do_count,do_domain,do_config",
+    "count,domain,config",
     [
         (
             1,
@@ -233,7 +233,7 @@ async def test_invalid_availability_template_keeps_component_available(
 
 
 @pytest.mark.parametrize(
-    "do_count,do_domain,do_config",
+    "count,domain,config",
     [
         (
             1,
@@ -270,7 +270,7 @@ async def test_attribute_templates(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "do_count,do_domain,do_config",
+    "count,domain,config",
     [
         (
             1,
@@ -302,7 +302,7 @@ async def test_invalid_attribute_template(hass, caplog, start_ha):
 
 
 @pytest.mark.parametrize(
-    "do_count,do_domain,do_config",
+    "count,domain,config",
     [
         (
             1,
