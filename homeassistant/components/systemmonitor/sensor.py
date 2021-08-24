@@ -416,6 +416,8 @@ async def async_setup_sensor_registry_updates(
 class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         sensor_registry: dict[tuple[str, str], SensorData],
@@ -425,7 +427,6 @@ class SystemMonitorSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = sensor_description
         self._attr_name: str = f"{sensor_description.name} {argument}".rstrip()
-        self._attr_should_poll = False
         self._attr_unique_id: str = slugify(f"{sensor_description.key}_{argument}")
         self._sensor_registry = sensor_registry
         self._type: str = sensor_description.key
