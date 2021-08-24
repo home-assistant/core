@@ -178,6 +178,7 @@ async def test_arm_home_not_publishes_mqtt_with_invalid_code_when_req(hass, mqtt
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
+    await hass.async_block_till_done()
 
     call_count = mqtt_mock.async_publish.call_count
     await common.async_alarm_arm_home(hass, "abcd")
@@ -229,6 +230,7 @@ async def test_arm_away_not_publishes_mqtt_with_invalid_code_when_req(hass, mqtt
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
+    await hass.async_block_till_done()
 
     call_count = mqtt_mock.async_publish.call_count
     await common.async_alarm_arm_away(hass, "abcd")
@@ -280,6 +282,7 @@ async def test_arm_night_not_publishes_mqtt_with_invalid_code_when_req(hass, mqt
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
+    await hass.async_block_till_done()
 
     call_count = mqtt_mock.async_publish.call_count
     await common.async_alarm_arm_night(hass, "abcd")
@@ -333,6 +336,7 @@ async def test_arm_vacation_not_publishes_mqtt_with_invalid_code_when_req(
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
+    await hass.async_block_till_done()
 
     call_count = mqtt_mock.async_publish.call_count
     await common.async_alarm_arm_vacation(hass, "abcd")
@@ -501,6 +505,7 @@ async def test_disarm_not_publishes_mqtt_with_invalid_code_when_req(hass, mqtt_m
         alarm_control_panel.DOMAIN,
         DEFAULT_CONFIG_CODE,
     )
+    await hass.async_block_till_done()
 
     call_count = mqtt_mock.async_publish.call_count
     await common.async_alarm_disarm(hass, "abcd")
