@@ -1,10 +1,11 @@
 {
   "domain": "gardena_smart_system",
   "name": "Gardena Smart System integration",
+  "version": "0.3",
   "config_flow": true,
   "documentation": "https://github.com/py-smart-gardena/hass-gardena-smart-system",
   "issue_tracker": "https://github.com/py-smart-gardena/hass-gardena-smart-system/issues",
   "dependencies": [],
   "codeowners": ["@py-smart-gardena"],
-  "requirements": ["py-smart-gardena==0.7.10"]
+  "requirements": ["py-smart-gardena==0.8.2"]
 }

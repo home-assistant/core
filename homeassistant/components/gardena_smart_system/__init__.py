@@ -2,6 +2,8 @@
 import logging
 
 from gardena.smart_system import SmartSystem
+from gardena.exceptions.authentication_exception import AuthenticationException
+
 from oauthlib.oauth2.rfc6749.errors import (
     AccessDeniedError,
     InvalidClientError,
@@ -84,20 +86,23 @@ class GardenaSmartSystem:
 
     def start(self):
         _LOGGER.debug("Starting GardenaSmartSystem")
-        self.smart_system.authenticate()
-        self.smart_system.update_locations()
+        try:
+            self.smart_system.authenticate()
+            self.smart_system.update_locations()
 
-        if len(self.smart_system.locations) < 1:
-            _LOGGER.error("No locations found")
-            raise Exception("No locations found")
+            if len(self.smart_system.locations) < 1:
+                _LOGGER.error("No locations found")
+                raise Exception("No locations found")
 
-        # currently gardena supports only one location and gateway, so we can take the first
-        location = list(self.smart_system.locations.values())[0]
-        _LOGGER.debug(f"Using location: {location.name} ({location.id})")
-        self.smart_system.update_devices(location)
-        self._hass.data[DOMAIN][GARDENA_LOCATION] = location
-        _LOGGER.debug("Starting GardenaSmartSystem websocket")
-        self.smart_system.start_ws(self._hass.data[DOMAIN][GARDENA_LOCATION])
+            # currently gardena supports only one location and gateway, so we can take the first
+            location = list(self.smart_system.locations.values())[0]
+            _LOGGER.debug(f"Using location: {location.name} ({location.id})")
+            self.smart_system.update_devices(location)
+            self._hass.data[DOMAIN][GARDENA_LOCATION] = location
+            _LOGGER.debug("Starting GardenaSmartSystem websocket")
+            self.smart_system.start_ws(self._hass.data[DOMAIN][GARDENA_LOCATION])
+        except AuthenticationException as ex:
+            _LOGGER.error(f"Authentication failed : {ex.message}. You may need to dcheck your token or create a new app in the gardena api and use the new token.")
 
     def stop(self):
         _LOGGER.debug("Stopping GardenaSmartSystem")
