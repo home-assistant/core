@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import FritzBoxSensorEntity
+from . import FritzBoxEntity
 from .const import (
     BINARY_SENSOR_DESCRIPTIONS,
     CONF_COORDINATOR,
@@ -30,28 +30,28 @@ async def async_setup_entry(
             if description.suitable is not None and description.suitable(device):
                 entities.append(
                     FritzboxBinarySensor(
-                        description,
                         coordinator,
                         ain,
+                        description,
                     )
                 )
 
     async_add_entities(entities)
 
 
-class FritzboxBinarySensor(FritzBoxSensorEntity, BinarySensorEntity):
+class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     """Representation of a binary FRITZ!SmartHome device."""
 
     entity_description: FritzBinarySensorEntityDescription
 
     def __init__(
         self,
-        entity_description: FritzBinarySensorEntityDescription,
         coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
         ain: str,
+        entity_description: FritzBinarySensorEntityDescription,
     ) -> None:
         """Initialize the FritzBox entity."""
-        super().__init__(entity_description, coordinator, ain)
+        super().__init__(coordinator, ain, entity_description)
         self._attr_name = self.device.name
         self._attr_unique_id = ain
 

@@ -65,7 +65,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[FritzSensorEntityDescription, ...]] = (
         suitable=lambda device: (
             device.has_temperature_sensor and not device.has_thermostat
         ),
-        state=lambda device: device.temperature,  # type: ignore[no-any-return]
+        native_value=lambda device: device.temperature,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
         key="battery",
@@ -73,7 +73,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         suitable=lambda device: device.battery_level is not None,
-        state=lambda device: device.battery_level,  # type: ignore[no-any-return]
+        native_value=lambda device: device.battery_level,  # type: ignore[no-any-return]
     ),
     FritzSensorEntityDescription(
         key="power_consumption",
@@ -82,7 +82,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        state=lambda device: device.power / 1000 if device.power else 0.0,
+        native_value=lambda device: device.power / 1000 if device.power else 0.0,
     ),
     FritzSensorEntityDescription(
         key="total_energy",
@@ -91,6 +91,6 @@ SENSOR_DESCRIPTIONS: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        state=lambda device: device.energy / 1000 if device.energy else 0.0,
+        native_value=lambda device: device.energy / 1000 if device.energy else 0.0,
     ),
 )

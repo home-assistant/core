@@ -134,13 +134,19 @@ class FritzBoxEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
         ain: str,
+        entity_description: FritzEntityDescription | None = None,
     ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator)
 
         self.ain = ain
-        self._attr_name = self.device.name
-        self._attr_unique_id = ain
+        if entity_description is not None:
+            self.entity_description = entity_description
+            self._attr_name = f"{self.device.name} {entity_description.name}"
+            self._attr_unique_id = f"{ain}_{entity_description.key}"
+        else:
+            self._attr_name = self.device.name
+            self._attr_unique_id = ain
 
     @property
     def available(self) -> bool:
@@ -171,19 +177,3 @@ class FritzBoxEntity(CoordinatorEntity):
             ATTR_STATE_LOCKED: self.device.lock,
         }
         return attrs
-
-
-class FritzBoxSensorEntity(FritzBoxEntity):
-    """Basis FritzBox entity."""
-
-    def __init__(
-        self,
-        entity_description: FritzEntityDescription,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
-        ain: str,
-    ) -> None:
-        """Initialize the FritzBox entity."""
-        super().__init__(coordinator, ain)
-        self.entity_description = entity_description
-        self._attr_name = f"{self.device.name} {entity_description.name}"
-        self._attr_unique_id = f"{ain}_{entity_description.key}"

@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxEntity, FritzBoxSensorEntity
+from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN, SENSOR_DESCRIPTIONS
 
 
@@ -23,15 +23,15 @@ async def async_setup_entry(
             if description.suitable is not None and description.suitable(device):
                 entities.append(
                     FritzBoxSensor(
-                        description,
                         coordinator,
                         ain,
+                        description,
                     )
                 )
     async_add_entities(entities)
 
 
-class FritzBoxSensor(FritzBoxSensorEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     """The entity class for FRITZ!SmartHome sensors."""
 
     entity_description: FritzSensorEntityDescription
