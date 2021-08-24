@@ -27,16 +27,13 @@ PLATFORMS = ["sensor", "number"]
 UPDATE_INTERVAL = 30
 
 
-class WallboxHub(DataUpdateCoordinator):
-    """Wallbox Hub class."""
+class WallboxCoordinator(DataUpdateCoordinator):
+    """Wallbox Coordinator class."""
 
-    def __init__(
-        self, station: str, username: str, password: str, hass: HomeAssistant
-    ) -> None:
+    def __init__(self, station, username, password, hass):
         """Initialize."""
         self._station = station
         self._wallbox = Wallbox(username, password)
-        self._hass = hass
 
         super().__init__(
             hass,
@@ -100,25 +97,25 @@ class WallboxHub(DataUpdateCoordinator):
 
     async def async_set_charging_current(self, charging_current):
         """Set maximum charging current for Wallbox."""
-        await self._hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self._set_charging_current, charging_current
         )
         await self.async_request_refresh()
 
     async def _async_update_data(self) -> bool:
         """Get new sensor data for Wallbox component."""
-        data = await self._hass.async_add_executor_job(self._get_data)
+        data = await self.hass.async_add_executor_job(self._get_data)
         return data
 
     async def async_validate_input(self) -> bool:
         """Get new sensor data for Wallbox component."""
-        data = await self._hass.async_add_executor_job(self._validate)
+        data = await self.hass.async_add_executor_job(self._validate)
         return data
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
-    wallbox = WallboxHub(
+    wallbox = WallboxCoordinator(
         entry.data[CONF_STATION],
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
