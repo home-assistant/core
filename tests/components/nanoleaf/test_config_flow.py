@@ -326,7 +326,7 @@ async def test_import_last_discovery_integration_host_zeroconf(
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.os.remove",
         return_value=None,
-    ), patch(
+    ) as mock_remove, patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -347,6 +347,7 @@ async def test_import_last_discovery_integration_host_zeroconf(
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    mock_remove.assert_called_once()
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -372,7 +373,7 @@ async def test_import_not_last_discovery_integration_device_id_homekit(
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.save_json",
         return_value=None,
-    ), patch(
+    ) as mock_save_json, patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -393,5 +394,6 @@ async def test_import_not_last_discovery_integration_device_id_homekit(
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    mock_save_json.assert_called_once()
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
