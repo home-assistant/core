@@ -43,13 +43,11 @@ CDC_SENSOR_DESCRIPTIONS = (
         key=SENSOR_TYPE_CDC_LEVEL,
         name="CDC Level",
         icon="mdi:biohazard",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_CDC_LEVEL2,
         name="CDC Level 2",
         icon="mdi:biohazard",
-        native_unit_of_measurement=None,
     ),
 )
 
@@ -135,13 +133,11 @@ class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._sensor_type = description.key
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_name = description.name
         self._attr_unique_id = (
             f"{entry.data[CONF_LATITUDE]},"
-            f"{entry.data[CONF_LONGITUDE]}_{self._sensor_type}"
+            f"{entry.data[CONF_LONGITUDE]}_{description.key}"
         )
         self._entry = entry
         self.entity_description = description
@@ -175,7 +171,7 @@ class CdcSensor(FluNearYouSensor):
                 ATTR_STATE: self.coordinator.data["name"],
             }
         )
-        self._attr_native_value = self.coordinator.data[self._sensor_type]
+        self._attr_native_value = self.coordinator.data[self.entity_description.key]
 
 
 class UserSensor(FluNearYouSensor):
@@ -194,10 +190,10 @@ class UserSensor(FluNearYouSensor):
             }
         )
 
-        if self._sensor_type in self.coordinator.data["state"]["data"]:
-            states_key = self._sensor_type
-        elif self._sensor_type in EXTENDED_SENSOR_TYPE_MAPPING:
-            states_key = EXTENDED_SENSOR_TYPE_MAPPING[self._sensor_type]
+        if self.entity_description.key in self.coordinator.data["state"]["data"]:
+            states_key = self.entity_description.key
+        elif self.entity_description.key in EXTENDED_SENSOR_TYPE_MAPPING:
+            states_key = EXTENDED_SENSOR_TYPE_MAPPING[self.entity_description.key]
 
         self._attr_extra_state_attributes[
             ATTR_STATE_REPORTS_THIS_WEEK
@@ -206,7 +202,7 @@ class UserSensor(FluNearYouSensor):
             ATTR_STATE_REPORTS_LAST_WEEK
         ] = self.coordinator.data["state"]["last_week_data"][states_key]
 
-        if self._sensor_type == SENSOR_TYPE_USER_TOTAL:
+        if self.entity_description.key == SENSOR_TYPE_USER_TOTAL:
             self._attr_native_value = sum(
                 v
                 for k, v in self.coordinator.data["local"].items()
@@ -220,4 +216,6 @@ class UserSensor(FluNearYouSensor):
                 )
             )
         else:
-            self._attr_native_value = self.coordinator.data["local"][self._sensor_type]
+            self._attr_native_value = self.coordinator.data["local"][
+                self.entity_description.key
+            ]
