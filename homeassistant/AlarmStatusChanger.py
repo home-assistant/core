@@ -50,7 +50,7 @@ class DBAccess:
 class AlarmStatusChanger:
 
     def __init__(self):
-        self.theDB = DBAccess('/home/dionisis/PycharmProjects/Guard/SQLLiteDB/TrackedObjectsDim.db')
+        self.theDB = DBAccess('/mnt/GuardFolders/Database/TrackedObjectsDim.db')
 
     def clear(self,ID):
         self.theDB.setState(ID,1)

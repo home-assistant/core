@@ -127,6 +127,7 @@ FLOWS = [
     "litejet",
     "litterrobot",
     "local_ip",
+    "localtuya",
     "locative",
     "logi_circle",
     "luftdaten",

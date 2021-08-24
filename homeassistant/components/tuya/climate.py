@@ -107,8 +107,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self._def_hvac_mode = HVAC_MODE_AUTO
         self._set_temp_divided = True
         self._temp_step_override = None
-        self._min_temp = None
-        self._max_temp = None
+        self._min_temp = 5
+        self._max_temp =30
 
     @callback
     def _process_config(self):
@@ -190,7 +190,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return float(self._tuya.target_temperature()/10)
+        ret = float(self._tuya.target_temperature())
+        if ret>100: ret=ret/10
+        return ret#float(self._tuya.target_temperature())
 
     @property
     def target_temperature_step(self):
@@ -212,7 +214,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE], self._set_temp_divided)
+            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE], False)
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device has already been configured.",
+            "unsupported_device_type": "Unsupported device type!"
+        },
+        "error": {
+            "cannot_connect": "Cannot connect to device. Verify that address is correct.",
+            "invalid_auth": "Failed to authenticate with device. Verify that device id and local key are correct.",
+            "unknown": "An unknown error occurred. See log for details.",
+            "switch_already_configured": "Switch with this ID has already been configured."
+        },
+        "step": {
+            "user": {
+                "title": "Add Tuya device",
+                "description": "Fill in the basic details and pick device type. The name entered here will be used to identify the integration itself (as seen in the `Integrations` page). You will name each sub-device in the following steps.",
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "device_id": "Device ID",
+                    "local_key": "Local key",
+                    "protocol_version": "Protocol Version",
+                    "device_type": "Device type"
+                }
+            },
+            "power_outlet": {
+                "title": "Add subswitch",
+		"description": "You are about to add subswitch number `{number}`. If you want to add another, tick `Add another switch` before continuing.",
+                "data": {
+                    "id": "ID",
+                    "name": "Name",
+                    "friendly_name": "Friendly name",
+                    "current": "Current",
+                    "current_consumption": "Current Consumption",
+                    "voltage": "Voltage",
+                    "add_another_switch": "Add another switch"
+                }
+            }
+        }
+    },
+    "title": "LocalTuya"
+}
