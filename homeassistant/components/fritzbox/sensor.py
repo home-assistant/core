@@ -39,6 +39,6 @@ class FritzBoxSensor(FritzBoxSensorEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        if self.entity_description.state is not None:
-            return self.entity_description.state(self.device)
+        if self.entity_description.native_value is not None:
+            return self.entity_description.native_value(self.device)
         return None

@@ -60,7 +60,7 @@ class FritzEntityDescription(EntityDescription):
 class FritzSensorEntityDescription(FritzEntityDescription, SensorEntityDescription):
     """Description for Fritz!Smarthome sensor entities."""
 
-    state: Callable[[FritzhomeDevice], float | int | None] | None = None
+    native_value: Callable[[FritzhomeDevice], float | int | None] | None = None
 
 
 @dataclass
