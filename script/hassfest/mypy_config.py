@@ -44,6 +44,7 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.gpmdp.*",
     "homeassistant.components.gree.*",
     "homeassistant.components.growatt_server.*",
+    "homeassistant.components.gtfs.*",
     "homeassistant.components.habitica.*",
     "homeassistant.components.harmony.*",
     "homeassistant.components.hassio.*",
