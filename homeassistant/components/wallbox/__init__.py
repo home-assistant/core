@@ -30,10 +30,10 @@ UPDATE_INTERVAL = 30
 class WallboxCoordinator(DataUpdateCoordinator):
     """Wallbox Coordinator class."""
 
-    def __init__(self, station, username, password, hass):
+    def __init__(self, station, wallbox, hass):
         """Initialize."""
         self._station = station
-        self._wallbox = Wallbox(username, password)
+        self._wallbox = wallbox
 
         super().__init__(
             hass,
@@ -115,38 +115,25 @@ class WallboxCoordinator(DataUpdateCoordinator):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
-    wallbox = WallboxCoordinator(
+    wallbox = Wallbox(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+    wallboxCoordinator = WallboxCoordinator(
         entry.data[CONF_STATION],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
+        wallbox,
         hass,
     )
 
-    await wallbox.async_validate_input()
+    await wallboxCoordinator.async_validate_input()
 
-    await wallbox.async_config_entry_first_refresh()
+    await wallboxCoordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
-    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox
+    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallboxCoordinator
 
     for platform in PLATFORMS:
 
-        if platform != "number":
-
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
-        else:
-            try:
-                await wallbox.async_set_charging_current(
-                    wallbox.data[CONF_MAX_CHARGING_CURRENT_KEY]
-                )
-            except InvalidAuth:
-                pass
-            else:
-                hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
-                )
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     return True
 
