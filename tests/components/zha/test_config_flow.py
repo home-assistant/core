@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import serial.tools.list_ports
 import zigpy.config
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import setup
 from homeassistant.components.ssdp import (
@@ -144,7 +145,9 @@ async def test_discovery_via_usb_rejects_nortek_zwave(detect_mock, hass):
 async def test_discovery_via_usb_already_setup(detect_mock, hass):
     """Test usb flow -- already setup."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
+    ).add_to_hass(hass)
 
     discovery_info = {
         "device": "/dev/ttyZIGBEE",
@@ -161,6 +164,34 @@ async def test_discovery_via_usb_already_setup(detect_mock, hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_discovery_via_usb_path_changes(hass):
+    """Test usb flow already setup and the path changes."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AAAA:AAAA_1234_test_zigbee radio",
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}},
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == "/dev/ttyZIGBEE"
 
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
@@ -204,7 +235,9 @@ async def test_discovery_already_setup(detect_mock, hass):
         "properties": {"name": "tube_123456"},
     }
     await setup.async_setup_component(hass, "persistent_notification", {})
-    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
@@ -310,7 +343,9 @@ async def test_pick_radio_flow(hass, radio_type):
 
 async def test_user_flow_existing_config_entry(hass):
     """Test if config entry already exists."""
-    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
+    ).add_to_hass(hass)
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}

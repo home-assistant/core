@@ -105,10 +105,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
-            }
+            updates={CONF_DEVICE: {CONF_DEVICE_PATH: dev_path}}
         )
         # Check if already configured
         if self._async_current_entries():
@@ -127,7 +126,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "8A2A" and "ZigBee" not in description:
             return self.async_abort(reason="not_zha_device")
 
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         self._auto_detected_data = await detect_radios(dev_path)
         if self._auto_detected_data is None:
             return self.async_abort(reason="not_zha_device")
