@@ -216,6 +216,16 @@ async def test_cost_sensor_price_entity(
     assert cost_sensor_entity_id in statistics
     assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 19.0
 
+    # Energy sensor has a small dip, no reset should be detected
+    hass.states.async_set(
+        usage_sensor_entity_id,
+        "14",
+        {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(cost_sensor_entity_id)
+    assert state.state == "18.0"  # 19 EUR + (14-14.5) kWh * 2 EUR/kWh = 18 EUR
+
     # Energy sensor is reset, with initial state at 4kWh, 0 kWh is used as zero-point
     hass.states.async_set(
         usage_sensor_entity_id,
@@ -240,7 +250,7 @@ async def test_cost_sensor_price_entity(
     await async_wait_recording_done_without_instance(hass)
     statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     assert cost_sensor_entity_id in statistics
-    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 39.0
+    assert statistics[cost_sensor_entity_id]["stat"]["sum"] == 38.0
 
 
 async def test_cost_sensor_handle_wh(hass, hass_storage) -> None:
