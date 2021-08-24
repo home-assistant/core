@@ -35,7 +35,7 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
     @property
     def min_value(self):
         """Return the minimum available current."""
-        return 0
+        return 6
 
     @property
     def max_value(self):
