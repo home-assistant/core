@@ -70,11 +70,9 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        if self._source_type == "GPS":
-            return SOURCE_TYPE_GPS
         if self._source_type == "PHONE":
             return SOURCE_TYPE_BLUETOOTH
-        return None
+        return SOURCE_TYPE_GPS
 
     @property
     def latitude(self):
