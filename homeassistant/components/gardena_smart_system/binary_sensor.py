@@ -4,7 +4,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 
-from custom_components.gardena_smart_system import GARDENA_SYSTEM
+from gardena_smart_system import GARDENA_SYSTEM
 from .const import DOMAIN
 
 
