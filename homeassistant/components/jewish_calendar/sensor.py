@@ -152,9 +152,9 @@ class JewishCalendarSensor(SensorEntity):
 
     def __init__(self, data, description: SensorEntityDescription) -> None:
         """Initialize the Jewish calendar sensor."""
-        self._description = description
-        self._attr_name = f"{data['name']} {self._description.name}"
-        self._attr_unique_id = f"{data['prefix']}_{self._description.key}"
+        self.entity_description = description
+        self._attr_name = f"{data['name']} {description.name}"
+        self._attr_unique_id = f"{data['prefix']}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
@@ -201,7 +201,7 @@ class JewishCalendarSensor(SensorEntity):
             after_tzais_date = daytime_date.next_day
 
         self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
-        _LOGGER.debug("New value for %s: %s", self._description.key, self._state)
+        _LOGGER.debug("New value for %s: %s", self.entity_description.key, self._state)
 
     def make_zmanim(self, date):
         """Create a Zmanim object."""
@@ -216,7 +216,7 @@ class JewishCalendarSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        if self._description.key != "holiday":
+        if self.entity_description.key != "holiday":
             return {}
         return self._holiday_attrs
 
@@ -224,19 +224,19 @@ class JewishCalendarSensor(SensorEntity):
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
-        if self._description.key == "date":
+        if self.entity_description.key == "date":
             return after_shkia_date.hebrew_date
-        if self._description.key == "weekly_portion":
+        if self.entity_description.key == "weekly_portion":
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
-        if self._description.key == "holiday":
+        if self.entity_description.key == "holiday":
             self._holiday_attrs["id"] = after_shkia_date.holiday_name
             self._holiday_attrs["type"] = after_shkia_date.holiday_type.name
             self._holiday_attrs["type_id"] = after_shkia_date.holiday_type.value
             return after_shkia_date.holiday_description
-        if self._description.key == "omer_count":
+        if self.entity_description.key == "omer_count":
             return after_shkia_date.omer_day
-        if self._description.key == "daf_yomi":
+        if self.entity_description.key == "daf_yomi":
             return daytime_date.daf_yomi
 
         return None
@@ -266,24 +266,24 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
 
     def get_state(self, daytime_date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
-        if self._description.key == "upcoming_shabbat_candle_lighting":
+        if self.entity_description.key == "upcoming_shabbat_candle_lighting":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat.previous_day.gdate
             )
             return times.candle_lighting
-        if self._description.key == "upcoming_candle_lighting":
+        if self.entity_description.key == "upcoming_candle_lighting":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat_or_yom_tov.first_day.previous_day.gdate
             )
             return times.candle_lighting
-        if self._description.key == "upcoming_shabbat_havdalah":
+        if self.entity_description.key == "upcoming_shabbat_havdalah":
             times = self.make_zmanim(after_tzais_date.upcoming_shabbat.gdate)
             return times.havdalah
-        if self._description.key == "upcoming_havdalah":
+        if self.entity_description.key == "upcoming_havdalah":
             times = self.make_zmanim(
                 after_tzais_date.upcoming_shabbat_or_yom_tov.last_day.gdate
             )
             return times.havdalah
 
         times = self.make_zmanim(dt_util.now()).zmanim
-        return times[self._description.key]
+        return times[self.entity_description.key]
