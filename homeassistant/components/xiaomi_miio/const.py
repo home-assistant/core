@@ -59,11 +59,22 @@ MODEL_AIRHUMIDIFIER_MJJSQ = "deerma.humidifier.mjjsq"
 MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
 
 MODEL_FAN_P5 = "dmaker.fan.p5"
+MODEL_FAN_SA1 = "zhimi.fan.sa1"
+MODEL_FAN_V2 = "zhimi.fan.v2"
+MODEL_FAN_V3 = "zhimi.fan.v3"
 MODEL_FAN_ZA1 = "zhimi.fan.za1"
 MODEL_FAN_ZA3 = "zhimi.fan.za3"
 MODEL_FAN_ZA4 = "zhimi.fan.za4"
 
-MODELS_FAN_MIIO = [MODEL_FAN_P5, MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4]
+MODELS_FAN_MIIO = [
+    MODEL_FAN_P5,
+    MODEL_FAN_SA1,
+    MODEL_FAN_V2,
+    MODEL_FAN_V3,
+    MODEL_FAN_ZA1,
+    MODEL_FAN_ZA3,
+    MODEL_FAN_ZA4,
+]
 
 MODELS_PURIFIER_MIOT = [
     MODEL_AIRPURIFIER_3,
