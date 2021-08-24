@@ -100,7 +100,6 @@ class SmartMeterTexasData:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account
-        self.ssl_context = ssl
         websession = aiohttp_client.async_get_clientsession(hass)
         self.client = Client(websession, account, ssl_context=ssl_context)
         self.meters: list = []
