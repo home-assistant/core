@@ -193,6 +193,7 @@ class AmcrestCam(Camera):
             )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get image from", self.name, "camera", error)
+            return
         finally:
             self._snapshot_task = None
 
