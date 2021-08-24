@@ -485,7 +485,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_start_addon()
 
-        usb_path = addon_config.get(CONF_ADDON_DEVICE) or self.usb_path or ""
+        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
         network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
 
         data_schema = vol.Schema(

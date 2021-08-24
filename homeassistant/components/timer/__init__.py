@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Callable
 
 import voluptuous as vol
 
@@ -196,7 +197,7 @@ class Timer(RestoreEntity):
         self._duration = cv.time_period_str(config[CONF_DURATION])
         self._remaining: timedelta | None = None
         self._end: datetime | None = None
-        self._listener = None
+        self._listener: Callable[[], None] | None = None
 
     @classmethod
     def from_yaml(cls, config: dict) -> Timer:

@@ -44,6 +44,7 @@ QUERY_STATISTICS = [
     Statistics.mean,
     Statistics.min,
     Statistics.max,
+    Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
 ]
@@ -382,6 +383,7 @@ def _sorted_statistics_to_dict(
                 "mean": convert(db_state.mean, units),
                 "min": convert(db_state.min, units),
                 "max": convert(db_state.max, units),
+                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
                 "state": convert(db_state.state, units),
                 "sum": convert(db_state.sum, units),
             }

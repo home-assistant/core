@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==4.0.0
+HAP-python==4.1.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -58,7 +58,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
-PyTurboJPEG==1.5.0
+PyTurboJPEG==1.5.2
 
 # homeassistant.components.vicare
 PyViCare==1.0.0
@@ -167,7 +167,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==6.1.0
+aioesphomeapi==7.0.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -294,7 +294,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.3
+apprise==0.9.4
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -641,7 +641,7 @@ fnvhash==0.1.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==2.0.0
+forecast_solar==2.1.0
 
 # homeassistant.components.fortios
 fortiosapi==1.0.5
@@ -1136,7 +1136,7 @@ orvibo==1.1.1
 ovoenergy==1.1.12
 
 # homeassistant.components.p1_monitor
-p1monitor == 0.2.0
+p1monitor==0.2.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1400,7 +1400,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==82
+pydeconz==83
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -1472,7 +1472,7 @@ pyfreedompro==1.1.0
 pyfritzhome==0.6.2
 
 # homeassistant.components.fronius
-pyfronius==0.5.5
+pyfronius==0.6.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1623,7 +1623,7 @@ pymonoprice==0.3
 pymsteams==0.1.12
 
 # homeassistant.components.myq
-pymyq==3.1.2
+pymyq==3.1.3
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
@@ -1853,7 +1853,7 @@ python-forecastio==1.4.0
 # python-gammu==3.1
 
 # homeassistant.components.gc100
-python-gc100==1.0.3a
+python-gc100==1.0.3a0
 
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
@@ -2382,7 +2382,7 @@ wallbox==0.4.4
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.3
+watchdog==2.1.4
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
@@ -2435,7 +2435,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.2
+yeelight==0.7.3
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10

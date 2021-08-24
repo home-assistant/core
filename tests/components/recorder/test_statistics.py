@@ -44,6 +44,7 @@ def test_compile_hourly_statistics(hass_recorder):
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
+        "last_reset": None,
         "state": None,
         "sum": None,
     }
@@ -53,6 +54,7 @@ def test_compile_hourly_statistics(hass_recorder):
         "mean": approx(20.0),
         "min": approx(20.0),
         "max": approx(20.0),
+        "last_reset": None,
         "state": None,
         "sum": None,
     }
@@ -125,6 +127,7 @@ def test_rename_entity(hass_recorder):
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
+        "last_reset": None,
         "state": None,
         "sum": None,
     }

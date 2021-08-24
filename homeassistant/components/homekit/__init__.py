@@ -532,11 +532,6 @@ class HomeKit:
         # as pyhap uses a random one until state is restored
         if os.path.exists(persist_file):
             self.driver.load()
-            self.driver.state.config_version += 1
-            if self.driver.state.config_version > 65535:
-                self.driver.state.config_version = 1
-
-        self.driver.persist()
 
     async def async_reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
@@ -688,6 +683,7 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
+        self.driver.async_persist()
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:
