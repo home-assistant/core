@@ -20,7 +20,7 @@ async def async_setup_entry(
 
     for ain, device in coordinator.data.items():
         for description in SENSOR_DESCRIPTIONS:
-            if callable(description.suitable) and description.suitable(device):
+            if description.suitable is not None and description.suitable(device):
                 entities.append(
                     FritzBoxSensor(
                         description,
@@ -39,6 +39,6 @@ class FritzBoxSensor(FritzBoxSensorEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        if callable(self.entity_description.state):
+        if self.entity_description.state is not None:
             return self.entity_description.state(self.device)
         return None
