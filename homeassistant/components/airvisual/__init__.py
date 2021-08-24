@@ -366,7 +366,7 @@ class AirVisualEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._type = description.key
+        self._kind = description.key
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
