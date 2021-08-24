@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
 )
@@ -61,11 +60,6 @@ DEVICE_CLASS_OR_UNIT_STATISTICS = {
         DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
         PERCENTAGE: {"mean", "min", "max"},
         # Deprecated, support will be removed in Home Assistant 2021.11
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
-    },
-    STATE_CLASS_TOTAL: {
         DEVICE_CLASS_ENERGY: {"sum"},
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
