@@ -231,7 +231,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         weather.attributes.get("forecast")[18]["datetime"]
         == "2020-04-27T21:00:00+00:00"
     )
-    assert weather.attributes.get("forecast")[18]["condition"] == "sunny"
+    assert weather.attributes.get("forecast")[18]["condition"] == "clear-night"
     assert weather.attributes.get("forecast")[18]["temperature"] == 9
     assert weather.attributes.get("forecast")[18]["wind_speed"] == 4
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "NW"
