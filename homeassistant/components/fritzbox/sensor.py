@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN, SENSOR_DESCRIPTIONS
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN, SENSOR_TYPES
 
 
 async def async_setup_entry(
@@ -19,7 +19,7 @@ async def async_setup_entry(
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
-        for description in SENSOR_DESCRIPTIONS:
+        for description in SENSOR_TYPES:
             if description.suitable is not None and description.suitable(device):
                 entities.append(
                     FritzBoxSensor(

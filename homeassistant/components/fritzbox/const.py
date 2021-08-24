@@ -45,7 +45,7 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
 
 PLATFORMS: Final[list[str]] = ["binary_sensor", "climate", "switch", "sensor"]
 
-BINARY_SENSOR_DESCRIPTIONS: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
+BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     FritzBinarySensorEntityDescription(
         key="alarm",
         name="Alarm",
@@ -55,7 +55,7 @@ BINARY_SENSOR_DESCRIPTIONS: Final[tuple[FritzBinarySensorEntityDescription, ...]
     ),
 )
 
-SENSOR_DESCRIPTIONS: Final[tuple[FritzSensorEntityDescription, ...]] = (
+SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(
         key="temperature",
         name="Temperature",
