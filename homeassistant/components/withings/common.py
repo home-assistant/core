@@ -792,6 +792,7 @@ class DataManager:
             )
             for group in groups
             for measure in group.measures
+            if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
     async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:
