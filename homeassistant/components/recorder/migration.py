@@ -488,20 +488,7 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
         session.add(StatisticsRuns(start=start))
     elif new_version == 20:
         # This changed the precision of statistics from float to double
-        if engine.dialect.name == "mysql":
-            _modify_columns(
-                connection,
-                engine,
-                "statistics",
-                [
-                    "mean DOUBLE",
-                    "min DOUBLE",
-                    "max DOUBLE",
-                    "state DOUBLE",
-                    "sum DOUBLE",
-                ],
-            )
-        elif engine.dialect.name in ["oracle", "postgresql"]:
+        if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
             _modify_columns(
                 connection,
                 engine,
