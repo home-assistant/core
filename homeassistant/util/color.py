@@ -6,6 +6,8 @@ import math
 
 import attr
 
+# mypy: disallow-any-generics
+
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
@@ -392,7 +394,9 @@ def color_hs_to_xy(
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
 
-def _match_max_scale(input_colors: tuple, output_colors: tuple) -> tuple:
+def _match_max_scale(
+    input_colors: tuple[int, ...], output_colors: tuple[int, ...]
+) -> tuple[int, ...]:
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
     max_out = max(output_colors)

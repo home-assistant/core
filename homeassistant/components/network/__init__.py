@@ -1,13 +1,14 @@
 """The Network Configuration integration."""
 from __future__ import annotations
 
+from ipaddress import IPv4Address, IPv6Address
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -43,6 +44,35 @@ async def async_get_source_ip(hass: HomeAssistant, target_ip: str) -> str:
 
     source_ip = util.async_get_source_ip(target_ip)
     return source_ip if source_ip in all_ipv4s else all_ipv4s[0]
+
+
+@bind_hass
+async def async_get_enabled_source_ips(
+    hass: HomeAssistant,
+) -> list[IPv4Address | IPv6Address]:
+    """Build the list of enabled source ips."""
+    adapters = await async_get_adapters(hass)
+    sources: list[IPv4Address | IPv6Address] = []
+    for adapter in adapters:
+        if not adapter["enabled"]:
+            continue
+        if adapter["ipv4"]:
+            sources.extend(IPv4Address(ipv4["address"]) for ipv4 in adapter["ipv4"])
+        if adapter["ipv6"]:
+            # With python 3.9 add scope_ids can be
+            # added by enumerating adapter["ipv6"]s
+            # IPv6Address(f"::%{ipv6['scope_id']}")
+            sources.extend(IPv6Address(ipv6["address"]) for ipv6 in adapter["ipv6"])
+
+    return sources
+
+
+@callback
+def async_only_default_interface_enabled(adapters: list[Adapter]) -> bool:
+    """Check to see if any non-default adapter is enabled."""
+    return not any(
+        adapter["enabled"] and not adapter["default"] for adapter in adapters
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

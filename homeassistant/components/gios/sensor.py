@@ -86,7 +86,6 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
-        self._attr_icon = "mdi:blur"
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self._attrs: dict[str, Any] = {
@@ -107,7 +106,7 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
         return self._attrs
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         state = getattr(self.coordinator.data, self.entity_description.key).value
         assert self.entity_description.value is not None
@@ -118,7 +117,7 @@ class GiosAqiSensor(GiosSensor):
     """Define an GIOS AQI sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return cast(
             StateType, getattr(self.coordinator.data, self.entity_description.key).value

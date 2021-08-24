@@ -1,5 +1,5 @@
 """Support for Google - Calendar Event Devices."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 import os
@@ -27,8 +27,8 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.event import track_time_change
-from homeassistant.util import convert, dt
+from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,16 +108,19 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SINGLE_CALSEARCH_CONFIG = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
-        vol.Optional(CONF_OFFSET): cv.string,
-        vol.Optional(CONF_SEARCH): cv.string,
-        vol.Optional(CONF_TRACK): cv.boolean,
-        vol.Optional(CONF_MAX_RESULTS): cv.positive_int,
-    }
+_SINGLE_CALSEARCH_CONFIG = vol.All(
+    cv.deprecated(CONF_MAX_RESULTS),
+    vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_DEVICE_ID): cv.string,
+            vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
+            vol.Optional(CONF_OFFSET): cv.string,
+            vol.Optional(CONF_SEARCH): cv.string,
+            vol.Optional(CONF_TRACK): cv.boolean,
+            vol.Optional(CONF_MAX_RESULTS): cv.positive_int,  # Now unused
+        }
+    ),
 )
 
 DEVICE_SCHEMA = vol.Schema(
@@ -185,7 +188,12 @@ def do_authentication(hass, hass_config, config):
 
     def step2_exchange(now):
         """Keep trying to validate the user_code until it expires."""
-        if now >= dt.as_local(dev_flow.user_code_expiry):
+
+        # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
+        # object without tzinfo. For the comparison below to work, it needs one.
+        user_code_expiry = dev_flow.user_code_expiry.replace(tzinfo=timezone.utc)
+
+        if now >= user_code_expiry:
             hass.components.persistent_notification.create(
                 "Authentication code expired, please restart "
                 "Home-Assistant and try again",
@@ -213,7 +221,7 @@ def do_authentication(hass, hass_config, config):
             notification_id=NOTIFICATION_ID,
         )
 
-    listener = track_time_change(
+    listener = track_utc_time_change(
         hass, step2_exchange, second=range(0, 60, dev_flow.interval)
     )
 

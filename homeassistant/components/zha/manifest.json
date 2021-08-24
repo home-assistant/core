@@ -15,6 +15,12 @@
     "zigpy-zigate==0.7.3",
     "zigpy-znp==0.5.3"
   ],
+  "usb": [
+   {"vid":"10C4","pid":"EA60","known_devices":["slae.sh cc2652rb stick"]},
+   {"vid":"1CF1","pid":"0030","known_devices":["Conbee II"]},
+   {"vid":"1A86","pid":"7523","known_devices":["Electrolama zig-a-zig-ah"]},
+   {"vid":"10C4","pid":"8A2A","known_devices":["Nortek HUSBZB-1"]}
+  ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
     {
@@ -22,6 +28,6 @@
       "name": "tube*"
     }
   ],
-  "after_dependencies": ["zeroconf"],
+  "after_dependencies": ["usb", "zeroconf"],
   "iot_class": "local_polling"
 }

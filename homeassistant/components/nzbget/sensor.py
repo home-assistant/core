@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -22,22 +22,56 @@ from .coordinator import NZBGetDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "article_cache": ["ArticleCacheMB", "Article Cache", DATA_MEGABYTES],
-    "average_download_rate": [
-        "AverageDownloadRate",
-        "Average Speed",
-        DATA_RATE_MEGABYTES_PER_SECOND,
-    ],
-    "download_paused": ["DownloadPaused", "Download Paused", None],
-    "download_rate": ["DownloadRate", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
-    "download_size": ["DownloadedSizeMB", "Size", DATA_MEGABYTES],
-    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", DATA_MEGABYTES],
-    "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
-    "post_paused": ["PostPaused", "Post Processing Paused", None],
-    "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
-    "uptime": ["UpTimeSec", "Uptime", None],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="ArticleCacheMB",
+        name="Article Cache",
+        native_unit_of_measurement=DATA_MEGABYTES,
+    ),
+    SensorEntityDescription(
+        key="AverageDownloadRate",
+        name="Average Speed",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="DownloadPaused",
+        name="Download Paused",
+    ),
+    SensorEntityDescription(
+        key="DownloadRate",
+        name="Speed",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="DownloadedSizeMB",
+        name="Size",
+        native_unit_of_measurement=DATA_MEGABYTES,
+    ),
+    SensorEntityDescription(
+        key="FreeDiskSpaceMB",
+        name="Disk Free",
+        native_unit_of_measurement=DATA_MEGABYTES,
+    ),
+    SensorEntityDescription(
+        key="PostJobCount",
+        name="Post Processing Jobs",
+        native_unit_of_measurement="Jobs",
+    ),
+    SensorEntityDescription(
+        key="PostPaused",
+        name="Post Processing Paused",
+    ),
+    SensorEntityDescription(
+        key="RemainingSizeMB",
+        name="Queue Size",
+        native_unit_of_measurement=DATA_MEGABYTES,
+    ),
+    SensorEntityDescription(
+        key="UpTimeSec",
+        name="Uptime",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -49,21 +83,12 @@ async def async_setup_entry(
     coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
-    sensors = []
+    entities = [
+        NZBGetSensor(coordinator, entry.entry_id, entry.data[CONF_NAME], description)
+        for description in SENSOR_TYPES
+    ]
 
-    for sensor_config in SENSOR_TYPES.values():
-        sensors.append(
-            NZBGetSensor(
-                coordinator,
-                entry.entry_id,
-                entry.data[CONF_NAME],
-                sensor_config[0],
-                sensor_config[1],
-                sensor_config[2],
-            )
-        )
-
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
 class NZBGetSensor(NZBGetEntity, SensorEntity):
@@ -74,53 +99,33 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
         coordinator: NZBGetDataUpdateCoordinator,
         entry_id: str,
         entry_name: str,
-        sensor_type: str,
-        sensor_name: str,
-        unit_of_measurement: str | None = None,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize a new NZBGet sensor."""
-        self._sensor_type = sensor_type
-        self._unique_id = f"{entry_id}_{sensor_type}"
-        self._unit_of_measurement = unit_of_measurement
+        self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
 
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            name=f"{entry_name} {sensor_name}",
+            name=f"{entry_name} {description.name}",
         )
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        if "UpTimeSec" in self._sensor_type:
-            return DEVICE_CLASS_TIMESTAMP
-
-        return None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit that the state of sensor is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        value = self.coordinator.data["status"].get(self._sensor_type)
+        sensor_type = self.entity_description.key
+        value = self.coordinator.data["status"].get(sensor_type)
 
         if value is None:
-            _LOGGER.warning("Unable to locate value for %s", self._sensor_type)
+            _LOGGER.warning("Unable to locate value for %s", sensor_type)
             return None
 
-        if "DownloadRate" in self._sensor_type and value > 0:
+        if "DownloadRate" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
             return round(value / 2 ** 20, 2)
 
-        if "UpTimeSec" in self._sensor_type and value > 0:
+        if "UpTimeSec" in sensor_type and value > 0:
             uptime = utcnow() - timedelta(seconds=value)
             return uptime.replace(microsecond=0).isoformat()
 

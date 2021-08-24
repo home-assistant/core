@@ -1,4 +1,6 @@
 """Support for Modbus."""
+from __future__ import annotations
+
 import asyncio
 from collections import namedtuple
 import logging
@@ -39,22 +41,24 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLOSE_COMM_ON_ERROR,
+    CONF_MSG_WAIT,
     CONF_PARITY,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
-    CONF_RTUOVERTCP,
-    CONF_SERIAL,
     CONF_STOPBITS,
-    CONF_TCP,
-    CONF_UDP,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
+    RTUOVERTCP,
+    SERIAL,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
+    TCP,
+    UDP,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 
 ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")
 RunEntry = namedtuple("RunEntry", "attr func")
@@ -183,6 +187,8 @@ async def async_modbus_setup(
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
+    name: str
+
     def __init__(self, hass, client_config):
         """Initialize the Modbus hub."""
 
@@ -192,15 +198,15 @@ class ModbusHub:
         self._in_error = False
         self._lock = asyncio.Lock()
         self.hass = hass
-        self._config_name = client_config[CONF_NAME]
+        self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
         self._pb_call = {}
         self._pb_class = {
-            CONF_SERIAL: ModbusSerialClient,
-            CONF_TCP: ModbusTcpClient,
-            CONF_UDP: ModbusUdpClient,
-            CONF_RTUOVERTCP: ModbusTcpClient,
+            SERIAL: ModbusSerialClient,
+            TCP: ModbusTcpClient,
+            UDP: ModbusUdpClient,
+            RTUOVERTCP: ModbusTcpClient,
         }
         self._pb_params = {
             "port": client_config[CONF_PORT],
@@ -209,7 +215,7 @@ class ModbusHub:
             "retries": client_config[CONF_RETRIES],
             "retry_on_empty": client_config[CONF_RETRY_ON_EMPTY],
         }
-        if self._config_type == CONF_SERIAL:
+        if self._config_type == SERIAL:
             # serial configuration
             self._pb_params.update(
                 {
@@ -223,10 +229,16 @@ class ModbusHub:
         else:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
-            if self._config_type == CONF_RTUOVERTCP:
+            if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
+        if CONF_MSG_WAIT in client_config:
+            self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
+        elif self._config_type == SERIAL:
+            self._msg_wait = 30 / 1000
+        else:
+            self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
         log_text = f"Pymodbus: {text}"
@@ -255,7 +267,7 @@ class ModbusHub:
         """Try to connect, and retry if needed."""
         async with self._lock:
             if not await self.hass.async_add_executor_job(self._pymodbus_connect):
-                err = f"{self._config_name} connect failed, retry in pymodbus"
+                err = f"{self.name} connect failed, retry in pymodbus"
                 self._log_error(err, error_state=False)
                 return
 
@@ -271,23 +283,17 @@ class ModbusHub:
         self._async_cancel_listener = None
         self._config_delay = 0
 
-    def _pymodbus_close(self):
-        """Close sync. pymodbus."""
+    async def async_close(self):
+        """Disconnect client."""
+        if self._async_cancel_listener:
+            self._async_cancel_listener()
+            self._async_cancel_listener = None
         if self._client:
             try:
                 self._client.close()
             except ModbusException as exception_error:
                 self._log_error(str(exception_error))
         self._client = None
-
-    async def async_close(self):
-        """Disconnect client."""
-        if self._async_cancel_listener:
-            self._async_cancel_listener()
-            self._async_cancel_listener = None
-
-        async with self._lock:
-            return await self.hass.async_add_executor_job(self._pymodbus_close)
 
     def _pymodbus_connect(self):
         """Connect client."""
@@ -322,7 +328,7 @@ class ModbusHub:
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )
-            if self._config_type == "serial":
+            if self._msg_wait:
                 # small delay until next request/response
-                await asyncio.sleep(30 / 1000)
+                await asyncio.sleep(self._msg_wait)
             return result

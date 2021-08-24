@@ -529,7 +529,7 @@ class Profile:
     transition: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
-    SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+    SCHEMA = vol.Schema(
         vol.Any(
             vol.ExactSequence(
                 (

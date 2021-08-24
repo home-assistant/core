@@ -1,4 +1,6 @@
 """Support for getting collected information from PVOutput."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
@@ -9,6 +11,7 @@ from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     PLATFORM_SCHEMA,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -71,8 +74,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class PvoutputSensor(SensorEntity):
     """Representation of a PVOutput sensor."""
 
+    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_unit_of_measurement = ENERGY_WATT_HOUR
+    _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
 
     def __init__(self, rest, name):
         """Initialize a PVOutput sensor."""
@@ -95,7 +99,7 @@ class PvoutputSensor(SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.pvcoutput is not None:
             return self.pvcoutput.energy_generation

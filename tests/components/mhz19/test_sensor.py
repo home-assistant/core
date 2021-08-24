@@ -83,10 +83,11 @@ async def aiohttp_client_update_good_read(mock_function):
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
-async def test_co2_sensor(mock_function):
+async def test_co2_sensor(mock_function, hass):
     """Test CO2 sensor."""
     client = mhz19.MHZClient(co2sensor, "test.serial")
     sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, "name")
+    sensor.hass = hass
     sensor.update()
 
     assert sensor.name == "name: CO2"
@@ -97,10 +98,11 @@ async def test_co2_sensor(mock_function):
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
-async def test_temperature_sensor(mock_function):
+async def test_temperature_sensor(mock_function, hass):
     """Test temperature sensor."""
     client = mhz19.MHZClient(co2sensor, "test.serial")
     sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_TEMPERATURE, None, "name")
+    sensor.hass = hass
     sensor.update()
 
     assert sensor.name == "name: Temperature"
@@ -111,12 +113,13 @@ async def test_temperature_sensor(mock_function):
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
-async def test_temperature_sensor_f(mock_function):
+async def test_temperature_sensor_f(mock_function, hass):
     """Test temperature sensor."""
     client = mhz19.MHZClient(co2sensor, "test.serial")
     sensor = mhz19.MHZ19Sensor(
         client, mhz19.SENSOR_TEMPERATURE, TEMP_FAHRENHEIT, "name"
     )
+    sensor.hass = hass
     sensor.update()
 
     assert sensor.state == 75.2

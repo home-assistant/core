@@ -168,7 +168,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
@@ -180,7 +180,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._attributes
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 

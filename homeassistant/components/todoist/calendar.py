@@ -1,4 +1,6 @@
 """Support for Todoist task management (https://todoist.com)."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
@@ -226,14 +228,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def _parse_due_date(data: dict, gmt_string) -> datetime:
+def _parse_due_date(data: dict, gmt_string) -> datetime | None:
     """Parse the due date dict into a datetime object."""
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         return datetime.fromisoformat(data["date"]).replace(tzinfo=dt.UTC)
-    if dt.parse_datetime(data["date"]).tzinfo is None:
+    nowtime = dt.parse_datetime(data["date"])
+    if not nowtime:
+        return None
+    if nowtime.tzinfo is None:
         data["date"] += gmt_string
-    return dt.as_utc(dt.parse_datetime(data["date"]))
+    return dt.as_utc(nowtime)
 
 
 class TodoistProjectDevice(CalendarEventDevice):
@@ -533,6 +538,8 @@ class TodoistProjectData:
             due_date = _parse_due_date(
                 task["due"], self._api.state["user"]["tz_info"]["gmt_string"]
             )
+            if not due_date:
+                continue
             midnight = dt.as_utc(
                 dt.parse_datetime(
                     due_date.strftime("%Y-%m-%d")

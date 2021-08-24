@@ -49,7 +49,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return "mdi:fire-truck"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._state
 

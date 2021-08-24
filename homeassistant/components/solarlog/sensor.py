@@ -9,7 +9,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
+from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES, SolarLogSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,69 +46,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     data = await hass.async_add_executor_job(SolarlogData, hass, api, host)
 
     # Create a new sensor for each sensor type.
-    entities = []
-    for sensor_key in SENSOR_TYPES:
-        sensor = SolarlogSensor(entry.entry_id, device_name, sensor_key, data)
-        entities.append(sensor)
-
+    entities = [
+        SolarlogSensor(entry.entry_id, device_name, data, description)
+        for description in SENSOR_TYPES
+    ]
     async_add_entities(entities, True)
     return True
-
-
-class SolarlogSensor(SensorEntity):
-    """Representation of a Sensor."""
-
-    def __init__(self, entry_id, device_name, sensor_key, data):
-        """Initialize the sensor."""
-        self.device_name = device_name
-        self.sensor_key = sensor_key
-        self.data = data
-        self.entry_id = entry_id
-        self._state = None
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-        self._label = SENSOR_TYPES[self.sensor_key][1]
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
-        self._icon = SENSOR_TYPES[self.sensor_key][3]
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return f"{self.entry_id}_{self.sensor_key}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.device_name} {self._label}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the state of the sensor."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return self._icon
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_info(self):
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self.entry_id)},
-            "name": self.device_name,
-            "manufacturer": "Solar-Log",
-        }
-
-    def update(self):
-        """Get the latest data from the sensor and update the state."""
-        self.data.update()
-        self._state = self.data.data[self._json_key]
 
 
 class SolarlogData:
@@ -157,7 +100,34 @@ class SolarlogData:
             self.data["CAPACITY"] = round(self.api.capacity * 100, 0)
             self.data["EFFICIENCY"] = round(self.api.efficiency * 100, 0)
             self.data["powerAVAILABLE"] = self.api.power_available
-            self.data["USAGE"] = self.api.usage
+            self.data["USAGE"] = round(self.api.usage * 100, 0)
             _LOGGER.debug("Updated Solarlog overview data: %s", self.data)
         except AttributeError:
             _LOGGER.error("Missing details data in Solarlog response")
+
+
+class SolarlogSensor(SensorEntity):
+    """Representation of a Sensor."""
+
+    def __init__(
+        self,
+        entry_id: str,
+        device_name: str,
+        data: SolarlogData,
+        description: SolarLogSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        self.data = data
+        self._attr_name = f"{device_name} {description.name}"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry_id)},
+            "name": device_name,
+            "manufacturer": "Solar-Log",
+        }
+
+    def update(self):
+        """Get the latest data from the sensor and update the state."""
+        self.data.update()
+        self._attr_native_value = self.data.data[self.entity_description.json_key]

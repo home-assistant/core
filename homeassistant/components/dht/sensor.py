@@ -15,11 +15,10 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TEMPERATURE: ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     SENSOR_HUMIDITY: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
 }
 
@@ -69,7 +68,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
-    SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
         "AM2302": adafruit_dht.DHT22,
         "DHT11": adafruit_dht.DHT11,
@@ -94,7 +92,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 DHTSensor(
                     data,
                     variable,
-                    SENSOR_TYPES[variable][1],
                     name,
                     temperature_offset,
                     humidity_offset,
@@ -111,7 +108,6 @@ class DHTSensor(SensorEntity):
         self,
         dht_client,
         sensor_type,
-        temp_unit,
         name,
         temperature_offset,
         humidity_offset,
@@ -120,7 +116,6 @@ class DHTSensor(SensorEntity):
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.dht_client = dht_client
-        self.temp_unit = temp_unit
         self.type = sensor_type
         self.temperature_offset = temperature_offset
         self.humidity_offset = humidity_offset
@@ -134,12 +129,12 @@ class DHTSensor(SensorEntity):
         return f"{self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -159,8 +154,6 @@ class DHTSensor(SensorEntity):
             )
             if -20 <= temperature < 80:
                 self._state = round(temperature + temperature_offset, 1)
-                if self.temp_unit == TEMP_FAHRENHEIT:
-                    self._state = round(celsius_to_fahrenheit(temperature), 1)
         elif self.type == SENSOR_HUMIDITY and SENSOR_HUMIDITY in data:
             humidity = data[SENSOR_HUMIDITY]
             _LOGGER.debug("Humidity %.1f%% + offset %.1f", humidity, humidity_offset)

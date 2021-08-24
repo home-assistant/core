@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyfronius import Fronius
 import voluptuous as vol
@@ -11,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
-    SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -20,14 +21,20 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_SCAN_INTERVAL,
     CONF_SENSOR_TYPE,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +44,7 @@ TYPE_INVERTER = "inverter"
 TYPE_STORAGE = "storage"
 TYPE_METER = "meter"
 TYPE_POWER_FLOW = "power_flow"
+TYPE_LOGGER_INFO = "logger_info"
 SCOPE_DEVICE = "device"
 SCOPE_SYSTEM = "system"
 
@@ -45,8 +53,36 @@ DEFAULT_DEVICE = 0
 DEFAULT_INVERTER = 1
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
-SENSOR_TYPES = [TYPE_INVERTER, TYPE_STORAGE, TYPE_METER, TYPE_POWER_FLOW]
+SENSOR_TYPES = [
+    TYPE_INVERTER,
+    TYPE_STORAGE,
+    TYPE_METER,
+    TYPE_POWER_FLOW,
+    TYPE_LOGGER_INFO,
+]
 SCOPE_TYPES = [SCOPE_DEVICE, SCOPE_SYSTEM]
+
+PREFIX_DEVICE_CLASS_MAPPING = [
+    ("state_of_charge", DEVICE_CLASS_BATTERY),
+    ("temperature", DEVICE_CLASS_TEMPERATURE),
+    ("power_factor", DEVICE_CLASS_POWER_FACTOR),
+    ("power", DEVICE_CLASS_POWER),
+    ("energy", DEVICE_CLASS_ENERGY),
+    ("current", DEVICE_CLASS_CURRENT),
+    ("timestamp", DEVICE_CLASS_TIMESTAMP),
+    ("voltage", DEVICE_CLASS_VOLTAGE),
+]
+
+PREFIX_STATE_CLASS_MAPPING = [
+    ("state_of_charge", STATE_CLASS_MEASUREMENT),
+    ("temperature", STATE_CLASS_MEASUREMENT),
+    ("power_factor", STATE_CLASS_MEASUREMENT),
+    ("power", STATE_CLASS_MEASUREMENT),
+    ("energy", STATE_CLASS_TOTAL_INCREASING),
+    ("current", STATE_CLASS_MEASUREMENT),
+    ("timestamp", STATE_CLASS_MEASUREMENT),
+    ("voltage", STATE_CLASS_MEASUREMENT),
+]
 
 
 def _device_id_validator(config):
@@ -111,6 +147,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 adapter_cls = FroniusMeterDevice
         elif sensor_type == TYPE_POWER_FLOW:
             adapter_cls = FroniusPowerFlow
+        elif sensor_type == TYPE_LOGGER_INFO:
+            adapter_cls = FroniusLoggerInfo
         else:
             adapter_cls = FroniusStorage
 
@@ -134,16 +172,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FroniusAdapter:
     """The Fronius sensor fetching component."""
 
-    def __init__(self, bridge, name, device, add_entities):
+    def __init__(
+        self, bridge: Fronius, name: str, device: int, add_entities: AddEntitiesCallback
+    ) -> None:
         """Initialize the sensor."""
         self.bridge = bridge
         self._name = name
         self._device = device
-        self._fetched = {}
+        self._fetched: dict[str, Any] = {}
         self._available = True
 
-        self.sensors = set()
-        self._registered_sensors = set()
+        self.sensors: set[str] = set()
+        self._registered_sensors: set[SensorEntity] = set()
         self._add_entities = add_entities
 
     @property
@@ -160,12 +200,6 @@ class FroniusAdapter:
     def available(self):
         """Whether the fronius device is active."""
         return self._available
-
-    def entity_description(  # pylint: disable=no-self-use
-        self, key
-    ) -> SensorEntityDescription | None:
-        """Create entity description for a key."""
-        return None
 
     async def async_update(self):
         """Retrieve and update latest state."""
@@ -223,18 +257,6 @@ class FroniusAdapter:
 class FroniusInverterSystem(FroniusAdapter):
     """Adapter for the fronius inverter with system scope."""
 
-    def entity_description(self, key):
-        """Return the entity descriptor."""
-        if key != "energy_total":
-            return None
-
-        return SensorEntityDescription(
-            key=key,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=dt.utc_from_timestamp(0),
-        )
-
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_system_inverter_data()
@@ -242,18 +264,6 @@ class FroniusInverterSystem(FroniusAdapter):
 
 class FroniusInverterDevice(FroniusAdapter):
     """Adapter for the fronius inverter with device scope."""
-
-    def entity_description(self, key):
-        """Return the entity descriptor."""
-        if key != "energy_total":
-            return None
-
-        return SensorEntityDescription(
-            key=key,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=dt.utc_from_timestamp(0),
-        )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -271,18 +281,6 @@ class FroniusStorage(FroniusAdapter):
 class FroniusMeterSystem(FroniusAdapter):
     """Adapter for the fronius meter with system scope."""
 
-    def entity_description(self, key):
-        """Return the entity descriptor."""
-        if not key.startswith("energy_real_"):
-            return None
-
-        return SensorEntityDescription(
-            key=key,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=dt.utc_from_timestamp(0),
-        )
-
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_system_meter_data()
@@ -290,18 +288,6 @@ class FroniusMeterSystem(FroniusAdapter):
 
 class FroniusMeterDevice(FroniusAdapter):
     """Adapter for the fronius meter with device scope."""
-
-    def entity_description(self, key):
-        """Return the entity descriptor."""
-        if not key.startswith("energy_real_"):
-            return None
-
-        return SensorEntityDescription(
-            key=key,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_MEASUREMENT,
-            last_reset=dt.utc_from_timestamp(0),
-        )
 
     async def _update(self):
         """Get the values for the current state."""
@@ -311,29 +297,35 @@ class FroniusMeterDevice(FroniusAdapter):
 class FroniusPowerFlow(FroniusAdapter):
     """Adapter for the fronius power flow."""
 
-    def entity_description(self, key):
-        """Return the entity descriptor."""
-        return SensorEntityDescription(
-            key=key,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
-        )
-
     async def _update(self):
         """Get the values for the current state."""
         return await self.bridge.current_power_flow()
 
 
+class FroniusLoggerInfo(FroniusAdapter):
+    """Adapter for the fronius power flow."""
+
+    async def _update(self):
+        """Get the values for the current state."""
+        return await self.bridge.current_logger_info()
+
+
 class FroniusTemplateSensor(SensorEntity):
     """Sensor for the single values (e.g. pv power, ac power)."""
 
-    def __init__(self, parent: FroniusAdapter, key):
+    def __init__(self, parent: FroniusAdapter, key: str) -> None:
         """Initialize a singular value sensor."""
         self._key = key
         self._attr_name = f"{key.replace('_', ' ').capitalize()} {parent.name}"
         self._parent = parent
-        if entity_description := parent.entity_description(key):
-            self.entity_description = entity_description
+        for prefix, device_class in PREFIX_DEVICE_CLASS_MAPPING:
+            if self._key.startswith(prefix):
+                self._attr_device_class = device_class
+                break
+        for prefix, state_class in PREFIX_STATE_CLASS_MAPPING:
+            if self._key.startswith(prefix):
+                self._attr_state_class = state_class
+                break
 
     @property
     def should_poll(self):
@@ -348,10 +340,10 @@ class FroniusTemplateSensor(SensorEntity):
     async def async_update(self):
         """Update the internal state."""
         state = self._parent.data.get(self._key)
-        self._attr_state = state.get("value")
-        if isinstance(self._attr_state, float):
-            self._attr_state = round(self._attr_state, 2)
-        self._attr_unit_of_measurement = state.get("unit")
+        self._attr_native_value = state.get("value")
+        if isinstance(self._attr_native_value, float):
+            self._attr_native_value = round(self._attr_native_value, 2)
+        self._attr_native_unit_of_measurement = state.get("unit")
 
     async def async_added_to_hass(self):
         """Register at parent component for updates."""

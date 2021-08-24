@@ -1,8 +1,6 @@
 """Provide the device conditions for Select."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -20,6 +18,8 @@ from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import ATTR_OPTIONS, CONF_OPTION, DOMAIN
+
+# nypy: disallow-any-generics
 
 CONDITION_TYPES = {"selected_option"}
 
@@ -71,7 +71,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, Any]:
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     try:
         options = get_capability(hass, config[CONF_ENTITY_ID], ATTR_OPTIONS) or []

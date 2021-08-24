@@ -71,7 +71,13 @@ httplib2>=0.19.0
 
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148
+# Newer versions of some other libraries pin a higher version of grpcio,
+# so those also need to be kept at an old version until the grpcio pin
+# is reverted, see:
+# https://github.com/home-assistant/core/issues/53427
 grpcio==1.31.0
+google-cloud-pubsub==2.1.0
+google-api-core<=1.31.2
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
