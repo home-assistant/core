@@ -261,7 +261,7 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL": "nanoleaf",
+    "NL*": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",

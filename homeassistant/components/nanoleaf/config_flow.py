@@ -78,12 +78,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle Nanoleaf Zeroconf discovery."""
-        _LOGGER.debug("Zeroconf discovered: %s", discovery_info)
+        _LOGGER.debug(
+            "Zeroconf discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
+            discovery_info,
+            self.context,
+            self._async_in_progress(),
+            self._async_in_progress(include_uninitialized=True),
+        )
         return await self._async_discovery_handler(discovery_info)
 
     async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle Nanoleaf Homekit discovery."""
-        _LOGGER.debug("Homekit discovered: %s", discovery_info)
+        _LOGGER.debug(
+            "Homekit discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
+            discovery_info,
+            self.context,
+            self._async_in_progress(),
+            self._async_in_progress(include_uninitialized=True),
+        )
         return await self._async_discovery_handler(discovery_info)
 
     async def _async_discovery_handler(
@@ -93,8 +105,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info["host"]
         # The name is unique and printed on the device and cannot be changed.
         name = discovery_info["name"].replace(f".{discovery_info['type']}", "")
+        _LOGGER.debug(
+            "About to set unique_id discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
+            discovery_info,
+            self.context,
+            self._async_in_progress(),
+            self._async_in_progress(include_uninitialized=True),
+        )
         await self.async_set_unique_id(name)
+        _LOGGER.debug(
+            "Did set unique_id discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
+            discovery_info,
+            self.context,
+            self._async_in_progress(),
+            self._async_in_progress(include_uninitialized=True),
+        )
         self._abort_if_unique_id_configured({CONF_HOST: host})
+        _LOGGER.debug(
+            "Did abort if unique_id discovered: %s -- context: %s -- in_progress: %s -- in_progress_with_unint: %s",
+            discovery_info,
+            self.context,
+            self._async_in_progress(),
+            self._async_in_progress(include_uninitialized=True),
+        )
         self.nanoleaf = Nanoleaf(host)
 
         # Import from discovery integration
