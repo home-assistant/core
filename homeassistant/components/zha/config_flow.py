@@ -102,13 +102,17 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device = discovery_info["device"]
         manufacturer = discovery_info["manufacturer"]
         description = discovery_info["description"]
-        await self.async_set_unique_id(
-            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        )
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: {CONF_DEVICE_PATH: dev_path}}
-        )
+        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        if current_entry := await self.async_set_unique_id(unique_id):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data[CONF_DEVICE],
+                        CONF_DEVICE_PATH: dev_path,
+                    },
+                }
+            )
         # Check if already configured
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -164,12 +168,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info[CONF_HOST]
         device_path = f"socket://{host}:6638"
 
-        await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
-            }
-        )
+        if current_entry := await self.async_set_unique_id(node_name):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data[CONF_DEVICE],
+                        CONF_DEVICE_PATH: device_path,
+                    },
+                }
+            )
 
         # Check if already configured
         if self._async_current_entries():
