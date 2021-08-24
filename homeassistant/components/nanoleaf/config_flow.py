@@ -110,11 +110,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.discovery_conf.get(host, {}).get("token"),  # < 2021.4
         )
         if self.nanoleaf.token is not None:
-            self.context["source"] = config_entries.SOURCE_INTEGRATION_DISCOVERY
             _LOGGER.warning(
                 "Importing Nanoleaf %s from the discovery integration", name
             )
-            return await self.async_setup_finish()
+            return await self.async_setup_finish(discovery_integration_import=True)
 
         self.context["title_placeholders"] = {"name": name}
         return await self.async_step_link()
@@ -149,7 +148,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.nanoleaf.token = config[CONF_TOKEN]
         return await self.async_setup_finish()
 
-    async def async_setup_finish(self) -> FlowResult:
+    async def async_setup_finish(
+        self, discovery_integration_import: bool = False
+    ) -> FlowResult:
         """Finish Nanoleaf config flow."""
         try:
             info = await self.hass.async_add_executor_job(
@@ -158,9 +159,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Unavailable:
             return self.async_abort(reason="cannot_connect")
         except InvalidToken:
-            return self.async_show_form(
-                step_id="link", errors={"base": "invalid_token"}
-            )
+            return self.async_abort(reason="invalid_token")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with Nanoleaf at %s with token %s",
@@ -173,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(name)
         self._abort_if_unique_id_configured({CONF_HOST: self.nanoleaf.host})
 
-        if self.context["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY:
+        if discovery_integration_import:
             if self.nanoleaf.host in self.discovery_conf:
                 self.discovery_conf.pop(self.nanoleaf.host)
             if self.device_id in self.discovery_conf:

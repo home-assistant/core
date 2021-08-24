@@ -283,7 +283,6 @@ async def test_import_config(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
-
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -305,10 +304,8 @@ async def test_import_config_invalid_token(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-    assert result["errors"] == {"base": "invalid_token"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_token"
 
 
 async def test_import_last_discovery_integration_host_zeroconf(
@@ -329,7 +326,7 @@ async def test_import_last_discovery_integration_host_zeroconf(
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.os.remove",
         return_value=None,
-    ), patch(
+    ) as mock_remove, patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -350,6 +347,7 @@ async def test_import_last_discovery_integration_host_zeroconf(
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    mock_remove.assert_called_once()
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -375,7 +373,7 @@ async def test_import_not_last_discovery_integration_device_id_homekit(
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.save_json",
         return_value=None,
-    ), patch(
+    ) as mock_save_json, patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -396,5 +394,6 @@ async def test_import_not_last_discovery_integration_device_id_homekit(
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    mock_save_json.assert_called_once()
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
