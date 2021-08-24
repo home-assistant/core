@@ -28,7 +28,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    ssl_context = await ClientSSLContext.get_ssl_context()
+    client_ssl_context = ClientSSLContext()
+    ssl_context = await client_ssl_context.get_ssl_context()
     client_session = aiohttp_client.async_get_clientsession(hass)
     account = Account(data["username"], data["password"])
     client = Client(client_session, account, ssl_context)
