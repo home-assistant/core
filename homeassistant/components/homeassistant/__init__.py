@@ -45,7 +45,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
             **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
-    cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+    cv.has_at_least_one_key(ATTR_ENTRY_ID, *(str(k) for k in cv.ENTITY_SERVICE_FIELDS)),
 )
 
 
