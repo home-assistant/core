@@ -8,7 +8,6 @@ from pyfritzhome import FritzhomeDevice
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.helpers.entity import EntityDescription
 
 
 class EntityInfo(TypedDict):
@@ -50,23 +49,35 @@ class SwitchExtraAttributes(TypedDict, total=False):
 
 
 @dataclass
-class FritzEntityDescription(EntityDescription):
-    """Description for Fritz!Smarthome entities."""
+class FritzEntityDescriptionMixinBase:
+    """Bases description mixin for Fritz!Smarthome entities."""
 
-    suitable: Callable[[FritzhomeDevice], bool] | None = None
+    suitable: Callable[[FritzhomeDevice], bool]
 
 
 @dataclass
-class FritzSensorEntityDescription(FritzEntityDescription, SensorEntityDescription):
-    """Description for Fritz!Smarthome sensor entities."""
+class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
+    """Sensor description mixin for Fritz!Smarthome entities."""
 
-    native_value: Callable[[FritzhomeDevice], float | int | None] | None = None
+    native_value: Callable[[FritzhomeDevice], float | int | None]
+
+
+@dataclass
+class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
+    """BinarySensor description mixin for Fritz!Smarthome entities."""
+
+    is_on: Callable[[FritzhomeDevice], bool | None]
+
+
+@dataclass
+class FritzSensorEntityDescription(
+    SensorEntityDescription, FritzEntityDescriptionMixinSensor
+):
+    """Description for Fritz!Smarthome sensor entities."""
 
 
 @dataclass
 class FritzBinarySensorEntityDescription(
-    FritzEntityDescription, BinarySensorEntityDescription
+    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
 ):
     """Description for Fritz!Smarthome binary sensor entities."""
-
-    is_on: Callable[[FritzhomeDevice], bool | None] | None = None

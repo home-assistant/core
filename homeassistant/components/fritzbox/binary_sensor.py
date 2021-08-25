@@ -23,7 +23,7 @@ async def async_setup_entry(
 
     for ain, device in coordinator.data.items():
         for description in BINARY_SENSOR_TYPES:
-            if description.suitable is not None and description.suitable(device):
+            if description.suitable(device):
                 entities.append(
                     FritzboxBinarySensor(
                         coordinator,
@@ -54,6 +54,4 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        if self.entity_description.is_on is not None:
-            return self.entity_description.is_on(self.device)
-        return None
+        return self.entity_description.is_on(self.device)

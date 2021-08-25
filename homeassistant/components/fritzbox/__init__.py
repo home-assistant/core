@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -32,7 +32,7 @@ from .const import (
     LOGGER,
     PLATFORMS,
 )
-from .model import FritzEntityDescription, FritzExtraAttributes
+from .model import FritzExtraAttributes
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -134,7 +134,7 @@ class FritzBoxEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
         ain: str,
-        entity_description: FritzEntityDescription | None = None,
+        entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator)

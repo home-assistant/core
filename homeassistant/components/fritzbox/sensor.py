@@ -20,7 +20,7 @@ async def async_setup_entry(
 
     for ain, device in coordinator.data.items():
         for description in SENSOR_TYPES:
-            if description.suitable is not None and description.suitable(device):
+            if description.suitable(device):
                 entities.append(
                     FritzBoxSensor(
                         coordinator,
@@ -39,6 +39,4 @@ class FritzBoxSensor(FritzBoxEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        if self.entity_description.native_value is not None:
-            return self.entity_description.native_value(self.device)
-        return None
+        return self.entity_description.native_value(self.device)
