@@ -301,6 +301,9 @@ async def test_reauth(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
         return_value=nanoleaf,
+    ), patch(
+        "homeassistant.components.nanoleaf.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
