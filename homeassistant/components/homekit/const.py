@@ -1,5 +1,7 @@
 """Constants used be the HomeKit component."""
 
+from homeassistant.const import CONF_DEVICES
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
@@ -136,6 +138,7 @@ SERV_MOTION_SENSOR = "MotionSensor"
 SERV_OCCUPANCY_SENSOR = "OccupancySensor"
 SERV_OUTLET = "Outlet"
 SERV_SECURITY_SYSTEM = "SecuritySystem"
+SERV_SERVICE_LABEL = "ServiceLabel"
 SERV_SMOKE_SENSOR = "SmokeSensor"
 SERV_SPEAKER = "Speaker"
 SERV_STATELESS_PROGRAMMABLE_SWITCH = "StatelessProgrammableSwitch"
@@ -205,6 +208,8 @@ CHAR_ROTATION_DIRECTION = "RotationDirection"
 CHAR_ROTATION_SPEED = "RotationSpeed"
 CHAR_SATURATION = "Saturation"
 CHAR_SERIAL_NUMBER = "SerialNumber"
+CHAR_SERVICE_LABEL_INDEX = "ServiceLabelIndex"
+CHAR_SERVICE_LABEL_NAMESPACE = "ServiceLabelNamespace"
 CHAR_SLEEP_DISCOVER_MODE = "SleepDiscoveryMode"
 CHAR_SMOKE_DETECTED = "SmokeDetected"
 CHAR_STATUS_LOW_BATTERY = "StatusLowBattery"
@@ -292,6 +297,7 @@ CONFIG_OPTIONS = [
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
     CONF_HOMEKIT_MODE,
+    CONF_DEVICES,
 ]
 
 # ### Maximum Lengths ###
