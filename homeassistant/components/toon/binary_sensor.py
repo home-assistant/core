@@ -1,7 +1,14 @@
 """Support for Toon binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from dataclasses import dataclass
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -12,6 +19,7 @@ from .models import (
     ToonBoilerModuleDeviceEntity,
     ToonDisplayDeviceEntity,
     ToonEntity,
+    ToonRequiredKeysMixin,
 )
 
 
@@ -83,10 +91,94 @@ class ToonBoilerModuleBinarySensor(ToonBinarySensor, ToonBoilerModuleDeviceEntit
     """Defines a Boiler module binary sensor."""
 
 
-# pylint: disable=wrong-import-position
-# Necessary to prevent circular import
-from .entity_descriptions import (  # noqa: E402
-    BINARY_SENSOR_ENTITIES,
-    BINARY_SENSOR_ENTITIES_BOILER,
-    ToonBinarySensorEntityDescription,
+@dataclass
+class ToonBinarySensorRequiredKeysMixin(ToonRequiredKeysMixin):
+    """Mixin for binary sensor required keys."""
+
+    cls: type[ToonBinarySensor]
+
+
+@dataclass
+class ToonBinarySensorEntityDescription(
+    BinarySensorEntityDescription, ToonBinarySensorRequiredKeysMixin
+):
+    """Describes Toon binary sensor entity."""
+
+    inverted: bool = False
+
+
+BINARY_SENSOR_ENTITIES = (
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_boiler_connected_None",
+        name="Boiler Module Connection",
+        section="thermostat",
+        measurement="boiler_module_connected",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_registry_enabled_default=False,
+        cls=ToonBoilerModuleBinarySensor,
+    ),
+    ToonBinarySensorEntityDescription(
+        key="thermostat_program_overridden",
+        name="Thermostat Program Override",
+        section="thermostat",
+        measurement="program_overridden",
+        icon="mdi:gesture-tap",
+        cls=ToonDisplayBinarySensor,
+    ),
+)
+
+BINARY_SENSOR_ENTITIES_BOILER: tuple[ToonBinarySensorEntityDescription, ...] = (
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_burner_info_1",
+        name="Boiler Heating",
+        section="thermostat",
+        measurement="heating",
+        icon="mdi:fire",
+        entity_registry_enabled_default=False,
+        cls=ToonBoilerBinarySensor,
+    ),
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_burner_info_2",
+        name="Hot Tap Water",
+        section="thermostat",
+        measurement="hot_tapwater",
+        icon="mdi:water-pump",
+        cls=ToonBoilerBinarySensor,
+    ),
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_burner_info_3",
+        name="Boiler Preheating",
+        section="thermostat",
+        measurement="pre_heating",
+        icon="mdi:fire",
+        entity_registry_enabled_default=False,
+        cls=ToonBoilerBinarySensor,
+    ),
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_burner_info_None",
+        name="Boiler Burner",
+        section="thermostat",
+        measurement="burner",
+        icon="mdi:fire",
+        cls=ToonBoilerBinarySensor,
+    ),
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_error_found_255",
+        name="Boiler Status",
+        section="thermostat",
+        measurement="error_found",
+        device_class=DEVICE_CLASS_PROBLEM,
+        icon="mdi:alert",
+        cls=ToonBoilerBinarySensor,
+    ),
+    ToonBinarySensorEntityDescription(
+        key="thermostat_info_ot_communication_error_0",
+        name="OpenTherm Connection",
+        section="thermostat",
+        measurement="opentherm_communication_error",
+        device_class=DEVICE_CLASS_PROBLEM,
+        icon="mdi:check-network-outline",
+        entity_registry_enabled_default=False,
+        cls=ToonBoilerBinarySensor,
+    ),
 )

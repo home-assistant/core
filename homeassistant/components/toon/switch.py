@@ -1,6 +1,7 @@
 """Support for Toon switches."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from toonapi import (
@@ -10,14 +11,14 @@ from toonapi import (
     PROGRAM_STATE_ON,
 )
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity, ToonEntity
+from .models import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 
 
 async def async_setup_entry(
@@ -92,9 +93,33 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
         )
 
 
-# pylint: disable=wrong-import-position
-# Necessary to prevent circular import
-from .entity_descriptions import (  # noqa: E402
-    SWITCH_ENTITIES,
-    ToonSwitchEntityDescription,
+@dataclass
+class ToonSwitchRequiredKeysMixin(ToonRequiredKeysMixin):
+    """Mixin for switch required keys."""
+
+    cls: type[ToonSwitch]
+
+
+@dataclass
+class ToonSwitchEntityDescription(SwitchEntityDescription, ToonSwitchRequiredKeysMixin):
+    """Describes Toon switch entity."""
+
+
+SWITCH_ENTITIES: tuple[ToonSwitchEntityDescription, ...] = (
+    ToonSwitchEntityDescription(
+        key="thermostat_holiday_mode",
+        name="Holiday Mode",
+        section="thermostat",
+        measurement="holiday_mode",
+        icon="mdi:airport",
+        cls=ToonHolidayModeSwitch,
+    ),
+    ToonSwitchEntityDescription(
+        key="thermostat_program",
+        name="Thermostat Program",
+        section="thermostat",
+        measurement="program",
+        icon="mdi:calendar-clock",
+        cls=ToonProgramSwitch,
+    ),
 )
