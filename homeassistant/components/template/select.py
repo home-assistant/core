@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -21,7 +22,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
+from .const import CONF_AVAILABILITY
 from .template_entity import TemplateEntity
 
 CONF_SELECT_OPTION = "select_option"
@@ -34,11 +35,7 @@ SELECT_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_ATTRIBUTES): vol.Schema(
-            {
-                vol.Required(ATTR_OPTIONS): cv.template,
-            }
-        ),
+        vol.Required(ATTR_OPTIONS): cv.template,
         vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -63,7 +60,7 @@ async def _async_create_entities(
                 entity[CONF_STATE],
                 entity.get(CONF_AVAILABILITY),
                 entity[CONF_SELECT_OPTION],
-                entity[CONF_ATTRIBUTES][ATTR_OPTIONS],
+                entity[ATTR_OPTIONS],
                 entity.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
                 unique_id,
             )
@@ -156,6 +153,7 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
 
     domain = SELECT_DOMAIN
     extra_template_keys = (CONF_STATE,)
+    extra_template_keys_complex = (ATTR_OPTIONS,)
 
     def __init__(
         self,
@@ -186,7 +184,8 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return the list of available options."""
-        return self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_OPTIONS, [])
+        logging.getLogger(__name__).error(self._rendered)
+        return self._rendered.get(ATTR_OPTIONS, [])
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

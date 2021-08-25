@@ -47,9 +47,7 @@ async def test_missing_optional_config(hass, calls):
                     "select": {
                         "state": "{{ 'a' }}",
                         "select_option": {"service": "script.select_option"},
-                        "attributes": {
-                            "options": "{{ ['a', 'b'] }}",
-                        },
+                        "options": "{{ ['a', 'b'] }}",
                     }
                 }
             },
@@ -72,9 +70,7 @@ async def test_missing_required_keys(hass, calls):
                 "template": {
                     "select": {
                         "select_option": {"service": "script.select_option"},
-                        "attributes": {
-                            "options": "{{ ['a', 'b'] }}",
-                        },
+                        "options": "{{ ['a', 'b'] }}",
                     }
                 }
             },
@@ -102,9 +98,7 @@ async def test_missing_required_keys(hass, calls):
                 "template": {
                     "select": {
                         "state": "{{ 'a' }}",
-                        "attributes": {
-                            "options": "{{ ['a', 'b'] }}",
-                        },
+                        "options": "{{ ['a', 'b'] }}",
                     }
                 }
             },
@@ -143,9 +137,7 @@ async def test_templates_with_entities(hass, calls):
                     "unique_id": "b",
                     "select": {
                         "state": f"{{{{ states('{_OPTION_INPUT_SELECT}') }}}}",
-                        "attributes": {
-                            "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
-                        },
+                        "options": f"{{{{ state_attr('{_OPTION_INPUT_SELECT}', '{INPUT_SELECT_ATTR_OPTIONS}') }}}}",
                         "select_option": {
                             "service": "input_select.select_option",
                             "data_template": {
@@ -219,7 +211,7 @@ async def test_trigger_select(hass):
                             "name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "state": "{{ trigger.event.data.beer }}",
-                            "attributes": {"options": "{{ trigger.event.data.beers }}"},
+                            "options": "{{ trigger.event.data.beers }}",
                             "select_option": {"event": "test_number_event"},
                             "optimistic": True,
                         },
