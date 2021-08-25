@@ -576,6 +576,7 @@ async def test_color_setting_color_light(hass, supported_color_modes):
             {
                 light.ATTR_HS_COLOR: (20, 94),
                 light.ATTR_BRIGHTNESS: 200,
+                light.ATTR_COLOR_MODE: "hs",
                 "supported_color_modes": supported_color_modes,
             },
         ),
@@ -634,6 +635,7 @@ async def test_color_setting_temperature_light(hass):
             STATE_ON,
             {
                 light.ATTR_MIN_MIREDS: 200,
+                light.ATTR_COLOR_MODE: "color_temp",
                 light.ATTR_COLOR_TEMP: 300,
                 light.ATTR_MAX_MIREDS: 500,
                 "supported_color_modes": ["color_temp"],
