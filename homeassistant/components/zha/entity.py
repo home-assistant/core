@@ -10,6 +10,7 @@ from typing import Any
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -34,7 +35,7 @@ from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
-UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
+UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -230,6 +231,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._entity_ids: list[str] = entity_ids
         self._async_unsub_state_changed: CALLBACK_TYPE | None = None
         self._handled_group_membership = False
+        self._change_listener_debouncer: Debouncer | None = None
 
     @property
     def available(self) -> bool:
@@ -256,6 +258,14 @@ class ZhaGroupEntity(BaseZhaEntity):
             signal_override=True,
         )
 
+        if self._change_listener_debouncer is None:
+            self._change_listener_debouncer = Debouncer(
+                self.hass,
+                self,
+                cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
+                immediate=False,
+                function=functools.partial(self.async_update_ha_state, True),
+            )
         self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, self._entity_ids, self.async_state_changed_listener
         )
@@ -271,10 +281,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
-        self.hass.loop.call_later(
-            UPDATE_GROUP_FROM_CHILD_DELAY,
-            lambda: self.async_schedule_update_ha_state(True),
-        )
+        self.hass.create_task(self._change_listener_debouncer.async_call())
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""

@@ -102,14 +102,17 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         device = discovery_info["device"]
         manufacturer = discovery_info["manufacturer"]
         description = discovery_info["description"]
-        await self.async_set_unique_id(
-            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        )
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {CONF_DEVICE_PATH: self._device_path},
-            }
-        )
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        if current_entry := await self.async_set_unique_id(unique_id):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data[CONF_DEVICE],
+                        CONF_DEVICE_PATH: dev_path,
+                    },
+                }
+            )
         # Check if already configured
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -127,7 +130,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if vid == "10C4" and pid == "8A2A" and "ZigBee" not in description:
             return self.async_abort(reason="not_zha_device")
 
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         self._auto_detected_data = await detect_radios(dev_path)
         if self._auto_detected_data is None:
             return self.async_abort(reason="not_zha_device")
@@ -166,12 +168,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info[CONF_HOST]
         device_path = f"socket://{host}:6638"
 
-        await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {CONF_DEVICE_PATH: device_path},
-            }
-        )
+        if current_entry := await self.async_set_unique_id(node_name):
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data[CONF_DEVICE],
+                        CONF_DEVICE_PATH: device_path,
+                    },
+                }
+            )
 
         # Check if already configured
         if self._async_current_entries():
@@ -233,7 +238,10 @@ async def detect_radios(dev_path: str) -> dict[str, Any] | None:
     """Probe all radio types on the device port."""
     for radio in RadioType:
         dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
-        if await radio.controller.probe(dev_config):
+        probe_result = await radio.controller.probe(dev_config)
+        if probe_result:
+            if isinstance(probe_result, dict):
+                return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: probe_result}
             return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: dev_config}
 
     return None

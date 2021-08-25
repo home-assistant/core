@@ -15,10 +15,9 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ SENSOR_PRESS = "pressure"
 SENSOR_GAS = "gas"
 SENSOR_AQ = "airquality"
 SENSOR_TYPES = {
-    SENSOR_TEMP: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TEMP: ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     SENSOR_HUMID: ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
     SENSOR_PRESS: ["Pressure", "mb", DEVICE_CLASS_PRESSURE],
     SENSOR_GAS: ["Gas Resistance", "Ohms", None],
@@ -110,7 +109,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BME680 sensor."""
-    SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config[CONF_NAME]
 
     sensor_handler = await hass.async_add_executor_job(_setup_bme680, config)
@@ -119,9 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(
-            BME680Sensor(sensor_handler, variable, SENSOR_TYPES[variable][1], name)
-        )
+        dev.append(BME680Sensor(sensor_handler, variable, name))
 
     async_add_entities(dev)
     return
@@ -321,11 +317,10 @@ class BME680Handler:
 class BME680Sensor(SensorEntity):
     """Implementation of the BME680 sensor."""
 
-    def __init__(self, bme680_client, sensor_type, temp_unit, name):
+    def __init__(self, bme680_client, sensor_type, name):
         """Initialize the sensor."""
         self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self.bme680_client = bme680_client
-        self.temp_unit = temp_unit
         self.type = sensor_type
         self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][2]
@@ -337,8 +332,6 @@ class BME680Sensor(SensorEntity):
             self._attr_native_value = round(
                 self.bme680_client.sensor_data.temperature, 1
             )
-            if self.temp_unit == TEMP_FAHRENHEIT:
-                self._attr_native_value = round(celsius_to_fahrenheit(self.state), 1)
         elif self.type == SENSOR_HUMID:
             self._attr_native_value = round(self.bme680_client.sensor_data.humidity, 1)
         elif self.type == SENSOR_PRESS:

@@ -50,8 +50,23 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: "sensor",
     CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: "number",
-    CharacteristicsTypes.get_uuid(CharacteristicsTypes.TEMPERATURE_CURRENT): "sensor",
-    CharacteristicsTypes.get_uuid(
-        CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT
-    ): "sensor",
+    CharacteristicsTypes.TEMPERATURE_CURRENT: "sensor",
+    CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: "sensor",
+    CharacteristicsTypes.AIR_QUALITY: "sensor",
+    CharacteristicsTypes.DENSITY_PM25: "sensor",
+    CharacteristicsTypes.DENSITY_PM10: "sensor",
+    CharacteristicsTypes.DENSITY_OZONE: "sensor",
+    CharacteristicsTypes.DENSITY_NO2: "sensor",
+    CharacteristicsTypes.DENSITY_SO2: "sensor",
+    CharacteristicsTypes.DENSITY_VOC: "sensor",
 }
+
+# For legacy reasons, "built-in" characteristic types are in their short form
+# And vendor types don't have a short form
+# This means long and short forms get mixed up in this dict, and comparisons
+# don't work!
+# We call get_uuid on *every* type to normalise them to the long form
+# Eventually aiohomekit will use the long form exclusively amd this can be removed.
+for k, v in list(CHARACTERISTIC_PLATFORMS.items()):
+    value = CHARACTERISTIC_PLATFORMS.pop(k)
+    CHARACTERISTIC_PLATFORMS[CharacteristicsTypes.get_uuid(k)] = value

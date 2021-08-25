@@ -316,7 +316,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             }
         )
         self._mode = self._state_attrs.get(ATTR_MODE)
-        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL)
+        self._fan_level = self.coordinator.data.fan_level
         self.async_write_ha_state()
 
     #
@@ -423,7 +423,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             {attribute: None for attribute in self._available_attributes}
         )
         self._mode = self._state_attrs.get(ATTR_MODE)
-        self._fan_level = self._state_attrs.get(ATTR_FAN_LEVEL)
+        self._fan_level = self.coordinator.data.fan_level
 
     @property
     def preset_mode(self):
@@ -451,6 +451,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
         This method is a coroutine.
         """
+        if percentage == 0:
+            await self.async_turn_off()
+            return
+
         speed_mode = math.ceil(
             percentage_to_ranged_value((1, self._speed_count), percentage)
         )
@@ -510,6 +514,8 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     @property
     def percentage(self):
         """Return the current percentage based speed."""
+        if self._fan_level is None:
+            return None
         if self._state:
             return ranged_value_to_percentage((1, 3), self._fan_level)
 
@@ -529,6 +535,10 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 
         This method is a coroutine.
         """
+        if percentage == 0:
+            await self.async_turn_off()
+            return
+
         fan_level = math.ceil(percentage_to_ranged_value((1, 3), percentage))
         if not fan_level:
             return

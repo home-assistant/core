@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "Denne enheten er ikke en zha -enhet",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -8,6 +9,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Vil du konfigurere {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio type"
