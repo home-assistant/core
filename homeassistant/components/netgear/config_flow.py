@@ -161,9 +161,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if host is None:
             host = self.placeholders[CONF_HOST]
         if port is None:
-            host = self.placeholders[CONF_PORT]
+            port = self.placeholders[CONF_PORT]
         if ssl is None:
-            host = self.placeholders[CONF_SSL]
+            ssl = self.placeholders[CONF_SSL]
         username = user_input.get(CONF_USERNAME)
         password = user_input[CONF_PASSWORD]
 
