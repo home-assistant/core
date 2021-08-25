@@ -358,7 +358,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
 
         for key in (CONF_DELAY_ON, CONF_DELAY_OFF, CONF_AUTO_OFF):
             if isinstance(config.get(key), template.Template):
-                self._to_render.append(key)
+                self._to_render_simple.append(key)
                 self._parse_result.add(key)
 
         self._delay_cancel = None
