@@ -3,7 +3,11 @@ from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.components.utility_meter.const import (
     ATTR_TARIFF,
     ATTR_VALUE,
@@ -165,6 +169,7 @@ async def test_device_class(hass):
         "utility_meter": {
             "energy_meter": {
                 "source": "sensor.energy",
+                "net_consumption": True,
             },
             "gas_meter": {
                 "source": "sensor.gas",
@@ -197,7 +202,7 @@ async def test_device_class(hass):
     assert state is not None
     assert state.state == "0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     hass.states.async_set(
@@ -219,7 +224,7 @@ async def test_device_class(hass):
     assert state is not None
     assert state.state == "1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "some_archaic_unit"
 
 
