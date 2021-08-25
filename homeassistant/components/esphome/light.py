@@ -29,6 +29,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
+    valid_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -232,15 +233,11 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["white"] = 1.0
             color_modes = _filter_color_modes(color_modes, LightColorCapability.WHITE)
 
-        if self._supports_color_mode:
-            if self._state is not None and self._state.color_mode in color_modes:
-                # if possible, stay with the color mode that is already set
-                data["color_mode"] = self._state.color_mode
-            elif color_modes:
-                # otherwise try the color mode with the least complexity (fewest capabilities set)
-                # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
-                color_modes.sort(key=lambda mode: bin(mode).count("1"))
-                data["color_mode"] = color_modes[0]
+        if self._supports_color_mode and color_modes:
+            # try the color mode with the least complexity (fewest capabilities set)
+            # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
+            color_modes.sort(key=lambda mode: bin(mode).count("1"))
+            data["color_mode"] = color_modes[0]
 
         await self._client.light_command(**data)
 
@@ -349,7 +346,9 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
-        return set(map(_color_mode_to_ha, self._native_supported_color_modes))
+        return valid_supported_color_modes(
+            map(_color_mode_to_ha, self._native_supported_color_modes)
+        )
 
     @property
     def effect_list(self) -> list[str]:
