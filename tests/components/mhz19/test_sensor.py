@@ -122,4 +122,4 @@ async def test_temperature_sensor_f(mock_function, hass):
         sensor.hass = hass
         sensor.update()
 
-        assert sensor.state == "75"
+        assert sensor.state == 75
