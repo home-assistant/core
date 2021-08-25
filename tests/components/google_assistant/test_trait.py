@@ -34,6 +34,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -384,6 +385,74 @@ async def test_locate_vacuum(hass):
 
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": True}, {})
+    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
+
+
+async def test_energystorage_vacuum(hass):
+    """Test EnergyStorage trait support for vacuum domain."""
+    assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
+    assert trait.EnergyStorageTrait.supported(
+        vacuum.DOMAIN, vacuum.SUPPORT_BATTERY, None, None
+    )
+
+    trt = trait.EnergyStorageTrait(
+        hass,
+        State(
+            "vacuum.bla",
+            vacuum.STATE_DOCKED,
+            {
+                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_BATTERY,
+                ATTR_BATTERY_LEVEL: 100,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "isRechargeable": True,
+        "queryOnlyEnergyStorage": True,
+    }
+
+    assert trt.query_attributes() == {
+        "descriptiveCapacityRemaining": "FULL",
+        "capacityRemaining": [{"rawValue": 100, "unit": "PERCENTAGE"}],
+        "capacityUntilFull": [{"rawValue": 0, "unit": "PERCENTAGE"}],
+        "isCharging": True,
+        "isPluggedIn": True,
+    }
+
+    trt = trait.EnergyStorageTrait(
+        hass,
+        State(
+            "vacuum.bla",
+            vacuum.STATE_CLEANING,
+            {
+                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_BATTERY,
+                ATTR_BATTERY_LEVEL: 20,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "isRechargeable": True,
+        "queryOnlyEnergyStorage": True,
+    }
+
+    assert trt.query_attributes() == {
+        "descriptiveCapacityRemaining": "CRITICALLY_LOW",
+        "capacityRemaining": [{"rawValue": 20, "unit": "PERCENTAGE"}],
+        "capacityUntilFull": [{"rawValue": 80, "unit": "PERCENTAGE"}],
+        "isCharging": False,
+        "isPluggedIn": False,
+    }
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": True}, {})
+    assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_CHARGE, BASIC_DATA, {"charge": False}, {})
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
