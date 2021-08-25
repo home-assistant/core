@@ -10,12 +10,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def mock_config_entry(uniqe_id: str, entry_id: str = "an_entry_id") -> MockConfigEntry:
+def mock_config_entry(unique_id: str, entry_id: str = "an_entry_id") -> MockConfigEntry:
     """Return a mock Config Entry for the Rituals Perfume Genie integration."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="name@example.com",
-        unique_id=uniqe_id,
+        unique_id=unique_id,
         data={ACCOUNT_HASH: "an_account_hash"},
         entry_id=entry_id,
     )
