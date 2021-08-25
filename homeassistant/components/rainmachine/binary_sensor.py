@@ -18,8 +18,8 @@ from .const import (
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN,
-    RainMachineSensorDescriptionMixin,
 )
+from .model import RainMachineSensorDescriptionMixin
 
 TYPE_FLOW_SENSOR = "flow_sensor"
 TYPE_FREEZE = "freeze"

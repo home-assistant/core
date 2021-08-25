@@ -21,8 +21,8 @@ from .const import (
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN,
-    RainMachineSensorDescriptionMixin,
 )
+from .model import RainMachineSensorDescriptionMixin
 
 TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
 TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"

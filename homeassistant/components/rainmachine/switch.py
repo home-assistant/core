@@ -181,34 +181,34 @@ async def async_setup_entry(
     ]
     zones_coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][DATA_ZONES]
 
-    entities: list[RainMachineProgram | RainMachineZone] = []
-
-    for uid, program in programs_coordinator.data.items():
-        entities.append(
-            RainMachineProgram(
-                programs_coordinator,
-                controller,
-                entry,
-                RainMachineSwitchDescription(
-                    key=f"RainMachineProgram_{uid}",
-                    name=program["name"],
-                    uid=uid,
-                ),
-            )
+    entities: list[RainMachineProgram | RainMachineZone] = [
+        RainMachineProgram(
+            programs_coordinator,
+            controller,
+            entry,
+            RainMachineSwitchDescription(
+                key=f"RainMachineProgram_{uid}",
+                name=program["name"],
+                uid=uid,
+            ),
         )
-    for uid, zone in zones_coordinator.data.items():
-        entities.append(
+        for uid, program in programs_coordinator.data.items()
+    ]
+    entities.extend(
+        [
             RainMachineZone(
                 zones_coordinator,
                 controller,
                 entry,
                 RainMachineSwitchDescription(
                     key=f"RainMachineZone_{uid}",
-                    name=program["name"],
+                    name=zone["name"],
                     uid=uid,
                 ),
             )
-        )
+            for uid, zone in zones_coordinator.data.items()
+        ]
+    )
 
     async_add_entities(entities)
 
