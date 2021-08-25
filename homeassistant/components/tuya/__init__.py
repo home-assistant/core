@@ -40,7 +40,6 @@ from .const import (
     TUYA_HA_TUYA_MAP,
     TUYA_HOME_MANAGER,
     TUYA_MQTT_LISTENER,
-    TUYA_SETUP_PLATFORM,
     TUYA_SUPPORT_HA_TYPE,
 )
 
@@ -210,7 +209,6 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-        hass.data[DOMAIN][TUYA_SETUP_PLATFORM].add(platform)
 
     return True
 
@@ -248,7 +246,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unloading the Tuya platforms."""
     _LOGGER.debug("integration unload")
     unload = await hass.config_entries.async_unload_platforms(
-        entry, hass.data[DOMAIN]["setup_platform"]
+        entry, TUYA_SUPPORT_HA_TYPE
     )
     if unload:
         __device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
@@ -267,7 +265,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN] = {
         TUYA_HA_TUYA_MAP: {},
         TUYA_HA_DEVICES: [],
-        TUYA_SETUP_PLATFORM: set(),
     }
 
     success = await _init_tuya_sdk(hass, entry)
