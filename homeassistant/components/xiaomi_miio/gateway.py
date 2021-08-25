@@ -7,7 +7,7 @@ from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -81,12 +81,9 @@ class ConnectXiaomiGateway:
             if isinstance(error.__cause__, ChecksumError):
                 raise ConfigEntryAuthFailed(error) from error
 
-            _LOGGER.error(
-                "DeviceException during setup of xiaomi gateway with host %s: %s",
-                self._host,
-                error,
-            )
-            return False
+            raise ConfigEntryNotReady(
+                "DeviceException during setup of xiaomi gateway with host {self._host}"
+            ) from error
 
         # get the connected sub devices
         use_cloud = self._use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU
@@ -128,12 +125,9 @@ class ConnectXiaomiGateway:
                     "Could not login to Xiaomi Miio Cloud, check the credentials"
                 ) from error
             except DeviceException as error:
-                _LOGGER.error(
-                    "DeviceException during setup of xiaomi gateway with host %s: %s",
-                    self._host,
-                    error,
-                )
-                return False
+                raise ConfigEntryNotReady(
+                    "DeviceException during setup of xiaomi gateway with host {self._host}"
+                ) from error
 
         return True
 

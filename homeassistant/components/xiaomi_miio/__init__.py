@@ -363,8 +363,7 @@ async def async_setup_gateway_entry(
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
-    if not await gateway.async_connect_gateway(host, token):
-        raise ConfigEntryNotReady("Error during setup of xiaomi gateway")
+    await gateway.async_connect_gateway(host, token)
     gateway_info = gateway.gateway_info
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
