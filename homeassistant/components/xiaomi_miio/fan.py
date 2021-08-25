@@ -768,7 +768,7 @@ class XiaomiFan(XiaomiGenericDevice):
             )
         else:
             await self._try_command(
-                "Setting fan speed percentage of the miio device failed.",
+                "Setting direct fan speed percentage of the miio device failed.",
                 self._device.set_direct_speed,
                 self._percentage,
             )
