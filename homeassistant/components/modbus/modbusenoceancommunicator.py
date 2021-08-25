@@ -50,7 +50,7 @@ class ModbusEnoceanCommunicator(Communicator):
 
             # Read chars from serial port as hex numbers
             try:
-                packet_size = 14 if self._esp_version == ESP_Version.ESP2 else 16
+                packet_size = 14 if self._esp_version == ESP_Version.ESP2.value else 16
                 packet = asyncio.run_coroutine_threadsafe(
                     self._adapter.read(packet_size), loop
                 ).result()

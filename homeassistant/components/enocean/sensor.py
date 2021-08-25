@@ -9,16 +9,30 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_WINDOW,
+)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
     CONF_NAME,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     STATE_CLOSED,
+    STATE_OFF,
+    STATE_ON,
     STATE_OPEN,
     TEMP_CELSIUS,
 )
@@ -29,16 +43,75 @@ from .device import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
+CONF_MIN_ILLUMINANCE = "min_illuminance"
+CONF_MAX_ILLUMINANCE = "max_illuminance"
 CONF_RANGE_FROM = "range_from"
 CONF_RANGE_TO = "range_to"
 CONF_DATA_BYTE = "data_byte"
+CONF_INVERTED = "inverted"
+CONF_PACKET_FILTER = "packet_filter"
+CONF_MASK = "mask"
+CONF_VALUE = "value"
 
 DEFAULT_NAME = "EnOcean sensor"
 
+SENSOR_TYPE_BATTERY = "battery"
+SENSOR_TYPE_BUTTON_PRESSED = "button"
 SENSOR_TYPE_HUMIDITY = "humidity"
+SENSOR_TYPE_ILLUMINANCE = "illuminance"
+SENSOR_TYPE_MOTION = "motion"
 SENSOR_TYPE_POWER = "powersensor"
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
+SENSOR_TYPE_WINDOW = "window"
+
+SENSOR_DESC_BATTERY = SensorEntityDescription(
+    key=SENSOR_TYPE_BATTERY,
+    name="Battery state",
+    native_unit_of_measurement=None,
+    icon="mdi:battery",
+    device_class=DEVICE_CLASS_BATTERY,
+)
+
+SENSOR_DESC_BUTTON_PRESSED = SensorEntityDescription(
+    key=SENSOR_TYPE_BUTTON_PRESSED,
+    name="Button pressed",
+    native_unit_of_measurement=None,
+    icon="mdi:gesture-tap-button",
+    device_class=None,
+)
+
+SENSOR_DESC_HUMIDITY = SensorEntityDescription(
+    key=SENSOR_TYPE_HUMIDITY,
+    name="Humidity",
+    native_unit_of_measurement=PERCENTAGE,
+    icon="mdi:water-percent",
+    device_class=DEVICE_CLASS_HUMIDITY,
+)
+
+SENSOR_DESC_ILLUMINANCE = SensorEntityDescription(
+    key=SENSOR_TYPE_ILLUMINANCE,
+    name="Illuminance",
+    native_unit_of_measurement=LIGHT_LUX,
+    icon="mdi:brightness-7",
+    device_class=DEVICE_CLASS_ILLUMINANCE,
+)
+
+SENSOR_DESC_MOTION = SensorEntityDescription(
+    key=SENSOR_TYPE_MOTION,
+    name="Motion",
+    native_unit_of_measurement=None,
+    icon="mdi:motion",
+    device_class=DEVICE_CLASS_MOTION,
+)
+
+SENSOR_DESC_POWER = SensorEntityDescription(
+    key=SENSOR_TYPE_POWER,
+    name="Power",
+    native_unit_of_measurement=POWER_WATT,
+    icon="mdi:power-plug",
+    device_class=DEVICE_CLASS_POWER,
+)
 
 SENSOR_DESC_TEMPERATURE = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
@@ -73,7 +146,6 @@ SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
     icon="mdi:window",
 )
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -84,9 +156,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
         vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
         vol.Optional(CONF_DATA_BYTE, default=3): cv.positive_int,
+        vol.Optional(CONF_MAX_ILLUMINANCE, default=1000): vol.Coerce(int),
+        vol.Optional(CONF_MIN_ILLUMINANCE, default=0): vol.Coerce(int),
+        vol.Optional(CONF_INVERTED, default=0): cv.boolean,
+        vol.Optional(CONF_PACKET_FILTER): vol.Maybe(
+            {
+                vol.Required(CONF_MASK): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+                vol.Required(CONF_VALUE): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            }
+        ),
     }
 )
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an EnOcean sensor device."""
@@ -101,6 +181,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         range_from = config[CONF_RANGE_FROM]
         range_to = config[CONF_RANGE_TO]
         data_byte = config.get(CONF_DATA_BYTE)
+        packet_filter = config.get(CONF_PACKET_FILTER)
         entities = [
             EnOceanTemperatureSensor(
                 dev_id,
@@ -110,9 +191,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 scale_max=temp_max,
                 range_from=range_from,
                 range_to=range_to,
-                data_byte=data_byte
+                data_byte=data_byte,
+                packet_filter=packet_filter
             )
         ]
+
+    elif sensor_type == SENSOR_TYPE_ILLUMINANCE:
+        illuminance_min = config.get(CONF_MIN_ILLUMINANCE)
+        illuminance_max = config.get(CONF_MAX_ILLUMINANCE)
+        range_from = config.get(CONF_RANGE_FROM)
+        range_to = config.get(CONF_RANGE_TO)
+        data_byte = config.get(CONF_DATA_BYTE)
+        packet_filter = config.get(CONF_PACKET_FILTER)
+        entities = [
+                EnOceanIlluminanceSensor(
+                    dev_id,
+                    dev_name,
+                    illuminance_min,
+                    illuminance_max,
+                    range_from=range_from,
+                    range_to=range_to,
+                    data_byte=data_byte,
+                    packet_filter=packet_filter
+                )
+            ]
 
     elif sensor_type == SENSOR_TYPE_HUMIDITY:
         entities = [EnOceanHumiditySensor(dev_id, dev_name, SENSOR_DESC_HUMIDITY)]
@@ -125,6 +227,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if entities:
         add_entities(entities)
+
+    elif (
+        sensor_type == SENSOR_TYPE_BATTERY
+        or sensor_type == SENSOR_TYPE_BUTTON_PRESSED
+        or sensor_type == SENSOR_TYPE_MOTION
+        or sensor_type == SENSOR_TYPE_WINDOW
+    ):
+        inverted = config.get(CONF_INVERTED)
+        add_entities(
+            [EnOceanOnOffSensor(dev_id, dev_name, sensor_type, inverted=inverted)]
+        )
 
 
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
@@ -170,7 +283,51 @@ class EnOceanPowerSensor(EnOceanSensor):
             self.schedule_update_ha_state()
 
 
-class EnOceanTemperatureSensor(EnOceanSensor):
+class EnOceanMinMaxWithScaleAndDatabyteSensor(EnOceanSensor):
+    """Representation of an EnOcean sensor reading value from a data byte, configurable with a min-max value and allowed data range."""
+
+    def __init__(
+        self,
+        dev_id,
+        dev_name,
+        sensor_type,
+        scale_min,
+        scale_max,
+        range_from,
+        range_to,
+        data_byte,
+        packet_filter,
+    ):
+        """Initialize the EnOcean temperature sensor device."""
+        super().__init__(dev_id, dev_name, sensor_type)
+        self._scale_min = scale_min
+        self._scale_max = scale_max
+        self.range_from = range_from
+        self.range_to = range_to
+        self.data_byte = data_byte
+        self.packet_filter: dict[str, Any] = packet_filter
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        if self.packet_filter:
+            for data, mask, value in zip(
+                packet.data,
+                self.packet_filter[CONF_MASK],
+                self.packet_filter[CONF_VALUE],
+            ):
+                if mask == 0xFF and data != value:
+                    return
+
+        scalescale = self._scale_max - self._scale_min
+        range = self.range_to - self.range_from
+        raw_val = packet.data[self.data_byte]
+        value = scalescale / range * (raw_val - self.range_from)
+        value += self._scale_min
+        self._state = round(value, 1)
+        self.schedule_update_ha_state()
+
+
+class EnOceanTemperatureSensor(EnOceanMinMaxWithScaleAndDatabyteSensor):
     """Representation of an EnOcean temperature sensor device.
 
     EEPs (EnOcean Equipment Profiles):
@@ -198,27 +355,21 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         scale_max,
         range_from,
         range_to,
-        data_byte
+        data_byte,
+        packet_filter,
     ):
         """Initialize the EnOcean temperature sensor device."""
-        super().__init__(dev_id, dev_name, description)
-        self._scale_min = scale_min
-        self._scale_max = scale_max
-        self.range_from = range_from
-        self.range_to = range_to
-        self.data_byte = data_byte
-
-    def value_changed(self, packet):
-        """Update the internal state of the sensor."""
-        if packet.data[0] != 0xA5:
-            return
-        temp_scale = self._scale_max - self._scale_min
-        temp_range = self.range_to - self.range_from
-        raw_val = packet.data[self.data_byte]
-        temperature = temp_scale / temp_range * (raw_val - self.range_from)
-        temperature += self._scale_min
-        self._attr_native_value = round(temperature, 1)
-        self.schedule_update_ha_state()
+        super().__init__(
+            dev_id,
+            dev_name,
+            SENSOR_TYPE_TEMPERATURE,
+            scale_min,
+            scale_max,
+            range_from,
+            range_to,
+            data_byte,
+            packet_filter,
+        )
 
 
 class EnOceanHumiditySensor(EnOceanSensor):
@@ -237,6 +388,59 @@ class EnOceanHumiditySensor(EnOceanSensor):
         humidity = packet.data[2] * 100 / 250
         self._attr_native_value = round(humidity, 1)
         self.schedule_update_ha_state()
+
+
+class EnOceanIlluminanceSensor(EnOceanMinMaxWithScaleAndDatabyteSensor):
+    """Representation of an EnOcean light sensor device.
+
+    EEPs (EnOcean Equipment Profiles):
+
+    EEPs with a scale from 0 to 255:
+    - A5-06-01 (300 to 30000 lx)
+    - A5-06-02 (0 to 510 lx)
+    - A5-06-05 (0 to 5100 lx)
+    - A5-08-01 (0 to 510 lx)
+    - A5-08-02 (0 to 1020 lx)
+    - A5-08-03 (0 to 1530 lx)
+
+    For the following EEPs the scales must be set to 0 to 250:
+    - A5-10-1B (0 to 1000 lx)
+    - A5-14-02 (0 to 1000 lx)
+    - A5-14-04 (0 to 1000 lx)
+    - A5-14-06 (0 to 1000 lx)
+
+    For the following EEPs the scales must be set to 0 to 1000:
+    - A5-06-03 (0 to 1000 lx)
+    - A5-07-04 (0 to 1000 lx)
+
+    For the following EEPs the databit must be set to 1 and scale set to 0 to 250:
+    - A5-10-18 (0 to 1000 lx)
+    - A5-10-1C (0 to 1000 lx)
+    """
+
+    def __init__(
+        self,
+        dev_id,
+        dev_name,
+        scale_min,
+        scale_max,
+        range_from,
+        range_to,
+        data_byte,
+        packet_filter,
+    ):
+        """Initialize the EnOcean temperature sensor device."""
+        super().__init__(
+            dev_id,
+            dev_name,
+            SENSOR_TYPE_ILLUMINANCE,
+            scale_min,
+            scale_max,
+            range_from,
+            range_to,
+            data_byte,
+            packet_filter,
+        )
 
 
 class EnOceanWindowHandle(EnOceanSensor):
@@ -259,3 +463,101 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._attr_native_value = "tilt"
 
         self.schedule_update_ha_state()
+
+
+class EnOceanOnOffSensor(EnOceanSensor):
+    """Representation of an EnOcean on-off sensor device, storing state in data byte 0.0, most often part of a multi-sensor device.
+
+    EEPs (EnOcean Equipment Profiles):
+    - D5-00-01
+    - A5-10-02 (slide switch of operating panel)
+    - A5-10-06 (slide switch of operating panel)
+    - A5-10-09 (slide switch of operating panel)
+    - A5-10-0D (slide switch of operating panel)
+    - A5-10-11 (slide switch of operating panel)
+    - A5-10-14 (slide switch of operating panel)
+    - A5-10-20 (user intervention on device)
+    - A5-10-21 (user intervention on device)
+    - A5-10-21 (occupied)
+    - A5-11-02 (occupied)
+    - A5-11-04 (light on)
+    - A5-14-08 (vibration detected)
+    - A5-14-0A (vibration detected)
+    - A5-20-10 (HVAC unit running state)
+    - A5-20-11 (HVAC alarm error state)
+    - A5-38-08 (switching command)
+
+    For the following EEPs the inverted flag has to be set to true:
+    - A5-08-01 (occupancy button pressed)
+    - A5-08-03 (occupancy button pressed)
+    - A5-10-01 (occupancy button pressed)
+    - A5-10-05 (occupancy button pressed)
+    - A5-10-08 (occupancy button pressed)
+    - A5-10-0C (occupancy button pressed)
+    - A5-10-0D (occupancy button pressed)
+    - A5-10-10 (occupancy button pressed)
+    - A5-10-13 (occupancy button pressed)
+    - A5-10-16 (occupancy button pressed)
+    - A5-10-17 (occupancy button pressed)
+    - A5-10-18 (occupancy button pressed)
+    - A5-10-19 (room occupancied)
+    - A5-10-1A (occupancy button pressed)
+    - A5-10-1B (occupancy button pressed)
+    - A5-10-1C (occupancy button pressed)
+    - A5-10-1D (occupancy button pressed)
+    - A5-10-1F (occupancy button pressed)
+    - A5-13-07 (battery low=0, battery ok=1)
+    - A5-13-08 (battery low=0, battery ok=1)
+    - A5-20-12 (room occupancied)
+    """
+
+    def __init__(
+        self,
+        dev_id,
+        dev_name,
+        sensor_type,
+        state_on=STATE_ON,
+        state_off=STATE_OFF,
+        inverted: bool = False,
+    ):
+        """Initialize the EnOcean on-off sensor device."""
+        super().__init__(dev_id, dev_name, sensor_type)
+        self._state_on = state_on
+        self._state_off = state_off
+        self._inverted = inverted
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+        stateOn = (packet.data[0] & 0x01) == 0x01
+
+        if stateOn and not self._inverted:
+            self._state = self._state_on
+        else:
+            self._state = self._state_off
+
+        self.schedule_update_ha_state()
+
+
+class EnOceanOpenClosedSensor(EnOceanOnOffSensor):
+    """Repreents an EnOcean Open-Closed sensor device.
+
+    EEPs (EnOcean Equipment Profiles):
+    - D5-00-01
+
+    For the following EEPs the inverted flag has to be set to true:
+    - A5-10-0A (contact state, 1=Open)
+    - A5-10-08 (contact state, 1=Open)
+    - A5-14-01 to A5-14-04 (contact state, 1=Open)
+    - A5-30-02 (contact state, 1=Open)
+    """
+
+    def __init__(self, dev_id, dev_name, sensor_type, inverted: bool = False):
+        """Initialize EnOceanOpenClosedSensor."""
+        super().__init__(
+            dev_id,
+            dev_name,
+            sensor_type,
+            state_on=STATE_OPEN,
+            state_off=STATE_CLOSED,
+            inverted=inverted,
+        )
