@@ -159,7 +159,7 @@ class USBDiscovery:
             _LOGGER.debug("Checking matcher: %s", matcher)
             if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
-            if "pid" in matcher and device.vid != matcher["pid"]:
+            if "pid" in matcher and device.pid != matcher["pid"]:
                 continue
             if "manufacturer" in matcher and not _fnmatch_lower(
                 device.manufacturer, matcher["manufacturer"]
