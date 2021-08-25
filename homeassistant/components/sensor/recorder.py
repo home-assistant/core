@@ -42,6 +42,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity import entity_sources
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -115,6 +116,8 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
     },
 }
 
+# Keep track of entities for which a warning about decreasing value has been logged
+WARN_DIP = "sensor_warn_total_increasing_dip"
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = set()
 
@@ -226,8 +229,36 @@ def _normalize_states(
     return DEVICE_CLASS_UNITS[key], fstates
 
 
-def reset_detected(state: float, previous_state: float | None) -> bool:
+def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
+    """Log a warning once if a sensor with state_class_total has a decreasing value."""
+    if WARN_DIP not in hass.data:
+        hass.data[WARN_DIP] = set()
+    if entity_id not in hass.data[WARN_DIP]:
+        hass.data[WARN_DIP].add(entity_id)
+        domain = entity_sources(hass).get(entity_id, {}).get("domain")
+        if domain in ["energy", "growatt_server", "solaredge"]:
+            return
+        _LOGGER.warning(
+            "Entity %s %shas state class total_increasing, but its state is "
+            "not strictly increasing. Please create a bug report at %s",
+            entity_id,
+            f"from integration {domain} " if domain else "",
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+            "+label%3A%22integration%3A+recorder%22",
+        )
+
+
+def reset_detected(
+    hass: HomeAssistant, entity_id: str, state: float, previous_state: float | None
+) -> bool:
     """Test if a total_increasing sensor has been reset."""
+    if (
+        previous_state is not None
+        and state < previous_state
+        and state >= 0.9 * previous_state
+    ):
+        warn_dip(hass, entity_id)
+
     return previous_state is not None and state < 0.9 * previous_state
 
 
@@ -313,7 +344,8 @@ def compile_statistics(
                         fstate,
                     )
                 elif state_class == STATE_CLASS_TOTAL_INCREASING and (
-                    old_state is None or reset_detected(fstate, new_state)
+                    old_state is None
+                    or reset_detected(hass, entity_id, fstate, new_state)
                 ):
                     reset = True
                     _LOGGER.info(

@@ -391,6 +391,12 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+    assert (
+        "Entity sensor.test1 has state class total_increasing, but its state is not "
+        "strictly increasing. Please create a bug report at https://github.com/"
+        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
+        "+recorder%22"
+    ) in caplog.text
 
 
 def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
