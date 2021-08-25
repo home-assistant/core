@@ -150,7 +150,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(
                 self.entry,
                 data={
-                    CONF_HOST: self.nanoleaf.host,
+                    **self.entry.data,
                     CONF_TOKEN: self.nanoleaf.token,
                 },
             )
