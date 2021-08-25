@@ -29,6 +29,7 @@
     "system_health",
     "tag",
     "timer",
+    "usb",
     "updater",
     "webhook",
     "zeroconf",

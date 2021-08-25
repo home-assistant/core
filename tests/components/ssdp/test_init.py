@@ -305,8 +305,8 @@ async def test_start_stop_scanner(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 1
-    # Next is 3, as async_upnp_client triggers 1 SSDPListener._async_on_connect
-    assert async_search_mock.call_count == 3
+    # Next is 2, as async_upnp_client triggers 1 SSDPListener._async_on_connect
+    assert async_search_mock.call_count == 2
     assert async_stop_mock.call_count == 0
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -314,7 +314,7 @@ async def test_start_stop_scanner(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
     assert async_start_mock.call_count == 1
-    assert async_search_mock.call_count == 3
+    assert async_search_mock.call_count == 2
     assert async_stop_mock.call_count == 1
 
 

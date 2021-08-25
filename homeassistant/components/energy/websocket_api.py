@@ -18,6 +18,7 @@ from .data import (
     EnergyPreferencesUpdate,
     async_get_manager,
 )
+from .validate import async_validate
 
 EnergyWebSocketCommandHandler = Callable[
     [HomeAssistant, websocket_api.ActiveConnection, Dict[str, Any], "EnergyManager"],
@@ -35,6 +36,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_prefs)
     websocket_api.async_register_command(hass, ws_save_prefs)
     websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_validate)
 
 
 def _ws_with_manager(
@@ -113,3 +115,18 @@ def ws_info(
 ) -> None:
     """Handle get info command."""
     connection.send_result(msg["id"], hass.data[DOMAIN])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "energy/validate",
+    }
+)
+@websocket_api.async_response
+async def ws_validate(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle validate command."""
+    connection.send_result(msg["id"], (await async_validate(hass)).as_dict())

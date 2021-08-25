@@ -30,6 +30,7 @@ from .models import (
     StatisticMetaData,
     Statistics,
     StatisticsMeta,
+    StatisticsRuns,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, retryable_database_job, session_scope
@@ -157,6 +158,12 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     """Compile statistics."""
     start = dt_util.as_utc(start)
     end = start + timedelta(hours=1)
+
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        if session.query(StatisticsRuns).filter_by(start=start).first():
+            _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
+            return True
+
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats = []
     for domain, platform in instance.hass.data[DOMAIN].items():
@@ -174,6 +181,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                     instance.hass, session, entity_id, stat["meta"]
                 )
                 session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+        session.add(StatisticsRuns(start=start))
 
     return True
 
@@ -217,6 +225,19 @@ def _get_metadata(
         if meta:
             metadata[_id] = meta
     return metadata
+
+
+def get_metadata(
+    hass: HomeAssistant,
+    statistic_id: str,
+) -> dict[str, str] | None:
+    """Return metadata for a statistic_id."""
+    statistic_ids = [statistic_id]
+    with session_scope(hass=hass) as session:
+        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
+        if not metadata_ids:
+            return None
+        return _get_metadata(hass, session, statistic_ids, None).get(metadata_ids[0])
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:

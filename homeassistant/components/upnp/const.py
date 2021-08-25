@@ -18,6 +18,9 @@ PACKETS_SENT = "packets_sent"
 TIMESTAMP = "timestamp"
 DATA_PACKETS = "packets"
 DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{TIME_SECONDS}"
+WANSTATUS = "wan_status"
+WANIP = "wan_ip"
+UPTIME = "uptime"
 KIBIBYTE = 1024
 UPDATE_INTERVAL = timedelta(seconds=30)
 CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"

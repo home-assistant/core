@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "This device is not a zha device",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
@@ -8,6 +9,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Do you want to setup {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio Type"

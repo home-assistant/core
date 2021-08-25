@@ -1,4 +1,8 @@
 """Constants and shared schema for the Azure Event Hub integration."""
+from __future__ import annotations
+
+from typing import Any
+
 DOMAIN = "azure_event_hub"
 
 CONF_EVENT_HUB_NAMESPACE = "event_hub_namespace"
@@ -10,4 +14,4 @@ CONF_SEND_INTERVAL = "send_interval"
 CONF_MAX_DELAY = "max_delay"
 CONF_FILTER = "filter"
 
-ADDITIONAL_ARGS = {"logging_enable": False}
+ADDITIONAL_ARGS: dict[str, Any] = {"logging_enable": False}

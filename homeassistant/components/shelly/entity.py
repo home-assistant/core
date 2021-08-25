@@ -179,7 +179,6 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, aioshelly.Block], bool] | None = None
     extra_state_attributes: Callable[[aioshelly.Block], dict | None] | None = None
-    last_reset: str | None = None
 
 
 @dataclass

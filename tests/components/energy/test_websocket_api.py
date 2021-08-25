@@ -216,3 +216,19 @@ async def test_handle_duplicate_from_stat(hass, hass_ws_client) -> None:
     assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_validate(hass, hass_ws_client) -> None:
+    """Test we can validate the preferences."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "energy/validate"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"] == {
+        "energy_sources": [],
+        "device_consumption": [],
+    }
