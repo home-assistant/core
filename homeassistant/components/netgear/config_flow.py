@@ -136,7 +136,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
         self.placeholders[CONF_URL] = f"http://{host}/"
-        return await async_step_user()
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
