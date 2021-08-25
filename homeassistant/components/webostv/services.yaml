@@ -40,7 +40,6 @@ command:
       name: Command
       description: >-
         Endpoint of the command. Known valid endpoints are listed in
-        https://github.com/bendavid/aiopylgtv/blob/master/aiopylgtv/endpoints.py
       required: true
       example: "system.launcher/open"
       selector:
