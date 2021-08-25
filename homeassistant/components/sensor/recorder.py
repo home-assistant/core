@@ -9,10 +9,8 @@ from typing import Callable
 from homeassistant.components.recorder import history, statistics
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -26,7 +24,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    PERCENTAGE,
     POWER_KILO_WATT,
     POWER_WATT,
     PRESSURE_BAR,
@@ -51,24 +48,18 @@ from . import ATTR_LAST_RESET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_CLASS_OR_UNIT_STATISTICS = {
+DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
     STATE_CLASS_MEASUREMENT: {
-        DEVICE_CLASS_BATTERY: {"mean", "min", "max"},
-        DEVICE_CLASS_HUMIDITY: {"mean", "min", "max"},
-        DEVICE_CLASS_POWER: {"mean", "min", "max"},
-        DEVICE_CLASS_PRESSURE: {"mean", "min", "max"},
-        DEVICE_CLASS_TEMPERATURE: {"mean", "min", "max"},
-        PERCENTAGE: {"mean", "min", "max"},
         # Deprecated, support will be removed in Home Assistant 2021.11
         DEVICE_CLASS_ENERGY: {"sum"},
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
     },
-    STATE_CLASS_TOTAL_INCREASING: {
-        DEVICE_CLASS_ENERGY: {"sum"},
-        DEVICE_CLASS_GAS: {"sum"},
-        DEVICE_CLASS_MONETARY: {"sum"},
-    },
+    STATE_CLASS_TOTAL_INCREASING: {},
+}
+DEFAULT_STATISTICS = {
+    STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
+    STATE_CLASS_TOTAL_INCREASING: {"sum"},
 }
 
 # Normalized units which will be stored in the statistics table
@@ -116,31 +107,20 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
 }
 
 # Keep track of entities for which a warning about unsupported unit has been logged
-WARN_UNSUPPORTED_UNIT = set()
+WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
+WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
 
 
-def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str]]:
-    """Get (entity_id, state_class, key) of all sensors for which to compile statistics.
-
-    Key is either a device class or a unit and is used to index the
-    DEVICE_CLASS_OR_UNIT_STATISTICS map.
-    """
+def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None]]:
+    """Get (entity_id, state_class, device_class) of all sensors for which to compile statistics."""
     all_sensors = hass.states.all(DOMAIN)
     entity_ids = []
 
     for state in all_sensors:
         if (state_class := state.attributes.get(ATTR_STATE_CLASS)) not in STATE_CLASSES:
             continue
-
-        if (
-            key := state.attributes.get(ATTR_DEVICE_CLASS)
-        ) in DEVICE_CLASS_OR_UNIT_STATISTICS[state_class]:
-            entity_ids.append((state.entity_id, state_class, key))
-
-        if (
-            key := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        ) in DEVICE_CLASS_OR_UNIT_STATISTICS[state_class]:
-            entity_ids.append((state.entity_id, state_class, key))
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        entity_ids.append((state.entity_id, state_class, device_class))
 
     return entity_ids
 
@@ -190,18 +170,39 @@ def _time_weighted_average(
     return accumulated / (end - start).total_seconds()
 
 
+def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
+    """Return True if all states have the same unit."""
+    return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
+
+
 def _normalize_states(
-    entity_history: list[State], key: str, entity_id: str
+    hass: HomeAssistant,
+    entity_history: list[State],
+    device_class: str | None,
+    entity_id: str,
 ) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
     unit = None
 
-    if key not in UNIT_CONVERSIONS:
+    if device_class not in UNIT_CONVERSIONS:
         # We're not normalizing this device class, return the state as they are
         fstates = [
             (float(el.state), el) for el in entity_history if _is_number(el.state)
         ]
         if fstates:
+            all_units = _get_units(fstates)
+            if len(all_units) > 1:
+                if WARN_UNSTABLE_UNIT not in hass.data:
+                    hass.data[WARN_UNSTABLE_UNIT] = set()
+                if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
+                    hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
+                    _LOGGER.warning(
+                        "The unit of %s is changing, got %s, generation of long term "
+                        "statistics will be suppressed unless the unit is stable",
+                        entity_id,
+                        all_units,
+                    )
+                return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return unit, fstates
 
@@ -215,15 +216,17 @@ def _normalize_states(
         fstate = float(state.state)
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         # Exclude unsupported units from statistics
-        if unit not in UNIT_CONVERSIONS[key]:
-            if entity_id not in WARN_UNSUPPORTED_UNIT:
-                WARN_UNSUPPORTED_UNIT.add(entity_id)
+        if unit not in UNIT_CONVERSIONS[device_class]:
+            if WARN_UNSUPPORTED_UNIT not in hass.data:
+                hass.data[WARN_UNSUPPORTED_UNIT] = set()
+            if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
+                hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
             continue
 
-        fstates.append((UNIT_CONVERSIONS[key][unit](fstate), state))
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
 
-    return DEVICE_CLASS_UNITS[key], fstates
+    return DEVICE_CLASS_UNITS[device_class], fstates
 
 
 def reset_detected(state: float, previous_state: float | None) -> bool:
@@ -247,17 +250,38 @@ def compile_statistics(
         hass, start - datetime.timedelta.resolution, end, [i[0] for i in entities]
     )
 
-    for entity_id, state_class, key in entities:
-        wanted_statistics = DEVICE_CLASS_OR_UNIT_STATISTICS[state_class][key]
+    for entity_id, state_class, device_class in entities:
+        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
+            wanted_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
+        else:
+            wanted_statistics = DEFAULT_STATISTICS[state_class]
 
         if entity_id not in history_list:
             continue
 
         entity_history = history_list[entity_id]
-        unit, fstates = _normalize_states(entity_history, key, entity_id)
+        unit, fstates = _normalize_states(hass, entity_history, device_class, entity_id)
 
         if not fstates:
             continue
+
+        # Check metadata
+        if old_metadata := statistics.get_metadata(hass, entity_id):
+            if old_metadata["unit_of_measurement"] != unit:
+                if WARN_UNSTABLE_UNIT not in hass.data:
+                    hass.data[WARN_UNSTABLE_UNIT] = set()
+                if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
+                    hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
+                    _LOGGER.warning(
+                        "The unit of %s (%s) does not match the unit of already "
+                        "compiled statistics (%s). Generation of long term statistics "
+                        "will be suppressed unless the unit changes back to %s",
+                        entity_id,
+                        unit,
+                        old_metadata["unit_of_measurement"],
+                        unit,
+                    )
+                continue
 
         result[entity_id] = {}
 
@@ -370,8 +394,11 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
 
     statistic_ids = {}
 
-    for entity_id, state_class, key in entities:
-        provided_statistics = DEVICE_CLASS_OR_UNIT_STATISTICS[state_class][key]
+    for entity_id, state_class, device_class in entities:
+        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
+            provided_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
+        else:
+            provided_statistics = DEFAULT_STATISTICS[state_class]
 
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
@@ -386,16 +413,20 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         ):
             continue
 
-        native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        metadata = statistics.get_metadata(hass, entity_id)
+        if metadata:
+            native_unit: str | None = metadata["unit_of_measurement"]
+        else:
+            native_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if key not in UNIT_CONVERSIONS:
+        if device_class not in UNIT_CONVERSIONS:
             statistic_ids[entity_id] = native_unit
             continue
 
-        if native_unit not in UNIT_CONVERSIONS[key]:
+        if native_unit not in UNIT_CONVERSIONS[device_class]:
             continue
 
-        statistics_unit = DEVICE_CLASS_UNITS[key]
+        statistics_unit = DEVICE_CLASS_UNITS[device_class]
         statistic_ids[entity_id] = statistics_unit
 
     return statistic_ids
