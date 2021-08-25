@@ -161,9 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_token")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error connecting with Nanoleaf at %s with token %s",
-                self.nanoleaf.host,
-                self.nanoleaf.token,
+                "Unknown error connecting with Nanoleaf at %s", self.nanoleaf.host
             )
             return self.async_abort(reason="unknown")
         name = info["name"]
