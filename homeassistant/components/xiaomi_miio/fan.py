@@ -277,11 +277,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return None
 
     @property
-    def should_poll(self):
-        """Poll the device."""
-        return True
-
-    @property
     def available(self):
         """Return true when state is known."""
         return self._available
