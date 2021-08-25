@@ -156,6 +156,7 @@ class USBDiscovery:
             return
         self.seen.add(device_tuple)
         for matcher in self.usb:
+            _LOGGER.debug("Checking matcher: %s", matcher)
             if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
             if "pid" in matcher and device.vid != matcher["pid"]:
