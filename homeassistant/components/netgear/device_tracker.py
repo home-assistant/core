@@ -65,7 +65,11 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for Netgear component."""
-    await async_setup_netgear_entry(hass, entry, async_add_entities, NetgearScannerEntity)
+    def generate_classes(router: NetgearRouter, device):
+        classes = []
+        classes.append(NetgearScannerEntity(router, device))
+        return classes
+    await async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
 
 
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):

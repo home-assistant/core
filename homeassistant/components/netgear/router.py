@@ -15,12 +15,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import format_mac, CONNECTION_NETWORK_MAC
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -70,7 +72,7 @@ def get_api(
 
 
 async def async_setup_netgear_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities, EntityClass
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities, EntityClasses
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id]
@@ -97,7 +99,7 @@ def add_entities(router, async_add_entities, tracked, EntityClasses):
         if mac in tracked:
             continue
 
-        new_tracked.append(EntityClasses(router, device))
+        new_tracked = new_tracked + EntityClasses(router, device)
         tracked.add(mac)
 
     if new_tracked:
@@ -162,12 +164,16 @@ class NetgearRouter:
         await self.hass.async_add_executor_job(self._setup)
 
         # set already known devices to away instead of unavailable
-        entity_registry = er.async_get(self.hass)
-        entries = er.async_entries_for_config_entry(entity_registry, self.entry_id)
-        for entity_entry in entries:
-            self.devices[entity_entry.unique_id] = {
-                "mac": entity_entry.unique_id,
-                "name": entity_entry.original_name,
+        device_registry = dr.async_get(self.hass)
+        devices = dr.async_entries_for_config_entry(device_registry, self.entry_id)
+        for device_entry in devices:
+            if device_entry.via_device_id is None:
+                continue    # do not add the router itself
+
+            device_mac = dict(device_entry.connections).get(dr.CONNECTION_NETWORK_MAC)
+            self.devices[device_mac] = {
+                "mac": device_mac,
+                "name": device_entry.name,
                 "active": False,
                 "last_seen": dt_util.utcnow() - timedelta(days=365),
                 "device_model": None,
@@ -251,6 +257,7 @@ class NetgearDeviceEntity(Entity):
         self._device = device
         self._mac = device["mac"]
         self._name = self.get_device_name(device)
+        self._device_name = self._name
         self._unique_id = self._mac
         self._active = device["active"]
 
@@ -285,7 +292,7 @@ class NetgearDeviceEntity(Entity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self.name,
+            "name": self._device_name,
             "model": self._device["device_model"],
             "via_device": (DOMAIN, self._router.unique_id),
         }

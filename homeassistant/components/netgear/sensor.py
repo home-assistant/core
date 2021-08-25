@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -40,16 +41,19 @@ class NetgearSensorDescription(SensorEntityDescription):
 
 SENSOR_TYPES = {
     "type": NetgearSensorDescription(
+        key="type",
         name="link type",
         native_unit_of_measurement=None,
         device_class=None,
     ),
     "link_rate": NetgearSensorDescription(
+        key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
         device_class=None,
     ),
     "signal": NetgearSensorDescription(
+        key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -85,11 +89,6 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self._state = None
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return self._active
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
@@ -109,6 +108,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
-        self._state = self._device[self._attribute]
+        if self._device[self._attribute] is not None:
+            self._state = self._device[self._attribute]
 
         self.async_write_ha_state()
