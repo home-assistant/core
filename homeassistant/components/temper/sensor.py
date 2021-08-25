@@ -35,13 +35,13 @@ def get_temper_devices():
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Temper sensors."""
-    name = config.get(CONF_NAME)
+    prefix = name = config[CONF_NAME]
     scaling = {"scale": config.get(CONF_SCALE), "offset": config.get(CONF_OFFSET)}
     temper_devices = get_temper_devices()
 
     for idx, dev in enumerate(temper_devices):
         if idx != 0:
-            name = f"{name}_{idx!s}"
+            name = f"{prefix}_{idx!s}"
         TEMPER_SENSORS.append(TemperSensor(dev, name, scaling))
     add_entities(TEMPER_SENSORS)
 
