@@ -1,7 +1,7 @@
 """Binary sensor for Shelly."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_UPDATE,
     DEVICE_CLASS_VIBRATION,
     STATE_ON,
     BinarySensorEntity,
@@ -45,7 +46,9 @@ SENSORS: Final = {
         name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
     ),
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
-        name="Door", device_class=DEVICE_CLASS_OPENING
+        name="Door",
+        device_class=DEVICE_CLASS_OPENING,
+        available=lambda block: cast(bool, block.dwIsOpened != -1),
     ),
     ("sensor", "flood"): BlockAttributeDescription(
         name="Flood", device_class=DEVICE_CLASS_MOISTURE
@@ -99,7 +102,7 @@ REST_SENSORS: Final = {
     ),
     "fwupdate": RestAttributeDescription(
         name="Firmware Update",
-        icon="mdi:update",
+        device_class=DEVICE_CLASS_UPDATE,
         value=lambda status, _: status["update"]["has_update"],
         default_enabled=False,
         extra_state_attributes=lambda status: {

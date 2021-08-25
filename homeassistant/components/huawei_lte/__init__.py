@@ -185,11 +185,6 @@ class Router:
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
             self.data[key] = func()
-        except ResponseErrorNotSupportedException:
-            _LOGGER.info(
-                "%s not supported by device, excluding from future updates", key
-            )
-            self.subscriptions.pop(key)
         except ResponseErrorLoginRequiredException:
             if isinstance(self.connection, AuthorizedConnection):
                 _LOGGER.debug("Trying to authorize again")
@@ -206,7 +201,13 @@ class Router:
             )
             self.subscriptions.pop(key)
         except ResponseErrorException as exc:
-            if exc.code != -1:
+            if not isinstance(
+                exc, ResponseErrorNotSupportedException
+            ) and exc.code not in (
+                # additional codes treated as unusupported
+                -1,
+                100006,
+            ):
                 raise
             _LOGGER.info(
                 "%s apparently not supported by device, excluding from future updates",
@@ -298,7 +299,7 @@ class Router:
 class HuaweiLteData:
     """Shared state."""
 
-    hass_config: dict = attr.ib()
+    hass_config: ConfigType = attr.ib()
     # Our YAML config, keyed by router URL
     config: dict[str, dict[str, Any]] = attr.ib()
     routers: dict[str, Router] = attr.ib(init=False, factory=dict)

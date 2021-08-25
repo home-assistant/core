@@ -17,5 +17,12 @@
                 "title": "Vul uw gegevens in"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Configureer OpenUV"
+            }
+        }
     }
 }

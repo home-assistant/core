@@ -87,7 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         source = HaVersionSource.CONTAINER
 
     if (
-        source in (HaVersionSource.SUPERVISOR, HaVersionSource.CONTAINER)
+        source == HaVersionSource.CONTAINER
         and image is not None
         and image != DEFAULT_IMAGE
     ):

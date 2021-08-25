@@ -6,22 +6,22 @@ import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
-    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import DOMAIN
 from .data import EnergyManager, async_get_manager
@@ -190,6 +190,9 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
+    _wrong_state_class_reported = False
+    _wrong_unit_reported = False
+
     def __init__(
         self,
         adapter: SourceAdapter,
@@ -203,16 +206,15 @@ class EnergyCostSensor(SensorEntity):
             f"{config[adapter.entity_energy_key]}_{adapter.entity_id_suffix}"
         )
         self._attr_device_class = DEVICE_CLASS_MONETARY
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         self._config = config
-        self._last_energy_sensor_state: State | None = None
+        self._last_energy_sensor_state: StateType | None = None
         self._cur_value = 0.0
 
-    def _reset(self, energy_state: State) -> None:
+    def _reset(self, energy_state: StateType) -> None:
         """Reset the cost sensor."""
         self._attr_native_value = 0.0
         self._cur_value = 0.0
-        self._attr_last_reset = dt_util.utcnow()
         self._last_energy_sensor_state = energy_state
         self.async_write_ha_state()
 
@@ -223,7 +225,19 @@ class EnergyCostSensor(SensorEntity):
             cast(str, self._config[self._adapter.entity_energy_key])
         )
 
-        if energy_state is None or ATTR_LAST_RESET not in energy_state.attributes:
+        if energy_state is None:
+            return
+
+        if (
+            state_class := energy_state.attributes.get(ATTR_STATE_CLASS)
+        ) != STATE_CLASS_TOTAL_INCREASING:
+            if not self._wrong_state_class_reported:
+                self._wrong_state_class_reported = True
+                _LOGGER.warning(
+                    "Found unexpected state_class %s for %s",
+                    state_class,
+                    energy_state.entity_id,
+                )
             return
 
         try:
@@ -259,7 +273,7 @@ class EnergyCostSensor(SensorEntity):
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
-            self._reset(energy_state)
+            self._reset(energy_state.state)
             return
 
         energy_unit = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -275,24 +289,29 @@ class EnergyCostSensor(SensorEntity):
                 energy_unit = None
 
         if energy_unit is None:
-            _LOGGER.warning(
-                "Found unexpected unit %s for %s", energy_unit, energy_state.entity_id
-            )
+            if not self._wrong_unit_reported:
+                self._wrong_unit_reported = True
+                _LOGGER.warning(
+                    "Found unexpected unit %s for %s",
+                    energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                    energy_state.entity_id,
+                )
             return
 
-        if (
-            energy_state.attributes[ATTR_LAST_RESET]
-            != self._last_energy_sensor_state.attributes[ATTR_LAST_RESET]
+        if reset_detected(
+            self.hass,
+            cast(str, self._config[self._adapter.entity_energy_key]),
+            energy,
+            float(self._last_energy_sensor_state),
         ):
             # Energy meter was reset, reset cost sensor too
-            self._reset(energy_state)
-        else:
-            # Update with newly incurred cost
-            old_energy_value = float(self._last_energy_sensor_state.state)
-            self._cur_value += (energy - old_energy_value) * energy_price
-            self._attr_native_value = round(self._cur_value, 2)
+            self._reset(0)
+        # Update with newly incurred cost
+        old_energy_value = float(self._last_energy_sensor_state)
+        self._cur_value += (energy - old_energy_value) * energy_price
+        self._attr_native_value = round(self._cur_value, 2)
 
-        self._last_energy_sensor_state = energy_state
+        self._last_energy_sensor_state = energy_state.state
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

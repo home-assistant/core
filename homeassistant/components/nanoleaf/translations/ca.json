@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_token": "Token d'acc\u00e9s no v\u00e0lid",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "not_allowing_new_tokens": "Nanoleaf no permet 'tokens' nous, segueix les instruccions de sobre.",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Prem i mant\u00e9 el bot\u00f3 d'engegada del Nanoleaf durant 5 segons fins que els LEDs del bot\u00f3 comencin a parpellejar, despr\u00e9s clica a **ENVIA** abans de que passin 30 segons.",
+                "title": "Enlla\u00e7 Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                }
+            }
+        }
+    }
+}

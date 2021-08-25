@@ -1,6 +1,7 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
 import asyncio
+import glob
 import os
 from unittest.mock import Mock, patch
 
@@ -62,6 +63,17 @@ async def test_async_enable_logging(hass):
     ) as mock_async_activate_log_queue_handler:
         bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
+        mock_async_activate_log_queue_handler.reset_mock()
+        bootstrap.async_enable_logging(
+            hass,
+            log_rotate_days=5,
+            log_file="test.log",
+        )
+        mock_async_activate_log_queue_handler.assert_called_once()
+        for f in glob.glob("test.log*"):
+            os.remove(f)
+        for f in glob.glob("testing_config/home-assistant.log*"):
+            os.remove(f)
 
 
 async def test_load_hassio(hass):

@@ -183,7 +183,6 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            # pylint: disable=no-member
             for name, target in self.targets.items():  # type: ignore
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:

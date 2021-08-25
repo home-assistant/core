@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)"
+                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)",
+                    "devices": "Dispositius (disparadors)"
                 },
-                "description": "Aquests par\u00e0metres nom\u00e9s s'han d'ajustar si HomeKit no \u00e9s funcional.",
+                "description": "Els interruptors programables es creen per cada dispositiu seleccionat. HomeKit pot ser programat per a que executi una automatitzaci\u00f3 o escena quan un dispositiu es dispari.",
                 "title": "Configuraci\u00f3 avan\u00e7ada"
             },
             "cameras": {

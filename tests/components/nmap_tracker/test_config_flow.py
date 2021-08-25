@@ -4,7 +4,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.components.nmap_tracker.const import (
     CONF_HOME_INTERVAL,
     CONF_OPTIONS,
@@ -206,6 +209,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_EXCLUDE: "4.4.4.4",
         CONF_HOME_INTERVAL: 3,
         CONF_HOSTS: "192.168.1.0/24",
+        CONF_CONSIDER_HOME: 180,
         CONF_SCAN_INTERVAL: 120,
         CONF_OPTIONS: "-F -T4 --min-rate 10 --host-timeout 5s",
     }
@@ -219,6 +223,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             user_input={
                 CONF_HOSTS: "192.168.1.0/24, 192.168.2.0/24",
                 CONF_HOME_INTERVAL: 5,
+                CONF_CONSIDER_HOME: 500,
                 CONF_OPTIONS: "-sn",
                 CONF_EXCLUDE: "4.4.4.4, 5.5.5.5",
                 CONF_SCAN_INTERVAL: 10,
@@ -230,6 +235,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert config_entry.options == {
         CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
         CONF_HOME_INTERVAL: 5,
+        CONF_CONSIDER_HOME: 500,
         CONF_OPTIONS: "-sn",
         CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
         CONF_SCAN_INTERVAL: 10,
@@ -250,6 +256,7 @@ async def test_import(hass: HomeAssistant) -> None:
             data={
                 CONF_HOSTS: "1.2.3.4/20",
                 CONF_HOME_INTERVAL: 3,
+                CONF_CONSIDER_HOME: 500,
                 CONF_OPTIONS: DEFAULT_OPTIONS,
                 CONF_EXCLUDE: "4.4.4.4, 6.4.3.2",
                 CONF_SCAN_INTERVAL: 2000,
@@ -263,6 +270,7 @@ async def test_import(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_HOSTS: "1.2.3.4/20",
         CONF_HOME_INTERVAL: 3,
+        CONF_CONSIDER_HOME: 500,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4,6.4.3.2",
         CONF_SCAN_INTERVAL: 2000,

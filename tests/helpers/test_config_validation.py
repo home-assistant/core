@@ -388,6 +388,34 @@ def test_service_schema():
         cv.SERVICE_SCHEMA(value)
 
 
+def test_entity_service_schema():
+    """Test make_entity_service_schema validation."""
+    schema = cv.make_entity_service_schema(
+        {vol.Required("required"): cv.positive_int, vol.Optional("optional"): cv.string}
+    )
+
+    options = (
+        {},
+        None,
+        {"entity_id": "light.kitchen"},
+        {"optional": "value", "entity_id": "light.kitchen"},
+        {"required": 1},
+        {"required": 2, "area_id": "kitchen", "foo": "bar"},
+        {"required": "str", "area_id": "kitchen"},
+    )
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            cv.SERVICE_SCHEMA(value)
+
+    options = (
+        {"required": 1, "entity_id": "light.kitchen"},
+        {"required": 2, "optional": "value", "device_id": "a_device"},
+        {"required": 3, "area_id": "kitchen"},
+    )
+    for value in options:
+        schema(value)
+
+
 def test_slug():
     """Test slug validation."""
     schema = vol.Schema(cv.slug)
@@ -912,7 +940,7 @@ def test_has_at_most_one_key():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ({}, {"beer": None}, {"soda": None}):
+    for value in ({}, {"beer": None}, {"soda": None}, {vol.Optional("soda"): None}):
         schema(value)
 
 
@@ -924,7 +952,7 @@ def test_has_at_least_one_key():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ({"beer": None}, {"soda": None}):
+    for value in ({"beer": None}, {"soda": None}, {vol.Required("soda"): None}):
         schema(value)
 
 

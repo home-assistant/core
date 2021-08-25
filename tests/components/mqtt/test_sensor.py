@@ -208,7 +208,7 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
     assert state.state == "100"
 
 
-async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock):
+async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock, caplog):
     """Test the setting of the last_reset property via MQTT."""
     assert await async_setup_component(
         hass,
@@ -228,6 +228,11 @@ async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "last-reset-topic", "2020-01-02 08:11:00")
     state = hass.states.get("sensor.test")
     assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
+    assert "'last_reset_topic' must be same as 'state_topic'" in caplog.text
+    assert (
+        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize("datestring", ["2020-21-02 08:11:00", "Hello there!"])
@@ -304,6 +309,45 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
     )
     state = hass.states.get("sensor.test")
     assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
+
+
+@pytest.mark.parametrize("extra", [{}, {"last_reset_topic": "test-topic"}])
+async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
+    hass, mqtt_mock, caplog, extra
+):
+    """Test the setting of the value via MQTT with JSON payload."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                **{
+                    "platform": "mqtt",
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "kWh",
+                    "value_template": "{{ value_json.value | float / 60000 }}",
+                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
+                },
+                **extra,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "test-topic",
+        '{"type":"minute","time":1629385500000,"value":947.7706166666667}',
+    )
+    state = hass.states.get("sensor.test")
+    assert float(state.state) == pytest.approx(0.015796176944444445)
+    assert state.attributes.get("last_reset") == "2021-08-19T15:05:00+00:00"
+    assert "'last_reset_topic' must be same as 'state_topic'" not in caplog.text
+    assert (
+        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
+        not in caplog.text
+    )
 
 
 async def test_force_update_disabled(hass, mqtt_mock):

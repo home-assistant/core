@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktivieren, wenn du den homekit.start-Dienst manuell aufrufst)"
+                    "auto_start": "Autostart (deaktivieren, wenn du den homekit.start-Dienst manuell aufrufst)",
+                    "devices": "Ger\u00e4te (Trigger)"
                 },
-                "description": "Diese Einstellungen m\u00fcssen nur angepasst werden, wenn HomeKit nicht funktioniert.",
+                "description": "F\u00fcr jedes ausgew\u00e4hlte Ger\u00e4t werden programmierbare Schalter erstellt. Wenn ein Ger\u00e4teausl\u00f6ser ausgel\u00f6st wird, kann HomeKit so konfiguriert werden, dass eine Automatisierung oder Szene ausgef\u00fchrt wird.",
                 "title": "Erweiterte Konfiguration"
             },
             "cameras": {

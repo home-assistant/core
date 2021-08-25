@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{model} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "Vuoi configurare {model} ({host})?"

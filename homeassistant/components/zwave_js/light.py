@@ -5,7 +5,8 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ColorComponent, CommandClass
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.color_switch import ColorComponent
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

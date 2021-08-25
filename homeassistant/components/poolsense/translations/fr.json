@@ -4,12 +4,12 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "invalid_auth": "L'authentification ne'st pas valide"
+            "invalid_auth": "Authentification invalide"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Adresse e-mail",
+                    "email": "Email",
                     "password": "Mot de passe"
                 },
                 "description": "Voulez-vous commencer la configuration ?",

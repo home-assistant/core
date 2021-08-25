@@ -86,11 +86,6 @@ def device_identifiers(printer: SyncThru) -> set[tuple[str, str]] | None:
 
 def device_connections(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device connections for device registry."""
-    connections = set()
-    try:
-        mac = printer.raw()["identity"]["mac_addr"]
-        if mac:
-            connections.add((dr.CONNECTION_NETWORK_MAC, mac))
-    except AttributeError:
-        pass
-    return connections
+    if mac := printer.raw().get("identity", {}).get("mac_addr"):
+        return {(dr.CONNECTION_NETWORK_MAC, mac)}
+    return set()

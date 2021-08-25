@@ -1,9 +1,24 @@
 """Collection of test helpers."""
+from datetime import datetime
 from fractions import Fraction
+from functools import partial
 import io
 
 import av
 import numpy as np
+
+from homeassistant.components.stream.core import Segment
+
+FAKE_TIME = datetime.utcnow()
+# Segment with defaults filled in for use in tests
+
+DefaultSegment = partial(
+    Segment,
+    init=None,
+    stream_id=0,
+    start_time=FAKE_TIME,
+    stream_outputs=[],
+)
 
 AUDIO_SAMPLE_RATE = 8000
 
@@ -22,14 +37,13 @@ def generate_audio_frame(pcm_mulaw=False):
     return audio_frame
 
 
-def generate_h264_video(container_format="mp4"):
+def generate_h264_video(container_format="mp4", duration=5):
     """
     Generate a test video.
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """
 
-    duration = 5
     fps = 24
     total_frames = duration * fps
 

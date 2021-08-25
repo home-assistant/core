@@ -88,6 +88,7 @@ class ArestSwitchBase(SwitchEntity):
         self._resource = resource
         self._attr_name = f"{location.title()} {name.title()}"
         self._attr_available = True
+        self._attr_is_on = False
 
 
 class ArestSwitchFunction(ArestSwitchBase):

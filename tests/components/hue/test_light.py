@@ -260,7 +260,7 @@ async def test_lights_color_mode(hass, mock_bridge):
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
-    assert "hs_color" not in lamp_1.attributes
+    assert "hs_color" in lamp_1.attributes
 
 
 async def test_groups(hass, mock_bridge):

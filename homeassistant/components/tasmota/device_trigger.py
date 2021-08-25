@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Any, Callable
 
 import attr
 from hatasmota.models import DiscoveryHashType
@@ -259,7 +259,9 @@ async def async_remove_triggers(hass: HomeAssistant, device_id: str) -> None:
             device_trigger.remove_update_signal()
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for a Tasmota device."""
     triggers: list[dict[str, str]] = []
 

@@ -1,4 +1,6 @@
 """Support for Broadlink sensors."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -11,6 +13,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.const import CONF_HOST, PERCENTAGE, POWER_WATT, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv
@@ -21,29 +24,42 @@ from .helpers import import_device
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "temperature": (
-        "Temperature",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        STATE_CLASS_MEASUREMENT,
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
-    "air_quality": ("Air Quality", None, None, None),
-    "humidity": (
-        "Humidity",
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription(
+        key="air_quality",
+        name="Air Quality",
     ),
-    "light": ("Light", None, DEVICE_CLASS_ILLUMINANCE, None),
-    "noise": ("Noise", None, None, None),
-    "power": (
-        "Current power",
-        POWER_WATT,
-        DEVICE_CLASS_POWER,
-        STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
-}
+    SensorEntityDescription(
+        key="light",
+        name="Light",
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    SensorEntityDescription(
+        key="noise",
+        name="Noise",
+    ),
+    SensorEntityDescription(
+        key="power",
+        name="Current power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string}, extra=vol.ALLOW_EXTRA
@@ -67,13 +83,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     sensor_data = device.update_manager.coordinator.data
     sensors = [
-        BroadlinkSensor(device, monitored_condition)
-        for monitored_condition in sensor_data
-        if monitored_condition in SENSOR_TYPES
+        BroadlinkSensor(device, description)
+        for description in SENSOR_TYPES
+        if description.key in sensor_data
         and (
             # These devices have optional sensors.
             # We don't create entities if the value is 0.
-            sensor_data[monitored_condition] != 0
+            sensor_data[description.key] != 0
             or device.api.type not in {"RM4PRO", "RM4MINI"}
         )
     ]
@@ -83,18 +99,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BroadlinkSensor(BroadlinkEntity, SensorEntity):
     """Representation of a Broadlink sensor."""
 
-    def __init__(self, device, monitored_condition):
+    def __init__(self, device, description: SensorEntityDescription):
         """Initialize the sensor."""
         super().__init__(device)
-        self._monitored_condition = monitored_condition
+        self.entity_description = description
 
-        self._attr_device_class = SENSOR_TYPES[monitored_condition][2]
-        self._attr_name = f"{device.name} {SENSOR_TYPES[monitored_condition][0]}"
-        self._attr_state_class = SENSOR_TYPES[monitored_condition][3]
-        self._attr_native_value = self._coordinator.data[monitored_condition]
-        self._attr_unique_id = f"{device.unique_id}-{monitored_condition}"
-        self._attr_native_unit_of_measurement = SENSOR_TYPES[monitored_condition][1]
+        self._attr_name = f"{device.name} {description.name}"
+        self._attr_native_value = self._coordinator.data[description.key]
+        self._attr_unique_id = f"{device.unique_id}-{description.key}"
 
     def _update_state(self, data):
         """Update the state of the entity."""
-        self._attr_native_value = data[self._monitored_condition]
+        self._attr_native_value = data[self.entity_description.key]

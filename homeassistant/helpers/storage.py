@@ -11,7 +11,7 @@ from typing import Any, Callable
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.loader import bind_hass
+from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
@@ -19,6 +19,8 @@ from homeassistant.util import json as json_util
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
+
+STORAGE_SEMAPHORE = "storage_semaphore"
 
 
 @bind_hass
@@ -109,8 +111,12 @@ class Store:
 
     async def _async_load(self):
         """Load the data and ensure the task is removed."""
+        if STORAGE_SEMAPHORE not in self.hass.data:
+            self.hass.data[STORAGE_SEMAPHORE] = asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
+
         try:
-            return await self._async_load_data()
+            async with self.hass.data[STORAGE_SEMAPHORE]:
+                return await self._async_load_data()
         finally:
             self._load_task = None
 

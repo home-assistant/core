@@ -7,9 +7,9 @@ from mysensors.sensor import Sensor
 import pytest
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -24,7 +24,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 from tests.common import MockConfigEntry
@@ -75,7 +74,6 @@ async def test_power_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
     assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
-    assert ATTR_LAST_RESET not in state.attributes
 
 
 async def test_energy_sensor(
@@ -92,8 +90,7 @@ async def test_energy_sensor(
     assert state.state == "18000"
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
-    assert state.attributes[ATTR_LAST_RESET] == utc_from_timestamp(0).isoformat()
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
 
 
 async def test_sound_sensor(

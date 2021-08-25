@@ -165,10 +165,7 @@ async def _async_get_image(
                     width=width, height=height
                 )
             else:
-                _LOGGER.warning(
-                    "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
-                    camera.entity_id,
-                )
+                camera.async_warn_old_async_camera_image_signature()
                 image_bytes = await camera.async_camera_image()
 
             if image_bytes:
@@ -381,6 +378,7 @@ class Camera(Entity):
         self.stream_options: dict[str, str] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
+        self._warned_old_signature = False
         self.async_update_token()
 
     @property
@@ -455,11 +453,20 @@ class Camera(Entity):
             return await self.hass.async_add_executor_job(
                 partial(self.camera_image, width=width, height=height)
             )
+        self.async_warn_old_async_camera_image_signature()
+        return await self.hass.async_add_executor_job(self.camera_image)
+
+    # Remove in 2022.1 after all custom components have had a chance to change their signature
+    @callback
+    def async_warn_old_async_camera_image_signature(self) -> None:
+        """Warn once when calling async_camera_image with the function old signature."""
+        if self._warned_old_signature:
+            return
         _LOGGER.warning(
             "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
             self.entity_id,
         )
-        return await self.hass.async_add_executor_job(self.camera_image)
+        self._warned_old_signature = True
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float

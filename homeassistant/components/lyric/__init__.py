@@ -23,6 +23,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -50,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Honeywell Lyric component."""
     hass.data[DOMAIN] = {}
 
@@ -139,34 +140,18 @@ class LyricEntity(CoordinatorEntity):
         location: LyricLocation,
         device: LyricDevice,
         key: str,
-        name: str,
-        icon: str | None,
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
         self._key = key
-        self._name = name
-        self._icon = icon
         self._location = location
         self._mac_id = device.macID
-        self._device_name = device.name
-        self._device_model = device.deviceModel
         self._update_thermostat = coordinator.data.update_thermostat
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
 
     @property
     def location(self) -> LyricLocation:
@@ -188,6 +173,6 @@ class LyricDeviceEntity(LyricEntity):
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             "manufacturer": "Honeywell",
-            "model": self._device_model,
-            "name": self._device_name,
+            "model": self.device.deviceModel,
+            "name": self.device.name,
         }

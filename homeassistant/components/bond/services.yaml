@@ -1,0 +1,23 @@
+start_increasing_brightness:
+  name: Start increasing brightness
+  description: "Start increasing the brightness of the light."
+  target:
+    entity:
+      integration: bond
+      domain: light
+
+start_decreasing_brightness:
+  name: Start decreasing brightness
+  description: "Start decreasing the brightness of the light."
+  target:
+    entity:
+      integration: bond
+      domain: light
+
+stop:
+  name: Stop
+  description: "Stop any in-progress action and empty the queue."
+  target:
+    entity:
+      integration: bond
+      domain: light

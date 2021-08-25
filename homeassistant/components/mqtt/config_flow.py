@@ -95,8 +95,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(self, discovery_info):
         """Receive a Hass.io discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        await self._async_handle_discovery_without_unique_id()
 
         self._hassio_discovery = discovery_info
 
