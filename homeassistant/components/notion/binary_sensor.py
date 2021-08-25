@@ -1,11 +1,16 @@
 """Support for Notion binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GARAGE_DOOR,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -28,18 +33,58 @@ from .const import (
     SENSOR_WINDOW_HINGED_VERTICAL,
 )
 
-BINARY_SENSOR_TYPES = {
-    SENSOR_BATTERY: ("Low Battery", "battery"),
-    SENSOR_DOOR: ("Door", DEVICE_CLASS_DOOR),
-    SENSOR_GARAGE_DOOR: ("Garage Door", "garage_door"),
-    SENSOR_LEAK: ("Leak Detector", DEVICE_CLASS_MOISTURE),
-    SENSOR_MISSING: ("Missing", DEVICE_CLASS_CONNECTIVITY),
-    SENSOR_SAFE: ("Safe", DEVICE_CLASS_DOOR),
-    SENSOR_SLIDING: ("Sliding Door/Window", DEVICE_CLASS_DOOR),
-    SENSOR_SMOKE_CO: ("Smoke/Carbon Monoxide Detector", DEVICE_CLASS_SMOKE),
-    SENSOR_WINDOW_HINGED_HORIZONTAL: ("Hinged Window", DEVICE_CLASS_WINDOW),
-    SENSOR_WINDOW_HINGED_VERTICAL: ("Hinged Window", DEVICE_CLASS_WINDOW),
-}
+BINARY_SENSOR_DESCRIPTIONS = (
+    BinarySensorEntityDescription(
+        key=SENSOR_BATTERY,
+        name="Low Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_DOOR,
+        name="Door",
+        device_class=DEVICE_CLASS_DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_GARAGE_DOOR,
+        name="Garage Door",
+        device_class=DEVICE_CLASS_GARAGE_DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_LEAK,
+        name="Leak Detector",
+        device_class=DEVICE_CLASS_MOISTURE,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_MISSING,
+        name="Missing",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_SAFE,
+        name="Safe",
+        device_class=DEVICE_CLASS_DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_SLIDING,
+        name="Sliding Door/Window",
+        device_class=DEVICE_CLASS_DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_SMOKE_CO,
+        name="Smoke/Carbon Monoxide Detector",
+        device_class=DEVICE_CLASS_SMOKE,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_WINDOW_HINGED_HORIZONTAL,
+        name="Hinged Window",
+        device_class=DEVICE_CLASS_WINDOW,
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_WINDOW_HINGED_VERTICAL,
+        name="Hinged Window",
+        device_class=DEVICE_CLASS_WINDOW,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -48,27 +93,22 @@ async def async_setup_entry(
     """Set up Notion sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
-    sensor_list = []
-    for task_id, task in coordinator.data["tasks"].items():
-        if task["task_type"] not in BINARY_SENSOR_TYPES:
-            continue
-
-        name, device_class = BINARY_SENSOR_TYPES[task["task_type"]]
-        sensor = coordinator.data["sensors"][task["sensor_id"]]
-
-        sensor_list.append(
+    async_add_entities(
+        [
             NotionBinarySensor(
                 coordinator,
                 task_id,
                 sensor["id"],
                 sensor["bridge"]["id"],
                 sensor["system_id"],
-                name,
-                device_class,
+                description,
             )
-        )
-
-    async_add_entities(sensor_list)
+            for task_id, task in coordinator.data["tasks"].items()
+            for description in BINARY_SENSOR_DESCRIPTIONS
+            if description.key == task["task_type"]
+            and (sensor := coordinator.data["sensors"][task["sensor_id"]])
+        ]
+    )
 
 
 class NotionBinarySensor(NotionEntity, BinarySensorEntity):
