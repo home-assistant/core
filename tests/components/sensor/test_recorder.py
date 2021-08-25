@@ -167,6 +167,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "mean": approx(16.440677966101696),
                 "min": approx(10.0),
                 "max": approx(30.0),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -178,6 +179,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "mean": approx(16.440677966101696),
                 "min": approx(10.0),
                 "max": approx(30.0),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -845,6 +847,7 @@ def test_compile_hourly_statistics_changing_units_1(
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -870,6 +873,7 @@ def test_compile_hourly_statistics_changing_units_1(
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
