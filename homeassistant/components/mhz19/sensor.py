@@ -13,11 +13,10 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_TEMPERATURE,
-    TEMP_FAHRENHEIT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ ATTR_CO2_CONCENTRATION = "co2_concentration"
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_CO2 = "co2"
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TEMPERATURE: ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION, DEVICE_CLASS_CO2],
 }
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -57,14 +56,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             err,
         )
         return False
-    SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
 
     data = MHZClient(co2sensor, config.get(CONF_SERIAL_DEVICE))
     dev = []
     name = config.get(CONF_NAME)
 
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(MHZ19Sensor(data, variable, SENSOR_TYPES[variable][1], name))
+        dev.append(MHZ19Sensor(data, variable, name))
 
     add_entities(dev, True)
     return True
@@ -73,11 +71,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MHZ19Sensor(SensorEntity):
     """Representation of an CO2 sensor."""
 
-    def __init__(self, mhz_client, sensor_type, temp_unit, name):
+    def __init__(self, mhz_client, sensor_type, name):
         """Initialize a new PM sensor."""
         self._mhz_client = mhz_client
         self._sensor_type = sensor_type
-        self._temp_unit = temp_unit
         self._name = name
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._ppm = None
@@ -104,8 +101,6 @@ class MHZ19Sensor(SensorEntity):
         self._mhz_client.update()
         data = self._mhz_client.data
         self._temperature = data.get(SENSOR_TEMPERATURE)
-        if self._temperature is not None and self._temp_unit == TEMP_FAHRENHEIT:
-            self._temperature = round(celsius_to_fahrenheit(self._temperature), 1)
         self._ppm = data.get(SENSOR_CO2)
 
     @property
