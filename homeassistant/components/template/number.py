@@ -215,11 +215,6 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_STATE))
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra attributes."""
-        return None
-
-    @property
     def min_value(self) -> int:
         """Return the minimum value."""
         return vol.Any(vol.Coerce(float), None)(
