@@ -1,7 +1,7 @@
 """Test the Nanoleaf config flow."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from pynanoleaf import InvalidToken, NotAuthorizingNewTokens, Unavailable
 from pynanoleaf.pynanoleaf import NanoleafError
@@ -11,6 +11,8 @@ from homeassistant import config_entries
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 TEST_NAME = "Canvas ADF9"
 TEST_HOST = "192.168.0.100"
@@ -281,6 +283,49 @@ async def test_discovery_link_unavailable(
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test Nanoleaf reauth flow."""
+    nanoleaf = MagicMock()
+    nanoleaf.host = TEST_HOST
+    nanoleaf.token = TEST_TOKEN
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_NAME,
+        data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_OTHER_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=nanoleaf,
+    ), patch(
+        "homeassistant.components.nanoleaf.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data=entry.data,
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "link"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+    assert entry.data[CONF_HOST] == TEST_HOST
+    assert entry.data[CONF_TOKEN] == TEST_TOKEN
 
 
 async def test_import_config(hass: HomeAssistant) -> None:
