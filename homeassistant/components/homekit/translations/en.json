@@ -35,7 +35,7 @@
             },
             "include_exclude": {
                 "data": {
-                    "devices": "Devices",
+                    "devices": "Devices (Triggers Only)",
                     "entities": "Entities",
                     "mode": "Mode"
                 },

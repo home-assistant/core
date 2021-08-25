@@ -415,7 +415,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     self.included_cameras = set()
 
             self.hk_options[CONF_FILTER] = entity_filter
-            if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
+            if (
+                self.show_advanced_options
+                and self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
+            ):
                 self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
             if self.included_cameras:
@@ -448,7 +451,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             all_supported_entities
         )
 
-        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
+        if (
+            self.show_advanced_options
+            and self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
+        ):
             all_supported_devices = await _async_get_supported_devices(self.hass)
             devices = self.hk_options.get(CONF_DEVICES, [])
             data_schema[vol.Optional(CONF_DEVICES, default=devices)] = cv.multi_select(
