@@ -23,8 +23,8 @@ from .data import (
     EnergyPreferencesUpdate,
     async_get_manager,
 )
-from .validate import async_validate
 from .types import EnergyPlatform, GetSolarForecastType
+from .validate import async_validate
 
 EnergyWebSocketCommandHandler = Callable[
     [HomeAssistant, websocket_api.ActiveConnection, "dict[str, Any]", "EnergyManager"],
