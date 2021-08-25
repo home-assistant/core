@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .base_platform import BaseStructPlatform
+from .const import CONF_STATE_CLASS
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -48,6 +49,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -64,10 +66,15 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             self._slave, self._address, self._count, self._input_type
         )
         if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
         self._attr_native_value = self.unpack_structure_result(result.registers)
+        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         self.async_write_ha_state()

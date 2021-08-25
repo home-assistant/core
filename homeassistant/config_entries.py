@@ -40,6 +40,7 @@ SOURCE_IMPORT = "import"
 SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
+SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
 SOURCE_DHCP = "dhcp"
@@ -103,7 +104,12 @@ DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = (
     SOURCE_SSDP,
+    SOURCE_USB,
+    SOURCE_DHCP,
+    SOURCE_HOMEKIT,
     SOURCE_ZEROCONF,
+    SOURCE_HOMEKIT,
+    SOURCE_DHCP,
     SOURCE_DISCOVERY,
     SOURCE_IMPORT,
     SOURCE_UNIGNORE,
@@ -1199,7 +1205,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             return None
 
         if raise_on_progress:
-            for progress in self._async_in_progress():
+            for progress in self._async_in_progress(include_uninitialized=True):
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
@@ -1207,7 +1213,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         # Abort discoveries done using the default discovery unique id
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:
-            for progress in self._async_in_progress():
+            for progress in self._async_in_progress(include_uninitialized=True):
                 if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
                     self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
@@ -1368,6 +1374,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: DiscoveryInfoType
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_usb(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by USB discovery."""
         return await self.async_step_discovery(discovery_info)
 
     @callback

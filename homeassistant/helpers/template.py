@@ -151,7 +151,7 @@ def gen_result_wrapper(kls):
     class Wrapper(kls, ResultWrapper):
         """Wrapper of a kls that can store render_result."""
 
-        def __init__(self, *args: tuple, render_result: str | None = None) -> None:
+        def __init__(self, *args: Any, render_result: str | None = None) -> None:
             super().__init__(*args)
             self.render_result = render_result
 

@@ -190,6 +190,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         device = self.device
         if not device.hasDualSetpointStatus:
+            if self.hvac_mode == HVAC_MODE_COOL:
+                return device.changeableValues.coolSetpoint
             return device.changeableValues.heatSetpoint
         return None
 
@@ -266,7 +268,14 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
             try:
-                await self._update_thermostat(self.location, device, heatSetpoint=temp)
+                if self.hvac_mode == HVAC_MODE_COOL:
+                    await self._update_thermostat(
+                        self.location, device, coolSetpoint=temp
+                    )
+                else:
+                    await self._update_thermostat(
+                        self.location, device, heatSetpoint=temp
+                    )
             except LYRIC_EXCEPTIONS as exception:
                 _LOGGER.error(exception)
         await self.coordinator.async_refresh()

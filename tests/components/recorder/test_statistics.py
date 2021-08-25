@@ -44,6 +44,7 @@ def test_compile_hourly_statistics(hass_recorder):
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
+        "last_reset": None,
         "state": None,
         "sum": None,
     }
@@ -53,6 +54,7 @@ def test_compile_hourly_statistics(hass_recorder):
         "mean": approx(20.0),
         "min": approx(20.0),
         "max": approx(20.0),
+        "last_reset": None,
         "state": None,
         "sum": None,
     }
@@ -125,6 +127,7 @@ def test_rename_entity(hass_recorder):
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
+        "last_reset": None,
         "state": None,
         "sum": None,
     }
@@ -146,6 +149,39 @@ def test_rename_entity(hass_recorder):
 
     stats = statistics_during_period(hass, zero)
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
+
+
+def test_statistics_duplicated(hass_recorder, caplog):
+    """Test statistics with same start time is not compiled."""
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    zero, four, states = record_states(hass)
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    with patch(
+        "homeassistant.components.sensor.recorder.compile_statistics"
+    ) as compile_statistics:
+        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        wait_recording_done(hass)
+        assert compile_statistics.called
+        compile_statistics.reset_mock()
+        assert "Compiling statistics for" in caplog.text
+        assert "Statistics already compiled" not in caplog.text
+        caplog.clear()
+
+        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        wait_recording_done(hass)
+        assert not compile_statistics.called
+        compile_statistics.reset_mock()
+        assert "Compiling statistics for" not in caplog.text
+        assert "Statistics already compiled" in caplog.text
+        caplog.clear()
 
 
 def record_states(hass):

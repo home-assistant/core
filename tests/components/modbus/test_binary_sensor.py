@@ -1,4 +1,4 @@
-"""The tests for the Modbus sensor component."""
+"""Thetests for the Modbus sensor component."""
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -20,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, base_test
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -44,6 +45,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
                     CONF_SLAVE: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
                     CONF_DEVICE_CLASS: "door",
+                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -54,51 +56,67 @@ async def test_config_binary_sensor(hass, mock_modbus):
     assert SENSOR_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
 @pytest.mark.parametrize(
-    "regs,expected",
+    "do_config",
+    [
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
+                },
+            ],
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,expected",
     [
         (
             [0xFF],
+            False,
             STATE_ON,
         ),
         (
             [0x01],
+            False,
             STATE_ON,
         ),
         (
             [0x00],
+            False,
             STATE_OFF,
         ),
         (
             [0x80],
+            False,
             STATE_OFF,
         ),
         (
             [0xFE],
+            False,
             STATE_OFF,
         ),
         (
-            None,
+            [0x00],
+            True,
             STATE_UNAVAILABLE,
         ),
     ],
 )
-async def test_all_binary_sensor(hass, do_type, regs, expected):
+async def test_all_binary_sensor(hass, expected, mock_do_cycle):
     """Run test for given config."""
-    state = await base_test(
-        hass,
-        {CONF_NAME: TEST_ENTITY_NAME, CONF_ADDRESS: 1234, CONF_INPUT_TYPE: do_type},
-        TEST_ENTITY_NAME,
-        SENSOR_DOMAIN,
-        CONF_BINARY_SENSORS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(

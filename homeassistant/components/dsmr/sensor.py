@@ -139,7 +139,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state != CoreState.stopping:
+        while hass.state == CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
@@ -154,7 +154,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if not hass.is_stopping:
+                    if hass.state == CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -181,7 +181,9 @@ async def async_setup_entry(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
             except CancelledError:
-                if stop_listener:
+                if stop_listener and (
+                    hass.state == CoreState.not_running or hass.is_running
+                ):
                     stop_listener()  # pylint: disable=not-callable
 
                 if transport:

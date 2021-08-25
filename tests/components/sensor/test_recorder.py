@@ -95,6 +95,7 @@ def test_compile_hourly_statistics(
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -106,24 +107,34 @@ def test_compile_hourly_statistics(
 @pytest.mark.parametrize("attributes", [TEMPERATURE_SENSOR_ATTRIBUTES])
 def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes):
     """Test compiling hourly statistics for unsupported sensor."""
-    attributes = dict(attributes)
     zero = dt_util.utcnow()
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     four, states = record_states(hass, zero, "sensor.test1", attributes)
-    if "unit_of_measurement" in attributes:
-        attributes["unit_of_measurement"] = "invalid"
-        _, _states = record_states(hass, zero, "sensor.test2", attributes)
-        states = {**states, **_states}
-        attributes.pop("unit_of_measurement")
-        _, _states = record_states(hass, zero, "sensor.test3", attributes)
-        states = {**states, **_states}
-    attributes["state_class"] = "invalid"
-    _, _states = record_states(hass, zero, "sensor.test4", attributes)
+
+    attributes_tmp = dict(attributes)
+    attributes_tmp["unit_of_measurement"] = "invalid"
+    _, _states = record_states(hass, zero, "sensor.test2", attributes_tmp)
     states = {**states, **_states}
-    attributes.pop("state_class")
-    _, _states = record_states(hass, zero, "sensor.test5", attributes)
+    attributes_tmp.pop("unit_of_measurement")
+    _, _states = record_states(hass, zero, "sensor.test3", attributes_tmp)
+    states = {**states, **_states}
+
+    attributes_tmp = dict(attributes)
+    attributes_tmp["state_class"] = "invalid"
+    _, _states = record_states(hass, zero, "sensor.test4", attributes_tmp)
+    states = {**states, **_states}
+    attributes_tmp.pop("state_class")
+    _, _states = record_states(hass, zero, "sensor.test5", attributes_tmp)
+    states = {**states, **_states}
+
+    attributes_tmp = dict(attributes)
+    attributes_tmp["device_class"] = "invalid"
+    _, _states = record_states(hass, zero, "sensor.test6", attributes_tmp)
+    states = {**states, **_states}
+    attributes_tmp.pop("device_class")
+    _, _states = record_states(hass, zero, "sensor.test7", attributes_tmp)
     states = {**states, **_states}
 
     hist = history.get_significant_states(hass, zero, four)
@@ -133,7 +144,9 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "°C"}
+        {"statistic_id": "sensor.test1", "unit_of_measurement": "°C"},
+        {"statistic_id": "sensor.test6", "unit_of_measurement": "°C"},
+        {"statistic_id": "sensor.test7", "unit_of_measurement": "°C"},
     ]
     stats = statistics_during_period(hass, zero)
     assert stats == {
@@ -144,14 +157,40 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "mean": approx(16.440677966101696),
                 "min": approx(10.0),
                 "max": approx(30.0),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
-        ]
+        ],
+        "sensor.test6": [
+            {
+                "statistic_id": "sensor.test6",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(16.440677966101696),
+                "min": approx(10.0),
+                "max": approx(30.0),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ],
+        "sensor.test7": [
+            {
+                "statistic_id": "sensor.test7",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(16.440677966101696),
+                "min": approx(10.0),
+                "max": approx(30.0),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ],
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.parametrize("state_class", ["measurement"])
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
@@ -164,7 +203,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     ],
 )
 def test_compile_hourly_sum_statistics_amount(
-    hass_recorder, caplog, device_class, unit, native_unit, factor
+    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
@@ -173,7 +212,7 @@ def test_compile_hourly_sum_statistics_amount(
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": device_class,
-        "state_class": "measurement",
+        "state_class": state_class,
         "unit_of_measurement": unit,
         "last_reset": None,
     }
@@ -206,6 +245,7 @@ def test_compile_hourly_sum_statistics_amount(
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
             },
@@ -215,8 +255,9 @@ def test_compile_hourly_sum_statistics_amount(
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(factor * seq[5]),
-                "sum": approx(factor * 30.0),
+                "sum": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -224,8 +265,9 @@ def test_compile_hourly_sum_statistics_amount(
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(factor * seq[8]),
-                "sum": approx(factor * 60.0),
+                "sum": approx(factor * 40.0),
             },
         ]
     }
@@ -283,6 +325,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
             },
@@ -292,6 +335,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 50.0),
             },
@@ -301,12 +345,94 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 80.0),
             },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,factor",
+    [("energy", "kWh", "kWh", 1)],
+)
+def test_compile_hourly_sum_statistics_total_increasing_small_dip(
+    hass_recorder, caplog, device_class, unit, native_unit, factor
+):
+    """Test small dips in sensor readings do not trigger a reset."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": "total_increasing",
+        "unit_of_measurement": unit,
+    }
+    seq = [10, 15, 20, 19, 30, 40, 50, 60, 70]
+
+    four, eight, states = record_meter_states(
+        hass, zero, "sensor.test1", attributes, seq
+    )
+    hist = history.get_significant_states(
+        hass, zero - timedelta.resolution, eight + timedelta.resolution
+    )
+    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    wait_recording_done(hass)
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
+    wait_recording_done(hass)
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "last_reset": None,
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "state": approx(factor * seq[2]),
+                "sum": approx(factor * 10.0),
+            },
+            {
+                "last_reset": None,
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "state": approx(factor * seq[5]),
+                "sum": approx(factor * 30.0),
+            },
+            {
+                "last_reset": None,
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "state": approx(factor * seq[8]),
+                "sum": approx(factor * 60.0),
+            },
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    assert (
+        "Entity sensor.test1 has state class total_increasing, but its state is not "
+        "strictly increasing. Please create a bug report at https://github.com/"
+        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
+        "+recorder%22"
+    ) in caplog.text
 
 
 def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
@@ -367,6 +493,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(20.0),
                 "sum": approx(10.0),
             },
@@ -376,8 +503,9 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
-                "sum": approx(30.0),
+                "sum": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -385,8 +513,9 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
-                "sum": approx(60.0),
+                "sum": approx(40.0),
             },
         ]
     }
@@ -447,6 +576,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(20.0),
                 "sum": approx(10.0),
             },
@@ -456,8 +586,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
-                "sum": approx(30.0),
+                "sum": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -465,8 +596,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
-                "sum": approx(60.0),
+                "sum": approx(40.0),
             },
         ],
         "sensor.test2": [
@@ -476,6 +608,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(130.0),
                 "sum": approx(20.0),
             },
@@ -485,8 +618,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(45.0),
-                "sum": approx(-65.0),
+                "sum": approx(-95.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -494,8 +628,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(75.0),
-                "sum": approx(-35.0),
+                "sum": approx(-65.0),
             },
         ],
         "sensor.test3": [
@@ -505,6 +640,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(5.0 / 1000),
                 "sum": approx(5.0 / 1000),
             },
@@ -514,8 +650,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(50.0 / 1000),
-                "sum": approx(50.0 / 1000),
+                "sum": approx(30.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -523,8 +660,9 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "max": None,
                 "mean": None,
                 "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(90.0 / 1000),
-                "sum": approx(90.0 / 1000),
+                "sum": approx(70.0 / 1000),
             },
         ],
     }
@@ -575,6 +713,7 @@ def test_compile_hourly_statistics_unchanged(
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -606,6 +745,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
                 "mean": approx(21.1864406779661),
                 "min": approx(10.0),
                 "max": approx(25.0),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -662,6 +802,7 @@ def test_compile_hourly_statistics_unavailable(
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
             }
@@ -758,6 +899,136 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
     hass.states.set("sensor.test5", 0, attributes=attributes)
     attributes.pop("state_class")
     hass.states.set("sensor.test6", 0, attributes=attributes)
+
+
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,mean,min,max",
+    [
+        (None, None, None, 16.440677, 10, 30),
+        (None, "%", "%", 16.440677, 10, 30),
+        ("battery", "%", "%", 16.440677, 10, 30),
+        ("battery", None, None, 16.440677, 10, 30),
+    ],
+)
+def test_compile_hourly_statistics_changing_units_1(
+    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+):
+    """Test compiling hourly statistics where units change from one hour to the next."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    attributes["unit_of_measurement"] = "cats"
+    four, _states = record_states(
+        hass, zero + timedelta(hours=1), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    four, _states = record_states(
+        hass, zero + timedelta(hours=2), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    wait_recording_done(hass)
+    assert "does not match the unit of already compiled" not in caplog.text
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
+    wait_recording_done(hass)
+    assert (
+        "The unit of sensor.test1 (cats) does not match the unit of already compiled "
+        f"statistics ({native_unit})" in caplog.text
+    )
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,mean,min,max",
+    [
+        (None, None, None, 16.440677, 10, 30),
+        (None, "%", "%", 16.440677, 10, 30),
+        ("battery", "%", "%", 16.440677, 10, 30),
+        ("battery", None, None, 16.440677, 10, 30),
+    ],
+)
+def test_compile_hourly_statistics_changing_units_2(
+    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+):
+    """Test compiling hourly statistics where units change during an hour."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    attributes["unit_of_measurement"] = "cats"
+    four, _states = record_states(
+        hass, zero + timedelta(hours=1), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(minutes=30))
+    wait_recording_done(hass)
+    assert "The unit of sensor.test1 is changing" in caplog.text
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": "cats"}
+    ]
+    stats = statistics_during_period(hass, zero)
+    assert stats == {}
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
 
 
 def record_states(hass, zero, entity_id, attributes):

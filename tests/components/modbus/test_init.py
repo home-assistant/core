@@ -59,6 +59,8 @@ from homeassistant.components.modbus.const import (
     UDP,
 )
 from homeassistant.components.modbus.validators import (
+    duplicate_entity_validator,
+    duplicate_modbus_validator,
     number_validator,
     struct_validator,
 )
@@ -200,6 +202,92 @@ async def test_exception_struct_validator(do_config):
     except vol.Invalid:
         return
     pytest.fail("struct_validator missing exception")
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            },
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST + "2",
+                CONF_PORT: TEST_PORT_TCP,
+            },
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            },
+            {
+                CONF_NAME: TEST_MODBUS_NAME + "2",
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            },
+        ],
+    ],
+)
+async def test_duplicate_modbus_validator(do_config):
+    """Test duplicate modbus validator."""
+    duplicate_modbus_validator(do_config)
+    assert len(do_config) == 1
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 119,
+                    },
+                ],
+            }
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + "2",
+                        CONF_ADDRESS: 117,
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_duplicate_entity_validator(do_config):
+    """Test duplicate entity validator."""
+    duplicate_entity_validator(do_config)
+    assert len(do_config[0][CONF_SENSORS]) == 1
 
 
 @pytest.mark.parametrize(

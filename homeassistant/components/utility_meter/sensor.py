@@ -5,7 +5,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -54,7 +59,6 @@ ATTR_SOURCE_ID = "source"
 ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
-ATTR_LAST_RESET = "last_reset"
 ATTR_TARIFF = "tariff"
 
 DEVICE_CLASS_MAP = {
@@ -330,7 +334,11 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     @property
     def state_class(self):
         """Return the device class of the sensor."""
-        return STATE_CLASS_MEASUREMENT
+        return (
+            STATE_CLASS_MEASUREMENT
+            if self._sensor_net_consumption
+            else STATE_CLASS_TOTAL_INCREASING
+        )
 
     @property
     def native_unit_of_measurement(self):
@@ -349,7 +357,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: self._last_period,
-            ATTR_LAST_RESET: self._last_reset.isoformat(),
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
@@ -361,3 +368,8 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset."""
+        return self._last_reset
