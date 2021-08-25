@@ -53,7 +53,7 @@ def period_or_cron(config):
     """Check that if cron pattern is used, then meter type and offsite must be removed."""
     if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
         raise vol.Invalid(
-            f"You can either use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>"
+            f"Use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>"
         )
     if (
         CONF_CRON_PATTERN in config
