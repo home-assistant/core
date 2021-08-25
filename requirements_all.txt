@@ -486,6 +486,9 @@ construct==2.10.56
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
 
+# homeassistant.components.utility_meter
+croniter==1.0.6
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
