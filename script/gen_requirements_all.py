@@ -16,6 +16,7 @@ COMMENT_REQUIREMENTS = (
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
+    "beacontools[scan]",
     "beewi_smartclim",  # depends on bluepy
     "blinkt",
     "bluepy",
