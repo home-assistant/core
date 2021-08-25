@@ -4,12 +4,14 @@ from unittest.mock import patch
 
 from homeassistant.components.decora_wifi.common import (
     DecoraWifiCommFailed,
+    DecoraWifiEntity,
     DecoraWifiLoginFailed,
     DecoraWifiPlatform,
 )
 from homeassistant.components.decora_wifi.const import LIGHT_DOMAIN
 
 from tests.components.decora_wifi.common import (
+    FakeDecoraWiFiIotSwitch,
     FakeDecoraWiFiResidence,
     FakeDecoraWiFiResidentialAccount,
     FakeDecoraWiFiSession,
@@ -28,12 +30,13 @@ def test_DecoraWifiPlatform_init():
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession.login",
         return_value=True,
     ) as mock_session_login, patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._apigetdevices"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._api_get_devices"
     ) as mock_apigetdevices, patch(
         "homeassistant.components.decora_wifi.common.Person.logout"
     ) as mock_person_logout:
         # Check object setup
         instance = DecoraWifiPlatform(USERNAME, PASSWORD)
+        instance.setup()
         assert isinstance(instance, DecoraWifiPlatform)
         mock_session_login.assert_called_once()
         mock_apigetdevices.assert_called_once()
@@ -48,12 +51,12 @@ def test_DecoraWifiPlatform_init():
         instance.refresh_devices()
         mock_apigetdevices.assert_called_once()
         # Check object teardown
-        instance = None
+        instance.teardown()
         mock_person_logout.assert_called_once()
 
 
 def test_DecoraWifiPlatform_init_invalidpw():
-    """Check DecoraWifiPlatform login failure throws correct exception, doesn't leave broken object."""
+    """Check DecoraWifiPlatform login failure throws correct exception."""
     instance = None
     exception = None
 
@@ -61,24 +64,24 @@ def test_DecoraWifiPlatform_init_invalidpw():
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession.login",
         return_value=None,
     ) as mock_session_login, patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._apigetdevices"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._api_get_devices"
     ) as mock_apigetdevices, patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.apilogout"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.api_logout"
     ) as mock_apilogout:
         # Check exception thrown as expected
         try:
-            DecoraWifiPlatform(USERNAME, PASSWORD)
+            instance = DecoraWifiPlatform(USERNAME, PASSWORD)
+            instance.setup()
         except Exception as ex:
             exception = ex
         assert isinstance(exception, DecoraWifiLoginFailed)
         mock_session_login.assert_called_once()
         mock_apigetdevices.assert_not_called()
         mock_apilogout.assert_not_called()
-        assert instance is None
 
 
 def test_DecoraWifiPlatform_init_nocomms():
-    """Check DecoraWifiPlatform communication failure throws correct exception, doesn't leave broken object."""
+    """Check DecoraWifiPlatform communication failure throws correct exception."""
     instance = None
     exception = None
 
@@ -86,20 +89,20 @@ def test_DecoraWifiPlatform_init_nocomms():
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession.login",
         side_effect=ValueError,
     ) as mock_session_login, patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._apigetdevices"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._api_get_devices"
     ) as mock_apigetdevices, patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.apilogout"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.api_logout"
     ) as mock_apilogout:
         # Check exception thrown as expected
         try:
-            DecoraWifiPlatform(USERNAME, PASSWORD)
+            instance = DecoraWifiPlatform(USERNAME, PASSWORD)
+            instance.setup()
         except Exception as ex:
             exception = ex
         assert isinstance(exception, DecoraWifiCommFailed)
         mock_session_login.assert_called_once()
         mock_apigetdevices.assert_not_called()
         mock_apilogout.assert_not_called()
-        assert instance is None
 
 
 def test_DecoraWifiPlatform_getdevices():
@@ -116,15 +119,16 @@ def test_DecoraWifiPlatform_getdevices():
         "homeassistant.components.decora_wifi.common.ResidentialAccount",
         side_effect=FakeDecoraWiFiResidentialAccount,
     ), patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.apilogout"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.api_logout"
     ) as mock_apilogout:
         # Setup platform object
         instance = DecoraWifiPlatform(USERNAME, PASSWORD)
+        instance.setup()
         assert isinstance(instance, DecoraWifiPlatform)
         # Check that getdevices left platform object in expected state
         assert len(instance._iot_switches[LIGHT_DOMAIN]) == 6
         # Check object teardown
-        instance = None
+        instance.teardown()
         mock_apilogout.assert_called_once()
 
 
@@ -154,16 +158,15 @@ def test_DecoraWifiPlatform_apigetdevices_commfailed():
         "homeassistant.components.decora_wifi.common.ResidentialAccount",
         side_effect=ValueError,
     ), patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.apilogout"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform.api_logout"
     ):
         # Setup Object
         try:
             instance = DecoraWifiPlatform(USERNAME, PASSWORD)
+            instance.setup()
         except DecoraWifiCommFailed as ex:
             exception = ex
         assert isinstance(exception, DecoraWifiCommFailed)
-        # If the comm failure happens during initial setup, the constructor never completes and the platform object instance isn't created.
-        assert not instance
 
 
 def test_DecoraWifiPlatform_apilogout_commfailed():
@@ -174,16 +177,27 @@ def test_DecoraWifiPlatform_apilogout_commfailed():
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._apigetdevices"
+        "homeassistant.components.decora_wifi.common.DecoraWifiPlatform._api_get_devices"
     ), patch(
         "homeassistant.components.decora_wifi.common.Person.logout",
-        side_effect=DecoraWifiCommFailed,
+        side_effect=ValueError,
     ) as mock_person_logout:
         # Setup Object
         try:
             instance = DecoraWifiPlatform(USERNAME, PASSWORD)
-            instance.apilogout()
+            instance.setup()
+            instance.api_logout()
         except DecoraWifiCommFailed as ex:
             exception = ex
         assert isinstance(exception, DecoraWifiCommFailed)
         mock_person_logout.assert_called_once()
+
+
+def test_DecoraWifiEntity_init():
+    """Check DecoraWifiEntity initialization."""
+    session = FakeDecoraWiFiSession()
+    switch = FakeDecoraWiFiIotSwitch(session)
+
+    entity = DecoraWifiEntity(switch)
+    assert entity._switch == switch
+    assert entity._unique_id == switch.mac

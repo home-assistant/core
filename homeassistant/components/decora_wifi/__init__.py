@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .common import (
@@ -74,15 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     email = conf_data[CONF_USERNAME]
     password = conf_data[CONF_PASSWORD]
 
-    conf_data[CONF_OPTIONS] = {}
-    # If no scan interval option was set in the config entry, use the default.
-    conf_data[CONF_OPTIONS].update(
-        {
-            CONF_SCAN_INTERVAL: dict(entry.options).get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
-        }
-    )
+    # Set a sane default scan interval.
+    conf_data[CONF_OPTIONS] = {
+        CONF_SCAN_INTERVAL: dict(entry.options).get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+    }
 
     # If a session is already setup, don't start a new one.
     session = decorawifisessions.get(email, None)
@@ -95,14 +93,16 @@ async def async_setup_entry(hass: HomeAssistant, entry):
                 email,
                 password,
             )
-        except DecoraWifiLoginFailed:
+        except DecoraWifiLoginFailed as exc:
             _LOGGER.error("Login failed")
-        except DecoraWifiCommFailed:
+            raise ConfigEntryAuthFailed from exc
+        except DecoraWifiCommFailed as exc:
             _LOGGER.error("Communication with myLeviton failed")
+            raise ConfigEntryNotReady from exc
         decorawifisessions.update({email: session})
 
     if session:
-        activeplatforms = session.activeplatforms
+        activeplatforms = session.active_platforms
         # Forward the config entry to each platform which has devices to set up.
         hass.config_entries.async_setup_platforms(entry, activeplatforms)
         return True
@@ -116,9 +116,10 @@ async def async_unload_entry(hass, entry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         if session:
+            session.teardown()
             try:
                 # Attempt to log out.
-                await hass.async_create_task(session.apilogout)
+                await hass.async_create_task(session.api_logout)
             except DecoraWifiCommFailed:
                 _LOGGER.warning(
                     "Communication with myLeviton failed while attempting to logout"

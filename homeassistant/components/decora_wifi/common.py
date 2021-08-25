@@ -40,12 +40,14 @@ class DecoraWifiPlatform:
         }
         self._loggedin = False
 
-        self._apilogin()
-        self._apigetdevices()
+    def setup(self):
+        """Set up the session after object instantiation."""
+        self._api_login()
+        self._api_get_devices()
 
-    def __del__(self):
+    def teardown(self):
         """Clean up the session on object deletion."""
-        self.apilogout()
+        self.api_logout()
 
     @property
     def lights(self) -> list[IotSwitch]:
@@ -53,11 +55,11 @@ class DecoraWifiPlatform:
         return self._iot_switches[LIGHT_DOMAIN]
 
     @property
-    def activeplatforms(self) -> list[str]:
+    def active_platforms(self) -> list[str]:
         """Get the list of platforms which have devices defined."""
         return [p for p in PLATFORMS if self._iot_switches[p]]
 
-    def _apilogin(self):
+    def _api_login(self):
         """Log in to decora_wifi session."""
         try:
             success = self._session.login(self._email, self._password)
@@ -71,7 +73,7 @@ class DecoraWifiPlatform:
 
         self._loggedin = True
 
-    def apilogout(self):
+    def api_logout(self):
         """Log out of decora_wifi session."""
         if self._loggedin:
             try:
@@ -80,7 +82,7 @@ class DecoraWifiPlatform:
                 raise DecoraWifiCommFailed from exc
         self._loggedin = False
 
-    def _apigetdevices(self):
+    def _api_get_devices(self):
         """Update the device library from the API."""
 
         try:
@@ -111,23 +113,25 @@ class DecoraWifiPlatform:
 
     def reauth(self):
         """Reauthenticate this object's session."""
-        self.apilogout()
+        self.api_logout()
         self._session = DecoraWiFiSession()
-        self._apilogin()
+        self._api_login()
 
     def refresh_devices(self):
         """Refresh this object's devices."""
         self._iot_switches: dict[str, IotSwitch] = {
             platform: [] for platform in PLATFORMS
         }
-        self._apigetdevices()
+        self._api_get_devices()
 
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
         """Set up a decora wifi session."""
 
         def setupplatform() -> DecoraWifiPlatform:
-            return DecoraWifiPlatform(email, password)
+            platform = DecoraWifiPlatform(email, password)
+            platform.setup()
+            return platform
 
         return await hass.async_add_executor_job(setupplatform)
 
