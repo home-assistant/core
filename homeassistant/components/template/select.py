@@ -13,7 +13,6 @@ from homeassistant.components.select.const import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
-from homeassistant.components.template.trigger_entity import TriggerEntity
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -24,6 +23,9 @@ from homeassistant.helpers.template import Template, TemplateError
 from . import TriggerUpdateCoordinator
 from .const import CONF_AVAILABILITY
 from .template_entity import TemplateEntity
+from .trigger_entity import TriggerEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_SELECT_OPTION = "select_option"
 
@@ -74,6 +76,12 @@ async def async_setup_platform(
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the template select."""
+    if discovery_info is None:
+        _LOGGER.warning(
+            "Template number entities can only be configured under template:"
+        )
+        return
+
     if "coordinator" in discovery_info:
         async_add_entities(
             TriggerSelectEntity(hass, discovery_info["coordinator"], config)
@@ -184,7 +192,6 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return the list of available options."""
-        logging.getLogger(__name__).error(self._rendered)
         return self._rendered.get(ATTR_OPTIONS, [])
 
     async def async_select_option(self, option: str) -> None:
