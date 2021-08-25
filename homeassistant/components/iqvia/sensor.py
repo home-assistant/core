@@ -1,7 +1,6 @@
 """Support for IQVIA sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from statistics import mean
 
 import numpy as np
@@ -64,71 +63,49 @@ TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
 
 
-@dataclass
-class IQVIASensorDescriptionMixin:
-    """Define an entity description mixin for binary and regular sensors."""
-
-    sensor_type: str
-
-
-@dataclass
-class IQVIASensorEntityDescription(
-    SensorEntityDescription, IQVIASensorDescriptionMixin
-):
-    """Describe an IQVIA sensor."""
-
-
-SENSOR_TYPE_FORECAST = "forecast"
-SENSOR_TYPE_INDEX = "index"
-
-SENSOR_DESCRIPTIONS = (
-    IQVIASensorEntityDescription(
+FORECAST_SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
         key=TYPE_ALLERGY_FORECAST,
         name="Allergy Index: Forecasted Average",
         icon="mdi:flower",
-        sensor_type=SENSOR_TYPE_FORECAST,
     ),
-    IQVIASensorEntityDescription(
-        key=TYPE_ALLERGY_TODAY,
-        name="Allergy Index: Today",
-        icon="mdi:flower",
-        sensor_type=SENSOR_TYPE_INDEX,
-    ),
-    IQVIASensorEntityDescription(
-        key=TYPE_ALLERGY_TOMORROW,
-        name="Allergy Index: Tomorrow",
-        icon="mdi:flower",
-        sensor_type=SENSOR_TYPE_INDEX,
-    ),
-    IQVIASensorEntityDescription(
+    SensorEntityDescription(
         key=TYPE_ASTHMA_FORECAST,
         name="Asthma Index: Forecasted Average",
         icon="mdi:flower",
-        sensor_type=SENSOR_TYPE_FORECAST,
     ),
-    IQVIASensorEntityDescription(
-        key=TYPE_ASTHMA_TODAY,
-        name="Asthma Index: Today",
-        icon="mdi:flower",
-        sensor_type=SENSOR_TYPE_INDEX,
-    ),
-    IQVIASensorEntityDescription(
-        key=TYPE_ASTHMA_TOMORROW,
-        name="Asthma Index: Tomorrow",
-        icon="mdi:flower",
-        sensor_type=SENSOR_TYPE_INDEX,
-    ),
-    IQVIASensorEntityDescription(
+    SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
         name="Cold & Flu: Forecasted Average",
         icon="mdi:snowflake",
-        sensor_type=SENSOR_TYPE_FORECAST,
     ),
-    IQVIASensorEntityDescription(
+)
+
+INDEX_SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key=TYPE_ALLERGY_TODAY,
+        name="Allergy Index: Today",
+        icon="mdi:flower",
+    ),
+    SensorEntityDescription(
+        key=TYPE_ALLERGY_TOMORROW,
+        name="Allergy Index: Tomorrow",
+        icon="mdi:flower",
+    ),
+    SensorEntityDescription(
+        key=TYPE_ASTHMA_TODAY,
+        name="Asthma Index: Today",
+        icon="mdi:flower",
+    ),
+    SensorEntityDescription(
+        key=TYPE_ASTHMA_TOMORROW,
+        name="Asthma Index: Tomorrow",
+        icon="mdi:flower",
+    ),
+    SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
         name="Cold & Flu Index: Today",
         icon="mdi:pill",
-        sensor_type=SENSOR_TYPE_INDEX,
     ),
 )
 
@@ -137,26 +114,30 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up IQVIA sensors based on a config entry."""
-    async_add_entities(
+    sensors: list[ForecastSensor | IndexSensor] = [
+        ForecastSensor(
+            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                API_CATEGORY_MAPPING.get(description.key, description.key)
+            ],
+            entry,
+            description,
+        )
+        for description in FORECAST_SENSOR_DESCRIPTIONS
+    ]
+    sensors.extend(
         [
-            ForecastSensor(
+            IndexSensor(
                 hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
                 description,
             )
-            if description.sensor_type == SENSOR_TYPE_FORECAST
-            else IndexSensor(
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-                    API_CATEGORY_MAPPING.get(description.key, description.key)
-                ],
-                entry,
-                description,
-            )
-            for description in SENSOR_DESCRIPTIONS
+            for description in INDEX_SENSOR_DESCRIPTIONS
         ]
     )
+
+    async_add_entities(sensors)
 
 
 @callback
