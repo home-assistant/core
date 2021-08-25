@@ -208,6 +208,6 @@ class NetgearDeviceEntity(ScannerEntity):
             async_dispatcher_connect(
                 self.hass,
                 self._router.signal_device_update,
-                self.update_device,
+                self.async_update_device,
             )
         )
