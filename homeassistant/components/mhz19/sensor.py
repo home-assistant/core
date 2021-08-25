@@ -1,11 +1,17 @@
 """Support for CO2 sensor connected to a serial port."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from pmsensor import co2sensor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -29,16 +35,27 @@ ATTR_CO2_CONCENTRATION = "co2_concentration"
 
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_CO2 = "co2"
-SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION, DEVICE_CLASS_CO2],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_CO2,
+        name="CO2",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=DEVICE_CLASS_CO2,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_SERIAL_DEVICE): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_CO2]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
@@ -58,43 +75,36 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     data = MHZClient(co2sensor, config.get(CONF_SERIAL_DEVICE))
-    dev = []
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
-    for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(MHZ19Sensor(data, variable, name))
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        MHZ19Sensor(data, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
 
-    add_entities(dev, True)
-    return True
+    add_entities(entities, True)
 
 
 class MHZ19Sensor(SensorEntity):
     """Representation of an CO2 sensor."""
 
-    def __init__(self, mhz_client, sensor_type, name):
+    def __init__(self, mhz_client, name, description: SensorEntityDescription):
         """Initialize a new PM sensor."""
+        self.entity_description = description
         self._mhz_client = mhz_client
-        self._sensor_type = sensor_type
-        self._name = name
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._ppm = None
         self._temperature = None
-        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name}: {SENSOR_TYPES[self._sensor_type][0]}"
+        self._attr_name = f"{name}: {description.name}"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._ppm if self._sensor_type == SENSOR_CO2 else self._temperature
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        if self.entity_description.key == SENSOR_CO2:
+            return self._ppm
+        return self._temperature
 
     def update(self):
         """Read from sensor and update the state."""
@@ -107,9 +117,10 @@ class MHZ19Sensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         result = {}
-        if self._sensor_type == SENSOR_TEMPERATURE and self._ppm is not None:
+        sensor_type = self.entity_description.key
+        if sensor_type == SENSOR_TEMPERATURE and self._ppm is not None:
             result[ATTR_CO2_CONCENTRATION] = self._ppm
-        if self._sensor_type == SENSOR_CO2 and self._temperature is not None:
+        elif sensor_type == SENSOR_CO2 and self._temperature is not None:
             result[ATTR_TEMPERATURE] = self._temperature
         return result
 
