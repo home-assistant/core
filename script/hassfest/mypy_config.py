@@ -125,7 +125,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.*",
     "homeassistant.components.spotify.*",
     "homeassistant.components.stt.*",
-    "homeassistant.components.switchbot.*",
     "homeassistant.components.system_health.*",
     "homeassistant.components.system_log.*",
     "homeassistant.components.tado.*",
