@@ -21,7 +21,13 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_DEVICES,
+    CONF_NAME,
+    CONF_PROTOCOL,
+    CONF_UNIQUE_ID,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -128,6 +134,7 @@ DEVICE_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(["ledenet"])),
         vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -148,6 +155,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = {}
         device["name"] = device_config[CONF_NAME]
         device["ipaddr"] = ipaddr
+        device[CONF_UNIQUE_ID] = device_config.get(CONF_UNIQUE_ID)
         device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
         device[ATTR_MODE] = device_config[ATTR_MODE]
         device[CONF_CUSTOM_EFFECT] = device_config.get(CONF_CUSTOM_EFFECT)
@@ -188,6 +196,7 @@ class FluxLight(LightEntity):
         self._custom_effect = device[CONF_CUSTOM_EFFECT]
         self._bulb = None
         self._error_reported = False
+        self._unique_id = device[CONF_UNIQUE_ID]
 
     def _connect(self):
         """Connect to Flux light."""
@@ -273,6 +282,11 @@ class FluxLight(LightEntity):
                 return effect
 
         return None
+
+    @property
+    def unique_id(self):
+        """Return unique_id."""
+        return self._unique_id
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
