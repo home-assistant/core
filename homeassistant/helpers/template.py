@@ -1017,33 +1017,33 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
 
 def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     """Return entities for a given area ID or name."""
-    id: str | None
+    _area_id: str | None
     # if area_name returns a value, we know the input was an ID, otherwise we
     # assume it's a name, and if it's neither, we return early
     if area_name(hass, area_id_or_name) is None:
-        id = area_id(hass, area_id_or_name)
+        _area_id = area_id(hass, area_id_or_name)
     else:
-        id = area_id_or_name
-    if id is None:
+        _area_id = area_id_or_name
+    if _area_id is None:
         return []
     ent_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_area(ent_reg, id)
+    entries = entity_registry.async_entries_for_area(ent_reg, _area_id)
     return [entry.entity_id for entry in entries]
 
 
 def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     """Return device IDs for a given area ID or name."""
-    id: str | None
+    _area_id: str | None
     # if area_name returns a value, we know the input was an ID, otherwise we
     # assume it's a name, and if it's neither, we return early
     if area_name(hass, area_id_or_name) is not None:
-        id = area_id_or_name
+        _area_id = area_id_or_name
     else:
-        id = area_id(hass, area_id_or_name)
-    if id is None:
+        _area_id = area_id(hass, area_id_or_name)
+    if _area_id is None:
         return []
     dev_reg = device_registry.async_get(hass)
-    entries = device_registry.async_entries_for_area(dev_reg, id)
+    entries = device_registry.async_entries_for_area(dev_reg, _area_id)
     return [entry.id for entry in entries]
 
 
