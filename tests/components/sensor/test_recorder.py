@@ -359,6 +359,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert stats == {
         "sensor.test1": [
             {
+                "last_reset": None,
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
                 "max": None,
@@ -368,6 +369,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "sum": approx(factor * 10.0),
             },
             {
+                "last_reset": None,
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
@@ -377,6 +379,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "sum": approx(factor * 30.0),
             },
             {
+                "last_reset": None,
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
