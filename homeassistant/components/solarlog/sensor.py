@@ -64,6 +64,7 @@ class SolarlogData:
         self.host = host
         self.update = Throttle(SCAN_INTERVAL)(self._update)
         self.data = {}
+        self.errs = 0
 
     def _update(self):
         """Update the data from the SolarLog device."""
@@ -75,9 +76,26 @@ class SolarlogData:
                 response,
             )
         except (OSError, Timeout, HTTPError):
-            _LOGGER.error("Connection error, Could not retrieve data, skipping update")
+            self.errs += 1
+            if self.errs >= 3:
+                # Skip first two error to prevent errors during a Solar-Log restart
+                _LOGGER.error(
+                    "Connection error, Could not retrieve data, skipping update"
+                )
             return
-
+        self.errs = 0
+        try:
+            # Skip measurements with zero totals after device restart
+            yield_total = self.api.yield_total
+            consumption_total = self.api.consumption_total
+        except AttributeError:
+            _LOGGER.error("Missing details data in Solarlog response")
+            return
+        if yield_total == 0 and consumption_total == 0:
+            _LOGGER.debug(
+                "Solarlog returns zero yield and consumtpion totals, skipping update"
+            )
+            return
         try:
             self.data["TIME"] = self.api.time
             self.data["powerAC"] = self.api.power_ac
