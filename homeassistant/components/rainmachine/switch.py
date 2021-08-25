@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
@@ -9,7 +10,7 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
@@ -115,6 +116,20 @@ SWITCH_TYPE_PROGRAM = "program"
 SWITCH_TYPE_ZONE = "zone"
 
 
+@dataclass
+class RainMachineSwitchDescriptionMixin:
+    """Define an entity description mixin for switches."""
+
+    uid: int
+
+
+@dataclass
+class RainMachineSwitchDescription(
+    SwitchEntityDescription, RainMachineSwitchDescriptionMixin
+):
+    """Describe a RainMachine switch."""
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -166,18 +181,34 @@ async def async_setup_entry(
     ]
     zones_coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][DATA_ZONES]
 
-    entities: list[RainMachineProgram | RainMachineZone] = []
-
-    for uid, program in programs_coordinator.data.items():
-        entities.append(
-            RainMachineProgram(
-                programs_coordinator, controller, uid, program["name"], entry
+    entities: list[RainMachineProgram | RainMachineZone] = [
+        RainMachineProgram(
+            programs_coordinator,
+            controller,
+            entry,
+            RainMachineSwitchDescription(
+                key=f"RainMachineProgram_{uid}",
+                name=program["name"],
+                uid=uid,
+            ),
+        )
+        for uid, program in programs_coordinator.data.items()
+    ]
+    entities.extend(
+        [
+            RainMachineZone(
+                zones_coordinator,
+                controller,
+                entry,
+                RainMachineSwitchDescription(
+                    key=f"RainMachineZone_{uid}",
+                    name=zone["name"],
+                    uid=uid,
+                ),
             )
-        )
-    for uid, zone in zones_coordinator.data.items():
-        entities.append(
-            RainMachineZone(zones_coordinator, controller, uid, zone["name"], entry)
-        )
+            for uid, zone in zones_coordinator.data.items()
+        ]
+    )
 
     async_add_entities(entities)
 
@@ -186,34 +217,27 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
     _attr_icon = DEFAULT_ICON
+    entity_description: RainMachineSwitchDescription
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         controller: Controller,
-        uid: int,
-        name: str,
         entry: ConfigEntry,
+        description: RainMachineSwitchDescription,
     ) -> None:
         """Initialize a generic RainMachine switch."""
-        super().__init__(coordinator, controller, type(self).__name__)
+        super().__init__(coordinator, controller, description)
 
         self._attr_is_on = False
-        self._attr_name = name
-        self._data = coordinator.data[uid]
+        self._data = coordinator.data[self.entity_description.uid]
         self._entry = entry
         self._is_active = True
-        self._uid = uid
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._is_active
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{super().unique_id}_{self._uid}"
 
     async def _async_run_switch_coroutine(self, api_coro: Coroutine) -> None:
         """Run a coroutine to toggle the switch."""
@@ -222,7 +246,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         except RequestError as err:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._entity_type,
+                self.entity_description.key,
                 self.unique_id,
                 err,
             )
@@ -231,7 +255,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         if resp["statusCode"] != 0:
             LOGGER.error(
                 'Error while toggling %s "%s": %s',
-                self._entity_type,
+                self.entity_description.key,
                 self.unique_id,
                 resp["message"],
             )
@@ -301,7 +325,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        self._data = self.coordinator.data[self._uid]
+        self._data = self.coordinator.data[self.entity_description.uid]
         self._is_active = self._data["active"]
 
 
@@ -316,13 +340,13 @@ class RainMachineProgram(RainMachineSwitch):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the program off."""
         await self._async_run_switch_coroutine(
-            self._controller.programs.stop(self._uid)
+            self._controller.programs.stop(self.entity_description.uid)
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the program on."""
         await self._async_run_switch_coroutine(
-            self._controller.programs.start(self._uid)
+            self._controller.programs.start(self.entity_description.uid)
         )
 
     @callback
@@ -341,10 +365,14 @@ class RainMachineProgram(RainMachineSwitch):
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_ID: self._uid,
+                ATTR_ID: self.entity_description.uid,
                 ATTR_NEXT_RUN: next_run,
-                ATTR_SOAK: self.coordinator.data[self._uid].get("soak"),
-                ATTR_STATUS: RUN_STATUS_MAP[self.coordinator.data[self._uid]["status"]],
+                ATTR_SOAK: self.coordinator.data[self.entity_description.uid].get(
+                    "soak"
+                ),
+                ATTR_STATUS: RUN_STATUS_MAP[
+                    self.coordinator.data[self.entity_description.uid]["status"]
+                ],
                 ATTR_ZONES: ", ".join(z["name"] for z in self.zones),
             }
         )
@@ -355,13 +383,15 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
-        await self._async_run_switch_coroutine(self._controller.zones.stop(self._uid))
+        await self._async_run_switch_coroutine(
+            self._controller.zones.stop(self.entity_description.uid)
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         await self._async_run_switch_coroutine(
             self._controller.zones.start(
-                self._uid,
+                self.entity_description.uid,
                 self._entry.options[CONF_ZONE_RUN_TIME],
             )
         )
