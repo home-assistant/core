@@ -44,6 +44,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
+    area_registry,
     device_registry,
     entity_registry,
     location as loc_helper,
@@ -949,6 +950,71 @@ def is_device_attr(
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
+def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the area ID from an area name, device id, or entity id."""
+    area_reg = area_registry.async_get(hass)
+    if area := area_reg.async_get_area_by_name(str(lookup_value)):
+        return area.id
+
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+        config_validation as cv,
+    )
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            return entity.area_id
+
+    # Check if this could be a device ID (hex string)
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(lookup_value):
+        return device.area_id
+
+    return None
+
+
+def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> str:
+    """Get area name from valid area ID."""
+    area = area_reg.async_get_area(valid_area_id)
+    assert area
+    return area.name
+
+
+def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the area name from an area id, device id, or entity id."""
+    area_reg = area_registry.async_get(hass)
+    area = area_reg.async_get_area(lookup_value)
+    if area:
+        return area.name
+
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+        config_validation as cv,
+    )
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            if entity.area_id:
+                return _get_area_name(area_reg, entity.area_id)
+            return None
+
+    dev_reg = device_registry.async_get(hass)
+    if (device := dev_reg.async_get(lookup_value)) and device.area_id:
+        return _get_area_name(area_reg, device.area_id)
+
+    return None
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1532,6 +1598,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = pass_context(self.globals["device_id"])
 
+        self.globals["area_id"] = hassfunction(area_id)
+        self.filters["area_id"] = pass_context(self.globals["area_id"])
+
+        self.globals["area_name"] = hassfunction(area_name)
+        self.filters["area_name"] = pass_context(self.globals["area_name"])
+
         if limited:
             # Only device_entities is available to limited templates, mark other
             # functions and filters as unsupported.
@@ -1556,8 +1628,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "device_attr",
                 "is_device_attr",
                 "device_id",
+                "area_id",
+                "area_name",
             ]
-            hass_filters = ["closest", "expand", "device_id"]
+            hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
