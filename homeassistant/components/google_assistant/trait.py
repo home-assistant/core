@@ -28,6 +28,7 @@ from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_BATTERY_LEVEL,
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -106,6 +107,7 @@ TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
+TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -148,6 +150,7 @@ COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
 COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
+COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
 TRAITS = []
 
@@ -606,6 +609,58 @@ class LocatorTrait(_Trait):
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=True,
             context=data.context,
+        )
+
+
+class EnergyStorageTrait(_Trait):
+    """Trait to offer EnergyStorage functionality.
+
+    https://developers.google.com/actions/smarthome/traits/energystorage
+    """
+
+    name = TRAIT_ENERGYSTORAGE
+    commands = [COMMAND_CHARGE]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_BATTERY
+
+    def sync_attributes(self):
+        """Return EnergyStorage attributes for a sync request."""
+        return {
+            "isRechargeable": True,
+            "queryOnlyEnergyStorage": True,
+        }
+
+    def query_attributes(self):
+        """Return EnergyStorage query attributes."""
+        battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
+        if battery_level == 100:
+            descriptive_capacity_remaining = "FULL"
+        elif 75 <= battery_level < 100:
+            descriptive_capacity_remaining = "HIGH"
+        elif 50 <= battery_level < 75:
+            descriptive_capacity_remaining = "MEDIUM"
+        elif 25 <= battery_level < 50:
+            descriptive_capacity_remaining = "LOW"
+        elif 0 <= battery_level < 25:
+            descriptive_capacity_remaining = "CRITICALLY_LOW"
+        return {
+            "descriptiveCapacityRemaining": descriptive_capacity_remaining,
+            "capacityRemaining": [{"rawValue": battery_level, "unit": "PERCENTAGE"}],
+            "capacityUntilFull": [
+                {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
+            ],
+            "isCharging": self.state.state == vacuum.STATE_DOCKED,
+            "isPluggedIn": self.state.state == vacuum.STATE_DOCKED,
+        }
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a dock command."""
+        raise SmartHomeError(
+            ERR_FUNCTION_NOT_SUPPORTED,
+            "Controlling charging of a vacuum is not yet supported",
         )
 
 
