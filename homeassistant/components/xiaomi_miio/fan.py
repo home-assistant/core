@@ -809,19 +809,13 @@ class XiaomiFan(XiaomiGenericDevice):
             self._device.set_oscillate,
             oscillating,
         )
-        self._oscillating = True
+        self._oscillating = oscillating
         self.async_write_ha_state()
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if self._oscillating:
-            await self._try_command(
-                "Setting oscillate off of the miio device failed.",
-                self._device.set_oscillate,
-                False,
-            )
-            self._oscillating = False
-            self.async_write_ha_state()
+            await self.async_oscillate(oscillating=False)
 
         await self._try_command(
             "Setting move direction of the miio device failed.",
