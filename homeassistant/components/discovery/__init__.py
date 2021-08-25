@@ -55,7 +55,6 @@ SERVICE_HANDLERS = {
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
-    "nanoleaf_aurora": ("light", "nanoleaf"),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
@@ -87,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    "nanoleaf_aurora",
 ]
 
 DEFAULT_ENABLED = (

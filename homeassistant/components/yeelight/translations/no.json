@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "{model} {host}",
+        "flow_title": "{modell} {id} ({host})",
         "step": {
             "discovery_confirm": {
                 "description": "Vil du sette opp {model} ( {host} )?"

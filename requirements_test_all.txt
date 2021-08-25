@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==4.0.0
+HAP-python==4.1.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -106,7 +106,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==6.1.0
+aioesphomeapi==7.0.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -358,7 +358,7 @@ fnvhash==0.1.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==2.0.0
+forecast_solar==2.1.0
 
 # homeassistant.components.freebox
 freebox-api==0.0.10
@@ -797,7 +797,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==82
+pydeconz==83
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -936,10 +936,13 @@ pymodbus==2.5.3rc1
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==3.1.2
+pymyq==3.1.3
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
+
+# homeassistant.components.nanoleaf
+pynanoleaf==0.1.0
 
 # homeassistant.components.nuki
 pynuki==1.4.1
@@ -1194,7 +1197,7 @@ slackclient==2.5.0
 sleepyq==0.8.1
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.0
+smart-meter-texas==0.4.7
 
 # homeassistant.components.smarthab
 smarthab==0.21

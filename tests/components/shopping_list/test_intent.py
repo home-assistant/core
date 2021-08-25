@@ -20,3 +20,12 @@ async def test_recent_items_intent(hass, sl_setup):
         response.speech["plain"]["speech"]
         == "These are the top 3 items on your shopping list: soda, wine, beer"
     )
+
+
+async def test_recent_items_intent_no_items(hass, sl_setup):
+    """Test recent items."""
+    response = await intent.async_handle(hass, "test", "HassShoppingListLastItems")
+
+    assert (
+        response.speech["plain"]["speech"] == "There are no items on your shopping list"
+    )
