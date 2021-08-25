@@ -407,7 +407,6 @@ async def test_options_flow_devices(
         result["flow_id"],
         user_input={
             "entities": ["climate.old"],
-            "devices": [device_id],
             "include_exclude_mode": "exclude",
         },
     )
@@ -415,7 +414,7 @@ async def test_options_flow_devices(
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
-            user_input={"auto_start": True},
+            user_input={"auto_start": True, "devices": [device_id]},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
