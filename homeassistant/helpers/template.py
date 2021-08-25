@@ -964,10 +964,11 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
 
     try:
         cv.entity_id(lookup_value)
-        if entity := ent_reg.async_get(lookup_value):
-            return entity.area_id
     except vol.Invalid:
         pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            return entity.area_id
 
     # Check if this could be a device ID (hex string)
     dev_reg = device_registry.async_get(hass)
@@ -999,12 +1000,13 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
 
     try:
         cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
         if entity := ent_reg.async_get(lookup_value):
             if entity.area_id:
                 return _get_area_name(area_reg, entity.area_id)
             return None
-    except vol.Invalid:
-        pass
 
     dev_reg = device_registry.async_get(hass)
     if (device := dev_reg.async_get(lookup_value)) and device.area_id:
