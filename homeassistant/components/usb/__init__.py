@@ -179,6 +179,14 @@ class USBDiscovery:
                     matcher["description"],
                 )
                 continue
+            if "manufacturer" in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher["manufacturer"]
+            ):
+                continue
+            if "description" in matcher and not _fnmatch_lower(
+                device.description, matcher["description"]
+            ):
+                continue
             flow: USBFlow = {
                 "domain": matcher["domain"],
                 "context": {"source": config_entries.SOURCE_USB},
