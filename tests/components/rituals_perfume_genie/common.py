@@ -33,6 +33,7 @@ def mock_diffuser(
     name: str = "Genie",
     perfume: str = "Ritual of Sakura",
     perfume_amount: int = 2,
+    room_size_square_meter: int = 60,
     version: str = "4.0",
     wifi_percentage: int = 75,
 ) -> MagicMock:
@@ -49,7 +50,9 @@ def mock_diffuser(
     diffuser_mock.name = name
     diffuser_mock.perfume = perfume
     diffuser_mock.perfume_amount = perfume_amount
+    diffuser_mock.room_size_square_meter = room_size_square_meter
     diffuser_mock.set_perfume_amount = AsyncMock()
+    diffuser_mock.set_room_size_square_meter = AsyncMock()
     diffuser_mock.turn_off = AsyncMock()
     diffuser_mock.turn_on = AsyncMock()
     diffuser_mock.update_data = AsyncMock()
