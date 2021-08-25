@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -49,7 +49,7 @@ def check_inactive_attribute(state: State, attr: str, expected_entity: dict):
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
-async def test_sensors(hass, vehicle_type):
+async def test_sensors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault sensors."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
@@ -76,7 +76,7 @@ async def test_sensors(hass, vehicle_type):
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
-async def test_sensor_empty(hass, vehicle_type):
+async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault sensors with empty data from Renault."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
@@ -103,7 +103,7 @@ async def test_sensor_empty(hass, vehicle_type):
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
-async def test_sensor_errors(hass, vehicle_type):
+async def test_sensor_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault sensors with temporary failure."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
@@ -136,7 +136,7 @@ async def test_sensor_errors(hass, vehicle_type):
             check_inactive_attribute(state, attr, expected_entity)
 
 
-async def test_sensor_access_denied(hass):
+async def test_sensor_access_denied(hass: HomeAssistant):
     """Test for Renault sensors with access denied failure."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
@@ -160,7 +160,7 @@ async def test_sensor_access_denied(hass):
     assert len(entity_registry.entities) == 0
 
 
-async def test_sensor_not_supported(hass):
+async def test_sensor_not_supported(hass: HomeAssistant):
     """Test for Renault sensors with access denied failure."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)

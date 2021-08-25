@@ -1,4 +1,5 @@
 """Tests for Renault binary sensors."""
+from homeassistant.core import HomeAssistant
 from unittest.mock import patch
 
 import pytest
@@ -21,7 +22,7 @@ from tests.common import mock_device_registry, mock_registry
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
-async def test_binary_sensors(hass, vehicle_type):
+async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
@@ -48,7 +49,7 @@ async def test_binary_sensors(hass, vehicle_type):
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
-async def test_binary_sensor_empty(hass, vehicle_type):
+async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors with empty data from Renault."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
@@ -78,7 +79,7 @@ async def test_binary_sensor_empty(hass, vehicle_type):
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
-async def test_binary_sensor_errors(hass, vehicle_type):
+async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
     """Test for Renault binary sensors with temporary failure."""
     await async_setup_component(hass, "persistent_notification", {})
     entity_registry = mock_registry(hass)
