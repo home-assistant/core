@@ -864,7 +864,6 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
-    homeassistant/components/rituals_perfume_genie/binary_sensor.py
     homeassistant/components/rituals_perfume_genie/select.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
