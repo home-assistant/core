@@ -48,51 +48,52 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
+
+    if DOMAIN not in config:
+        return True
+
     hass.data.setdefault(DOMAIN, {})
 
-    def build_client() -> ProxmoxAPI:
-        """Build the Proxmox client connection."""
-        hass.data[PROXMOX_CLIENTS] = {}
+    hass.data[PROXMOX_CLIENTS] = {}
 
-        for entry in config[DOMAIN]:
-            host = entry[CONF_HOST]
-            port = entry.get(CONF_PORT, DEFAULT_PORT)
-            user = entry[CONF_USERNAME]
-            realm = entry.get(CONF_REALM, DEFAULT_REALM)
-            password = entry[CONF_PASSWORD]
-            verify_ssl = entry.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+    for entry in config[DOMAIN]:
+        host = entry[CONF_HOST]
+        port = entry.get(CONF_PORT, DEFAULT_PORT)
+        user = entry[CONF_USERNAME]
+        realm = entry.get(CONF_REALM, DEFAULT_REALM)
+        password = entry[CONF_PASSWORD]
+        verify_ssl = entry.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
 
-            hass.data[PROXMOX_CLIENTS][host] = None
+        hass.data[PROXMOX_CLIENTS][host] = None
 
-            try:
-                # Construct an API client with the given data for the given host
-                proxmox_client = ProxmoxClient(
-                    host, port, user, realm, password, verify_ssl
-                )
-                proxmox_client.build_client()
-            except AuthenticationError:
-                _LOGGER.warning(
-                    "Invalid credentials for proxmox instance %s:%d", host, port
-                )
-                continue
-            except SSLError:
-                _LOGGER.error(
-                    "Unable to verify proxmox server SSL. "
-                    'Try using "verify_ssl: false" for proxmox instance %s:%d',
-                    host,
-                    port,
-                )
-                continue
-            except ConnectTimeout:
-                _LOGGER.warning("Connection to host %s timed out during setup", host)
-                continue
-            except requests.exceptions.ConnectionError:
-                _LOGGER.warning("Host %s is not reachable", host)
-                continue
+        try:
+            # Construct an API client with the given data for the given host
+            proxmox_client = ProxmoxClient(
+                host, port, user, realm, password, verify_ssl
+            )
 
-            hass.data[PROXMOX_CLIENTS][host] = proxmox_client
+            hass.async_add_executor_job(proxmox_client.build_client)
+        except AuthenticationError:
+            _LOGGER.warning(
+                "Invalid credentials for proxmox instance %s:%d", host, port
+            )
+            continue
+        except SSLError:
+            _LOGGER.error(
+                "Unable to verify proxmox server SSL. "
+                'Try using "verify_ssl: false" for proxmox instance %s:%d',
+                host,
+                port,
+            )
+            continue
+        except ConnectTimeout:
+            _LOGGER.warning("Connection to host %s timed out during setup", host)
+            continue
+        except requests.exceptions.ConnectionError:
+            _LOGGER.warning("Host %s is not reachable", host)
+            continue
 
-    await hass.async_add_executor_job(build_client)
+        hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 
     coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
     hass.data[DOMAIN][COORDINATORS] = coordinators
