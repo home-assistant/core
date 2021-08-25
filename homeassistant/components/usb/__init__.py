@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import fnmatch
 import logging
 import os
 import sys
@@ -70,6 +71,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_usb_scan)
 
     return True
+
+
+def _fnmatch_lower(name: str | None, pattern: str) -> bool:
+    """Match a lowercase version of the name."""
+    if name is None:
+        return False
+    return fnmatch.fnmatch(name.lower(), pattern)
 
 
 class USBDiscovery:
@@ -150,7 +158,15 @@ class USBDiscovery:
         for matcher in self.usb:
             if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
-            if "pid" in matcher and device.pid != matcher["pid"]:
+            if "pid" in matcher and device.vid != matcher["pid"]:
+                continue
+            if "manufacturer" in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher["manufacturer"]
+            ):
+                continue
+            if "description" in matcher and not _fnmatch_lower(
+                device.description, matcher["description"]
+            ):
                 continue
             flow: USBFlow = {
                 "domain": matcher["domain"],
