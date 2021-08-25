@@ -412,10 +412,11 @@ class ColorSettingTrait(_Trait):
 
     def query_attributes(self):
         """Return color temperature query attributes."""
-        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        color_mode = self.state.attributes.get(light.ATTR_COLOR_MODE)
+
         color = {}
 
-        if light.color_supported(color_modes):
+        if light.color_supported([color_mode]):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
@@ -425,7 +426,7 @@ class ColorSettingTrait(_Trait):
                     "value": brightness / 255,
                 }
 
-        if light.color_temp_supported(color_modes):
+        if light.color_temp_supported([color_mode]):
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
