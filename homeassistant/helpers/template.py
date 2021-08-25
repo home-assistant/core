@@ -69,9 +69,6 @@ _ENVIRONMENT_STRICT = "template.environment_strict"
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
-# Match ID strings generated using homeassistant.util.uuid.random_uuid_hex
-# ("0a" matches but "0x0a" and "0A" don't match)
-_ID_STRING = re.compile(r"^[0-9a-f]+$")
 
 _RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
 
@@ -959,13 +956,13 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     if area := area_reg.async_get_area_by_name(str(lookup_value)):
         return area.id
 
-    try:
-        ent_reg = entity_registry.async_get(hass)
-        # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-            config_validation as cv,
-        )
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+        config_validation as cv,
+    )
 
+    try:
         cv.entity_id(lookup_value)
         if entity := ent_reg.async_get(lookup_value):
             return entity.area_id
@@ -973,10 +970,9 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
         pass
 
     # Check if this could be a device ID (hex string)
-    if _ID_STRING.match(str(lookup_value)):
-        dev_reg = device_registry.async_get(hass)
-        if device := dev_reg.async_get(lookup_value):
-            return device.area_id
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(lookup_value):
+        return device.area_id
 
     return None
 
@@ -995,14 +991,14 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     if area:
         return area.name
 
-    try:
-        # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-            config_validation as cv,
-        )
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+        config_validation as cv,
+    )
 
+    try:
         cv.entity_id(lookup_value)
-        ent_reg = entity_registry.async_get(hass)
         if entity := ent_reg.async_get(lookup_value):
             if entity.area_id:
                 return _get_area_name(area_reg, entity.area_id)
