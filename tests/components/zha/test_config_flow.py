@@ -1,6 +1,6 @@
 """Tests for ZHA config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch, sentinel
 
 import pytest
 import serial.tools.list_ports
@@ -444,6 +444,39 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
         assert zigate_probe.await_count == 1
         assert deconz_probe.await_count == 1
         assert cc_probe.await_count == 1
+
+
+@patch("zigpy_cc.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch(
+    "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
+)
+@patch(
+    "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
+)
+@patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
+async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, cc_probe, hass):
+    """Test detect radios."""
+    app_ctrl_cls = MagicMock()
+    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
+    app_ctrl_cls.probe = AsyncMock(side_efferct=(True, False))
+
+    p1 = patch(
+        "bellows.zigbee.application.ControllerApplication.probe",
+        return_value={
+            zigpy.config.CONF_DEVICE_PATH: sentinel.usb_port,
+            "baudrate": 33840,
+        },
+    )
+    with p1 as probe_mock:
+        res = await config_flow.detect_radios("/dev/null")
+        assert probe_mock.await_count == 1
+        assert res[CONF_RADIO_TYPE] == "ezsp"
+        assert zigpy.config.CONF_DEVICE in res
+        assert (
+            res[zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
+            is sentinel.usb_port
+        )
+        assert res[zigpy.config.CONF_DEVICE]["baudrate"] == 33840
 
 
 @patch("bellows.zigbee.application.ControllerApplication.probe", return_value=False)

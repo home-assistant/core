@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import OpenUV, OpenUvEntity
+from . import OpenUvEntity
 from .const import (
     DATA_CLIENT,
     DATA_UV,
@@ -42,7 +42,7 @@ UV_LEVEL_HIGH = "High"
 UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
         name="Current Ozone Level",
@@ -59,7 +59,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=TYPE_CURRENT_UV_LEVEL,
         name="Current UV Level",
         icon="mdi:weather-sunny",
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key=TYPE_MAX_UV_INDEX,
@@ -111,22 +110,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-
-    entities = [OpenUvSensor(openuv, description) for description in SENSOR_TYPES]
-    async_add_entities(entities, True)
+    async_add_entities(
+        [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
+    )
 
 
 class OpenUvSensor(OpenUvEntity, SensorEntity):
     """Define a binary sensor for OpenUV."""
-
-    def __init__(
-        self,
-        openuv: OpenUV,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(openuv, description.key)
-        self.entity_description = description
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -139,11 +129,11 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
 
         self._attr_available = True
 
-        if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
+        if self.entity_description.key == TYPE_CURRENT_OZONE_LEVEL:
             self._attr_native_value = data["ozone"]
-        elif self._sensor_type == TYPE_CURRENT_UV_INDEX:
+        elif self.entity_description.key == TYPE_CURRENT_UV_INDEX:
             self._attr_native_value = data["uv"]
-        elif self._sensor_type == TYPE_CURRENT_UV_LEVEL:
+        elif self.entity_description.key == TYPE_CURRENT_UV_LEVEL:
             if data["uv"] >= 11:
                 self._attr_native_value = UV_LEVEL_EXTREME
             elif data["uv"] >= 8:
@@ -154,14 +144,14 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
                 self._attr_native_value = UV_LEVEL_MODERATE
             else:
                 self._attr_native_value = UV_LEVEL_LOW
-        elif self._sensor_type == TYPE_MAX_UV_INDEX:
+        elif self.entity_description.key == TYPE_MAX_UV_INDEX:
             self._attr_native_value = data["uv_max"]
             uv_max_time = parse_datetime(data["uv_max_time"])
             if uv_max_time:
                 self._attr_extra_state_attributes.update(
                     {ATTR_MAX_UV_TIME: as_local(uv_max_time)}
                 )
-        elif self._sensor_type in (
+        elif self.entity_description.key in (
             TYPE_SAFE_EXPOSURE_TIME_1,
             TYPE_SAFE_EXPOSURE_TIME_2,
             TYPE_SAFE_EXPOSURE_TIME_3,
@@ -170,5 +160,5 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
             TYPE_SAFE_EXPOSURE_TIME_6,
         ):
             self._attr_native_value = data["safe_exposure_time"][
-                EXPOSURE_TYPE_MAP[self._sensor_type]
+                EXPOSURE_TYPE_MAP[self.entity_description.key]
             ]

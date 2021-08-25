@@ -14,12 +14,14 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_token": "Invalid token",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "not_allowing_new_tokens": "Nanoleaf is not allowing new tokens, follow the instructions above."
+      "not_allowing_new_tokens": "Nanoleaf is not allowing new tokens, follow the instructions above.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

@@ -261,7 +261,7 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
-    "NL": "nanoleaf",
+    "NL*": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
@@ -273,7 +273,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
-    "YLD*": "yeelight",
+    "YL*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

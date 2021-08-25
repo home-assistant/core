@@ -167,9 +167,10 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
     SolarLogSensorEntityDescription(
         key="total_power",
         json_key="totalPOWER",
-        name="total power",
+        name="installed peak power",
         icon="mdi:solar-power",
-        native_unit_of_measurement="Wp",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
     ),
     SolarLogSensorEntityDescription(
         key="alternator_loss",
@@ -185,7 +186,8 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         json_key="CAPACITY",
         name="capacity",
         icon="mdi:solar-power",
-        native_unit_of_measurement="W/Wp",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_POWER_FACTOR,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(

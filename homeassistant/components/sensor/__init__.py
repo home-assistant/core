@@ -291,7 +291,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 temp = units.temperature(float(value), unit_of_measurement)
-                value = str(round(temp) if prec == 0 else round(temp, prec))
+                value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
 

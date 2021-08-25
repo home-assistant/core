@@ -44,6 +44,7 @@ QUERY_STATISTICS = [
     Statistics.mean,
     Statistics.min,
     Statistics.max,
+    Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
 ]
@@ -226,6 +227,19 @@ def _get_metadata(
     return metadata
 
 
+def get_metadata(
+    hass: HomeAssistant,
+    statistic_id: str,
+) -> dict[str, str] | None:
+    """Return metadata for a statistic_id."""
+    statistic_ids = [statistic_id]
+    with session_scope(hass=hass) as session:
+        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
+        if not metadata_ids:
+            return None
+        return _get_metadata(hass, session, statistic_ids, None).get(metadata_ids[0])
+
+
 def _configured_unit(unit: str, units: UnitSystem) -> str:
     """Return the pressure and temperature units configured by the user."""
     if unit == PRESSURE_PA:
@@ -382,6 +396,7 @@ def _sorted_statistics_to_dict(
                 "mean": convert(db_state.mean, units),
                 "min": convert(db_state.min, units),
                 "max": convert(db_state.max, units),
+                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
                 "state": convert(db_state.state, units),
                 "sum": convert(db_state.sum, units),
             }
