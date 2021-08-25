@@ -28,6 +28,7 @@ responses==0.12.0
 respx==0.17.0
 stdlib-list==0.7.0
 tqdm==4.49.0
+types-croniter==1.0.0
 types-backports==0.1.3
 types-certifi==0.1.4
 types-chardet==0.1.5
