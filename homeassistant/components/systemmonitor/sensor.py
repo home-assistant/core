@@ -64,7 +64,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="disk_free",
         name="Disk free",
-        unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:harddisk",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -72,7 +72,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="disk_use",
         name="Disk use",
-        unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:harddisk",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -80,7 +80,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="disk_use_percent",
         name="Disk use (percent)",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -127,7 +127,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="memory_free",
         name="Memory free",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -135,7 +135,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="memory_use",
         name="Memory use",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -143,7 +143,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="memory_use_percent",
         name="Memory use (percent)",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -151,7 +151,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="network_in",
         name="Network in",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:server-network",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory=True,
@@ -159,7 +159,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="network_out",
         name="Network out",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:server-network",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory=True,
@@ -181,7 +181,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="throughput_network_in",
         name="Network throughput in",
-        unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         icon="mdi:server-network",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=True,
@@ -189,7 +189,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="throughput_network_out",
         name="Network throughput out",
-        unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         icon="mdi:server-network",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=True,
@@ -203,7 +203,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="processor_use",
         name="Processor use (percent)",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon=CPU_ICON,
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -211,7 +211,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="processor_temperature",
         name="Processor temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -219,7 +219,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="swap_free",
         name="Swap free",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:harddisk",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -227,7 +227,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="swap_use",
         name="Swap use",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:harddisk",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
@@ -235,7 +235,7 @@ SENSOR_TYPES: Final[tuple[SystemMonitorSensorEntityDescription, ...]] = (
     SystemMonitorSensorEntityDescription(
         key="swap_use_percent",
         name="Swap use (percent)",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
         state_class=STATE_CLASS_MEASUREMENT,
         mandatory=False,
