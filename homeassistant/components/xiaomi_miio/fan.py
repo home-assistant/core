@@ -762,7 +762,7 @@ class XiaomiFan(XiaomiGenericDevice):
 
         if preset_mode == ATTR_MODE_NATURE:
             await self._try_command(
-                "Setting fan speed percentage of the miio device failed.",
+                "Setting natural fan speed percentage of the miio device failed.",
                 self._device.set_natural_speed,
                 self._percentage,
             )
