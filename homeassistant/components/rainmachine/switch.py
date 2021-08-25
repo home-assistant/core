@@ -217,6 +217,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
     _attr_icon = DEFAULT_ICON
+    entity_description: RainMachineSwitchDescription
 
     def __init__(
         self,
@@ -227,7 +228,6 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     ) -> None:
         """Initialize a generic RainMachine switch."""
         super().__init__(coordinator, controller, description)
-        self.entity_description: RainMachineSwitchDescription
 
         self._attr_is_on = False
         self._data = coordinator.data[self.entity_description.uid]
