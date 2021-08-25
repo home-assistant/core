@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -213,20 +214,13 @@ class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
 
     def __init__(  # pylint: disable=super-init-not-called
-        self,
-        entry: ConfigEntry,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_class = device_class
         self._attr_device_info = {"manufacturer": "Elexa"}
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
-        self._attr_icon = icon
-        self._attr_name = name
         self._entry = entry
+        self.entity_description = description
 
     @callback
     def _async_update_from_latest_data(self) -> None:
@@ -244,13 +238,10 @@ class PairedSensorEntity(GuardianEntity):
         self,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, kind, name, device_class, icon)
+        super().__init__(entry, description)
 
         paired_sensor_uid = coordinator.data["uid"]
         self._attr_device_info = {
@@ -258,9 +249,10 @@ class PairedSensorEntity(GuardianEntity):
             "name": f"Guardian Paired Sensor {paired_sensor_uid}",
             "via_device": (DOMAIN, entry.data[CONF_UID]),
         }
-        self._attr_name = f"Guardian Paired Sensor {paired_sensor_uid}: {name}"
-        self._attr_unique_id = f"{paired_sensor_uid}_{kind}"
-        self._kind = kind
+        self._attr_name = (
+            f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"
+        )
+        self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
         self.coordinator = coordinator
 
     async def async_added_to_hass(self) -> None:
@@ -275,22 +267,18 @@ class ValveControllerEntity(GuardianEntity):
         self,
         entry: ConfigEntry,
         coordinators: dict[str, DataUpdateCoordinator],
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, kind, name, device_class, icon)
+        super().__init__(entry, description)
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.data[CONF_UID])},
             "name": f"Guardian Valve Controller {entry.data[CONF_UID]}",
             "model": coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
         }
-        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {name}"
-        self._attr_unique_id = f"{entry.data[CONF_UID]}_{kind}"
-        self._kind = kind
+        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {description.name}"
+        self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators
 
     @property
