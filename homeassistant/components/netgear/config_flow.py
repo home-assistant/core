@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
@@ -96,6 +95,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: DEFAULT_PORT,
             CONF_USERNAME: DEFAULT_USER,
         }
+        self.discoverd = False
 
     @staticmethod
     @callback
@@ -110,8 +110,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             user_input = {}
 
-        if self.placeholders.get(CONF_URL):
-            user_input.update({CONF_URL: self.placeholders[CONF_URL]})
+        if self.discoverd:
             data_schema = _discovery_schema_with_defaults(user_input)
         else:
             data_schema = _user_schema_with_defaults(user_input)
@@ -129,13 +128,24 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: dict):
         """Initialize flow from ssdp."""
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+        updated_data = {}
+
+        device_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+        if device_url.hostname:
+            updated_data[CONF_HOST] = device_url.hostname
+        if device_url.port:
+            updated_data[CONF_PORT] = device_url.port
+        if device_url.scheme == "https":
+            updated_data[CONF_SSL] = True
+        else:
+            updated_data[CONF_SSL] = False
 
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates=updated_data)
+        self.placeholders.update(updated_data)
+        self.discoverd = True
 
         self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
-        self.placeholders[CONF_URL] = f"http://{host}/"
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
@@ -145,20 +155,22 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form()
 
-        if self.placeholders.get(CONF_URL) is None:
-            self.placeholders[CONF_URL] = user_input.get(CONF_URL)
-
-        url = self.placeholders.get(CONF_URL)
         host = user_input.get(CONF_HOST)
         port = user_input.get(CONF_PORT)
         ssl = user_input.get(CONF_SSL)
+        if host is None:
+            host = self.placeholders[CONF_HOST]
+        if port is None:
+            host = self.placeholders[CONF_PORT]
+        if ssl is None:
+            host = self.placeholders[CONF_SSL]
         username = user_input.get(CONF_USERNAME)
         password = user_input[CONF_PASSWORD]
 
         # Open connection and check authentication
         try:
             api = await self.hass.async_add_executor_job(
-                get_api, password, host, username, port, ssl, url
+                get_api, password, host, username, port, ssl
             )
         except CannotLoginException:
             errors["base"] = "config"
@@ -177,12 +189,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if username:
             config_data[CONF_USERNAME] = username
 
-        if url:
-            config_data[CONF_URL] = url
-        else:
-            config_data[CONF_HOST] = host
-            config_data[CONF_PORT] = port
-            config_data[CONF_SSL] = ssl
+        config_data[CONF_HOST] = host
+        config_data[CONF_PORT] = port
+        config_data[CONF_SSL] = ssl
 
         return self.async_create_entry(
             title=f"{infos['ModelName']} - {infos['DeviceName']}",

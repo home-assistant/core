@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
 )
 from homeassistant.helpers import entity_registry as er
@@ -58,10 +57,9 @@ def get_api(
     username: str = None,
     port: int = None,
     ssl: bool = False,
-    url: str = None,
 ) -> Netgear:
     """Get the Netgear API and login to it."""
-    api: Netgear = Netgear(password, host, username, port, ssl, url)
+    api: Netgear = Netgear(password, host, username, port, ssl)
 
     if not api.login():
         raise CannotLoginException
@@ -77,7 +75,6 @@ class NetgearRouter:
         self.hass = hass
         self.entry_id = entry.entry_id
         self.unique_id = entry.unique_id
-        self._url = entry.data.get(CONF_URL)
         self._host = entry.data.get(CONF_HOST)
         self._port = entry.data.get(CONF_PORT)
         self._ssl = entry.data.get(CONF_SSL)
@@ -113,7 +110,6 @@ class NetgearRouter:
             self._username,
             self._port,
             self._ssl,
-            self._url,
         )
 
         self._info = self._api.get_info()
