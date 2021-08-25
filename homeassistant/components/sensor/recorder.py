@@ -252,14 +252,13 @@ def reset_detected(
     hass: HomeAssistant, entity_id: str, state: float, previous_state: float | None
 ) -> bool:
     """Test if a total_increasing sensor has been reset."""
-    if (
-        previous_state is not None
-        and state < previous_state
-        and state >= 0.9 * previous_state
-    ):
+    if previous_state is None:
+        return False
+
+    if 0.9 * previous_state <= state < previous_state:
         warn_dip(hass, entity_id)
 
-    return previous_state is not None and state < 0.9 * previous_state
+    return state < 0.9 * previous_state
 
 
 def compile_statistics(
