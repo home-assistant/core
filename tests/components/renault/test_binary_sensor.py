@@ -1,5 +1,4 @@
 """Tests for Renault binary sensors."""
-from homeassistant.core import HomeAssistant
 from unittest.mock import patch
 
 import pytest
@@ -8,6 +7,7 @@ from renault_api.kamereon import exceptions
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (

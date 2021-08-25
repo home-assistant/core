@@ -1,5 +1,4 @@
 """Tests for Renault setup process."""
-from homeassistant.core import HomeAssistant
 from unittest.mock import patch
 
 import aiohttp
@@ -7,6 +6,7 @@ from renault_api.gigya.exceptions import InvalidCredentialsException
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import get_mock_config_entry, setup_renault_integration_simple
 
