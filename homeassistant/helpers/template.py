@@ -1015,6 +1015,20 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
+def area_entities(hass: HomeAssistant, _area_id: str) -> Iterable[str]:
+    """Return entities for a given area ID."""
+    ent_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_area(ent_reg, _area_id)
+    return [entry.entity_id for entry in entries]
+
+
+def area_devices(hass: HomeAssistant, _area_id: str) -> Iterable[str]:
+    """Return device IDs for a given area ID."""
+    dev_reg = device_registry.async_get(hass)
+    entries = device_registry.async_entries_for_area(dev_reg, _area_id)
+    return [entry.id for entry in entries]
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1603,6 +1617,12 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_name"] = hassfunction(area_name)
         self.filters["area_name"] = pass_context(self.globals["area_name"])
+
+        self.globals["area_entities"] = hassfunction(area_entities)
+        self.filters["area_entities"] = pass_context(self.globals["area_entities"])
+
+        self.globals["area_devices"] = hassfunction(area_devices)
+        self.filters["area_devices"] = pass_context(self.globals["area_devices"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other

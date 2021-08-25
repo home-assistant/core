@@ -1898,6 +1898,72 @@ async def test_area_name(hass):
     assert info.rate_limit is None
 
 
+async def test_area_entities(hass):
+    """Test area_entities function."""
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry = mock_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_entities('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_entities(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        area_id=area_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.id}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+
+async def test_area_devices(hass):
+    """Test area_devices function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_devices('deadbeef') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_devices(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        suggested_area=area_entry.name,
+    )
+
+    info = render_to_info(hass, f"{{{{ area_devices('{area_entry.id}') }}}}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.id}' | area_devices }}}}")
+    assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
     hass.states.async_set(
