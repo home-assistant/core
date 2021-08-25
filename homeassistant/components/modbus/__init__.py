@@ -121,6 +121,7 @@ from .const import (
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
+    duplicate_modbus_validator,
     number_validator,
     scan_interval_validator,
     struct_validator,
@@ -338,6 +339,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.ensure_list,
             scan_interval_validator,
             duplicate_entity_validator,
+            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
