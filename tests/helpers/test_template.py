@@ -1927,7 +1927,7 @@ async def test_area_entities(hass):
     assert_result_info(info, ["light.hue_5678"])
     assert info.rate_limit is None
 
-    info = render_to_info(hass, f"{{{{ '{area_entry.id}' | area_entities }}}}")
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
     assert_result_info(info, ["light.hue_5678"])
     assert info.rate_limit is None
 
@@ -1959,7 +1959,7 @@ async def test_area_devices(hass):
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
 
-    info = render_to_info(hass, f"{{{{ '{area_entry.id}' | area_devices }}}}")
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
 
