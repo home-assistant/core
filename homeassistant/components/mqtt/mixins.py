@@ -330,7 +330,10 @@ class MqttAvailability(Entity):
 
             self.async_write_ha_state()
 
-        self._available = {topic: False for topic in self._avail_topics}
+        self._available = {
+            topic: (self._available[topic] if topic in self._available else False)
+            for topic in self._avail_topics
+        }
         topics = {
             f"availability_{topic}": {
                 "topic": topic,
