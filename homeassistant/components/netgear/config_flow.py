@@ -129,8 +129,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: dict):
         """Initialize flow from ssdp."""
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+
+        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
