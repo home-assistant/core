@@ -87,9 +87,10 @@ class BasePlatform(Entity):
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
         if self._scan_interval > 0:
-            async_track_time_interval(
+            cancel_func = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
+            self._hub.entity_timers.append(cancel_func)
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
