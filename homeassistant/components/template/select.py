@@ -185,11 +185,6 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
         return self._rendered.get(CONF_STATE)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra attributes."""
-        return None
-
-    @property
     def options(self) -> list[str]:
         """Return the list of available options."""
         return self._rendered.get(ATTR_OPTIONS, [])
