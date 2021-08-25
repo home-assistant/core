@@ -173,6 +173,7 @@ class USBDiscovery:
                 "context": {"source": config_entries.SOURCE_USB},
                 "data": dataclasses.asdict(device),
             }
+            _LOGGER.debug("Match results in flow: %s", flow)
             self.flow_dispatcher.async_create(flow)
 
     @callback
