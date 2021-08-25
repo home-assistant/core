@@ -148,3 +148,51 @@ async def test_async_update_data_subscribed(
     pywemo_device.get_state.reset_mock()
     await device._async_update_data()
     pywemo_device.get_state.assert_not_called()
+
+
+class TestInsight:
+    """Tests specific to the WeMo Insight device."""
+
+    @pytest.fixture
+    def pywemo_model(self):
+        """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
+        return "Insight"
+
+    @pytest.fixture(name="pywemo_device")
+    def pywemo_device_fixture(self, pywemo_device):
+        """Fixture for WeMoDevice instances."""
+        pywemo_device.insight_params = {
+            "currentpower": 1.0,
+            "todaymw": 200000000.0,
+            "state": 0,
+            "onfor": 0,
+            "ontoday": 0,
+            "ontotal": 0,
+            "powerthreshold": 0,
+        }
+        yield pywemo_device
+
+    @pytest.mark.parametrize(
+        "subscribed,state,expected",
+        [
+            (False, 0, True),
+            (False, 1, True),
+            (True, 0, True),
+            (True, 1, False),
+        ],
+    )
+    async def test_should_poll(
+        self,
+        hass,
+        subscribed,
+        state,
+        expected,
+        wemo_entity,
+        pywemo_device,
+        pywemo_registry,
+    ):
+        """Validate the should_poll returns the correct value."""
+        pywemo_registry.is_subscribed.return_value = subscribed
+        pywemo_device.get_state.return_value = state
+        coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
+        assert coordinator.should_poll == expected
