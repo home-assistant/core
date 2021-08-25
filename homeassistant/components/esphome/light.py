@@ -219,13 +219,13 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         if (color_temp := kwargs.get(ATTR_COLOR_TEMP)) is not None:
             data["color_temperature"] = color_temp
-            if _filter_color_modes(color_modes, LightColorCapability.COLD_WARM_WHITE):
+            if _filter_color_modes(color_modes, LightColorCapability.COLOR_TEMPERATURE):
                 color_modes = _filter_color_modes(
-                    color_modes, LightColorCapability.COLD_WARM_WHITE
+                    color_modes, LightColorCapability.COLOR_TEMPERATURE
                 )
             else:
                 color_modes = _filter_color_modes(
-                    color_modes, LightColorCapability.COLOR_TEMPERATURE
+                    color_modes, LightColorCapability.COLD_WARM_WHITE
                 )
 
         if (effect := kwargs.get(ATTR_EFFECT)) is not None:
