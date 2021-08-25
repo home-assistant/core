@@ -163,10 +163,20 @@ class USBDiscovery:
             if "manufacturer" in matcher and not _fnmatch_lower(
                 device.manufacturer, matcher["manufacturer"]
             ):
+                _LOGGER.debug(
+                    "reject manufacturer: %s !~ %s",
+                    device.manufacturer,
+                    matcher["manufacturer"],
+                )
                 continue
             if "description" in matcher and not _fnmatch_lower(
                 device.description, matcher["description"]
             ):
+                _LOGGER.debug(
+                    "reject description: %s !~ %s",
+                    device.description,
+                    matcher["description"],
+                )
                 continue
             flow: USBFlow = {
                 "domain": matcher["domain"],
