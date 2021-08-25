@@ -87,13 +87,18 @@ _COLOR_MODE_MAPPING = {
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.RGB
+        | LightColorCapability.WHITE
         | LightColorCapability.COLOR_TEMPERATURE,
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.RGB
         | LightColorCapability.COLD_WARM_WHITE,
     ],
-    COLOR_MODE_WHITE: [LightColorCapability.ON_OFF | LightColorCapability.WHITE],
+    COLOR_MODE_WHITE: [
+        LightColorCapability.ON_OFF
+        | LightColorCapability.BRIGHTNESS
+        | LightColorCapability.WHITE
+    ],
 }
 
 
