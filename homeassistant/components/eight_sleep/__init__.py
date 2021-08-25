@@ -185,17 +185,14 @@ class EightSleepHeatDataCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, api):
         """Initialize coordinator."""
+        self.api = api
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_heat",
             update_interval=HEAT_SCAN_INTERVAL,
-            update_method=self._async_update_data,
+            update_method=self.api.update_device_data,
         )
-        self.api = api
-
-    async def _async_update_data(self):
-        await self.api.update_device_data()
 
 
 class EightSleepUserDataCoordinator(DataUpdateCoordinator):
@@ -203,17 +200,14 @@ class EightSleepUserDataCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, api):
         """Initialize coordinator."""
+        self.api = api
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_user",
             update_interval=USER_SCAN_INTERVAL,
-            update_method=self._async_update_data,
+            update_method=self.api.update_user_data,
         )
-        self.api = api
-
-    async def _async_update_data(self):
-        await self.api.update_user_data()
 
 
 class EightSleepEntity(CoordinatorEntity):
