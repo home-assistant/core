@@ -179,7 +179,7 @@ class OpenUvEntity(Entity):
         """Initialize."""
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_should_poll = False
-        self._attr_unique_id = f"{openuv.client.latitude}_{openuv.client.longitude}_{self.entity_description.key}"
+        self._attr_unique_id = f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"
         self.entity_description = description
         self.openuv = openuv
 
