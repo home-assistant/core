@@ -177,7 +177,7 @@ async def test_attributes(hass, setup_comp):
     assert state.state == STATE_OPEN
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 244
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.attributes[ATTR_CURRENT_POSITION] == 85  # (70 + 100) / 2
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 60
 
     hass.states.async_remove(DEMO_COVER)
@@ -204,7 +204,7 @@ async def test_attributes(hass, setup_comp):
     assert state.attributes[ATTR_ASSUMED_STATE] is True
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 128
     assert ATTR_CURRENT_POSITION not in state.attributes
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 80  # (60 + 100) / 2
 
     hass.states.async_remove(DEMO_COVER_TILT)
     hass.states.async_set(DEMO_TILT, STATE_CLOSED)
@@ -367,8 +367,8 @@ async def test_stop_covers(hass, setup_comp):
     await hass.async_block_till_done()
 
     state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPEN
-    assert state.attributes[ATTR_CURRENT_POSITION] == 100
+    assert state.state == STATE_OPENING
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50  # (20 + 80) / 2
 
     assert hass.states.get(DEMO_COVER).state == STATE_OPEN
     assert hass.states.get(DEMO_COVER_POS).attributes[ATTR_CURRENT_POSITION] == 20
@@ -542,6 +542,7 @@ async def test_is_opening_closing(hass, setup_comp):
     )
     await hass.async_block_till_done()
 
+    # Both covers opening -> opening
     assert hass.states.get(DEMO_COVER_POS).state == STATE_OPENING
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING
     assert hass.states.get(COVER_GROUP).state == STATE_OPENING
@@ -555,6 +556,7 @@ async def test_is_opening_closing(hass, setup_comp):
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: COVER_GROUP}, blocking=True
     )
 
+    # Both covers closing -> closing
     assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSING
     assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
     assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
@@ -562,11 +564,44 @@ async def test_is_opening_closing(hass, setup_comp):
     hass.states.async_set(DEMO_COVER_POS, STATE_OPENING, {ATTR_SUPPORTED_FEATURES: 11})
     await hass.async_block_till_done()
 
+    # Closing + Opening -> Opening
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
     assert hass.states.get(DEMO_COVER_POS).state == STATE_OPENING
     assert hass.states.get(COVER_GROUP).state == STATE_OPENING
 
     hass.states.async_set(DEMO_COVER_POS, STATE_CLOSING, {ATTR_SUPPORTED_FEATURES: 11})
     await hass.async_block_till_done()
 
+    # Both covers closing -> closing
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
     assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSING
     assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
+
+    # Closed + Closing -> Closing
+    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {ATTR_SUPPORTED_FEATURES: 11})
+    await hass.async_block_till_done()
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSED
+    assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
+
+    # Open + Closing -> Closing
+    hass.states.async_set(DEMO_COVER_POS, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 11})
+    await hass.async_block_till_done()
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_CLOSING
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_OPEN
+    assert hass.states.get(COVER_GROUP).state == STATE_CLOSING
+
+    # Closed + Opening -> Closing
+    hass.states.async_set(DEMO_COVER_TILT, STATE_OPENING, {ATTR_SUPPORTED_FEATURES: 11})
+    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {ATTR_SUPPORTED_FEATURES: 11})
+    await hass.async_block_till_done()
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_CLOSED
+    assert hass.states.get(COVER_GROUP).state == STATE_OPENING
+
+    # Open + Opening -> Closing
+    hass.states.async_set(DEMO_COVER_POS, STATE_OPEN, {ATTR_SUPPORTED_FEATURES: 11})
+    await hass.async_block_till_done()
+    assert hass.states.get(DEMO_COVER_TILT).state == STATE_OPENING
+    assert hass.states.get(DEMO_COVER_POS).state == STATE_OPEN
+    assert hass.states.get(COVER_GROUP).state == STATE_OPENING
