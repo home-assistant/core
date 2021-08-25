@@ -67,8 +67,9 @@ async def _async_remove_untracked_registries(hass: HomeAssistantType, entry: Con
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     for entity_entry in entries:
-        if entity_entry.unique_id not in tracked_list:
-            entity_registry.async_remove(entity_entry.entity_id)
+        for tracked_id in tracked_list:
+            if not entity_entry.unique_id.startswith(tracked_id):
+                entity_registry.async_remove(entity_entry.entity_id)
 
     # Remove devices that are no longer tracked
     device_registry = dr.async_get(hass)

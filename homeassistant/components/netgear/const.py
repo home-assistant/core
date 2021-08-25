@@ -3,7 +3,7 @@ from datetime import timedelta
 
 DOMAIN = "netgear"
 
-PLATFORMS = ["device_tracker"]
+PLATFORMS = ["device_tracker", "sensor"]
 
 CONF_CONSIDER_HOME = "consider_home"
 CONF_TRACKED_LIST = "tracked_list"

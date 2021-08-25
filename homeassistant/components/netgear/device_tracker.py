@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEVICE_ICONS, DOMAIN
-from .router import NetgearRouter
+from .router import async_setup_netgear_entry, NetgearRouter, NetgearDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,58 +65,18 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for Netgear component."""
-    router = hass.data[DOMAIN][entry.unique_id]
-    tracked = set()
-
-    @callback
-    def update_router():
-        """Update the values of the router."""
-        add_entities(router, async_add_entities, tracked)
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, router.signal_device_new, update_router)
-    )
-
-    update_router()
+    await async_setup_netgear_entry(hass, entry, async_add_entities, NetgearScannerEntity)
 
 
-@callback
-def add_entities(router, async_add_entities, tracked):
-    """Add new tracker entities from the router."""
-    new_tracked = []
-
-    for mac, device in router.devices.items():
-        if mac in tracked:
-            continue
-
-        new_tracked.append(NetgearDeviceEntity(router, device))
-        tracked.add(mac)
-
-    if new_tracked:
-        async_add_entities(new_tracked, True)
-
-
-class NetgearDeviceEntity(ScannerEntity):
+class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
     def __init__(self, router: NetgearRouter, device) -> None:
         """Initialize a Netgear device."""
-        self._router = router
-        self._device = device
-        self._mac = device["mac"]
-        self._name = self.get_device_name(device)
+        super().__init__(router, device)
         self._hostname = self.get_hostname(device)
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
-        self._active = device["active"]
         self._attrs = {}
-
-    def get_device_name(self, device):
-        """Return the name of the given device or the MAC if we don't know."""
-        name = device["name"]
-        if not name or name == "--":
-            name = self._mac
-
-        return name
 
     def get_hostname(self, device):
         """Return the hostname of the given device or None if we don't know."""
@@ -141,16 +101,6 @@ class NetgearDeviceEntity(ScannerEntity):
             self._attrs = {}
 
         self.async_write_ha_state()
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._mac
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
 
     @property
     def is_connected(self):
@@ -186,28 +136,3 @@ class NetgearDeviceEntity(ScannerEntity):
     def device_state_attributes(self):
         """Return the attributes."""
         return self._attrs
-
-    @property
-    def device_info(self):
-        """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self.name,
-            "model": self._device["device_model"],
-            "via_device": (DOMAIN, self._router.unique_id),
-        }
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._router.signal_device_update,
-                self.async_update_device,
-            )
-        )

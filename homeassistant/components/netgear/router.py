@@ -4,6 +4,7 @@ import logging
 
 from pynetgear import Netgear
 
+from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -17,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -65,6 +67,41 @@ def get_api(
         raise CannotLoginException
 
     return api
+
+
+async def async_setup_netgear_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities, EntityClass
+) -> None:
+    """Set up device tracker for Netgear component."""
+    router = hass.data[DOMAIN][entry.unique_id]
+    tracked = set()
+
+    @callback
+    def update_router():
+        """Update the values of the router."""
+        add_entities(router, async_add_entities, tracked, EntityClasses)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, router.signal_device_new, update_router)
+    )
+
+    update_router()
+
+
+@callback
+def add_entities(router, async_add_entities, tracked, EntityClasses):
+    """Add new tracker entities from the router."""
+    new_tracked = []
+
+    for mac, device in router.devices.items():
+        if mac in tracked:
+            continue
+
+        new_tracked.append(EntityClasses(router, device))
+        tracked.add(mac)
+
+    if new_tracked:
+        async_add_entities(new_tracked, True)
 
 
 class NetgearRouter:
@@ -203,3 +240,67 @@ class NetgearRouter:
     def signal_device_update(self) -> str:
         """Event specific per Netgear entry to signal updates in devices."""
         return f"{DOMAIN}-{self._host}-device-update"
+
+
+class NetgearDeviceEntity(Entity):
+    """Base class for a device connected to a Netgear router."""
+
+    def __init__(self, router: NetgearRouter, device) -> None:
+        """Initialize a Netgear device."""
+        self._router = router
+        self._device = device
+        self._mac = device["mac"]
+        self._name = self.get_device_name(device)
+        self._unique_id = self._mac
+        self._active = device["active"]
+
+    def get_device_name(self, device):
+        """Return the name of the given device or the MAC if we don't know."""
+        name = device["name"]
+        if not name or name == "--":
+            name = self._mac
+
+        return name
+
+    @callback
+    def async_update_device(self) -> None:
+        """Update the Netgear device."""
+        self._device = self._router.devices[self._mac]
+        self._active = self._device["active"]
+
+        self.async_write_ha_state()
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
+            "name": self.name,
+            "model": self._device["device_model"],
+            "via_device": (DOMAIN, self._router.unique_id),
+        }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_device_update,
+                self.async_update_device,
+            )
+        )
