@@ -133,9 +133,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
-        self.placeholders[
-            CONF_URL
-        ] = f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/"
+        self.placeholders[CONF_URL] = f"http://{host}/"
         return await async_step_user()
 
     async def async_step_user(self, user_input=None):
