@@ -486,6 +486,9 @@ construct==2.10.56
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
 
+# homeassistant.components.utility_meter
+croniter==1.0.6
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -790,7 +793,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210818.0
+home-assistant-frontend==20210825.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10

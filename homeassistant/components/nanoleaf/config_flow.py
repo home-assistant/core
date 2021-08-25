@@ -32,6 +32,8 @@ USER_SCHEMA: Final = vol.Schema(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Nanoleaf config flow."""
 
+    reauth_entry: config_entries.ConfigEntry | None = None
+
     VERSION = 1
 
     def __init__(self) -> None:
@@ -75,12 +77,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
         """Handle Nanoleaf reauth flow if token is invalid."""
-        self.entry = cast(
+        self.reauth_entry = cast(
             config_entries.ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
         self.nanoleaf = Nanoleaf(data[CONF_HOST])
-        self.context["title_placeholders"] = {"name": self.entry.title}
+        self.context["title_placeholders"] = {"name": self.reauth_entry.title}
         return await self.async_step_link()
 
     async def async_step_zeroconf(
@@ -146,15 +148,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
 
-        if self.context["source"] == config_entries.SOURCE_REAUTH:
+        if self.reauth_entry is not None:
             self.hass.config_entries.async_update_entry(
-                self.entry,
+                self.reauth_entry,
                 data={
-                    **self.entry.data,
+                    **self.reauth_entry.data,
                     CONF_TOKEN: self.nanoleaf.token,
                 },
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return await self.async_setup_finish()
