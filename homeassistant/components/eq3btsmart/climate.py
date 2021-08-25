@@ -7,13 +7,6 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from .const import (
-    PRESET_PERMANENT_HOLD,
-    PRESET_NO_HOLD,
-    PRESET_OPEN,
-    PRESET_CLOSED,
-)
-
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -37,6 +30,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import PRESET_CLOSED, PRESET_NO_HOLD, PRESET_OPEN, PRESET_PERMANENT_HOLD
 
 _LOGGER = logging.getLogger(__name__)
 
