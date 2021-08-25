@@ -30,9 +30,10 @@
             },
             "advanced": {
                 "data": {
+                    "devices": "Devices (Triggers)",
                     "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
                 },
-                "description": "These settings only need to be adjusted if HomeKit is not functional.",
+                "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
                 "title": "Advanced Configuration"
             }
         }
