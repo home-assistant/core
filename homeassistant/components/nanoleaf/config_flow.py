@@ -73,6 +73,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_link()
 
+    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+        """Handle Nanoleaf reauth flow if token is invalid."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.nanoleaf = Nanoleaf(data[CONF_HOST])
+        return await self.async_step_link()
+
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
@@ -135,6 +141,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
+
+        if self.context["source"] == config_entries.SOURCE_REAUTH:
+            entry = cast(
+                config_entries.ConfigEntry,
+                self.hass.config_entries.async_get_entry(self.context["entry_id"]),
+            )
+            self.hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    CONF_HOST: self.nanoleaf.host,
+                    CONF_TOKEN: self.nanoleaf.token,
+                },
+            )
+            return self.async_abort(reason="reauth_successful")
+
         return await self.async_setup_finish()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
