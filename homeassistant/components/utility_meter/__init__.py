@@ -61,7 +61,7 @@ def period_or_cron(config):
         and config[CONF_METER_OFFSET] != DEFAULT_OFFSET
     ):
         raise vol.Invalid(
-            f"When <{CONF_CRON_PATTERN}> is used <{CONF_METER_OFFSET}> has no meaning and must be removed"
+            f"When <{CONF_CRON_PATTERN}> is used <{CONF_METER_OFFSET}> has no meaning"
         )
     return config
 
