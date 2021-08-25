@@ -39,7 +39,7 @@ command:
     command:
       name: Command
       description: >-
-        Endpoint of the command. Known valid endpoints are listed in
+        Endpoint of the command.
       required: true
       example: "system.launcher/open"
       selector:
