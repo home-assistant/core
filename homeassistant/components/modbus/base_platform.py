@@ -27,7 +27,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
@@ -172,6 +174,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             CALL_TYPE_REGISTER_HOLDING: (
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_WRITE_REGISTER,
+            ),
+            CALL_TYPE_DISCRETE: (
+                CALL_TYPE_DISCRETE,
+                None,
+            ),
+            CALL_TYPE_REGISTER_INPUT: (
+                CALL_TYPE_REGISTER_INPUT,
+                None,
             ),
             CALL_TYPE_COIL: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COIL),
             CALL_TYPE_X_COILS: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COILS),
