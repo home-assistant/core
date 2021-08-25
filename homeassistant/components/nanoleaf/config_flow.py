@@ -9,7 +9,6 @@ from pynanoleaf import InvalidToken, Nanoleaf, NotAuthorizingNewTokens, Unavaila
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -188,11 +187,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.hass.async_add_executor_job(
                     os.remove, self.hass.config.path(CONFIG_FILE)
-                )
-                persistent_notification.async_create(
-                    self.hass,
-                    "All Nanoleaf devices from the discovery integration are imported. If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml",
-                    f"Imported Nanoleaf {name}",
                 )
 
         return self.async_create_entry(
