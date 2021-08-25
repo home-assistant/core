@@ -585,7 +585,7 @@ homeassistant/components/worldclock/* @fabaff
 homeassistant/components/xbox/* @hunterjm
 homeassistant/components/xbox_live/* @MartinHjelmare
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
-homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG
+homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG @bieniu
 homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yale_smart_alarm/* @gjohansson-ST
