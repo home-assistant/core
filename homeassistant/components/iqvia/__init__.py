@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, cast
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
@@ -108,7 +107,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity, SensorEntity):
+class IQVIAEntity(CoordinatorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(
@@ -119,11 +118,9 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._sensor_type = description.key
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_name = description.name
-        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{self._sensor_type}"
+        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{description.key}"
         self._entry = entry
         self.entity_description = description
 
@@ -140,7 +137,7 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        if self._type == TYPE_ALLERGY_FORECAST:
+        if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
                 self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
                     TYPE_ALLERGY_OUTLOOK

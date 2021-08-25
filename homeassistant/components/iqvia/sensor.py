@@ -6,6 +6,7 @@ from statistics import mean
 
 import numpy as np
 
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant, callback
@@ -15,7 +16,6 @@ from . import IQVIAEntity
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
-    SENSORS,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
@@ -58,41 +58,105 @@ RATING_MAPPING = [
     {"label": "High", "minimum": 9.7, "maximum": 12},
 ]
 
+
 TREND_FLAT = "Flat"
 TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
 
 
 @dataclass
-class IQVIARequiredKeysMixin:
-    """Mixin for required keys."""
+class IQVIASensorDescriptionMixin:
+    """Define an entity description mixin for binary and regular sensors."""
 
-    sensor_type: IQVIAEntity
+    sensor_type: str
+
+
+@dataclass
+class IQVIASensorEntityDescription(
+    SensorEntityDescription, IQVIASensorDescriptionMixin
+):
+    """Describe an IQVIA sensor."""
+
+
+SENSOR_TYPE_FORECAST = "forecast"
+SENSOR_TYPE_INDEX = "index"
+
+SENSOR_DESCRIPTIONS = (
+    IQVIASensorEntityDescription(
+        key=TYPE_ALLERGY_FORECAST,
+        name="Allergy Index: Forecasted Average",
+        icon="mdi:flower",
+        sensor_type=SENSOR_TYPE_FORECAST,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_ALLERGY_TODAY,
+        name="Allergy Index: Today",
+        icon="mdi:flower",
+        sensor_type=SENSOR_TYPE_INDEX,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_ALLERGY_TOMORROW,
+        name="Allergy Index: Tomorrow",
+        icon="mdi:flower",
+        sensor_type=SENSOR_TYPE_INDEX,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_ASTHMA_FORECAST,
+        name="Asthma Index: Forecasted Average",
+        icon="mdi:flower",
+        sensor_type=SENSOR_TYPE_FORECAST,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_ASTHMA_TODAY,
+        name="Asthma Index: Today",
+        icon="mdi:flower",
+        sensor_type=SENSOR_TYPE_INDEX,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_ASTHMA_TOMORROW,
+        name="Asthma Index: Tomorrow",
+        icon="mdi:flower",
+        sensor_type=SENSOR_TYPE_INDEX,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_DISEASE_FORECAST,
+        name="Cold & Flu: Forecasted Average",
+        icon="mdi:snowflake",
+        sensor_type=SENSOR_TYPE_FORECAST,
+    ),
+    IQVIASensorEntityDescription(
+        key=TYPE_DISEASE_TODAY,
+        name="Cold & Flu Index: Today",
+        icon="mdi:pill",
+        sensor_type=SENSOR_TYPE_INDEX,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up IQVIA sensors based on a config entry."""
-    sensor_class_mapping = {
-        TYPE_ALLERGY_FORECAST: ForecastSensor,
-        TYPE_ALLERGY_TODAY: IndexSensor,
-        TYPE_ALLERGY_TOMORROW: IndexSensor,
-        TYPE_ASTHMA_FORECAST: ForecastSensor,
-        TYPE_ASTHMA_TODAY: IndexSensor,
-        TYPE_ASTHMA_TOMORROW: IndexSensor,
-        TYPE_DISEASE_FORECAST: ForecastSensor,
-        TYPE_DISEASE_TODAY: IndexSensor,
-    }
-
-    sensors = []
-    for sensor_type, (name, icon) in SENSORS.items():
-        api_category = API_CATEGORY_MAPPING.get(sensor_type, sensor_type)
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][api_category]
-        sensor_class = sensor_class_mapping[sensor_type]
-        sensors.append(sensor_class(coordinator, entry, sensor_type, name, icon))
-
-    async_add_entities(sensors)
+    async_add_entities(
+        [
+            ForecastSensor(
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                    API_CATEGORY_MAPPING.get(description.key, description.key)
+                ],
+                entry,
+                description,
+            )
+            if description.sensor_type == SENSOR_TYPE_FORECAST
+            else IndexSensor(
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                    API_CATEGORY_MAPPING.get(description.key, description.key)
+                ],
+                entry,
+                description,
+            )
+            for description in SENSOR_DESCRIPTIONS
+        ]
+    )
 
 
 @callback
@@ -112,7 +176,7 @@ def calculate_trend(indices: list[float]) -> str:
     return TREND_FLAT
 
 
-class ForecastSensor(IQVIAEntity):
+class ForecastSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to forecast data."""
 
     @callback
@@ -145,7 +209,7 @@ class ForecastSensor(IQVIAEntity):
             }
         )
 
-        if self._type == TYPE_ALLERGY_FORECAST:
+        if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
                 self._entry.entry_id
             ][TYPE_ALLERGY_OUTLOOK]
@@ -161,7 +225,7 @@ class ForecastSensor(IQVIAEntity):
             ] = outlook_coordinator.data.get("Season")
 
 
-class IndexSensor(IQVIAEntity):
+class IndexSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to indices."""
 
     @callback
@@ -171,16 +235,22 @@ class IndexSensor(IQVIAEntity):
             return
 
         try:
-            if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
+            if self.entity_description.key in (
+                TYPE_ALLERGY_TODAY,
+                TYPE_ALLERGY_TOMORROW,
+            ):
                 data = self.coordinator.data.get("Location")
-            elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
+            elif self.entity_description.key in (
+                TYPE_ASTHMA_TODAY,
+                TYPE_ASTHMA_TOMORROW,
+            ):
                 data = self.coordinator.data.get("Location")
-            elif self._type == TYPE_DISEASE_TODAY:
+            elif self.entity_description.key == TYPE_DISEASE_TODAY:
                 data = self.coordinator.data.get("Location")
         except KeyError:
             return
 
-        key = self._type.split("_")[-1].title()
+        key = self.entity_description.key.split("_")[-1].title()
 
         try:
             [period] = [p for p in data["periods"] if p["Type"] == key]
@@ -202,7 +272,7 @@ class IndexSensor(IQVIAEntity):
             }
         )
 
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
+        if self.entity_description.key in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
             for idx, attrs in enumerate(period["Triggers"]):
                 index = idx + 1
                 self._attr_extra_state_attributes.update(
@@ -212,7 +282,7 @@ class IndexSensor(IQVIAEntity):
                         f"{ATTR_ALLERGEN_TYPE}_{index}": attrs["PlantType"],
                     }
                 )
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
+        elif self.entity_description.key in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
             for idx, attrs in enumerate(period["Triggers"]):
                 index = idx + 1
                 self._attr_extra_state_attributes.update(
@@ -221,7 +291,7 @@ class IndexSensor(IQVIAEntity):
                         f"{ATTR_ALLERGEN_AMOUNT}_{index}": attrs["PPM"],
                     }
                 )
-        elif self._type == TYPE_DISEASE_TODAY:
+        elif self.entity_description.key == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
                 self._attr_extra_state_attributes[
                     f"{attrs['Name'].lower()}_index"
