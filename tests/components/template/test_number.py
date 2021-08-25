@@ -53,9 +53,7 @@ async def test_missing_optional_config(hass, calls):
                     "number": {
                         "state": "{{ 4 }}",
                         "set_value": {"service": "script.set_value"},
-                        "attributes": {
-                            "step": "{{ 1 }}",
-                        },
+                        "step": "{{ 1 }}",
                     }
                 }
             },
@@ -114,11 +112,9 @@ async def test_all_optional_config(hass, calls):
                     "number": {
                         "state": "{{ 4 }}",
                         "set_value": {"service": "script.set_value"},
-                        "attributes": {
-                            "min": "{{ 3 }}",
-                            "max": "{{ 5 }}",
-                            "step": "{{ 1 }}",
-                        },
+                        "min": "{{ 3 }}",
+                        "max": "{{ 5 }}",
+                        "step": "{{ 1 }}",
                     }
                 }
             },
@@ -180,11 +176,9 @@ async def test_templates_with_entities(hass, calls):
                     "unique_id": "b",
                     "number": {
                         "state": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
-                        "attributes": {
-                            "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
-                            "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
-                            "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
-                        },
+                        "step": f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
+                        "min": f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
+                        "max": f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
                         "set_value": {
                             "service": "input_number.set_value",
                             "data_template": {
@@ -278,11 +272,9 @@ async def test_trigger_number(hass):
                             "name": "Hello Name",
                             "unique_id": "hello_name-id",
                             "state": "{{ trigger.event.data.beers_drank }}",
-                            "attributes": {
-                                "min": "{{ trigger.event.data.min_beers }}",
-                                "max": "{{ trigger.event.data.max_beers }}",
-                                "step": "{{ trigger.event.data.step }}",
-                            },
+                            "min": "{{ trigger.event.data.min_beers }}",
+                            "max": "{{ trigger.event.data.max_beers }}",
+                            "step": "{{ trigger.event.data.step }}",
                             "set_value": {"event": "test_number_event"},
                             "optimistic": True,
                         },

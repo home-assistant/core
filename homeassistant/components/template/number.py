@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
-from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY
+from .const import CONF_AVAILABILITY
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
@@ -38,13 +38,9 @@ NUMBER_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_ATTRIBUTES): vol.Schema(
-            {
-                vol.Required(ATTR_STEP): cv.template,
-                vol.Optional(ATTR_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-                vol.Optional(ATTR_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-            }
-        ),
+        vol.Required(ATTR_STEP): cv.template,
+        vol.Optional(ATTR_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        vol.Optional(ATTR_MAX, default=DEFAULT_MAX_VALUE): cv.template,
         vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -68,9 +64,9 @@ async def _async_create_entities(
                 definition[CONF_STATE],
                 definition.get(CONF_AVAILABILITY),
                 definition[CONF_SET_VALUE],
-                definition[CONF_ATTRIBUTES][ATTR_STEP],
-                definition[CONF_ATTRIBUTES][ATTR_MIN],
-                definition[CONF_ATTRIBUTES][ATTR_MAX],
+                definition[ATTR_STEP],
+                definition[ATTR_MIN],
+                definition[ATTR_MAX],
                 definition[CONF_OPTIMISTIC],
                 unique_id,
             )
@@ -181,7 +177,12 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
     """Number entity based on trigger data."""
 
     domain = NUMBER_DOMAIN
-    extra_template_keys = (CONF_STATE,)
+    extra_template_keys = (
+        CONF_STATE,
+        ATTR_STEP,
+        ATTR_MIN,
+        ATTR_MAX,
+    )
 
     def __init__(
         self,
@@ -213,21 +214,21 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
     def min_value(self) -> int:
         """Return the minimum value."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_MIN, super().min_value)
+            self._rendered.get(ATTR_MIN, super().min_value)
         )
 
     @property
     def max_value(self) -> int:
         """Return the maximum value."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_MAX, super().max_value)
+            self._rendered.get(ATTR_MAX, super().max_value)
         )
 
     @property
     def step(self) -> int:
         """Return the increment/decrement step."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_ATTRIBUTES, {}).get(ATTR_STEP, super().step)
+            self._rendered.get(ATTR_STEP, super().step)
         )
 
     async def async_set_value(self, value: float) -> None:
