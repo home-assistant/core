@@ -18,21 +18,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    entities: list[FritzboxBinarySensor] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
-    for ain, device in coordinator.data.items():
-        for description in BINARY_SENSOR_TYPES:
-            if description.suitable(device):
-                entities.append(
-                    FritzboxBinarySensor(
-                        coordinator,
-                        ain,
-                        description,
-                    )
-                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            FritzboxBinarySensor(coordinator, ain, description)
+            for ain, device in coordinator.data.items()
+            for description in BINARY_SENSOR_TYPES
+            if description.suitable(device)
+        ]
+    )
 
 
 class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
