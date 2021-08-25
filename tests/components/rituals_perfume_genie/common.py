@@ -32,6 +32,7 @@ def mock_diffuser(
     is_on: bool = True,
     name: str = "Genie",
     perfume: str = "Ritual of Sakura",
+    perfume_amount: int = 2,
     version: str = "4.0",
     wifi_percentage: int = 75,
 ) -> MagicMock:
@@ -47,6 +48,8 @@ def mock_diffuser(
     diffuser_mock.is_on = is_on
     diffuser_mock.name = name
     diffuser_mock.perfume = perfume
+    diffuser_mock.perfume_amount = perfume_amount
+    diffuser_mock.set_perfume_amount = AsyncMock()
     diffuser_mock.turn_off = AsyncMock()
     diffuser_mock.turn_on = AsyncMock()
     diffuser_mock.update_data = AsyncMock()
@@ -55,12 +58,12 @@ def mock_diffuser(
     return diffuser_mock
 
 
-def mock_diffuser_v1_battery_cartridge():
+def mock_diffuser_v1_battery_cartridge() -> MagicMock:
     """Create and return a mock version 1 Diffuser with battery and a cartridge."""
     return mock_diffuser(hublot="lot123v1")
 
 
-def mock_diffuser_v2_no_battery_no_cartridge():
+def mock_diffuser_v2_no_battery_no_cartridge() -> MagicMock:
     """Create and return a mock version 2 Diffuser without battery and cartridge."""
     return mock_diffuser(
         hublot="lot123v2",
