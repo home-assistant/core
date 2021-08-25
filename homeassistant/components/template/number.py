@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -27,6 +28,8 @@ from homeassistant.helpers.template import Template, TemplateError
 from .const import CONF_AVAILABILITY
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_SET_VALUE = "set_value"
 
@@ -81,6 +84,12 @@ async def async_setup_platform(
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the template number."""
+    if discovery_info is None:
+        _LOGGER.warning(
+            "Template number entities can only be configured under template:"
+        )
+        return
+
     if "coordinator" in discovery_info:
         async_add_entities(
             TriggerNumberEntity(hass, discovery_info["coordinator"], config)
