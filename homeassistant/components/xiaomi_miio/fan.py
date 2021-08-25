@@ -799,8 +799,8 @@ class XiaomiFan(XiaomiGenericDevice):
 
         if not self.is_on:
             await self.async_turn_on()
-
-        self.async_write_ha_state()
+        else:
+            self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
@@ -881,5 +881,5 @@ class XiaomiFanP5(XiaomiFan):
 
         if not self.is_on:
             await self.async_turn_on()
-
-        self.async_write_ha_state()
+        else:
+            self.async_write_ha_state()
