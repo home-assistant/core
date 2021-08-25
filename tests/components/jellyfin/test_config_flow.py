@@ -16,6 +16,10 @@ PASSWORD = "test-password"
 
 MOCK_SUCCESFUL_CONNECTION_STATE = {"State": CONNECTION_STATE["ServerSignIn"]}
 MOCK_SUCCESFUL_LOGIN_RESPONSE = {"AccessToken": "Test"}
+
+MOCK_UNSUCCESFUL_CONNECTION_STATE = {"State": CONNECTION_STATE["Unavailable"]}
+MOCK_UNSUCCESFUL_LOGIN_RESPONSE = {""}
+
 MOCK_USER_SETTINGS = {"Id": "123"}
 
 
@@ -85,18 +89,24 @@ async def test_form_cannot_connect(hass: HomeAssistant):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_URL: URL,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
+        return_value=MOCK_UNSUCCESFUL_CONNECTION_STATE,
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: URL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
     await hass.async_block_till_done()
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    assert len(mock_connect.mock_calls) == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant):
@@ -111,7 +121,10 @@ async def test_form_invalid_auth(hass: HomeAssistant):
     with patch(
         "homeassistant.components.jellyfin.config_flow.ConnectionManager.connect_to_address",
         return_value=MOCK_SUCCESFUL_CONNECTION_STATE,
-    ) as mock_connect:
+    ) as mock_connect, patch(
+        "homeassistant.components.jellyfin.config_flow.ConnectionManager.login",
+        return_value=MOCK_UNSUCCESFUL_LOGIN_RESPONSE,
+    ) as mock_login:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -126,6 +139,7 @@ async def test_form_invalid_auth(hass: HomeAssistant):
     assert result2["errors"] == {"base": "invalid_auth"}
 
     assert len(mock_connect.mock_calls) == 1
+    assert len(mock_login.mock_calls) == 1
 
 
 async def test_form_exception(hass: HomeAssistant):

@@ -39,6 +39,7 @@ from .const import (
     ITEM_TYPE_ARTIST,
     ITEM_TYPE_AUDIO,
     ITEM_TYPE_LIBRARY,
+    MAX_IMAGE_WIDTH,
     MAX_STREAMING_BITRATE,
     MEDIA_SOURCE_KEY_PATH,
     MEDIA_TYPE_AUDIO,
@@ -285,11 +286,7 @@ class JellyfinSource(MediaSource):
             return None
 
         item_id = media_item[ITEM_KEY_ID]
-        api_key = self.client.config.data["auth.token"]
-        tag = image_tags["Primary"]
-        params = urllib.parse.urlencode({"Tag": tag, "api_key": api_key})
-
-        return f"{self.url}Items/{item_id}/Images/Primary?{params}"
+        return str(self.api.artwork(item_id, "Primary", MAX_IMAGE_WIDTH))
 
     def _get_stream_url(self, media_item: dict[str, Any]) -> str:
         """Return the stream URL for a media item."""

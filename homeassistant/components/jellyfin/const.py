@@ -25,7 +25,9 @@ ITEM_TYPE_ARTIST: Final = "MusicArtist"
 ITEM_TYPE_AUDIO: Final = "Audio"
 ITEM_TYPE_LIBRARY: Final = "CollectionFolder"
 
+MAX_IMAGE_WIDTH: Final = 500
 MAX_STREAMING_BITRATE: Final = "140000000"
+
 
 MEDIA_SOURCE_KEY_PATH: Final = "Path"
 
