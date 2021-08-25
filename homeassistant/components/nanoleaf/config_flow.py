@@ -154,6 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_TOKEN: self.nanoleaf.token,
                 },
             )
+            await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return await self.async_setup_finish()
