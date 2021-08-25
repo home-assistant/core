@@ -93,12 +93,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.flipr_myfliprid_ph_status")
     assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "on"  # Alert is on for binary sensor
 
     state = hass.states.get("binary_sensor.flipr_myfliprid_chlorine_status")
     assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "off"

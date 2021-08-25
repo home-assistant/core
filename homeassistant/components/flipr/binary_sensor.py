@@ -1,65 +1,73 @@
 """Support for Flipr binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FliprEntity
 from .const import CONF_FLIPR_ID, DOMAIN
 
-BINARY_SENSORS = {
-    "ph_status": {
-        "unit": None,
-        "icon": None,
-        "name": "PH Status",
-        "device_class": DEVICE_CLASS_PROBLEM,
-    },
-    "chlorine_status": {
-        "unit": None,
-        "icon": None,
-        "name": "Chlorine Status",
-        "device_class": DEVICE_CLASS_PROBLEM,
-    },
-}
+BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="ph_status",
+        name="PH Status",
+        device_class=DEVICE_CLASS_PROBLEM,
+    ),
+    BinarySensorEntityDescription(
+        key="chlorine_status",
+        name="Chlorine Status",
+        device_class=DEVICE_CLASS_PROBLEM,
+    ),
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Defer sensor setup to the shared sensor module."""
+    """Defer sensor setup of flipr binary sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    binary_sensors_list = []
-    for binary_sensor in BINARY_SENSORS:
-        binary_sensors_list.append(
-            FliprBinarySensor(
-                coordinator, config_entry.data[CONF_FLIPR_ID], binary_sensor
-            )
+    async_add_entities(
+        FliprBinarySensor(
+            coordinator,
+            config_entry.data[CONF_FLIPR_ID],
+            description,
+            config_entry.entry_id,
         )
-
-    async_add_entities(binary_sensors_list, True)
+        for description in BINARY_SENSORS_TYPES
+    )
 
 
 class FliprBinarySensor(FliprEntity, BinarySensorEntity):
     """Representation of Flipr binary sensors."""
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        flipr_id: str,
+        description: BinarySensorEntityDescription,
+        entry_id: str,
+    ) -> None:
+        """Initialize a Flipr sensor."""
+        super().__init__(coordinator, flipr_id, f"{description.key}-{entry_id}")
+        self.entity_description = description
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on in case of a Problem is detected."""
         return (
-            self.coordinator.data[self.info_type] == "TooLow"
-            or self.coordinator.data[self.info_type] == "TooHigh"
+            self.coordinator.data[self.entity_description.key] == "TooLow"
+            or self.coordinator.data[self.entity_description.key] == "TooHigh"
         )
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return BINARY_SENSORS[self.info_type]["icon"]
 
     @property
     def device_class(self):
         """Return the class of this device."""
-        return BINARY_SENSORS[self.info_type]["device_class"]
+        return self.entity_description.device_class
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return f"Flipr {self.flipr_id} {BINARY_SENSORS[self.info_type]['name']}"
+        return f"Flipr {self.flipr_id} {self.entity_description.name}"

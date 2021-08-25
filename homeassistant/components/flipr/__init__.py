@@ -75,14 +75,15 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
-    def __init__(self, coordinator, flipr_id, info_type):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, flipr_id: str, server_unique_id: str
+    ) -> None:
         """Initialize Flipr sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{flipr_id}-{info_type}"
+        self._attr_unique_id = f"{flipr_id}-{server_unique_id}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, flipr_id)},
             "name": NAME,
             "manufacturer": MANUFACTURER,
         }
-        self.info_type = info_type
         self.flipr_id = flipr_id
