@@ -167,6 +167,9 @@ class SensorEntity(Entity):
     _attr_native_value: StateType = None
     _attr_state_class: str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
+    _attr_unit_of_measurement: None = (
+        None  # Subclasses of SensorEntity should not set this
+    )
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
@@ -240,11 +243,12 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        # Support for _attr_unit_of_measurement will be removed in Home Assistant 2021.11
         if (
             hasattr(self, "_attr_unit_of_measurement")
             and self._attr_unit_of_measurement is not None
         ):
-            return self._attr_unit_of_measurement
+            return self._attr_unit_of_measurement  # type: ignore
 
         native_unit_of_measurement = self.native_unit_of_measurement
 

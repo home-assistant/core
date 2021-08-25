@@ -845,6 +845,7 @@ omit =
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
+    homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/raspihats/*
@@ -864,12 +865,8 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rituals_perfume_genie/binary_sensor.py
-    homeassistant/components/rituals_perfume_genie/entity.py
     homeassistant/components/rituals_perfume_genie/number.py
     homeassistant/components/rituals_perfume_genie/select.py
-    homeassistant/components/rituals_perfume_genie/sensor.py
-    homeassistant/components/rituals_perfume_genie/switch.py
-    homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
