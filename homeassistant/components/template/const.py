@@ -15,6 +15,7 @@ PLATFORMS = [
     "fan",
     "light",
     "lock",
+    "select",
     "sensor",
     "switch",
     "vacuum",

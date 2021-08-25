@@ -4,13 +4,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
-from . import binary_sensor as binary_sensor_platform, sensor as sensor_platform
+from . import (
+    binary_sensor as binary_sensor_platform,
+    select as select_platform,
+    sensor as sensor_platform,
+)
 from .const import CONF_TRIGGER, DOMAIN
 
 PACKAGE_MERGE_HINT = "list"
@@ -30,6 +35,9 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
             binary_sensor_platform.LEGACY_BINARY_SENSOR_SCHEMA
+        ),
+        vol.Optional(SELECT_DOMAIN): vol.All(
+            cv.ensure_list, [select_platform.SELECT_SCHEMA]
         ),
     }
 )
