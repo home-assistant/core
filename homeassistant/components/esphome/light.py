@@ -61,7 +61,7 @@ _COLOR_MODE_MAPPING = {
     ],
     COLOR_MODE_BRIGHTNESS: [
         LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
-        # for compatibility with older clients
+        # for compatibility with older clients (2021.8.x)
         LightColorCapability.BRIGHTNESS,
     ],
     COLOR_MODE_COLOR_TEMP: [
