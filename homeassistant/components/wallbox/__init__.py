@@ -116,18 +116,18 @@ class WallboxCoordinator(DataUpdateCoordinator):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wallbox from a config entry."""
     wallbox = Wallbox(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
-    wallboxCoordinator = WallboxCoordinator(
+    wallbox_coordinator = WallboxCoordinator(
         entry.data[CONF_STATION],
         wallbox,
         hass,
     )
 
-    await wallboxCoordinator.async_validate_input()
+    await wallbox_coordinator.async_validate_input()
 
-    await wallboxCoordinator.async_config_entry_first_refresh()
+    await wallbox_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
-    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallboxCoordinator
+    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox_coordinator
 
     for platform in PLATFORMS:
 

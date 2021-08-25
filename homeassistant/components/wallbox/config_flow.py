@@ -25,9 +25,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     wallbox = Wallbox(data["username"], data["password"])
-    wallboxCoordinator = WallboxCoordinator(data["station"], wallbox, hass)
+    wallbox_coordinator = WallboxCoordinator(data["station"], wallbox, hass)
 
-    await wallboxCoordinator.async_validate_input()
+    await wallbox_coordinator.async_validate_input()
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
