@@ -76,7 +76,7 @@ async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes.get(attr)
+        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -113,7 +113,7 @@ async def test_sensor_errors(hass: HomeAssistant, vehicle_type: str):
             assert state.attributes.get(attr) == expected_entity.get(attr)
         # Check dynamic attributes:
         assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
-        assert ATTR_LAST_UPDATE not in state.attributes.get(attr)
+        assert ATTR_LAST_UPDATE not in state.attributes
 
 
 async def test_sensor_access_denied(hass: HomeAssistant):
