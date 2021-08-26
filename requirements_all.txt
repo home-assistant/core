@@ -1463,6 +1463,9 @@ pydroid-ipcam==0.8
 # homeassistant.components.ebox
 pyebox==1.1.4
 
+# homeassistant.components.ecodevices
+pyecodevices==1.3.0
+
 # homeassistant.components.econet
 pyeconet==0.1.14
 
@@ -2471,6 +2474,7 @@ xboxapi==2.0.1
 xknx==0.18.15
 
 # homeassistant.components.bluesound
+# homeassistant.components.ecodevices
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca

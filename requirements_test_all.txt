@@ -889,6 +889,9 @@ pydexcom==0.2.2
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
+# homeassistant.components.ecodevices
+pyecodevices==1.3.0
+
 # homeassistant.components.econet
 pyeconet==0.1.14
 
@@ -1487,6 +1490,7 @@ xbox-webapi==2.0.11
 xknx==0.18.15
 
 # homeassistant.components.bluesound
+# homeassistant.components.ecodevices
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
