@@ -281,23 +281,29 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Return the device volume."""
+        if not self._currently_playing:
+            return None
         return self._currently_playing.get("device", {}).get("volume_percent", 0) / 100
 
     @property
     def media_content_id(self) -> str | None:
         """Return the media URL."""
+        if not self._currently_playing:
+            return None
         item = self._currently_playing.get("item") or {}
         return item.get("uri")
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
+        if not self._currently_playing:
+            return None
         if self._currently_playing.get("item") is None:
             return None
         return self._currently_playing["item"]["duration_ms"] / 1000
 
     @property
-    def media_position(self) -> str | None:
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if not self._currently_playing:
             return None
@@ -313,6 +319,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Return the media image URL."""
+        if not self._currently_playing:
+            return None
         if (
             self._currently_playing.get("item") is None
             or not self._currently_playing["item"]["album"]["images"]
@@ -323,12 +331,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Return the media title."""
+        if not self._currently_playing:
+            return None
         item = self._currently_playing.get("item") or {}
         return item.get("name")
 
     @property
     def media_artist(self) -> str | None:
         """Return the media artist."""
+        if not self._currently_playing:
+            return None
         if self._currently_playing.get("item") is None:
             return None
         return ", ".join(
@@ -338,6 +350,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_album_name(self) -> str | None:
         """Return the media album."""
+        if not self._currently_playing:
+            return None
         if self._currently_playing.get("item") is None:
             return None
         return self._currently_playing["item"]["album"]["name"]
@@ -345,6 +359,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
+        if not self._currently_playing:
+            return None
         item = self._currently_playing.get("item") or {}
         return item.get("track_number")
 
@@ -358,6 +374,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current playback device."""
+        if not self._currently_playing:
+            return None
         return self._currently_playing.get("device", {}).get("name")
 
     @property
@@ -368,14 +386,20 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return [device["name"] for device in self._devices]
 
     @property
-    def shuffle(self) -> bool:
+    def shuffle(self) -> bool | None:
         """Shuffling state."""
+        if not self._currently_playing:
+            return None
         return bool(self._currently_playing.get("shuffle_state"))
 
     @property
     def repeat(self) -> str | None:
         """Return current repeat mode."""
+        if not self._currently_playing:
+            return None
         repeat_state = self._currently_playing.get("repeat_state")
+        if not repeat_state:
+            return None
         return REPEAT_MODE_MAPPING_TO_HA.get(repeat_state)
 
     @property
@@ -432,6 +456,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             _LOGGER.error("Media type %s is not supported", media_type)
             return
 
+        if not self._currently_playing:
+            return
         if not self._currently_playing.get("device") and self._devices:
             kwargs["device_id"] = self._devices[0].get("id")
 
@@ -440,6 +466,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @spotify_exception_handler
     def select_source(self, source: str) -> None:
         """Select playback device."""
+        if self._devices is None:
+            return
         for device in self._devices:
             if device["name"] == source:
                 self._spotify.transfer_playback(
