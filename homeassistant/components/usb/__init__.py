@@ -129,7 +129,10 @@ class USBDiscovery:
         monitor = Monitor.from_netlink(context)
         try:
             monitor.filter_by(subsystem="tty")
-        except ValueError:  # this fails on WSL
+        except ValueError as ex:  # this fails on WSL
+            _LOGGER.debug(
+                "Unable to setup pyudev filtering; This is expected on WSL: %s", ex
+            )
             return
         observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
