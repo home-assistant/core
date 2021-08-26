@@ -105,6 +105,25 @@ class RingCam(RingEntityMixin, Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
+        if self._image is None:
+            ffmpeg = ImageFrame(self._ffmpeg.binary)
+
+            try:
+                image = await asyncio.shield(
+                    ffmpeg.get_image(
+                        self._video_url,
+                        output_format=IMAGE_JPEG,
+                    )
+                )
+            except requests.Timeout:
+                _LOGGER.warning(
+                    "Time out fetching still image for camera %s", self.entity_id
+                )
+                image = None
+
+            if image:
+                self._image = image
+
         return self._image
 
     async def handle_async_mjpeg_stream(self, request):
@@ -138,6 +157,9 @@ class RingCam(RingEntityMixin, Camera):
         if self._last_video_id == self._last_event["id"] and utcnow <= self._expires_at:
             return
 
+        if (self._last_video_id != self._last_event["id"]):
+            self._image = None
+
         try:
             video_url = await self.hass.async_add_executor_job(
                 self._device.recording_url, self._last_event["id"]
@@ -149,18 +171,6 @@ class RingCam(RingEntityMixin, Camera):
             video_url = None
 
         if video_url:
-            if (self._last_video_id != self._last_event["id"]) or (self._image is None):
-                ffmpeg = ImageFrame(self._ffmpeg.binary)
-
-                self._image = await asyncio.shield(
-                    ffmpeg.get_image(
-                        video_url,
-                        output_format=IMAGE_JPEG,
-                    )
-                )
-
             self._last_video_id = self._last_event["id"]
             self._video_url = video_url
             self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
-        else:
-            self._image = None
