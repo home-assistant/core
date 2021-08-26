@@ -1,15 +1,24 @@
 """Helpers for amcrest component."""
+from __future__ import annotations
+
 import logging
 
 from .const import DOMAIN
 
 
-def service_signal(service, *args):
+def service_signal(service: str, *args: str) -> str:
     """Encode signal."""
     return "_".join([DOMAIN, service, *args])
 
 
-def log_update_error(logger, action, name, entity_type, error, level=logging.ERROR):
+def log_update_error(
+    logger: logging.Logger,
+    action: str,
+    name: str | None,
+    entity_type: str,
+    error: Exception,
+    level: int = logging.ERROR,
+) -> None:
     """Log an update error."""
     logger.log(
         level,

@@ -1,5 +1,4 @@
 """The songpal component."""
-from collections import OrderedDict
 
 import voluptuous as vol
 
@@ -7,6 +6,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ENDPOINT, DOMAIN
 
@@ -22,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["media_player"]
 
 
-async def async_setup(hass: HomeAssistant, config: OrderedDict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up songpal environment."""
     conf = config.get(DOMAIN)
     if conf is None:

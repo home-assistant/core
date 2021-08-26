@@ -6,19 +6,17 @@ from bme280spi import BME280 as BME280_spi  # pylint: disable=import-error
 from i2csense.bme280 import BME280 as BME280_i2c  # pylint: disable=import-error
 import smbus
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from .const import (
     CONF_DELTA_TEMP,
@@ -47,7 +45,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the BME280 sensor."""
     if discovery_info is None:
         return
-    SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     sensor_conf = discovery_info[SENSOR_DOMAIN]
     name = sensor_conf[CONF_NAME]
     scan_interval = max(sensor_conf[CONF_SCAN_INTERVAL], MIN_TIME_BETWEEN_UPDATES)
@@ -105,42 +102,34 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         update_interval=scan_interval,
     )
     await coordinator.async_refresh()
-    entities = []
-    for condition in sensor_conf[CONF_MONITORED_CONDITIONS]:
-        entities.append(
-            BME280Sensor(
-                condition,
-                SENSOR_TYPES[condition][1],
-                name,
-                coordinator,
-            )
-        )
+    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
+    entities = [
+        BME280Sensor(name, coordinator, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
     async_add_entities(entities, True)
 
 
 class BME280Sensor(CoordinatorEntity, SensorEntity):
     """Implementation of the BME280 sensor."""
 
-    def __init__(self, sensor_type, temp_unit, name, coordinator):
+    def __init__(self, name, coordinator, description: SensorEntityDescription):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
-        self.temp_unit = temp_unit
-        self.type = sensor_type
-        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._attr_device_class = SENSOR_TYPES[sensor_type][2]
+        self.entity_description = description
+        self._attr_name = f"{name} {description.name}"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        if self.type == SENSOR_TEMP:
+        sensor_type = self.entity_description.key
+        if sensor_type == SENSOR_TEMP:
             temperature = round(self.coordinator.data.temperature, 1)
-            if self.temp_unit == TEMP_FAHRENHEIT:
-                temperature = round(celsius_to_fahrenheit(temperature), 1)
             state = temperature
-        elif self.type == SENSOR_HUMID:
+        elif sensor_type == SENSOR_HUMID:
             state = round(self.coordinator.data.humidity, 1)
-        elif self.type == SENSOR_PRESS:
+        elif sensor_type == SENSOR_PRESS:
             state = round(self.coordinator.data.pressure, 1)
         return state
 

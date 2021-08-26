@@ -8,7 +8,11 @@ from typing import Callable, TypedDict
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
@@ -134,7 +138,6 @@ class SensorData(TypedDict, total=False):
     name: str
     device_class: str | None
     state_class: str | None
-    last_reset: bool
     unit_of_measurement: str | None
     icon: str | None
     state_provider: Callable
@@ -185,16 +188,14 @@ SENSOR_DATA = {
     ),
     "gb_sent": SensorData(
         name="GB sent",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=True,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         state_provider=_retrieve_gb_sent_state,
     ),
     "gb_received": SensorData(
         name="GB received",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=True,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
@@ -284,7 +285,6 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         """Init FRITZ!Box connectivity class."""
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._last_device_value: str | None = None
-        self._last_wan_value: str | None = None
         self._attr_available = True
         self._attr_device_class = self._sensor_data.get("device_class")
         self._attr_icon = self._sensor_data.get("icon")
@@ -316,12 +316,3 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._attr_native_value = self._last_device_value = self._state_provider(
             status, self._last_device_value
         )
-
-        if self._sensor_data.get("last_reset") is True:
-            self._last_wan_value = _retrieve_connection_uptime_state(
-                status, self._last_wan_value
-            )
-            self._attr_last_reset = datetime.datetime.strptime(
-                self._last_wan_value,
-                "%Y-%m-%dT%H:%M:%S%z",
-            )

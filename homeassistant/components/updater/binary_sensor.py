@@ -1,7 +1,10 @@
 """Support for Home Assistant Updater binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_UPDATE,
+    BinarySensorEntity,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
@@ -18,15 +21,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
     """Representation of an updater binary sensor."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor, if any."""
-        return "Updater"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return "updater"
+    _attr_device_class = DEVICE_CLASS_UPDATE
+    _attr_name = "Updater"
+    _attr_unique_id = "updater"
 
     @property
     def is_on(self) -> bool | None:

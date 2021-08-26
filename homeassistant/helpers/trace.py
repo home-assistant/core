@@ -21,7 +21,7 @@ class TraceElement:
         self._child_run_id: str | None = None
         self._error: Exception | None = None
         self.path: str = path
-        self._result: dict | None = None
+        self._result: dict[str, Any] | None = None
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 

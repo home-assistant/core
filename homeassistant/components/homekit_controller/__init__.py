@@ -142,7 +142,7 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.available
+        return self._accessory.available and self.service.available
 
     @property
     def device_info(self):

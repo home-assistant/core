@@ -102,9 +102,10 @@ from . import (
     MODULE,
     NAME,
     PROPERTIES,
-    UNIQUE_NAME,
+    UNIQUE_FRIENDLY_NAME,
     _mocked_bulb,
     _patch_discovery,
+    _patch_discovery_interval,
 )
 
 from tests.common import MockConfigEntry
@@ -132,7 +133,7 @@ async def test_services(hass: HomeAssistant, caplog):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(MODULE), patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -559,7 +560,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         model,
         target_properties,
         nightlight_properties=None,
-        name=UNIQUE_NAME,
+        name=UNIQUE_FRIENDLY_NAME,
         entity_id=ENTITY_LIGHT,
     ):
         config_entry = MockConfigEntry(
@@ -598,7 +599,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
         assert hass.states.get(entity_id).state == "off"
         state = hass.states.get(f"{entity_id}_nightlight")
         assert state.state == "on"
-        nightlight_properties["friendly_name"] = f"{name} nightlight"
+        nightlight_properties["friendly_name"] = f"{name} Nightlight"
         nightlight_properties["icon"] = "mdi:weather-night"
         nightlight_properties["flowing"] = False
         nightlight_properties["night_light"] = True
@@ -672,6 +673,9 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_temp": ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "hs_color": (26.812, 34.87),
+            "rgb_color": (255, 205, 166),
+            "xy_color": (0.421, 0.364),
         },
         {
             "supported_features": 0,
@@ -836,6 +840,9 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_temp": ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
+            "hs_color": (26.812, 34.87),
+            "rgb_color": (255, 205, 166),
+            "xy_color": (0.421, 0.364),
         },
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
@@ -869,6 +876,9 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_temp": ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
+            "hs_color": (26.812, 34.87),
+            "rgb_color": (255, 205, 166),
+            "xy_color": (0.421, 0.364),
         },
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
@@ -892,8 +902,11 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_temp": bg_ct,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "hs_color": (27.001, 19.243),
+            "rgb_color": (255, 228, 205),
+            "xy_color": (0.372, 0.35),
         },
-        name=f"{UNIQUE_NAME} ambilight",
+        name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
@@ -914,7 +927,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "hs",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        name=f"{UNIQUE_NAME} ambilight",
+        name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
@@ -935,7 +948,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "color_mode": "rgb",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
         },
-        name=f"{UNIQUE_NAME} ambilight",
+        name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
     )
 
@@ -969,7 +982,7 @@ async def test_effects(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(MODULE), patch(
+    with _patch_discovery(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=mocked_bulb
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
