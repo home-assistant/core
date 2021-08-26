@@ -9,7 +9,7 @@ from homeassistant.components import usb
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.setup import async_setup_component
 
-from . import slae_sh_device
+from . import conbee_device, slae_sh_device
 
 
 @pytest.fixture(name="operating_system")
@@ -169,6 +169,297 @@ async def test_discovered_by_websocket_scan(hass, hass_ws_client):
 
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+
+async def test_discovered_by_websocket_scan_limited_by_description_matcher(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket scan is limited by the description matcher."""
+    new_usb = [
+        {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*2652*"}
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+
+async def test_discovered_by_websocket_scan_rejected_by_description_matcher(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket scan rejected by the description matcher."""
+    new_usb = [
+        {"domain": "test1", "vid": "3039", "pid": "3039", "description": "*not_it*"}
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovered_by_websocket_scan_limited_by_serial_number_matcher(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket scan is limited by the serial_number matcher."""
+    new_usb = [
+        {
+            "domain": "test1",
+            "vid": "3039",
+            "pid": "3039",
+            "serial_number": "00_12_4b_00*",
+        }
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+
+async def test_discovered_by_websocket_scan_rejected_by_serial_number_matcher(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket scan is rejected by the serial_number matcher."""
+    new_usb = [
+        {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovered_by_websocket_scan_limited_by_manufacturer_matcher(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket scan is limited by the manufacturer matcher."""
+    new_usb = [
+        {
+            "domain": "test1",
+            "vid": "3039",
+            "pid": "3039",
+            "manufacturer": "dresden elektronik ingenieurtechnik*",
+        }
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=conbee_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=conbee_device.serial_number,
+            manufacturer=conbee_device.manufacturer,
+            description=conbee_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+
+async def test_discovered_by_websocket_scan_rejected_by_manufacturer_matcher(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket scan is rejected by the manufacturer matcher."""
+    new_usb = [
+        {
+            "domain": "test1",
+            "vid": "3039",
+            "pid": "3039",
+            "manufacturer": "other vendor*",
+        }
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=conbee_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=conbee_device.serial_number,
+            manufacturer=conbee_device.manufacturer,
+            description=conbee_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 0
+
+
+async def test_discovered_by_websocket_rejected_with_empty_serial_number_only(
+    hass, hass_ws_client
+):
+    """Test a device is discovered from websocket is rejected with empty serial number."""
+    new_usb = [
+        {"domain": "test1", "vid": "3039", "pid": "3039", "serial_number": "123*"}
+    ]
+
+    mock_comports = [
+        MagicMock(
+            device=conbee_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        )
+    ]
+
+    with patch("pyudev.Context", side_effect=ImportError), patch(
+        "homeassistant.components.usb.async_get_usb", return_value=new_usb
+    ), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 0
 
 
 async def test_discovered_by_websocket_scan_match_vid_only(hass, hass_ws_client):
