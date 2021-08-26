@@ -830,7 +830,11 @@ class YeelightColorLightSupport(YeelightGenericLight):
     @property
     def color_mode(self):
         """Return the color mode."""
-        color_mode = int(self._get_property("color_mode"))
+        prop_value = self._get_property("color_mode")
+        if not prop_value:
+            _LOGGER.debug("Light reported unknown color mode: %s", prop_value)
+            return COLOR_MODE_UNKNOWN
+        color_mode = int(prop_value)
         if color_mode == 1:  # RGB
             return COLOR_MODE_RGB
         if color_mode == 2:  # color temperature
