@@ -53,7 +53,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.network import get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -145,12 +145,21 @@ def listen_for_new_cameras(
 
 
 @callback
-def async_generate_motioneye_webhook(hass: HomeAssistant, webhook_id: str) -> str:
+def async_generate_motioneye_webhook(
+    hass: HomeAssistant, webhook_id: str
+) -> str | None:
     """Generate the full local URL for a webhook_id."""
-    return "{}{}".format(
-        get_url(hass, allow_cloud=False),
-        async_generate_path(webhook_id),
-    )
+    try:
+        return "{}{}".format(
+            get_url(hass, allow_cloud=False),
+            async_generate_path(webhook_id),
+        )
+    except NoURLAvailableError:
+        _LOGGER.warning(
+            "Unable to get Home Assistant URL. Have you set the internal and/or "
+            "external URLs in Configuration -> General?"
+        )
+        return None
 
 
 @callback
@@ -228,30 +237,34 @@ def _add_camera(
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
         url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])
 
-        if _set_webhook(
-            _build_url(
-                device,
-                url,
-                EVENT_MOTION_DETECTED,
-                EVENT_MOTION_DETECTED_KEYS,
-            ),
-            KEY_WEB_HOOK_NOTIFICATIONS_URL,
-            KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
-            KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
-            camera,
-        ) | _set_webhook(
-            _build_url(
-                device,
-                url,
-                EVENT_FILE_STORED,
-                EVENT_FILE_STORED_KEYS,
-            ),
-            KEY_WEB_HOOK_STORAGE_URL,
-            KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
-            KEY_WEB_HOOK_STORAGE_ENABLED,
-            camera,
-        ):
-            hass.async_create_task(client.async_set_camera(camera_id, camera))
+        if url:
+            set_motion_event = _set_webhook(
+                _build_url(
+                    device,
+                    url,
+                    EVENT_MOTION_DETECTED,
+                    EVENT_MOTION_DETECTED_KEYS,
+                ),
+                KEY_WEB_HOOK_NOTIFICATIONS_URL,
+                KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
+                KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
+                camera,
+            )
+
+            set_storage_event = _set_webhook(
+                _build_url(
+                    device,
+                    url,
+                    EVENT_FILE_STORED,
+                    EVENT_FILE_STORED_KEYS,
+                ),
+                KEY_WEB_HOOK_STORAGE_URL,
+                KEY_WEB_HOOK_STORAGE_HTTP_METHOD,
+                KEY_WEB_HOOK_STORAGE_ENABLED,
+                camera,
+            )
+            if set_motion_event or set_storage_event:
+                hass.async_create_task(client.async_set_camera(camera_id, camera))
 
     async_dispatcher_send(
         hass,

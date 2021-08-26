@@ -1,13 +1,14 @@
 """This component provides support to the Ring Door Bell camera."""
-import asyncio
+from __future__ import annotations
+
 from datetime import timedelta
 from itertools import chain
 import logging
 
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import requests
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -42,12 +43,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    def __init__(self, config_entry_id, ffmpeg, device):
+    def __init__(self, config_entry_id, ffmpeg_manager, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__(config_entry_id, device)
 
         self._name = self._device.name
-        self._ffmpeg = ffmpeg
+        self._ffmpeg_manager = ffmpeg_manager
         self._last_event = None
         self._last_video_id = None
         self._video_url = None
@@ -103,23 +104,19 @@ class RingCam(RingEntityMixin, Camera):
             "last_video_id": self._last_video_id,
         }
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
-        if self._image is None:
+        if self._image is None and self._video_url:
             ffmpeg = ImageFrame(self._ffmpeg.binary)
 
-            try:
-                image = await asyncio.shield(
-                    ffmpeg.get_image(
-                        self._video_url,
-                        output_format=IMAGE_JPEG,
-                    )
-                )
-            except requests.Timeout:
-                _LOGGER.warning(
-                    "Time out fetching still image for camera %s", self.entity_id
-                )
-                image = None
+            image = await ffmpeg.async_get_image(
+                self._video_url,
+                output_format=IMAGE_JPEG,
+                width=width,
+                height=height,
+            )
 
             if image:
                 self._image = image
@@ -131,7 +128,7 @@ class RingCam(RingEntityMixin, Camera):
         if self._video_url is None:
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary)
+        stream = CameraMjpeg(self._ffmpeg_manager.binary)
         await stream.open_camera(self._video_url)
 
         try:
@@ -140,7 +137,7 @@ class RingCam(RingEntityMixin, Camera):
                 self.hass,
                 request,
                 stream_reader,
-                self._ffmpeg.ffmpeg_stream_content_type,
+                self._ffmpeg_manager.ffmpeg_stream_content_type,
             )
         finally:
             await stream.close()

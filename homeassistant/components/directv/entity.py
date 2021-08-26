@@ -3,17 +3,16 @@ from __future__ import annotations
 
 from directv import DIRECTV
 
-from homeassistant.const import ATTR_NAME
-from homeassistant.helpers.entity import DeviceInfo, Entity
-
-from .const import (
+from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    ATTR_VIA_DEVICE,
-    DOMAIN,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
 )
+from homeassistant.helpers.entity import DeviceInfo, Entity
+
+from .const import ATTR_VIA_DEVICE, DOMAIN
 
 
 class DIRECTVEntity(Entity):
@@ -34,6 +33,6 @@ class DIRECTVEntity(Entity):
             ATTR_NAME: self.name,
             ATTR_MANUFACTURER: self.dtv.device.info.brand,
             ATTR_MODEL: None,
-            ATTR_SOFTWARE_VERSION: self.dtv.device.info.version,
+            ATTR_SW_VERSION: self.dtv.device.info.version,
             ATTR_VIA_DEVICE: (DOMAIN, self.dtv.device.info.receiver_id),
         }

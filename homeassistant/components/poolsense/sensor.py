@@ -89,7 +89,7 @@ class PoolSenseSensor(PoolSenseEntity, SensorEntity):
         return f"PoolSense {SENSORS[self.info_type]['name']}"
 
     @property
-    def state(self):
+    def native_value(self):
         """State of the sensor."""
         return self.coordinator.data[self.info_type]
 
@@ -104,7 +104,7 @@ class PoolSenseSensor(PoolSenseEntity, SensorEntity):
         return SENSORS[self.info_type]["icon"]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return unit of measurement."""
         return SENSORS[self.info_type]["unit"]
 

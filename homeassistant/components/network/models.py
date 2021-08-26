@@ -24,6 +24,7 @@ class Adapter(TypedDict):
     """Configured network adapters."""
 
     name: str
+    index: int
     enabled: bool
     auto: bool
     default: bool

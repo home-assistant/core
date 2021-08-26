@@ -20,5 +20,14 @@
                 "title": "Dispositif WLED d\u00e9couvert"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Garder la lumi\u00e8re principale, m\u00eame avec 1 segment LED."
+                }
+            }
+        }
     }
 }

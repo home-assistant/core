@@ -11,7 +11,8 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Emplacement"
+                    "location": "Emplacement",
+                    "usercode": "Code d'utilisateur"
                 },
                 "description": "Saisissez le code d'utilisateur de cet utilisateur \u00e0 cet emplacement",
                 "title": "Codes d'utilisateur de l'emplacement"

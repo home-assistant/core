@@ -85,7 +85,7 @@ class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f"{self._name} {self._sensor_name}"
         self._attr_unique_id = self._unique_id
         self._attr_device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS)
-        self._attr_unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
+        self._attr_native_unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
 
 
 class AemetSensor(AbstractAemetSensor):
@@ -106,7 +106,7 @@ class AemetSensor(AbstractAemetSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._weather_coordinator.data.get(self._sensor_type)
 
@@ -134,7 +134,7 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         forecast = None
         forecasts = self._weather_coordinator.data.get(

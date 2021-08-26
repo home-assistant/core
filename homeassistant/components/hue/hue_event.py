@@ -60,10 +60,17 @@ class HueEvent(GenericHueDevice):
                 self.sensor.last_event is not None
                 and self.sensor.last_event["type"] != EVENT_BUTTON
             )
-            or
-            # Filter out old states. Can happen when events fire while refreshing
-            dt_util.parse_datetime(self.sensor.state["lastupdated"])
-            <= dt_util.parse_datetime(self._last_state["lastupdated"])
+        ):
+            return
+
+        # Filter out old states. Can happen when events fire while refreshing
+        now_updated = dt_util.parse_datetime(self.sensor.state["lastupdated"])
+        last_updated = dt_util.parse_datetime(self._last_state["lastupdated"])
+
+        if (
+            now_updated is not None
+            and last_updated is not None
+            and now_updated <= last_updated
         ):
             return
 

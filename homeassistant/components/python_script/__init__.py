@@ -195,6 +195,7 @@ def execute(hass, filename, source, data=None):
         "sum": sum,
         "any": any,
         "all": all,
+        "enumerate": enumerate,
     }
     builtins = safe_builtins.copy()
     builtins.update(utility_builtins)

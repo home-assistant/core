@@ -29,6 +29,8 @@ async def async_setup_entry(
 class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     """Representation of a Pi-hole binary sensor."""
 
+    _attr_icon = "mdi:pi-hole"
+
     @property
     def name(self) -> str:
         """Return the name of the sensor."""

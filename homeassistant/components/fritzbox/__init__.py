@@ -12,7 +12,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -139,9 +138,13 @@ class FritzBoxEntity(CoordinatorEntity):
         self.ain = ain
         self._name = entity_info[ATTR_NAME]
         self._unique_id = entity_info[ATTR_ENTITY_ID]
-        self._unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
         self._device_class = entity_info[ATTR_DEVICE_CLASS]
         self._attr_state_class = entity_info[ATTR_STATE_CLASS]
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.device.present
 
     @property
     def device(self) -> FritzhomeDevice:
@@ -168,11 +171,6 @@ class FritzBoxEntity(CoordinatorEntity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
 
     @property
     def device_class(self) -> str | None:

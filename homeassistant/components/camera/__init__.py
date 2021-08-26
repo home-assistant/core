@@ -8,7 +8,9 @@ from collections.abc import Awaitable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 import hashlib
+import inspect
 import logging
 import os
 from random import SystemRandom
@@ -62,6 +64,7 @@ from .const import (
     DOMAIN,
     SERVICE_RECORD,
 )
+from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences
 
 # mypy: allow-untyped-calls
@@ -138,21 +141,66 @@ async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) ->
     return await _async_stream_endpoint_url(hass, camera, fmt)
 
 
-@bind_hass
-async def async_get_image(
-    hass: HomeAssistant, entity_id: str, timeout: int = 10
+async def _async_get_image(
+    camera: Camera,
+    timeout: int = 10,
+    width: int | None = None,
+    height: int | None = None,
 ) -> Image:
-    """Fetch an image from a camera entity."""
-    camera = _get_camera_from_entity_id(hass, entity_id)
+    """Fetch a snapshot image from a camera.
 
+    If width and height are passed, an attempt to scale
+    the image will be made on a best effort basis.
+    Not all cameras can scale images or return jpegs
+    that we can scale, however the majority of cases
+    are handled.
+    """
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         async with async_timeout.timeout(timeout):
-            image = await camera.async_camera_image()
+            # Calling inspect will be removed in 2022.1 after all
+            # custom components have had a chance to change their signature
+            sig = inspect.signature(camera.async_camera_image)
+            if "height" in sig.parameters and "width" in sig.parameters:
+                image_bytes = await camera.async_camera_image(
+                    width=width, height=height
+                )
+            else:
+                camera.async_warn_old_async_camera_image_signature()
+                image_bytes = await camera.async_camera_image()
 
-            if image:
-                return Image(camera.content_type, image)
+            if image_bytes:
+                content_type = camera.content_type
+                image = Image(content_type, image_bytes)
+                if (
+                    width is not None
+                    and height is not None
+                    and ("jpeg" in content_type or "jpg" in content_type)
+                ):
+                    assert width is not None
+                    assert height is not None
+                    return Image(
+                        content_type, scale_jpeg_camera_image(image, width, height)
+                    )
+
+                return image
 
     raise HomeAssistantError("Unable to get image")
+
+
+@bind_hass
+async def async_get_image(
+    hass: HomeAssistant,
+    entity_id: str,
+    timeout: int = 10,
+    width: int | None = None,
+    height: int | None = None,
+) -> Image:
+    """Fetch an image from a camera entity.
+
+    width and height will be passed to the underlying camera.
+    """
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    return await _async_get_image(camera, timeout, width, height)
 
 
 @bind_hass
@@ -330,6 +378,7 @@ class Camera(Entity):
         self.stream_options: dict[str, str] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
+        self._warned_old_signature = False
         self.async_update_token()
 
     @property
@@ -387,13 +436,37 @@ class Camera(Entity):
         """Return the source of the stream."""
         return None
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
+        sig = inspect.signature(self.camera_image)
+        # Calling inspect will be removed in 2022.1 after all
+        # custom components have had a chance to change their signature
+        if "height" in sig.parameters and "width" in sig.parameters:
+            return await self.hass.async_add_executor_job(
+                partial(self.camera_image, width=width, height=height)
+            )
+        self.async_warn_old_async_camera_image_signature()
         return await self.hass.async_add_executor_job(self.camera_image)
+
+    # Remove in 2022.1 after all custom components have had a chance to change their signature
+    @callback
+    def async_warn_old_async_camera_image_signature(self) -> None:
+        """Warn once when calling async_camera_image with the function old signature."""
+        if self._warned_old_signature:
+            return
+        _LOGGER.warning(
+            "The camera entity %s does not support requesting width and height, please open an issue with the integration author",
+            self.entity_id,
+        )
+        self._warned_old_signature = True
 
     async def handle_async_still_stream(
         self, request: web.Request, interval: float
@@ -529,14 +602,19 @@ class CameraImageView(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
-        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
-                image = await camera.async_camera_image()
-
-            if image:
-                return web.Response(body=image, content_type=camera.content_type)
-
-        raise web.HTTPInternalServerError()
+        width = request.query.get("width")
+        height = request.query.get("height")
+        try:
+            image = await _async_get_image(
+                camera,
+                CAMERA_IMAGE_TIMEOUT,
+                int(width) if width else None,
+                int(height) if height else None,
+            )
+        except (HomeAssistantError, ValueError) as ex:
+            raise web.HTTPInternalServerError() from ex
+        else:
+            return web.Response(body=image.content, content_type=image.content_type)
 
 
 class CameraMjpegStream(CameraView):

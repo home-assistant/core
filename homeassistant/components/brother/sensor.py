@@ -64,7 +64,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         if self.entity_description.key == ATTR_UPTIME:
             return cast(

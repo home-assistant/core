@@ -1,27 +1,27 @@
 {
-  "config": {
-    "abort": {
-      "already_configured": "Account already configured",
-      "kamereon_no_account": "Unable to find Kamereon account."
-    },
-    "error": {
-      "invalid_credentials": "Invalid credentials."
-    },
-    "step": {
-      "kamereon": {
-        "data": {
-          "kamereon_account_id": "Kamereon account id"
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "kamereon_no_account": "Unable to find Kamereon account."
         },
-        "title": "Select Kamereon account id"
-      },
-      "user": {
-        "data": {
-          "locale": "Locale",
-          "username": "Email",
-          "password": "Password"
+        "error": {
+            "invalid_credentials": "Invalid authentication"
         },
-        "title": "Set Renault credentials"
-      }
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon account id"
+                },
+                "title": "Select Kamereon account id"
+            },
+            "user": {
+                "data": {
+                    "locale": "Locale",
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "title": "Set Renault credentials"
+            }
+        }
     }
-  }
 }

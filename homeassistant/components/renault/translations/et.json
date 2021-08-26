@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "kamereon_no_account": "Kamereoni kontot ei leitud."
+        },
+        "error": {
+            "invalid_credentials": "Tuvastamine nurjus"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereoni konto ID"
+                },
+                "title": "Vali Kamereoni konto ID"
+            },
+            "user": {
+                "data": {
+                    "locale": "Riigi kood (n\u00e4iteks EE)",
+                    "password": "Salas\u00f5na",
+                    "username": "E-posti aadress"
+                },
+                "title": "M\u00e4\u00e4ra Renault sidumise parameetrid"
+            }
+        }
+    }
+}

@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mfa": "Codice autenticazione a pi\u00f9 fattori MFA (facoltativo)",
                     "password": "Password",
                     "username": "E-mail"
                 },

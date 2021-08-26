@@ -175,7 +175,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
             raise InvalidAuth() from ex
-        _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
+        _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         raise CannotConnect() from ex
     finally:
         await async_client.aclose()

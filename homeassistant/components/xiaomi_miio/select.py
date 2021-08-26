@@ -1,11 +1,17 @@
 """Support led_brightness for Mi Air Humidifier."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 
+from miio.airfresh import LedBrightness as AirfreshLedBrightness
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
 from miio.airhumidifier_miot import LedBrightness as AirhumidifierMiotLedBrightness
+from miio.airpurifier import LedBrightness as AirpurifierLedBrightness
+from miio.airpurifier_miot import LedBrightness as AirpurifierMiotLedBrightness
+from miio.fan import LedBrightness as FanLedBrightness
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import callback
 
 from .const import (
@@ -16,11 +22,18 @@ from .const import (
     FEATURE_SET_LED_BRIGHTNESS,
     KEY_COORDINATOR,
     KEY_DEVICE,
-    MODEL_AIRHUMIDIFIER_CA1,
-    MODEL_AIRHUMIDIFIER_CA4,
-    MODEL_AIRHUMIDIFIER_CB1,
-    MODELS_HUMIDIFIER,
-    SERVICE_SET_LED_BRIGHTNESS,
+    MODEL_AIRFRESH_VA2,
+    MODEL_AIRPURIFIER_M1,
+    MODEL_AIRPURIFIER_M2,
+    MODEL_FAN_SA1,
+    MODEL_FAN_V2,
+    MODEL_FAN_V3,
+    MODEL_FAN_ZA1,
+    MODEL_FAN_ZA3,
+    MODEL_FAN_ZA4,
+    MODELS_HUMIDIFIER_MIIO,
+    MODELS_HUMIDIFIER_MIOT,
+    MODELS_PURIFIER_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -28,31 +41,27 @@ ATTR_LED_BRIGHTNESS = "led_brightness"
 
 
 LED_BRIGHTNESS_MAP = {"Bright": 0, "Dim": 1, "Off": 2}
-LED_BRIGHTNESS_MAP_MIOT = {"Bright": 2, "Dim": 1, "Off": 0}
+LED_BRIGHTNESS_MAP_HUMIDIFIER_MIOT = {"Bright": 2, "Dim": 1, "Off": 0}
 LED_BRIGHTNESS_REVERSE_MAP = {val: key for key, val in LED_BRIGHTNESS_MAP.items()}
-LED_BRIGHTNESS_REVERSE_MAP_MIOT = {
-    val: key for key, val in LED_BRIGHTNESS_MAP_MIOT.items()
+LED_BRIGHTNESS_REVERSE_MAP_HUMIDIFIER_MIOT = {
+    val: key for key, val in LED_BRIGHTNESS_MAP_HUMIDIFIER_MIOT.items()
 }
 
 
 @dataclass
-class SelectorType:
-    """Class that holds device specific info for a xiaomi aqara or humidifier selectors."""
+class XiaomiMiioSelectDescription(SelectEntityDescription):
+    """A class that describes select entities."""
 
-    name: str = None
-    icon: str = None
-    short_name: str = None
-    options: list = None
-    service: str = None
+    options: tuple = ()
 
 
 SELECTOR_TYPES = {
-    FEATURE_SET_LED_BRIGHTNESS: SelectorType(
-        name="Led brightness",
+    FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioSelectDescription(
+        key=ATTR_LED_BRIGHTNESS,
+        name="Led Brightness",
         icon="mdi:brightness-6",
-        short_name=ATTR_LED_BRIGHTNESS,
-        options=["Bright", "Dim", "Off"],
-        service=SERVICE_SET_LED_BRIGHTNESS,
+        device_class="xiaomi_miio__led_brightness",
+        options=("bright", "dim", "off"),
     ),
 }
 
@@ -65,28 +74,40 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
-    if model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+    if model in MODELS_HUMIDIFIER_MIIO:
         entity_class = XiaomiAirHumidifierSelector
-    elif model in [MODEL_AIRHUMIDIFIER_CA4]:
+    elif model in MODELS_HUMIDIFIER_MIOT:
         entity_class = XiaomiAirHumidifierMiotSelector
-    elif model in MODELS_HUMIDIFIER:
-        entity_class = XiaomiAirHumidifierSelector
+    elif model in [MODEL_AIRPURIFIER_M1, MODEL_AIRPURIFIER_M2]:
+        entity_class = XiaomiAirPurifierSelector
+    elif model in MODELS_PURIFIER_MIOT:
+        entity_class = XiaomiAirPurifierMiotSelector
+    elif model == MODEL_AIRFRESH_VA2:
+        entity_class = XiaomiAirFreshSelector
+    elif model in (
+        MODEL_FAN_ZA1,
+        MODEL_FAN_ZA3,
+        MODEL_FAN_ZA4,
+        MODEL_FAN_SA1,
+        MODEL_FAN_V2,
+        MODEL_FAN_V3,
+    ):
+        entity_class = XiaomiFanSelector
     else:
         return
 
-    for selector in SELECTOR_TYPES.values():
-        entities.append(
-            entity_class(
-                f"{config_entry.title} {selector.name}",
-                device,
-                config_entry,
-                f"{selector.short_name}_{config_entry.unique_id}",
-                selector,
-                coordinator,
-            )
+    description = SELECTOR_TYPES[FEATURE_SET_LED_BRIGHTNESS]
+    entities.append(
+        entity_class(
+            f"{config_entry.title} {description.name}",
+            device,
+            config_entry,
+            f"{description.key}_{config_entry.unique_id}",
+            hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+            description,
         )
+    )
 
     async_add_entities(entities)
 
@@ -94,12 +115,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     """Representation of a generic Xiaomi attribute selector."""
 
-    def __init__(self, name, device, entry, unique_id, selector, coordinator):
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator)
-        self._attr_icon = selector.icon
-        self._controller = selector
-        self._attr_options = self._controller.options
+        self._attr_options = list(description.options)
+        self.entity_description = description
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
@@ -113,33 +133,29 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
 
-    def __init__(self, name, device, entry, unique_id, controller, coordinator):
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the plug switch."""
-        super().__init__(name, device, entry, unique_id, controller, coordinator)
+        super().__init__(name, device, entry, unique_id, coordinator, description)
         self._current_led_brightness = self._extract_value_from_attribute(
-            self.coordinator.data, self._controller.short_name
+            self.coordinator.data, self.entity_description.key
         )
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._current_led_brightness = self._extract_value_from_attribute(
-            self.coordinator.data, self._controller.short_name
+            self.coordinator.data, self.entity_description.key
         )
         self.async_write_ha_state()
 
     @property
     def current_option(self):
         """Return the current option."""
-        return self.led_brightness
+        return self.led_brightness.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
-        if option not in self.options:
-            raise ValueError(
-                f"Selection '{option}' is not a valid {self._controller.name}"
-            )
-        await self.async_set_led_brightness(option)
+        await self.async_set_led_brightness(option.title())
 
     @property
     def led_brightness(self):
@@ -163,14 +179,76 @@ class XiaomiAirHumidifierMiotSelector(XiaomiAirHumidifierSelector):
     @property
     def led_brightness(self):
         """Return the current led brightness."""
-        return LED_BRIGHTNESS_REVERSE_MAP_MIOT.get(self._current_led_brightness)
+        return LED_BRIGHTNESS_REVERSE_MAP_HUMIDIFIER_MIOT.get(
+            self._current_led_brightness
+        )
 
-    async def async_set_led_brightness(self, brightness: str):
+    async def async_set_led_brightness(self, brightness: str) -> None:
         """Set the led brightness."""
         if await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            AirhumidifierMiotLedBrightness(LED_BRIGHTNESS_MAP_MIOT[brightness]),
+            AirhumidifierMiotLedBrightness(
+                LED_BRIGHTNESS_MAP_HUMIDIFIER_MIOT[brightness]
+            ),
         ):
-            self._current_led_brightness = LED_BRIGHTNESS_MAP_MIOT[brightness]
+            self._current_led_brightness = LED_BRIGHTNESS_MAP_HUMIDIFIER_MIOT[
+                brightness
+            ]
+            self.async_write_ha_state()
+
+
+class XiaomiAirPurifierSelector(XiaomiAirHumidifierSelector):
+    """Representation of a Xiaomi Air Purifier (MIIO protocol) selector."""
+
+    async def async_set_led_brightness(self, brightness: str) -> None:
+        """Set the led brightness."""
+        if await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness,
+            AirpurifierLedBrightness(LED_BRIGHTNESS_MAP[brightness]),
+        ):
+            self._current_led_brightness = LED_BRIGHTNESS_MAP[brightness]
+            self.async_write_ha_state()
+
+
+class XiaomiAirPurifierMiotSelector(XiaomiAirHumidifierSelector):
+    """Representation of a Xiaomi Air Purifier (MiOT protocol) selector."""
+
+    async def async_set_led_brightness(self, brightness: str) -> None:
+        """Set the led brightness."""
+        if await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness,
+            AirpurifierMiotLedBrightness(LED_BRIGHTNESS_MAP[brightness]),
+        ):
+            self._current_led_brightness = LED_BRIGHTNESS_MAP[brightness]
+            self.async_write_ha_state()
+
+
+class XiaomiFanSelector(XiaomiAirHumidifierSelector):
+    """Representation of a Xiaomi Fan (MIIO protocol) selector."""
+
+    async def async_set_led_brightness(self, brightness: str) -> None:
+        """Set the led brightness."""
+        if await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness,
+            FanLedBrightness(LED_BRIGHTNESS_MAP[brightness]),
+        ):
+            self._current_led_brightness = LED_BRIGHTNESS_MAP[brightness]
+            self.async_write_ha_state()
+
+
+class XiaomiAirFreshSelector(XiaomiAirHumidifierSelector):
+    """Representation of a Xiaomi Air Fresh selector."""
+
+    async def async_set_led_brightness(self, brightness: str) -> None:
+        """Set the led brightness."""
+        if await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness,
+            AirfreshLedBrightness(LED_BRIGHTNESS_MAP[brightness]),
+        ):
+            self._current_led_brightness = LED_BRIGHTNESS_MAP[brightness]
             self.async_write_ha_state()

@@ -82,7 +82,7 @@ async def test_abort_if_existing_entry(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 
-    result = await flow.async_step_import()
+    result = await flow.async_step_import({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"
 

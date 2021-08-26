@@ -6,6 +6,9 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Voulez-vous configurer cet appareil Guardian\u00a0?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Adresse IP",

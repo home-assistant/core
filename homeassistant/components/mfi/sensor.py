@@ -88,7 +88,7 @@ class MfiSensor(SensorEntity):
         return self._port.label
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         try:
             tag = self._port.tag
@@ -115,7 +115,7 @@ class MfiSensor(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         try:
             tag = self._port.tag

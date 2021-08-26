@@ -96,7 +96,7 @@ async def test_sensors(
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_production_now"
-    assert state.state == "300.0"
+    assert state.state == "300000"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Estimated Power Production - Now"
     )
@@ -142,7 +142,7 @@ async def test_sensors(
     assert device_entry.manufacturer == "Forecast.Solar"
     assert device_entry.name == "Solar Production Forecast"
     assert device_entry.entry_type == ENTRY_TYPE_SERVICE
-    assert not device_entry.model
+    assert device_entry.model == "public"
     assert not device_entry.sw_version
 
 
@@ -175,17 +175,17 @@ async def test_disabled_by_default(
         (
             "power_production_next_12hours",
             "Estimated Power Production - Next 12 Hours",
-            "600.0",
+            "600000",
         ),
         (
             "power_production_next_24hours",
             "Estimated Power Production - Next 24 Hours",
-            "700.0",
+            "700000",
         ),
         (
             "power_production_next_hour",
             "Estimated Power Production - Next Hour",
-            "400.0",
+            "400000",
         ),
     ],
 )

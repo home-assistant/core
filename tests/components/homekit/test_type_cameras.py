@@ -7,6 +7,7 @@ from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components import camera, ffmpeg
+from homeassistant.components.camera.img_util import TurboJPEGSingleton
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
@@ -26,14 +27,13 @@ from homeassistant.components.homekit.const import (
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
 )
-from homeassistant.components.homekit.img_util import TurboJPEGSingleton
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.components.homekit.type_switches import Switch
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from .common import mock_turbo_jpeg
+from tests.components.camera.common import mock_turbo_jpeg
 
 MOCK_START_STREAM_TLV = "ARUCAQEBEDMD1QMXzEaatnKSQ2pxovYCNAEBAAIJAQECAgECAwEAAwsBAgAFAgLQAgMBHgQXAQFjAgQ768/RAwIrAQQEAAAAPwUCYgUDLAEBAwIMAQEBAgEAAwECBAEUAxYBAW4CBCzq28sDAhgABAQAAKBABgENBAEA"
 MOCK_END_POINTS_TLV = "ARAzA9UDF8xGmrZykkNqcaL2AgEAAxoBAQACDTE5Mi4xNjguMjA4LjUDAi7IBAKkxwQlAQEAAhDN0+Y0tZ4jzoO0ske9UsjpAw6D76oVXnoi7DbawIG4CwUlAQEAAhCyGcROB8P7vFRDzNF2xrK1Aw6NdcLugju9yCfkWVSaVAYEDoAsAAcEpxV8AA=="

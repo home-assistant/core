@@ -143,6 +143,7 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
-        return await account_link.async_fetch_access_token(
+        new_token = await account_link.async_fetch_access_token(
             self.hass.data[DOMAIN], self.service, token["refresh_token"]
         )
+        return {**token, **new_token}

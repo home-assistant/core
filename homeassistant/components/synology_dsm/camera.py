@@ -123,7 +123,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         """Return the camera motion detection status."""
         return self.camera_data.is_motion_detection_enabled  # type: ignore[no-any-return]
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         _LOGGER.debug(
             "SynoDSMCamera.camera_image(%s)",
