@@ -115,7 +115,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._brightness = None
         self._state = None
-        self._color_modes = None
+        self._color_mode = None
         self._supported_color_modes = set()
         self._supported_features = None
         self._delay = delay
