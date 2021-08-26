@@ -9,7 +9,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
-    CONF_TRACKED_LIST,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -279,12 +278,10 @@ async def test_options_flow(hass, service):
         result["flow_id"],
         user_input={
             CONF_CONSIDER_HOME: 1800,
-            CONF_TRACKED_LIST: "ab:cd:ef:gh:ij:kl, 12:34:56:78:90:ab",
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         CONF_CONSIDER_HOME: 1800,
-        CONF_TRACKED_LIST: "ab:cd:ef:gh:ij:kl, 12:34:56:78:90:ab",
     }

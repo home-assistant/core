@@ -14,7 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -27,7 +26,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CONSIDER_HOME,
-    CONF_TRACKED_LIST,
     DEFAULT_CONSIDER_HOME,
     DOMAIN,
     MODELS_V2,
@@ -37,23 +35,6 @@ from .errors import CannotLoginException
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def convert_tracked_list(tracked_list_str):
-    """Convert tracked list string to a list."""
-    tracked_list = []
-    tracked_list_unformatted = []
-
-    # remove '[' and ']' chars
-    tracked_list_str = tracked_list_str.replace("]", "").replace("[", "")
-
-    if tracked_list_str:
-        tracked_list_unformatted = cv.ensure_list_csv(tracked_list_str)
-
-    for mac in tracked_list_unformatted:
-        tracked_list.append(format_mac(mac))
-
-    return tracked_list
 
 
 def get_api(
@@ -132,9 +113,6 @@ class NetgearRouter:
         self._method_version = 1
         consider_home_int = entry.options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
-        )
-        self._tracked_list = convert_tracked_list(
-            entry.options.get(CONF_TRACKED_LIST, "")
         )
         self._consider_home = timedelta(seconds=consider_home_int)
 
@@ -219,9 +197,6 @@ class NetgearRouter:
             device_mac = format_mac(ntg_device.mac)
 
             if self._method_version == 2 and not ntg_device.link_rate:
-                continue
-
-            if self._tracked_list and device_mac not in self._tracked_list:
                 continue
 
             if not self.devices.get(device_mac):

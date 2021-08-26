@@ -7,9 +7,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_TRACKED_LIST, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .errors import CannotLoginException
-from .router import NetgearRouter, convert_tracked_list
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,18 +61,6 @@ async def _async_remove_untracked_registries(
     hass: HomeAssistantType, entry: ConfigEntry
 ):
     """Remove entities and devices that are no longer tracked from the registries."""
-    tracked_list = convert_tracked_list(entry.options.get(CONF_TRACKED_LIST, ""))
-    if not tracked_list:
-        return
-
-    # Remove entities that are no longer tracked
-    entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    tracked_list_tuple = tuple(tracked_list)
-    for entity_entry in entries:
-        if not entity_entry.unique_id.startswith(tracked_list_tuple):
-            entity_registry.async_remove(entity_entry.entity_id)
-
     # Remove devices that are no longer tracked
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)

@@ -34,9 +34,7 @@
         "title": "Netgear",
         "description": "Specify optional settings",
         "data": {
-          "method_version": "Update method version",
-          "consider_home": "Consider home time (seconds)",
-          "tracked_list": "Include list of MAC-addresses (',' seperated), leave empty to track all"
+          "consider_home": "Consider home time (seconds)"
         }
       }
     }

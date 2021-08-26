@@ -18,7 +18,6 @@ from homeassistant.core import callback
 
 from .const import (  # pylint: disable=unused-import
     CONF_CONSIDER_HOME,
-    CONF_TRACKED_LIST,
     DEFAULT_CONSIDER_HOME,
     DOMAIN,
 )
@@ -68,14 +67,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): int,
-                vol.Optional(
-                    CONF_TRACKED_LIST,
-                    description={
-                        "suggested_value": self.config_entry.options.get(
-                            CONF_TRACKED_LIST, ""
-                        )
-                    },
-                ): str,
             }
         )
 
