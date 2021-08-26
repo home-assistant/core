@@ -859,7 +859,12 @@ class YeelightColorLightWithoutNightlightSwitch(
 
     @property
     def _brightness_property(self):
-        return "current_brightness"
+        # If the nightlight is not active, we do not
+        # want to "current_brightness" since it will check
+        # "bg_power" and main light could still be on
+        if self.device.is_nightlight_enabled:
+            return "current_brightness"
+        return super()._brightness_property
 
 
 class YeelightColorLightWithNightlightSwitch(
@@ -883,7 +888,12 @@ class YeelightWhiteTempWithoutNightlightSwitch(
 
     @property
     def _brightness_property(self):
-        return "current_brightness"
+        # If the nightlight is not active, we do not
+        # want to "current_brightness" since it will check
+        # "bg_power" and main light could still be on
+        if self.device.is_nightlight_enabled:
+            return "current_brightness"
+        return super()._brightness_property
 
 
 class YeelightWithNightLight(
