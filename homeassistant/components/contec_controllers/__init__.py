@@ -11,6 +11,7 @@ from ContecControllers.ControllerManager import ControllerManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .contec_tracer import ContecTracer
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Failed to connect to Contec Controllers at address {controllersIp},{controllersPort}"
         )
         await controllerManager.CloseAsync()
-        return False
+        raise ConfigEntryNotReady
 
     await controllerManager.DiscoverEntitiesAsync()
 

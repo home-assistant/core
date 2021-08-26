@@ -23,29 +23,23 @@ async def async_setup_entry(
 ):
     """Set up the Contec Lights."""
     controllerManager: ControllerManager = hass.data[DOMAIN][config_entry.entry_id]
-    allLights: List[ContecLight] = []
-    for onOff in controllerManager.OnOffActivations:
-        allLights.append(ContecLight(onOff))
+    allLights: List[ContecLight] = [
+        ContecLight(onOff) for onOff in controllerManager.OnOffActivations
+    ]
     async_add_entities(allLights)
 
 
 class ContecLight(LightEntity):
     """Representation of a Contec light."""
 
-    _id: str
     _name: str
     _onOffActivation: ContecOnOffActivation
 
     def __init__(self, onOffActivation: ContecOnOffActivation):
         """Initialize an ContecLight."""
         self._onOffActivation = onOffActivation
-        self._id = f"light_{onOffActivation.ControllerUnit.UnitId}-{onOffActivation.StartActivationNumber}"
-        self._name = f"Contec Light {self._id}"
-
-        def StateUpdated(isOn: bool):
-            self.schedule_update_ha_state()
-
-        self._onOffActivation.SetStateChangedCallback(StateUpdated)
+        self._attr_unique_id = f"light_{onOffActivation.ControllerUnit.UnitId}-{onOffActivation.StartActivationNumber}"
+        self._name = f"Contec Light {self._attr_unique_id}"
 
     @property
     def name(self) -> str:
@@ -62,10 +56,13 @@ class ContecLight(LightEntity):
         """Return true if light is on."""
         return self._onOffActivation.IsOn
 
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._id
+    async def async_added_to_hass(self):
+        """Subscribe to changes in on/off activation."""
+
+        def StateUpdated(isOn: bool):
+            self.async_write_ha_state()
+
+        self._onOffActivation.SetStateChangedCallback(StateUpdated)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Instruct the light to turn on."""

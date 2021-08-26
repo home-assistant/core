@@ -3,11 +3,7 @@
   "name": "Contec Controllers",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/contec_controllers",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
+  "requirements": ["ContecControllers==1.0.0"],
   "codeowners": [
     "@havivi1986"
   ],
