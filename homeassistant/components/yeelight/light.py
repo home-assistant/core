@@ -67,9 +67,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YEELIGHT = SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
 
-PROP_POWER = "power"
-PROP_MAIN_POWER = "main_power"
-
 ATTR_MINUTES = "minutes"
 
 SERVICE_SET_MODE = "set_mode"
@@ -165,9 +162,6 @@ EFFECTS_MAP = {
     EFFECT_HAPPY_BIRTHDAY: flows.happy_birthday,
     EFFECT_CANDLE_FLICKER: flows.candle_flicker,
 }
-
-COLOR_MODE_MAP = {"1": COLOR_MODE_RGB, "2": COLOR_MODE_COLOR_TEMP, "3": COLOR_MODE_HS}
-
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
@@ -400,15 +394,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         self._effect = None
 
         model_specs = self._bulb.get_model_specs()
-        _LOGGER.debug("model specs for %s: %s", self.entity_id, model_specs)
         self._min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
         self._max_mireds = kelvin_to_mired(model_specs["color_temp"]["min"])
-        _LOGGER.debug(
-            "model specs for %s: mired %s:%s",
-            self.entity_id,
-            self._min_mireds,
-            self._max_mireds,
-        )
 
         self._light_type = LightType.Main
 
@@ -544,7 +531,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     @property
     def _power_property(self):
-        return PROP_POWER
+        return "power"
 
     @property
     def _turn_on_power_mode(self):
@@ -574,7 +561,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     async def async_update(self):
         """Update light properties."""
-        await self.device.async_update(False)
+        await self.device.async_update()
 
     def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
@@ -785,10 +772,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
-
         # Some devices will not send back the off state so we need to force a refresh
         if self.is_on and (
-            self._power_property == PROP_MAIN_POWER
+            self._power_property == "main_power"
             or isinstance(self, YeelightAmbientLight)
         ):
             await self.device.async_update(True)
@@ -831,10 +817,14 @@ class YeelightColorLightSupport(YeelightGenericLight):
     @property
     def color_mode(self):
         """Return the color mode."""
-        prop_value = str(self._get_property("color_mode"))
-        if color_mode := COLOR_MODE_MAP.get(prop_value):
-            return color_mode
-        _LOGGER.debug("Light reported unknown color mode: %s", prop_value)
+        color_mode = int(self._get_property("color_mode"))
+        if color_mode == 1:  # RGB
+            return COLOR_MODE_RGB
+        if color_mode == 2:  # color temperature
+            return COLOR_MODE_COLOR_TEMP
+        if color_mode == 3:  # hsv
+            return COLOR_MODE_HS
+        _LOGGER.debug("Light reported unknown color mode: %s", color_mode)
         return COLOR_MODE_UNKNOWN
 
     @property
@@ -951,7 +941,7 @@ class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
 
     @property
     def _power_property(self):
-        return PROP_MAIN_POWER
+        return "main_power"
 
 
 class YeelightNightLightModeWithoutBrightnessControl(YeelightNightLightMode):
@@ -977,7 +967,7 @@ class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwi
 
     @property
     def _power_property(self):
-        return PROP_MAIN_POWER
+        return "main_power"
 
 
 class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
@@ -988,7 +978,7 @@ class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
 
     @property
     def _power_property(self):
-        return PROP_MAIN_POWER
+        return "main_power"
 
 
 class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
@@ -1020,6 +1010,9 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         return "bright"
 
     def _get_property(self, prop, default=None):
-        return super()._get_property(
-            self.PROPERTIES_MAPPING.get(prop, f"bg_{prop}"), default
-        )
+        bg_prop = self.PROPERTIES_MAPPING.get(prop)
+
+        if not bg_prop:
+            bg_prop = f"bg_{prop}"
+
+        return super()._get_property(bg_prop, default)
