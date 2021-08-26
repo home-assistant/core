@@ -4,7 +4,7 @@ config2/*
 homeassistant/components/ais_updater/scripts/fix_script.sh
 
 tests/testing_config/deps
-tests/testing_config/home-assistant.log
+tests/testing_config/home-assistant.log*
 
 # hass-release
 data/

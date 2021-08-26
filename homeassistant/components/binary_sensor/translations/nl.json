@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} detecteert geen probleem",
             "is_no_smoke": "{entity_name} detecteert geen rook",
             "is_no_sound": "{entity_name} detecteert geen geluid",
+            "is_no_update": "{entity_name} is up-to-date",
             "is_no_vibration": "{entity_name} detecteert geen trillingen",
             "is_not_bat_low": "{entity_name} batterij is normaal",
             "is_not_cold": "{entity_name} is niet koud",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} detecteert rook",
             "is_sound": "{entity_name} detecteert geluid",
             "is_unsafe": "{entity_name} is onveilig",
+            "is_update": "{entity_name} heeft een update beschikbaar",
             "is_vibration": "{entity_name} detecteert trillingen"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} gestopt met het detecteren van het probleem",
             "no_smoke": "{entity_name} gestopt met het detecteren van rook",
             "no_sound": "{entity_name} gestopt met het detecteren van geluid",
+            "no_update": "{entity_name} werd ge\u00fcpdatet",
             "no_vibration": "{entity_name} gestopt met het detecteren van trillingen",
             "not_bat_low": "{entity_name} batterij normaal",
             "not_cold": "{entity_name} werd niet koud",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} uitgeschakeld",
             "turned_on": "{entity_name} ingeschakeld",
             "unsafe": "{entity_name} werd onveilig",
+            "update": "{entity_name} kreeg een update beschikbaar",
             "vibration": "{entity_name} begon trillingen te detecteren"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Niet gedetecteerd",
             "on": "Gedetecteerd"
+        },
+        "update": {
+            "off": "Up-to-date",
+            "on": "Update beschikbaar"
         },
         "vibration": {
             "off": "Niet gedetecteerd",

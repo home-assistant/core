@@ -165,16 +165,16 @@ class APCUPSdSensor(SensorEntity):
         self.type = sensor_type
         self._attr_name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
         self._attr_icon = SENSOR_TYPES[self.type][2]
-        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][3]
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
         if self.type.upper() not in self._data.status:
-            self._attr_state = None
+            self._attr_native_value = None
         else:
-            self._attr_state, inferred_unit = infer_unit(
+            self._attr_native_value, inferred_unit = infer_unit(
                 self._data.status[self.type.upper()]
             )
-            if not self._attr_unit_of_measurement:
-                self._attr_unit_of_measurement = inferred_unit
+            if not self._attr_native_unit_of_measurement:
+                self._attr_native_unit_of_measurement = inferred_unit

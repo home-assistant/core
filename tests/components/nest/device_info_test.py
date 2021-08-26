@@ -93,11 +93,11 @@ def test_device_invalid_type():
 
     device_info = NestDeviceInfo(device)
     assert device_info.device_name == "My Doorbell"
-    assert device_info.device_model == "Unknown"
+    assert device_info.device_model is None
     assert device_info.device_brand == "Google Nest"
     assert device_info.device_info == {
         "identifiers": {("nest", "some-device-id")},
         "name": "My Doorbell",
         "manufacturer": "Google Nest",
-        "model": "Unknown",
+        "model": None,
     }

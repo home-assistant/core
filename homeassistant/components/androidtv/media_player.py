@@ -461,7 +461,7 @@ class ADBDevice(MediaPlayerEntity):
 
     async def async_get_media_image(self):
         """Fetch current playing image."""
-        if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
+        if not self._screencap or self.state in (STATE_OFF, None) or not self.available:
             return None, None
 
         media_data = await self._adb_screencap()

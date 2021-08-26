@@ -75,11 +75,11 @@ class PlaatoSensor(PlaatoEntity, SensorEntity):
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._sensor_data.sensors.get(self._sensor_type)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor_data.get_unit_of_measurement(self._sensor_type)

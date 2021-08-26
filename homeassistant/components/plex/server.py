@@ -144,11 +144,11 @@ class PlexServer:
         config_entry_update_needed = False
 
         def _connect_with_token():
-            available_servers = [
-                (x.name, x.clientIdentifier)
-                for x in self.account.resources()
-                if "server" in x.provides and x.presence
+            all_servers = [
+                x for x in self.account.resources() if "server" in x.provides
             ]
+            servers = [x for x in all_servers if x.presence] or all_servers
+            available_servers = [(x.name, x.clientIdentifier) for x in servers]
 
             if not available_servers:
                 raise NoServersFound
@@ -291,10 +291,10 @@ class PlexServer:
             media = self.fetch_item(rating_key)
             active_session.update_media(media)
 
-        if active_session.media_content_id != rating_key and state in [
+        if active_session.media_content_id != rating_key and state in (
             "playing",
             "paused",
-        ]:
+        ):
             await self.hass.async_add_executor_job(update_with_new_media)
 
         async_dispatcher_send(

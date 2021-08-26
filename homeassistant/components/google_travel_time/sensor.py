@@ -196,7 +196,7 @@ class GoogleTravelTimeSensor(SensorEntity):
             await self.first_update()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._matrix is None:
             return None
@@ -250,7 +250,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         return res
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 

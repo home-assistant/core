@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "description": "Los tokens de autenticaci\u00f3n dejaron de ser v\u00e1lidos, inicie sesi\u00f3n para volver a crearlos."
+            },
+            "user": {
+                "data": {
+                    "url": "Sitio web"
+                }
+            }
+        }
+    }
+}

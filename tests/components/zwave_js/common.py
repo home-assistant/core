@@ -1,6 +1,4 @@
 """Provide common test tools for Z-Wave JS."""
-from datetime import datetime, timezone
-
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 HUMIDITY_SENSOR = "sensor.multisensor_6_humidity"
 POWER_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
@@ -16,7 +14,7 @@ NOTIFICATION_MOTION_BINARY_SENSOR = (
 )
 NOTIFICATION_MOTION_SENSOR = "sensor.multisensor_6_home_security_motion_sensor_status"
 INDICATOR_SENSOR = "sensor.z_wave_thermostat_indicator_value"
-BASIC_SENSOR = "sensor.livingroomlight_basic"
+BASIC_NUMBER_ENTITY = "number.livingroomlight_basic"
 PROPERTY_DOOR_STATUS_BINARY_SENSOR = (
     "binary_sensor.august_smart_lock_pro_3rd_gen_the_current_status_of_the_door"
 )
@@ -35,6 +33,3 @@ ID_LOCK_CONFIG_PARAMETER_SENSOR = (
 ZEN_31_ENTITY = "light.kitchen_under_cabinet_lights"
 METER_ENERGY_SENSOR = "sensor.smart_switch_6_electric_consumed_kwh"
 METER_VOLTAGE_SENSOR = "sensor.smart_switch_6_electric_consumed_v"
-
-DATETIME_ZERO = datetime(1970, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-DATETIME_LAST_RESET = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)

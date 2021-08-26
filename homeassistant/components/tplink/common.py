@@ -1,7 +1,6 @@
 """Common code for tplink."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Callable
 
@@ -183,16 +182,3 @@ def add_available_devices(
 
     hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = devices_unavailable
     return entities_ready
-
-
-def get_time_offset(device: SmartDevice) -> timedelta:
-    """Get the time offset since last device reset (local midnight)."""
-    device_time = device.time.replace(microsecond=0)
-    offset = device_time - device_time.replace(hour=0, minute=0, second=0)
-    _LOGGER.debug(
-        "%s local time is %s, offset from midnight is %s",
-        device.alias,
-        device_time.strftime("%Y/%m/%d %H:%M:%S"),
-        str(offset),
-    )
-    return offset

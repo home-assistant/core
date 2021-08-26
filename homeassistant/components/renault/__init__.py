@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     await renault_hub.async_initialise(config_entry)
 
-    hass.data[DOMAIN][config_entry.unique_id] = renault_hub
+    hass.data[DOMAIN][config_entry.entry_id] = renault_hub
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -40,6 +40,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.unique_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
