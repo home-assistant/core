@@ -77,6 +77,8 @@ async def async_setup_entry(
 class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
     """Representation of a device connected to a Netgear router."""
 
+    _attr_entity_registry_enabled_default = False
+
     def __init__(self, router: NetgearRouter, device, attribute) -> None:
         """Initialize a Netgear device."""
         super().__init__(router, device)
