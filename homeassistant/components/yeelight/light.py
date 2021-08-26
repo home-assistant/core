@@ -166,6 +166,9 @@ EFFECTS_MAP = {
     EFFECT_CANDLE_FLICKER: flows.candle_flicker,
 }
 
+COLOR_MODE_MAP = {"1": COLOR_MODE_RGB, "2": COLOR_MODE_COLOR_TEMP, "3": COLOR_MODE_HS}
+
+
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE = {
@@ -830,18 +833,10 @@ class YeelightColorLightSupport(YeelightGenericLight):
     @property
     def color_mode(self):
         """Return the color mode."""
-        prop_value = self._get_property("color_mode")
-        if not prop_value:
-            _LOGGER.debug("Light reported unknown color mode: %s", prop_value)
-            return COLOR_MODE_UNKNOWN
-        color_mode = int(prop_value)
-        if color_mode == 1:  # RGB
-            return COLOR_MODE_RGB
-        if color_mode == 2:  # color temperature
-            return COLOR_MODE_COLOR_TEMP
-        if color_mode == 3:  # hsv
-            return COLOR_MODE_HS
-        _LOGGER.debug("Light reported unknown color mode: %s", color_mode)
+        prop_value = str(self._get_property("color_mode"))
+        if color_mode := COLOR_MODE_MAP.get(prop_value):
+            return color_mode
+        _LOGGER.debug("Light reported unknown color mode: %s", prop_value)
         return COLOR_MODE_UNKNOWN
 
     @property
