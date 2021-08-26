@@ -145,7 +145,6 @@ UPDATE_REQUEST_PROPERTIES = [
     "power",
     "main_power",
     "bright",
-    "current_brightness",
     "ct",
     "rgb",
     "hue",
