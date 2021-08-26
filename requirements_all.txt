@@ -2043,7 +2043,7 @@ rfk101py==0.0.1
 rflink==0.0.58
 
 # homeassistant.components.ring
-ring_doorbell==0.6.2
+ring_doorbell==0.7.1
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2

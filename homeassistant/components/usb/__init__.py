@@ -127,7 +127,10 @@ class USBDiscovery:
             return
 
         monitor = Monitor.from_netlink(context)
-        monitor.filter_by(subsystem="tty")
+        try:
+            monitor.filter_by(subsystem="tty")
+        except ValueError:  # this fails on WSL
+            return
         observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
         )
