@@ -8,6 +8,7 @@ import voluptuous as vol
 import yeelight
 from yeelight import Bulb, BulbException, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
+from yeelight.main import DEFAULT_PROPS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -66,6 +67,8 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YEELIGHT = SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
+
+PROP_MAIN_POWER = "main_power"
 
 ATTR_MINUTES = "minutes"
 
@@ -784,9 +787,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             self.light_type,
         )
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
-        # Some devices will not send back the off state
-        # so we need to manually refresh
-        await self._bulb.async_get_properties()
+        if self._power_property == PROP_MAIN_POWER:
+            # Some devices will not send back the off state
+            # so we need to manually refresh
+            await self._bulb.async_get_properties([*DEFAULT_PROPS, PROP_MAIN_POWER])
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
@@ -950,7 +954,7 @@ class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
 
     @property
     def _power_property(self):
-        return "main_power"
+        return PROP_MAIN_POWER
 
 
 class YeelightNightLightModeWithoutBrightnessControl(YeelightNightLightMode):
@@ -976,7 +980,7 @@ class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwi
 
     @property
     def _power_property(self):
-        return "main_power"
+        return PROP_MAIN_POWER
 
 
 class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
@@ -987,7 +991,7 @@ class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
 
     @property
     def _power_property(self):
-        return "main_power"
+        return PROP_MAIN_POWER
 
 
 class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
