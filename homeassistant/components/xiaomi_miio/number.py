@@ -248,7 +248,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         )
         self.async_write_ha_state()
 
-    async def async_set_motor_speed(self, motor_speed: int = 400):
+    async def async_set_motor_speed(self, motor_speed: int = 400) -> bool:
         """Set the target motor speed."""
         return await self._try_command(
             "Setting the target motor speed of the miio device failed.",
@@ -256,7 +256,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             motor_speed,
         )
 
-    async def async_set_favorite_level(self, level: int = 1):
+    async def async_set_favorite_level(self, level: int = 1) -> bool:
         """Set the favorite level."""
         return await self._try_command(
             "Setting the favorite level of the miio device failed.",
@@ -264,7 +264,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             level,
         )
 
-    async def async_set_fan_level(self, level: int = 1):
+    async def async_set_fan_level(self, level: int = 1) -> bool:
         """Set the fan level."""
         return await self._try_command(
             "Setting the favorite level of the miio device failed.",
@@ -272,7 +272,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             level,
         )
 
-    async def async_set_volume(self, volume: int = 50):
+    async def async_set_volume(self, volume: int = 50) -> bool:
         """Set the volume."""
         return await self._try_command(
             "Setting the volume of the miio device failed.",
@@ -280,13 +280,13 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             volume,
         )
 
-    async def async_set_oscillation_angle(self, angle: int):
+    async def async_set_oscillation_angle(self, angle: int) -> bool:
         """Set the volume."""
         return await self._try_command(
             "Setting angle of the miio device failed.", self._device.set_angle, angle
         )
 
-    async def async_set_delay_off_countdown(self, delay_off_countdown: int):
+    async def async_set_delay_off_countdown(self, delay_off_countdown: int) -> bool:
         """Set the delay off countdown."""
         return await self._try_command(
             "Setting delay off miio device failed.",
