@@ -4,14 +4,15 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import exceptions
 
+from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ICON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
-    get_null_attribute,
+    get_no_data_icon,
     setup_renault_integration_vehicle,
     setup_renault_integration_vehicle_with_no_data,
     setup_renault_integration_vehicle_with_side_effect,
@@ -73,9 +74,9 @@ async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
         assert state.state == STATE_UNKNOWN
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        for attr in DYNAMIC_ATTRIBUTES:
-            expected_value = get_null_attribute(attr, expected_entity)
-            assert state.attributes.get(attr) == expected_value
+        # Check dynamic attributes:
+        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+        assert ATTR_LAST_UPDATE not in state.attributes.get(attr)
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -110,9 +111,9 @@ async def test_sensor_errors(hass: HomeAssistant, vehicle_type: str):
         assert state.state == STATE_UNAVAILABLE
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        for attr in DYNAMIC_ATTRIBUTES:
-            expected_value = get_null_attribute(attr, expected_entity)
-            assert state.attributes.get(attr) == expected_value
+        # Check dynamic attributes:
+        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
+        assert ATTR_LAST_UPDATE not in state.attributes.get(attr)
 
 
 async def test_sensor_access_denied(hass: HomeAssistant):

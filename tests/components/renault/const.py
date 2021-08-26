@@ -51,15 +51,10 @@ DYNAMIC_ATTRIBUTES = (
     ATTR_LAST_UPDATE,
 )
 
-EMPTY_ATTR_VALUES = {
-    ATTR_ICON: {
-        "sensor.charge_mode": "mdi:calendar-remove",
-        "sensor.charge_state": "mdi:flash-off",
-        "sensor.plug_state": "mdi:power-plug-off",
-    },
-    ATTR_LAST_UPDATE: {
-        "all": None,
-    },
+ICON_FOR_EMPTY_VALUES = {
+    "sensor.charge_mode": "mdi:calendar-remove",
+    "sensor.charge_state": "mdi:flash-off",
+    "sensor.plug_state": "mdi:power-plug-off",
 }
 
 # Mock config data to be used across multiple tests

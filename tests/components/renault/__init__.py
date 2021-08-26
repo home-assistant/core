@@ -11,6 +11,7 @@ from renault_api.renault_account import RenaultAccount
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
+    ATTR_ICON,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from .const import EMPTY_ATTR_VALUES, MOCK_CONFIG, MOCK_VEHICLES
+from .const import ICON_FOR_EMPTY_VALUES, MOCK_CONFIG, MOCK_VEHICLES
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -65,15 +66,10 @@ def get_fixtures(vehicle_type: str) -> dict[str, Any]:
     }
 
 
-def get_null_attribute(attr: str, expected_entity: MappingProxyType):
+def get_no_data_icon(expected_entity: MappingProxyType):
     """Check attribute for  icon for inactive sensors."""
     entity_id = expected_entity["entity_id"]
-    empty_values: MappingProxyType = EMPTY_ATTR_VALUES[attr]
-    if entity_id in empty_values:
-        return empty_values.get(entity_id)
-    if "all" in empty_values:
-        return empty_values.get("all")
-    return expected_entity.get(attr)
+    return ICON_FOR_EMPTY_VALUES.get(entity_id, expected_entity.get(ATTR_ICON))
 
 
 async def setup_renault_integration_simple(hass: HomeAssistant):
