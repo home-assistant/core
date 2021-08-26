@@ -122,6 +122,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for flow in self.hass.config_entries.flow.async_progress():
             if flow["handler"] == "deconz":
                 return self.async_abort(reason="not_zha_device")
+        for entry in self.hass.config_entries.async_entries("deconz"):
+            if entry.source != config_entries.SOURCE_IGNORE:
+                return self.async_abort(reason="not_zha_device")
 
         self._device_path = dev_path
         self._title = usb.human_readable_device_name(

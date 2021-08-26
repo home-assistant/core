@@ -7,7 +7,7 @@ import serial.tools.list_ports
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import setup
+from homeassistant import config_entries, setup
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER_URL,
@@ -269,6 +269,52 @@ async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_deconz_already_setup(detect_mock, hass):
+    """Test usb flow -- deconz setup."""
+    MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
+    """Test usb flow -- deconz setup."""
+    MockConfigEntry(
+        domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
+    ).add_to_hass(hass)
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
