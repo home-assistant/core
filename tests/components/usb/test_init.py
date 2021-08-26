@@ -38,6 +38,20 @@ def mock_docker():
         yield
 
 
+@pytest.fixture(name="venv")
+def mock_venv():
+    """Mock running Home Assistant in a venv container."""
+    with patch(
+        "homeassistant.components.usb.system_info.async_get_system_info",
+        return_value={
+            "hassio": False,
+            "docker": False,
+            "virtualenv": True,
+        },
+    ):
+        yield
+
+
 @pytest.mark.skipif(
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
@@ -604,6 +618,48 @@ async def test_non_matching_discovered_by_scanner_after_started(
         await hass.async_block_till_done()
 
     assert len(mock_config_flow.mock_calls) == 0
+
+
+@pytest.mark.skipif(
+    not sys.platform.startswith("linux"),
+    reason="Only works on linux",
+)
+async def test_observer_on_wsl_fallback_without_throwing_exception(
+    hass, hass_ws_client, venv
+):
+    """Test that observer on WSL failure results in fallback to scanning without raising an exception."""
+    new_usb = [{"domain": "test1", "vid": "3039"}]
+
+    mock_comports = [
+        MagicMock(
+            device=slae_sh_device.device,
+            vid=12345,
+            pid=12345,
+            serial_number=slae_sh_device.serial_number,
+            manufacturer=slae_sh_device.manufacturer,
+            description=slae_sh_device.description,
+        )
+    ]
+
+    with patch("pyudev.Context"), patch(
+        "pyudev.Monitor.filter_by", side_effect=ValueError
+    ), patch("homeassistant.components.usb.async_get_usb", return_value=new_usb), patch(
+        "homeassistant.components.usb.comports", return_value=mock_comports
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow:
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
 @pytest.mark.skipif(
