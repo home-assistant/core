@@ -794,7 +794,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             return
 
         _LOGGER.debug("Has duration, double checking")
-        await asyncio.sleep(duration + 0.1)
+        await asyncio.sleep(duration / 1000 + 0.1)
         if self.is_on:
             _LOGGER.debug("light still on after off trans")
             await self.device.async_turn_off(light_type=self.light_type)
