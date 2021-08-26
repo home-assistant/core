@@ -63,11 +63,8 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of this entity."""
-        if self.entity_description.coordinator == "battery":
-            last_update = (
-                getattr(self.coordinator.data, "timestamp")
-                if self.coordinator.data
-                else None
-            )
-            return {ATTR_LAST_UPDATE: last_update}
+        if self.entity_description.coordinator == "battery" and self.coordinator.data:
+            timestamp = getattr(self.coordinator.data, "timestamp")
+            if timestamp:
+                return {ATTR_LAST_UPDATE: timestamp}
         return None
