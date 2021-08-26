@@ -37,6 +37,33 @@ from homeassistant.data_entry_flow import (
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="async_get_addon_info_installed")
+def mock_async_get_addon_info_installed():
+    """Mock get add-on get addon."""
+    with patch(
+        "homeassistant.components.zha.config_flow.async_get_addon_info",
+        return_value={"version": "any"},
+    ) as get_addon_discovery_info:
+        yield get_addon_discovery_info
+
+
+@pytest.fixture(name="async_get_addon_info_not_installed")
+def mock_async_get_addon_info_not_installed():
+    """Mock get add-on get addon."""
+    with patch(
+        "homeassistant.components.zha.config_flow.async_get_addon_info",
+        return_value={"version": None},
+    ) as get_addon_discovery_info:
+        yield get_addon_discovery_info
+
+
+@pytest.fixture(name="supervisor")
+def mock_supervisor_fixture():
+    """Mock Supervisor."""
+    with patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True):
+        yield
+
+
 def com_port():
     """Mock of a serial port."""
     port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
@@ -300,6 +327,48 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
         domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
     ).add_to_hass(hass)
     await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
+
+
+async def test_discovery_via_usb_zigbee2mqtt_installed(
+    hass, supervisor, async_get_addon_info_installed
+):
+    """Test usb flow -- zigbee2mqtt installed."""
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_zha_device"
+
+
+async def test_discovery_via_usb_zigbee2mqtt_not_installed(
+    hass, supervisor, async_get_addon_info_not_installed
+):
+    """Test usb flow -- zigbee2mqtt not installed."""
     discovery_info = {
         "device": "/dev/ttyZIGBEE",
         "pid": "AAAA",
