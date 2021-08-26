@@ -394,8 +394,15 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         self._effect = None
 
         model_specs = self._bulb.get_model_specs()
+        _LOGGER.debug("model specs for %s: %s", self.entity_id, model_specs)
         self._min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
         self._max_mireds = kelvin_to_mired(model_specs["color_temp"]["min"])
+        _LOGGER.debug(
+            "model specs for %s: mired %s:%s",
+            self.entity_id,
+            self._min_mireds,
+            self._max_mireds,
+        )
 
         self._light_type = LightType.Main
 
