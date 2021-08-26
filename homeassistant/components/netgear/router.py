@@ -24,12 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_CONSIDER_HOME,
-    DEFAULT_CONSIDER_HOME,
-    DOMAIN,
-    MODELS_V2,
-)
+from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DOMAIN, MODELS_V2
 from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)

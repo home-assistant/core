@@ -7,10 +7,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.netgear.const import (
-    CONF_CONSIDER_HOME,
-    DOMAIN,
-)
+from homeassistant.components.netgear.const import CONF_CONSIDER_HOME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
