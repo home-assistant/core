@@ -794,6 +794,9 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             return
 
         _LOGGER.debug("Has duration, double checking")
+        # We want to give at least 0.1 seconds past the transition to make
+        # sure there is enough time to process the callback so we can avoid
+        # the additional off command if we do not need it.
         await asyncio.sleep(duration / 1000 + 0.1)
         if self.is_on:
             _LOGGER.debug("light still on after off trans")
