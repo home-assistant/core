@@ -35,7 +35,6 @@ from miio.gateway.gateway import GatewayException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
