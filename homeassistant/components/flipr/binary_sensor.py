@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FliprEntity
-from .const import CONF_FLIPR_ID, DOMAIN
+from .const import DOMAIN
 
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -32,9 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(
         FliprBinarySensor(
             coordinator,
-            config_entry.data[CONF_FLIPR_ID],
             description,
-            config_entry.entry_id,
         )
         for description in BINARY_SENSORS_TYPES
     )
@@ -46,12 +44,15 @@ class FliprBinarySensor(FliprEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        flipr_id: str,
         description: BinarySensorEntityDescription,
-        entry_id: str,
     ) -> None:
         """Initialize a Flipr sensor."""
-        super().__init__(coordinator, flipr_id, f"{description.key}-{entry_id}")
+        if coordinator.config_entry:
+            server_unique_id = coordinator.config_entry.entry_id
+        super().__init__(
+            coordinator,
+            f"{description.key}-{server_unique_id}",
+        )
         self.entity_description = description
 
     @property
@@ -61,11 +62,6 @@ class FliprBinarySensor(FliprEntity, BinarySensorEntity):
             self.coordinator.data[self.entity_description.key] == "TooLow"
             or self.coordinator.data[self.entity_description.key] == "TooHigh"
         )
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self.entity_description.device_class
 
     @property
     def name(self):

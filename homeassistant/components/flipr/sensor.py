@@ -14,21 +14,18 @@ from homeassistant.const import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FliprEntity
-from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="chlorine",
         name="Chlorine",
-        device_class=None,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
     ),
     SensorEntityDescription(
         key="ph",
         name="pH",
-        device_class=None,
-        native_unit_of_measurement=None,
         icon="mdi:pool",
     ),
     SensorEntityDescription(
@@ -36,19 +33,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Water Temp",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
     ),
     SensorEntityDescription(
         key="date_time",
         name="Last Measured",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        native_unit_of_measurement=None,
-        icon=None,
     ),
     SensorEntityDescription(
         key="red_ox",
         name="Red OX",
-        device_class=None,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
     ),
@@ -57,13 +50,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    flipr_id = config_entry.data[CONF_FLIPR_ID]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    sensors = [
-        FliprSensor(coordinator, flipr_id, description, config_entry.entry_id)
-        for description in SENSOR_TYPES
-    ]
+    sensors = [FliprSensor(coordinator, description) for description in SENSOR_TYPES]
     async_add_entities(sensors, True)
 
 
@@ -75,12 +64,15 @@ class FliprSensor(FliprEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        flipr_id: str,
         description: SensorEntityDescription,
-        entry_id: str,
     ) -> None:
         """Initialize a Flipr sensor."""
-        super().__init__(coordinator, flipr_id, f"{description.key}-{entry_id}")
+        if coordinator.config_entry:
+            server_unique_id = coordinator.config_entry.entry_id
+        super().__init__(
+            coordinator,
+            f"{description.key}-{server_unique_id}",
+        )
         self.entity_description = description
 
     @property
