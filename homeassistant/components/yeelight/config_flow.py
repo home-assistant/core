@@ -96,7 +96,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=async_format_model_id(self._discovered_model, self.unique_id),
-                data={CONF_ID: self.unique_id, CONF_HOST: self._discovered_ip},
+                data={
+                    CONF_ID: self.unique_id,
+                    CONF_HOST: self._discovered_ip,
+                    CONF_MODEL: self._discovered_model,
+                },
             )
 
         self._set_confirm_only()
@@ -129,6 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_ID: self.unique_id,
+                        CONF_MODEL: model,
                     },
                 )
 
@@ -151,7 +156,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = urlparse(capabilities["location"]).hostname
             return self.async_create_entry(
                 title=_async_unique_name(capabilities),
-                data={CONF_ID: unique_id, CONF_HOST: host},
+                data={
+                    CONF_ID: unique_id,
+                    CONF_HOST: host,
+                    CONF_MODEL: capabilities["model"],
+                },
             )
 
         configured_devices = {

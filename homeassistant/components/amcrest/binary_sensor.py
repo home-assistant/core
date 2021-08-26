@@ -232,8 +232,6 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to signals."""
-        assert self.hass is not None
-
         self._unsub_dispatcher.append(
             async_dispatcher_connect(
                 self.hass,
