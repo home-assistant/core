@@ -13,10 +13,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import TautulliDataUpdateCoordinator
 
@@ -68,14 +67,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     coordinator = TautulliDataUpdateCoordinator(hass=hass, api_client=api_client)
-
-    try:
-        await coordinator.async_refresh()
-    except UpdateFailed as exception:
-        raise PlatformNotReady from exception
-
-    if not coordinator.activity or not coordinator.home_stats or not coordinator.users:
-        raise PlatformNotReady
 
     entities = [TautulliSensor(coordinator, name, monitored_conditions, user)]
 
