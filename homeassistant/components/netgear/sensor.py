@@ -86,7 +86,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self._unique_id = f"{self._mac}-{self._attribute}"
         self._device_class = self._discription.device_class
         self._unit = self._discription.native_unit_of_measurement
-        self._state = None
+        self._state = self._device[self._attribute]
 
     @property
     def native_value(self):
