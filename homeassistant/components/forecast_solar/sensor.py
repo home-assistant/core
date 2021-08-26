@@ -5,7 +5,12 @@ from datetime import datetime
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -56,11 +61,12 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
             ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
             ATTR_NAME: "Solar Production Forecast",
             ATTR_MANUFACTURER: "Forecast.Solar",
+            ATTR_MODEL: coordinator.data.account_type.value,
             ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
         }
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.entity_description.state is None:
             state: StateType | datetime = getattr(

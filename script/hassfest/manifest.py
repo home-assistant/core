@@ -205,6 +205,15 @@ MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
+        vol.Optional("usb"): [
+            vol.Schema(
+                {
+                    vol.Optional("vid"): vol.All(str, verify_uppercase),
+                    vol.Optional("pid"): vol.All(str, verify_uppercase),
+                    vol.Optional("known_devices"): [str],
+                }
+            )
+        ],
         vol.Required("documentation"): vol.All(
             vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
         ),

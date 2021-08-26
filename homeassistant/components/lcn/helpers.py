@@ -79,9 +79,9 @@ def get_device_connection(
 
 def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     """Return the resource for the specified domain_data."""
-    if domain_name in ["switch", "light"]:
+    if domain_name in ("switch", "light"):
         return cast(str, domain_data["output"])
-    if domain_name in ["binary_sensor", "sensor"]:
+    if domain_name in ("binary_sensor", "sensor"):
         return cast(str, domain_data["source"])
     if domain_name == "cover":
         return cast(str, domain_data["motor"])

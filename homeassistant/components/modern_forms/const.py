@@ -2,9 +2,6 @@
 
 DOMAIN = "modern_forms"
 
-ATTR_IDENTIFIERS = "identifiers"
-ATTR_MANUFACTURER = "manufacturer"
-
 OPT_ON = "on"
 OPT_SPEED = "speed"
 OPT_BRIGHTNESS = "brightness"

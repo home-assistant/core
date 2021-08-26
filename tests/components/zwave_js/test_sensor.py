@@ -1,9 +1,10 @@
 """Test the Z-Wave JS sensor platform."""
-from unittest.mock import patch
-
 from zwave_js_server.event import Event
 
-from homeassistant.components.sensor import ATTR_LAST_RESET, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_VALUE,
@@ -28,16 +29,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
-    BASIC_SENSOR,
     CURRENT_SENSOR,
-    DATETIME_LAST_RESET,
-    DATETIME_ZERO,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     ID_LOCK_CONFIG_PARAMETER_SENSOR,
     INDICATOR_SENSOR,
     METER_ENERGY_SENSOR,
-    METER_VOLTAGE_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
     VOLTAGE_SENSOR,
@@ -77,7 +74,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.16"
     assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
     assert state.attributes["device_class"] == DEVICE_CLASS_ENERGY
-    assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
+    assert state.attributes["state_class"] == STATE_CLASS_TOTAL_INCREASING
 
     state = hass.states.get(VOLTAGE_SENSOR)
 
@@ -125,16 +122,6 @@ async def test_disabled_indcator_sensor(
     """Test sensor is created from Indicator CC and is disabled."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(INDICATOR_SENSOR)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
-
-
-async def test_disabled_basic_sensor(hass, ge_in_wall_dimmer_switch, integration):
-    """Test sensor is created from Basic CC and is disabled."""
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(BASIC_SENSOR)
 
     assert entity_entry
     assert entity_entry.disabled
@@ -203,31 +190,14 @@ async def test_reset_meter(
     client.async_send_command.return_value = {}
     client.async_send_command_no_wait.return_value = {}
 
-    # Validate that non accumulating meter does not have a last reset attribute
-
-    assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
-
-    # Validate that the sensor last reset is starting from nothing
-    assert (
-        hass.states.get(METER_ENERGY_SENSOR).attributes[ATTR_LAST_RESET]
-        == DATETIME_ZERO.isoformat()
-    )
-
-    # Test successful meter reset call, patching utcnow so we can make sure the last
-    # reset gets updated
-    with patch("homeassistant.util.dt.utcnow", return_value=DATETIME_LAST_RESET):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RESET_METER,
-            {
-                ATTR_ENTITY_ID: METER_ENERGY_SENSOR,
-            },
-            blocking=True,
-        )
-
-    assert (
-        hass.states.get(METER_ENERGY_SENSOR).attributes[ATTR_LAST_RESET]
-        == DATETIME_LAST_RESET.isoformat()
+    # Test successful meter reset call
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESET_METER,
+        {
+            ATTR_ENTITY_ID: METER_ENERGY_SENSOR,
+        },
+        blocking=True,
     )
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
@@ -236,10 +206,6 @@ async def test_reset_meter(
     assert args["nodeId"] == aeon_smart_switch_6.node_id
     assert args["endpoint"] == 0
     assert args["args"] == []
-
-    # Validate that non accumulating meter does not have a last reset attribute
-
-    assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
 
     client.async_send_command_no_wait.reset_mock()
 
@@ -262,26 +228,4 @@ async def test_reset_meter(
     assert args["endpoint"] == 0
     assert args["args"] == [{"type": 1, "targetValue": 2}]
 
-    # Validate that non accumulating meter does not have a last reset attribute
-
-    assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes
-
     client.async_send_command_no_wait.reset_mock()
-
-
-async def test_restore_last_reset(
-    hass,
-    client,
-    aeon_smart_switch_6,
-    restore_last_reset,
-    integration,
-):
-    """Test restoring last_reset on setup."""
-    assert (
-        hass.states.get(METER_ENERGY_SENSOR).attributes[ATTR_LAST_RESET]
-        == DATETIME_LAST_RESET.isoformat()
-    )
-
-    # Validate that non accumulating meter does not have a last reset attribute
-
-    assert ATTR_LAST_RESET not in hass.states.get(METER_VOLTAGE_SENSOR).attributes

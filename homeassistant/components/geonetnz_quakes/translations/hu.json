@@ -6,6 +6,7 @@
         "step": {
             "user": {
                 "data": {
+                    "mmi": "MMI",
                     "radius": "Sug\u00e1r"
                 },
                 "title": "T\u00f6ltsd ki a sz\u0171r\u0151 adatait."

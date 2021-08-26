@@ -365,8 +365,8 @@ async def test_addon_options_changed(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, snapshot_calls, "
-    "update_addon_side_effect, create_shapshot_side_effect",
+    "addon_version, update_available, update_calls, backup_calls, "
+    "update_addon_side_effect, create_backup_side_effect",
     [
         ("1.0", True, 1, 1, None, None),
         ("1.0", False, 0, 0, None, None),
@@ -380,15 +380,15 @@ async def test_update_addon(
     addon_info,
     addon_installed,
     addon_running,
-    create_shapshot,
+    create_backup,
     update_addon,
     addon_options,
     addon_version,
     update_available,
     update_calls,
-    snapshot_calls,
+    backup_calls,
     update_addon_side_effect,
-    create_shapshot_side_effect,
+    create_backup_side_effect,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -397,7 +397,7 @@ async def test_update_addon(
     addon_options["network_key"] = network_key
     addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
-    create_shapshot.side_effect = create_shapshot_side_effect
+    create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion("Invalid version")
     entry = MockConfigEntry(
@@ -416,7 +416,7 @@ async def test_update_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert create_shapshot.call_count == snapshot_calls
+    assert create_backup.call_count == backup_calls
     assert update_addon.call_count == update_calls
 
 
@@ -469,7 +469,7 @@ async def test_stop_addon(
 
 
 async def test_remove_entry(
-    hass, addon_installed, stop_addon, create_shapshot, uninstall_addon, caplog
+    hass, addon_installed, stop_addon, create_backup, uninstall_addon, caplog
 ):
     """Test remove the config entry."""
     # test successful remove without created add-on
@@ -500,8 +500,8 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
@@ -511,7 +511,7 @@ async def test_remove_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on stop failure
@@ -523,27 +523,27 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 0
+    assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the Z-Wave JS add-on" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test create snapshot failure
+    # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_shapshot.side_effect = HassioAPIError()
+    create_backup.side_effect = HassioAPIError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
@@ -551,10 +551,10 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a snapshot of the Z-Wave JS add-on" in caplog.text
-    create_shapshot.side_effect = None
+    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    create_backup.side_effect = None
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on uninstall failure
@@ -566,8 +566,8 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,

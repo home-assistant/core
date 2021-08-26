@@ -1,7 +1,7 @@
 #
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.23.0
+    rev: v2.23.3
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
@@ -46,7 +46,7 @@ repos:
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/isort
-    rev: 5.8.0
+    rev: 5.9.3
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks

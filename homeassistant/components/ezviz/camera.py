@@ -1,13 +1,12 @@
 """Support ezviz camera devices."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
 import voluptuous as vol
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import (
@@ -325,14 +324,15 @@ class EzvizCamera(CoordinatorEntity, Camera):
         """Return the name of this camera."""
         return self._serial
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a frame from the camera stream."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary)
-
-        image = await asyncio.shield(
-            ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG)
+        if self._rtsp_stream is None:
+            return None
+        return await ffmpeg.async_get_image(
+            self.hass, self._rtsp_stream, width=width, height=height
         )
-        return image
 
     @property
     def device_info(self) -> DeviceInfo:

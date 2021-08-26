@@ -53,18 +53,23 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
-PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+PLATFORM_SCHEMA = vol.All(
+    # Deprecated, remove in Home Assistant 2021.11
+    cv.deprecated(CONF_LAST_RESET_TOPIC),
+    cv.deprecated(CONF_LAST_RESET_VALUE_TEMPLATE),
+    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+            vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        }
+    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+)
 
 
 async def async_setup_platform(
@@ -214,7 +219,7 @@ class MqttSensor(MqttEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
@@ -224,7 +229,7 @@ class MqttSensor(MqttEntity, SensorEntity):
         return self._config[CONF_FORCE_UPDATE]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self._state
 

@@ -19,6 +19,7 @@ import threading
 from time import monotonic
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from urllib.parse import urlparse
 
 import attr
 import voluptuous as vol
@@ -1756,19 +1757,35 @@ class Config:
         )
         data = await store.async_load()
 
-        if data:
-            self._update(
-                source=SOURCE_STORAGE,
-                latitude=data.get("latitude"),
-                longitude=data.get("longitude"),
-                elevation=data.get("elevation"),
-                unit_system=data.get("unit_system"),
-                location_name=data.get("location_name"),
-                time_zone=data.get("time_zone"),
-                external_url=data.get("external_url", _UNDEF),
-                internal_url=data.get("internal_url", _UNDEF),
-                currency=data.get("currency"),
-            )
+        if not data:
+            return
+
+        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
+        # but this data still lives in storage, so we print a warning.
+        if data.get("external_url") and urlparse(data["external_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
+
+        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
+
+        self._update(
+            source=SOURCE_STORAGE,
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            elevation=data.get("elevation"),
+            unit_system=data.get("unit_system"),
+            location_name=data.get("location_name"),
+            time_zone=data.get("time_zone"),
+            external_url=data.get("external_url", _UNDEF),
+            internal_url=data.get("internal_url", _UNDEF),
+            currency=data.get("currency"),
+        )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""

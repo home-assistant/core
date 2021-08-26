@@ -529,7 +529,7 @@ class Profile:
     transition: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
-    SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+    SCHEMA = vol.Schema(
         vol.Any(
             vol.ExactSequence(
                 (
@@ -829,6 +829,13 @@ class LightEntity(ToggleEntity):
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif color_mode == COLOR_MODE_COLOR_TEMP and self.color_temp:
+            hs_color = color_util.color_temperature_to_hs(
+                color_util.color_temperature_mired_to_kelvin(self.color_temp)
+            )
+            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
+            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         return data
 
     @final
@@ -863,7 +870,7 @@ class LightEntity(ToggleEntity):
         if color_mode == COLOR_MODE_COLOR_TEMP:
             data[ATTR_COLOR_TEMP] = self.color_temp
 
-        if color_mode in COLOR_MODES_COLOR:
+        if color_mode in COLOR_MODES_COLOR or color_mode == COLOR_MODE_COLOR_TEMP:
             data.update(self._light_internal_convert_color(color_mode))
 
         if supported_features & SUPPORT_COLOR_TEMP and not self.supported_color_modes:
