@@ -1781,7 +1781,7 @@ pyskyqhub==0.1.3
 pysma==0.6.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.25
+pysmappee==0.2.26
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
