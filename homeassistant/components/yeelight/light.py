@@ -779,6 +779,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
+        _LOGGER.debug(
+            "Calling turn off with duration=%s, light_type=%s",
+            duration,
+            self.light_type,
+        )
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
 
         # Some lights will not fully turn off if there is a transition
@@ -788,9 +793,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if not duration:
             return
 
+        _LOGGER.debug("Has duration, double checking")
         await asyncio.sleep(duration + 0.1)
         if self.is_on:
+            _LOGGER.debug("light still on after off trans")
             await self.device.async_turn_off(light_type=self.light_type)
+        else:
+            _LOGGER.debug("light OFF after off trans")
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
