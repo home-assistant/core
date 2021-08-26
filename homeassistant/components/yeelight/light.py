@@ -1,6 +1,7 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 
@@ -779,6 +780,16 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
+
+        # Some lights will not fully turn off if there is a transition
+        # If after the transition has completed the light is still reflecting
+        # as on, we have to turn it off without the transition or it will
+        # be stuck on
+        if duration:
+            await asyncio.sleep(duration + 0.1)
+        if not self.is_on:
+            return
+        await self.device.async_turn_off(light_type=self.light_type)
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
