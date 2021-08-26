@@ -38,6 +38,20 @@ def mock_docker():
         yield
 
 
+@pytest.fixture(name="venv")
+def mock_venv():
+    """Mock running Home Assistant in a venv container."""
+    with patch(
+        "homeassistant.components.usb.system_info.async_get_system_info",
+        return_value={
+            "hassio": False,
+            "docker": False,
+            "virtualenv": True,
+        },
+    ):
+        yield
+
+
 @pytest.mark.skipif(
     not sys.platform.startswith("linux"),
     reason="Only works on linux",
@@ -611,7 +625,7 @@ async def test_non_matching_discovered_by_scanner_after_started(
     reason="Only works on linux",
 )
 async def test_observer_on_wsl_fallback_without_throwing_exception(
-    hass, hass_ws_client
+    hass, hass_ws_client, venv
 ):
     """Test that observer on WSL failure results in fallback to scanning without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
@@ -627,9 +641,9 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
         )
     ]
 
-    with patch("pyudev.Monitor.filter_by", side_effect=ValueError), patch(
-        "homeassistant.components.usb.async_get_usb", return_value=new_usb
-    ), patch(
+    with patch("pyudev.Context"), patch(
+        "pyudev.Monitor.filter_by", side_effect=ValueError
+    ), patch("homeassistant.components.usb.async_get_usb", return_value=new_usb), patch(
         "homeassistant.components.usb.comports", return_value=mock_comports
     ), patch.object(
         hass.config_entries.flow, "async_init"
