@@ -145,6 +145,7 @@ UPDATE_REQUEST_PROPERTIES = [
     "power",
     "main_power",
     "bright",
+    "active_bright",
     "ct",
     "rgb",
     "hue",
@@ -161,7 +162,6 @@ UPDATE_REQUEST_PROPERTIES = [
     "bg_rgb",
     "nl_br",
     "active_mode",
-    "active_bright"
 ]
 
 PLATFORMS = ["binary_sensor", "light"]
