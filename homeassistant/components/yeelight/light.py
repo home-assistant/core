@@ -790,6 +790,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             self.light_type,
         )
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
+        _LOGGER.debug(
+            "After calling turn_off, power state is %s, power prop is %s, and self is %s",
+            self.is_on,
+            self._power_property,
+            self,
+        )
         if self.is_on and (
             self._power_property == PROP_MAIN_POWER
             or isinstance(self, YeelightAmbientLight)
