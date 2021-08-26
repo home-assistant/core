@@ -20,14 +20,10 @@
       "params": {
         "title": "Parameters of Eco-Device entities",
         "data": {
-          "t1_name": "Teleinfo 1 Name",
           "t1_unit_of_measurement": "Teleinfo 1 Unit of measurement",
-          "t2_name": "Teleinfo 2 Name",
           "t2_unit_of_measurement": "Teleinfo 2 Unit of measurement",
-          "c1_name": "Meter 1 Name",
           "c1_device_class": "Meter 1 Device Class (sensor)",
           "c1_unit_of_measurement": "Meter 1 Unit of measurement",
-          "c2_name": "Meter 2 Name",
           "c2_device_class": "Meter 2 Device Class (sensor)",
           "c2_unit_of_measurement": "Meter 2 Unit of measurement"
         }
