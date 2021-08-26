@@ -164,27 +164,17 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_zha_device"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
 
+    with patch("homeassistant.components.zha.async_setup_entry"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_rejects_nortek_zwave(detect_mock, hass):
-    """Test usb flow -- reject the nortek zwave radio."""
-    discovery_info = {
-        "device": "/dev/null",
-        "vid": "10C4",
-        "pid": "8A2A",
-        "serial_number": "612020FD",
-        "description": "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
-        "manufacturer": "Silicon Labs",
-    }
-    result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_zha_device"
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "usb_probe_failed"
 
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
