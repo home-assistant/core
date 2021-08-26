@@ -211,7 +211,10 @@ async def _async_initialize(
     await device.async_setup()
     entry_data[DATA_DEVICE] = device
 
-    if device.capabilities and not entry.options.get(CONF_MODEL):
+    if (
+        device.capabilities
+        and entry.options.get(CONF_MODEL) != device.capabilities["model"]
+    ):
         hass.config_entries.async_update_entry(
             entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
         )
