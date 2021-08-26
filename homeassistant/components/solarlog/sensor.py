@@ -6,7 +6,7 @@ from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES, SolarLogSensorEntityDescription
@@ -70,33 +70,7 @@ class SolarlogData:
         """Update the data from the SolarLog device."""
         try:
             self.api = SolarLog(self.host)
-            response = self.api.time
-            _LOGGER.debug(
-                "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
-                response,
-            )
-        except (OSError, Timeout, HTTPError):
-            self.errs += 1
-            if self.errs >= 3:
-                # Skip first two error to prevent errors during a Solar-Log restart
-                _LOGGER.error(
-                    "Connection error, Could not retrieve data, skipping update"
-                )
-            return
-        self.errs = 0
-        try:
-            # Skip measurements with zero totals after device restart
-            yield_total = self.api.yield_total
-            consumption_total = self.api.consumption_total
-        except AttributeError:
-            _LOGGER.error("Missing details data in Solarlog response")
-            return
-        if yield_total == 0 and consumption_total == 0:
-            _LOGGER.debug(
-                "Solarlog returns zero yield and consumtpion totals, skipping update"
-            )
-            return
-        try:
+
             self.data["TIME"] = self.api.time
             self.data["powerAC"] = self.api.power_ac
             self.data["powerDC"] = self.api.power_dc
@@ -119,9 +93,46 @@ class SolarlogData:
             self.data["EFFICIENCY"] = round(self.api.efficiency * 100, 0)
             self.data["powerAVAILABLE"] = self.api.power_available
             self.data["USAGE"] = round(self.api.usage * 100, 0)
-            _LOGGER.debug("Updated Solarlog overview data: %s", self.data)
-        except AttributeError:
-            _LOGGER.error("Missing details data in Solarlog response")
+
+            if self.data["yieldTOTAL"] == 0 and self.data["consumptionTOTAL"] == 0:
+                raise ValueError(
+                    "Measurement with zero totals (can happen after Solarlog restart)."
+                )
+
+        except (OSError, Timeout, HTTPError, AttributeError, ValueError) as err:
+            self.data["TIME"] = STATE_UNAVAILABLE
+            self.data["powerAC"] = STATE_UNAVAILABLE
+            self.data["powerDC"] = STATE_UNAVAILABLE
+            self.data["voltageAC"] = STATE_UNAVAILABLE
+            self.data["voltageDC"] = STATE_UNAVAILABLE
+            self.data["yieldDAY"] = STATE_UNAVAILABLE
+            self.data["yieldYESTERDAY"] = STATE_UNAVAILABLE
+            self.data["yieldMONTH"] = STATE_UNAVAILABLE
+            self.data["yieldYEAR"] = STATE_UNAVAILABLE
+            self.data["yieldTOTAL"] = STATE_UNAVAILABLE
+            self.data["consumptionAC"] = STATE_UNAVAILABLE
+            self.data["consumptionDAY"] = STATE_UNAVAILABLE
+            self.data["consumptionYESTERDAY"] = STATE_UNAVAILABLE
+            self.data["consumptionMONTH"] = STATE_UNAVAILABLE
+            self.data["consumptionYEAR"] = STATE_UNAVAILABLE
+            self.data["consumptionTOTAL"] = STATE_UNAVAILABLE
+            self.data["totalPOWER"] = STATE_UNAVAILABLE
+            self.data["alternatorLOSS"] = STATE_UNAVAILABLE
+            self.data["CAPACITY"] = STATE_UNAVAILABLE
+            self.data["EFFICIENCY"] = STATE_UNAVAILABLE
+            self.data["powerAVAILABLE"] = STATE_UNAVAILABLE
+            self.data["USAGE"] = STATE_UNAVAILABLE
+
+            self.errs += 1
+            if self.errs >= 3:
+                # Suppress errors of first two connection failures (can happen during a Solarlog restart)
+                _LOGGER.error("Connection error with Solarlog device, %s", err)
+        else:
+            _LOGGER.debug(
+                "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
+                self.data["TIME"],
+            )
+            self.errs = 0
 
 
 class SolarlogSensor(SensorEntity):
