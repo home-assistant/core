@@ -1,12 +1,12 @@
 {
   "domain": "homewizard_energy",
   "name": "HomeWizard Energy",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/homewizard_energy",
-  "requirements": ["aiohwenergy==0.2.3"],
+  "documentation": "https://github.com/DCSBL/ha-homewizard-energy",
+  "issue_tracker": "https://github.com/DCSBL/ha-homewizard-energy/issues",
+  "codeowners": ["@DCSBL"],
+  "dependencies": ["zeroconf"],
+  "requirements": ["aiohwenergy==0.3.2"],
   "zeroconf": ["_hwenergy._tcp.local."],
-  "codeowners": [
-    "@DCSBL"
-  ],
+  "config_flow": true,
   "iot_class": "local_polling"
 }

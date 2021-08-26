@@ -5,7 +5,7 @@
         "abort": {
             "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "api_not_enabled": "Device API not activated.",
+            "api_not_enabled": "Device API not activated. API can be enabled in the HomeWizard Energy app.",
             "manual_config_request_error": "Could not connect to device. Please check the IP address and that your device is reachable from Home Assistant",
             "manual_config_unknown_error": "Could not connect to device. Please check if you entered the correct IP address and check if the API is enabled.",
             "manual_config_unsupported_api_version": "API version not supported",
@@ -17,21 +17,11 @@
                 "data": {
                     "ip_address": "IP Address"
                 },
-                "description": "Set up your HomeWizard Energy P1 meter to integrate with Home Assistant.",
+                "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
                 "title": "Configure device"
             },
             "discovery_confirm": {
                 "description": "Please enter a name for your {name}:"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "override_poll_interval": "Override default poll interval",
-                    "poll_interval_seconds": "Poll interval (seconds)"
-                }
             }
         }
     }
