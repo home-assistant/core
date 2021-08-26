@@ -108,6 +108,7 @@ UNIT_CONVERSIONS: dict[str, dict[str, Callable]] = {
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
+SEEN_DIP = "sensor_seen_total_increasing_dip"
 WARN_DIP = "sensor_warn_total_increasing_dip"
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
@@ -233,7 +234,17 @@ def _normalize_states(
 
 
 def warn_dip(hass: HomeAssistant, entity_id: str) -> None:
-    """Log a warning once if a sensor with state_class_total has a decreasing value."""
+    """Log a warning once if a sensor with state_class_total has a decreasing value.
+
+    The log will be suppressed until two dips have been seen to prevent warning due to
+    rounding issues with databases storing the state as a single precision float, which
+    was fixed in recorder DB version 20.
+    """
+    if SEEN_DIP not in hass.data:
+        hass.data[SEEN_DIP] = set()
+    if entity_id not in hass.data[SEEN_DIP]:
+        hass.data[SEEN_DIP].add(entity_id)
+        return
     if WARN_DIP not in hass.data:
         hass.data[WARN_DIP] = set()
     if entity_id not in hass.data[WARN_DIP]:
