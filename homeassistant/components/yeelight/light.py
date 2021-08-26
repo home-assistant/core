@@ -786,7 +786,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
         # Some devices will not send back the off state
         # so we need to manually refresh
-        await self.device.async_get_properties()
+        await self._bulb.async_get_properties()
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
