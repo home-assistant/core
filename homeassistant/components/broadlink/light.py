@@ -41,7 +41,6 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
     def __init__(self, device):
         """Initialize the light."""
         super().__init__(device)
-        self._attr_assumed_state = False
         self._attr_name = f"{device.name} Light"
         self._attr_unique_id = device.unique_id
         self._attr_supported_color_modes = set()
@@ -60,7 +59,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
     def _update_state(self, data):
         """Update the state of the entity."""
         if "pwr" in data:
-            self._attr_is_on = data["pwr"]
+            self._attr_is_on = bool(data["pwr"])
 
         if "brightness" in data:
             self._attr_brightness = round(data["brightness"] * 2.55)
