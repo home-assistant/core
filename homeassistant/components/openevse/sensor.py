@@ -16,6 +16,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
@@ -101,8 +103,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the OpenEVSE sensors."""
     host = entry.data[CONF_HOST]
+    user = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
-    charger = openevsewifi.Charger(host)
+    charger = openevsewifi.Charger(host, username=user, password=password)
 
     entities = [OpenEVSESensor(charger, description) for description in SENSOR_TYPES]
 
