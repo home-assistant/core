@@ -98,3 +98,33 @@ async def test_update(hass):
     state = hass.states.get("sensor.current_version")
     assert state
     assert state.state == "1234"
+
+
+async def test_image_name_container(hass):
+    """Test the Version sensor with image name for container."""
+    config = {
+        "sensor": {"platform": "version", "source": "docker", "image": "qemux86-64"}
+    }
+
+    with patch("homeassistant.components.version.sensor.HaVersion") as haversion:
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    constructor = haversion.call_args[1]
+    assert constructor["source"] == "container"
+    assert constructor["image"] == "qemux86-64-homeassistant"
+
+
+async def test_image_name_supervisor(hass):
+    """Test the Version sensor with image name for supervisor."""
+    config = {
+        "sensor": {"platform": "version", "source": "hassio", "image": "qemux86-64"}
+    }
+
+    with patch("homeassistant.components.version.sensor.HaVersion") as haversion:
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    constructor = haversion.call_args[1]
+    assert constructor["source"] == "supervisor"
+    assert constructor["image"] == "qemux86-64"

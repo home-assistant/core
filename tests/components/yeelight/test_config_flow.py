@@ -19,7 +19,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.components.yeelight.config_flow import CannotConnect
+from homeassistant.components.yeelight.config_flow import MODEL_UNKNOWN, CannotConnect
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
@@ -28,6 +28,7 @@ from . import (
     CAPABILITIES,
     ID,
     IP_ADDRESS,
+    MODEL,
     MODULE,
     MODULE_CONFIG_FLOW,
     NAME,
@@ -51,6 +52,94 @@ DEFAULT_CONFIG = {
 
 async def test_discovery(hass: HomeAssistant):
     """Test setting up discovery."""
+    with _patch_discovery(), _patch_discovery_interval():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert not result["errors"]
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "pick_device"
+        assert not result2["errors"]
+
+        # test we can try again
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert not result["errors"]
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result2["type"] == "form"
+        assert result2["step_id"] == "pick_device"
+        assert not result2["errors"]
+
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE}.async_setup", return_value=True
+    ) as mock_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: ID}
+        )
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == UNIQUE_FRIENDLY_NAME
+    assert result3["data"] == {CONF_ID: ID, CONF_HOST: IP_ADDRESS, CONF_MODEL: MODEL}
+    await hass.async_block_till_done()
+    mock_setup.assert_called_once()
+    mock_setup_entry.assert_called_once()
+
+    # ignore configured devices
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(), _patch_discovery_interval():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovery_with_existing_device_present(hass: HomeAssistant):
+    """Test setting up discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_ID: "0x000000000099999", CONF_HOST: "4.4.4.4"}
+    )
+    config_entry.add_to_hass(hass)
+    alternate_bulb = _mocked_bulb()
+    alternate_bulb.capabilities["id"] = "0x000000000099999"
+    alternate_bulb.capabilities["location"] = "yeelight://4.4.4.4"
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=alternate_bulb):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(), _patch_discovery_interval():
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "pick_device"
+    assert not result2["errors"]
+
+    # Now abort and make sure we can start over
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -65,19 +154,20 @@ async def test_discovery(hass: HomeAssistant):
     assert not result2["errors"]
 
     with _patch_discovery(), _patch_discovery_interval(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
         )
-    assert result3["type"] == "create_entry"
-    assert result3["title"] == UNIQUE_FRIENDLY_NAME
-    assert result3["data"] == {CONF_ID: ID, CONF_HOST: IP_ADDRESS}
-    await hass.async_block_till_done()
-    mock_setup.assert_called_once()
-    mock_setup_entry.assert_called_once()
+        assert result3["type"] == "create_entry"
+        assert result3["title"] == UNIQUE_FRIENDLY_NAME
+        assert result3["data"] == {
+            CONF_ID: ID,
+            CONF_HOST: IP_ADDRESS,
+            CONF_MODEL: MODEL,
+        }
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # ignore configured devices
     result = await hass.config_entries.flow.async_init(
@@ -214,8 +304,12 @@ async def test_manual(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
-    assert result4["title"] == "color 0x000000000015243f"
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS}
+    assert result4["title"] == "Color 0x15243f"
+    assert result4["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: "0x000000000015243f",
+        CONF_MODEL: MODEL,
+    }
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -248,7 +342,7 @@ async def test_options(hass: HomeAssistant):
 
     config = {
         CONF_NAME: NAME,
-        CONF_MODEL: "",
+        CONF_MODEL: MODEL,
         CONF_TRANSITION: DEFAULT_TRANSITION,
         CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
@@ -298,7 +392,11 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_HOST: IP_ADDRESS}
+    assert result["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: None,
+        CONF_MODEL: MODEL_UNKNOWN,
+    }
 
 
 async def test_discovered_by_homekit_and_dhcp(hass):
@@ -395,7 +493,11 @@ async def test_discovered_by_dhcp_or_homekit(hass, source, data):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_ID: "0x000000000015243f"}
+    assert result2["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: "0x000000000015243f",
+        CONF_MODEL: MODEL,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -455,7 +557,11 @@ async def test_discovered_ssdp(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_ID: "0x000000000015243f"}
+    assert result2["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: "0x000000000015243f",
+        CONF_MODEL: MODEL,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 

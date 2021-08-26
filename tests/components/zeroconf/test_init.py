@@ -39,7 +39,7 @@ def service_update_mock(ipv6, zeroconf, services, handlers, *, limit_service=Non
         handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Added)
 
 
-def get_service_info_mock(service_type, name):
+def get_service_info_mock(service_type, name, *args, **kwargs):
     """Return service info for get_service_info."""
     return AsyncServiceInfo(
         service_type,
@@ -872,3 +872,16 @@ async def test_async_detect_interfaces_explicitly_set_ipv6(hass, mock_async_zero
         interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef"],
         ip_version=IPVersion.All,
     )
+
+
+async def test_no_name(hass, mock_async_zeroconf):
+    """Test fallback to Home for mDNS announcement if the name is missing."""
+    hass.config.location_name = ""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
+    info = register_call.args[0]
+    assert info.name == "Home._home-assistant._tcp.local."

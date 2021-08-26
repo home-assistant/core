@@ -1,6 +1,7 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SSDPListener
@@ -18,6 +19,8 @@ from homeassistant.components.yeelight import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+
+FAIL_TO_BIND_IP = "1.2.3.4"
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"
@@ -127,6 +130,8 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     listener = SSDPListener(*args, **kwargs)
 
     async def _async_callback(*_):
+        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+            raise OSError
         await listener.async_connect_callback()
 
     @callback
@@ -139,12 +144,12 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     return listener
 
 
-def _patch_discovery(no_device=False):
+def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         return _patched_ssdp_listener(
-            None if no_device else CAPABILITIES,
+            None if no_device else capabilities or CAPABILITIES,
             *args,
             **kwargs,
         )

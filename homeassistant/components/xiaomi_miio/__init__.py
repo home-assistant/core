@@ -11,6 +11,8 @@ from miio import (
     AirPurifier,
     AirPurifierMiot,
     DeviceException,
+    Fan,
+    FanP5,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -29,8 +31,10 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_FAN_P5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
@@ -46,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan", "select", "sensor"]
+FAN_PLATFORMS = ["fan", "number", "select", "sensor", "switch"]
 HUMIDIFIER_PLATFORMS = [
     "binary_sensor",
     "humidifier",
@@ -141,6 +145,11 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
+    # Pedestal fans
+    elif model == MODEL_FAN_P5:
+        device = FanP5(host, token)
+    elif model in MODELS_FAN_MIIO:
+        device = Fan(host, token, model=model)
     else:
         _LOGGER.error(
             "Unsupported device found! Please create an issue at "
