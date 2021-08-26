@@ -1148,7 +1148,7 @@ restrictedpython==5.1
 rflink==0.0.58
 
 # homeassistant.components.ring
-ring_doorbell==0.6.2
+ring_doorbell==0.7.1
 
 # homeassistant.components.roku
 rokuecp==0.8.1
