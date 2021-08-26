@@ -361,13 +361,6 @@ class NmapDeviceScanner:
                 continue
 
             formatted_mac = format_mac(mac)
-            new = formatted_mac not in devices.tracked
-            if (
-                new
-                and formatted_mac not in devices.tracked
-                and formatted_mac not in self._known_mac_addresses
-            ):
-                continue
 
             if (
                 devices.config_entry_owner.setdefault(formatted_mac, entry_id)
@@ -382,6 +375,7 @@ class NmapDeviceScanner:
                 formatted_mac, hostname, name, ipv4, vendor, reason, now, 0
             )
 
+            new = formatted_mac not in devices.tracked
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac
             self._last_results.append(device)
