@@ -545,7 +545,7 @@ class YeelightDevice:
         self._config = config
         self._host = host
         self._bulb_device = bulb
-        self._capabilities = {}
+        self.capabilities = {}
         self._device_type = None
         self._available = False
         self._initialized = False
@@ -579,12 +579,12 @@ class YeelightDevice:
     @property
     def model(self):
         """Return configured/autodetected device model."""
-        return self._bulb_device.model or self._capabilities.get("model")
+        return self._bulb_device.model or self.capabilities.get("model")
 
     @property
     def fw_version(self):
         """Return the firmware version."""
-        return self._capabilities.get("fw_ver")
+        return self.capabilities.get("fw_ver")
 
     @property
     def is_nightlight_supported(self) -> bool:
@@ -679,15 +679,15 @@ class YeelightDevice:
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""
         scanner = YeelightScanner.async_get(self._hass)
-        self._capabilities = await scanner.async_get_capabilities(self._host) or {}
-        if self._capabilities:
-            self._bulb_device.set_capabilities(self._capabilities)
+        self.capabilities = await scanner.async_get_capabilities(self._host) or {}
+        if self.capabilities:
+            self._bulb_device.set_capabilities(self.capabilities)
         if name := self._config.get(CONF_NAME):
             # Override default name when name is set in config
             self._name = name
-        elif self._capabilities:
+        elif self.capabilities:
             # Generate name from model and id when capabilities is available
-            self._name = _async_unique_name(self._capabilities)
+            self._name = _async_unique_name(self.capabilities)
         else:
             self._name = self._host  # Default name is host
 
