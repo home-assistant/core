@@ -5,7 +5,12 @@ import datetime
 import logging
 from typing import Callable, TypedDict
 
-from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.core.exceptions import (
+    FritzActionError,
+    FritzActionFailedError,
+    FritzConnectionException,
+    FritzServiceError,
+)
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
@@ -260,12 +265,16 @@ async def async_setup_entry(
         return
 
     entities = []
-    dslinterface = await hass.async_add_executor_job(
-        fritzbox_tools.connection.call_action,
-        "WANDSLInterfaceConfig:1",
-        "GetInfo",
-    )
-    dsl: bool = dslinterface["NewEnable"]
+    dsl: bool = False
+    try:
+        dslinterface = await hass.async_add_executor_job(
+            fritzbox_tools.connection.call_action,
+            "WANDSLInterfaceConfig:1",
+            "GetInfo",
+        )
+        dsl = dslinterface["NewEnable"]
+    except (FritzActionError, FritzActionFailedError, FritzServiceError):
+        pass
 
     for sensor_type, sensor_data in SENSOR_DATA.items():
         if not dsl and sensor_data.get("connection_type") == DSL_CONNECTION:
