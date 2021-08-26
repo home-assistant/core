@@ -4,6 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_token": "Token d'acc\u00e9s no v\u00e0lid",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "unknown": "Error inesperat"
         },
         "error": {

@@ -59,23 +59,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import Nanoleaf light platform."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: config[CONF_HOST], CONF_TOKEN: config[CONF_TOKEN]},
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: config[CONF_HOST], CONF_TOKEN: config[CONF_TOKEN]},
+        )
     )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
     data = hass.data[DOMAIN][entry.entry_id]
-    add_entities([NanoleafLight(data[DEVICE], data[NAME], data[SERIAL_NO])], True)
+    async_add_entities([NanoleafLight(data[DEVICE], data[NAME], data[SERIAL_NO])], True)
 
 
 class NanoleafLight(LightEntity):

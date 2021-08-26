@@ -9,7 +9,6 @@ from pynanoleaf import InvalidToken, Nanoleaf, NotAuthorizingNewTokens, Unavaila
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -32,6 +31,8 @@ USER_SCHEMA: Final = vol.Schema(
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Nanoleaf config flow."""
+
+    reauth_entry: config_entries.ConfigEntry | None = None
 
     VERSION = 1
 
@@ -72,6 +73,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 last_step=False,
                 errors={"base": "unknown"},
             )
+        return await self.async_step_link()
+
+    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+        """Handle Nanoleaf reauth flow if token is invalid."""
+        self.reauth_entry = cast(
+            config_entries.ConfigEntry,
+            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
+        )
+        self.nanoleaf = Nanoleaf(data[CONF_HOST])
+        self.context["title_placeholders"] = {"name": self.reauth_entry.title}
         return await self.async_step_link()
 
     async def async_step_zeroconf(
@@ -136,6 +147,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
+
+        if self.reauth_entry is not None:
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry,
+                data={
+                    **self.reauth_entry.data,
+                    CONF_TOKEN: self.nanoleaf.token,
+                },
+            )
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
         return await self.async_setup_finish()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
@@ -162,9 +185,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_token")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Unknown error connecting with Nanoleaf at %s with token %s",
-                self.nanoleaf.host,
-                self.nanoleaf.token,
+                "Unknown error connecting with Nanoleaf at %s", self.nanoleaf.host
             )
             return self.async_abort(reason="unknown")
         name = info["name"]
@@ -188,11 +209,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.hass.async_add_executor_job(
                     os.remove, self.hass.config.path(CONFIG_FILE)
-                )
-                persistent_notification.async_create(
-                    self.hass,
-                    "All Nanoleaf devices from the discovery integration are imported. If you used the discovery integration only for Nanoleaf you can remove it from your configuration.yaml",
-                    f"Imported Nanoleaf {name}",
                 )
 
         return self.async_create_entry(

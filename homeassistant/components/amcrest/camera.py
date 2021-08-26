@@ -180,7 +180,6 @@ class AmcrestCam(Camera):
             raise CannotSnapshot
 
     async def _async_get_image(self) -> None:
-        assert self.hass is not None
         try:
             # Send the request to snap a picture and return raw jpg data
             # Snapshot command needs a much longer read timeout than other commands.
@@ -201,7 +200,6 @@ class AmcrestCam(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        assert self.hass is not None
         _LOGGER.debug("Take snapshot from %s", self._name)
         try:
             # Amcrest cameras only support one snapshot command at a time.
@@ -226,7 +224,6 @@ class AmcrestCam(Camera):
         self, request: web.Request
     ) -> web.StreamResponse | None:
         """Return an MJPEG stream."""
-        assert self.hass is not None
         # The snapshot implementation is handled by the parent class
         if self._stream_source == "snapshot":
             return await super().handle_async_mjpeg_stream(request)
@@ -344,7 +341,6 @@ class AmcrestCam(Camera):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to signals and add camera to list."""
-        assert self.hass is not None
         self._unsub_dispatcher.extend(
             async_dispatcher_connect(
                 self.hass,
@@ -364,7 +360,6 @@ class AmcrestCam(Camera):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove camera from list and disconnect from signals."""
-        assert self.hass is not None
         self.hass.data[DATA_AMCREST][CAMERAS].remove(self.entity_id)
         for unsub_dispatcher in self._unsub_dispatcher:
             unsub_dispatcher()
@@ -428,57 +423,46 @@ class AmcrestCam(Camera):
 
     async def async_enable_recording(self) -> None:
         """Call the job and enable recording."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._enable_recording, True)
 
     async def async_disable_recording(self) -> None:
         """Call the job and disable recording."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._enable_recording, False)
 
     async def async_enable_audio(self) -> None:
         """Call the job and enable audio."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._enable_audio, True)
 
     async def async_disable_audio(self) -> None:
         """Call the job and disable audio."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._enable_audio, False)
 
     async def async_enable_motion_recording(self) -> None:
         """Call the job and enable motion recording."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._enable_motion_recording, True)
 
     async def async_disable_motion_recording(self) -> None:
         """Call the job and disable motion recording."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._enable_motion_recording, False)
 
     async def async_goto_preset(self, preset: int) -> None:
         """Call the job and move camera to preset position."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._goto_preset, preset)
 
     async def async_set_color_bw(self, color_bw: str) -> None:
         """Call the job and set camera color mode."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._set_color_bw, color_bw)
 
     async def async_start_tour(self) -> None:
         """Call the job and start camera tour."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._start_tour, True)
 
     async def async_stop_tour(self) -> None:
         """Call the job and stop camera tour."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self._start_tour, False)
 
     async def async_ptz_control(self, movement: str, travel_time: float) -> None:
         """Move or zoom camera in specified direction."""
-        assert self.hass is not None
         code = _ACTION[_MOV.index(movement)]
 
         kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}

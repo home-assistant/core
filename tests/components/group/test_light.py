@@ -618,12 +618,12 @@ async def test_emulated_color_temp_group(hass, enable_custom_integrations):
     state = hass.states.get("light.test1")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP] == 200
-    assert ATTR_HS_COLOR not in state.attributes.keys()
+    assert ATTR_HS_COLOR in state.attributes.keys()
 
     state = hass.states.get("light.test2")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP] == 200
-    assert ATTR_HS_COLOR not in state.attributes.keys()
+    assert ATTR_HS_COLOR in state.attributes.keys()
 
     state = hass.states.get("light.test3")
     assert state.state == STATE_ON

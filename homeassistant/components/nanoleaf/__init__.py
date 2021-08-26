@@ -1,10 +1,10 @@
 """The Nanoleaf integration."""
-from pynanoleaf.pynanoleaf import Nanoleaf, Unavailable
+from pynanoleaf.pynanoleaf import InvalidToken, Nanoleaf, Unavailable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DEVICE, DOMAIN, NAME, SERIAL_NO
 from .util import pynanoleaf_get_info
@@ -18,6 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         info = await hass.async_add_executor_job(pynanoleaf_get_info, nanoleaf)
     except Unavailable as err:
         raise ConfigEntryNotReady from err
+    except InvalidToken as err:
+        raise ConfigEntryAuthFailed from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DEVICE: nanoleaf,
