@@ -94,6 +94,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: DEFAULT_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_USERNAME: DEFAULT_USER,
+            CONF_SSL: False,
         }
         self.discoverd = False
 
@@ -155,17 +156,13 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form()
 
-        host = user_input.get(CONF_HOST)
-        port = user_input.get(CONF_PORT)
-        ssl = user_input.get(CONF_SSL)
-        if host is None:
-            host = self.placeholders[CONF_HOST]
-        if port is None:
-            port = self.placeholders[CONF_PORT]
-        if ssl is None:
-            ssl = self.placeholders[CONF_SSL]
-        username = user_input.get(CONF_USERNAME)
+        host = user_input.get(CONF_HOST, self.placeholders[CONF_HOST])
+        port = user_input.get(CONF_PORT, self.placeholders[CONF_PORT])
+        ssl = user_input.get(CONF_SSL, self.placeholders[CONF_SSL])
+        username = user_input.get(CONF_USERNAME, self.placeholders[CONF_USERNAME])
         password = user_input[CONF_PASSWORD]
+        if not username:
+            username = self.placeholders[CONF_USERNAME]
 
         # Open connection and check authentication
         try:
@@ -184,14 +181,12 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         config_data = {
+            CONF_USERNAME: username,
             CONF_PASSWORD: password,
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: ssl,
         }
-        if username:
-            config_data[CONF_USERNAME] = username
-
-        config_data[CONF_HOST] = host
-        config_data[CONF_PORT] = port
-        config_data[CONF_SSL] = ssl
 
         return self.async_create_entry(
             title=f"{infos['ModelName']} - {infos['DeviceName']}",

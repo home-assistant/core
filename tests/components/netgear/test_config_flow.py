@@ -2,6 +2,7 @@
 import logging
 from unittest.mock import Mock, patch
 
+from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
 import pytest
 
 from homeassistant import data_entry_flow
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
 )
 
@@ -57,6 +57,8 @@ PORT = 80
 SSL = False
 USERNAME = "Home_Assistant"
 PASSWORD = "password"
+SSDP_URL = f"http://{HOST}:{PORT}/rootDesc.xml"
+SSDP_URL_SLL = f"https://{HOST}:{PORT}/rootDesc.xml"
 
 
 @pytest.fixture(name="service")
@@ -100,7 +102,6 @@ async def test_user(hass, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) is None
     assert result["data"].get(CONF_HOST) == HOST
     assert result["data"].get(CONF_PORT) == PORT
     assert result["data"].get(CONF_SSL) == SSL
@@ -116,11 +117,10 @@ async def test_import_required(hass, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) is None
-    assert result["data"].get(CONF_HOST) is None
-    assert result["data"].get(CONF_PORT) is None
-    assert result["data"].get(CONF_SSL) is None
-    assert result["data"].get(CONF_USERNAME) is None
+    assert result["data"].get(CONF_HOST) == DEFAULT_HOST
+    assert result["data"].get(CONF_PORT) == DEFAULT_PORT
+    assert result["data"].get(CONF_SSL) is False
+    assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
@@ -150,7 +150,6 @@ async def test_import_all(hass, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) is None
     assert result["data"].get(CONF_HOST) == HOST
     assert result["data"].get(CONF_PORT) == PORT
     assert result["data"].get(CONF_SSL) == SSL
@@ -220,7 +219,7 @@ async def test_ssdp_already_configured(hass):
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data={
-            ssdp.ATTR_SSDP_LOCATION: "http://10.0.0.1:5555/rootDesc.xml",
+            ssdp.ATTR_SSDP_LOCATION: SSDP_URL_SLL,
             ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
             ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
             ssdp.ATTR_UPNP_SERIAL: SERIAL,
@@ -236,7 +235,7 @@ async def test_ssdp(hass, service):
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data={
-            ssdp.ATTR_SSDP_LOCATION: "http://10.0.0.1:5555/rootDesc.xml",
+            ssdp.ATTR_SSDP_LOCATION: SSDP_URL,
             ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
             ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
             ssdp.ATTR_UPNP_SERIAL: SERIAL,
@@ -251,11 +250,10 @@ async def test_ssdp(hass, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) == f"http://{HOST}/"
-    assert result["data"].get(CONF_HOST) is None
-    assert result["data"].get(CONF_PORT) is None
-    assert result["data"].get(CONF_SSL) is None
-    assert result["data"].get(CONF_USERNAME) is None
+    assert result["data"].get(CONF_HOST) == HOST
+    assert result["data"].get(CONF_PORT) == PORT
+    assert result["data"].get(CONF_SSL) == SSL
+    assert result["data"].get(CONF_USERNAME) == DEFAULT_USER
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
