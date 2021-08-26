@@ -342,7 +342,7 @@ async def test_options(hass: HomeAssistant):
 
     config = {
         CONF_NAME: NAME,
-        CONF_MODEL: "",
+        CONF_MODEL: MODEL,
         CONF_TRANSITION: DEFAULT_TRANSITION,
         CONF_MODE_MUSIC: DEFAULT_MODE_MUSIC,
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
