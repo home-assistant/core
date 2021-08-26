@@ -189,13 +189,12 @@ class ModbusHub:
 
     name: str
 
-    entity_timers: list[CALLBACK_TYPE] = []
-
     def __init__(self, hass, client_config):
         """Initialize the Modbus hub."""
 
         # generic configuration
         self._client = None
+        self.entity_timers: list[CALLBACK_TYPE] = []
         self._async_cancel_listener = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -294,11 +293,12 @@ class ModbusHub:
             call()
         self.entity_timers = []
         if self._client:
-            try:
-                self._client.close()
-            except ModbusException as exception_error:
-                self._log_error(str(exception_error))
-        self._client = None
+            async with self._lock:
+                try:
+                    self._client.close()
+                except ModbusException as exception_error:
+                    self._log_error(str(exception_error))
+            self._client = None
 
     def _pymodbus_connect(self):
         """Connect client."""
