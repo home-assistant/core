@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 
 
 class TuyaHaEntity(Entity):
@@ -58,7 +60,18 @@ class TuyaHaEntity(Entity):
         """Return if the device is available."""
         return self.tuya_device.online
 
-    def _send_command(self, commands) -> None:
-        self.hass.async_add_executor_job(
-            self.tuya_device_manager.send_commands, self.tuya_device.id, commands
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, TUYA_HA_SIGNAL_UPDATE_ENTITY, self._update_callback
+            )
         )
+
+    def _send_command(self, commands) -> None:
+        self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)

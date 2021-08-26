@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .aes_cbc import AES_ACCOUNT_KEY, KEY_KEY, XOR_KEY, AesCBC as Aes
 from .const import (
@@ -37,6 +37,7 @@ from .const import (
     TUYA_DEVICE_MANAGER,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_DEVICES,
+    TUYA_HA_SIGNAL_UPDATE_ENTITY,
     TUYA_HA_TUYA_MAP,
     TUYA_HOME_MANAGER,
     TUYA_MQTT_LISTENER,
@@ -156,7 +157,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.debug(
                         "_update-->%s;->>%s", self, ha_device.tuya_device.status
                     )
-                    ha_device.schedule_update_ha_state()
+                    async_dispatcher_send(hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
 
         def add_device(self, device: TuyaDevice):
 
