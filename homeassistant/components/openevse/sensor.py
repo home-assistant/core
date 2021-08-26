@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -20,7 +21,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,20 +82,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the OpenEVSE sensor."""
-    host = config[CONF_HOST]
-    monitored_variables = config[CONF_MONITORED_VARIABLES]
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the OpenEVSE sensors."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the OpenEVSE sensors."""
+    host = entry.data[CONF_HOST]
 
     charger = openevsewifi.Charger(host)
 
-    entities = [
-        OpenEVSESensor(charger, description)
-        for description in SENSOR_TYPES
-        if description.key in monitored_variables
-    ]
+    entities = [OpenEVSESensor(charger, description) for description in SENSOR_TYPES]
 
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class OpenEVSESensor(SensorEntity):

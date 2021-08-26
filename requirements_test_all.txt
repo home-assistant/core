@@ -637,6 +637,9 @@ onvif-zeep-async==1.2.0
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
+# homeassistant.components.openevse
+openevsewifi==1.1.0
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.1.12
 
