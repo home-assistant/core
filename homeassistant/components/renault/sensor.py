@@ -102,18 +102,51 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         return self.entity_description.value_lambda(self)
 
 
-def _get_formatted_charging_status(
-    data: KamereonVehicleBatteryStatusData,
-) -> str | None:
+def _get_charge_mode_icon(entity: RenaultDataEntity[T]) -> str:
+    """Return the icon of this entity."""
+    if entity.data == "schedule_mode":
+        return "mdi:calendar-clock"
+    return "mdi:calendar-remove"
+
+
+def _get_charging_power(entity: RenaultDataEntity[T]) -> StateType:
+    """Return the charging_power of this entity."""
+    if entity.vehicle.details.reports_charging_power_in_watts():
+        return cast(float, entity.data) / 1000
+    return entity.data
+
+
+def _get_charge_state_formatted(entity: RenaultDataEntity[T]) -> str | None:
     """Return the charging_status of this entity."""
+    data = cast(KamereonVehicleBatteryStatusData, entity.coordinator.data)
     charging_status = data.get_charging_status() if data else None
     return charging_status.name.lower() if charging_status else None
 
 
-def _get_formatted_plug_status(data: KamereonVehicleBatteryStatusData) -> str | None:
+def _get_charge_state_icon(entity: RenaultDataEntity[T]) -> str:
+    """Return the icon of this entity."""
+    if entity.data == ChargeState.CHARGE_IN_PROGRESS.value:
+        return "mdi:flash"
+    return "mdi:flash-off"
+
+
+def _get_plug_state_formatted(entity: RenaultDataEntity[T]) -> str | None:
     """Return the plug_status of this entity."""
+    data = cast(KamereonVehicleBatteryStatusData, entity.coordinator.data)
     plug_status = data.get_plug_status() if data else None
     return plug_status.name.lower() if plug_status else None
+
+
+def _get_plug_state_icon(entity: RenaultDataEntity[T]) -> str:
+    """Return the icon of this entity."""
+    if entity.data == PlugState.PLUGGED.value:
+        return "mdi:power-plug"
+    return "mdi:power-plug-off"
+
+
+def _get_rounded_value(entity: RenaultDataEntity[T]) -> float:
+    """Return the icon of this entity."""
+    return round(cast(float, entity.data))
 
 
 SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
@@ -133,17 +166,9 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="chargingStatus",
         device_class=DEVICE_CLASS_CHARGE_STATE,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
-        icon_lambda=lambda x: (
-            "mdi:flash"
-            if x.data == ChargeState.CHARGE_IN_PROGRESS.value
-            else "mdi:flash-off"
-        ),
+        icon_lambda=_get_charge_state_icon,
         name="Charge State",
-        value_lambda=lambda x: (
-            _get_formatted_charging_status(
-                cast(KamereonVehicleBatteryStatusData, x.coordinator.data)
-            )
-        ),
+        value_lambda=_get_charge_state_formatted,
     ),
     RenaultSensorEntityDescription(
         key="charging_remaining_time",
@@ -164,11 +189,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Charging Power",
         native_unit_of_measurement=POWER_KILO_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
-        value_lambda=lambda x: (
-            cast(float, x.data) / 1000
-            if x.vehicle.details.reports_charging_power_in_watts()
-            else x.data
-        ),
+        value_lambda=_get_charging_power,
     ),
     RenaultSensorEntityDescription(
         key="plug_state",
@@ -176,17 +197,9 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="plugStatus",
         device_class=DEVICE_CLASS_PLUG_STATE,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
-        icon_lambda=lambda x: (
-            "mdi:power-plug"
-            if x.data == PlugState.PLUGGED.value
-            else "mdi:power-plug-off"
-        ),
+        icon_lambda=_get_plug_state_icon,
         name="Plug State",
-        value_lambda=lambda x: (
-            _get_formatted_plug_status(
-                cast(KamereonVehicleBatteryStatusData, x.coordinator.data)
-            )
-        ),
+        value_lambda=_get_plug_state_formatted,
     ),
     RenaultSensorEntityDescription(
         key="battery_autonomy",
@@ -227,7 +240,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Mileage",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        value_lambda=lambda x: round(cast(float, x.data)),
+        value_lambda=_get_rounded_value,
     ),
     RenaultSensorEntityDescription(
         key="fuel_autonomy",
@@ -239,7 +252,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=STATE_CLASS_MEASUREMENT,
         requires_fuel=True,
-        value_lambda=lambda x: round(cast(float, x.data)),
+        value_lambda=_get_rounded_value,
     ),
     RenaultSensorEntityDescription(
         key="fuel_quantity",
@@ -251,7 +264,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         native_unit_of_measurement=VOLUME_LITERS,
         state_class=STATE_CLASS_MEASUREMENT,
         requires_fuel=True,
-        value_lambda=lambda x: round(cast(float, x.data)),
+        value_lambda=_get_rounded_value,
     ),
     RenaultSensorEntityDescription(
         key="outside_temperature",
@@ -269,9 +282,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         data_key="chargeMode",
         device_class=DEVICE_CLASS_CHARGE_MODE,
         entity_class=RenaultSensor[KamereonVehicleChargeModeData],
-        icon_lambda=lambda x: (
-            "mdi:calendar-clock" if x.data == "schedule_mode" else "mdi:calendar-remove"
-        ),
+        icon_lambda=_get_charge_mode_icon,
         name="Charge Mode",
     ),
 )
