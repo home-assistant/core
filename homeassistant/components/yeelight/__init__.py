@@ -196,7 +196,6 @@ async def _async_initialize(
     entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
         DATA_PLATFORMS_LOADED: False
     }
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     @callback
     def _async_load_platforms():
@@ -217,6 +216,7 @@ async def _async_initialize(
             entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
         )
 
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, DEVICE_INITIALIZED.format(host), _async_load_platforms
