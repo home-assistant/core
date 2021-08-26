@@ -636,7 +636,7 @@ freebox-api==0.0.10
 freesms==0.2.0
 
 # homeassistant.components.frigidaire
-frigidaire==0.11
+frigidaire==0.12
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor

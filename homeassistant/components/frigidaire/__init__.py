@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import frigidaire
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
 
@@ -14,7 +16,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     def setup(username: str, password: str) -> frigidaire.Frigidaire:
-        hass.data[DOMAIN][entry.entry_id] = frigidaire.Frigidaire(username, password)
+        try:
+            hass.data[DOMAIN][entry.entry_id] = frigidaire.Frigidaire(
+                username, password, timeout=60
+            )
+        except ConnectionError as err:
+            raise ConfigEntryNotReady("Cannot connect to Frigidaire") from err
+        except frigidaire.FrigidaireException as err:
+            raise data_entry_flow.AbortFlow from err
 
     await hass.async_add_executor_job(
         setup, entry.data["username"], entry.data["password"]

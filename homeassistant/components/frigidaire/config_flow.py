@@ -27,17 +27,20 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
 
     def setup(username: str, password: str) -> list[frigidaire.Appliance]:
         try:
-            client = frigidaire.Frigidaire(username, password)
+            client = frigidaire.Frigidaire(username, password, timeout=60)
             return client.get_appliances()
         except frigidaire.FrigidaireException as err:
-            raise InvalidAuth from err
+            if "Failed to authenticate" in str(err):
+                raise InvalidAuth from err
+
+            raise CannotConnect from err
 
     appliances = await hass.async_add_executor_job(
         setup, data["username"], data["password"]
     )
 
     if len(appliances) == 0:
-        raise CannotConnect
+        raise NoAppliances
 
     # Validation Succeeded
     return True
@@ -65,6 +68,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except NoAppliances:
+            errors["base"] = "no_appliances"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -74,6 +79,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+
+class NoAppliances(HomeAssistantError):
+    """Error to indicate there are no appliances."""
 
 
 class CannotConnect(HomeAssistantError):
