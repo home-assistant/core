@@ -305,7 +305,7 @@ async def test_discovery_via_usb_deconz_already_setup(detect_mock, hass):
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
-    """Test usb flow -- deconz setup."""
+    """Test usb flow -- deconz ignored."""
     MockConfigEntry(
         domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
     ).add_to_hass(hass)
