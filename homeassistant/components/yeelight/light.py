@@ -452,14 +452,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         brightness_property = (
             "bright" if self._bulb.music_mode else self._brightness_property
         )
-        # If the nightlight is not active, we do not
-        # want to "current_brightness" since it will check
-        # "bg_power" and main light could still be on
-        if (
-            brightness_property == "current_brightness"
-            and self._bulb.last_properties.get("active_mode") != "1"
-        ):
-            brightness_property = "bright"
         brightness = self._get_property(brightness_property)
         return round(255 * (int(brightness) / 100))
 
@@ -863,7 +855,12 @@ class YeelightColorLightWithoutNightlightSwitch(
 
     @property
     def _brightness_property(self):
-        return "current_brightness"
+        # If the nightlight is not active, we do not
+        # want to "current_brightness" since it will check
+        # "bg_power" and main light could still be on
+        if self._bulb.last_properties.get("active_mode") == "1":
+            return "current_brightness"
+        return super()._brightness_property
 
 
 class YeelightColorLightWithNightlightSwitch(
@@ -887,7 +884,12 @@ class YeelightWhiteTempWithoutNightlightSwitch(
 
     @property
     def _brightness_property(self):
-        return "current_brightness"
+        # If the nightlight is not active, we do not
+        # want to "current_brightness" since it will check
+        # "bg_power" and main light could still be on
+        if self._bulb.last_properties.get("active_mode") == "1":
+            return "current_brightness"
+        return super()._brightness_property
 
 
 class YeelightWithNightLight(
