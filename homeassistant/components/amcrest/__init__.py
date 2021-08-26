@@ -143,6 +143,7 @@ class AmcrestChecker(ApiWrapper):
         self._wrap_login_err = False
         self._wrap_event_flag = threading.Event()
         self._wrap_event_flag.set()
+        self._unique_id: str | None = None
         self._unsub_recheck: Callable[[], None] | None = None
         super().__init__(
             host,
@@ -152,6 +153,14 @@ class AmcrestChecker(ApiWrapper):
             retries_connection=COMM_RETRIES,
             timeout_protocol=COMM_TIMEOUT,
         )
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID associated with the device."""
+        if self._unique_id is None:
+            with suppress(AmcrestError):
+                self._unique_id = self.serial_number.strip()
+        return self._unique_id
 
     @property
     def available(self) -> bool:

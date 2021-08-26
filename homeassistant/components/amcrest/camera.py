@@ -167,7 +167,6 @@ class AmcrestCam(Camera):
         self._rtsp_url: str | None = None
         self._snapshot_task: asyncio.tasks.Task | None = None
         self._unsub_dispatcher: list[Callable[[], None]] = []
-        self._update_succeeded = False
 
     def _check_snapshot_ok(self) -> None:
         available = self.available
@@ -366,9 +365,7 @@ class AmcrestCam(Camera):
 
     def update(self) -> None:
         """Update entity status."""
-        if not self.available or self._update_succeeded:
-            if not self.available:
-                self._update_succeeded = False
+        if not self.available:
             return
         _LOGGER.debug("Updating %s camera", self.name)
         try:
@@ -387,20 +384,19 @@ class AmcrestCam(Camera):
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                self._attr_unique_id = self._api.serial_number.strip()
-                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+                self._attr_unique_id = self._api.unique_id
+                if self._attr_unique_id:
+                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+            if self._rtsp_url is None:
+                self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
             self._audio_enabled = self._get_audio()
             self._motion_recording_enabled = self._get_motion_recording()
             self._color_bw = self._get_color_mode()
-            self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
-            self._update_succeeded = False
-        else:
-            self._update_succeeded = True
 
     # Other Camera method overrides
 

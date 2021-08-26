@@ -192,6 +192,9 @@ class AmcrestBinarySensor(BinarySensorEntity):
         if not (self._api.available or self.is_on):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
+
+        self._update_unique_id()
+
         if self._api.available:
             # Send a command to the camera to test if we can still communicate with it.
             # Override of Http.command() in __init__.py will set self._api.available
@@ -205,6 +208,8 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
 
+        self._update_unique_id()
+
         event_code = self.entity_description.event_code
         if event_code is None:
             _LOGGER.error("Binary sensor %s event code not set", self.name)
@@ -214,6 +219,14 @@ class AmcrestBinarySensor(BinarySensorEntity):
             self._attr_is_on = len(self._api.event_channels_happened(event_code)) > 0
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
+
+    def _update_unique_id(self) -> None:
+        """Set the unique id."""
+        if self._attr_unique_id is not None:
+            return
+        unique_id = self._api.unique_id
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
 
     async def async_on_demand_update(self) -> None:
         """Update state."""
