@@ -95,9 +95,9 @@ class AmcrestSensor(SensorEntity):
 
         sensor_type = self.entity_description.key
         if self._attr_unique_id is None:
-            unique_id = self._api.unique_id
-            if unique_id:
-                self._attr_unique_id = f"{unique_id}-{sensor_type}"
+            serial_number = self._api.serial_number
+            if serial_number:
+                self._attr_unique_id = f"{serial_number}-{sensor_type}"
 
         try:
             if sensor_type == SENSOR_PTZ_PRESET:

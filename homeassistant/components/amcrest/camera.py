@@ -384,7 +384,7 @@ class AmcrestCam(Camera):
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                self._attr_unique_id = self._api.unique_id
+                self._attr_unique_id = self._api.serial_number
                 if self._attr_unique_id:
                     _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             if self._rtsp_url is None:
