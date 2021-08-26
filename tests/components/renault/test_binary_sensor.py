@@ -5,18 +5,18 @@ import pytest
 from renault_api.kamereon import exceptions
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
+    get_null_attribute,
     setup_renault_integration_vehicle,
     setup_renault_integration_vehicle_with_no_data,
     setup_renault_integration_vehicle_with_side_effect,
 )
-from .const import CHECK_ATTRIBUTES, MOCK_VEHICLES
+from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 
 from tests.common import mock_device_registry, mock_registry
 
@@ -44,7 +44,7 @@ async def test_binary_sensors(hass: HomeAssistant, vehicle_type: str):
         assert registry_entry.unique_id == expected_entity["unique_id"]
         state = hass.states.get(entity_id)
         assert state.state == expected_entity["result"]
-        for attr in CHECK_ATTRIBUTES:
+        for attr in FIXED_ATTRIBUTES + DYNAMIC_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
@@ -71,11 +71,11 @@ async def test_binary_sensor_empty(hass: HomeAssistant, vehicle_type: str):
         assert registry_entry.unique_id == expected_entity["unique_id"]
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
-        for attr in CHECK_ATTRIBUTES:
-            if attr == ATTR_LAST_UPDATE:
-                assert state.attributes.get(attr) is None
-            else:
-                assert state.attributes.get(attr) == expected_entity.get(attr)
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+        for attr in DYNAMIC_ATTRIBUTES:
+            expected_value = get_null_attribute(attr, expected_entity)
+            assert state.attributes.get(attr) == expected_value
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -108,11 +108,11 @@ async def test_binary_sensor_errors(hass: HomeAssistant, vehicle_type: str):
         assert registry_entry.unique_id == expected_entity["unique_id"]
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
-        for attr in CHECK_ATTRIBUTES:
-            if attr == ATTR_LAST_UPDATE:
-                assert state.attributes.get(attr) is None
-            else:
-                assert state.attributes.get(attr) == expected_entity.get(attr)
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+        for attr in DYNAMIC_ATTRIBUTES:
+            expected_value = get_null_attribute(attr, expected_entity)
+            assert state.attributes.get(attr) == expected_value
 
 
 async def test_binary_sensor_access_denied(hass):

@@ -4,48 +4,21 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import exceptions
 
-from homeassistant.components.renault.const import (
-    DEVICE_CLASS_CHARGE_MODE,
-    DEVICE_CLASS_CHARGE_STATE,
-    DEVICE_CLASS_PLUG_STATE,
-)
-from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import (
     check_device_registry,
+    get_null_attribute,
     setup_renault_integration_vehicle,
     setup_renault_integration_vehicle_with_no_data,
     setup_renault_integration_vehicle_with_side_effect,
 )
-from .const import CHECK_ATTRIBUTES, MOCK_VEHICLES
+from .const import DYNAMIC_ATTRIBUTES, FIXED_ATTRIBUTES, MOCK_VEHICLES
 
 from tests.common import mock_device_registry, mock_registry
-
-
-def check_inactive_attribute(state: State, attr: str, expected_entity: dict):
-    """Check attribute for  icon for inactive sensors."""
-    if attr == ATTR_LAST_UPDATE:
-        assert state.attributes.get(attr) is None
-    elif attr == ATTR_ICON:
-        if expected_entity.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CHARGE_MODE:
-            assert state.attributes.get(ATTR_ICON) == "mdi:calendar-remove"
-        elif expected_entity.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CHARGE_STATE:
-            assert state.attributes.get(ATTR_ICON) == "mdi:flash-off"
-        elif expected_entity.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_PLUG_STATE:
-            assert state.attributes.get(ATTR_ICON) == "mdi:power-plug-off"
-        else:
-            assert state.attributes.get(ATTR_ICON) == expected_entity.get(ATTR_ICON)
-    else:
-        assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -71,7 +44,7 @@ async def test_sensors(hass: HomeAssistant, vehicle_type: str):
         assert registry_entry.unique_id == expected_entity["unique_id"]
         state = hass.states.get(entity_id)
         assert state.state == expected_entity["result"]
-        for attr in CHECK_ATTRIBUTES:
+        for attr in FIXED_ATTRIBUTES + DYNAMIC_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
 
@@ -98,8 +71,11 @@ async def test_sensor_empty(hass: HomeAssistant, vehicle_type: str):
         assert registry_entry.unique_id == expected_entity["unique_id"]
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNKNOWN
-        for attr in CHECK_ATTRIBUTES:
-            check_inactive_attribute(state, attr, expected_entity)
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+        for attr in DYNAMIC_ATTRIBUTES:
+            expected_value = get_null_attribute(attr, expected_entity)
+            assert state.attributes.get(attr) == expected_value
 
 
 @pytest.mark.parametrize("vehicle_type", MOCK_VEHICLES.keys())
@@ -132,8 +108,11 @@ async def test_sensor_errors(hass: HomeAssistant, vehicle_type: str):
         assert registry_entry.unique_id == expected_entity["unique_id"]
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
-        for attr in CHECK_ATTRIBUTES:
-            check_inactive_attribute(state, attr, expected_entity)
+        for attr in FIXED_ATTRIBUTES:
+            assert state.attributes.get(attr) == expected_entity.get(attr)
+        for attr in DYNAMIC_ATTRIBUTES:
+            expected_value = get_null_attribute(attr, expected_entity)
+            assert state.attributes.get(attr) == expected_value
 
 
 async def test_sensor_access_denied(hass: HomeAssistant):
