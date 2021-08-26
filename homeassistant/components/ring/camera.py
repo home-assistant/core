@@ -110,8 +110,8 @@ class RingCam(RingEntityMixin, Camera):
         """Return a still image response from the camera."""
         if self._image is None and self._video_url:
             image = await ffmpeg.async_get_image(
+                self.hass,
                 self._video_url,
-                output_format=IMAGE_JPEG,
                 width=width,
                 height=height,
             )
