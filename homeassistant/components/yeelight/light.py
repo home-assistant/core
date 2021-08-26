@@ -452,6 +452,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         brightness_property = (
             "bright" if self._bulb.music_mode else self._brightness_property
         )
+        _LOGGER.debug(
+            "brightness: %s - %s - %s",
+            self,
+            brightness_property,
+            self._bulb.last_properties,
+        )
         brightness = self._get_property(brightness_property)
         return round(255 * (int(brightness) / 100))
 
