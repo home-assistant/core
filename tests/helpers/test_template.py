@@ -588,7 +588,7 @@ def test_to_json_string(hass):
     ).async_render()
     assert actual_value_ascii == '"Bar \\u049d \\u00e9\\u00e8\\u00e0"'
     actual_value = template.Template(
-        "{{ 'Bar ҝ éèà' | to_json(ensureascii=False) }}", hass
+        "{{ 'Bar ҝ éèà' | to_json(ensure_ascii=False) }}", hass
     ).async_render()
     assert actual_value == '"Bar ҝ éèà"'
 
