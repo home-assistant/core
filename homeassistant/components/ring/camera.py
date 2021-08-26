@@ -152,7 +152,7 @@ class RingCam(RingEntityMixin, Camera):
         if self._last_video_id == self._last_event["id"] and utcnow <= self._expires_at:
             return
 
-        if (self._last_video_id != self._last_event["id"]):
+        if self._last_video_id != self._last_event["id"]:
             self._image = None
 
         try:
