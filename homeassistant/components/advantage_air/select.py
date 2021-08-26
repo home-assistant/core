@@ -1,5 +1,5 @@
 """Select platform for Advantage Air integration."""
-# Force retest
+
 from homeassistant.components.select import SelectEntity
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
