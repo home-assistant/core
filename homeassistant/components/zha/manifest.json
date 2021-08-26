@@ -18,7 +18,8 @@
   "usb": [
    {"vid":"10C4","pid":"EA60","description":"*2652*","known_devices":["slae.sh cc2652rb stick"]},
    {"vid":"1CF1","pid":"0030","description":"*conbee*","known_devices":["Conbee II"]},
-   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]}
+   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]},
+   {"vid":"0451","pid":"16A8","known_devices":["TI CC2531 USB CDC"]}
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
