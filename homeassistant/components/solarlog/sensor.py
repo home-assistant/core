@@ -6,7 +6,7 @@ from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES, SolarLogSensorEntityDescription
@@ -69,6 +69,7 @@ class SolarlogData:
     def _update(self):
         """Update the data from the SolarLog device."""
         try:
+            # Check connection to Solarlog device
             self.api = SolarLog(self.host)
 
             self.data["TIME"] = self.api.time
@@ -100,28 +101,7 @@ class SolarlogData:
                 )
 
         except (OSError, Timeout, HTTPError, AttributeError, ValueError) as err:
-            self.data["TIME"] = STATE_UNAVAILABLE
-            self.data["powerAC"] = STATE_UNAVAILABLE
-            self.data["powerDC"] = STATE_UNAVAILABLE
-            self.data["voltageAC"] = STATE_UNAVAILABLE
-            self.data["voltageDC"] = STATE_UNAVAILABLE
-            self.data["yieldDAY"] = STATE_UNAVAILABLE
-            self.data["yieldYESTERDAY"] = STATE_UNAVAILABLE
-            self.data["yieldMONTH"] = STATE_UNAVAILABLE
-            self.data["yieldYEAR"] = STATE_UNAVAILABLE
-            self.data["yieldTOTAL"] = STATE_UNAVAILABLE
-            self.data["consumptionAC"] = STATE_UNAVAILABLE
-            self.data["consumptionDAY"] = STATE_UNAVAILABLE
-            self.data["consumptionYESTERDAY"] = STATE_UNAVAILABLE
-            self.data["consumptionMONTH"] = STATE_UNAVAILABLE
-            self.data["consumptionYEAR"] = STATE_UNAVAILABLE
-            self.data["consumptionTOTAL"] = STATE_UNAVAILABLE
-            self.data["totalPOWER"] = STATE_UNAVAILABLE
-            self.data["alternatorLOSS"] = STATE_UNAVAILABLE
-            self.data["CAPACITY"] = STATE_UNAVAILABLE
-            self.data["EFFICIENCY"] = STATE_UNAVAILABLE
-            self.data["powerAVAILABLE"] = STATE_UNAVAILABLE
-            self.data["USAGE"] = STATE_UNAVAILABLE
+            self.data = {}
 
             self.errs += 1
             if self.errs >= 3:
@@ -159,4 +139,10 @@ class SolarlogSensor(SensorEntity):
     def update(self):
         """Get the latest data from the sensor and update the state."""
         self.data.update()
+
+        if not self.data.data:
+            self._attr_available = False
+            return
+
+        self._attr_available = True
         self._attr_native_value = self.data.data[self.entity_description.json_key]
