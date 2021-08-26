@@ -785,11 +785,12 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         # If after the transition has completed the light is still reflecting
         # as on, we have to turn it off without the transition or it will
         # be stuck on
-        if duration:
-            await asyncio.sleep(duration + 0.1)
-        if not self.is_on:
+        if not duration:
             return
-        await self.device.async_turn_off(light_type=self.light_type)
+
+        await asyncio.sleep(duration + 0.1)
+        if self.is_on:
+            await self.device.async_turn_off(light_type=self.light_type)
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
