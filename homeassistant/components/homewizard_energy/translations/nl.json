@@ -11,19 +11,18 @@
             "manual_config_unsupported_api_version": "API versie niet ondersteund",
             "invalid_discovery_parameters": "Fout: invalid_discovery_parameters"
         },
+        
         "step": {
+            "user":
+            {
+                "data": {
+                    "ip_address": "IP Address"
+                },
+                "description": "Vul het IP adres in van je HomeWizard Energy apparaat",
+                "title": "Apparaat toevoegen"
+            },
             "discovery_confirm": {
                 "description": "Geef een naam aan je apparaat:"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "override_poll_interval": "Gebruik eigen update frequentie",
-                    "poll_interval_seconds": "Update frequentie (in seconden)"
-                }
             }
         }
     }
