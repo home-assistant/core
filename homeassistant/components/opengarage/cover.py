@@ -1,9 +1,9 @@
 """Platform for the opengarage.io cover component."""
 import logging
 
-import opengarage
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA,
@@ -23,20 +23,18 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
+
+from .const import (
+    ATTR_DISTANCE_SENSOR,
+    ATTR_DOOR_STATE,
+    ATTR_SIGNAL_STRENGTH,
+    CONF_DEVICE_KEY,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_DISTANCE_SENSOR = "distance_sensor"
-ATTR_DOOR_STATE = "door_state"
-ATTR_SIGNAL_STRENGTH = "wifi_signal"
-
-CONF_DEVICE_KEY = "device_key"
-
-DEFAULT_NAME = "OpenGarage"
-DEFAULT_PORT = 80
 
 STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
@@ -58,37 +56,37 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenGarage covers."""
-    covers = []
     devices = config.get(CONF_COVERS)
-
     for device_config in devices.values():
-        opengarage_url = (
+        device_config[CONF_HOST] = (
             f"{'https' if device_config[CONF_SSL] else 'http'}://"
-            f"{device_config.get(CONF_HOST)}:{device_config.get(CONF_PORT)}"
+            f"{device_config.get(CONF_HOST)}"
         )
 
-        open_garage = opengarage.OpenGarage(
-            opengarage_url,
-            device_config[CONF_DEVICE_KEY],
-            device_config[CONF_VERIFY_SSL],
-            async_get_clientsession(hass),
-        )
-        status = await open_garage.update_state()
-        covers.append(
-            OpenGarageCover(
-                device_config.get(CONF_NAME), open_garage, format_mac(status["mac"])
+        del device_config[CONF_SSL]
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=device_config,
             )
         )
 
-    async_add_entities(covers, True)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the OpenGarage covers."""
+    async_add_entities(
+        [OpenGarageCover(hass.data[DOMAIN][entry.entry_id], entry.unique_id)], True
+    )
 
 
 class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    def __init__(self, name, open_garage, device_id):
+    def __init__(self, open_garage, device_id):
         """Initialize the cover."""
-        self._name = name
+        self._name = None
         self._open_garage = open_garage
         self._state = None
         self._state_before_move = None
@@ -192,3 +190,13 @@ class OpenGarageCover(CoverEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._device_id
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self.name,
+            "manufacturer": "Open Garage",
+        }
+        return device_info
