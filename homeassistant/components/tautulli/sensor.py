@@ -77,9 +77,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not coordinator.activity or not coordinator.home_stats or not coordinator.users:
         raise PlatformNotReady
 
-    sensors = [TautulliSensor(coordinator, name, monitored_conditions, user)]
+    entities = [TautulliSensor(coordinator, name, monitored_conditions, user)]
 
-    async_add_entities(sensors, True)
+    async_add_entities(entities, True)
 
 
 class TautulliSensor(CoordinatorEntity, SensorEntity):
