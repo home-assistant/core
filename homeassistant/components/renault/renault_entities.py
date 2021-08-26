@@ -58,4 +58,8 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
             last_update = self._get_data_attr("timestamp")
             if last_update:
                 return {ATTR_LAST_UPDATE: last_update}
+        if self.entity_description.coordinator == "location":
+            last_update = self._get_data_attr("lastUpdateTime")
+            if last_update:
+                return {ATTR_LAST_UPDATE: last_update}
         return None

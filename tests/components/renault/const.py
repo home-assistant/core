@@ -244,6 +244,8 @@ MOCK_VEHICLES = {
                 "entity_id": "device_tracker.location",
                 "unique_id": "vf1aaaaa555777999_location",
                 "result": STATE_NOT_HOME,
+                ATTR_ICON: "mdi:car",
+                ATTR_LAST_UPDATE: "2020-02-18T16:58:38Z",
             }
         ],
         SENSOR_DOMAIN: [
@@ -376,6 +378,8 @@ MOCK_VEHICLES = {
                 "entity_id": "device_tracker.location",
                 "unique_id": "vf1aaaaa555777123_location",
                 "result": STATE_NOT_HOME,
+                ATTR_ICON: "mdi:car",
+                ATTR_LAST_UPDATE: "2020-02-18T16:58:38Z",
             }
         ],
         SENSOR_DOMAIN: [
@@ -507,6 +511,8 @@ MOCK_VEHICLES = {
                 "entity_id": "device_tracker.location",
                 "unique_id": "vf1aaaaa555777123_location",
                 "result": STATE_NOT_HOME,
+                ATTR_ICON: "mdi:car",
+                ATTR_LAST_UPDATE: "2020-02-18T16:58:38Z",
             }
         ],
         SENSOR_DOMAIN: [
