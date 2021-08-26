@@ -219,7 +219,7 @@ async def _async_initialize(
     )
 
     # fetch initial state
-    asyncio.create_task(device.async_update())
+    asyncio.create_task(device.async_update(False))
 
 
 @callback
@@ -689,7 +689,7 @@ class YeelightDevice:
     async def async_update(self, force):
         """Update device properties and send data updated signal."""
         if not force and self._initialized and self._available:
-            # No need to poll, already connected
+            # No need to poll unless force, already connected
             return
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
@@ -740,7 +740,7 @@ class YeelightEntity(Entity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        await self._device.async_update()
+        await self._device.async_update(False)
 
 
 async def _async_get_device(
