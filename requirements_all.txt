@@ -2055,6 +2055,9 @@ regenmaschine==2022.01.0
 # homeassistant.components.renault
 renault-api==0.1.11
 
+# homeassistant.components.renson_ventilation
+rensonVentilationLib==1.0.0
+
 # homeassistant.components.python_script
 restrictedpython==5.2
 
