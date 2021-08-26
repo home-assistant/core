@@ -9,6 +9,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "wrong_token": "Checksum error, wrong token",
             "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
             "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials.",
             "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
