@@ -762,6 +762,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
                 _LOGGER.error("Unable to set the defaults: %s", ex)
                 return
 
+        # Some devices (mainly nightlights) will not send back the on state so we need to force a refresh
+        if not self.is_on:
+            await self.device.async_update(True)
+
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off."""
         if not self.is_on:
