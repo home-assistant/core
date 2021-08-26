@@ -784,23 +784,13 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        _LOGGER.debug(
-            "Calling turn off with duration=%s, light_type=%s",
-            duration,
-            self.light_type,
-        )
         await self.device.async_turn_off(duration=duration, light_type=self.light_type)
-        _LOGGER.debug(
-            "After calling turn_off, power state is %s, power prop is %s, and self is %s",
-            self.is_on,
-            self._power_property,
-            self,
-        )
+
+        # Some devices will not send back the off state so we need to force a refresh
         if self.is_on and (
             self._power_property == PROP_MAIN_POWER
             or isinstance(self, YeelightAmbientLight)
         ):
-            # Some devices will not send back the off state so we need to manually refresh
             await self.device.async_update(True)
 
     async def async_set_mode(self, mode: str):
