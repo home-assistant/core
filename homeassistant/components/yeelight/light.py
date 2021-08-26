@@ -574,7 +574,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     async def async_update(self):
         """Update light properties."""
-        await self.device.async_update()
+        await self.device.async_update(False)
 
     def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
@@ -801,7 +801,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             or isinstance(self, YeelightAmbientLight)
         ):
             # Some devices will not send back the off state so we need to manually refresh
-            await self.device.async_update()
+            await self.device.async_update(True)
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
