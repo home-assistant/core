@@ -129,7 +129,6 @@ class AmcrestSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to update signal."""
-        assert self.hass is not None
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass,
             service_signal(SERVICE_UPDATE, self._signal_name),
