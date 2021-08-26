@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from yeelight import BulbException, BulbType
 
 from homeassistant.components.yeelight import (
+    CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     DATA_CONFIG_ENTRIES,
@@ -35,6 +36,7 @@ from . import (
     FAIL_TO_BIND_IP,
     ID,
     IP_ADDRESS,
+    MODEL,
     MODULE,
     SHORT_ID,
     _mocked_bulb,
@@ -360,6 +362,7 @@ async def test_async_listen_error_late_discovery(hass, caplog):
 
     assert "Failed to connect to bulb at" not in caplog.text
     assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options[CONF_MODEL] == MODEL
 
 
 async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
