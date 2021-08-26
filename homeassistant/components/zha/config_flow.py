@@ -25,6 +25,7 @@ SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
 )
+DECONZ_DOMAIN = "deconz"
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -121,7 +122,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # we ignore the usb discovery as they probably
         # want to use it there instead
         for flow in self.hass.config_entries.flow.async_progress():
-            if flow["handler"] == "deconz":
+            if flow["handler"] == DECONZ_DOMAIN:
                 return self.async_abort(reason="not_zha_device")
         for entry in self.hass.config_entries.async_entries("deconz"):
             if entry.source != config_entries.SOURCE_IGNORE:
