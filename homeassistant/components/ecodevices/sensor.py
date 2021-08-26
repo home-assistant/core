@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         )
         entities.append(
-            C2TotalEdDevice(
+            C1TotalEdDevice(
                 controller,
                 coordinator,
                 input_name="c1_total",
@@ -170,7 +170,7 @@ class EdDevice(CoordinatorEntity, SensorEntity):
         self._input_name = input_name
 
         self._attr_name = name
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._attr_icon = icon
@@ -194,7 +194,7 @@ class T1EdDevice(EdDevice):
     """Initialize the T1 sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["T1_PAPP"]
 
@@ -230,7 +230,7 @@ class T1TotalEdDevice(EdDevice):
     """Initialize the T1 Total sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["T1_BASE"]
 
@@ -239,7 +239,7 @@ class T2EdDevice(EdDevice):
     """Initialize the T2 sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["T2_PAPP"]
 
@@ -275,7 +275,7 @@ class T2TotalEdDevice(EdDevice):
     """Initialize the T1 Total sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["T2_BASE"]
 
@@ -284,7 +284,7 @@ class C1EdDevice(EdDevice):
     """Initialize the C1 sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["c0day"]
 
@@ -302,7 +302,7 @@ class C1TotalEdDevice(EdDevice):
     """Initialize the C1 sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["count0"]
 
@@ -311,7 +311,7 @@ class C2EdDevice(EdDevice):
     """Initialize the C2 sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["c1day"]
 
@@ -329,6 +329,6 @@ class C2TotalEdDevice(EdDevice):
     """Initialize the C1 sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self.coordinator.data["count1"]
