@@ -106,7 +106,7 @@ async def test_config_cover(hass, mock_modbus):
         ),
     ],
 )
-async def test_coil_cover(hass, expected, mock_modbus, mock_do_cycle):
+async def test_coil_cover(hass, expected, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 
@@ -150,7 +150,7 @@ async def test_coil_cover(hass, expected, mock_modbus, mock_do_cycle):
         ),
     ],
 )
-async def test_register_cover(hass, expected, mock_modbus, mock_do_cycle):
+async def test_register_cover(hass, expected, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 

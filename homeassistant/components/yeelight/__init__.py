@@ -196,7 +196,6 @@ async def _async_initialize(
     entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
         DATA_PLATFORMS_LOADED: False
     }
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     @callback
     def _async_load_platforms():
@@ -212,6 +211,15 @@ async def _async_initialize(
     await device.async_setup()
     entry_data[DATA_DEVICE] = device
 
+    if (
+        device.capabilities
+        and entry.options.get(CONF_MODEL) != device.capabilities["model"]
+    ):
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
+        )
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, DEVICE_INITIALIZED.format(host), _async_load_platforms
@@ -540,7 +548,7 @@ class YeelightDevice:
         self._config = config
         self._host = host
         self._bulb_device = bulb
-        self._capabilities = {}
+        self.capabilities = {}
         self._device_type = None
         self._available = False
         self._initialized = False
@@ -574,12 +582,12 @@ class YeelightDevice:
     @property
     def model(self):
         """Return configured/autodetected device model."""
-        return self._bulb_device.model or self._capabilities.get("model")
+        return self._bulb_device.model or self.capabilities.get("model")
 
     @property
     def fw_version(self):
         """Return the firmware version."""
-        return self._capabilities.get("fw_ver")
+        return self.capabilities.get("fw_ver")
 
     @property
     def is_nightlight_supported(self) -> bool:
@@ -674,20 +682,20 @@ class YeelightDevice:
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""
         scanner = YeelightScanner.async_get(self._hass)
-        self._capabilities = await scanner.async_get_capabilities(self._host) or {}
+        self.capabilities = await scanner.async_get_capabilities(self._host) or {}
         if name := self._config.get(CONF_NAME):
             # Override default name when name is set in config
             self._name = name
-        elif self._capabilities:
+        elif self.capabilities:
             # Generate name from model and id when capabilities is available
-            self._name = _async_unique_name(self._capabilities)
+            self._name = _async_unique_name(self.capabilities)
         else:
             self._name = self._host  # Default name is host
 
-    async def async_update(self):
+    async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
-        if self._initialized and self._available:
-            # No need to poll, already connected
+        if not force and self._initialized and self._available:
+            # No need to poll unless force, already connected
             return
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))

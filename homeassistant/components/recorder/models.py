@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects import mysql, oracle, postgresql
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -39,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 19
+SCHEMA_VERSION = 20
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +65,12 @@ ALL_TABLES = [
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
@@ -220,6 +226,7 @@ class StatisticData(TypedDict, total=False):
     mean: float
     min: float
     max: float
+    last_reset: datetime | None
     state: float
     sum: float
 
@@ -240,11 +247,12 @@ class Statistics(Base):  # type: ignore
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
-    state = Column(Float())
-    sum = Column(Float())
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):

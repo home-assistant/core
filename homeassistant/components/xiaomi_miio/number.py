@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import DEGREE, TIME_MINUTES
 from homeassistant.core import callback
 
 from .const import (
@@ -22,9 +23,14 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V1,
     FEATURE_FLAGS_AIRPURIFIER_V3,
+    FEATURE_FLAGS_FAN,
+    FEATURE_FLAGS_FAN_P5,
+    FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
+    FEATURE_SET_OSCILLATION_ANGLE,
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_140,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -37,14 +43,23 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3,
+    MODEL_FAN_P5,
+    MODEL_FAN_SA1,
+    MODEL_FAN_V2,
+    MODEL_FAN_V3,
+    MODEL_FAN_ZA1,
+    MODEL_FAN_ZA3,
+    MODEL_FAN_ZA4,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
+ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_MOTOR_SPEED = "motor_speed"
+ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
 
 
@@ -93,14 +108,45 @@ NUMBER_TYPES = {
         key=ATTR_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
-        min_value=1,
+        min_value=0,
         max_value=100,
         step=1,
         method="async_set_volume",
     ),
+    FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
+        key=ATTR_OSCILLATION_ANGLE,
+        name="Oscillation Angle",
+        icon="mdi:angle-acute",
+        unit_of_measurement=DEGREE,
+        min_value=1,
+        max_value=120,
+        step=1,
+        method="async_set_oscillation_angle",
+    ),
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_140: XiaomiMiioNumberDescription(
+        key=ATTR_OSCILLATION_ANGLE,
+        name="Oscillation Angle",
+        icon="mdi:angle-acute",
+        unit_of_measurement=DEGREE,
+        min_value=30,
+        max_value=140,
+        step=30,
+        method="async_set_oscillation_angle",
+    ),
+    FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
+        key=ATTR_DELAY_OFF_COUNTDOWN,
+        name="Delay Off Countdown",
+        icon="mdi:fan-off",
+        unit_of_measurement=TIME_MINUTES,
+        min_value=0,
+        max_value=480,
+        step=1,
+        method="async_set_delay_off_countdown",
+    ),
 }
 
 MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -109,7 +155,13 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
     MODEL_AIRPURIFIER_V3: FEATURE_FLAGS_AIRPURIFIER_V3,
-    MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_FAN_P5: FEATURE_FLAGS_FAN_P5,
+    MODEL_FAN_SA1: FEATURE_FLAGS_FAN,
+    MODEL_FAN_V2: FEATURE_FLAGS_FAN,
+    MODEL_FAN_V3: FEATURE_FLAGS_FAN,
+    MODEL_FAN_ZA1: FEATURE_FLAGS_FAN,
+    MODEL_FAN_ZA3: FEATURE_FLAGS_FAN,
+    MODEL_FAN_ZA4: FEATURE_FLAGS_FAN,
 }
 
 
@@ -183,7 +235,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     async def async_set_value(self, value):
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
-        if await method(value):
+        if await method(int(value)):
             self._attr_value = value
             self.async_write_ha_state()
 
@@ -226,4 +278,18 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             "Setting the volume of the miio device failed.",
             self._device.set_volume,
             volume,
+        )
+
+    async def async_set_oscillation_angle(self, angle: int):
+        """Set the volume."""
+        return await self._try_command(
+            "Setting angle of the miio device failed.", self._device.set_angle, angle
+        )
+
+    async def async_set_delay_off_countdown(self, delay_off_countdown: int):
+        """Set the delay off countdown."""
+        return await self._try_command(
+            "Setting delay off miio device failed.",
+            self._device.delay_off,
+            delay_off_countdown * 60,
         )

@@ -188,7 +188,7 @@ homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
-homeassistant/components/github/* @timmo001
+homeassistant/components/github/* @timmo001 @ludeeus
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
@@ -326,6 +326,7 @@ homeassistant/components/myq/* @bdraco @ehendrix23
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nam/* @bieniu
+homeassistant/components/nanoleaf/* @milanmeu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
@@ -530,7 +531,7 @@ homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/trace/* @home-assistant/core
-homeassistant/components/tractive/* @Danielhiversen @zhulik
+homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
 homeassistant/components/tradfri/* @janiversen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
@@ -584,7 +585,7 @@ homeassistant/components/worldclock/* @fabaff
 homeassistant/components/xbox/* @hunterjm
 homeassistant/components/xbox_live/* @MartinHjelmare
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
-homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG
+homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG @bieniu
 homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yale_smart_alarm/* @gjohansson-ST

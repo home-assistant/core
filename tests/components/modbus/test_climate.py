@@ -86,7 +86,7 @@ async def test_config_climate(hass, mock_modbus):
         ),
     ],
 )
-async def test_temperature_climate(hass, expected, mock_modbus, mock_do_cycle):
+async def test_temperature_climate(hass, expected, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later
 
@@ -194,6 +194,7 @@ class ModbusHub:
 
         # generic configuration
         self._client = None
+        self.entity_timers: list[CALLBACK_TYPE] = []
         self._async_cancel_listener = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -288,12 +289,16 @@ class ModbusHub:
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
+        for call in self.entity_timers:
+            call()
+        self.entity_timers = []
         if self._client:
-            try:
-                self._client.close()
-            except ModbusException as exception_error:
-                self._log_error(str(exception_error))
-        self._client = None
+            async with self._lock:
+                try:
+                    self._client.close()
+                except ModbusException as exception_error:
+                    self._log_error(str(exception_error))
+            self._client = None
 
     def _pymodbus_connect(self):
         """Connect client."""

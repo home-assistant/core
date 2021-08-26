@@ -685,7 +685,9 @@ omit =
     homeassistant/components/myq/cover.py
     homeassistant/components/myq/light.py
     homeassistant/components/nad/media_player.py
+    homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/light.py
+    homeassistant/components/nanoleaf/util.py
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
@@ -843,6 +845,7 @@ omit =
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
+    homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/raspihats/*
@@ -862,12 +865,8 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rituals_perfume_genie/binary_sensor.py
-    homeassistant/components/rituals_perfume_genie/entity.py
     homeassistant/components/rituals_perfume_genie/number.py
     homeassistant/components/rituals_perfume_genie/select.py
-    homeassistant/components/rituals_perfume_genie/sensor.py
-    homeassistant/components/rituals_perfume_genie/switch.py
-    homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -1002,6 +1001,7 @@ omit =
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/binary_sensor.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
@@ -1096,6 +1096,8 @@ omit =
     homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
+    homeassistant/components/tractive/entity.py
+    homeassistant/components/tractive/sensor.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py

@@ -27,7 +27,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
@@ -87,9 +89,10 @@ class BasePlatform(Entity):
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
         if self._scan_interval > 0:
-            async_track_time_interval(
+            cancel_func = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
+            self._hub.entity_timers.append(cancel_func)
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
@@ -171,6 +174,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             CALL_TYPE_REGISTER_HOLDING: (
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_WRITE_REGISTER,
+            ),
+            CALL_TYPE_DISCRETE: (
+                CALL_TYPE_DISCRETE,
+                None,
+            ),
+            CALL_TYPE_REGISTER_INPUT: (
+                CALL_TYPE_REGISTER_INPUT,
+                None,
             ),
             CALL_TYPE_COIL: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COIL),
             CALL_TYPE_X_COILS: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COILS),

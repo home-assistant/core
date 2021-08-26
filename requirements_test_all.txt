@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==4.0.0
+HAP-python==4.1.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -106,7 +106,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==6.1.0
+aioesphomeapi==7.0.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -227,7 +227,7 @@ azure-eventhub==5.5.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.26.0
+bellows==0.27.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.19
@@ -281,6 +281,9 @@ construct==2.10.56
 
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
+
+# homeassistant.components.utility_meter
+croniter==1.0.6
 
 # homeassistant.components.datadog
 datadog==0.15.0
@@ -358,7 +361,7 @@ fnvhash==0.1.0
 foobot_async==1.0.0
 
 # homeassistant.components.forecast_solar
-forecast_solar==2.0.0
+forecast_solar==2.1.0
 
 # homeassistant.components.freebox
 freebox-api==0.0.10
@@ -459,7 +462,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210818.0
+home-assistant-frontend==20210825.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -797,7 +800,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==82
+pydeconz==83
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -936,10 +939,13 @@ pymodbus==2.5.3rc1
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==3.1.2
+pymyq==3.1.3
 
 # homeassistant.components.mysensors
 pymysensors==0.21.0
+
+# homeassistant.components.nanoleaf
+pynanoleaf==0.1.0
 
 # homeassistant.components.nuki
 pynuki==1.4.1
@@ -1142,7 +1148,7 @@ restrictedpython==5.1
 rflink==0.0.58
 
 # homeassistant.components.ring
-ring_doorbell==0.6.2
+ring_doorbell==0.7.1
 
 # homeassistant.components.roku
 rokuecp==0.8.1
@@ -1194,7 +1200,7 @@ slackclient==2.5.0
 sleepyq==0.8.1
 
 # homeassistant.components.smart_meter_texas
-smart-meter-texas==0.4.0
+smart-meter-texas==0.4.7
 
 # homeassistant.components.smarthab
 smarthab==0.21
@@ -1373,25 +1379,25 @@ zeep[async]==4.0.0
 zeroconf==0.36.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.59
+zha-quirks==0.0.60
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.12.1
+zigpy-deconz==0.13.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.13.0
+zigpy-xbee==0.14.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.5.3
+zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.36.1
+zigpy==0.37.1
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.29.0

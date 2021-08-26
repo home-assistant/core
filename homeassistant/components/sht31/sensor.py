@@ -13,11 +13,9 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.temperature import display_temp
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,20 +119,12 @@ class SHTSensorTemperature(SHTSensor):
     """Representation of a temperature sensor."""
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def update(self):
         """Fetch temperature from the sensor."""
         super().update()
-        temp_celsius = self._sensor.temperature
-        if temp_celsius is not None:
-            self._state = display_temp(
-                self.hass, temp_celsius, TEMP_CELSIUS, PRECISION_TENTHS
-            )
+        self._state = self._sensor.temperature
 
 
 class SHTSensorHumidity(SHTSensor):

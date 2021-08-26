@@ -80,35 +80,41 @@ async def test_config_binary_sensor(hass, mock_modbus):
     ],
 )
 @pytest.mark.parametrize(
-    "register_words,expected",
+    "register_words,do_exception,expected",
     [
         (
             [0xFF],
+            False,
             STATE_ON,
         ),
         (
             [0x01],
+            False,
             STATE_ON,
         ),
         (
             [0x00],
+            False,
             STATE_OFF,
         ),
         (
             [0x80],
+            False,
             STATE_OFF,
         ),
         (
             [0xFE],
+            False,
             STATE_OFF,
         ),
         (
-            None,
+            [0x00],
+            True,
             STATE_UNAVAILABLE,
         ),
     ],
 )
-async def test_all_binary_sensor(hass, expected, mock_modbus, mock_do_cycle):
+async def test_all_binary_sensor(hass, expected, mock_do_cycle):
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
 
