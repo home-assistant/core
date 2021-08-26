@@ -168,7 +168,7 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert state.state == "1412.002"
     entry = entity_registry.async_get("sensor.refrigerator_energy")
     assert entry
-    assert entry.unique_id == f"{device.device_id}.energy"
+    assert entry.unique_id == f"{device.device_id}.energy_meter"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
@@ -180,7 +180,7 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert state.state == "109"
     entry = entity_registry.async_get("sensor.refrigerator_power")
     assert entry
-    assert entry.unique_id == f"{device.device_id}.power"
+    assert entry.unique_id == f"{device.device_id}.power_meter"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
