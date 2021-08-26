@@ -161,6 +161,15 @@ class USBDiscovery:
                 continue
             if "pid" in matcher and device.pid != matcher["pid"]:
                 continue
+            if "serial_number" in matcher and not _fnmatch_lower(
+                device.serial_number, matcher["serial_number"]
+            ):
+                _LOGGER.debug(
+                    "reject serial_number: %s !~ %s",
+                    device.description,
+                    matcher["serial_number"],
+                )
+                continue
             if "manufacturer" in matcher and not _fnmatch_lower(
                 device.manufacturer, matcher["manufacturer"]
             ):
@@ -178,14 +187,6 @@ class USBDiscovery:
                     device.description,
                     matcher["description"],
                 )
-                continue
-            if "manufacturer" in matcher and not _fnmatch_lower(
-                device.manufacturer, matcher["manufacturer"]
-            ):
-                continue
-            if "description" in matcher and not _fnmatch_lower(
-                device.description, matcher["description"]
-            ):
                 continue
             flow: USBFlow = {
                 "domain": matcher["domain"],

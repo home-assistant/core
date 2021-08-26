@@ -210,6 +210,7 @@ MANIFEST_SCHEMA = vol.Schema(
                 {
                     vol.Optional("vid"): vol.All(str, verify_uppercase),
                     vol.Optional("pid"): vol.All(str, verify_uppercase),
+                    vol.Optional("serial_number"): vol.All(str, verify_lowercase),
                     vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
                     vol.Optional("description"): vol.All(str, verify_lowercase),
                     vol.Optional("known_devices"): [str],
