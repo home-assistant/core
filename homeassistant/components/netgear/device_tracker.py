@@ -80,7 +80,6 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         super().__init__(router, device)
         self._hostname = self.get_hostname(device)
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
-        self._attrs = {}
 
     def get_hostname(self, device):
         """Return the hostname of the given device or None if we don't know."""
@@ -96,13 +95,6 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
         self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
-        self._attrs = {
-            "link_type": self._device["type"],
-            "link_rate": self._device["link_rate"],
-            "signal_strength": self._device["signal"],
-        }
-        if not self._active:
-            self._attrs = {}
 
         self.async_write_ha_state()
 
@@ -135,8 +127,3 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     def icon(self) -> str:
         """Return the icon."""
         return self._icon
-
-    @property
-    def device_state_attributes(self):
-        """Return the attributes."""
-        return self._attrs
