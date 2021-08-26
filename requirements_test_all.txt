@@ -158,7 +158,7 @@ aiopvpc==2.2.0
 aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.7
+aiorecollect==1.0.8
 
 # homeassistant.components.shelly
 aioshelly==0.6.4
@@ -1367,7 +1367,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.3
+yeelight==0.7.4
 
 # homeassistant.components.youless
 youless-api==0.12
