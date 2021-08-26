@@ -859,10 +859,6 @@ class YeelightColorLightWithoutNightlightSwitch(
 ):
     """Representation of a Color Yeelight light."""
 
-    @property
-    def _brightness_property(self):
-        return "current_brightness"
-
 
 class YeelightColorLightWithNightlightSwitch(
     YeelightNightLightSupport, YeelightColorLightSupport, YeelightGenericLight
@@ -882,10 +878,6 @@ class YeelightWhiteTempWithoutNightlightSwitch(
     YeelightWhiteTempLightSupport, YeelightGenericLight
 ):
     """White temp light, when nightlight switch is not set to light."""
-
-    @property
-    def _brightness_property(self):
-        return "current_brightness"
 
 
 class YeelightWithNightLight(
