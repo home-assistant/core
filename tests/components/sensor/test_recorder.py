@@ -371,7 +371,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         "state_class": "total_increasing",
         "unit_of_measurement": unit,
     }
-    seq = [10, 15, 20, 19, 30, 40, 50, 60, 70]
+    seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
 
     four, eight, states = record_meter_states(
         hass, zero, "sensor.test1", attributes, seq
@@ -385,8 +385,20 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     wait_recording_done(hass)
     recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
     wait_recording_done(hass)
+    assert (
+        "Entity sensor.test1 has state class total_increasing, but its state is not "
+        "strictly increasing. Please create a bug report at https://github.com/"
+        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
+        "+recorder%22"
+    ) not in caplog.text
     recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
     wait_recording_done(hass)
+    assert (
+        "Entity sensor.test1 has state class total_increasing, but its state is not "
+        "strictly increasing. Please create a bug report at https://github.com/"
+        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
+        "+recorder%22"
+    ) in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
@@ -427,12 +439,6 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
-    assert (
-        "Entity sensor.test1 has state class total_increasing, but its state is not "
-        "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
-        "+recorder%22"
-    ) in caplog.text
 
 
 def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
