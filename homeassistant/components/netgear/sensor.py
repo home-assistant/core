@@ -1,43 +1,28 @@
 """Support for Netgear routers."""
-import logging
-
-import voluptuous as vol
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_EXCLUDE,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    PERCENTAGE,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DEVICE_ICONS, DOMAIN
-from .router import async_setup_netgear_entry, NetgearRouter, NetgearDeviceEntity
+from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class NetgearSensorDescription(SensorEntityDescription):
     """Class that holds device specific info for a netgear sensor."""
 
     attributes: tuple = ()
+
 
 SENSOR_TYPES = {
     "type": NetgearSensorDescription(
@@ -60,18 +45,22 @@ SENSOR_TYPES = {
     ),
 }
 
+
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for Netgear component."""
+
     def generate_sensor_classes(router: NetgearRouter, device):
         sensor_classes = []
         sensor_classes.append(NetgearSensorEntity(router, device, "type"))
         sensor_classes.append(NetgearSensorEntity(router, device, "link_rate"))
         sensor_classes.append(NetgearSensorEntity(router, device, "signal"))
         return sensor_classes
-    
-    await async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
+
+    await async_setup_netgear_entry(
+        hass, entry, async_add_entities, generate_sensor_classes
+    )
 
 
 class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
@@ -84,7 +73,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         super().__init__(router, device)
         self._attribute = attribute
         self._discription = SENSOR_TYPES[self._attribute]
-        self._name = f"{self.get_device_name(device)} {self._discription.name}"
+        self._name = f"{self.get_device_name()} {self._discription.name}"
         self._unique_id = f"{self._mac}-{self._attribute}"
         self._device_class = self._discription.device_class
         self._unit = self._discription.native_unit_of_measurement

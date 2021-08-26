@@ -57,7 +57,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_remove_untracked_registries(hass: HomeAssistantType, entry: ConfigEntry):
+async def _async_remove_untracked_registries(
+    hass: HomeAssistantType, entry: ConfigEntry
+):
     """Remove entities and devices that are no longer tracked from the registries."""
     tracked_list = convert_tracked_list(entry.options.get(CONF_TRACKED_LIST, ""))
     if not tracked_list:

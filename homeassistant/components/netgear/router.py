@@ -4,7 +4,6 @@ import logging
 
 from pynetgear import Netgear
 
-from homeassistant.core import callback
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -13,16 +12,18 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac, CONNECTION_NETWORK_MAC
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -72,7 +73,10 @@ def get_api(
 
 
 async def async_setup_netgear_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities, EntityClasses
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities,
+    entity_class_generator,
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id]
@@ -81,7 +85,7 @@ async def async_setup_netgear_entry(
     @callback
     def update_router():
         """Update the values of the router."""
-        add_entities(router, async_add_entities, tracked, EntityClasses)
+        add_entities(router, async_add_entities, tracked, entity_class_generator)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, update_router)
@@ -91,7 +95,7 @@ async def async_setup_netgear_entry(
 
 
 @callback
-def add_entities(router, async_add_entities, tracked, EntityClasses):
+def add_entities(router, async_add_entities, tracked, entity_class_generator):
     """Add new tracker entities from the router."""
     new_tracked = []
 
@@ -99,7 +103,7 @@ def add_entities(router, async_add_entities, tracked, EntityClasses):
         if mac in tracked:
             continue
 
-        new_tracked = new_tracked + EntityClasses(router, device)
+        new_tracked = new_tracked + entity_class_generator(router, device)
         tracked.add(mac)
 
     if new_tracked:
@@ -168,7 +172,7 @@ class NetgearRouter:
         devices = dr.async_entries_for_config_entry(device_registry, self.entry_id)
         for device_entry in devices:
             if device_entry.via_device_id is None:
-                continue    # do not add the router itself
+                continue  # do not add the router itself
 
             device_mac = dict(device_entry.connections).get(dr.CONNECTION_NETWORK_MAC)
             self.devices[device_mac] = {
@@ -256,14 +260,14 @@ class NetgearDeviceEntity(Entity):
         self._router = router
         self._device = device
         self._mac = device["mac"]
-        self._name = self.get_device_name(device)
+        self._name = self.get_device_name()
         self._device_name = self._name
         self._unique_id = self._mac
         self._active = device["active"]
 
-    def get_device_name(self, device):
+    def get_device_name(self):
         """Return the name of the given device or the MAC if we don't know."""
-        name = device["name"]
+        name = self._device["name"]
         if not name or name == "--":
             name = self._mac
 

@@ -17,12 +17,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEVICE_ICONS, DOMAIN
-from .router import async_setup_netgear_entry, NetgearRouter, NetgearDeviceEntity
+from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +63,12 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for Netgear component."""
+
     def generate_classes(router: NetgearRouter, device):
         classes = []
         classes.append(NetgearScannerEntity(router, device))
         return classes
+
     await async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
 
 
@@ -78,12 +78,12 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     def __init__(self, router: NetgearRouter, device) -> None:
         """Initialize a Netgear device."""
         super().__init__(router, device)
-        self._hostname = self.get_hostname(device)
+        self._hostname = self.get_hostname()
         self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
 
-    def get_hostname(self, device):
+    def get_hostname(self):
         """Return the hostname of the given device or None if we don't know."""
-        hostname = device["name"]
+        hostname = self._device["name"]
         if hostname == "--":
             return None
 
