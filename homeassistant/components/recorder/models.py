@@ -70,7 +70,7 @@ DOUBLE_TYPE = (
     Float()
     .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
-    .with_variant(postgresql.DOUBLE_PRECISION, "postgresql")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
