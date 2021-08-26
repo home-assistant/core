@@ -8,7 +8,6 @@ import voluptuous as vol
 import yeelight
 from yeelight import Bulb, BulbException, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
-from yeelight.main import DEFAULT_PROPS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -68,6 +67,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YEELIGHT = SUPPORT_TRANSITION | SUPPORT_FLASH | SUPPORT_EFFECT
 
+PROP_POWER = "power"
 PROP_MAIN_POWER = "main_power"
 
 ATTR_MINUTES = "minutes"
@@ -541,7 +541,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     @property
     def _power_property(self):
-        return "power"
+        return PROP_POWER
 
     @property
     def _turn_on_power_mode(self):
@@ -790,7 +790,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if self._power_property == PROP_MAIN_POWER:
             # Some devices will not send back the off state
             # so we need to manually refresh
-            await self._bulb.async_get_properties([*DEFAULT_PROPS, PROP_MAIN_POWER])
+            await self._bulb.async_get_properties([PROP_POWER, PROP_MAIN_POWER])
 
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
