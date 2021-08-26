@@ -9,6 +9,7 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.components.hassio import async_get_addon_info, is_hassio
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -26,6 +27,8 @@ SUPPORTED_PORT_SETTINGS = (
     CONF_FLOWCONTROL,
 )
 DECONZ_DOMAIN = "deconz"
+
+ZIGBEE2MQTT_ADDON_SLUG = "45df7312_zigbee2mqtt"
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -125,6 +128,14 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="not_zha_device")
         for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
             if entry.source != config_entries.SOURCE_IGNORE:
+                return self.async_abort(reason="not_zha_device")
+
+        # If they have the zigbee2mqtt addon installed, abort
+        if is_hassio(self.hass):
+            addon_info: dict = await async_get_addon_info(
+                self.hass, ZIGBEE2MQTT_ADDON_SLUG
+            )
+            if addon_info["version"] is not None:
                 return self.async_abort(reason="not_zha_device")
 
         self._device_path = dev_path
