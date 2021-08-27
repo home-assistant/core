@@ -115,7 +115,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="14.3unknown")
+                return self.async_abort(reason="unknown")
             else:
                 if self._reauth_entry_id:
                     return await self._async_reauth_update_entry(
