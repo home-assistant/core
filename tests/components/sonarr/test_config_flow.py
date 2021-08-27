@@ -100,9 +100,7 @@ async def test_full_reauth_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the manual reauth flow from start to finish."""
-    entry = await setup_integration(
-        hass, aioclient_mock, skip_entry_setup=True
-    )
+    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
     assert entry
 
     result = await hass.config_entries.flow.async_init(
