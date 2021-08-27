@@ -175,6 +175,10 @@ class PowerViewShade(ShadeEntity, CoverEntity):
 
     async def _async_move(self, target_hass_position):
         """Move the shade to a position."""
+        # Force the position to be refreshed in case the hub
+        # is not in sync with the shade to prevent the move being
+        # a NOOP because the hub things it already at the correct position
+        await self._async_force_refresh_state()
         current_hass_position = hd_position_to_hass(self._current_cover_position)
         steps_to_move = abs(current_hass_position - target_hass_position)
         if not steps_to_move:
