@@ -683,6 +683,8 @@ class YeelightDevice:
         """Fetch capabilities and setup name if available."""
         scanner = YeelightScanner.async_get(self._hass)
         self.capabilities = await scanner.async_get_capabilities(self._host) or {}
+        if self.capabilities:
+            self._bulb_device.set_capabilities(self.capabilities)
         if name := self._config.get(CONF_NAME):
             # Override default name when name is set in config
             self._name = name
