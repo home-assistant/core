@@ -64,8 +64,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the flow."""
-        self._reauth_entry_id = None
-        self._reauth_entry_data = {}
+        self.entry = None
 
     @staticmethod
     @callback
@@ -75,8 +74,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry_id = self.context["entry_id"]
-        self._reauth_entry_data = dict(data)
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
         return await self.async_step_reauth_confirm()
 
@@ -87,7 +85,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"host": self._reauth_entry_data[CONF_HOST]},
+                description_placeholders={"host": self.entry.data[CONF_HOST]},
                 data_schema=vol.Schema({}),
                 errors={},
             )
@@ -101,8 +99,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self._reauth_entry_id:
-                user_input = {**self._reauth_entry_data, **user_input}
+            if self.entry:
+                user_input = {**self.entry.data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
@@ -117,10 +115,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                if self._reauth_entry_id:
-                    return await self._async_reauth_update_entry(
-                        self._reauth_entry_id, user_input
-                    )
+                if self.entry:
+                    return await self._async_reauth_update_entry(user_input)
 
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
@@ -133,11 +129,10 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_reauth_update_entry(self, entry_id: str, data: dict) -> FlowResult:
+    async def _async_reauth_update_entry(self, data: dict) -> FlowResult:
         """Update existing config entry."""
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        self.hass.config_entries.async_update_entry(entry, data=data)
-        await self.hass.config_entries.async_reload(entry.entry_id)
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
 
         return self.async_abort(reason="reauth_successful")
 
