@@ -1,6 +1,6 @@
 {
   "domain": "iotawatt",
-  "name": "IoTawatt",
+  "name": "IoTaWatt",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iotawatt",
   "requirements": [
