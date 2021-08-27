@@ -106,7 +106,7 @@ class SonarrCommandsSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Commands sensor."""
-        self._commands = []
+        self._commands: list[Any] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -144,7 +144,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Disk Space sensor."""
-        self._disks = []
+        self._disks: list[Any] = []
         self._total_free = 0
 
         super().__init__(
@@ -192,7 +192,7 @@ class SonarrQueueSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Queue sensor."""
-        self._queue = []
+        self._queue: list[Any] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -233,7 +233,7 @@ class SonarrSeriesSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Series sensor."""
-        self._items = []
+        self._items: list[Any] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -272,7 +272,7 @@ class SonarrUpcomingSensor(SonarrSensor):
     def __init__(self, sonarr: Sonarr, entry_id: str, days: int = 1) -> None:
         """Initialize Sonarr Upcoming sensor."""
         self._days = days
-        self._upcoming = []
+        self._upcoming: list[Any] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -332,12 +332,15 @@ class SonarrWantedSensor(SonarrSensor):
     async def async_update(self) -> None:
         """Update entity."""
         self._results = await self.sonarr.wanted(page_size=self._max_items)
-        self._total = self._results.total
+        if self._results is None:
+            self._total = None
+        else:
+            self._total = self._results.total
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
-        attrs = {}
+        attrs: dict[str, Any] = {}
 
         if self._results is not None:
             for episode in self._results.episodes:

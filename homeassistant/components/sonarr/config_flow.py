@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -53,8 +53,6 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     )
 
     await sonarr.update()
-
-    return True
 
 
 class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
