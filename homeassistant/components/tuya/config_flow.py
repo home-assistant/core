@@ -131,17 +131,16 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-            return (
-                self.async_show_form(
+            if self.project_type == ProjectType.SMART_HOME:
+                return self.async_show_form(
                     step_id="user", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
                 )
-                if self.project_type == ProjectType.SMART_HOME
-                else self.async_show_form(
+            else:
+                return self.async_show_form(
                     step_id="user",
                     data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
                     errors=errors,
                 )
-            )
 
         return self.async_show_form(
             step_id="project_type", data_schema=DATA_SCHEMA_PROJECT_TYPE, errors=errors
