@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import (
+    EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     HLS_PROVIDER,
     MAX_SEGMENTS,
@@ -99,7 +100,7 @@ def make_playlist(
             [
                 f"#EXT-X-PART-INF:PART-TARGET={part_target_duration:.3f}",
                 f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_target_duration:.3f}",
-                f"#EXT-X-START:TIME-OFFSET=-{3*part_target_duration:.3f},PRECISE=YES",
+                f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*part_target_duration:.3f},PRECISE=YES",
             ]
         )
     else:
