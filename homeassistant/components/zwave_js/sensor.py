@@ -481,9 +481,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
             self.node.on("interview started", self._update_availability)
         )
         self.async_on_remove(
-            self.node.on("interview failed", self._update_availability)
-        )
-        self.async_on_remove(
             self.node.on("interview completed", self._update_availability)
         )
         # Add value_changed callbacks.
