@@ -71,6 +71,7 @@ class IotaWattSensor(IotaWattEntity):
         self._io_type = sensor.getType()
         self._state = None
         self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_force_update = True
 
         unit = sensor.getUnit()
         if unit == "Watts":
