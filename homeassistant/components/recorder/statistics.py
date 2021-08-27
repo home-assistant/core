@@ -7,7 +7,7 @@ import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal, cast
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
@@ -185,26 +185,11 @@ def get_start_time() -> datetime:
     return last_period
 
 
-def _get_metadata_ids(
-    hass: HomeAssistant, session: scoped_session, statistic_ids: list[str]
-) -> list[str]:
-    """Resolve metadata_id for a list of statistic_ids."""
-    baked_query = hass.data[STATISTICS_META_BAKERY](
-        lambda session: session.query(*QUERY_STATISTIC_META_ID)
-    )
-    baked_query += lambda q: q.filter(
-        StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
-    )
-    result = execute(baked_query(session).params(statistic_ids=statistic_ids))
-
-    return [id for id, _ in result] if result else []
-
-
 def _update_or_add_metadata(
     hass: HomeAssistant,
     session: scoped_session,
     new_metadata: StatisticMetaData,
-) -> str:
+) -> int:
     """Get metadata_id for a statistic_id.
 
     If the statistic_id is previously unknown, add it. If it's already known, update
@@ -218,16 +203,15 @@ def _update_or_add_metadata(
         unit = new_metadata["unit_of_measurement"]
         has_mean = new_metadata["has_mean"]
         has_sum = new_metadata["has_sum"]
-        session.add(
-            StatisticsMeta.from_meta(DOMAIN, statistic_id, unit, has_mean, has_sum)
-        )
-        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
+        meta = StatisticsMeta.from_meta(DOMAIN, statistic_id, unit, has_mean, has_sum)
+        session.add(meta)
+        session.flush()  # Flush to get the metadata id assigned
         _LOGGER.debug(
             "Added new statistics metadata for %s, new_metadata: %s",
             statistic_id,
             new_metadata,
         )
-        return metadata_ids[0]
+        return cast(int, meta.id)
 
     metadata_id, old_metadata = next(iter(old_metadata_dict.items()))
     if (
@@ -387,7 +371,7 @@ def _get_metadata(
     session: scoped_session,
     statistic_ids: list[str] | None,
     statistic_type: Literal["mean"] | Literal["sum"] | None,
-) -> dict[str, StatisticMetaData]:
+) -> dict[int, StatisticMetaData]:
     """Fetch meta data, returns a dict of StatisticMetaData indexed by statistic_id.
 
     If statistic_ids is given, fetch metadata only for the listed statistics_ids.
@@ -424,7 +408,7 @@ def _get_metadata(
 
     metadata_ids = [metadata[0] for metadata in result]
     # Prepare the result dict
-    metadata: dict[str, StatisticMetaData] = {}
+    metadata: dict[int, StatisticMetaData] = {}
     for _id in metadata_ids:
         meta = _meta(result, _id)
         if meta:
@@ -437,12 +421,11 @@ def get_metadata(
     statistic_id: str,
 ) -> StatisticMetaData | None:
     """Return metadata for a statistic_id."""
-    statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
-        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
-        if not metadata_ids:
+        metadata = _get_metadata(hass, session, [statistic_id], None)
+        if not metadata:
             return None
-        return _get_metadata(hass, session, statistic_ids, None).get(metadata_ids[0])
+        return next(iter(metadata.values()))
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:
@@ -651,7 +634,7 @@ def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     stats: list,
     statistic_ids: list[str] | None,
-    metadata: dict[str, StatisticMetaData],
+    metadata: dict[int, StatisticMetaData],
     convert_units: bool,
     duration: timedelta,
 ) -> dict[str, list[dict]]:
