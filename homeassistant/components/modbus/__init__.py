@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
@@ -76,7 +77,6 @@ from .const import (
     CONF_RETRY_ON_EMPTY,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
-    CONF_STATE_CLASS,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
