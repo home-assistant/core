@@ -21,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .connection_state import ConnectionStateMixin
 from .const import (
     ACTIVITY_POWER_OFF,
     ATTR_ACTIVITY_STARTING,
@@ -34,6 +33,7 @@ from .const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
+from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,14 +76,12 @@ async def async_setup_entry(
     )
 
 
-class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
+class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
     """Remote representation used to control a Harmony device."""
 
     def __init__(self, data, activity, delay_secs, out_path):
         """Initialize HarmonyRemote class."""
-        super().__init__()
-        self._data = data
-        self._name = data.name
+        super().__init__(data=data)
         self._state = None
         self._current_activity = ACTIVITY_POWER_OFF
         self.default_activity = activity
@@ -92,7 +90,6 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         self.delay_secs = delay_secs
         self._last_activity = None
         self._config_path = out_path
-        self._attr_should_poll = False
         self._attr_unique_id = data.unique_id
         self._attr_device_info = self._data.device_info(DOMAIN)
         self._attr_name = data.name
@@ -180,11 +177,6 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
     def is_on(self):
         """Return False if PowerOff is the current activity, otherwise True."""
         return self._current_activity not in [None, "PowerOff"]
-
-    @property
-    def available(self):
-        """Return True if connected to Hub, otherwise False."""
-        return self._data.available
 
     @callback
     def async_new_activity(self, activity_info: tuple) -> None:

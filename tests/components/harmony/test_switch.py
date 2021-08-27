@@ -42,8 +42,8 @@ async def test_connection_state_changes(
 
     # enable switch entities
     ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(ENTITY_WATCH_TV, **{"disabled_by": None})
-    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, **{"disabled_by": None})
+    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -92,8 +92,8 @@ async def test_switch_toggles(mock_hc, hass, mock_write_config):
 
     # enable switch entities
     ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(ENTITY_WATCH_TV, **{"disabled_by": None})
-    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, **{"disabled_by": None})
+    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
