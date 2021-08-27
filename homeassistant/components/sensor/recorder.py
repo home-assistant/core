@@ -352,7 +352,7 @@ def compile_statistics(
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 new_state = old_state = last_stats[entity_id][0]["state"]
-                _sum = last_stats[entity_id][0]["sum"]
+                _sum = last_stats[entity_id][0]["sum"] or 0
 
             for fstate, state in fstates:
 
