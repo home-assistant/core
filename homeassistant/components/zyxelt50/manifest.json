@@ -4,9 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zyxelt50",
   "requirements": [
-    "pycryptodome==latest"
+    "pycryptodome==3.10.1"
   ],
-  "dependencies": [],
   "codeowners": [
     "@SLG"
   ],

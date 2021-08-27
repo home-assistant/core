@@ -11,13 +11,13 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, DEFAULT_HOST, DEFAULT_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST, default="192.168.1.1"): str,
-    vol.Required(CONF_USERNAME, default="admin"): str,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
     vol.Required(CONF_PASSWORD): str
 })
 
