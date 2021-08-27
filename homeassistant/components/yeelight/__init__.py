@@ -712,7 +712,7 @@ class YeelightDevice:
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
         if self._did_first_update and not was_available and self._available:
-            #
+            # On reconnect the properties may be out of sync
             #
             # We need to make sure the DEVICE_INITIALIZED dispatcher
             # before we can update on reconnect by checking self._did_first_update
@@ -722,7 +722,6 @@ class YeelightDevice:
             # to be called when async_setup_entry reaches the end of the
             # function
             #
-            # On reconnect the properties may be out of sync
             asyncio.create_task(self.async_update(True))
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
