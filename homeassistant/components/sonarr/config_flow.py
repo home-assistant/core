@@ -64,7 +64,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the flow."""
-        self._reauth = False
+        self._reauth_unique_id = None
         self._entry_id = None
         self._entry_data = {}
 
@@ -76,10 +76,10 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth = True
-        self._entry_data = dict(data)
-        entry = await self.async_set_unique_id(self.unique_id)
+        self._reauth_unique_id = self.context["unique_id"]
+        entry = await self.async_set_unique_id(self._reauth_unique_id)
         self._entry_id = entry.entry_id
+        self._entry_data = entry.data
 
         return await self.async_step_reauth_confirm()
 
@@ -104,7 +104,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self._reauth:
+            if self._reauth_unique_id:
                 user_input = {**self._entry_data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
@@ -120,7 +120,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                if self._reauth:
+                if self._reauth_unique_id:
                     return await self._async_reauth_update_entry(
                         self._entry_id, user_input
                     )
