@@ -31,7 +31,6 @@ async def validate_input(hass: core.HomeAssistant, data):
     iotawatt = Iotawatt(data["name"], data["host"], session)
     try:
         is_connected = await iotawatt.connect()
-        _LOGGER.debug("isConnected: %s", is_connected)
     except (KeyError, json.JSONDecodeError, httpx.HTTPError):
         raise CannotConnect
 
@@ -87,7 +86,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
             }
         )
-        _LOGGER.debug("Data: %s", self._data)
         if user_input is None:
             return self.async_show_form(step_id="auth", data_schema=data_schema)
         self._data.update(user_input)
