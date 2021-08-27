@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -23,12 +22,9 @@ from homeassistant.const import (
 
 DOMAIN = "solarlog"
 
-"""Default config for solarlog."""
+# Default config for solarlog.
 DEFAULT_HOST = "http://solar-log"
 DEFAULT_NAME = "solarlog"
-
-"""Fixed constants."""
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 @dataclass
