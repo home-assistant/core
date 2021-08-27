@@ -243,7 +243,7 @@ class ModbusHub:
             self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
-        log_text = f"Pymodbus: {text}"
+        log_text = f"Pymodbus: {self.name}: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
