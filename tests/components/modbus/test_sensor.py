@@ -9,7 +9,6 @@ from homeassistant.components.modbus.const import (
     CONF_LAZY_ERROR,
     CONF_PRECISION,
     CONF_SCALE,
-    CONF_STATE_CLASS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
@@ -22,6 +21,7 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     STATE_CLASS_MEASUREMENT,
 )

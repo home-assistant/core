@@ -230,7 +230,7 @@ base36==0.1.1
 bellows==0.27.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.19
+bimmer_connected==0.7.20
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -1191,7 +1191,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.4
+simplisafe-python==11.0.5
 
 # homeassistant.components.slack
 slackclient==2.5.0

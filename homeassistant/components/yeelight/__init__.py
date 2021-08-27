@@ -227,7 +227,7 @@ async def _async_initialize(
     )
 
     # fetch initial state
-    asyncio.create_task(device.async_update())
+    asyncio.create_task(device.async_first_update())
 
 
 @callback
@@ -694,6 +694,16 @@ class YeelightDevice:
         else:
             self._name = self._host  # Default name is host
 
+    async def async_first_update(self):
+        """Try to refresh the state on initial connection.
+
+        If this fails, the library will reconnect and try
+        again and our callback (async_update_callback) will
+        trigger another update.
+        """
+        with contextlib.suppress(asyncio.TimeoutError):
+            await self.async_update(True)
+
     async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
         if not force and self._initialized and self._available:
@@ -705,7 +715,11 @@ class YeelightDevice:
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
-        self._available = data.get(KEY_CONNECTED, True)
+        connected = data.get(KEY_CONNECTED, True)
+        if not self._available and connected:
+            # On reconnect the properties may be out of sync
+            asyncio.create_task(self.async_update(True))
+        self._available = connected
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 
