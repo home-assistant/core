@@ -9,13 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
-from .const import (
-    ATTR_STATE_DEVICE_LOCKED,
-    ATTR_STATE_LOCKED,
-    CONF_COORDINATOR,
-    DOMAIN as FRITZBOX_DOMAIN,
-)
-from .model import FritzExtraAttributes
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 
 
 async def async_setup_entry(
@@ -50,12 +44,3 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self.device.set_switch_state_off)
         await self.coordinator.async_refresh()
-
-    @property
-    def extra_state_attributes(self) -> FritzExtraAttributes:
-        """Return the state attributes of the device."""
-        attrs: FritzExtraAttributes = {
-            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
-            ATTR_STATE_LOCKED: self.device.lock,
-        }
-        return attrs

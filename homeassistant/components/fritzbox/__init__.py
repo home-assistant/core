@@ -172,8 +172,7 @@ class FritzBoxEntity(CoordinatorEntity):
     @property
     def extra_state_attributes(self) -> FritzExtraAttributes:
         """Return the state attributes of the device."""
-        attrs: FritzExtraAttributes = {
+        return {
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,
         }
-        return attrs
