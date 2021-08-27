@@ -56,7 +56,7 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
         try:
             api = await self.hass.async_add_executor_job(SolarLog, self.host)
         except (OSError, Timeout, HTTPError) as err:
-            return update_coordinator.UpdateFailed(err)
+            raise update_coordinator.UpdateFailed(err)
 
         response = api.time
         self.logger.debug(
