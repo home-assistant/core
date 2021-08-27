@@ -14,6 +14,13 @@ from homeassistant.const import (
 
 DOMAIN = "enasolar"
 
+DEFAULT_HOST = "my.inverter.fqdn"
+DEFAULT_NAME = ""
+DEFAULT_SUN_UP = "06:00"
+DEFAULT_SUN_DOWN = "21:00"
+
+CONF_HOST = "host"
+CONF_NAME = "name"
 CONF_CAPABILITY = "capability"
 CONF_MAX_OUTPUT = "max_output"
 CONF_DC_STRINGS = "dc_strings"
@@ -36,13 +43,3 @@ ENASOLAR_UNIT_MAPPINGS = {
     "F": TEMP_FAHRENHEIT,
     "%": "%",
 }
-
-ENASOLAR_MAX_OUTPUT = {
-    1.5: "1.5 kWh",
-    2.0: "2.0 kWh",
-    3.0: "3.0 kWh",
-    3.8: "3.8 kWh",
-    4.0: "4.0 kWh",
-    5.0: "5.0 kWh",
-}
-ENASOLAR_DC_STRINGS = [1, 2]

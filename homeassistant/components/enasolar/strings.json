@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup EnaSolar Inverter connection",
+        "data": {
+          "host": "FQDN or IP Address of the Inverter",
+          "sun_up": "The time that polling will start each day",
+          "sun_down": "The time that polling will cease each day",
+          "name": "A name for the Inverter (optional)"
+        },
+        "description": "Enter the connection data"
+      },
+      "inverter": {
+        "title": "EnaSolar Model Characteristics",
+        "data": {
+           "max_output": "Maximum AC Output Power",
+           "dc_strings": "Number of DC strings in the array",
+           "capability": "Capability bits - see documentation"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "This inverter has already been added",
+      "cannot_connect": "Unable to connect to inverter",
+      "time_invalid": "Time must be HH:MM",
+      "time_range": "Polling must cease after polling starts",
+      "capability_invalid": "Invalid - See documentation for capability"
+    },
+    "abort": {
+      "already_configured": "This inverter has already been added"
+    }
+  }
+}

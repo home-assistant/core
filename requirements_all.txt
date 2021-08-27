@@ -1420,7 +1420,7 @@ pyeight==0.1.9
 pyemby==1.7
 
 # homeassistant.components.enasolar
-pyenasolar==0.1.0
+pyenasolar==0.1.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.0

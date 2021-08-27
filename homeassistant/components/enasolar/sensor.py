@@ -1,15 +1,13 @@
 """EnaSolar solar inverter interface."""
+
 from __future__ import annotations
 
-# from datetime import time
 from datetime import date, datetime
 import logging
 
 import pyenasolar
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+from homeassistant.components.sensor import (  # STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
@@ -28,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
@@ -46,24 +43,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_SUN_DOWN, default="22:00"): cv.time,
-        vol.Required(CONF_SUN_UP, default="5:00"): cv.time,
-        vol.Optional(CONF_MAX_OUTPUT): vol.In([1.5, 2.0, 3.0, 3.8, 4.0, 5.0]),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_DC_STRINGS): vol.In([1, 2]),
-        vol.Optional(CONF_CAPABILITY): cv.positive_int,
-    }
-)
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the enasolar platform."""
+    _LOGGER.warning(
+        "Configuration of the enasolar platform in configuration.yaml is deprecated "
+        "in Home Assistant 0.119. Please remove entry from your configuration"
+    )
 
 
-async def async_setup_platform(  # noqa: C901
-    hass, config, async_add_entities, discovery_info=None
-):
-    """Set up the EnaSolar sensors."""
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add enasolar entry."""
     remove_interval_update_meters = None
     remove_interval_update_data = None
 
@@ -73,54 +63,38 @@ async def async_setup_platform(  # noqa: C901
 
     kwargs = {}
 
+    host = config_entry.data[CONF_HOST]
+
     try:
-        _LOGGER.info(
-            "Attempting to set up monitoring of EnaSolar Inverter at '%s'",
-            config[CONF_HOST],
-        )
-        enasolar = pyenasolar.EnaSolar(config[CONF_HOST], **kwargs)
-        done = await enasolar.model()
-
-        enasolar.sun_up = config[CONF_SUN_UP]
-        enasolar.sun_down = config[CONF_SUN_DOWN]
-
-        try:
-            if config[CONF_CAPABILITY] is not None:
-                enasolar.capability = config[CONF_CAPABILITY]
-        except KeyError:
-            pass
-
-        try:
-            if config[CONF_DC_STRINGS] is not None:
-                enasolar.dc_strings = config[CONF_DC_STRINGS]
-        except KeyError:
-            pass
-
-        try:
-            if config[CONF_MAX_OUTPUT] is not None:
-                enasolar.max_output = config[CONF_MAX_OUTPUT]
-        except KeyError:
-            pass
-
-    except pyenasolar.UnexpectedResponseException as err:
+        _LOGGER.info("Instantiate an EnaSolar Inverter at '%s'", host)
+        enasolar = pyenasolar.EnaSolar(host, **kwargs)
+        await enasolar.interogate_inverter()
+    except Exception as e:
         _LOGGER.error(
-            "Error in EnaSolar, please check host/ip address. Original error: %s", err
+            "Connection to EnaSolar Inverter '%s' failed (%s), check host FQDN/ip address",
+            host,
+            e,
         )
-        return
-
-    if not done:
         raise PlatformNotReady
+
+    enasolar.sun_up = dt_util.parse_time(config_entry.data[CONF_SUN_UP])
+    enasolar.sun_down = dt_util.parse_time(config_entry.data[CONF_SUN_DOWN])
+    enasolar.capability = config_entry.data[CONF_CAPABILITY]
+    enasolar.dc_strings = config_entry.data[CONF_DC_STRINGS]
+    enasolar.max_output = config_entry.data[CONF_MAX_OUTPUT]
+
+    enasolar.setup_sensors()
 
     for sensor in enasolar.sensors:
         _LOGGER.debug("Setup sensor %s", sensor.key)
         if sensor.enabled:
             if sensor.is_meter:
                 hass_meter_sensors.append(
-                    EnaSolarSensor(sensor, inverter_name=config.get(CONF_NAME))
+                    EnaSolarSensor(sensor, inverter_name=config_entry.data[CONF_NAME])
                 )
             else:
                 hass_data_sensors.append(
-                    EnaSolarSensor(sensor, inverter_name=config.get(CONF_NAME))
+                    EnaSolarSensor(sensor, inverter_name=config_entry.data[CONF_NAME])
                 )
 
     async_add_entities(hass_meter_sensors)
@@ -226,10 +200,12 @@ class EnaSolarSensor(SensorEntity):
         self._inverter_name = inverter_name
         self._state = self._sensor.value
 
-        if pyenasolar_sensor.name in ("total_energy", "temperature"):
+        if pyenasolar_sensor.is_meter:
             self._attr_state_class = STATE_CLASS_MEASUREMENT
-        if pyenasolar_sensor.name == "total_energy":
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
+
+    # Future addition for statistics
+    #        else:
+    #            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     @property
     def name(self):

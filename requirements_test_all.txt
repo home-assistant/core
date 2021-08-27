@@ -792,6 +792,9 @@ pydispatcher==2.0.5
 # homeassistant.components.econet
 pyeconet==0.1.14
 
+# homeassistant.components.enasolar
+pyenasolar==0.1.1
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 

@@ -69,6 +69,7 @@ FLOWS = [
     "elkm1",
     "emonitor",
     "emulated_roku",
+    "enasolar",
     "enocean",
     "enphase_envoy",
     "epson",
