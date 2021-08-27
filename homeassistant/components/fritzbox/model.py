@@ -1,7 +1,13 @@
 """Models for the AVM FRITZ!SmartHome integration."""
 from __future__ import annotations
 
-from typing import TypedDict
+from dataclasses import dataclass
+from typing import Callable, TypedDict
+
+from pyfritzhome import FritzhomeDevice
+
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 
 
 class EntityInfo(TypedDict):
@@ -14,23 +20,21 @@ class EntityInfo(TypedDict):
     state_class: str | None
 
 
-class ClimateExtraAttributes(TypedDict, total=False):
-    """TypedDict for climates extra attributes."""
-
-    battery_low: bool
-    device_locked: bool
-    locked: bool
-    battery_level: int
-    holiday_mode: bool
-    summer_mode: bool
-    window_open: bool
-
-
-class SensorExtraAttributes(TypedDict):
+class FritzExtraAttributes(TypedDict):
     """TypedDict for sensors extra attributes."""
 
     device_locked: bool
     locked: bool
+
+
+class ClimateExtraAttributes(FritzExtraAttributes, total=False):
+    """TypedDict for climates extra attributes."""
+
+    battery_low: bool
+    battery_level: int
+    holiday_mode: bool
+    summer_mode: bool
+    window_open: bool
 
 
 class SwitchExtraAttributes(TypedDict, total=False):
@@ -42,3 +46,38 @@ class SwitchExtraAttributes(TypedDict, total=False):
     total_consumption_unit: str
     temperature: str
     temperature_unit: str
+
+
+@dataclass
+class FritzEntityDescriptionMixinBase:
+    """Bases description mixin for Fritz!Smarthome entities."""
+
+    suitable: Callable[[FritzhomeDevice], bool]
+
+
+@dataclass
+class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
+    """Sensor description mixin for Fritz!Smarthome entities."""
+
+    native_value: Callable[[FritzhomeDevice], float | int | None]
+
+
+@dataclass
+class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
+    """BinarySensor description mixin for Fritz!Smarthome entities."""
+
+    is_on: Callable[[FritzhomeDevice], bool | None]
+
+
+@dataclass
+class FritzSensorEntityDescription(
+    SensorEntityDescription, FritzEntityDescriptionMixinSensor
+):
+    """Description for Fritz!Smarthome sensor entities."""
+
+
+@dataclass
+class FritzBinarySensorEntityDescription(
+    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
+):
+    """Description for Fritz!Smarthome binary sensor entities."""
