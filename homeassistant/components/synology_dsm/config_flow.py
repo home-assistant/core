@@ -228,14 +228,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_VOLUMES):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
-        if existing_entry and self.reauth_conf:
+        if existing_entry:
             self.hass.config_entries.async_update_entry(
                 existing_entry, data=config_data
             )
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-        if existing_entry:
-            return self.async_abort(reason="already_configured")
+            if self.reauth_conf:
+                return self.async_abort(reason="reauth_successful")
+            return self.async_abort(reason="reconfigure_successful")
 
         return self.async_create_entry(title=host, data=config_data)
 
@@ -246,14 +246,26 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
         )
 
-        mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
+        discovered_mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
-        if self._mac_already_configured(mac):
-            return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured()
+        existing_entry = self._async_get_existing_entry(discovered_mac)
+
+        if existing_entry and existing_entry.data[CONF_HOST] != parsed_url.hostname:
+            _LOGGER.debug(
+                "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
+                existing_entry.data[CONF_HOST],
+                parsed_url.hostname,
+                existing_entry.unique_id,
+            )
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={**existing_entry.data, CONF_HOST: parsed_url.hostname},
+            )
+            return self.async_abort(reason="reconfigure_successful")
+        if existing_entry:
+            return self.async_abort(reason="already_configured")
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
@@ -295,14 +307,15 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
-    def _mac_already_configured(self, mac: str) -> bool:
-        """See if we already have configured a NAS with this MAC address."""
-        existing_macs = [
-            mac.replace("-", "")
-            for entry in self._async_current_entries()
-            for mac in entry.data.get(CONF_MAC, [])
-        ]
-        return mac in existing_macs
+    def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
+        """See if we already have a configured NAS with this MAC address."""
+        existing_entry: ConfigEntry | None = None
+        for entry in self._async_current_entries():
+            if discovered_mac in [
+                mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
+            ]:
+                existing_entry = entry
+        return existing_entry
 
 
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
