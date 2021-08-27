@@ -71,7 +71,6 @@ async def async_setup_entry(
         if not dev_ids:
             return
         entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)
-        hass.data[DOMAIN][TUYA_HA_DEVICES].extend(entities)
         async_add_entities(entities)
 
     async_dispatcher_connect(
@@ -96,6 +95,7 @@ def _setup_entities(hass, device_ids: list):
             continue
 
         for function in device.function:
+            tuya_ha_switch = None
             if device.category == "kj":
                 if function in [
                     DPCODE_ANION,
@@ -105,23 +105,26 @@ def _setup_entities(hass, device_ids: list):
                     DPCODE_UV,
                     DPCODE_WET,
                 ]:
-                    entities.append(TuyaHaSwitch(device, device_manager, function))
+                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
                     # Main device switch is handled by the Fan object
             elif device.category == "cwysj":
                 if function in [DPCODE_FRESET, DPCODE_UV, DPCODE_PRESET, DPCODE_WRESET]:
-                    entities.append(TuyaHaSwitch(device, device_manager, function))
+                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
 
                 if function.startswith(DPCODE_SWITCH):
                     # Main device switch
-                    entities.append(TuyaHaSwitch(device, device_manager, function))
-                    continue
+                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
             else:
                 if function.startswith(DPCODE_START):
-                    entities.append(TuyaHaSwitch(device, device_manager, function))
-                    continue
+                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
                 if function.startswith(DPCODE_SWITCH):
-                    entities.append(TuyaHaSwitch(device, device_manager, function))
-                    continue
+                    tuya_ha_switch = TuyaHaSwitch(device, device_manager, function)
+
+            if tuya_ha_switch is not None:
+                entities.append(tuya_ha_switch)
+                hass.data[DOMAIN][TUYA_HA_DEVICES][
+                    tuya_ha_switch.tuya_device.id
+                ] = tuya_ha_switch
     return entities
 
 

@@ -152,12 +152,13 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Device Update Listener."""
 
         def update_device(self, device: TuyaDevice):
-            for ha_device in hass.data[DOMAIN][TUYA_HA_DEVICES]:
-                if ha_device.tuya_device.id == device.id:
-                    _LOGGER.debug(
-                        "_update-->%s;->>%s", self, ha_device.tuya_device.status
-                    )
-                    async_dispatcher_send(hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
+            if device.id in hass.data[DOMAIN][TUYA_HA_DEVICES]:
+                _LOGGER.debug(
+                    "_update-->%s;->>%s",
+                    self,
+                    hass.data[DOMAIN][TUYA_HA_DEVICES][device.id].tuya_device.status,
+                )
+                async_dispatcher_send(hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
 
         def add_device(self, device: TuyaDevice):
 
@@ -265,7 +266,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN] = {
         TUYA_HA_TUYA_MAP: {},
-        TUYA_HA_DEVICES: [],
+        TUYA_HA_DEVICES: {},
     }
 
     success = await _init_tuya_sdk(hass, entry)
