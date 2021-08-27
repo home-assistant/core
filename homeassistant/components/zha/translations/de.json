@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "not_zha_device": "Dieses Ger\u00e4t ist kein ZHA-Ger\u00e4t",
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "usb_probe_failed": "Fehler beim Testen des USB-Ger\u00e4ts"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
