@@ -50,6 +50,19 @@ async def test_select(hass: HomeAssistant) -> None:
     assert select.select_option.called
     assert select.select_option.call_args[0][0] == "option_one"
 
+    assert select.capability_attributes[ATTR_OPTIONS] == [
+        "option_one",
+        "option_two",
+        "option_three",
+    ]
+
+
+async def test_select_next_previous(hass: HomeAssistant) -> None:
+    """Test switching to next and previous options."""
+    select = MockSelectEntity()
+    select.hass = hass
+    select.select_option = MagicMock()
+
     # Test next option
     select._attr_current_option = "option_one"
     await select.async_next_option(cycle=True)
@@ -77,12 +90,6 @@ async def test_select(hass: HomeAssistant) -> None:
     select._attr_current_option = "option_three"
     await select.async_previous_option(cycle=True)
     assert select.select_option.call_args[0][0] == "option_two"
-
-    assert select.capability_attributes[ATTR_OPTIONS] == [
-        "option_one",
-        "option_two",
-        "option_three",
-    ]
 
 
 async def test_custom_integration_and_validation(hass, enable_custom_integrations):
