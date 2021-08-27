@@ -15,7 +15,6 @@ COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "avea",  # depends on bluepy
     "avion",
-    "beacontools",
     "beacontools[scan]",
     "beewi_smartclim",  # depends on bluepy
     "blinkt",
