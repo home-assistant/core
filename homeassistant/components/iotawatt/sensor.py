@@ -10,6 +10,8 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt
 
@@ -82,6 +84,15 @@ class IotaWattSensor(IotaWattEntity):
             self._attr_device_class = DEVICE_CLASS_VOLTAGE
         else:
             self._attr_unit_of_measurement = unit
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self._ent not in self.coordinator.data["sensors"]:
+            entity_registry.async_get(self.hass).async_remove(self.entity_id)
+            return
+
+        super()._handle_coordinator_update()
 
     @property
     def device_state_attributes(self):
