@@ -1,7 +1,10 @@
 """Support for IoTaWatt Energy monitor."""
 import logging
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -13,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import dt
 
 from . import IotaWattEntity
 from .const import COORDINATOR, DOMAIN, SIGNAL_ADD_DEVICE
@@ -80,6 +82,7 @@ class IotaWattSensor(IotaWattEntity):
         elif unit == "WattHours":
             self._attr_unit_of_measurement = ENERGY_WATT_HOUR
             self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         elif unit == "Volts":
             self._attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
             self._attr_device_class = DEVICE_CLASS_VOLTAGE
@@ -111,14 +114,6 @@ class IotaWattSensor(IotaWattEntity):
     def state(self):
         """Return the state of the sensor."""
         return self.coordinator.data["sensors"][self._ent].getValue()
-
-    @property
-    def last_reset(self):
-        """Return the time when the sensor was last reset, if any."""
-        last_reset = self.coordinator.data["sensors"][self._ent].getBegin()
-        if last_reset is None:
-            return None
-        return dt.parse_datetime(last_reset)
 
     @property
     def name(self):
