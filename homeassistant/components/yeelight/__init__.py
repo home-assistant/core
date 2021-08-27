@@ -163,6 +163,8 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
+BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError)
+
 PLATFORMS = ["binary_sensor", "light"]
 
 
@@ -227,7 +229,7 @@ async def _async_initialize(
     )
 
     # fetch initial state
-    asyncio.create_task(device.async_first_update())
+    asyncio.create_task(device.async_update())
 
 
 @callback
@@ -272,7 +274,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.data.get(CONF_HOST):
         try:
             device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             # If CONF_ID is not valid we cannot fallback to discovery
             # so we must retry by raising ConfigEntryNotReady
             if not entry.data.get(CONF_ID):
@@ -287,7 +289,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host = urlparse(capabilities["location"]).hostname
         try:
             await _async_initialize(hass, entry, host)
-        except BulbException:
+        except BULB_EXCEPTIONS:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
     # discovery
@@ -647,14 +649,14 @@ class YeelightDevice:
             await self.bulb.async_turn_on(
                 duration=duration, light_type=light_type, power_mode=power_mode
             )
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 
     async def async_turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         try:
             await self.bulb.async_turn_off(duration=duration, light_type=light_type)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error(
                 "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex
             )
@@ -670,7 +672,7 @@ class YeelightDevice:
             if not self._initialized:
                 self._initialized = True
                 async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
@@ -693,16 +695,6 @@ class YeelightDevice:
             self._name = _async_unique_name(self.capabilities)
         else:
             self._name = self._host  # Default name is host
-
-    async def async_first_update(self):
-        """Try to refresh the state on initial connection.
-
-        If this fails, the library will reconnect and try
-        again and our callback (async_update_callback) will
-        trigger another update.
-        """
-        with contextlib.suppress(asyncio.TimeoutError):
-            await self.async_update(True)
 
     async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
