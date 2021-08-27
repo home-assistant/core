@@ -77,14 +77,10 @@ class SpotifyFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth dialog."""
-        if self.entry is None:
-            id = None
-        else:
-            id = self.entry["id"]
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": id},
+                description_placeholders={"account": self.entry["id"]},  # type: ignore[index]
                 data_schema=vol.Schema({}),
                 errors={},
             )
