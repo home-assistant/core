@@ -250,12 +250,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
 
-        existing_entry: ConfigEntry | None = None
-        for entry in self._async_current_entries():
-            if discovered_mac in [
-                mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
-            ]:
-                existing_entry = entry
+        existing_entry = self._async_get_existing_entry(discovered_mac)
 
         if existing_entry and existing_entry.data[CONF_HOST] != parsed_url.hostname:
             _LOGGER.debug(
@@ -311,6 +306,16 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.saved_user_input = {}
 
         return await self.async_step_user(user_input)
+
+    def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
+        """See if we already have a configured NAS with this MAC address."""
+        existing_entry: ConfigEntry | None = None
+        for entry in self._async_current_entries():
+            if discovered_mac in [
+                mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
+            ]:
+                existing_entry = entry
+        return existing_entry
 
 
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
