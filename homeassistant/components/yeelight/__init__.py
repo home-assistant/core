@@ -554,6 +554,7 @@ class YeelightDevice:
         self._device_type = None
         self._available = False
         self._initialized = False
+        self._did_first_update = False
         self._name = None
 
     @property
@@ -698,6 +699,7 @@ class YeelightDevice:
 
     async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
+        self._did_first_update = True
         if not force and self._initialized and self._available:
             # No need to poll unless force, already connected
             return
@@ -709,7 +711,17 @@ class YeelightDevice:
         """Update push from device."""
         was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
-        if not was_available and self._available:
+        if self._did_first_update and not was_available and self._available:
+            #
+            #
+            # We need to make sure the DEVICE_INITIALIZED dispatcher
+            # before we can update on reconnect by checking self._did_first_update
+            #
+            # If the device drops the connection right away, we do not want to
+            # do a property resync via async_update since its about
+            # to be called when async_setup_entry reaches the end of the
+            # function
+            #
             # On reconnect the properties may be out of sync
             asyncio.create_task(self.async_update(True))
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
