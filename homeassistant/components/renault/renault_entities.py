@@ -19,14 +19,11 @@ class RenaultRequiredKeysMixin:
     """Mixin for required keys."""
 
     coordinator: str
-    data_key: str
 
 
 @dataclass
 class RenaultEntityDescription(EntityDescription, RenaultRequiredKeysMixin):
     """Class describing Renault entities."""
-
-    requires_fuel: bool | None = None
 
 
 ATTR_LAST_UPDATE = "last_update"
@@ -51,20 +48,17 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
         self._attr_device_info = self.vehicle.device_info
         self._attr_unique_id = f"{self.vehicle.details.vin}_{description.key}".lower()
 
-    @property
-    def data(self) -> StateType:
-        """Return the state of this entity."""
+    def _get_data_attr(self, key: str) -> StateType:
+        """Return the attribute value from the coordinator data."""
         if self.coordinator.data is None:
             return None
-        return cast(
-            StateType, getattr(self.coordinator.data, self.entity_description.data_key)
-        )
+        return cast(StateType, getattr(self.coordinator.data, key))
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of this entity."""
-        if self.entity_description.coordinator == "battery" and self.coordinator.data:
-            timestamp = getattr(self.coordinator.data, "timestamp")
-            if timestamp:
-                return {ATTR_LAST_UPDATE: timestamp}
+        if self.entity_description.coordinator == "battery":
+            last_update = self._get_data_attr("timestamp")
+            if last_update:
+                return {ATTR_LAST_UPDATE: last_update}
         return None
