@@ -229,7 +229,7 @@ class JewishCalendarSensor(SensorEntity):
         if self.entity_description.key == "weekly_portion":
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
-        if self._type == "holiday":
+        if self.entity_description.key == "holiday":
             self._holiday_attrs = {
                 "id": after_shkia_date.holiday_name,
                 "type": after_shkia_date.holiday_type.name,
