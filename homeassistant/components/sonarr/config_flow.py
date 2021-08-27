@@ -138,7 +138,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_user_data_schema(self) -> dict[str, Any]:
         """Get the data schema to display user form."""
-        if self._reauth:
+        if self.entry:
             return {vol.Required(CONF_API_KEY): str}
 
         data_schema = {
