@@ -101,8 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     wired_shades = []
-    for raw_shade in shade_data.values():
+    for shade_id, raw_shade in shade_data.items():
         shade = PvShade(raw_shade, pv_request)
+        _LOGGER.debug("Raw Shade Data for %s: %s", shade_id, shade.raw_data)
         if shade.raw_data.get(SHADE_BATTERY_STATUS) == SHADE_BATTERY_PLUGGED_IN:
             wired_shades.append(shade)
 
