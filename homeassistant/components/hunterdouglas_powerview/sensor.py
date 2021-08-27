@@ -16,6 +16,8 @@ from .const import (
     ROOM_NAME_UNICODE,
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
+    SHADE_BATTERY_PLUGGED_IN,
+    SHADE_BATTERY_STATUS,
 )
 from .entity import ShadeEntity
 
@@ -34,6 +36,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for raw_shade in shade_data.values():
         shade = PvShade(raw_shade, pv_request)
         if SHADE_BATTERY_LEVEL not in shade.raw_data:
+            continue
+        if shade.raw_data.get(SHADE_BATTERY_STATUS) == SHADE_BATTERY_PLUGGED_IN:
             continue
         name_before_refresh = shade.name
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
