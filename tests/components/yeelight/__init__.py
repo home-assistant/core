@@ -90,11 +90,29 @@ YAML_CONFIGURATION = {
 CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 
+class MockAsyncBulb:
+    """A mock for yeelight.aio.AsyncBulb."""
+
+    def __init__(self, model, bulb_type, cannot_connect):
+        """Init the mock."""
+        self.model = model
+        self.bulb_type = bulb_type
+        self._async_callback = None
+        self._cannot_connect = cannot_connect
+
+    async def async_listen(self, callback):
+        """Mock the listener."""
+        if self._cannot_connect:
+            raise BulbException
+        self._async_callback = callback
+
+    async def async_stop_listening(self):
+        """Drop the listener."""
+        self._async_callback = None
+
+
 def _mocked_bulb(cannot_connect=False):
-    bulb = MagicMock()
-    type(bulb).async_listen = AsyncMock(
-        side_effect=BulbException if cannot_connect else None
-    )
+    bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None
     )
@@ -102,14 +120,10 @@ def _mocked_bulb(cannot_connect=False):
         side_effect=BulbException if cannot_connect else None
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
-
     bulb.capabilities = CAPABILITIES.copy()
-    bulb.model = MODEL
-    bulb.bulb_type = BulbType.Color
     bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()
-    bulb.async_stop_listening = AsyncMock()
     bulb.async_update = AsyncMock()
     bulb.async_turn_on = AsyncMock()
     bulb.async_turn_off = AsyncMock()
@@ -122,7 +136,6 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-
     return bulb
 
 
