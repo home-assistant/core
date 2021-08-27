@@ -110,6 +110,10 @@ class MockAsyncBulb:
         """Drop the listener."""
         self._async_callback = None
 
+    def set_capabilities(self, capabilities):
+        """Mock setting capabilities."""
+        self.capabilities = capabilities
+
 
 def _mocked_bulb(cannot_connect=False):
     bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
@@ -136,6 +140,7 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
+    bulb.start_music = MagicMock()
     return bulb
 
 
