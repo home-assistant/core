@@ -101,7 +101,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self._reauth_unique_id:
+            if self._reauth_entry_id:
                 user_input = {**self._reauth_entry_data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
@@ -115,11 +115,11 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
+                return self.async_abort(reason="14.3unknown")
             else:
-                if self._reauth_unique_id:
+                if self._reauth_entry_id:
                     return await self._async_reauth_update_entry(
-                        self._entry_id, user_input
+                        self._reauth_entry_id, user_input
                     )
 
                 return self.async_create_entry(
