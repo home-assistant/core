@@ -468,21 +468,8 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_native_value = self.node.status.name.lower()
         self.async_write_ha_state()
 
-    @callback
-    def _update_availability(self, event: dict) -> None:
-        """Call when availability needs to be checked and possible updated."""
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        self.async_on_remove(self.node.on("ready", self._update_availability))
-        self.async_on_remove(self.node.on("value updated", self._update_availability))
-        self.async_on_remove(
-            self.node.on("interview started", self._update_availability)
-        )
-        self.async_on_remove(
-            self.node.on("interview completed", self._update_availability)
-        )
         # Add value_changed callbacks.
         for evt in ("wake up", "sleep", "dead", "alive"):
             self.async_on_remove(self.node.on(evt, self._status_changed))
@@ -494,8 +481,3 @@ class ZWaveNodeStatusSensor(SensorEntity):
             )
         )
         self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        return self.client.connected and bool(self.node.ready)
