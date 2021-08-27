@@ -12,3 +12,31 @@ select_option:
       example: '"Item A"'
       selector:
         text:
+
+select_next:
+  name: Next
+  description: Select the next option of aselect entity.
+  target:
+    entity:
+      domain: select
+  fields:
+    cycle:
+      name: Cycle
+      description: If the option should cycle from the last to the first.
+      default: true
+      selector:
+        boolean:
+
+select_previous:
+  name: Previous
+  description: Select the previous option of a select entity.
+  target:
+    entity:
+      domain: select
+  fields:
+    cycle:
+      name: Cycle
+      description: If the option should cycle from the first to the last.
+      default: true
+      selector:
+        boolean:

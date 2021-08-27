@@ -19,7 +19,15 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION
+from .const import (
+    ATTR_CYCLE,
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN,
+    SERVICE_SELECT_NEXT,
+    SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -41,6 +49,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SELECT_OPTION,
         {vol.Required(ATTR_OPTION): cv.string},
         async_select_option,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_NEXT,
+        {vol.Optional(ATTR_CYCLE, default=True): cv.string},
+        "async_next_option",
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_PREVIOUS,
+        {vol.Optional(ATTR_CYCLE, default=True): cv.string},
+        "async_previous_option",
     )
 
     return True
@@ -111,3 +131,23 @@ class SelectEntity(Entity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.hass.async_add_executor_job(self.select_option, option)
+
+    @staticmethod
+    def _get_next_option(options: list[str], current: str | None, cycle: bool) -> str:
+        """Return next element in a list."""
+        return next(
+            (n for (c, n) in zip(options, options[1:]) if c == current),
+            options[0] if cycle else options[-1],
+        )
+
+    async def async_next_option(self, cycle: bool) -> None:
+        """Change the option to the next one."""
+        await self.async_select_option(
+            self._get_next_option(self.options, self.current_option, cycle)
+        )
+
+    async def async_previous_option(self, cycle: bool) -> None:
+        """Change the option to the previous one."""
+        await self.async_select_option(
+            self._get_next_option(self.options[::-1], self.current_option, cycle)
+        )

@@ -50,6 +50,34 @@ async def test_select(hass: HomeAssistant) -> None:
     assert select.select_option.called
     assert select.select_option.call_args[0][0] == "option_one"
 
+    # Test next option
+    select._attr_current_option = "option_one"
+    await select.async_next_option(cycle=True)
+
+    assert select.select_option.called
+    assert select.select_option.call_args[0][0] == "option_two"
+
+    select._attr_current_option = "option_three"
+    await select.async_next_option(cycle=False)
+    assert select.select_option.call_args[0][0] == "option_three"
+
+    await select.async_next_option(cycle=True)
+    assert select.select_option.call_args[0][0] == "option_one"
+
+    # Test previous option
+    select._attr_current_option = "option_one"
+    await select.async_previous_option(cycle=True)
+
+    assert select.select_option.called
+    assert select.select_option.call_args[0][0] == "option_three"
+
+    await select.async_previous_option(cycle=False)
+    assert select.select_option.call_args[0][0] == "option_one"
+
+    select._attr_current_option = "option_three"
+    await select.async_previous_option(cycle=True)
+    assert select.select_option.call_args[0][0] == "option_two"
+
     assert select.capability_attributes[ATTR_OPTIONS] == [
         "option_one",
         "option_two",
