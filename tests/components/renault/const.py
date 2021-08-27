@@ -41,13 +41,21 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 
-CHECK_ATTRIBUTES = (
+FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_LAST_UPDATE,
     ATTR_STATE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
 )
+DYNAMIC_ATTRIBUTES = (
+    ATTR_ICON,
+    ATTR_LAST_UPDATE,
+)
+
+ICON_FOR_EMPTY_VALUES = {
+    "sensor.charge_mode": "mdi:calendar-remove",
+    "sensor.charge_state": "mdi:flash-off",
+    "sensor.plug_state": "mdi:power-plug-off",
+}
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {
