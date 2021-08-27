@@ -1,0 +1,8 @@
+{
+    "state": {
+      "tractive__tracker_state": {
+        "not_reporting": "Not reporting",
+        "operational": "Operational"
+      }
+  }
+}

@@ -8,7 +8,6 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
     TIME_MINUTES,
     TIME_SECONDS,
 )
@@ -133,7 +132,6 @@ SENSOR_TYPES = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
         name="Battery Level",
-        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         entity_class=TractiveHardwareSensor,
     ),
@@ -146,6 +144,7 @@ SENSOR_TYPES = (
     TractiveSensorEntityDescription(
         key=ATTR_TRACKER_STATE,
         name="Tracker state",
+        device_class="tractive__tracker_state",
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(

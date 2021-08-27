@@ -157,7 +157,7 @@ class TractiveClient:
             ATTR_LIVE_TRACKING_REMAINING: event.get("live_tracking", {}).get(
                 "remaining"
             ),
-            ATTR_TRACKER_STATE: event.get("tracker_state"),
+            ATTR_TRACKER_STATE: event.get("tracker_state", "").lower(),
         }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
