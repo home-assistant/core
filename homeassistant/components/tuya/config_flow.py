@@ -111,9 +111,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Step user."""
-        _LOGGER.debug(
-            "TuyaConfigFlow.async_step_user start, user_input= %s", user_input
-        )
 
         if self._async_current_entries():
             return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
