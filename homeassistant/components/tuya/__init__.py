@@ -148,9 +148,9 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.async_add_executor_job(home_manager.update_device_cache)
     hass.data[DOMAIN][TUYA_HOME_MANAGER] = home_manager
 
-    __listener = DeviceListener(hass)
-    hass.data[DOMAIN][TUYA_MQTT_LISTENER] = __listener
-    device_manager.add_device_listener(__listener)
+    listener = DeviceListener(hass)
+    hass.data[DOMAIN][TUYA_MQTT_LISTENER] = listener
+    device_manager.add_device_listener(listener)
     hass.data[DOMAIN][TUYA_DEVICE_MANAGER] = device_manager
 
     # Clean up device entities

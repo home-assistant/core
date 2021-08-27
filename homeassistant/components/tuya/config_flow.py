@@ -65,7 +65,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.conf_project_type = None
         self.project_type = ProjectType.SMART_HOME
-        self.is_import = False
 
     @staticmethod
     def _try_login(user_input):
@@ -98,11 +97,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("TuyaConfigFlow._try_login finish, response:, %s", response)
         return response
 
-    async def async_step_import(self, user_input=None):
-        """Step import."""
-        self.is_import = True
-        return await self.async_step_user(user_input)
-
     async def async_step_project_type(self, user_input=None):
         """Step project type."""
         self.conf_project_type = user_input[CONF_PROJECT_TYPE]
@@ -117,9 +111,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Step user."""
-        _LOGGER.debug(
-            "TuyaConfigFlow.async_step_user start, is_import= %s}", self.is_import
-        )
         _LOGGER.debug(
             "TuyaConfigFlow.async_step_user start, user_input= %s", user_input
         )
@@ -142,10 +133,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME],
                     data=user_input,
                 )
-
-            errors["base"] = RESULT_AUTH_FAILED
-            if self.is_import:
-                return self.async_abort(reason=errors["base"])
 
             return (
                 self.async_show_form(
