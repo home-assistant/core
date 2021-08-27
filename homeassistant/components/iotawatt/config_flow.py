@@ -31,8 +31,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     iotawatt = Iotawatt(data["name"], data["host"], session)
     try:
         is_connected = await iotawatt.connect()
-    except (KeyError, json.JSONDecodeError, httpx.HTTPError):
-        raise CannotConnect
+    except (KeyError, json.JSONDecodeError, httpx.HTTPError) as err:
+        raise CannotConnect from err
 
     if not is_connected:
         raise InvalidAuth

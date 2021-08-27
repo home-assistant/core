@@ -1,7 +1,8 @@
 """The iotawatt integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Dict, List
 
 from httpx import AsyncClient
 from iotawattpy.iotawatt import Iotawatt
@@ -87,10 +88,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class IotawattUpdater(DataUpdateCoordinator):
     """Class to manage fetching update data from the IoTaWatt Energy Device."""
 
-    def __init__(self, hass: HomeAssistant, api: str, name: str, update_interval: int):
+    def __init__(
+        self, hass: HomeAssistant, api: str, name: str, update_interval: int
+    ) -> None:
         """Initialize IotaWattUpdater object."""
         self.api = api
-        self.sensorlist: Dict[str, List[str]] = {}
+        self.sensorlist: dict[str, list[str]] = {}
 
         super().__init__(
             hass=hass,
