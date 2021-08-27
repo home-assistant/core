@@ -50,6 +50,7 @@ from .renault_hub import RenaultHub
 class RenaultSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
+    data_key: str
     entity_class: type[RenaultSensor]
 
 
@@ -59,8 +60,9 @@ class RenaultSensorEntityDescription(
 ):
     """Class describing Renault sensor entities."""
 
-    icon_lambda: Callable[[RenaultDataEntity[T]], str] | None = None
-    value_lambda: Callable[[RenaultDataEntity[T]], StateType] | None = None
+    icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
+    requires_fuel: bool | None = None
+    value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
 
 
 async def async_setup_entry(
@@ -86,6 +88,11 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     entity_description: RenaultSensorEntityDescription
 
     @property
+    def data(self) -> StateType:
+        """Return the state of this entity."""
+        return self._get_data_attr(self.entity_description.data_key)
+
+    @property
     def icon(self) -> str | None:
         """Icon handling."""
         if self.entity_description.icon_lambda is None:
@@ -102,49 +109,49 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         return self.entity_description.value_lambda(self)
 
 
-def _get_charge_mode_icon(entity: RenaultDataEntity[T]) -> str:
+def _get_charge_mode_icon(entity: RenaultSensor[T]) -> str:
     """Return the icon of this entity."""
     if entity.data == "schedule_mode":
         return "mdi:calendar-clock"
     return "mdi:calendar-remove"
 
 
-def _get_charging_power(entity: RenaultDataEntity[T]) -> StateType:
+def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
     """Return the charging_power of this entity."""
     if entity.vehicle.details.reports_charging_power_in_watts():
         return cast(float, entity.data) / 1000
     return entity.data
 
 
-def _get_charge_state_formatted(entity: RenaultDataEntity[T]) -> str | None:
+def _get_charge_state_formatted(entity: RenaultSensor[T]) -> str | None:
     """Return the charging_status of this entity."""
     data = cast(KamereonVehicleBatteryStatusData, entity.coordinator.data)
     charging_status = data.get_charging_status() if data else None
     return charging_status.name.lower() if charging_status else None
 
 
-def _get_charge_state_icon(entity: RenaultDataEntity[T]) -> str:
+def _get_charge_state_icon(entity: RenaultSensor[T]) -> str:
     """Return the icon of this entity."""
     if entity.data == ChargeState.CHARGE_IN_PROGRESS.value:
         return "mdi:flash"
     return "mdi:flash-off"
 
 
-def _get_plug_state_formatted(entity: RenaultDataEntity[T]) -> str | None:
+def _get_plug_state_formatted(entity: RenaultSensor[T]) -> str | None:
     """Return the plug_status of this entity."""
     data = cast(KamereonVehicleBatteryStatusData, entity.coordinator.data)
     plug_status = data.get_plug_status() if data else None
     return plug_status.name.lower() if plug_status else None
 
 
-def _get_plug_state_icon(entity: RenaultDataEntity[T]) -> str:
+def _get_plug_state_icon(entity: RenaultSensor[T]) -> str:
     """Return the icon of this entity."""
     if entity.data == PlugState.PLUGGED.value:
         return "mdi:power-plug"
     return "mdi:power-plug-off"
 
 
-def _get_rounded_value(entity: RenaultDataEntity[T]) -> float:
+def _get_rounded_value(entity: RenaultSensor[T]) -> float:
     """Return the icon of this entity."""
     return round(cast(float, entity.data))
 
