@@ -707,11 +707,11 @@ class YeelightDevice:
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
-        connected = data.get(KEY_CONNECTED, True)
-        if not self._available and connected:
+        was_available = self._available
+        self._available = data.get(KEY_CONNECTED, True)
+        if not was_available and self._available:
             # On reconnect the properties may be out of sync
             asyncio.create_task(self.async_update(True))
-        self._available = connected
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 
