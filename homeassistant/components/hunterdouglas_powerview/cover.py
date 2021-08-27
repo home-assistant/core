@@ -195,25 +195,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         elif target_hass_position < current_hass_position:
             self._is_closing = True
         self.async_write_ha_state()
-        # Force the position to be refreshed in case the hub
-        # is not in sync with the shade and the last command
-        # was a NOOP because the hub things it already at the correct position
-        await self._async_force_refresh_state()
-        # Send the command again since it may have been out of sync.
-        # We do this AFTER trying without the forced refresh since
-        # the force refresh can take a few seconds, and it will only
-        # be out of sync if controlled from a remote. If we did the forced
-        # refresh first, it would introduce an unacceptable amout of
-        # latency for the cases where the shade was last controlled via
-        # the HUB (and thus HA)
-        self._async_update_from_command(
-            await self._shade.move(
-                {
-                    ATTR_POSITION1: hass_position_to_hd(target_hass_position),
-                    ATTR_POSKIND1: 1,
-                }
-            )
-        )
 
     @callback
     def _async_update_from_command(self, raw_data):
