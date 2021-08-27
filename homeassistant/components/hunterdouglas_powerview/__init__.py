@@ -1,5 +1,4 @@
 """The Hunter Douglas PowerView integration."""
-import contextlib
 from datetime import timedelta
 import logging
 
@@ -7,7 +6,6 @@ from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiEntryPoint
 from aiopvapi.helpers.constants import ATTR_ID
 from aiopvapi.helpers.tools import base64_to_unicode
-from aiopvapi.resources.shade import factory as PvShade
 from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
@@ -49,8 +47,6 @@ from .const import (
     ROOM_DATA,
     SCENE_DATA,
     SERIAL_NUMBER_IN_USERDATA,
-    SHADE_BATTERY_PLUGGED_IN,
-    SHADE_BATTERY_STATUS,
     SHADE_DATA,
     USER_DATA,
 )
@@ -90,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(10):
             shades = Shades(pv_request)
             shade_data = _async_map_data_by_id(
-                (await shades.get_resources(params={"refresh": "true"}))[SHADE_DATA]
+                (await shades.get_resources())[SHADE_DATA]
             )
     except HUB_EXCEPTIONS as err:
         _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
@@ -100,28 +96,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
         raise ConfigEntryNotReady
 
-    wired_shades = []
-    for shade_id, raw_shade in shade_data.items():
-        shade = PvShade(raw_shade, pv_request)
-        _LOGGER.debug("Raw Shade Data for %s: %s", shade_id, shade.raw_data)
-        if shade.raw_data.get(SHADE_BATTERY_STATUS) == SHADE_BATTERY_PLUGGED_IN:
-            wired_shades.append(shade)
-
     async def async_update_data():
         """Fetch data from shade endpoint."""
-        # If the shade is hard wired force
-        # a refresh since there is no risk of draining
-        # the batteries
-        for shade in wired_shades:
-            with contextlib.suppress(HUB_EXCEPTIONS):
-                async with async_timeout.timeout(1):
-                    await shade.refresh()
-
         async with async_timeout.timeout(10):
-            shade_entries = await shades.get_resources(params={"refresh": "true"})
+            shade_entries = await shades.get_resources()
         if not shade_entries:
             raise UpdateFailed("Failed to fetch new shade data.")
-
         return _async_map_data_by_id(shade_entries[SHADE_DATA])
 
     coordinator = DataUpdateCoordinator(

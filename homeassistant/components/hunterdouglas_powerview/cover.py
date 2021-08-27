@@ -195,21 +195,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         elif target_hass_position < current_hass_position:
             self._is_closing = True
         self.async_write_ha_state()
-        # Force the position to be refreshed in case the hub
-        # is not in sync with the shade to prevent the move being
-        # a NOOP because the hub things it already at the correct position
-        await self._async_force_refresh_state()
-        # Send the command again since it may have been out of sync
-        # but if it wasn't we don't want to delay since the forced
-        # refresh can take a few seconds
-        self._async_update_from_command(
-            await self._shade.move(
-                {
-                    ATTR_POSITION1: hass_position_to_hd(target_hass_position),
-                    ATTR_POSKIND1: 1,
-                }
-            )
-        )
 
     @callback
     def _async_update_from_command(self, raw_data):
@@ -276,9 +261,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
 
     async def _async_force_refresh_state(self):
         """Refresh the cover state and force the device cache to be bypassed."""
-        _LOGGER.debug("Performing forced refresh for %s", self.entity_id)
         await self._shade.refresh()
-        _LOGGER.debug("Finished forced refresh for %s", self.entity_id)
         self._async_update_current_cover_position()
         self.async_write_ha_state()
 
