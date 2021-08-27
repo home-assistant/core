@@ -21,7 +21,8 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)"
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)",
+                    "devices": "Urz\u0105dzenia (Wyzwalacze)"
                 },
                 "description": "Te ustawienia nale\u017cy dostosowa\u0107 tylko wtedy, gdy HomeKit nie dzia\u0142a.",
                 "title": "Konfiguracja zaawansowana"
