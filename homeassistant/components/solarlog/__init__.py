@@ -58,10 +58,14 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
         except (OSError, Timeout, HTTPError) as err:
             raise update_coordinator.UpdateFailed(err)
 
-        response = api.time
+        if api.time.year == 1999:
+            raise update_coordinator.UpdateFailed(
+                "Invalid data returned (can happen after Solarlog restart)."
+            )
+
         self.logger.debug(
             "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
-            response,
+            api.time,
         )
 
         data = {}
@@ -93,11 +97,6 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed(
                 f"Missing details data in Solarlog response: {err}"
             ) from err
-
-        if self.data["yieldTOTAL"] == 0 and self.data["consumptionTOTAL"] == 0:
-            raise update_coordinator.UpdateFailed(
-                "Measurement with zero totals (can happen after Solarlog restart)."
-            )
 
         _LOGGER.debug("Updated Solarlog overview data: %s", data)
         return data
