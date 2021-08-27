@@ -94,5 +94,10 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
                 f"Missing details data in Solarlog response: {err}"
             ) from err
 
+        if self.data["yieldTOTAL"] == 0 and self.data["consumptionTOTAL"] == 0:
+            raise update_coordinator.UpdateFailed(
+                "Measurement with zero totals (can happen after Solarlog restart)."
+            )
+
         _LOGGER.debug("Updated Solarlog overview data: %s", data)
         return data
