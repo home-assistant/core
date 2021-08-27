@@ -1,0 +1,39 @@
+{
+    "config": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      },
+      "error": {
+        "communication": "Unable to connect to OpenEVSE charger. Please check the log for details."
+      },
+      "step": {
+        "user": {
+          "data": {
+            "name": "Alias",
+            "host": "Hostname/IP",
+            "password": "Password (optional)",
+            "username": "Username (optional)"
+          },
+          "description": "Please enter the connection information of OpenEVSE charger.",
+          "title": "OpenEVSE Setup"
+        }
+      }
+    },
+    "options": {
+      "error": {
+        "communication": "Unable to connect to OpenEVSE charger. Please check the log for details."    
+      },
+      "step": {
+        "init": {
+            "data": {
+                "name": "Alias",
+                "host": "Host/IP",
+                "password": "Password (optional)",
+                "username": "Username (optional)"
+            },
+            "description": "Please enter the connection information of OpenEVSE charger.",
+            "title": "OpenEVSE Setup"
+        }
+      }
+    }
+}
