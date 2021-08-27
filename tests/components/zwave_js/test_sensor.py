@@ -185,6 +185,40 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
 
 
+async def test_node_status_sensor_not_ready(
+    hass,
+    client,
+    lock_id_lock_as_id150_not_ready,
+    lock_id_lock_as_id150_state,
+    integration,
+):
+    """Test node status sensor is created and available if node is not ready."""
+    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node = lock_id_lock_as_id150_not_ready
+    assert not node.ready
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    updated_entry = ent_reg.async_update_entity(
+        entity_entry.entity_id, **{"disabled_by": None}
+    )
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert not updated_entry.disabled
+    assert hass.states.get(NODE_STATUS_ENTITY)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+    # Mark node as ready
+    event = Event("ready", {"nodeState": lock_id_lock_as_id150_state})
+    node.receive_event(event)
+    assert node.ready
+    assert hass.states.get(NODE_STATUS_ENTITY)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+
 async def test_reset_meter(
     hass,
     client,
