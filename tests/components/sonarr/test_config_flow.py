@@ -101,13 +101,17 @@ async def test_full_reauth_flow_implementation(
 ) -> None:
     """Test the manual reauth flow from start to finish."""
     entry = await setup_integration(
-        hass, aioclient_mock, skip_entry_setup=True, unique_id="any"
+        hass, aioclient_mock, skip_entry_setup=True
     )
     assert entry
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_REAUTH, "unique_id": entry.unique_id},
+        context={
+            CONF_SOURCE: SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
         data=entry.data,
     )
 
