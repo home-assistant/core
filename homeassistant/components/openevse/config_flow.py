@@ -46,7 +46,8 @@ class OpenEVSEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_configured")
 
-        if not import_config[CONF_NAME]:
+        import_config.pop("platform", None)
+        if CONF_NAME not in import_config:
             import_config[CONF_NAME] = DEFAULT_NAME
 
         import_config[CONF_NAME] = slugify(import_config[CONF_NAME].lower())
