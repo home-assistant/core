@@ -36,7 +36,7 @@ async def test_invalid_place_or_service_id(hass):
     conf = {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}
 
     with patch(
-        "aiorecollect.client.Client.async_get_next_pickup_event",
+        "aiorecollect.client.Client.async_get_pickup_events",
         side_effect=RecollectError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -87,9 +87,7 @@ async def test_step_import(hass):
 
     with patch(
         "homeassistant.components.recollect_waste.async_setup_entry", return_value=True
-    ), patch(
-        "aiorecollect.client.Client.async_get_next_pickup_event", return_value=True
-    ):
+    ), patch("aiorecollect.client.Client.async_get_pickup_events", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
@@ -105,9 +103,7 @@ async def test_step_user(hass):
 
     with patch(
         "homeassistant.components.recollect_waste.async_setup_entry", return_value=True
-    ), patch(
-        "aiorecollect.client.Client.async_get_next_pickup_event", return_value=True
-    ):
+    ), patch("aiorecollect.client.Client.async_get_pickup_events", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
