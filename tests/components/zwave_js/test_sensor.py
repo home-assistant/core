@@ -23,6 +23,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import entity_registry as er
@@ -136,7 +137,7 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     assert entity_entry.disabled
 
 
-async def test_node_status_sensor(hass, lock_id_lock_as_id150, integration):
+async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integration):
     """Test node status sensor is created and gets updated on node state changes."""
     NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
     node = lock_id_lock_as_id150
@@ -177,6 +178,44 @@ async def test_node_status_sensor(hass, lock_id_lock_as_id150, integration):
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+    # Disconnect the client and make sure the entity is still available
+    await client.disconnect()
+    assert hass.states.get(NODE_STATUS_ENTITY).state != STATE_UNAVAILABLE
+
+
+async def test_node_status_sensor_not_ready(
+    hass,
+    client,
+    lock_id_lock_as_id150_not_ready,
+    lock_id_lock_as_id150_state,
+    integration,
+):
+    """Test node status sensor is created and available if node is not ready."""
+    NODE_STATUS_ENTITY = "sensor.z_wave_module_for_id_lock_150_and_101_node_status"
+    node = lock_id_lock_as_id150_not_ready
+    assert not node.ready
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    updated_entry = ent_reg.async_update_entity(
+        entity_entry.entity_id, **{"disabled_by": None}
+    )
+
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert not updated_entry.disabled
+    assert hass.states.get(NODE_STATUS_ENTITY)
+    assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+
+    # Mark node as ready
+    event = Event("ready", {"nodeState": lock_id_lock_as_id150_state})
+    node.receive_event(event)
+    assert node.ready
+    assert hass.states.get(NODE_STATUS_ENTITY)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
 
