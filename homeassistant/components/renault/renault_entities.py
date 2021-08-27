@@ -49,7 +49,7 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
         self._attr_unique_id = f"{self.vehicle.details.vin}_{description.key}".lower()
 
     def _get_data_attr(self, key: str) -> StateType:
-        """Return the state of this entity."""
+        """Return the attribute value from the coordinator data."""
         if self.coordinator.data is None:
             return None
         return cast(StateType, getattr(self.coordinator.data, key))
