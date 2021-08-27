@@ -7,9 +7,9 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
-from .connection_state import ConnectionStateMixin
 from .const import ACTIVITY_POWER_OFF, DOMAIN, HARMONY_DATA
 from .data import HarmonyData
+from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,23 +24,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class HarmonyActivitySelect(ConnectionStateMixin, SelectEntity):
+class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
     """Select representation of a Harmony activities."""
 
     def __init__(self, name: str, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySelect class."""
-        super().__init__()
+        super().__init__(data=data)
         self._data = data
         self._name = name
-        self._attr_should_poll = False
-        self._attr_unique_id = f"{self._data.unique_id}_activities"
+        self._attr_unique_id = self._data.unique_id
         self._attr_device_info = self._data.device_info(DOMAIN)
         self._attr_name = name
-
-    @property
-    def available(self):
-        """Return True if we're connected to the Hub, otherwise False."""
-        return self._data.available
 
     @property
     def icon(self):
