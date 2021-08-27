@@ -6,16 +6,17 @@
             "addon_install_failed": "\u00c9chec de l'installation du module compl\u00e9mentaire Z-Wave JS.",
             "addon_set_config_failed": "\u00c9chec de la d\u00e9finition de la configuration Z-Wave JS.",
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS.",
-            "already_configured": "Le p\u00e9riph\u00e9rique est d\u00e9j\u00e0 configur\u00e9",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
-            "cannot_connect": "\u00c9chec de la connexion "
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "error": {
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. V\u00e9rifiez la configuration.",
-            "cannot_connect": "Erreur de connection",
+            "cannot_connect": "\u00c9chec de connexion",
             "invalid_ws_url": "URL websocket invalide",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Veuillez patienter pendant l'installation du module compl\u00e9mentaire Z-Wave JS. Cela peut prendre plusieurs minutes.",
             "start_addon": "Veuillez patienter pendant le d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. Cela peut prendre quelques secondes."
@@ -48,6 +49,9 @@
             },
             "start_addon": {
                 "title": "Le module compl\u00e9mentaire Z-Wave JS est d\u00e9marr\u00e9."
+            },
+            "usb_confirm": {
+                "description": "Voulez-vous configurer {name} avec le plugin Z-Wave JS ?"
             }
         }
     },
