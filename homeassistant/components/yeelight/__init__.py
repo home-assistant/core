@@ -714,7 +714,7 @@ class YeelightDevice:
         if self._did_first_update and not was_available and self._available:
             # On reconnect the properties may be out of sync
             #
-            # We need to make sure the DEVICE_INITIALIZED dispatcher
+            # We need to make sure the DEVICE_INITIALIZED dispatcher is setup
             # before we can update on reconnect by checking self._did_first_update
             #
             # If the device drops the connection right away, we do not want to
