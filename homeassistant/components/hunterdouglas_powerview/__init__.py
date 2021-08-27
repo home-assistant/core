@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # the batteries
         for shade in wired_shades:
             with contextlib.suppress(HUB_EXCEPTIONS):
-                async with async_timeout.timeout(5):
+                async with async_timeout.timeout(1):
                     await shade.refresh()
 
         async with async_timeout.timeout(10):

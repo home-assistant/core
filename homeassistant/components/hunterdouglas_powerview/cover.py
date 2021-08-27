@@ -265,7 +265,9 @@ class PowerViewShade(ShadeEntity, CoverEntity):
 
     async def _async_force_refresh_state(self):
         """Refresh the cover state and force the device cache to be bypassed."""
+        _LOGGER.debug("Performing forced refresh for %s", self.entity_id)
         await self._shade.refresh()
+        _LOGGER.debug("Finished forced refresh for %s", self.entity_id)
         self._async_update_current_cover_position()
         self.async_write_ha_state()
 
