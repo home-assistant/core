@@ -9,6 +9,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
@@ -151,6 +152,33 @@ async def test_arm_home_with_invalid_code(hass):
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
 
+async def test_arm_home_with_template_code(hass):
+    """Attempt to arm with a template-based code."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code_template": '{{ "abc" }}',
+                "arming_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_home(hass, "abc")
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_ARMED_HOME
+
+
 async def test_arm_away_no_pending(hass):
     """Test arm home method."""
     assert await async_setup_component(
@@ -202,33 +230,6 @@ async def test_arm_away_no_pending_when_code_not_req(hass):
     await common.async_alarm_arm_away(hass, 0, entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
-
-
-async def test_arm_home_with_template_code(hass):
-    """Attempt to arm with a template-based code."""
-    assert await async_setup_component(
-        hass,
-        alarm_control_panel.DOMAIN,
-        {
-            "alarm_control_panel": {
-                "platform": "manual",
-                "name": "test",
-                "code_template": '{{ "abc" }}',
-                "arming_time": 0,
-                "disarm_after_trigger": False,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_id = "alarm_control_panel.test"
-
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
-
-    await common.async_alarm_arm_home(hass, "abc")
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ALARM_ARMED_HOME
 
 
 async def test_arm_away_with_pending(hass):
@@ -417,6 +418,130 @@ async def test_arm_night_with_invalid_code(hass):
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
     await common.async_alarm_arm_night(hass, CODE + "2")
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+
+async def test_arm_vacation_no_pending(hass):
+    """Test arm vacation method."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE,
+                "arming_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_vacation(hass, CODE)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
+
+
+async def test_arm_vacation_no_pending_when_code_not_req(hass):
+    """Test arm vacation method."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE,
+                "code_arm_required": False,
+                "arming_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_vacation(hass, 0)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
+
+
+async def test_arm_vacation_with_pending(hass):
+    """Test arm vacation method."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE,
+                "arming_time": 1,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_vacation(hass, CODE, entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMING
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["next_state"] == STATE_ALARM_ARMED_VACATION
+
+    future = dt_util.utcnow() + timedelta(seconds=1)
+    with patch(
+        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ALARM_ARMED_VACATION
+
+    # Do not go to the pending state when updating to the same state
+    await common.async_alarm_arm_vacation(hass, CODE, entity_id)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
+
+
+async def test_arm_vacation_with_invalid_code(hass):
+    """Attempt to arm vacation without a valid code."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE,
+                "arming_time": 1,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+
+    await common.async_alarm_arm_vacation(hass, CODE + "2")
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
@@ -903,6 +1028,39 @@ async def test_armed_night_with_specific_pending(hass):
         await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+
+
+async def test_armed_vacation_with_specific_pending(hass):
+    """Test arm vacation method."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 10,
+                "armed_vacation": {"arming_time": 2},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    await common.async_alarm_arm_vacation(hass)
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMING
+
+    future = dt_util.utcnow() + timedelta(seconds=2)
+    with patch(
+        ("homeassistant.components.manual.alarm_control_panel.dt_util.utcnow"),
+        return_value=future,
+    ):
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_VACATION
 
 
 async def test_trigger_with_specific_pending(hass):
