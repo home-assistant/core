@@ -46,6 +46,9 @@ class OpenEVSEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_configured")
 
+        if not import_config[CONF_NAME]:
+            import_config[CONF_NAME] = DEFAULT_NAME
+
         import_config[CONF_NAME] = slugify(import_config[CONF_NAME].lower())
         return self.async_create_entry(
             title=import_config[CONF_NAME], data=import_config
