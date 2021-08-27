@@ -10,6 +10,7 @@ from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
+    get_metadata,
     list_statistic_ids,
     statistics_during_period,
 )
@@ -1033,6 +1034,95 @@ def test_compile_hourly_statistics_changing_units_2(
     ]
     stats = statistics_during_period(hass, zero)
     assert stats == {}
+
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,mean,min,max",
+    [
+        (None, None, None, 16.440677, 10, 30),
+    ],
+)
+def test_compile_hourly_statistics_changing_statistics(
+    hass_recorder, caplog, device_class, unit, native_unit, mean, min, max
+):
+    """Test compiling hourly statistics where units change during an hour."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes_1 = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    attributes_2 = {
+        "device_class": device_class,
+        "state_class": "total_increasing",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes_1)
+    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": None}
+    ]
+    metadata = get_metadata(hass, "sensor.test1")
+    assert metadata == {
+        "has_mean": True,
+        "has_sum": False,
+        "statistic_id": "sensor.test1",
+        "unit_of_measurement": None,
+    }
+
+    # Add more states, with changed state class
+    four, _states = record_states(
+        hass, zero + timedelta(hours=1), "sensor.test1", attributes_2
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": None}
+    ]
+    metadata = get_metadata(hass, "sensor.test1")
+    assert metadata == {
+        "has_mean": False,
+        "has_sum": True,
+        "statistic_id": "sensor.test1",
+        "unit_of_measurement": None,
+    }
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "mean": None,
+                "min": None,
+                "max": None,
+                "last_reset": None,
+                "state": approx(30.0),
+                "sum": approx(30.0),
+            },
+        ]
+    }
 
     assert "Error while processing event StatisticsTask" not in caplog.text
 
