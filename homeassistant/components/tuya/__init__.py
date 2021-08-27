@@ -148,55 +148,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.async_add_executor_job(home_manager.update_device_cache)
     hass.data[DOMAIN][TUYA_HOME_MANAGER] = home_manager
 
-    class DeviceListener(TuyaDeviceListener):
-        """Device Update Listener."""
-
-        def update_device(self, device: TuyaDevice):
-            if device.id in hass.data[DOMAIN][TUYA_HA_DEVICES]:
-                _LOGGER.debug(
-                    "_update-->%s;->>%s",
-                    self,
-                    hass.data[DOMAIN][TUYA_HA_DEVICES][device.id].tuya_device.status,
-                )
-                async_dispatcher_send(hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
-
-        def add_device(self, device: TuyaDevice):
-
-            device_add = False
-
-            _LOGGER.debug(
-                """add device category->%s; keys->,
-                {hass.data[DOMAIN][TUYA_HA_TUYA_MAP].keys()}""",
-                device.category,
-            )
-            if device.category in itertools.chain(
-                *hass.data[DOMAIN][TUYA_HA_TUYA_MAP].values()
-            ):
-                ha_tuya_map = hass.data[DOMAIN][TUYA_HA_TUYA_MAP]
-
-                hass.add_job(async_remove_hass_device, hass, device.id)
-
-                for key, tuya_list in ha_tuya_map.items():
-                    if device.category in tuya_list:
-                        device_add = True
-                        dispatcher_send(
-                            hass, TUYA_DISCOVERY_NEW.format(key), [device.id]
-                        )
-
-            if device_add:
-                device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
-                device_manager.mq.stop()
-                tuya_mq = TuyaOpenMQ(device_manager.api)
-                tuya_mq.start()
-
-                device_manager.mq = tuya_mq
-                tuya_mq.add_message_listener(device_manager.on_message)
-
-        def remove_device(self, device_id: str):
-            _LOGGER.debug("tuya remove device:%s", device_id)
-            hass.add_job(async_remove_hass_device, hass, device_id)
-
-    __listener = DeviceListener()
+    __listener = DeviceListener(hass)
     hass.data[DOMAIN][TUYA_MQTT_LISTENER] = __listener
     device_manager.add_device_listener(__listener)
     hass.data[DOMAIN][TUYA_DEVICE_MANAGER] = device_manager
@@ -274,3 +226,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     return True
+
+
+class DeviceListener(TuyaDeviceListener):
+    """Device Update Listener."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Init DeviceListener."""
+
+        self.hass = hass
+
+    def update_device(self, device: TuyaDevice):
+        """Update device status."""
+        if device.id in self.hass.data[DOMAIN][TUYA_HA_DEVICES]:
+            _LOGGER.debug(
+                "_update-->%s;->>%s",
+                self,
+                self.hass.data[DOMAIN][TUYA_HA_DEVICES][device.id].tuya_device.status,
+            )
+            async_dispatcher_send(self.hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
+
+    def add_device(self, device: TuyaDevice):
+        """Add device added listener."""
+        device_add = False
+
+        _LOGGER.debug(
+            """add device category->%s; keys->,
+            {hass.data[DOMAIN][TUYA_HA_TUYA_MAP].keys()}""",
+            device.category,
+        )
+
+        if device.category in itertools.chain(
+            *self.hass.data[DOMAIN][TUYA_HA_TUYA_MAP].values()
+        ):
+            ha_tuya_map = self.hass.data[DOMAIN][TUYA_HA_TUYA_MAP]
+
+            self.hass.add_job(async_remove_hass_device, self.hass, device.id)
+
+            for key, tuya_list in ha_tuya_map.items():
+                if device.category in tuya_list:
+                    device_add = True
+                    dispatcher_send(
+                        self.hass, TUYA_DISCOVERY_NEW.format(key), [device.id]
+                    )
+
+        if device_add:
+            device_manager = self.hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
+            device_manager.mq.stop()
+            tuya_mq = TuyaOpenMQ(device_manager.api)
+            tuya_mq.start()
+
+            device_manager.mq = tuya_mq
+            tuya_mq.add_message_listener(device_manager.on_message)
+
+    def remove_device(self, device_id: str):
+        """Add device removed listener."""
+        _LOGGER.debug("tuya remove device:%s", device_id)
+        self.hass.add_job(async_remove_hass_device, self.hass, device_id)
