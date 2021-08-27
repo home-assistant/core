@@ -7,6 +7,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from . import TEST_MAC
 
@@ -540,6 +541,39 @@ async def test_import_flow_success(hass):
     }
 
 
+async def test_config_flow_step_device_manual_model_error(hass):
+    """Test config flow, device connection error, model None."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "cloud"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {const.CONF_MANUAL: True},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=get_mock_info(model=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_config_flow_step_device_manual_model_succes(hass):
     """Test config flow, device connection error, manual model."""
     result = await hass.config_entries.flow.async_init(
@@ -561,7 +595,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
 
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
-        side_effect=DeviceException({}),
+        side_effect=ConfigEntryAuthFailed({}),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -570,7 +604,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "wrong_token"}
 
     overwrite_model = const.MODELS_VACUUM[0]
 
