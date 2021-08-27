@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription, T
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -26,7 +26,6 @@ from .renault_hub import RenaultHub
 class RenaultBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    entity_class: type[RenaultBinarySensor]
     on_value: StateType
 
 
@@ -47,7 +46,7 @@ async def async_setup_entry(
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultBinarySensor] = [
-        description.entity_class(vehicle, description)
+        RenaultBinarySensor(vehicle, description)
         for vehicle in proxy.vehicles.values()
         for description in BINARY_SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
@@ -55,7 +54,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RenaultBinarySensor(RenaultDataEntity[T], BinarySensorEntity):
+class RenaultBinarySensor(
+    RenaultDataEntity[KamereonVehicleBatteryStatusData], BinarySensorEntity
+):
     """Mixin for binary sensor specific attributes."""
 
     entity_description: RenaultBinarySensorEntityDescription
@@ -72,7 +73,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
         coordinator="battery",
         data_key="plugStatus",
         device_class=DEVICE_CLASS_PLUG,
-        entity_class=RenaultBinarySensor[KamereonVehicleBatteryStatusData],
         name="Plugged In",
         on_value=PlugState.PLUGGED.value,
     ),
@@ -81,7 +81,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
         coordinator="battery",
         data_key="chargingStatus",
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
-        entity_class=RenaultBinarySensor[KamereonVehicleBatteryStatusData],
         name="Charging",
         on_value=ChargeState.CHARGE_IN_PROGRESS.value,
     ),
