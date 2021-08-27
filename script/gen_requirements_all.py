@@ -154,7 +154,7 @@ def gather_recursive_requirements(domain, seen=None):
 
 def comment_requirement(req):
     """Comment out requirement. Some don't install on all systems."""
-    return any(f"{ign.lower()}==" in req.lower() for ign in COMMENT_REQUIREMENTS)
+    return any(req.startswith(f"{ign.lower()}==") for ign in COMMENT_REQUIREMENTS)
 
 
 def gather_modules():
