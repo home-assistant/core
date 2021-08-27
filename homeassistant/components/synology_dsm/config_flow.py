@@ -251,7 +251,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         # The serial of the NAS is actually its MAC address.
 
         existing_entry: ConfigEntry | None = None
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             if discovered_mac in [
                 mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
             ]:
