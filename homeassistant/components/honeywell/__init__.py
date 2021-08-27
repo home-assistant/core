@@ -1,5 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from datetime import timedelta
+import time
 
 import somecomfort
 
@@ -106,6 +107,7 @@ class HoneywellData:
         """Refresh each enabled device."""
         for device in self.devices:
             device.refresh()
+            time.sleep(3)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self) -> None:
@@ -124,7 +126,7 @@ class HoneywellData:
                 if retries == 0:
                     raise exp
 
-                result = await self._hass.async_add_executor_job(self._retry())
+                result = await self._retry()
 
                 if not result:
                     raise exp

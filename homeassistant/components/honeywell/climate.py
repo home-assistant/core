@@ -107,6 +107,8 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
