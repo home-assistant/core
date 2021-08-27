@@ -6,10 +6,10 @@ from micloud import MiCloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -324,9 +324,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await connect_device_class.async_connect_device(self.host, self.token)
         except ConfigEntryAuthFailed:
-            errors["base"] = "wrong_token"
+            if self.model is None:
+                errors["base"] = "wrong_token"
         except ConfigEntryNotReady:
-            errors["base"] = "cannot_connect"
+            if self.model is None:
+                errors["base"] = "cannot_connect"
 
         device_info = connect_device_class.device_info
 
