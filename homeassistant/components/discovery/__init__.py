@@ -1,4 +1,6 @@
 """Starts a service to scan in intervals for new devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
@@ -57,7 +59,7 @@ SERVICE_HANDLERS = {
     "lg_smart_device": ("media_player", "lg_soundbar"),
 }
 
-OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
+OPTIONAL_SERVICE_HANDLERS: dict[str, tuple[str, str | None]] = {}
 
 MIGRATED_SERVICE_HANDLERS = [
     SERVICE_APPLE_TV,
@@ -65,6 +67,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "deconz",
     SERVICE_DAIKIN,
     "denonavr",
+    SERVICE_DLNA_DMR,
     "esphome",
     "google_cast",
     SERVICE_HASS_IOS_APP,

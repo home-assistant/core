@@ -120,6 +120,7 @@ homeassistant/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
+homeassistant/components/dlna_dmr/* @StevenLooman
 homeassistant/components/doorbird/* @oblogic7 @bdraco
 homeassistant/components/dsmr/* @Robbie1221 @frenck
 homeassistant/components/dsmr_reader/* @depl0y
