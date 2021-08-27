@@ -6,7 +6,7 @@ import math
 
 import voluptuous as vol
 import yeelight
-from yeelight import Bulb, BulbException, Flow, RGBTransition, SleepTransition, flows
+from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 
 from homeassistant.components.light import (
@@ -49,6 +49,7 @@ from . import (
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
+    BULB_EXCEPTIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH,
@@ -241,7 +242,7 @@ def _async_cmd(func):
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return await func(self, *args, **kwargs)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Error when calling %s: %s", func, ex)
 
     return _async_wrap
@@ -678,7 +679,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             flow = Flow(count=count, transitions=transitions)
             try:
                 await self._bulb.async_start_flow(flow, light_type=self.light_type)
-            except BulbException as ex:
+            except BULB_EXCEPTIONS as ex:
                 _LOGGER.error("Unable to set flash: %s", ex)
 
     @_async_cmd
@@ -709,7 +710,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         try:
             await self._bulb.async_start_flow(flow, light_type=self.light_type)
             self._effect = effect
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -737,7 +738,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
                 await self.hass.async_add_executor_job(
                     self.set_music_mode, self.config[CONF_MODE_MUSIC]
                 )
-            except BulbException as ex:
+            except BULB_EXCEPTIONS as ex:
                 _LOGGER.error(
                     "Unable to turn on music mode, consider disabling it: %s", ex
                 )
@@ -750,7 +751,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             await self.async_set_brightness(brightness, duration)
             await self.async_set_flash(flash)
             await self.async_set_effect(effect)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to set bulb properties: %s", ex)
             return
 
@@ -758,7 +759,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if self.config[CONF_SAVE_ON_CHANGE] and (brightness or colortemp or rgb):
             try:
                 await self.async_set_default()
-            except BulbException as ex:
+            except BULB_EXCEPTIONS as ex:
                 _LOGGER.error("Unable to set the defaults: %s", ex)
                 return
 
@@ -784,7 +785,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set a power mode."""
         try:
             await self._bulb.async_set_power_mode(PowerMode[mode.upper()])
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to set the power mode: %s", ex)
 
     async def async_start_flow(self, transitions, count=0, action=ACTION_RECOVER):
@@ -795,7 +796,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             )
 
             await self._bulb.async_start_flow(flow, light_type=self.light_type)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to set effect: %s", ex)
 
     async def async_set_scene(self, scene_class, *args):
@@ -806,7 +807,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """
         try:
             await self._bulb.async_set_scene(scene_class, *args)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to set scene: %s", ex)
 
 
