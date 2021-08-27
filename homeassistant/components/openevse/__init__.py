@@ -29,7 +29,7 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     _LOGGER.debug("Attempting to reload entities from the %s integration", DOMAIN)
 
     if config_entry.data == config_entry.options:
-        _LOGGER.debug("No changes detected not reloading entities.")
+        _LOGGER.debug("No changes detected not reloading entities")
         return
 
     new_data = config_entry.options.copy()

@@ -42,7 +42,7 @@ class OpenEVSEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OpenEVSEOptionsFlow(config_entries.OptionsFlow):
     """Options flow for KeyMaster."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 
@@ -123,9 +123,6 @@ async def _start_config_flow(
     if user_input is not None:
         user_input[CONF_NAME] = slugify(user_input[CONF_NAME].lower())
 
-        # TODO: Insert openevse connection check here
-
-        # Update options if no errors
         if not errors:
             return cls.async_create_entry(title=title, data=user_input)
 
