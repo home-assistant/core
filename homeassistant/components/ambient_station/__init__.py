@@ -44,7 +44,7 @@ DEFAULT_SOCKET_MIN_RETRY = 15
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-def async_lux_to_perceived(value: float) -> int:
+def async_lux_to_perceived(value: int) -> int:
     """Calculate illuminance (in lux)."""
     lux = async_wm2_to_lx(value)
 
