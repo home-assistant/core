@@ -4,7 +4,6 @@ from __future__ import annotations
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.components.fritzbox.model import FritzBinarySensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -12,6 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FritzBoxEntity
 from .const import BINARY_SENSOR_TYPES, CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .model import FritzBinarySensorEntityDescription
 
 
 async def async_setup_entry(

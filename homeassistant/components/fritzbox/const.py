@@ -5,10 +5,6 @@ import logging
 from typing import Final
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_WINDOW
-from homeassistant.components.fritzbox.model import (
-    FritzBinarySensorEntityDescription,
-    FritzSensorEntityDescription,
-)
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -23,6 +19,8 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
+
+from .model import FritzBinarySensorEntityDescription, FritzSensorEntityDescription
 
 ATTR_STATE_BATTERY_LOW: Final = "battery_low"
 ATTR_STATE_DEVICE_LOCKED: Final = "device_locked"
