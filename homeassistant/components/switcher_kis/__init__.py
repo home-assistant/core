@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     update_coordinator,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DEVICE_PASSWORD,
@@ -49,7 +50,7 @@ CCONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the switcher component."""
     hass.data.setdefault(DOMAIN, {})
 

@@ -255,6 +255,9 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    assert (
+        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
+    )
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     state = hass.states.get("sensor.tasmota_energy_total")
@@ -269,7 +272,6 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     )
     state = hass.states.get("sensor.tasmota_energy_total")
     assert state.state == "1.2"
-    assert state.attributes["last_reset"] == "2018-11-23T15:33:47+00:00"
 
     # Test polled state update
     async_fire_mqtt_message(
@@ -279,7 +281,6 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     )
     state = hass.states.get("sensor.tasmota_energy_total")
     assert state.state == "5.6"
-    assert state.attributes["last_reset"] == "2018-11-23T16:33:47+00:00"
 
 
 async def test_bad_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):

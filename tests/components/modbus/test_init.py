@@ -42,23 +42,25 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RTUOVERTCP,
-    CONF_SERIAL,
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
-    CONF_TCP,
-    CONF_UDP,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
+    RTUOVERTCP,
+    SERIAL,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
+    TCP,
+    UDP,
 )
 from homeassistant.components.modbus.validators import (
+    duplicate_entity_validator,
+    duplicate_modbus_validator,
     number_validator,
     struct_validator,
 )
@@ -77,6 +79,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -205,13 +208,99 @@ async def test_exception_struct_validator(do_config):
 @pytest.mark.parametrize(
     "do_config",
     [
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            },
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST + "2",
+                CONF_PORT: TEST_PORT_TCP,
+            },
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            },
+            {
+                CONF_NAME: TEST_MODBUS_NAME + "2",
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+            },
+        ],
+    ],
+)
+async def test_duplicate_modbus_validator(do_config):
+    """Test duplicate modbus validator."""
+    duplicate_modbus_validator(do_config)
+    assert len(do_config) == 1
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 119,
+                    },
+                ],
+            }
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 117,
+                    },
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME + "2",
+                        CONF_ADDRESS: 117,
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_duplicate_entity_validator(do_config):
+    """Test duplicate entity validator."""
+    duplicate_entity_validator(do_config)
+    assert len(do_config[0][CONF_SENSORS]) == 1
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
         {
-            CONF_TYPE: CONF_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
         },
         {
-            CONF_TYPE: CONF_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_NAME: TEST_MODBUS_NAME,
@@ -219,25 +308,12 @@ async def test_exception_struct_validator(do_config):
             CONF_DELAY: 10,
         },
         {
-            CONF_TYPE: CONF_UDP,
+            CONF_TYPE: UDP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
         },
         {
-            CONF_TYPE: CONF_UDP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TIMEOUT: 30,
-            CONF_DELAY: 10,
-        },
-        {
-            CONF_TYPE: CONF_RTUOVERTCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-        },
-        {
-            CONF_TYPE: CONF_RTUOVERTCP,
+            CONF_TYPE: UDP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_NAME: TEST_MODBUS_NAME,
@@ -245,7 +321,20 @@ async def test_exception_struct_validator(do_config):
             CONF_DELAY: 10,
         },
         {
-            CONF_TYPE: CONF_SERIAL,
+            CONF_TYPE: RTUOVERTCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+        },
+        {
+            CONF_TYPE: RTUOVERTCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_NAME: TEST_MODBUS_NAME,
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
+        },
+        {
+            CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
             CONF_METHOD: "rtu",
@@ -255,7 +344,7 @@ async def test_exception_struct_validator(do_config):
             CONF_MSG_WAIT: 100,
         },
         {
-            CONF_TYPE: CONF_SERIAL,
+            CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
             CONF_METHOD: "rtu",
@@ -267,26 +356,26 @@ async def test_exception_struct_validator(do_config):
             CONF_DELAY: 10,
         },
         {
-            CONF_TYPE: CONF_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_DELAY: 5,
         },
         [
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
             },
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: f"{TEST_MODBUS_NAME}2",
             },
             {
-                CONF_TYPE: CONF_SERIAL,
+                CONF_TYPE: SERIAL,
                 CONF_BAUDRATE: 9600,
                 CONF_BYTESIZE: 8,
                 CONF_METHOD: "rtu",
@@ -298,7 +387,7 @@ async def test_exception_struct_validator(do_config):
         ],
         {
             # Special test for scan_interval validator with scan_interval: 0
-            CONF_TYPE: CONF_TCP,
+            CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
             CONF_SENSORS: [
@@ -326,7 +415,7 @@ SERVICE = "service"
     [
         {
             CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TYPE: CONF_SERIAL,
+            CONF_TYPE: SERIAL,
             CONF_BAUDRATE: 9600,
             CONF_BYTESIZE: 8,
             CONF_METHOD: "rtu",
@@ -431,7 +520,7 @@ async def mock_modbus_read_pymodbus(
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -505,7 +594,8 @@ async def test_pymodbus_constructor_fail(hass, caplog):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
             }
@@ -518,7 +608,8 @@ async def test_pymodbus_constructor_fail(hass, caplog):
         mock_pb.side_effect = ModbusException("test no class")
         assert await async_setup_component(hass, DOMAIN, config) is False
         await hass.async_block_till_done()
-        assert caplog.messages[0].startswith("Pymodbus: Modbus Error: test")
+        message = f"Pymodbus: {TEST_MODBUS_NAME}: Modbus Error: test"
+        assert caplog.messages[0].startswith(message)
         assert caplog.records[0].levelname == "ERROR"
         assert mock_pb.called
 
@@ -528,7 +619,7 @@ async def test_pymodbus_close_fail(hass, caplog, mock_pymodbus):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
             }
@@ -553,7 +644,7 @@ async def test_delay(hass, mock_pymodbus):
     config = {
         DOMAIN: [
             {
-                CONF_TYPE: CONF_TCP,
+                CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: TEST_MODBUS_NAME,
@@ -596,3 +687,29 @@ async def test_delay(hass, mock_pymodbus):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 117,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ],
+        },
+    ],
+)
+async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
+    """Run test for shutdown."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_pymodbus.close.called
+    assert caplog.text == ""

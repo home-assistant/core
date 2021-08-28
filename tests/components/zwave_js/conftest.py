@@ -11,11 +11,6 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
-from homeassistant.components.sensor import ATTR_LAST_RESET
-from homeassistant.core import State
-
-from .common import DATETIME_LAST_RESET
-
 from tests.common import MockConfigEntry, load_fixture
 
 # Add-on fixtures
@@ -774,6 +769,16 @@ def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
     return node
 
 
+@pytest.fixture(name="lock_id_lock_as_id150_not_ready")
+def node_not_ready(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node that's not ready."""
+    state = copy.deepcopy(lock_id_lock_as_id150_state)
+    state["ready"] = False
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_radio_thermostat_ct101_multiple_temp_units")
 def climate_radio_thermostat_ct101_multiple_temp_units_fixture(
     client, climate_radio_thermostat_ct101_multiple_temp_units_state
@@ -858,16 +863,3 @@ def lock_popp_electric_strike_lock_control_fixture(
 def firmware_file_fixture():
     """Return mock firmware file stream."""
     return io.BytesIO(bytes(10))
-
-
-@pytest.fixture(name="restore_last_reset")
-def restore_last_reset_fixture():
-    """Return mock restore last reset."""
-    state = State(
-        "sensor.test", "test", {ATTR_LAST_RESET: DATETIME_LAST_RESET.isoformat()}
-    )
-    with patch(
-        "homeassistant.components.zwave_js.sensor.ZWaveMeterSensor.async_get_last_state",
-        return_value=state,
-    ):
-        yield state

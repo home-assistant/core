@@ -44,6 +44,7 @@ from .const import (
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
+    DSMR_VERSIONS,
     LOGGER,
     SENSORS,
 )
@@ -54,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5L", "5B", "5", "4", "2.2"])
+            cv.string, vol.In(DSMR_VERSIONS)
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -118,7 +119,7 @@ async def async_setup_entry(
             create_tcp_dsmr_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
-            entry.data[CONF_DSMR_VERSION],
+            dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
@@ -127,7 +128,7 @@ async def async_setup_entry(
         reader_factory = partial(
             create_dsmr_reader,
             entry.data[CONF_PORT],
-            entry.data[CONF_DSMR_VERSION],
+            dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
         )
@@ -138,7 +139,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state != CoreState.stopping:
+        while hass.state == CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = await hass.loop.create_task(reader_factory())
@@ -153,7 +154,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if not hass.is_stopping:
+                    if hass.state == CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -180,7 +181,9 @@ async def async_setup_entry(
                     entry.data.get(CONF_RECONNECT_INTERVAL, DEFAULT_RECONNECT_INTERVAL)
                 )
             except CancelledError:
-                if stop_listener:
+                if stop_listener and (
+                    hass.state == CoreState.not_running or hass.is_running
+                ):
                     stop_listener()  # pylint: disable=not-callable
 
                 if transport:
@@ -217,6 +220,8 @@ class DSMREntity(SensorEntity):
         if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
+        if device_serial is None:
+            device_serial = entry.entry_id
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, device_serial)},

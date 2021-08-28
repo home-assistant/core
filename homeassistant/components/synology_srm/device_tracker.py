@@ -1,4 +1,6 @@
 """Device tracker for Synology SRM routers."""
+from __future__ import annotations
+
 import logging
 
 import synology_srm
@@ -6,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -26,7 +28,7 @@ DEFAULT_PORT = 8001
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -106,7 +108,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
         device = next(
             (result for result in self.devices if result["mac"] == device), None
         )
-        filtered_attributes = {}
+        filtered_attributes: dict[str, str] = {}
         if not device:
             return filtered_attributes
         for attribute, alias in ATTRIBUTE_ALIAS.items():

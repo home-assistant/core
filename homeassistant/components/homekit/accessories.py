@@ -134,10 +134,15 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             and features & cover.SUPPORT_SET_POSITION
         ):
             a_type = "Window"
-        elif features & (cover.SUPPORT_SET_POSITION | cover.SUPPORT_SET_TILT_POSITION):
+        elif features & cover.SUPPORT_SET_POSITION:
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"
+        elif features & cover.SUPPORT_SET_TILT_POSITION:
+            # WindowCovering and WindowCoveringBasic both support tilt
+            # only WindowCovering can handle the covers that are missing
+            # SUPPORT_SET_POSITION, SUPPORT_OPEN, and SUPPORT_CLOSE
+            a_type = "WindowCovering"
 
     elif state.domain == "fan":
         a_type = "Fan"
@@ -219,6 +224,7 @@ class HomeAccessory(Accessory):
         config,
         *args,
         category=CATEGORY_OTHER,
+        device_id=None,
         **kwargs,
     ):
         """Initialize a Accessory object."""
@@ -226,18 +232,29 @@ class HomeAccessory(Accessory):
             driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
         )
         self.config = config or {}
-        domain = split_entity_id(entity_id)[0].replace("_", " ")
+        if device_id:
+            self.device_id = device_id
+            serial_number = device_id
+            domain = None
+        else:
+            self.device_id = None
+            serial_number = entity_id
+            domain = split_entity_id(entity_id)[0].replace("_", " ")
 
         if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
         elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
-        else:
+        elif domain:
             manufacturer = f"{MANUFACTURER} {domain}".title()
+        else:
+            manufacturer = MANUFACTURER
         if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
-        else:
+        elif domain:
             model = domain.title()
+        else:
+            model = MANUFACTURER
         sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
@@ -247,7 +264,7 @@ class HomeAccessory(Accessory):
         self.set_info_service(
             manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
             model=model[:MAX_MODEL_LENGTH],
-            serial_number=entity_id[:MAX_SERIAL_LENGTH],
+            serial_number=serial_number[:MAX_SERIAL_LENGTH],
             firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
@@ -255,6 +272,10 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self._subscriptions = []
+
+        if device_id:
+            return
+
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
@@ -523,9 +544,9 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
-    def pair(self, client_uuid, client_public):
+    def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(client_uuid, client_public)
+        success = super().pair(client_uuid, client_public, client_permissions)
         if success:
             dismiss_setup_message(self.hass, self._entry_id)
         return success

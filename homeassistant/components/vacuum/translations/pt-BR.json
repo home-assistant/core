@@ -1,8 +1,13 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_docked": "{entity_name} est\u00e1 na base"
+        }
+    },
     "state": {
         "_": {
             "cleaning": "Limpando",
-            "docked": "Baseado",
+            "docked": "Na base",
             "error": "Erro",
             "idle": "Em espera",
             "off": "Desligado",

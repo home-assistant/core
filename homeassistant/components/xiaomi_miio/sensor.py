@@ -14,24 +14,21 @@ from miio.gateway.gateway import (
     GATEWAY_MODEL_EU,
     GatewayException,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
@@ -47,7 +44,6 @@ from homeassistant.const import (
     TIME_HOURS,
     VOLUME_CUBIC_METERS,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_DEVICE,
@@ -64,6 +60,12 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V2,
     MODEL_AIRPURIFIER_V3,
+    MODEL_FAN_P5,
+    MODEL_FAN_V2,
+    MODEL_FAN_V3,
+    MODEL_FAN_ZA1,
+    MODEL_FAN_ZA3,
+    MODEL_FAN_ZA4,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -78,17 +80,10 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Xiaomi Miio Sensor"
 UNIT_LUMEN = "lm"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
 ATTR_ACTUAL_SPEED = "actual_speed"
 ATTR_AIR_QUALITY = "air_quality"
 ATTR_AQI = "aqi"
+ATTR_BATTERY = "battery"
 ATTR_CARBON_DIOXIDE = "co2"
 ATTR_CHARGING = "charging"
 ATTR_DISPLAY_CLOCK = "display_clock"
@@ -232,6 +227,13 @@ SENSOR_TYPES = {
         state_class=STATE_CLASS_TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
+    ATTR_BATTERY: XiaomiMiioSensorDescription(
+        key=ATTR_BATTERY,
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
 }
 
 HUMIDIFIER_MIIO_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_WATER_LEVEL)
@@ -314,31 +316,23 @@ AIRFRESH_SENSORS = (
     ATTR_PM25,
     ATTR_TEMPERATURE,
 )
+FAN_V2_V3_SENSORS = (
+    ATTR_BATTERY,
+    ATTR_HUMIDITY,
+    ATTR_TEMPERATURE,
+)
 
 MODEL_TO_SENSORS_MAP = {
+    MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
     MODEL_AIRHUMIDIFIER_CA1: HUMIDIFIER_CA1_CB1_SENSORS,
     MODEL_AIRHUMIDIFIER_CB1: HUMIDIFIER_CA1_CB1_SENSORS,
+    MODEL_AIRPURIFIER_PRO: PURIFIER_PRO_SENSORS,
+    MODEL_AIRPURIFIER_PRO_V7: PURIFIER_PRO_V7_SENSORS,
     MODEL_AIRPURIFIER_V2: PURIFIER_V2_SENSORS,
     MODEL_AIRPURIFIER_V3: PURIFIER_V3_SENSORS,
-    MODEL_AIRPURIFIER_PRO_V7: PURIFIER_PRO_V7_SENSORS,
-    MODEL_AIRPURIFIER_PRO: PURIFIER_PRO_SENSORS,
-    MODEL_AIRFRESH_VA2: AIRFRESH_SENSORS,
+    MODEL_FAN_V2: FAN_V2_V3_SENSORS,
+    MODEL_FAN_V3: FAN_V2_V3_SENSORS,
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Sensor via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -379,6 +373,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
         sensors = []
+        if model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4, MODEL_FAN_P5):
+            return
         if model in MODEL_TO_SENSORS_MAP:
             sensors = MODEL_TO_SENSORS_MAP[model]
         elif model in MODELS_HUMIDIFIER_MIOT:

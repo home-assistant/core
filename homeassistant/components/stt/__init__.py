@@ -17,6 +17,7 @@ import attr
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
@@ -34,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
     providers = {}
 
