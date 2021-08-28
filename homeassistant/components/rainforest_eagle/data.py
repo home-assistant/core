@@ -59,15 +59,15 @@ async def async_get_type(hass, cloud_id, install_code, host):
         meters = None
 
     if meters is not None:
-        # Find the first meter that has a Connected status
-        meterIdx = 0
-        for meter in range(len(meters)):
-            if meters[meter].connection_status == "Connected":
-                meterIdx = meter
+        meter_idx = 0
+        # pylint: disable=unused-variable
+        for idx, meter in enumerate(meters):
+            if meters[idx].connection_status == "Connected":
+                meter_idx = idx
                 break
 
         if meters:
-            hardware_address = meters[meterIdx].hardware_address
+            hardware_address = meters[meter_idx].hardware_address
         else:
             hardware_address = None
 
