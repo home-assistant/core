@@ -59,9 +59,6 @@ class SegmentBuffer:
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
         self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
-        self._MIN_PART_DURATION_US = int(
-            self._stream_settings.part_target_duration * 85e4
-        )
         self._start_time = datetime.datetime.utcnow()
 
     def make_new_av(
@@ -101,7 +98,9 @@ class SegmentBuffer:
                         # maximum threshold for part durations, we scale that number down here by .85 and hope
                         # that the output part durations stay below the maximum Part Target Duration threshold.
                         # See https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis#section-4.4.4.9
-                        "frag_duration": str(self._MIN_PART_DURATION_US),
+                        "frag_duration": str(
+                            self._stream_settings.part_target_duration * 1e6
+                        ),
                     }
                     if self._stream_settings.ll_hls
                     else {}
@@ -153,7 +152,7 @@ class SegmentBuffer:
                 >= self._stream_settings.min_segment_duration
             ):
                 # Flush segment (also flushes the stub part segment)
-                self.flush(packet, last_part=True, include_current_packet=False)
+                self.flush(packet, last_part=True)
                 # Reinitialize
                 self.reset(packet.dts)
 
@@ -161,6 +160,7 @@ class SegmentBuffer:
             packet.stream = self._output_video_stream
             self._av_output.mux(packet)
             self.check_flush_part(packet)
+            self._part_has_keyframe |= packet.is_keyframe
 
         elif packet.stream == self._input_audio_stream:
             packet.stream = self._output_audio_stream
@@ -169,7 +169,6 @@ class SegmentBuffer:
     def check_flush_part(self, packet: av.Packet) -> None:
         """Check for and mark a part segment boundary and record its duration."""
         if self._memory_file_pos == self._memory_file.tell():
-            self._part_has_keyframe |= packet.is_keyframe
             return
         if self._segment is None:
             # We have our first non-zero byte position. This means the init has just
@@ -188,32 +187,24 @@ class SegmentBuffer:
             )
             self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = self._segment_start_dts
-            self._part_has_keyframe |= packet.is_keyframe
         else:  # These are the ends of the part segments
-            # If the current packet has a dts that is less than MIN_PART_DURATION_US,
-            # the current packet is also included in the finished part.
-            if (
-                packet.dts - self._part_start_dts
-            ) * packet.time_base * 1e6 < self._MIN_PART_DURATION_US:
-                self._part_has_keyframe |= packet.is_keyframe
-                self.flush(packet, last_part=False, include_current_packet=True)
-                self._part_has_keyframe = False
-            else:
-                self.flush(packet, last_part=False, include_current_packet=False)
-                self._part_has_keyframe = packet.is_keyframe
+            self.flush(packet, last_part=False)
 
-    def flush(
-        self, packet: av.Packet, last_part: bool, include_current_packet: bool
-    ) -> None:
+    def flush(self, packet: av.Packet, last_part: bool) -> None:
         """Output a part from the most recent bytes in the memory_file.
 
         If last_part is True, also close the segment, give it a duration,
         and clean up the av_output and memory_file.
-        The part may or may not include the current packet, and the dts boundary
-        between this part and the next part will differ accordingly.
         """
-        current_dts = (
-            packet.dts + packet.duration if include_current_packet else packet.dts
+        # In some cases using the current packet's dts (which is the start
+        # dts of the next part) to calculate the part duration will result in a
+        # value which exceeds the part_target_duration. This can muck up the
+        # duration of both this part and the next part. An easy fix is to just
+        # use the current packet dts and cap it by the part target duration.
+        current_dts = min(
+            packet.dts,
+            self._part_start_dts
+            + self._stream_settings.part_target_duration / packet.time_base,
         )
         if last_part:
             # Closing the av_output will write the remaining buffered data to the
@@ -235,12 +226,12 @@ class SegmentBuffer:
         if last_part:
             # If we've written the last part, we can close the memory_file.
             self._memory_file.close()  # We don't need the BytesIO object anymore
-            self._part_has_keyframe = False
         else:
             # For the last part, these will get set again elsewhere so we can skip
             # setting them here.
             self._memory_file_pos = self._memory_file.tell()
             self._part_start_dts = current_dts
+        self._part_has_keyframe = False
 
     def discontinuity(self) -> None:
         """Mark the stream as having been restarted."""

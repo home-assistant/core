@@ -134,7 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ll_hls=False,
             min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
             - SEGMENT_DURATION_ADJUSTER,
-            part_target_duration=0.0,
+            part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
             hls_advance_part_limit=3,
             hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
         )
