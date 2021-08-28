@@ -112,11 +112,9 @@ class OpenGarageCover(CoverEntity):
         return self._extra_state_attributes
 
     @property
-    def is_closed(self):
-        """Return if the cover is closed."""
-        if self._state is None:
-            return None
-        return self._state in [STATE_CLOSED, STATE_OPENING]
+    def state(self):
+        """Return the state of the cover."""
+        return self._state
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
