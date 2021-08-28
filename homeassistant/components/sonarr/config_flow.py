@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -54,8 +54,6 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
 
     await sonarr.update()
 
-    return True
-
 
 class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sonarr."""
@@ -72,14 +70,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
@@ -164,7 +162,7 @@ class SonarrOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(self, user_input: dict[str, int] | None = None):
         """Manage Sonarr options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

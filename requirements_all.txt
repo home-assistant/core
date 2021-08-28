@@ -1581,7 +1581,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.8.0
+pylitterbot==2021.8.1
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -2134,7 +2134,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.5
+simplisafe-python==11.0.6
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
