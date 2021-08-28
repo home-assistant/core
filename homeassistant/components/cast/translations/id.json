@@ -22,6 +22,17 @@
     "options": {
         "error": {
             "invalid_known_hosts": "Host yang diketahui harus berupa daftar host yang dipisahkan koma."
+        },
+        "step": {
+            "advanced_options": {
+                "title": "Konfigurasi Google Cast tingkat lanjut"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Host yang dikenal"
+                },
+                "title": "Konfigurasi Google Cast"
+            }
         }
     }
 }

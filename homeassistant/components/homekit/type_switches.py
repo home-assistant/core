@@ -55,6 +55,11 @@ VALVE_TYPE = {
 }
 
 
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
+
+ACTIVATE_ONLY_RESET_SECONDS = 10
+
+
 @TYPES.register("Outlet")
 class Outlet(HomeAccessory):
     """Generate an Outlet accessory."""
@@ -86,9 +91,8 @@ class Outlet(HomeAccessory):
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state == STATE_ON
-        if self.char_on.value is not current_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
 
 
 @TYPES.register("Switch")
@@ -98,7 +102,7 @@ class Switch(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
-        self._domain = split_entity_id(self.entity_id)[0]
+        self._domain, self._object_id = split_entity_id(self.entity_id)
         state = self.hass.states.get(self.entity_id)
 
         self.activate_only = self.is_activate(self.hass.states.get(self.entity_id))
@@ -113,15 +117,12 @@ class Switch(HomeAccessory):
 
     def is_activate(self, state):
         """Check if entity is activate only."""
-        if self._domain == "scene":
-            return True
-        return False
+        return self._domain in ACTIVATE_ONLY_SWITCH_DOMAINS
 
     def reset_switch(self, *args):
         """Reset switch to emulate activate click."""
         _LOGGER.debug("%s: Reset switch to off", self.entity_id)
-        if self.char_on.value is not False:
-            self.char_on.set_value(False)
+        self.char_on.set_value(False)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -129,12 +130,18 @@ class Switch(HomeAccessory):
         if self.activate_only and not value:
             _LOGGER.debug("%s: Ignoring turn_off call", self.entity_id)
             return
+
         params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+        if self._domain == "script":
+            service = self._object_id
+            params = {}
+        else:
+            service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+
         self.async_call_service(self._domain, service, params)
 
         if self.activate_only:
-            async_call_later(self.hass, 1, self.reset_switch)
+            async_call_later(self.hass, ACTIVATE_ONLY_RESET_SECONDS, self.reset_switch)
 
     @callback
     def async_update_state(self, new_state):
@@ -147,9 +154,8 @@ class Switch(HomeAccessory):
             return
 
         current_state = new_state.state == STATE_ON
-        if self.char_on.value is not current_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
 
 
 @TYPES.register("Vacuum")
@@ -177,9 +183,8 @@ class Vacuum(Switch):
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state in (STATE_CLEANING, STATE_ON)
-        if self.char_on.value is not current_state:
-            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
 
 
 @TYPES.register("Valve")
@@ -217,9 +222,7 @@ class Valve(HomeAccessory):
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = 1 if new_state.state == STATE_ON else 0
-        if self.char_active.value != current_state:
-            _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
-            self.char_active.set_value(current_state)
-        if self.char_in_use.value != current_state:
-            _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
-            self.char_in_use.set_value(current_state)
+        _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
+        self.char_active.set_value(current_state)
+        _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
+        self.char_in_use.set_value(current_state)

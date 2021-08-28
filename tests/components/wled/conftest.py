@@ -63,6 +63,7 @@ def mock_wled(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
     ) as wled_mock:
         wled = wled_mock.return_value
         wled.update.return_value = device
+        wled.connected = False
         yield wled
 
 

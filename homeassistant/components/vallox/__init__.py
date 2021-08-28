@@ -40,7 +40,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# pylint: disable=no-member
 PROFILE_TO_STR_SETTABLE = {
     VALLOX_PROFILE.HOME: "Home",
     VALLOX_PROFILE.AWAY: "Away",
@@ -50,7 +49,6 @@ PROFILE_TO_STR_SETTABLE = {
 
 STR_TO_PROFILE = {v: k for (k, v) in PROFILE_TO_STR_SETTABLE.items()}
 
-# pylint: disable=no-member
 PROFILE_TO_STR_REPORTABLE = {
     **{VALLOX_PROFILE.NONE: "None", VALLOX_PROFILE.EXTRA: "Extra"},
     **PROFILE_TO_STR_SETTABLE,
@@ -112,8 +110,8 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {"client": client, "state_proxy": state_proxy, "name": name}
 
-    for vallox_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[vallox_service]["schema"]
+    for vallox_service, method in SERVICE_TO_METHOD.items():
+        schema = method["schema"]
         hass.services.async_register(
             DOMAIN, vallox_service, service_handler.async_handle, schema=schema
         )

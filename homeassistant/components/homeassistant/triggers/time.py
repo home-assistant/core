@@ -25,7 +25,7 @@ import homeassistant.util.dt as dt_util
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
-    vol.All(str, cv.entity_domain(("input_datetime", "sensor"))),
+    vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
     msg="Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'",
 )
 
@@ -39,7 +39,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     entities = {}
     removes = []
     job = HassJob(action)
@@ -51,11 +51,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": "time",
                     "now": now,
                     "description": description,
                     "entity_id": entity_id,
-                    "id": trigger_id,
                 }
             },
         )

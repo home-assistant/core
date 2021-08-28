@@ -1,6 +1,8 @@
 """Provides device triggers for NEW_NAME."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
@@ -32,7 +34,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -51,24 +55,14 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
 
         # Add triggers for each entity that belongs to this integration
         # TODO add your own triggers.
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_on",
-            }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_off",
-            }
-        )
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+        triggers.append({**base_trigger, CONF_TYPE: "turned_on"})
+        triggers.append({**base_trigger, CONF_TYPE: "turned_off"})
 
     return triggers
 

@@ -56,8 +56,11 @@ ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
 # Covers
-DAMPERS = ["Level controllable output"]
-WINDOW_COVERS = ["Window covering device", "Window covering controller"]
+LEVEL_CONTROLLABLE_OUTPUT = "Level controllable output"
+DAMPERS = [LEVEL_CONTROLLABLE_OUTPUT]
+WINDOW_COVERING_CONTROLLER = "Window covering controller"
+WINDOW_COVERING_DEVICE = "Window covering device"
+WINDOW_COVERS = [WINDOW_COVERING_CONTROLLER, WINDOW_COVERING_DEVICE]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
 # Fans

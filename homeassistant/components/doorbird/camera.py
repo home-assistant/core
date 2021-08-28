@@ -1,4 +1,6 @@
 """Support for viewing the camera feed from a DoorBird video doorbell."""
+from __future__ import annotations
+
 import asyncio
 import datetime
 import logging
@@ -112,7 +114,9 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         """Get the name of the camera."""
         return self._name
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Pull a still image from the camera."""
         now = dt_util.utcnow()
 

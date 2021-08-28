@@ -73,9 +73,9 @@ def _item_to_children_media_class(item, info=None):
 def _item_to_media_class(item, parent_item=None):
     if "type" not in item:
         return MEDIA_CLASS_DIRECTORY
-    if item["type"] in ["webradio", "mywebradio"]:
+    if item["type"] in ("webradio", "mywebradio"):
         return MEDIA_CLASS_CHANNEL
-    if item["type"] in ["song", "cuesong"]:
+    if item["type"] in ("song", "cuesong"):
         return MEDIA_CLASS_TRACK
     if item.get("artist"):
         return MEDIA_CLASS_ALBUM

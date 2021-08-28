@@ -17,5 +17,12 @@
                 "title": "Wprowad\u017a dane"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Skonfiguruj OpenUV"
+            }
+        }
     }
 }

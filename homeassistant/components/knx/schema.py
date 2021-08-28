@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from abc import ABC
+from collections import OrderedDict
 from typing import Any, ClassVar
 
 import voluptuous as vol
 from xknx import XKNX
 from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import DPTBase
+from xknx.dpt import DPTBase, DPTNumeric
 from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.telegram.address import IndividualAddress, parse_device_group_address
@@ -15,7 +16,9 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
+from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
+from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -33,6 +36,7 @@ from .const import (
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
     CONF_RESET_AFTER,
+    CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
@@ -68,6 +72,77 @@ ia_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
+
+
+def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
+    """Validate a number entity configurations dependent on configured value type."""
+    value_type = entity_config[CONF_TYPE]
+    min_config: float | None = entity_config.get(NumberSchema.CONF_MIN)
+    max_config: float | None = entity_config.get(NumberSchema.CONF_MAX)
+    step_config: float | None = entity_config.get(NumberSchema.CONF_STEP)
+    dpt_class = DPTNumeric.parse_transcoder(value_type)
+
+    if dpt_class is None:
+        raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
+    # Inifinity is not supported by Home Assistant frontend so user defined
+    # config is required if if xknx DPTNumeric subclass defines it as limit.
+    if min_config is None and dpt_class.value_min == float("-inf"):
+        raise vol.Invalid(f"'min' key required for value type '{value_type}'")
+    if min_config is not None and min_config < dpt_class.value_min:
+        raise vol.Invalid(
+            f"'min: {min_config}' undercuts possible minimum"
+            f" of value type '{value_type}': {dpt_class.value_min}"
+        )
+
+    if max_config is None and dpt_class.value_max == float("inf"):
+        raise vol.Invalid(f"'max' key required for value type '{value_type}'")
+    if max_config is not None and max_config > dpt_class.value_max:
+        raise vol.Invalid(
+            f"'max: {max_config}' exceeds possible maximum"
+            f" of value type '{value_type}': {dpt_class.value_max}"
+        )
+
+    if step_config is not None and step_config < dpt_class.resolution:
+        raise vol.Invalid(
+            f"'step: {step_config}' undercuts possible minimum step"
+            f" of value type '{value_type}': {dpt_class.resolution}"
+        )
+
+    return entity_config
+
+
+def numeric_type_validator(value: Any) -> str | int:
+    """Validate that value is parsable as numeric sensor type."""
+    if isinstance(value, (str, int)) and DPTNumeric.parse_transcoder(value) is not None:
+        return value
+    raise vol.Invalid(f"value '{value}' is not a valid numeric sensor type.")
+
+
+def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
+    """Validate a select entity options configuration."""
+    options_seen = set()
+    payloads_seen = set()
+    payload_length = entity_config[SelectSchema.CONF_PAYLOAD_LENGTH]
+    if payload_length == 0:
+        max_payload = 0x3F
+    else:
+        max_payload = 256 ** payload_length - 1
+
+    for opt in entity_config[SelectSchema.CONF_OPTIONS]:
+        option = opt[SelectSchema.CONF_OPTION]
+        payload = opt[SelectSchema.CONF_PAYLOAD]
+        if payload > max_payload:
+            raise vol.Invalid(
+                f"'payload: {payload}' for 'option: {option}' exceeds possible"
+                f" maximum of 'payload_length: {payload_length}': {max_payload}"
+            )
+        if option in options_seen:
+            raise vol.Invalid(f"duplicate item for 'option' not allowed: {option}")
+        options_seen.add(option)
+        if payload in payloads_seen:
+            raise vol.Invalid(f"duplicate item for 'payload' not allowed: {payload}")
+        payloads_seen.add(payload)
+    return entity_config
 
 
 def sensor_type_validator(value: Any) -> str | int:
@@ -186,6 +261,7 @@ class ClimateSchema(KNXPlatformSchema):
 
     PLATFORM_NAME = SupportedPlatforms.CLIMATE.value
 
+    CONF_ACTIVE_STATE_ADDRESS = "active_state_address"
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
     CONF_SETPOINT_SHIFT_STATE_ADDRESS = "setpoint_shift_state_address"
     CONF_SETPOINT_SHIFT_MODE = "setpoint_shift_mode"
@@ -201,6 +277,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_CONTROLLER_STATUS_STATE_ADDRESS = "controller_status_state_address"
     CONF_CONTROLLER_MODE_ADDRESS = "controller_mode_address"
     CONF_CONTROLLER_MODE_STATE_ADDRESS = "controller_mode_state_address"
+    CONF_COMMAND_VALUE_STATE_ADDRESS = "command_value_state_address"
     CONF_HEAT_COOL_ADDRESS = "heat_cool_address"
     CONF_HEAT_COOL_STATE_ADDRESS = "heat_cool_state_address"
     CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS = (
@@ -211,6 +288,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
     CONF_OPERATION_MODES = "operation_modes"
     CONF_CONTROLLER_MODES = "controller_modes"
+    CONF_DEFAULT_CONTROLLER_MODE = "default_controller_mode"
     CONF_ON_OFF_ADDRESS = "on_off_address"
     CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
     CONF_ON_OFF_INVERT = "on_off_invert"
@@ -259,6 +337,8 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_SETPOINT_SHIFT_MODE): vol.Maybe(
                     vol.All(vol.Upper, cv.enum(SetpointShiftMode))
                 ),
+                vol.Optional(CONF_ACTIVE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_COMMAND_VALUE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_OPERATION_MODE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): ga_list_validator,
@@ -284,6 +364,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
                     cv.ensure_list, [vol.In(CONTROLLER_MODES)]
                 ),
+                vol.Optional(
+                    CONF_DEFAULT_CONTROLLER_MODE, default=HVAC_MODE_HEAT
+                ): vol.In(HVAC_MODES),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
             }
@@ -419,8 +502,12 @@ class LightSchema(KNXPlatformSchema):
     CONF_COLOR_TEMP_ADDRESS = "color_temperature_address"
     CONF_COLOR_TEMP_STATE_ADDRESS = "color_temperature_state_address"
     CONF_COLOR_TEMP_MODE = "color_temperature_mode"
+    CONF_HUE_ADDRESS = "hue_address"
+    CONF_HUE_STATE_ADDRESS = "hue_state_address"
     CONF_RGBW_ADDRESS = "rgbw_address"
     CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
+    CONF_SATURATION_ADDRESS = "saturation_address"
+    CONF_SATURATION_STATE_ADDRESS = "saturation_state_address"
     CONF_XYY_ADDRESS = "xyy_address"
     CONF_XYY_STATE_ADDRESS = "xyy_state_address"
     CONF_MIN_KELVIN = "min_kelvin"
@@ -437,7 +524,18 @@ class LightSchema(KNXPlatformSchema):
     CONF_BLUE = "blue"
     CONF_WHITE = "white"
 
-    COLOR_SCHEMA = vol.Schema(
+    _hs_color_inclusion_msg = (
+        "'hue_address', 'saturation_address' and 'brightness_address'"
+        " are required for hs_color configuration"
+    )
+    HS_COLOR_SCHEMA = {
+        vol.Optional(CONF_HUE_ADDRESS): ga_list_validator,
+        vol.Optional(CONF_HUE_STATE_ADDRESS): ga_list_validator,
+        vol.Optional(CONF_SATURATION_ADDRESS): ga_list_validator,
+        vol.Optional(CONF_SATURATION_STATE_ADDRESS): ga_list_validator,
+    }
+
+    INDIVIDUAL_COLOR_SCHEMA = vol.Schema(
         {
             vol.Optional(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
@@ -459,18 +557,18 @@ class LightSchema(KNXPlatformSchema):
                         CONF_RED,
                         "individual_colors",
                         msg="'red', 'green' and 'blue' are required for individual colors configuration",
-                    ): COLOR_SCHEMA,
+                    ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
                         CONF_GREEN,
                         "individual_colors",
                         msg="'red', 'green' and 'blue' are required for individual colors configuration",
-                    ): COLOR_SCHEMA,
+                    ): INDIVIDUAL_COLOR_SCHEMA,
                     vol.Inclusive(
                         CONF_BLUE,
                         "individual_colors",
                         msg="'red', 'green' and 'blue' are required for individual colors configuration",
-                    ): COLOR_SCHEMA,
-                    vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+                    ): INDIVIDUAL_COLOR_SCHEMA,
+                    vol.Optional(CONF_WHITE): INDIVIDUAL_COLOR_SCHEMA,
                 },
                 vol.Exclusive(CONF_COLOR_ADDRESS, "color"): ga_list_validator,
                 vol.Optional(CONF_COLOR_STATE_ADDRESS): ga_list_validator,
@@ -479,6 +577,7 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(
                     CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
                 ): vol.All(vol.Upper, cv.enum(ColorTempModes)),
+                **HS_COLOR_SCHEMA,
                 vol.Exclusive(CONF_RGBW_ADDRESS, "color"): ga_list_validator,
                 vol.Optional(CONF_RGBW_STATE_ADDRESS): ga_list_validator,
                 vol.Exclusive(CONF_XYY_ADDRESS, "color"): ga_list_validator,
@@ -492,20 +591,39 @@ class LightSchema(KNXPlatformSchema):
             }
         ),
         vol.Any(
-            # either global "address" or "individual_colors" is required
             vol.Schema(
+                {vol.Required(KNX_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(  # brightness addresses are required in INDIVIDUAL_COLOR_SCHEMA
+                {vol.Required(CONF_INDIVIDUAL_COLORS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            msg="either 'address' or 'individual_colors' is required",
+        ),
+        vol.Any(
+            vol.Schema(  # 'brightness' is non-optional for hs-color
                 {
-                    # brightness addresses are required in COLOR_SCHEMA
-                    vol.Required(CONF_INDIVIDUAL_COLORS): object,
+                    vol.Inclusive(
+                        CONF_BRIGHTNESS_ADDRESS, "hs_color", msg=_hs_color_inclusion_msg
+                    ): object,
+                    vol.Inclusive(
+                        CONF_HUE_ADDRESS, "hs_color", msg=_hs_color_inclusion_msg
+                    ): object,
+                    vol.Inclusive(
+                        CONF_SATURATION_ADDRESS, "hs_color", msg=_hs_color_inclusion_msg
+                    ): object,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
-            vol.Schema(
+            vol.Schema(  # hs-colors not used
                 {
-                    vol.Required(KNX_ADDRESS): object,
+                    vol.Optional(CONF_HUE_ADDRESS): None,
+                    vol.Optional(CONF_SATURATION_ADDRESS): None,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
+            msg=_hs_color_inclusion_msg,
         ),
     )
 
@@ -522,6 +640,33 @@ class NotifySchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_validator,
         }
+    )
+
+
+class NumberSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX numbers."""
+
+    PLATFORM_NAME = SupportedPlatforms.NUMBER.value
+
+    CONF_MAX = "max"
+    CONF_MIN = "min"
+    CONF_STEP = "step"
+    DEFAULT_NAME = "KNX Number"
+
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+                vol.Required(CONF_TYPE): numeric_type_validator,
+                vol.Required(KNX_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_MAX): vol.Coerce(float),
+                vol.Optional(CONF_MIN): vol.Coerce(float),
+                vol.Optional(CONF_STEP): cv.positive_float,
+            }
+        ),
+        number_limit_sub_validator,
     )
 
 
@@ -544,6 +689,40 @@ class SceneSchema(KNXPlatformSchema):
     )
 
 
+class SelectSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX selects."""
+
+    PLATFORM_NAME = SupportedPlatforms.SELECT.value
+
+    CONF_OPTION = "option"
+    CONF_OPTIONS = "options"
+    CONF_PAYLOAD = "payload"
+    CONF_PAYLOAD_LENGTH = "payload_length"
+    DEFAULT_NAME = "KNX Select"
+
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+                vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+                vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=14)
+                ),
+                vol.Required(CONF_OPTIONS): [
+                    {
+                        vol.Required(CONF_OPTION): vol.Coerce(str),
+                        vol.Required(CONF_PAYLOAD): cv.positive_int,
+                    }
+                ],
+                vol.Required(KNX_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            }
+        ),
+        select_options_sub_validator,
+    )
+
+
 class SensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX sensors."""
 
@@ -559,6 +738,7 @@ class SensorSchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
             vol.Required(CONF_TYPE): sensor_type_validator,
             vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
         }
@@ -578,6 +758,7 @@ class SwitchSchema(KNXPlatformSchema):
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
         }

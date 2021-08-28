@@ -10,6 +10,7 @@
             "os_version": "Oper\u00e1ci\u00f3s rendszer verzi\u00f3ja",
             "python_version": "Python verzi\u00f3",
             "timezone": "Id\u0151z\u00f3na",
+            "user": "Felhaszn\u00e1l\u00f3",
             "version": "Verzi\u00f3",
             "virtualenv": "Virtu\u00e1lis k\u00f6rnyezet"
         }

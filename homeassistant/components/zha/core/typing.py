@@ -26,8 +26,8 @@ ZigpyGroupType = zigpy.group.Group
 ZigpyZdoType = zigpy.zdo.ZDO
 
 if TYPE_CHECKING:
+    from homeassistant.components.zha.core import channels
     import homeassistant.components.zha.core.channels
-    import homeassistant.components.zha.core.channels as channels
     import homeassistant.components.zha.core.channels.base as base_channels
     import homeassistant.components.zha.core.device
     import homeassistant.components.zha.core.gateway

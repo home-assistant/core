@@ -109,37 +109,25 @@ async def async_setup_platform(
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
+    _attr_native_unit_of_measurement: str = "packages"
+    _attr_icon: str = ICON
+
     def __init__(self, aftership: Tracking, name: str) -> None:
         """Initialize the sensor."""
         self._attributes: dict[str, Any] = {}
-        self._name: str = name
         self._state: int | None = None
         self.aftership = aftership
+        self._attr_name = name
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return "packages"
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return attributes for the sensor."""
         return self._attributes
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return ICON
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

@@ -21,7 +21,8 @@ _PLATFORM_ALIASES = {
 
 
 async def _async_get_trigger_platform(hass: HomeAssistant, config: ConfigType) -> Any:
-    platform = config[CONF_PLATFORM]
+    platform_and_sub_type = config[CONF_PLATFORM].split(".")
+    platform = platform_and_sub_type[0]
     for alias, triggers in _PLATFORM_ALIASES.items():
         if platform in triggers:
             platform = alias
@@ -75,7 +76,9 @@ async def async_initialize_triggers(
     for idx, conf in enumerate(trigger_config):
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
-        info = {**info, "trigger_id": trigger_id}
+        trigger_idx = f"{idx}"
+        trigger_data = {"id": trigger_id, "idx": trigger_idx}
+        info = {**info, "trigger_data": trigger_data}
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)

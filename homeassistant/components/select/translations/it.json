@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "action_type": {
+            "select_option": "Cambia l'opzione {entity_name}"
+        },
+        "condition_type": {
+            "selected_option": "Opzione selezionata {entity_name} corrente"
+        },
+        "trigger_type": {
+            "current_option_changed": "Opzione {entity_name} modificata"
+        }
+    },
+    "title": "Selezionare"
+}

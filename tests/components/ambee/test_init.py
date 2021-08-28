@@ -2,9 +2,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from ambee import AmbeeConnectionError
+from ambee.exceptions import AmbeeAuthenticationError
+import pytest
 
 from homeassistant.components.ambee.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -44,3 +46,33 @@ async def test_config_entry_not_ready(
 
     assert mock_request.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("service_name", ["air_quality", "pollen"])
+async def test_config_entry_authentication_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ambee: MagicMock,
+    service_name: str,
+) -> None:
+    """Test the Ambee configuration entry not ready."""
+    mock_config_entry.add_to_hass(hass)
+
+    service = getattr(mock_ambee.return_value, service_name)
+    service.side_effect = AmbeeAuthenticationError
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id

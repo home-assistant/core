@@ -34,8 +34,6 @@ class DeconzBase:
         if self.serial is None:
             return None
 
-        bridgeid = self.gateway.api.config.bridgeid
-
         return {
             "connections": {(CONNECTION_ZIGBEE, self.serial)},
             "identifiers": {(DECONZ_DOMAIN, self.serial)},
@@ -43,12 +41,14 @@ class DeconzBase:
             "model": self._device.modelid,
             "name": self._device.name,
             "sw_version": self._device.swversion,
-            "via_device": (DECONZ_DOMAIN, bridgeid),
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
         }
 
 
 class DeconzDevice(DeconzBase, Entity):
     """Representation of a deCONZ device."""
+
+    _attr_should_poll = False
 
     TYPE = ""
 
@@ -56,6 +56,8 @@ class DeconzDevice(DeconzBase, Entity):
         """Set up device and add update callback to get data from websocket."""
         super().__init__(device, gateway)
         self.gateway.entities[self.TYPE].add(self.unique_id)
+
+        self._attr_name = self._device.name
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -93,13 +95,3 @@ class DeconzDevice(DeconzBase, Entity):
     def available(self):
         """Return True if device is available."""
         return self.gateway.available and self._device.reachable
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

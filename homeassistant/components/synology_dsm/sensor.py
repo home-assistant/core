@@ -11,12 +11,9 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DATA_TERABYTES,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
@@ -30,7 +27,6 @@ from .const import (
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
     SYNO_API,
-    TEMP_SENSORS_KEYS,
     UTILISATION_SENSORS,
     EntityInfo,
 )
@@ -46,10 +42,8 @@ async def async_setup_entry(
     coordinator = data[COORDINATOR_CENTRAL]
 
     entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
-        SynoDSMUtilSensor(
-            api, sensor_type, UTILISATION_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in UTILISATION_SENSORS
+        SynoDSMUtilSensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in UTILISATION_SENSORS.items()
     ]
 
     # Handle all volumes
@@ -59,11 +53,11 @@ async def async_setup_entry(
                 SynoDSMStorageSensor(
                     api,
                     sensor_type,
-                    STORAGE_VOL_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     volume,
                 )
-                for sensor_type in STORAGE_VOL_SENSORS
+                for sensor_type, sensor in STORAGE_VOL_SENSORS.items()
             ]
 
     # Handle all disks
@@ -73,18 +67,16 @@ async def async_setup_entry(
                 SynoDSMStorageSensor(
                     api,
                     sensor_type,
-                    STORAGE_DISK_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     disk,
                 )
-                for sensor_type in STORAGE_DISK_SENSORS
+                for sensor_type, sensor in STORAGE_DISK_SENSORS.items()
             ]
 
     entities += [
-        SynoDSMInfoSensor(
-            api, sensor_type, INFORMATION_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in INFORMATION_SENSORS
+        SynoDSMInfoSensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in INFORMATION_SENSORS.items()
     ]
 
     async_add_entities(entities)
@@ -94,10 +86,8 @@ class SynoDSMSensor(SynologyDSMBaseEntity):
     """Mixin for sensor specific attributes."""
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        if self.entity_type in TEMP_SENSORS_KEYS:
-            return self.hass.config.units.temperature_unit
         return self._unit
 
 
@@ -105,7 +95,7 @@ class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
-    def state(self) -> Any | None:
+    def native_value(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.utilisation, self.entity_type)
         if callable(attr):
@@ -137,7 +127,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity)
     """Representation a Synology Storage sensor."""
 
     @property
-    def state(self) -> Any | None:
+    def native_value(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.storage, self.entity_type)(self._device_id)
         if attr is None:
@@ -146,10 +136,6 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity)
         # Data (disk space)
         if self._unit == DATA_TERABYTES:
             return round(attr / 1024.0 ** 4, 2)
-
-        # Temperature
-        if self.entity_type in TEMP_SENSORS_KEYS:
-            return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         return attr
 
@@ -170,15 +156,11 @@ class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
         self._last_boot: str | None = None
 
     @property
-    def state(self) -> Any | None:
+    def native_value(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.information, self.entity_type)
         if attr is None:
             return None
-
-        # Temperature
-        if self.entity_type in TEMP_SENSORS_KEYS:
-            return display_temp(self.hass, attr, TEMP_CELSIUS, PRECISION_TENTHS)
 
         if self.entity_type == "uptime":
             # reboot happened or entity creation

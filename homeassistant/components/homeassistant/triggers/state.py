@@ -87,8 +87,8 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
-    _variables = {}
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
+    _variables: dict = {}
     if automation_info:
         _variables = automation_info.get("variables") or {}
 
@@ -134,6 +134,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": platform_type,
                         "entity_id": entity,
                         "from_state": from_s,
@@ -141,7 +142,6 @@ async def async_attach_trigger(
                         "for": time_delta if not time_delta else period[entity],
                         "attribute": attribute,
                         "description": f"state of {entity}",
-                        "id": trigger_id,
                     }
                 },
                 event.context,
@@ -171,10 +171,11 @@ async def async_attach_trigger(
             )
             return
 
-        def _check_same_state(_, _2, new_st: State):
+        def _check_same_state(_, _2, new_st: State | None) -> bool:
             if new_st is None:
                 return False
 
+            cur_value: str | None
             if attribute is None:
                 cur_value = new_st.state
             else:

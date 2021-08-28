@@ -1,7 +1,12 @@
 """Representation of a Hue remote firing events for button presses."""
 import logging
 
-from aiohue.sensors import TYPE_ZGP_SWITCH, TYPE_ZLL_ROTARY, TYPE_ZLL_SWITCH
+from aiohue.sensors import (
+    EVENT_BUTTON,
+    TYPE_ZGP_SWITCH,
+    TYPE_ZLL_ROTARY,
+    TYPE_ZLL_SWITCH,
+)
 
 from homeassistant.const import CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
@@ -50,10 +55,22 @@ class HueEvent(GenericHueDevice):
         """Fire the event if reason is that state is updated."""
         if (
             self.sensor.state == self._last_state
-            or
-            # Filter out old states. Can happen when events fire while refreshing
-            dt_util.parse_datetime(self.sensor.state["lastupdated"])
-            <= dt_util.parse_datetime(self._last_state["lastupdated"])
+            # Filter out non-button events if last event type is available
+            or (
+                self.sensor.last_event is not None
+                and self.sensor.last_event["type"] != EVENT_BUTTON
+            )
+        ):
+            return
+
+        # Filter out old states. Can happen when events fire while refreshing
+        now_updated = dt_util.parse_datetime(self.sensor.state["lastupdated"])
+        last_updated = dt_util.parse_datetime(self._last_state["lastupdated"])
+
+        if (
+            now_updated is not None
+            and last_updated is not None
+            and now_updated <= last_updated
         ):
             return
 

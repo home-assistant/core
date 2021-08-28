@@ -1,86 +1,25 @@
 """The tests for hls streams."""
-from __future__ import annotations
-
-import asyncio
-from collections import deque
 from datetime import timedelta
 from io import BytesIO
-import logging
 import os
-import threading
 from unittest.mock import patch
 
-import async_timeout
 import av
 import pytest
 
 from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.const import HLS_PROVIDER, RECORDER_PROVIDER
-from homeassistant.components.stream.core import Segment
-from homeassistant.components.stream.fmp4utils import get_init_and_moof_data
+from homeassistant.components.stream.core import Part, Segment
+from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.components.stream.recorder import recorder_save_worker
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video
+from tests.components.stream.common import generate_h264_video, remux_with_audio
 
-TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
-
-
-class SaveRecordWorkerSync:
-    """
-    Test fixture to manage RecordOutput thread for recorder_save_worker.
-
-    This is used to assert that the worker is started and stopped cleanly
-    to avoid thread leaks in tests.
-    """
-
-    def __init__(self):
-        """Initialize SaveRecordWorkerSync."""
-        self.reset()
-        self._segments = None
-        self._save_thread = None
-
-    def recorder_save_worker(self, file_out: str, segments: deque[Segment]):
-        """Mock method for patch."""
-        logging.debug("recorder_save_worker thread started")
-        assert self._save_thread is None
-        self._segments = segments
-        self._save_thread = threading.current_thread()
-        self._save_event.set()
-
-    async def get_segments(self):
-        """Return the recorded video segments."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            await self._save_event.wait()
-        return self._segments
-
-    async def join(self):
-        """Verify save worker was invoked and block on shutdown."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            await self._save_event.wait()
-        self._save_thread.join(timeout=TEST_TIMEOUT)
-        assert not self._save_thread.is_alive()
-
-    def reset(self):
-        """Reset callback state for reuse in tests."""
-        self._save_thread = None
-        self._save_event = asyncio.Event()
-
-
-@pytest.fixture()
-def record_worker_sync(hass):
-    """Patch recorder_save_worker for clean thread shutdown for test."""
-    sync = SaveRecordWorkerSync()
-    with patch(
-        "homeassistant.components.stream.recorder.recorder_save_worker",
-        side_effect=sync.recorder_save_worker,
-        autospec=True,
-    ):
-        yield sync
 
 
 async def test_record_stream(hass, hass_client, record_worker_sync):
@@ -95,7 +34,7 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
@@ -117,7 +56,7 @@ async def test_record_lookback(
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
@@ -146,7 +85,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         # Setup demo track
         source = generate_h264_video()
 
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, source, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -172,11 +111,26 @@ async def test_record_path_not_allowed(hass, hass_client):
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, source, {})
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
         await stream.async_record("/example/path")
+
+
+def add_parts_to_segment(segment, source):
+    """Add relevant part data to segment for testing recorder."""
+    moof_locs = list(find_box(source.getbuffer(), b"moof")) + [len(source.getbuffer())]
+    segment.init = source.getbuffer()[: moof_locs[0]].tobytes()
+    segment.parts = [
+        Part(
+            duration=None,
+            has_keyframe=None,
+            http_range_start=None,
+            data=source.getbuffer()[moof_locs[i] : moof_locs[i + 1]],
+        )
+        for i in range(1, len(moof_locs) - 1)
+    ]
 
 
 async def test_recorder_save(tmpdir):
@@ -186,9 +140,10 @@ async def test_recorder_save(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    recorder_save_worker(
-        filename, [Segment(1, *get_init_and_moof_data(source.getbuffer()), 4)]
-    )
+    segment = Segment(sequence=1)
+    add_parts_to_segment(segment, source)
+    segment.duration = 4
+    recorder_save_worker(filename, [segment])
 
     # Assert
     assert os.path.exists(filename)
@@ -201,15 +156,13 @@ async def test_recorder_discontinuity(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    init, moof_data = get_init_and_moof_data(source.getbuffer())
-    recorder_save_worker(
-        filename,
-        [
-            Segment(1, init, moof_data, 4, 0),
-            Segment(2, init, moof_data, 4, 1),
-        ],
-    )
-
+    segment_1 = Segment(sequence=1, stream_id=0)
+    add_parts_to_segment(segment_1, source)
+    segment_1.duration = 4
+    segment_2 = Segment(sequence=2, stream_id=1)
+    add_parts_to_segment(segment_2, source)
+    segment_2.duration = 4
+    recorder_save_worker(filename, [segment_1, segment_2])
     # Assert
     assert os.path.exists(filename)
 
@@ -237,20 +190,23 @@ async def test_record_stream_audio(
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
+    # Generate source video with no audio
+    source = generate_h264_video(container_format="mov")
+
     for a_codec, expected_audio_streams in (
         ("aac", 1),  # aac is a valid mp4 codec
         ("pcm_mulaw", 0),  # G.711 is not a valid mp4 codec
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
     ):
+
+        # Remux source video with new audio
+        source = remux_with_audio(source, "mov", a_codec)  # mov can store PCM
+
         record_worker_sync.reset()
         stream_worker_sync.pause()
 
-        # Setup demo track
-        source = generate_h264_video(
-            container_format="mov", audio_codec=a_codec
-        )  # mov can store PCM
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, source, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -263,7 +219,9 @@ async def test_record_stream_audio(
             stream_worker_sync.resume()
 
         result = av.open(
-            BytesIO(last_segment.init + last_segment.moof_data), "r", format="mp4"
+            BytesIO(last_segment.init + last_segment.get_bytes_without_init()),
+            "r",
+            format="mp4",
         )
 
         assert len(result.streams.audio) == expected_audio_streams
@@ -279,7 +237,7 @@ async def test_record_stream_audio(
 async def test_recorder_log(hass, caplog):
     """Test starting a stream to record logs the url without username and password."""
     await async_setup_component(hass, "stream", {"stream": {}})
-    stream = create_stream(hass, "https://abcd:efgh@foo.bar")
+    stream = create_stream(hass, "https://abcd:efgh@foo.bar", {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
     assert "https://abcd:efgh@foo.bar" not in caplog.text

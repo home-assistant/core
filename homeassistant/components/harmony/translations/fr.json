@@ -4,7 +4,7 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "cannot_connect": "\u00c9chec de connexion",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "Logitech Harmony Hub {name}",
@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "host": "H\u00f4te",
                     "name": "Nom du Hub"
                 },
                 "title": "Configuration de Logitech Harmony Hub"

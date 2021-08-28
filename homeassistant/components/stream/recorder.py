@@ -23,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_recorder(hass):
+def async_setup_recorder(hass: HomeAssistant) -> None:
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: deque[Segment]):
+def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
     """Handle saving stream."""
 
     if not segments:
@@ -57,7 +57,7 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
 
         # Open segment
         source = av.open(
-            BytesIO(segment.init + segment.moof_data),
+            BytesIO(segment.init + segment.get_bytes_without_init()),
             "r",
             format=SEGMENT_CONTAINER_FORMAT,
         )
@@ -121,7 +121,7 @@ class RecorderOutput(StreamOutput):
     def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
         """Initialize recorder output."""
         super().__init__(hass, idle_timer)
-        self.video_path = None
+        self.video_path: str
 
     @property
     def name(self) -> str:
@@ -132,7 +132,7 @@ class RecorderOutput(StreamOutput):
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Write recording and clean up."""
         _LOGGER.debug("Starting recorder worker thread")
         thread = threading.Thread(

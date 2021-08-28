@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -56,31 +57,46 @@ NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
 
 _SYSTEM_MON_COND = {
-    "status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "system_temp": ["System Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "status": ["Status", None, "mdi:checkbox-marked-circle-outline", None],
+    "system_temp": ["System Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
 }
 _CPU_MON_COND = {
-    "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "cpu_usage": ["CPU Usage", PERCENTAGE, "mdi:chip"],
+    "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "cpu_usage": ["CPU Usage", PERCENTAGE, "mdi:chip", None],
 }
 _MEMORY_MON_COND = {
-    "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory"],
-    "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory"],
-    "memory_percent_used": ["Memory Usage", PERCENTAGE, "mdi:memory"],
+    "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory", None],
+    "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory", None],
+    "memory_percent_used": ["Memory Usage", PERCENTAGE, "mdi:memory", None],
 }
 _NETWORK_MON_COND = {
-    "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
-    "network_tx": ["Network Up", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:upload"],
-    "network_rx": ["Network Down", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:download"],
+    "network_link_status": [
+        "Network Link",
+        None,
+        "mdi:checkbox-marked-circle-outline",
+        None,
+    ],
+    "network_tx": ["Network Up", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:upload", None],
+    "network_rx": [
+        "Network Down",
+        DATA_RATE_MEBIBYTES_PER_SECOND,
+        "mdi:download",
+        None,
+    ],
 }
 _DRIVE_MON_COND = {
-    "drive_smart_status": ["SMART Status", None, "mdi:checkbox-marked-circle-outline"],
-    "drive_temp": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "drive_smart_status": [
+        "SMART Status",
+        None,
+        "mdi:checkbox-marked-circle-outline",
+        None,
+    ],
+    "drive_temp": ["Temperature", TEMP_CELSIUS, None, None, DEVICE_CLASS_TEMPERATURE],
 }
 _VOLUME_MON_COND = {
-    "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie"],
-    "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
+    "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie", None],
+    "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie", None],
+    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie", None],
 }
 
 _MONITORED_CONDITIONS = (
@@ -210,6 +226,7 @@ class QNAPSensor(SensorEntity):
         self.var_icon = variable_info[2]
         self.monitor_device = monitor_device
         self._api = api
+        self._attr_device_class = variable_info[3]
 
     @property
     def name(self):
@@ -226,7 +243,7 @@ class QNAPSensor(SensorEntity):
         return self.var_icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.var_units
 
@@ -239,7 +256,7 @@ class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.var_id == "cpu_temp":
             return self._api.data["system_stats"]["cpu"]["temp_c"]
@@ -251,7 +268,7 @@ class QNAPMemorySensor(QNAPSensor):
     """A QNAP sensor that monitors memory stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         free = float(self._api.data["system_stats"]["memory"]["free"]) / 1024
         if self.var_id == "memory_free":
@@ -279,7 +296,7 @@ class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.var_id == "network_link_status":
             nic = self._api.data["system_stats"]["nics"][self.monitor_device]
@@ -312,7 +329,7 @@ class QNAPSystemSensor(QNAPSensor):
     """A QNAP sensor that monitors overall system health."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.var_id == "status":
             return self._api.data["system_health"]
@@ -341,7 +358,7 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         data = self._api.data["smart_drive_health"][self.monitor_device]
 
@@ -375,7 +392,7 @@ class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         data = self._api.data["volumes"][self.monitor_device]
 

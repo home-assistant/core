@@ -8,6 +8,7 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error
 import decora  # pylint: disable=import-error
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -16,7 +17,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
 
 _LOGGER = logging.getLogger(__name__)
 

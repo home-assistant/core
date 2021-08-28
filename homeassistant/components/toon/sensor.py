@@ -1,11 +1,7 @@
 """Support for Toon sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
-    SensorEntity,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -89,7 +85,7 @@ async def async_setup_entry(
         sensors.extend(
             [
                 ToonSolarDeviceSensor(coordinator, key=key)
-                for key in [
+                for key in (
                     "solar_value",
                     "solar_maximum",
                     "solar_produced",
@@ -98,7 +94,7 @@ async def async_setup_entry(
                     "power_usage_day_from_grid_usage",
                     "power_usage_day_to_grid_usage",
                     "power_usage_current_covered_by_solar",
-                ]
+                )
             ]
         )
 
@@ -127,10 +123,9 @@ class ToonSensor(ToonEntity, SensorEntity):
             ATTR_DEFAULT_ENABLED, True
         )
         self._attr_icon = sensor.get(ATTR_ICON)
-        self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
         self._attr_name = sensor[ATTR_NAME]
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
-        self._attr_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]
+        self._attr_native_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]
         self._attr_device_class = sensor.get(ATTR_DEVICE_CLASS)
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
@@ -139,7 +134,7 @@ class ToonSensor(ToonEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(
             self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]

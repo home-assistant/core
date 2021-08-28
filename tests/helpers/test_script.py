@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from types import MappingProxyType
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from async_timeout import timeout
 import pytest
@@ -15,7 +15,12 @@ import voluptuous as vol
 # Otherwise can't test just this file (import order issue)
 from homeassistant import exceptions
 import homeassistant.components.scene as scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
 from homeassistant.exceptions import ConditionError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv, script, trace
@@ -3130,3 +3135,16 @@ async def test_breakpoints_2(hass):
     assert not script_obj.is_running
     assert script_obj.runs == 0
     assert len(events) == 1
+
+
+async def test_platform_async_validate_action_config(hass):
+    """Test platform.async_validate_action_config will be called if it exists."""
+    config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
+    platform = AsyncMock()
+    with patch(
+        "homeassistant.helpers.script.device_automation.async_get_device_automation_platform",
+        return_value=platform,
+    ):
+        platform.async_validate_action_config.return_value = config
+        await script.async_validate_action_config(hass, config)
+        platform.async_validate_action_config.assert_awaited()

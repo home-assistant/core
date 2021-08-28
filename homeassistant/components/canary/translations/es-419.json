@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Conectarse a Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumentos pasados a ffmpeg para c\u00e1maras",
+                    "timeout": "Solicitar tiempo de espera (segundos)"
+                }
+            }
+        }
+    }
+}

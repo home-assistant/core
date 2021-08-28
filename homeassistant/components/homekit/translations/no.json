@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domener \u00e5 inkludere"
                 },
-                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert. Det opprettes en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
+                "description": "Velg domenene som skal inkluderes. Alle enheter som st\u00f8ttes p\u00e5 domenet vil bli inkludert. En egen HomeKit -forekomst i tilbeh\u00f8rsmodus vil bli opprettet for hver tv -mediespiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
                 "title": "Velg domener som skal inkluderes"
             }
         }
@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)"
+                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
+                    "devices": "Enheter (utl\u00f8sere)"
                 },
-                "description": "Disse innstillingene m\u00e5 bare justeres hvis HomeKit ikke fungerer.",
+                "description": "Programmerbare brytere opprettes for hver valgt enhet. N\u00e5r en enhetstrigger utl\u00f8ses, kan HomeKit konfigureres til \u00e5 kj\u00f8re en automatisering eller scene.",
                 "title": "Avansert konfigurasjon"
             },
             "cameras": {

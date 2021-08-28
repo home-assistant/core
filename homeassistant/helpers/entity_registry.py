@@ -160,8 +160,14 @@ class EntityRegistry:
         )
 
     @callback
-    def async_get_device_class_lookup(self, domain_device_classes: set) -> dict:
-        """Return a lookup for the device class by domain."""
+    def async_get_device_class_lookup(
+        self, domain_device_classes: set[tuple[str, str | None]]
+    ) -> dict:
+        """Return a lookup of entity ids for devices which have matching entities.
+
+        Entities must match a set of (domain, device_class) tuples.
+        The result is indexed by device_id, then by the matching (domain, device_class)
+        """
         lookup: dict[str, dict[tuple[Any, Any], str]] = {}
         for entity in self.entities.values():
             if not entity.device_id:

@@ -17,7 +17,9 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "away": "t\u00e1vol"
+            "away": "t\u00e1vol",
+            "hg": "fagyv\u00e9d\u0151",
+            "schedule": "\u00fctemez"
         },
         "trigger_type": {
             "alarm_started": "{entity_name} riaszt\u00e1st \u00e9szlelt",
@@ -39,14 +41,24 @@
         "step": {
             "public_weather": {
                 "data": {
-                    "area_name": "A ter\u00fclet neve"
-                }
+                    "area_name": "A ter\u00fclet neve",
+                    "lat_ne": "Sz\u00e9less\u00e9g \u00c9szakkeleti sarok",
+                    "lat_sw": "Sz\u00e9less\u00e9g D\u00e9lnyugati sarok",
+                    "lon_ne": "Hossz\u00fas\u00e1g \u00c9szakkeleti sarok",
+                    "lon_sw": "Hossz\u00fas\u00e1g D\u00e9lnyugati sarok",
+                    "mode": "Sz\u00e1m\u00edt\u00e1s",
+                    "show_on_map": "Mutasd a t\u00e9rk\u00e9pen"
+                },
+                "description": "\u00c1ll\u00edtson be egy nyilv\u00e1nos id\u0151j\u00e1r\u00e1s-\u00e9rz\u00e9kel\u0151t egy ter\u00fclethez.",
+                "title": "Netatmo nyilv\u00e1nos id\u0151j\u00e1r\u00e1s-\u00e9rz\u00e9kel\u0151"
             },
             "public_weather_areas": {
                 "data": {
                     "new_area": "Ter\u00fclet neve",
                     "weather_areas": "Id\u0151j\u00e1r\u00e1si ter\u00fcletek"
-                }
+                },
+                "description": "\u00c1ll\u00edtsa be a nyilv\u00e1nos id\u0151j\u00e1r\u00e1s-\u00e9rz\u00e9kel\u0151ket.",
+                "title": "Netatmo nyilv\u00e1nos id\u0151j\u00e1r\u00e1s-\u00e9rz\u00e9kel\u0151"
             }
         }
     }

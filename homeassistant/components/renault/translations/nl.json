@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "kamereon_no_account": "Kan Kamereon-account niet vinden."
+        },
+        "error": {
+            "invalid_credentials": "Ongeldige authenticatie"
+        },
+        "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Kamereon account id"
+                },
+                "title": "Selecteer Kamereon-account-ID"
+            },
+            "user": {
+                "data": {
+                    "locale": "Locale",
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                },
+                "title": "Renault-inloggegevens instellen"
+            }
+        }
+    }
+}

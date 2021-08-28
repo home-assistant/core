@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_URL,
+    HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import TemplateError
@@ -255,7 +256,9 @@ def load_data(
         if url is not None:
             # Load data from URL
             params = {"timeout": 15}
-            if username is not None and password is not None:
+            if authentication == HTTP_BEARER_AUTHENTICATION and password is not None:
+                params["headers"] = {"Authorization": f"Bearer {password}"}
+            elif username is not None and password is not None:
                 if authentication == HTTP_DIGEST_AUTHENTICATION:
                     params["auth"] = HTTPDigestAuth(username, password)
                 else:
@@ -283,7 +286,7 @@ def load_data(
             _LOGGER.warning("Can't load data in %s after %s retries", url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                return open(filepath, "rb")  # pylint: disable=consider-using-with
+                return open(filepath, "rb")
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
@@ -329,7 +332,7 @@ async def async_setup(hass, config):
             attribute_templ = data.get(attribute)
             if attribute_templ:
                 if any(
-                    isinstance(attribute_templ, vtype) for vtype in [float, int, str]
+                    isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):
                     data[attribute] = attribute_templ
                 else:
@@ -349,7 +352,7 @@ async def async_setup(hass, config):
 
         msgtype = service.service
         kwargs = dict(service.data)
-        for attribute in [
+        for attribute in (
             ATTR_MESSAGE,
             ATTR_TITLE,
             ATTR_URL,
@@ -357,7 +360,7 @@ async def async_setup(hass, config):
             ATTR_CAPTION,
             ATTR_LONGITUDE,
             ATTR_LATITUDE,
-        ]:
+        ):
             _render_template_attr(kwargs, attribute)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
@@ -845,7 +848,7 @@ class BaseTelegramBotEntity:
 
         if (
             msg_data["from"].get("id") not in self.allowed_chat_ids
-            and msg_data["chat"].get("id") not in self.allowed_chat_ids
+            and msg_data["message"]["chat"].get("id") not in self.allowed_chat_ids
         ):
             # Neither from id nor chat id was in allowed_chat_ids,
             # origin is not allowed.

@@ -22,6 +22,7 @@ from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
@@ -72,7 +73,7 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
     ),
     "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, True),
     "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, True),
-    "last_boot": ("Last boot", None, "mdi:clock", DEVICE_CLASS_TIMESTAMP, False),
+    "last_boot": ("Last boot", None, None, DEVICE_CLASS_TIMESTAMP, False),
     "load_15m": ("Load (15m)", " ", CPU_ICON, None, False),
     "load_1m": ("Load (1m)", " ", CPU_ICON, None, False),
     "load_5m": ("Load (5m)", " ", CPU_ICON, None, False),
@@ -108,8 +109,8 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
     "processor_temperature": (
         "Processor temperature",
         TEMP_CELSIUS,
-        CPU_ICON,
         None,
+        DEVICE_CLASS_TEMPERATURE,
         False,
     ),
     "swap_free": ("Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, False),
@@ -330,12 +331,12 @@ class SystemMonitorSensor(SensorEntity):
         return self.sensor_type[SENSOR_TYPE_ICON]  # type: ignore[no-any-return]
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         return self.data.state
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.sensor_type[SENSOR_TYPE_UOM]  # type: ignore[no-any-return]
 
@@ -413,20 +414,20 @@ def _update(  # noqa: C901
                     err.pid,
                     err.name,
                 )
-    elif type_ in ["network_out", "network_in"]:
+    elif type_ in ("network_out", "network_in"):
         counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
             state = round(counter / 1024 ** 2, 1)
         else:
             state = None
-    elif type_ in ["packets_out", "packets_in"]:
+    elif type_ in ("packets_out", "packets_in"):
         counters = _net_io_counters()
         if data.argument in counters:
             state = counters[data.argument][IO_COUNTER[type_]]
         else:
             state = None
-    elif type_ in ["throughput_network_out", "throughput_network_in"]:
+    elif type_ in ("throughput_network_out", "throughput_network_in"):
         counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
@@ -444,7 +445,7 @@ def _update(  # noqa: C901
             value = counter
         else:
             state = None
-    elif type_ in ["ipv4_address", "ipv6_address"]:
+    elif type_ in ("ipv4_address", "ipv6_address"):
         addresses = _net_if_addrs()
         if data.argument in addresses:
             for addr in addresses[data.argument]:

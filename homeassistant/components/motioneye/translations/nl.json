@@ -25,5 +25,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "MotionEye-webhooks configureren om gebeurtenissen aan Home Assistant te melden",
+                    "webhook_set_overwrite": "Overschrijf niet-herkende webhooks"
+                }
+            }
+        }
     }
 }

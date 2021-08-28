@@ -37,7 +37,7 @@ def source_match(state, source):
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     source = config.get(CONF_SOURCE).lower()
     zone_entity_id = config.get(CONF_ZONE)
     trigger_event = config.get(CONF_EVENT)
@@ -78,6 +78,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": "geo_location",
                         "source": source,
                         "entity_id": event.data.get("entity_id"),
@@ -86,7 +87,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
                         "zone": zone_state,
                         "event": trigger_event,
                         "description": f"geo_location - {source}",
-                        "id": trigger_id,
                     }
                 },
                 event.context,

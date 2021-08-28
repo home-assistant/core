@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Any, Callable
 
 import attr
 import voluptuous as vol
@@ -119,15 +119,15 @@ class Trigger:
     """Device trigger settings."""
 
     device_id: str = attr.ib()
-    discovery_data: dict = attr.ib()
+    discovery_data: dict | None = attr.ib()
     hass: HomeAssistant = attr.ib()
-    payload: str = attr.ib()
-    qos: int = attr.ib()
-    remove_signal: Callable[[], None] = attr.ib()
+    payload: str | None = attr.ib()
+    qos: int | None = attr.ib()
+    remove_signal: Callable[[], None] | None = attr.ib()
     subtype: str = attr.ib()
-    topic: str = attr.ib()
+    topic: str | None = attr.ib()
     type: str = attr.ib()
-    value_template: str = attr.ib()
+    value_template: str | None = attr.ib()
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
@@ -287,9 +287,11 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for MQTT devices."""
-    triggers = []
+    triggers: list[dict] = []
 
     if DEVICE_TRIGGERS not in hass.data:
         return triggers

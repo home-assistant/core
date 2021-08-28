@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from . import NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
+    ATTR_ENABLE,
     ATTR_NUKI_ID,
     ATTR_UNLATCH,
     DATA_COORDINATOR,
@@ -58,6 +59,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
             vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
         },
         "lock_n_go",
+    )
+
+    platform.async_register_entity_service(
+        "set_continuous_mode",
+        {
+            vol.Required(ATTR_ENABLE): cv.boolean,
+        },
+        "set_continuous_mode",
     )
 
 
@@ -165,3 +174,15 @@ class NukiOpenerEntity(NukiDeviceEntity):
 
     def lock_n_go(self, unlatch):
         """Stub service."""
+
+    def set_continuous_mode(self, enable):
+        """Continuous Mode.
+
+        This feature will cause the door to automatically open when anyone
+        rings the bell. This is similar to ring-to-open, except that it does
+        not automatically deactivate
+        """
+        if enable:
+            self._nuki_device.activate_continuous_mode()
+        else:
+            self._nuki_device.deactivate_continuous_mode()

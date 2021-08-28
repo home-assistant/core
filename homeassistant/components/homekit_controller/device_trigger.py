@@ -1,6 +1,8 @@
 """Provides device automations for homekit devices."""
 from __future__ import annotations
 
+from typing import Any
+
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import ServicesTypes
@@ -76,13 +78,15 @@ class TriggerSource:
         automation_info: dict,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
-        trigger_id = automation_info.get("trigger_id") if automation_info else None
+        trigger_data = (
+            automation_info.get("trigger_data", {}) if automation_info else {}
+        )
 
         def event_handler(char):
             if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
                 return
             self._hass.async_create_task(
-                action({"trigger": {**config, "id": trigger_id}})
+                action({"trigger": {**trigger_data, **config}})
             )
 
         trigger = self._triggers[config[CONF_TYPE], config[CONF_SUBTYPE]]
@@ -230,7 +234,9 @@ def async_fire_triggers(conn, events):
                 source.fire(iid, ev)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for homekit devices."""
 
     if device_id not in hass.data.get(TRIGGERS, {}):

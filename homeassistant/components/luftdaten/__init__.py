@@ -12,6 +12,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -45,19 +48,41 @@ SENSOR_TEMPERATURE = "temperature"
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSORS = {
-    SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
-    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_HPA],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_HPA],
+    SENSOR_TEMPERATURE: [
+        "Temperature",
+        "mdi:thermometer",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
+    SENSOR_HUMIDITY: [
+        "Humidity",
+        "mdi:water-percent",
+        PERCENTAGE,
+        DEVICE_CLASS_HUMIDITY,
+    ],
+    SENSOR_PRESSURE: [
+        "Pressure",
+        "mdi:arrow-down-bold",
+        PRESSURE_HPA,
+        DEVICE_CLASS_PRESSURE,
+    ],
+    SENSOR_PRESSURE_AT_SEALEVEL: [
+        "Pressure at sealevel",
+        "mdi:download",
+        PRESSURE_HPA,
+        DEVICE_CLASS_PRESSURE,
+    ],
     SENSOR_PM10: [
         "PM10",
         "mdi:thought-bubble",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
     ],
     SENSOR_PM2_5: [
         "PM2.5",
         "mdi:thought-bubble-outline",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
     ],
 }
 

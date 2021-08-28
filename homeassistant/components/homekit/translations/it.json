@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domini da includere"
                 },
-                "description": "Scegli i domini da includere. Verranno incluse tutte le entit\u00e0 supportate nel dominio. Verr\u00e0 creata un'istanza HomeKit separata in modalit\u00e0 accessorio per ogni lettore multimediale TV e telecamera.",
+                "description": "Scegli i domini da includere. Tutte le entit\u00e0 supportate nel dominio saranno incluse. Verr\u00e0 creata un'istanza HomeKit separata in modalit\u00e0 accessoria per ogni lettore multimediale TV, telecomando basato sulle attivit\u00e0, serratura e telecamera.",
                 "title": "Seleziona i domini da includere"
             }
         }
@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)"
+                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
+                    "devices": "Dispositivi (Attivatori)"
                 },
-                "description": "Queste impostazioni devono essere regolate solo se HomeKit non funziona.",
+                "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",
                 "title": "Configurazione Avanzata"
             },
             "cameras": {

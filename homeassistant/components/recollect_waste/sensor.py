@@ -15,11 +15,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.dt import as_utc
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
 
@@ -55,10 +55,10 @@ def async_get_pickup_type_names(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: dict,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict = None,
-):
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
         "Loading ReCollect Waste via platform setup is deprecated; "
@@ -84,37 +84,18 @@ async def async_setup_entry(
 class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_name = DEFAULT_NAME
+        self._attr_unique_id = (
+            f"{entry.data[CONF_PLACE_ID]}{entry.data[CONF_SERVICE_ID]}"
+        )
         self._entry = entry
-        self._state = None
-
-    @property
-    def device_class(self) -> dict:
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return DEFAULT_NAME
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._entry.data[CONF_PLACE_ID]}{self._entry.data[CONF_SERVICE_ID]}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -133,8 +114,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
         pickup_event = self.coordinator.data[0]
         next_pickup_event = self.coordinator.data[1]
 
-        self._state = as_utc(pickup_event.date).isoformat()
-        self._attributes.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, pickup_event.pickup_types
@@ -143,6 +123,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
+                ATTR_NEXT_PICKUP_DATE: next_pickup_event.date.isoformat(),
             }
         )
+        self._attr_native_value = pickup_event.date.isoformat()

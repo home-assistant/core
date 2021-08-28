@@ -37,7 +37,7 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "Einrichten der FRITZ!Box Tools zur Steuerung Ihrer FRITZ!Box.\n Ben\u00f6tigt: Benutzername, Passwort.",
+                "description": "Einrichten der FRITZ!Box Tools zur Steuerung deiner FRITZ!Box.\nBen\u00f6tigt: Benutzername, Passwort.",
                 "title": "Setup FRITZ!Box Tools - obligatorisch"
             },
             "user": {
@@ -47,7 +47,7 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "FRITZ!Box Tools einrichten, um Ihre FRITZ!Box zu steuern.\nMindestens erforderlich: Benutzername, Passwort.",
+                "description": "FRITZ!Box Tools einrichten, um deine FRITZ!Box zu steuern.\nMindestens erforderlich: Benutzername, Passwort.",
                 "title": "Setup FRITZ!Box Tools"
             }
         }

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "unknown": "Unerwarteter Fehler"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API-Token",
+                    "description": "Authentifiziere dich erneut mit deinem Cloudflare-Konto."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Datens\u00e4tze"
@@ -19,7 +26,7 @@
             },
             "user": {
                 "data": {
-                    "api_token": "API Token"
+                    "api_token": "API-Token"
                 },
                 "description": "F\u00fcr diese Integration ist ein API-Token erforderlich, der mit Zone: Zone: Lesen und Zone: DNS: Bearbeiten f\u00fcr alle Zonen in deinem Konto erstellt wurde.",
                 "title": "Mit Cloudflare verbinden"

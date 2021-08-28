@@ -35,7 +35,7 @@ async def async_setup_entry(
         WLEDSyncSendSwitch(coordinator),
         WLEDSyncReceiveSwitch(coordinator),
     ]
-    async_add_entities(switches, True)
+    async_add_entities(switches)
 
 
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):

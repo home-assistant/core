@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
@@ -42,22 +43,33 @@ _LOGGER = logging.getLogger(__name__)
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_TOPIC = "last_reset_topic"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_STATE_CLASS = "state_class"
+
+MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        sensor.ATTR_LAST_RESET,
+        sensor.ATTR_STATE_CLASS,
+    }
+)
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
-PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+PLATFORM_SCHEMA = vol.All(
+    # Deprecated, remove in Home Assistant 2021.11
+    cv.deprecated(CONF_LAST_RESET_TOPIC),
+    cv.deprecated(CONF_LAST_RESET_VALUE_TEMPLATE),
+    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+            vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        }
+    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+)
 
 
 async def async_setup_platform(
@@ -87,6 +99,7 @@ class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     _attr_last_reset = None
+    _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the sensor."""
@@ -188,7 +201,7 @@ class MqttSensor(MqttEntity, SensorEntity):
             self.async_write_ha_state()
 
         if CONF_LAST_RESET_TOPIC in self._config:
-            topics["state_topic"] = {
+            topics["last_reset_topic"] = {
                 "topic": self._config[CONF_LAST_RESET_TOPIC],
                 "msg_callback": last_reset_message_received,
                 "qos": self._config[CONF_QOS],
@@ -206,7 +219,7 @@ class MqttSensor(MqttEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
@@ -216,7 +229,7 @@ class MqttSensor(MqttEntity, SensorEntity):
         return self._config[CONF_FORCE_UPDATE]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self._state
 
@@ -234,6 +247,7 @@ class MqttSensor(MqttEntity, SensorEntity):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         expire_after = self._config.get(CONF_EXPIRE_AFTER)
-        return MqttAvailability.available.fget(self) and (
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return MqttAvailability.available.fget(self) and (  # type: ignore[attr-defined]
             expire_after is None or not self._expired
         )

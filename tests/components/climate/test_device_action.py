@@ -259,7 +259,7 @@ async def test_capabilities(
     "action,capability_name",
     [("set_hvac_mode", "hvac_mode"), ("set_preset_mode", "preset_mode")],
 )
-async def test_capabilities_mising_entity(
+async def test_capabilities_missing_entity(
     hass, device_reg, entity_reg, action, capability_name
 ):
     """Test getting capabilities."""

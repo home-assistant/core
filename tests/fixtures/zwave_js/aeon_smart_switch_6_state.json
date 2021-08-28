@@ -81,7 +81,8 @@
           "type": "boolean",
           "readable": true,
           "writeable": true,
-          "label": "Target value"
+          "label": "Target value",
+          "valueChangeOptions": ["transitionDuration"]
         }
       },
       {
