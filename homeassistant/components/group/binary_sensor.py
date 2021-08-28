@@ -1,9 +1,9 @@
 """This platform allows several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
-from typing import Any, List, Optional
-
 import logging
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -82,13 +81,13 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         mode: str | None,
     ) -> None:
         """Initialize a BinarySensorGroup entity."""
-        super(BinarySensorGroup, self).__init__()
+        super().__init__()
         self._entity_ids = entity_ids
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._device_class = device_class
-        self._state: Optional[str] = None
+        self._state: str | None = None
         self.mode = any
         if mode:
             self.mode = all
@@ -116,21 +115,16 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     async def async_update(self) -> None:
         """Query all members and determine the binary sensor group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        filtered_states: List[str] = [x.state for x in all_states if x is not None]
+        filtered_states: list[str] = [x.state for x in all_states if x is not None]
         if STATE_UNAVAILABLE in filtered_states:
-            self._state = STATE_UNAVAILABLE
+            self._attr_is_on = None
         else:
             states = list(map(lambda x: x == STATE_ON, filtered_states))
             state = self.mode(states)
-            self._state = STATE_ON if state else STATE_OFF
+            self._attr_is_on = state
         self.async_write_ha_state()
 
     @property
     def device_class(self) -> str | None:
         """Return the sensor class of the binary sensor."""
         return self._device_class
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return bool(self._state) if self._state is not None else None
