@@ -40,6 +40,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         """Initialize sensor entity."""
         super().__init__(user_id, trackable, tracker_details)
 
+        self._attr_name = f"{trackable['details']['name']} {description.name}"
         self._attr_unique_id = unique_id
         self.entity_description = description
 
@@ -52,11 +53,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 
 class TractiveHardwareSensor(TractiveSensor):
     """Tractive hardware sensor."""
-
-    def __init__(self, user_id, trackable, tracker_details, unique_id, description):
-        """Initialize sensor entity."""
-        super().__init__(user_id, trackable, tracker_details, unique_id, description)
-        self._attr_name = f"{self._tracker_id} {description.name}"
 
     @callback
     def handle_hardware_status_update(self, event):
@@ -87,11 +83,6 @@ class TractiveHardwareSensor(TractiveSensor):
 
 class TractiveActivitySensor(TractiveSensor):
     """Tractive active sensor."""
-
-    def __init__(self, user_id, trackable, tracker_details, unique_id, description):
-        """Initialize sensor entity."""
-        super().__init__(user_id, trackable, tracker_details, unique_id, description)
-        self._attr_name = f"{trackable['details']['name']} {description.name}"
 
     @callback
     def handle_activity_status_update(self, event):
