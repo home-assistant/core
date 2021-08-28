@@ -8,7 +8,7 @@
           "tuya_project_type": "Tuya cloud project type"
         }
       },
-      "user": {
+      "login": {
         "title": "Tuya",
         "description": "Enter your Tuya credential",
         "data": {

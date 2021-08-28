@@ -101,17 +101,23 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Step project type."""
         self.conf_project_type = user_input[CONF_PROJECT_TYPE]
         self.project_type = ProjectType(self.conf_project_type)
-        return (
-            self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_SMART_HOME)
-            if self.project_type == ProjectType.SMART_HOME
-            else self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
+        if self.project_type == ProjectType.SMART_HOME:
+            return self.async_show_form(
+                step_id="login", data_schema=DATA_SCHEMA_SMART_HOME
             )
-        )
+        else:
+            return self.async_show_form(
+                step_id="login", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
+            )
 
     async def async_step_user(self, user_input=None):
         """Step user."""
+        return self.async_show_form(
+            step_id="project_type", data_schema=DATA_SCHEMA_PROJECT_TYPE
+        )
 
+    async def async_step_login(self, user_input=None):
+        """Setp login."""
         if self._async_current_entries():
             return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
 
@@ -130,18 +136,14 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME],
                     data=user_input,
                 )
-
+            errors["base"] = RESULT_AUTH_FAILED
             if self.project_type == ProjectType.SMART_HOME:
                 return self.async_show_form(
-                    step_id="user", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
+                    step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
                 )
             else:
                 return self.async_show_form(
-                    step_id="user",
+                    step_id="login",
                     data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
                     errors=errors,
                 )
-
-        return self.async_show_form(
-            step_id="project_type", data_schema=DATA_SCHEMA_PROJECT_TYPE, errors=errors
-        )

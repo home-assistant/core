@@ -16,7 +16,7 @@
                   "tuya_project_type": "塗鴉雲端專案類型"
                 }
             },
-            "user": {
+            "login": {
                 "data": {
                     "endpoint": "區域",
                     "access_id": "Access ID",

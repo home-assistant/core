@@ -16,7 +16,7 @@
                   "tuya_project_type": "Type de projet cloud Tuya"
                 }
             },
-            "user": {
+            "login": {
                 "data": {
                     "endpoint": "Région",
                     "access_id": "Access ID",

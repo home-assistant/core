@@ -16,7 +16,7 @@
                   "tuya_project_type": "涂鸦云项目类型"
                 }
             },
-            "user": {
+            "login": {
                 "data": {
                     "endpoint": "可用区域",
                     "access_id": "Access ID",

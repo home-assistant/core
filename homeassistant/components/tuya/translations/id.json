@@ -16,7 +16,7 @@
                   "tuya_project_type": "Tipe dari Projek Tuya cloud"
                 }
             },
-            "user": {
+            "login": {
                 "data": {
                     "endpoint": "Zona yang Tersedia",
                     "access_id": "Akses ID",
