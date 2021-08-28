@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, DEFAULT_HOST, DEFAULT_USERNAME
+from .router import get_connection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,11 +37,8 @@ class ZyxelT50Flow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        # TODO Verify connection
         try:
-            # router = VMG8825_T50_Web(None, config_entry)
-            # await router.perform_login()
-            _LOGGER.debug("We should verify the connection here")
+            await get_connection(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except

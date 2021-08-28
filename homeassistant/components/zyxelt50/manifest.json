@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zyxelt50",
   "requirements": [
-    "pycryptodome==3.10.1"
+    "zyxel-t50-modem==0.0.2"
   ],
   "codeowners": [
     "@SLG"

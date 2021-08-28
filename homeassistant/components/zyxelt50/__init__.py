@@ -1,37 +1,31 @@
 """Support for Zyxel functions."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 
 from .const import DATA_ZYXEL, DOMAIN, PLATFORMS
-from .router import Zyxel_T50_Router
+from .router import ZyxelT50Device
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Zyxel from config entry."""
-    router = Zyxel_T50_Router(hass, entry)
-    await router.setup()
+    device = ZyxelT50Device(hass, entry)
+    await device.setup()
 
-    router.async_on_close(entry.add_update_listener(update_listener))
+    device.async_on_close(entry.add_update_listener(update_listener))
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def async_close_connection(event):
         """Close Zyxel connection on HA Stop."""
-        await router.perform_logout()
+        await device.close()
 
     stop_listener = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, async_close_connection
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        DATA_ZYXEL: router,
+        DATA_ZYXEL: device,
         "stop_listener": stop_listener,
     }
 

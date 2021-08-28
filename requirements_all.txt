@@ -1391,7 +1391,7 @@ pycomfoconnect==0.4
 pycoolmasternet-async==0.1.2
 
 # homeassistant.components.zyxelt50
-pycryptodome==3.10.1
+zyxel-t50-modem==0.0.2
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.4
