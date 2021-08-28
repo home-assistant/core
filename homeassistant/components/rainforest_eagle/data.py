@@ -60,9 +60,8 @@ async def async_get_type(hass, cloud_id, install_code, host):
 
     if meters is not None:
         meter_idx = 0
-        # pylint: disable=unused-variable
         for idx, meter in enumerate(meters):
-            if meters[idx].connection_status == "Connected":
+            if meter.connection_status == "Connected":
                 meter_idx = idx
                 break
 
