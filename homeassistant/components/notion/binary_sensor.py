@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -40,7 +41,7 @@ from .const import (
 class NotionBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary and regular sensors."""
 
-    on_state: str
+    on_state: Literal["alarm", "critical", "leak", "not_missing", "open"]
 
 
 @dataclass
