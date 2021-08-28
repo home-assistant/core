@@ -93,6 +93,11 @@ uuid==1000000000.0.0
 # Temporary constraint on pandas, to unblock 2021.7 releases
 # until we have fixed the wheels builds for newer versions.
 pandas==1.3.0
+
+# regex causes segfault with version 2021.8.27
+# https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
+# This is fixed in 2021.8.28
+regex>=2021.8.28
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
