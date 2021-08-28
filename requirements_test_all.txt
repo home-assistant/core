@@ -158,7 +158,7 @@ aiopvpc==2.2.0
 aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.7
+aiorecollect==1.0.8
 
 # homeassistant.components.shelly
 aioshelly==0.6.4
@@ -230,7 +230,7 @@ base36==0.1.1
 bellows==0.27.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.19
+bimmer_connected==0.7.20
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -1151,7 +1151,7 @@ restrictedpython==5.1
 rflink==0.0.58
 
 # homeassistant.components.ring
-ring_doorbell==0.6.2
+ring_doorbell==0.7.1
 
 # homeassistant.components.roku
 rokuecp==0.8.1
@@ -1194,7 +1194,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.4
+simplisafe-python==11.0.5
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1370,7 +1370,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.3
+yeelight==0.7.4
 
 # homeassistant.components.youless
 youless-api==0.12

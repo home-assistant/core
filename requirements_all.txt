@@ -201,7 +201,7 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.6.9
+aiolifx==0.6.10
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -237,7 +237,7 @@ aiopvpc==2.2.0
 aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
-aiorecollect==1.0.7
+aiorecollect==1.0.8
 
 # homeassistant.components.shelly
 aioshelly==0.6.4
@@ -375,7 +375,7 @@ beautifulsoup4==4.9.3
 bellows==0.27.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.19
+bimmer_connected==0.7.20
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -2046,7 +2046,7 @@ rfk101py==0.0.1
 rflink==0.0.58
 
 # homeassistant.components.ring
-ring_doorbell==0.6.2
+ring_doorbell==0.7.1
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -2134,7 +2134,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.4
+simplisafe-python==11.0.5
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2441,7 +2441,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.3
+yeelight==0.7.4
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10

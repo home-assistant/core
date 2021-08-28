@@ -593,6 +593,7 @@ async def test_pymodbus_constructor_fail(hass, caplog):
     config = {
         DOMAIN: [
             {
+                CONF_NAME: TEST_MODBUS_NAME,
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
@@ -606,7 +607,8 @@ async def test_pymodbus_constructor_fail(hass, caplog):
         mock_pb.side_effect = ModbusException("test no class")
         assert await async_setup_component(hass, DOMAIN, config) is False
         await hass.async_block_till_done()
-        assert caplog.messages[0].startswith("Pymodbus: Modbus Error: test")
+        message = f"Pymodbus: {TEST_MODBUS_NAME}: Modbus Error: test"
+        assert caplog.messages[0].startswith(message)
         assert caplog.records[0].levelname == "ERROR"
         assert mock_pb.called
 
