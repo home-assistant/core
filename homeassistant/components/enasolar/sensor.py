@@ -7,8 +7,9 @@ import logging
 
 import pyenasolar
 
-from homeassistant.components.sensor import (  # STATE_CLASS_TOTAL_INCREASING,
+from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -202,10 +203,8 @@ class EnaSolarSensor(SensorEntity):
 
         if pyenasolar_sensor.is_meter:
             self._attr_state_class = STATE_CLASS_MEASUREMENT
-
-    # Future addition for statistics
-    #        else:
-    #            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        else:
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     @property
     def name(self):
