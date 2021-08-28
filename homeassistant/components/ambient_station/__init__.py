@@ -51,8 +51,8 @@ def async_lux_to_perceived(value: float) -> int:
     try:
         perceived = round(math.log10(lux) / 5) * 100
     except ValueError:
-        # If we've approached negative infinity, we'll get a math domain error; in that
-        # case, return 0.0:
+        # A ValueError can be thrown if the value approaches negative infinity; in that
+        # case, provide a floor:
         return 0
 
     return max(perceived, 0)
