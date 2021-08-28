@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
@@ -14,14 +14,13 @@ PLATFORMS = [MEDIA_PLAYER_DOMAIN]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up DLNA component."""
-    LOGGER.debug("async_setup: config: %s", config)
-
     if MEDIA_PLAYER_DOMAIN not in config:
         return True
 
     for entry_config in config[MEDIA_PLAYER_DOMAIN]:
-        if entry_config[CONF_PLATFORM] != DOMAIN:
+        if entry_config.get(CONF_PLATFORM) != DOMAIN:
             continue
+        LOGGER.debug("async_setup migrating entry for: %s", entry_config.get(CONF_URL))
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -49,10 +48,5 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-
     # Forward to the same platform as async_setup_entry did
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
