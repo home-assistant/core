@@ -51,8 +51,8 @@ def async_wm2_to_lx(value: float) -> int:
 @callback
 def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
     """Hydrate station data with addition or normalized data."""
-    if TYPE_SOLARRADIATION in data:
-        data[TYPE_SOLARRADIATION_LX] = async_wm2_to_lx(data[TYPE_SOLARRADIATION])
+    if (irradiation := data.get(TYPE_SOLARRADIATION)) is not None:
+        data[TYPE_SOLARRADIATION_LX] = async_wm2_to_lx(irradiation)
 
     return data
 
