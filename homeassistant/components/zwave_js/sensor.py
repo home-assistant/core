@@ -462,6 +462,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
         """Poll a value."""
         raise ValueError("There is no value to poll for this entity")
 
+    @callback
     def _status_changed(self, _: dict) -> None:
         """Call when status event is received."""
         self._attr_native_value = self.node.status.name.lower()
@@ -480,8 +481,3 @@ class ZWaveNodeStatusSensor(SensorEntity):
             )
         )
         self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        return self.client.connected and bool(self.node.ready)

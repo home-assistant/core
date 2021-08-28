@@ -201,7 +201,7 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.6.9
+aiolifx==0.6.10
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -1100,7 +1100,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.0.0
+onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
 open-garage==0.1.5
@@ -1578,7 +1578,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.8.0
+pylitterbot==2021.8.1
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -2448,9 +2448,6 @@ youless-api==0.12
 
 # homeassistant.components.media_extractor
 youtube_dl==2021.04.26
-
-# homeassistant.components.onvif
-zeep[async]==4.0.0
 
 # homeassistant.components.zengge
 zengge==0.2

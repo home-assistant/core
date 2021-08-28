@@ -156,9 +156,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             auto_detected_data = await detect_radios(self._device_path)
             if auto_detected_data is None:
-                # This probably will not happen how they have
-                # have very specific usb matching, but there could
-                # be a problem with the device
+                # This path probably will not happen now that we have
+                # more precise USB matching unless there is a problem
+                # with the device
                 return self.async_abort(reason="usb_probe_failed")
             return self.async_create_entry(
                 title=self._title,
