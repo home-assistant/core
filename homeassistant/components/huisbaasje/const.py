@@ -78,7 +78,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_ELECTRICITY_IN,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
         "state_class": STATE_CLASS_TOTAL_INCREASING,
-        "precision": 1,
+        "precision": 3,
     },
     {
         "name": "Huisbaasje Energy Consumption Off Peak Today",
@@ -87,7 +87,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_ELECTRICITY_IN_LOW,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
         "state_class": STATE_CLASS_TOTAL_INCREASING,
-        "precision": 1,
+        "precision": 3,
     },
     {
         "name": "Huisbaasje Energy Production Peak Today",
@@ -96,7 +96,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
         "state_class": STATE_CLASS_TOTAL_INCREASING,
-        "precision": 1,
+        "precision": 3,
     },
     {
         "name": "Huisbaasje Energy Production Off Peak Today",
@@ -105,7 +105,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT_LOW,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
         "state_class": STATE_CLASS_TOTAL_INCREASING,
-        "precision": 1,
+        "precision": 3,
     },
     {
         "name": "Huisbaasje Energy Today",
