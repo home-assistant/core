@@ -88,10 +88,10 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             )
         if coordinator.is_metric:
             self._unit_system = API_METRIC
-            self._attr_unit_of_measurement = description.unit_metric
+            self._attr_native_unit_of_measurement = description.unit_metric
         else:
             self._unit_system = API_IMPERIAL
-            self._attr_unit_of_measurement = description.unit_imperial
+            self._attr_native_unit_of_measurement = description.unit_imperial
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.location_key)},
             "name": NAME,
@@ -101,7 +101,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self.forecast_day = forecast_day
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         if self.forecast_day is not None:
             if self.entity_description.device_class == DEVICE_CLASS_TEMPERATURE:

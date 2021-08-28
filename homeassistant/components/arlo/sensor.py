@@ -1,4 +1,6 @@
 """Sensor support for Netgear Arlo IP cameras."""
+from __future__ import annotations
+
 from dataclasses import replace
 import logging
 
@@ -28,45 +30,59 @@ from . import ATTRIBUTION, DATA_ARLO, DEFAULT_BRAND, SIGNAL_UPDATE_ARLO
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = (
-    SensorEntityDescription(key="last_capture", name="Last", icon="mdi:run-fast"),
-    SensorEntityDescription(key="total_cameras", name="Arlo Cameras", icon="mdi:video"),
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="captured_today", name="Captured Today", icon="mdi:file-video"
+        key="last_capture",
+        name="Last",
+        icon="mdi:run-fast",
+    ),
+    SensorEntityDescription(
+        key="total_cameras",
+        name="Arlo Cameras",
+        icon="mdi:video",
+    ),
+    SensorEntityDescription(
+        key="captured_today",
+        name="Captured Today",
+        icon="mdi:file-video",
     ),
     SensorEntityDescription(
         key="battery_level",
         name="Battery Level",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
     ),
     SensorEntityDescription(
-        key="signal_strength", name="Signal Strength", icon="mdi:signal"
+        key="signal_strength",
+        name="Signal Strength",
+        icon="mdi:signal",
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
     ),
     SensorEntityDescription(
         key="air_quality",
         name="Air Quality",
-        unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:biohazard",
     ),
 )
 
+SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
@@ -127,7 +143,7 @@ class ArloSensor(SensorEntity):
         self.async_schedule_update_ha_state(True)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

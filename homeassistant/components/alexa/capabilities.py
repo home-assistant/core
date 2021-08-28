@@ -99,7 +99,7 @@ class AlexaCapability:
         return False
 
     @staticmethod
-    def properties_non_controllable() -> bool:
+    def properties_non_controllable() -> bool | None:
         """Return True if non controllable."""
         return None
 

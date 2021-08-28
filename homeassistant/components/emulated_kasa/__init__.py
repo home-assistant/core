@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.template import Template, is_template_string
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_POWER, CONF_POWER_ENTITY, DOMAIN
 
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the emulated_kasa component."""
     conf = config.get(DOMAIN)
     if not conf:

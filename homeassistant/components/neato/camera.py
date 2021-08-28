@@ -66,7 +66,9 @@ class NeatoCleaningMap(Camera):
         self._image_url: str | None = None
         self._image: bytes | None = None
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.update()
         return self._image

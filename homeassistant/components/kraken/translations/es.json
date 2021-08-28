@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "one": "",
+                    "other": "Otros"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "account_id": "ID de la cuenta"
+                }
+            }
+        }
+    }
+}

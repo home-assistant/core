@@ -5,7 +5,7 @@
             "kamereon_no_account": "Impossible de trouver le compte Kamereon."
         },
         "error": {
-            "invalid_credentials": "Authentification incorrecte"
+            "invalid_credentials": "Authentification invalide"
         },
         "step": {
             "kamereon": {

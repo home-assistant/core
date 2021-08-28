@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "unknown": "Nenumatyta klaida"
+        },
         "step": {
             "link": {
                 "data": {

@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await client.async_get_next_pickup_event()
+            await client.async_get_pickup_events()
         except RecollectError as err:
             LOGGER.error("Error during setup of integration: %s", err)
             return self.async_show_form(

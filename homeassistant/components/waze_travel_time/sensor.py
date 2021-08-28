@@ -202,7 +202,7 @@ class WazeTravelTime(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
@@ -210,7 +210,7 @@ class WazeTravelTime(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return TIME_MINUTES
 

@@ -539,25 +539,13 @@ class Entity(ABC):
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
-            extra = ""
-            if "custom_components" in type(self).__module__:
-                extra = "Please report it to the custom component author."
-            else:
-                extra = (
-                    "Please create a bug report at "
-                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                )
-                if self.platform:
-                    extra += (
-                        f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
-                    )
-
+            report_issue = self._suggest_report_issue()
             _LOGGER.warning(
-                "Updating state for %s (%s) took %.3f seconds. %s",
+                "Updating state for %s (%s) took %.3f seconds. Please %s",
                 self.entity_id,
                 type(self),
                 end - start,
-                extra,
+                report_issue,
             )
 
         # Overwrite properties that have been set in the config file.
@@ -634,7 +622,6 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         try:
-            # pylint: disable=no-member
             if hasattr(self, "async_update"):
                 task = self.hass.async_create_task(self.async_update())  # type: ignore
             elif hasattr(self, "update"):
@@ -857,6 +844,23 @@ class Entity(ABC):
         finally:
             if self.parallel_updates:
                 self.parallel_updates.release()
+
+    def _suggest_report_issue(self) -> str:
+        """Suggest to report an issue."""
+        report_issue = ""
+        if "custom_components" in type(self).__module__:
+            report_issue = "report it to the custom component author."
+        else:
+            report_issue = (
+                "create a bug report at "
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+            )
+            if self.platform:
+                report_issue += (
+                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                )
+
+        return report_issue
 
 
 @dataclass

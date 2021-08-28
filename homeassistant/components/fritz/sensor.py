@@ -5,10 +5,19 @@ import datetime
 import logging
 from typing import Callable, TypedDict
 
-from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.core.exceptions import (
+    FritzActionError,
+    FritzActionFailedError,
+    FritzConnectionException,
+    FritzServiceError,
+)
 from fritzconnection.lib.fritzstatus import FritzStatus
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
@@ -134,7 +143,6 @@ class SensorData(TypedDict, total=False):
     name: str
     device_class: str | None
     state_class: str | None
-    last_reset: bool
     unit_of_measurement: str | None
     icon: str | None
     state_provider: Callable
@@ -185,16 +193,14 @@ SENSOR_DATA = {
     ),
     "gb_sent": SensorData(
         name="GB sent",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=True,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         state_provider=_retrieve_gb_sent_state,
     ),
     "gb_received": SensorData(
         name="GB received",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=True,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
@@ -259,12 +265,16 @@ async def async_setup_entry(
         return
 
     entities = []
-    dslinterface = await hass.async_add_executor_job(
-        fritzbox_tools.connection.call_action,
-        "WANDSLInterfaceConfig:1",
-        "GetInfo",
-    )
-    dsl: bool = dslinterface["NewEnable"]
+    dsl: bool = False
+    try:
+        dslinterface = await hass.async_add_executor_job(
+            fritzbox_tools.connection.call_action,
+            "WANDSLInterfaceConfig:1",
+            "GetInfo",
+        )
+        dsl = dslinterface["NewEnable"]
+    except (FritzActionError, FritzActionFailedError, FritzServiceError):
+        pass
 
     for sensor_type, sensor_data in SENSOR_DATA.items():
         if not dsl and sensor_data.get("connection_type") == DSL_CONNECTION:
@@ -284,13 +294,14 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         """Init FRITZ!Box connectivity class."""
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._last_device_value: str | None = None
-        self._last_wan_value: str | None = None
         self._attr_available = True
         self._attr_device_class = self._sensor_data.get("device_class")
         self._attr_icon = self._sensor_data.get("icon")
         self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
         self._attr_state_class = self._sensor_data.get("state_class")
-        self._attr_unit_of_measurement = self._sensor_data.get("unit_of_measurement")
+        self._attr_native_unit_of_measurement = self._sensor_data.get(
+            "unit_of_measurement"
+        )
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         super().__init__(fritzbox_tools, device_friendly_name)
 
@@ -311,15 +322,6 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        self._attr_state = self._last_device_value = self._state_provider(
+        self._attr_native_value = self._last_device_value = self._state_provider(
             status, self._last_device_value
         )
-
-        if self._sensor_data.get("last_reset") is True:
-            self._last_wan_value = _retrieve_connection_uptime_state(
-                status, self._last_wan_value
-            )
-            self._attr_last_reset = datetime.datetime.strptime(
-                self._last_wan_value,
-                "%Y-%m-%dT%H:%M:%S%z",
-            )

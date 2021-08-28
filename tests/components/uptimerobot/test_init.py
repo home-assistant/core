@@ -1,15 +1,30 @@
 """Test the Uptime Robot init."""
-import datetime
 from unittest.mock import patch
 
 from pytest import LogCaptureFixture
-from pyuptimerobot import UptimeRobotApiResponse
-from pyuptimerobot.exceptions import UptimeRobotAuthenticationException
+from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant import config_entries
-from homeassistant.components.uptimerobot.const import DOMAIN
+from homeassistant.components.uptimerobot.const import (
+    COORDINATOR_UPDATE_INTERVAL,
+    DOMAIN,
+)
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from homeassistant.util import dt
+
+from .common import (
+    MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
+    MOCK_UPTIMEROBOT_MONITOR,
+    UPTIMEROBOT_TEST_ENTITY,
+    MockApiResponseKey,
+    mock_uptimerobot_api_response,
+    setup_uptimerobot_integration,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -18,13 +33,7 @@ async def test_reauthentication_trigger_in_setup(
     hass: HomeAssistant, caplog: LogCaptureFixture
 ):
     """Test reauthentication trigger."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@test.test",
-        data={"platform": DOMAIN, "api_key": "1234"},
-        unique_id="1234567890",
-        source=config_entries.SOURCE_USER,
-    )
+    mock_config_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -57,46 +66,23 @@ async def test_reauthentication_trigger_after_setup(
     hass: HomeAssistant, caplog: LogCaptureFixture
 ):
     """Test reauthentication trigger."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="test@test.test",
-        data={"platform": DOMAIN, "api_key": "1234"},
-        unique_id="1234567890",
-        source=config_entries.SOURCE_USER,
-    )
-    mock_config_entry.add_to_hass(hass)
+    mock_config_entry = await setup_uptimerobot_integration(hass)
 
-    with patch(
-        "pyuptimerobot.UptimeRobot.async_get_monitors",
-        return_value=UptimeRobotApiResponse.from_dict(
-            {
-                "stat": "ok",
-                "monitors": [
-                    {"id": 1234, "friendly_name": "Test monitor", "status": 2}
-                ],
-            }
-        ),
-    ):
-
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    binary_sensor = hass.states.get("binary_sensor.test_monitor")
+    binary_sensor = hass.states.get(UPTIMEROBOT_TEST_ENTITY)
     assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
-    assert binary_sensor.state == "on"
+    assert binary_sensor.state == STATE_ON
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         side_effect=UptimeRobotAuthenticationException,
     ):
 
-        async_fire_time_changed(hass, dt.utcnow() + datetime.timedelta(seconds=10))
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
         await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
-    binary_sensor = hass.states.get("binary_sensor.test_monitor")
+    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_UNAVAILABLE
 
-    assert binary_sensor.state == "unavailable"
     assert "Authentication failed while fetching uptimerobot data" in caplog.text
 
     assert len(flows) == 1
@@ -105,3 +91,97 @@ async def test_reauthentication_trigger_after_setup(
     assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == config_entries.SOURCE_REAUTH
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_integration_reload(hass: HomeAssistant):
+    """Test integration reload."""
+    mock_entry = await setup_uptimerobot_integration(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(),
+    ):
+        assert await hass.config_entries.async_reload(mock_entry.entry_id)
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+
+
+async def test_update_errors(hass: HomeAssistant, caplog: LogCaptureFixture):
+    """Test errors during updates."""
+    await setup_uptimerobot_integration(hass)
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        side_effect=UptimeRobotException,
+    ):
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+        assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_UNAVAILABLE
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(),
+    ):
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+        assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ERROR),
+    ):
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+        assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_UNAVAILABLE
+
+    assert "Error fetching uptimerobot data: test error from API" in caplog.text
+
+
+async def test_device_management(hass: HomeAssistant):
+    """Test that we are adding and removing devices for monitors returned from the API."""
+    mock_entry = await setup_uptimerobot_integration(hass)
+    dev_reg = await async_get_registry(hass)
+
+    devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    assert len(devices) == 1
+
+    assert devices[0].identifiers == {(DOMAIN, "1234")}
+    assert devices[0].name == "Test monitor"
+
+    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2") is None
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(
+            data=[MOCK_UPTIMEROBOT_MONITOR, {**MOCK_UPTIMEROBOT_MONITOR, "id": 12345}]
+        ),
+    ):
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    assert len(devices) == 2
+    assert devices[0].identifiers == {(DOMAIN, "1234")}
+    assert devices[1].identifiers == {(DOMAIN, "12345")}
+
+    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2").state == STATE_ON
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(),
+    ):
+        async_fire_time_changed(hass, dt.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+    devices = async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    assert len(devices) == 1
+    assert devices[0].identifiers == {(DOMAIN, "1234")}
+
+    assert hass.states.get(UPTIMEROBOT_TEST_ENTITY).state == STATE_ON
+    assert hass.states.get(f"{UPTIMEROBOT_TEST_ENTITY}_2") is None
