@@ -1,12 +1,16 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
-from typing import Final
+from dataclasses import dataclass
+from typing import Callable, Final
+
+from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -24,7 +28,22 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
-from .model import FritzSensorEntityDescription
+from .model import FritzEntityDescriptionMixinBase
+
+
+@dataclass
+class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
+    """Sensor description mixin for Fritz!Smarthome entities."""
+
+    native_value: Callable[[FritzhomeDevice], float | int | None]
+
+
+@dataclass
+class FritzSensorEntityDescription(
+    SensorEntityDescription, FritzEntityDescriptionMixinSensor
+):
+    """Description for Fritz!Smarthome sensor entities."""
+
 
 SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
     FritzSensorEntityDescription(

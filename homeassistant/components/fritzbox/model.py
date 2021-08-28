@@ -6,9 +6,6 @@ from typing import Callable, TypedDict
 
 from pyfritzhome import FritzhomeDevice
 
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
-
 
 class EntityInfo(TypedDict):
     """TypedDict for EntityInfo."""
@@ -53,31 +50,3 @@ class FritzEntityDescriptionMixinBase:
     """Bases description mixin for Fritz!Smarthome entities."""
 
     suitable: Callable[[FritzhomeDevice], bool]
-
-
-@dataclass
-class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
-    """Sensor description mixin for Fritz!Smarthome entities."""
-
-    native_value: Callable[[FritzhomeDevice], float | int | None]
-
-
-@dataclass
-class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
-    """BinarySensor description mixin for Fritz!Smarthome entities."""
-
-    is_on: Callable[[FritzhomeDevice], bool | None]
-
-
-@dataclass
-class FritzSensorEntityDescription(
-    SensorEntityDescription, FritzEntityDescriptionMixinSensor
-):
-    """Description for Fritz!Smarthome sensor entities."""
-
-
-@dataclass
-class FritzBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
-):
-    """Description for Fritz!Smarthome binary sensor entities."""

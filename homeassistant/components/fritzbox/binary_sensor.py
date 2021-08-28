@@ -1,13 +1,15 @@
 """Support for Fritzbox binary sensors."""
 from __future__ import annotations
 
-from typing import Final
+from dataclasses import dataclass
+from typing import Callable, Final
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,7 +18,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
-from .model import FritzBinarySensorEntityDescription
+from .model import FritzEntityDescriptionMixinBase
+
+
+@dataclass
+class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
+    """BinarySensor description mixin for Fritz!Smarthome entities."""
+
+    is_on: Callable[[FritzhomeDevice], bool | None]
+
+
+@dataclass
+class FritzBinarySensorEntityDescription(
+    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
+):
+    """Description for Fritz!Smarthome binary sensor entities."""
+
 
 BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     FritzBinarySensorEntityDescription(
