@@ -68,7 +68,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def _try_login(user_input):
-        _LOGGER.debug("TuyaConfigFlow._try_login start, user_input: %s", user_input)
         project_type = ProjectType(user_input[CONF_PROJECT_TYPE])
         api = TuyaOpenAPI(
             user_input[CONF_ENDPOINT]
