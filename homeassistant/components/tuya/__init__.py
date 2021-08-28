@@ -167,7 +167,7 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def cleanup_device_registry(hass: HomeAssistant):
+async def cleanup_device_registry(hass: HomeAssistant) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
 
     __device_registry = device_registry.async_get(hass)
@@ -181,7 +181,7 @@ async def cleanup_device_registry(hass: HomeAssistant):
 
 
 @callback
-def async_remove_hass_device(hass: HomeAssistant, device_id: str):
+def async_remove_hass_device(hass: HomeAssistant, device_id: str) -> None:
     """Remove device from hass cache."""
     __device_registry = device_registry.async_get(hass)
     for entity in list(__device_registry.devices.values()):
@@ -196,7 +196,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the Tuya platforms."""
     _LOGGER.debug("integration unload")
     unload = await hass.config_entries.async_unload_platforms(
@@ -212,14 +212,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
 
-    hass.data[DOMAIN] = {
-        TUYA_HA_TUYA_MAP: {},
-        TUYA_HA_DEVICES: {},
-    }
+    hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: {}}
 
     success = await _init_tuya_sdk(hass, entry)
     if not success:
@@ -236,7 +233,7 @@ class DeviceListener(TuyaDeviceListener):
 
         self.hass = hass
 
-    def update_device(self, device: TuyaDevice):
+    def update_device(self, device: TuyaDevice) -> None:
         """Update device status."""
         if device.id in self.hass.data[DOMAIN][TUYA_HA_DEVICES]:
             _LOGGER.debug(
@@ -246,7 +243,7 @@ class DeviceListener(TuyaDeviceListener):
             )
             async_dispatcher_send(self.hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
 
-    def add_device(self, device: TuyaDevice):
+    def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""
         device_add = False
 
@@ -279,7 +276,7 @@ class DeviceListener(TuyaDeviceListener):
             device_manager.mq = tuya_mq
             tuya_mq.add_message_listener(device_manager.on_message)
 
-    def remove_device(self, device_id: str):
+    def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
         _LOGGER.debug("tuya remove device:%s", device_id)
         self.hass.add_job(async_remove_hass_device, self.hass, device_id)

@@ -11,6 +11,7 @@ from homeassistant.components.switch import DOMAIN as DEVICE_DOMAIN, SwitchEntit
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .base import TuyaHaEntity
 from .const import (
@@ -58,8 +59,8 @@ DPCODE_START = "start"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, _entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
     _LOGGER.debug("switch init")
 
@@ -73,8 +74,10 @@ async def async_setup_entry(
         entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)
         async_add_entities(entities)
 
-    async_dispatcher_connect(
-        hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, TUYA_DISCOVERY_NEW.format(DEVICE_DOMAIN), async_discover_device
+        )
     )
 
     device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
