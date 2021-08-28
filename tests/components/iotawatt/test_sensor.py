@@ -1,29 +1,29 @@
 """Test setting up sensors."""
-from unittest.mock import patch, AsyncMock, Mock
+from unittest.mock import AsyncMock, patch
 
 from iotawattpy.sensor import Sensor
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.iotawatt.const import DOMAIN
-from homeassistant.const import (
-    ENERGY_WATT_HOUR,
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS,
-)
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL_INCREASING,
     ATTR_STATE_CLASS,
     DEVICE_CLASS_ENERGY,
+    STATE_CLASS_TOTAL_INCREASING,
 )
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_WATT_HOUR,
+)
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_iotawatt():
-    """Mock iotawatt"""
+    """Mock iotawatt."""
     with patch("homeassistant.components.iotawatt.Iotawatt") as mock:
         instance = mock.return_value
         instance.update = AsyncMock()
