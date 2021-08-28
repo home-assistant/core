@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
         vol.Required(
             CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
-        ): cv.positive_int,
+        ): cv.time_period,
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS): cv.string,
     }
