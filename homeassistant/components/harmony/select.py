@@ -31,7 +31,6 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         """Initialize HarmonyActivitySelect class."""
         super().__init__(data=data)
         self._data = data
-        self._name = name
         self._attr_unique_id = self._data.unique_id
         self._attr_device_info = self._data.device_info(DOMAIN)
         self._attr_name = name
