@@ -1375,6 +1375,9 @@ youless-api==0.12
 # homeassistant.components.zeroconf
 zeroconf==0.36.1
 
+# homeassistant.components.zeversolar_local
+zeversolarlocal==0.0.9
+
 # homeassistant.components.zha
 zha-quirks==0.0.60
 

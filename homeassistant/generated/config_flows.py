@@ -313,6 +313,7 @@ FLOWS = [
     "yeelight",
     "youless",
     "zerproc",
+    "zeversolar_local",
     "zha",
     "zwave",
     "zwave_js"

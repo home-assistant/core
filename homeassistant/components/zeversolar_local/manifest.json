@@ -1,0 +1,17 @@
+{
+  "domain": "zeversolar_local",
+  "name": "Zeversolar local",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zeversolar_local",
+  "requirements": [
+    "zeversolarlocal==0.0.9"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@sander76"
+  ],
+  "iot_class": "local_polling"
+}
