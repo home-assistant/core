@@ -59,8 +59,15 @@ async def async_get_type(hass, cloud_id, install_code, host):
         meters = None
 
     if meters is not None:
+        # Find the first meter that has a Connected status
+        meterIdx = 0
+        for meter in range(len(meters)):
+            if meters[meter].connection_status == "Connected":
+                meterIdx = meter
+                break
+
         if meters:
-            hardware_address = meters[0].hardware_address
+            hardware_address = meters[meterIdx].hardware_address
         else:
             hardware_address = None
 
