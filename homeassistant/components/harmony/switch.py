@@ -33,7 +33,6 @@ class HarmonyActivitySwitch(HarmonyEntity, SwitchEntity):
     def __init__(self, name: str, activity: dict, data: HarmonyData) -> None:
         """Initialize HarmonyActivitySwitch class."""
         super().__init__(data=data)
-        self._name = name
         self._activity_name = activity["label"]
         self._activity_id = activity["id"]
         self._attr_entity_registry_enabled_default = False
