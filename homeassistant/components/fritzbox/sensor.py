@@ -1,14 +1,70 @@
 """Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from typing import Final
+
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN, SENSOR_TYPES
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 from .model import FritzSensorEntityDescription
+
+SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
+    FritzSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: (
+            device.has_temperature_sensor and not device.has_thermostat
+        ),
+        native_value=lambda device: device.temperature,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        suitable=lambda device: device.battery_level is not None,
+        native_value=lambda device: device.battery_level,  # type: ignore[no-any-return]
+    ),
+    FritzSensorEntityDescription(
+        key="power_consumption",
+        name="Power Consumption",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+        suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
+        native_value=lambda device: device.power / 1000 if device.power else 0.0,
+    ),
+    FritzSensorEntityDescription(
+        key="total_energy",
+        name="Total Energy",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
+        native_value=lambda device: device.energy / 1000 if device.energy else 0.0,
+    ),
+)
 
 
 async def async_setup_entry(
