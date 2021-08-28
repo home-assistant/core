@@ -122,7 +122,7 @@ async def test_setup_entry(hass: HomeAssistant):
         energy_consumption_peak_today = hass.states.get(
             "sensor.huisbaasje_energy_consumption_peak_today"
         )
-        assert energy_consumption_peak_today.state == "2.7"
+        assert energy_consumption_peak_today.state == "2.67"
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == DEVICE_CLASS_ENERGY
@@ -143,7 +143,7 @@ async def test_setup_entry(hass: HomeAssistant):
         energy_consumption_off_peak_today = hass.states.get(
             "sensor.huisbaasje_energy_consumption_off_peak_today"
         )
-        assert energy_consumption_off_peak_today.state == "0.6"
+        assert energy_consumption_off_peak_today.state == "0.627"
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == DEVICE_CLASS_ENERGY
@@ -164,7 +164,7 @@ async def test_setup_entry(hass: HomeAssistant):
         energy_production_peak_today = hass.states.get(
             "sensor.huisbaasje_energy_production_peak_today"
         )
-        assert energy_production_peak_today.state == "1.5"
+        assert energy_production_peak_today.state == "1.512"
         assert (
             energy_production_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == DEVICE_CLASS_ENERGY
@@ -185,7 +185,7 @@ async def test_setup_entry(hass: HomeAssistant):
         energy_production_off_peak_today = hass.states.get(
             "sensor.huisbaasje_energy_production_off_peak_today"
         )
-        assert energy_production_off_peak_today.state == "1.0"
+        assert energy_production_off_peak_today.state == "1.093"
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == DEVICE_CLASS_ENERGY
