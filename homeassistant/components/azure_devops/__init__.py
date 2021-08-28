@@ -1,6 +1,7 @@
 """Support for Azure DevOps."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Final
@@ -33,23 +34,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
     client: DevOpsClient = DevOpsClient()
 
+    if entry.data[CONF_PAT] is not None:
+        await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
+        if not client.authorized:
+            raise ConfigEntryAuthFailed(
+                "Could not authorize with Azure DevOps. You will need to update your token"
+            )
+
     async def async_update_data() -> tuple[
         DevOpsClient, DevOpsProject, list[DevOpsBuild]
     ]:
         """Fetch data from Azure DevOps."""
 
         try:
-            if entry.data[CONF_PAT] is not None:
-                await client.authorize(entry.data[CONF_PAT], entry.data[CONF_ORG])
-                if not client.authorized:
-                    raise ConfigEntryAuthFailed(
-                        "Could not authorize with Azure DevOps. You need to update your token"
-                    )
-            project: DevOpsProject = await client.get_project(
-                entry.data[CONF_ORG], entry.data[CONF_PROJECT]
-            )
-            builds: list[DevOpsBuild] = await client.get_builds(
-                entry.data[CONF_ORG], entry.data[CONF_PROJECT], BUILDS_QUERY
+            project, builds = await asyncio.gather(
+                client.get_project(
+                    entry.data[CONF_ORG],
+                    entry.data[CONF_PROJECT],
+                ),
+                client.get_builds(
+                    entry.data[CONF_ORG],
+                    entry.data[CONF_PROJECT],
+                    BUILDS_QUERY,
+                ),
             )
             return client, project, builds
         except (aiohttp.ClientError, aiohttp.ClientError) as exception:
