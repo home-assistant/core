@@ -45,7 +45,7 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 @callback
 def async_wm2_to_lx(value: float) -> int:
     """Calculate illuminance (in lux)."""
-    return round(float(value) / 0.0079)
+    return round(value / 0.0079)
 
 
 @callback
