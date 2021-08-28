@@ -122,28 +122,25 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
 
         errors = {}
-        if user_input is not None:
-            if self.conf_project_type is not None:
-                user_input[CONF_PROJECT_TYPE] = self.conf_project_type
+        if self.conf_project_type is not None:
+            user_input[CONF_PROJECT_TYPE] = self.conf_project_type
 
-            response = await self.hass.async_add_executor_job(
-                self._try_login, user_input
+        response = await self.hass.async_add_executor_job(self._try_login, user_input)
+
+        if response.get("success", False):
+            _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
+            return self.async_create_entry(
+                title=user_input[CONF_USERNAME],
+                data=user_input,
             )
-
-            if response.get("success", False):
-                _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input,
-                )
-            errors["base"] = RESULT_AUTH_FAILED
-            if self.project_type == ProjectType.SMART_HOME:
-                return self.async_show_form(
-                    step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
-                )
-            else:
-                return self.async_show_form(
-                    step_id="login",
-                    data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
-                    errors=errors,
-                )
+        errors["base"] = RESULT_AUTH_FAILED
+        if self.project_type == ProjectType.SMART_HOME:
+            return self.async_show_form(
+                step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
+            )
+        else:
+            return self.async_show_form(
+                step_id="login",
+                data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
+                errors=errors,
+            )
