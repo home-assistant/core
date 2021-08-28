@@ -487,7 +487,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TYPE_UV,
-        name="uv",
+        name="UV Index",
         native_unit_of_measurement="Index",
         device_class=DEVICE_CLASS_ILLUMINANCE,
     ),
