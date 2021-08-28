@@ -25,6 +25,7 @@ from .const import (
 
 RESULT_SINGLE_INSTANCE = "single_instance_allowed"
 RESULT_AUTH_FAILED = "invalid_auth"
+TUYA_ENDPOINT_BASE = "https://openapi.tuyacn.com"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if project_type == ProjectType.INDUSTY_SOLUTIONS:
             response = api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         else:
-            api.endpoint = "https://openapi.tuyacn.com"
+            api.endpoint = TUYA_ENDPOINT_BASE
             response = api.login(
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
