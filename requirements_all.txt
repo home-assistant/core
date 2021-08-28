@@ -1100,7 +1100,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.0.0
+onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
 open-garage==0.1.5
@@ -2448,9 +2448,6 @@ youless-api==0.12
 
 # homeassistant.components.media_extractor
 youtube_dl==2021.04.26
-
-# homeassistant.components.onvif
-zeep[async]==4.0.0
 
 # homeassistant.components.zengge
 zengge==0.2
