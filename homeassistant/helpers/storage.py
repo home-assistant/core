@@ -114,6 +114,7 @@ class Store:
         semaphore = self.hass.data.setdefault(
             STORAGE_SEMAPHORE, asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
         )
+        _LOGGER.warning("STORAGE_SEMAPHORE: %s", semaphore)
         try:
             async with semaphore:
                 return await self._async_load_data()
