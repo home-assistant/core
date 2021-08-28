@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
+from sonarr.models import SeriesItem, WantedResults
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -233,7 +234,7 @@ class SonarrSeriesSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Series sensor."""
-        self._items: list[Any] = []
+        self._items: list[SeriesItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -315,7 +316,7 @@ class SonarrWantedSensor(SonarrSensor):
     def __init__(self, sonarr: Sonarr, entry_id: str, max_items: int = 10) -> None:
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
-        self._results = None
+        self._results: WantedResults = None
         self._total: int | None = None
 
         super().__init__(
@@ -332,10 +333,7 @@ class SonarrWantedSensor(SonarrSensor):
     async def async_update(self) -> None:
         """Update entity."""
         self._results = await self.sonarr.wanted(page_size=self._max_items)
-        if self._results is None:
-            self._total = None
-        else:
-            self._total = self._results.total
+        self._total = self._results.total
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
