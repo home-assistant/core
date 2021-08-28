@@ -13,35 +13,32 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AmbientWeatherEntity
-from .const import (
-    ATTR_LAST_DATA,
-    DATA_CLIENT,
-    DOMAIN,
-    TYPE_BATT1,
-    TYPE_BATT2,
-    TYPE_BATT3,
-    TYPE_BATT4,
-    TYPE_BATT5,
-    TYPE_BATT6,
-    TYPE_BATT7,
-    TYPE_BATT8,
-    TYPE_BATT9,
-    TYPE_BATT10,
-    TYPE_BATT_CO2,
-    TYPE_BATTOUT,
-    TYPE_PM25_BATT,
-    TYPE_PM25IN_BATT,
-    TYPE_RELAY1,
-    TYPE_RELAY2,
-    TYPE_RELAY3,
-    TYPE_RELAY4,
-    TYPE_RELAY5,
-    TYPE_RELAY6,
-    TYPE_RELAY7,
-    TYPE_RELAY8,
-    TYPE_RELAY9,
-    TYPE_RELAY10,
-)
+from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN
+
+TYPE_BATT1 = "batt1"
+TYPE_BATT10 = "batt10"
+TYPE_BATT2 = "batt2"
+TYPE_BATT3 = "batt3"
+TYPE_BATT4 = "batt4"
+TYPE_BATT5 = "batt5"
+TYPE_BATT6 = "batt6"
+TYPE_BATT7 = "batt7"
+TYPE_BATT8 = "batt8"
+TYPE_BATT9 = "batt9"
+TYPE_BATT_CO2 = "batt_co2"
+TYPE_BATTOUT = "battout"
+TYPE_PM25_BATT = "batt_25"
+TYPE_PM25IN_BATT = "batt_25in"
+TYPE_RELAY1 = "relay1"
+TYPE_RELAY10 = "relay10"
+TYPE_RELAY2 = "relay2"
+TYPE_RELAY3 = "relay3"
+TYPE_RELAY4 = "relay4"
+TYPE_RELAY5 = "relay5"
+TYPE_RELAY6 = "relay6"
+TYPE_RELAY7 = "relay7"
+TYPE_RELAY8 = "relay8"
+TYPE_RELAY9 = "relay9"
 
 BINARY_SENSOR_DESCRIPTIONS = (
     BinarySensorEntityDescription(
@@ -178,8 +175,8 @@ async def async_setup_entry(
             AmbientWeatherBinarySensor(
                 ambient, mac_address, station[ATTR_NAME], description
             )
-            for description in BINARY_SENSOR_DESCRIPTIONS
             for mac_address, station in ambient.stations.items()
+            for description in BINARY_SENSOR_DESCRIPTIONS
             if description.key in station[ATTR_LAST_DATA]
         ]
     )
@@ -195,7 +192,7 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
             self.entity_description.key
         ]
 
-        if self.entity_description.key in (
+        if self.entity_description.key in {
             TYPE_BATT1,
             TYPE_BATT10,
             TYPE_BATT2,
@@ -210,7 +207,7 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
             TYPE_BATTOUT,
             TYPE_PM25_BATT,
             TYPE_PM25IN_BATT,
-        ):
+        }:
             self._attr_is_on = state == 0
         else:
             self._attr_is_on = state == 1

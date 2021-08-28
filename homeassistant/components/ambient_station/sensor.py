@@ -28,83 +28,80 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX, AmbientWeatherEntity
-from .const import (
-    ATTR_LAST_DATA,
-    DATA_CLIENT,
-    DOMAIN,
-    TYPE_24HOURRAININ,
-    TYPE_BAROMABSIN,
-    TYPE_BAROMRELIN,
-    TYPE_CO2,
-    TYPE_DAILYRAININ,
-    TYPE_DEWPOINT,
-    TYPE_EVENTRAININ,
-    TYPE_FEELSLIKE,
-    TYPE_HOURLYRAININ,
-    TYPE_HUMIDITY,
-    TYPE_HUMIDITY1,
-    TYPE_HUMIDITY2,
-    TYPE_HUMIDITY3,
-    TYPE_HUMIDITY4,
-    TYPE_HUMIDITY5,
-    TYPE_HUMIDITY6,
-    TYPE_HUMIDITY7,
-    TYPE_HUMIDITY8,
-    TYPE_HUMIDITY9,
-    TYPE_HUMIDITY10,
-    TYPE_HUMIDITYIN,
-    TYPE_LASTRAIN,
-    TYPE_MAXDAILYGUST,
-    TYPE_MONTHLYRAININ,
-    TYPE_PM25,
-    TYPE_PM25_24H,
-    TYPE_PM25_IN,
-    TYPE_PM25_IN_24H,
-    TYPE_SOILHUM1,
-    TYPE_SOILHUM2,
-    TYPE_SOILHUM3,
-    TYPE_SOILHUM4,
-    TYPE_SOILHUM5,
-    TYPE_SOILHUM6,
-    TYPE_SOILHUM7,
-    TYPE_SOILHUM8,
-    TYPE_SOILHUM9,
-    TYPE_SOILHUM10,
-    TYPE_SOILTEMP1F,
-    TYPE_SOILTEMP2F,
-    TYPE_SOILTEMP3F,
-    TYPE_SOILTEMP4F,
-    TYPE_SOILTEMP5F,
-    TYPE_SOILTEMP6F,
-    TYPE_SOILTEMP7F,
-    TYPE_SOILTEMP8F,
-    TYPE_SOILTEMP9F,
-    TYPE_SOILTEMP10F,
-    TYPE_TEMP1F,
-    TYPE_TEMP2F,
-    TYPE_TEMP3F,
-    TYPE_TEMP4F,
-    TYPE_TEMP5F,
-    TYPE_TEMP6F,
-    TYPE_TEMP7F,
-    TYPE_TEMP8F,
-    TYPE_TEMP9F,
-    TYPE_TEMP10F,
-    TYPE_TEMPF,
-    TYPE_TEMPINF,
-    TYPE_TOTALRAININ,
-    TYPE_UV,
-    TYPE_WEEKLYRAININ,
-    TYPE_WINDDIR,
-    TYPE_WINDDIR_AVG2M,
-    TYPE_WINDDIR_AVG10M,
-    TYPE_WINDGUSTDIR,
-    TYPE_WINDGUSTMPH,
-    TYPE_WINDSPDMPH_AVG2M,
-    TYPE_WINDSPDMPH_AVG10M,
-    TYPE_WINDSPEEDMPH,
-    TYPE_YEARLYRAININ,
-)
+from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN
+
+TYPE_24HOURRAININ = "24hourrainin"
+TYPE_BAROMABSIN = "baromabsin"
+TYPE_BAROMRELIN = "baromrelin"
+TYPE_CO2 = "co2"
+TYPE_DAILYRAININ = "dailyrainin"
+TYPE_DEWPOINT = "dewPoint"
+TYPE_EVENTRAININ = "eventrainin"
+TYPE_FEELSLIKE = "feelsLike"
+TYPE_HOURLYRAININ = "hourlyrainin"
+TYPE_HUMIDITY = "humidity"
+TYPE_HUMIDITY1 = "humidity1"
+TYPE_HUMIDITY10 = "humidity10"
+TYPE_HUMIDITY2 = "humidity2"
+TYPE_HUMIDITY3 = "humidity3"
+TYPE_HUMIDITY4 = "humidity4"
+TYPE_HUMIDITY5 = "humidity5"
+TYPE_HUMIDITY6 = "humidity6"
+TYPE_HUMIDITY7 = "humidity7"
+TYPE_HUMIDITY8 = "humidity8"
+TYPE_HUMIDITY9 = "humidity9"
+TYPE_HUMIDITYIN = "humidityin"
+TYPE_LASTRAIN = "lastRain"
+TYPE_MAXDAILYGUST = "maxdailygust"
+TYPE_MONTHLYRAININ = "monthlyrainin"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
+TYPE_PM25_IN = "pm25_in"
+TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_SOILHUM1 = "soilhum1"
+TYPE_SOILHUM10 = "soilhum10"
+TYPE_SOILHUM2 = "soilhum2"
+TYPE_SOILHUM3 = "soilhum3"
+TYPE_SOILHUM4 = "soilhum4"
+TYPE_SOILHUM5 = "soilhum5"
+TYPE_SOILHUM6 = "soilhum6"
+TYPE_SOILHUM7 = "soilhum7"
+TYPE_SOILHUM8 = "soilhum8"
+TYPE_SOILHUM9 = "soilhum9"
+TYPE_SOILTEMP1F = "soiltemp1f"
+TYPE_SOILTEMP10F = "soiltemp10f"
+TYPE_SOILTEMP2F = "soiltemp2f"
+TYPE_SOILTEMP3F = "soiltemp3f"
+TYPE_SOILTEMP4F = "soiltemp4f"
+TYPE_SOILTEMP5F = "soiltemp5f"
+TYPE_SOILTEMP6F = "soiltemp6f"
+TYPE_SOILTEMP7F = "soiltemp7f"
+TYPE_SOILTEMP8F = "soiltemp8f"
+TYPE_SOILTEMP9F = "soiltemp9f"
+TYPE_TEMP10F = "temp10f"
+TYPE_TEMP1F = "temp1f"
+TYPE_TEMP2F = "temp2f"
+TYPE_TEMP3F = "temp3f"
+TYPE_TEMP4F = "temp4f"
+TYPE_TEMP5F = "temp5f"
+TYPE_TEMP6F = "temp6f"
+TYPE_TEMP7F = "temp7f"
+TYPE_TEMP8F = "temp8f"
+TYPE_TEMP9F = "temp9f"
+TYPE_TEMPF = "tempf"
+TYPE_TEMPINF = "tempinf"
+TYPE_TOTALRAININ = "totalrainin"
+TYPE_UV = "uv"
+TYPE_WEEKLYRAININ = "weeklyrainin"
+TYPE_WINDDIR = "winddir"
+TYPE_WINDDIR_AVG10M = "winddir_avg10m"
+TYPE_WINDDIR_AVG2M = "winddir_avg2m"
+TYPE_WINDGUSTDIR = "windgustdir"
+TYPE_WINDGUSTMPH = "windgustmph"
+TYPE_WINDSPDMPH_AVG10M = "windspdmph_avg10m"
+TYPE_WINDSPDMPH_AVG2M = "windspdmph_avg2m"
+TYPE_WINDSPEEDMPH = "windspeedmph"
+TYPE_YEARLYRAININ = "yearlyrainin"
 
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -563,8 +560,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)
-            for description in SENSOR_DESCRIPTIONS
             for mac_address, station in ambient.stations.items()
+            for description in SENSOR_DESCRIPTIONS
             if description.key in station[ATTR_LAST_DATA]
         ]
     )
