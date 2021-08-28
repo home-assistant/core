@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final
@@ -14,7 +15,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,6 +29,13 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
+
+
+@dataclass
+class AzureDevOpsEntityDescription(EntityDescription):
+    """Class describing Azure DevOps entities."""
+
+    organization: str = ""
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -97,15 +105,13 @@ class AzureDevOpsEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        organization: str,
-        key: str,
+        description: AzureDevOpsEntityDescription,
     ) -> None:
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
         _, project, _ = coordinator.data
-        self._attr_unique_id = "_".join([organization, key])
-        self.organization = organization
         self.project = project.name
+        self.organization = description.organization
 
 
 class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
