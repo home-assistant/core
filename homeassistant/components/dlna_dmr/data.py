@@ -60,14 +60,9 @@ class DlnaDmrData:
         LOGGER.debug("Getting event handler for %s", listen_addr)
 
         async with self.lock:
-            try:
-                # Return an existing event handler if we can
-                server = self.event_notifiers[listen_addr]
-            except KeyError:
-                # No existing event handler? It will be created below
-                pass
-            else:
-                return server.event_handler
+            # Return an existing event handler if we can
+            if listen_addr in self.event_notifiers:
+                return self.event_notifiers[listen_addr].event_handler
 
             # Start event handler
             server = AiohttpNotifyServer(
