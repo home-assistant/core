@@ -24,8 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-class ZyxelT50Device(object):
 
+class ZyxelT50Device(object):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self._entry = entry
@@ -50,7 +50,9 @@ class ZyxelT50Device(object):
         )
         for entry in track_entries:
             if entry.domain == TRACKER_DOMAIN:
-                self._devices[entry.unique_id] = ZyxelDevice(entry.unique_id, entry.original_name)
+                self._devices[entry.unique_id] = ZyxelDevice(
+                    entry.unique_id, entry.original_name
+                )
 
         # Update devices
         await self.update_devices()
@@ -79,7 +81,9 @@ class ZyxelT50Device(object):
     async def update_devices(self) -> None:
         new_device = False
 
-        zyxel_devices = await self.hass.async_add_executor_job(self._api.get_connected_devices)
+        zyxel_devices = await self.hass.async_add_executor_job(
+            self._api.get_connected_devices
+        )
         consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
 
         for device_mac in self._devices:
@@ -115,6 +119,7 @@ class ZyxelT50Device(object):
         """Return devices."""
         return self._devices
 
+
 class ZyxelDevice:
     """Representation of a Zyxel device info."""
 
@@ -137,7 +142,9 @@ class ZyxelDevice:
             self._connected = True
 
         elif self._connected:
-            self._connected = (utc_point_in_time - self._last_activity).total_seconds() < consider_home
+            self._connected = (
+                utc_point_in_time - self._last_activity
+            ).total_seconds() < consider_home
             self._ip_address = None
 
     @property
@@ -170,14 +177,11 @@ async def get_connection(hass: HomeAssistant, conf: dict) -> ZyxelT50Modem:
     """Get the AsusWrt API."""
 
     modem = ZyxelT50Modem(
-        conf.get(CONF_PASSWORD, ""),
-        conf[CONF_HOST],
-        conf[CONF_USERNAME]
-        )
+        conf.get(CONF_PASSWORD, ""), conf[CONF_HOST], conf[CONF_USERNAME]
+    )
     await hass.async_add_executor_job(modem.connect)
     return modem
 
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-

@@ -16,11 +16,13 @@ from .router import get_connection
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str
-})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class ZyxelT50Flow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,7 +30,9 @@ class ZyxelT50Flow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(

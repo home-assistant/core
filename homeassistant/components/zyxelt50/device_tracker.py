@@ -14,7 +14,7 @@ from .router import Zyxel_T50_Router, ZyxelDevice
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for Zyxel component."""
     router = hass.data[DOMAIN][entry.entry_id][DATA_ZYXEL]
