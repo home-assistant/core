@@ -252,8 +252,14 @@ class DlnaDmrEntity(MediaPlayerEntity):
             self.location = location
 
             # Subscribe to event notifications
-            self._device.on_event = self._on_event
-            await self._device.async_subscribe_services(auto_resubscribe=True)
+            try:
+                self._device.on_event = self._on_event
+                await self._device.async_subscribe_services(auto_resubscribe=True)
+            except UpnpError as err:
+                # Don't leave the device half-constructed
+                self._device = None
+                _LOGGER.debug("Error while subscribing during device connect: %s", err)
+                raise
 
     async def _device_disconnect(self) -> None:
         """Destroy connections to the device now that it's not available.
@@ -280,15 +286,14 @@ class DlnaDmrEntity(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Retrieve the latest data."""
         if not self._device:
-            if self.poll_availability and self.location:
-                try:
-                    await self._device_connect(self.location)
-                except UpnpError:
-                    return
-                if not self._device:
-                    return
-            else:
+            if not self.poll_availability:
                 return
+            try:
+                await self._device_connect(self.location)
+            except UpnpError:
+                return
+
+        assert self._device is not None
 
         try:
             await self._device.async_update()
