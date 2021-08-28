@@ -15,10 +15,9 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -87,6 +86,8 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         super().__init__(nanoleaf)
         self._attr_unique_id = nanoleaf.serial_no
         self._attr_name = nanoleaf.name
+        self._attr_supported_color_modes = (COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS)
+        self._attr_supported_features = SUPPORT_EFFECT | SUPPORT_TRANSITION
         self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
         self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
 
@@ -130,17 +131,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     def hs_color(self) -> tuple[int, int]:
         """Return the color in HS."""
         return self._nanoleaf.hue, self._nanoleaf.saturation
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_COLOR_TEMP
-            | SUPPORT_EFFECT
-            | SUPPORT_COLOR
-            | SUPPORT_TRANSITION
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
