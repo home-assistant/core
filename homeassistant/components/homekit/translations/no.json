@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)"
+                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
+                    "devices": "Enheter (utl\u00f8sere)"
                 },
-                "description": "Disse innstillingene m\u00e5 bare justeres hvis HomeKit ikke fungerer.",
+                "description": "Programmerbare brytere opprettes for hver valgt enhet. N\u00e5r en enhetstrigger utl\u00f8ses, kan HomeKit konfigureres til \u00e5 kj\u00f8re en automatisering eller scene.",
                 "title": "Avansert konfigurasjon"
             },
             "cameras": {
