@@ -632,7 +632,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.0.0
+onvif-zeep-async==1.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -1371,9 +1371,6 @@ yeelight==0.7.4
 
 # homeassistant.components.youless
 youless-api==0.12
-
-# homeassistant.components.onvif
-zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
 zeroconf==0.36.0
