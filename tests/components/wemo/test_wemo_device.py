@@ -8,8 +8,13 @@ from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant import runner
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, wemo_device
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -193,6 +198,19 @@ class TestInsight:
     ):
         """Validate the should_poll returns the correct value."""
         pywemo_registry.is_subscribed.return_value = subscribed
+        pywemo_device.reset_mock()
         pywemo_device.get_state.return_value = state
-        coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
-        assert coordinator.should_poll == expected
+        await async_setup_component(hass, HA_DOMAIN, {})
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+            blocking=True,
+        )
+        if expected:
+            pywemo_device.get_state.assert_any_call(True)
+        else:
+            for call in pywemo_device.get_state.mock_calls:
+                # All calls have no args/kwargs
+                assert not call.args
+                assert not call.kwargs
