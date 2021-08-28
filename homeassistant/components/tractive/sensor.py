@@ -29,7 +29,6 @@ from .entity import TractiveEntity
 class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
-    attributes: tuple = ()
     entity_class: type[TractiveSensor] | None = None
 
 
@@ -97,10 +96,6 @@ class TractiveActivitySensor(TractiveSensor):
     def handle_activity_status_update(self, event):
         """Handle activity status update."""
         self._attr_native_value = event[self.entity_description.key]
-        self._attr_extra_state_attributes = {
-            attr: event[attr] if attr in event else None
-            for attr in self.entity_description.attributes
-        }
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -137,7 +132,13 @@ SENSOR_TYPES = (
         name="Minutes Active",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        attributes=(ATTR_DAILY_GOAL,),
+        entity_class=TractiveActivitySensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_DAILY_GOAL,
+        name="Daily Goal",
+        icon="mdi:flag-checkered",
+        native_unit_of_measurement=TIME_MINUTES,
         entity_class=TractiveActivitySensor,
     ),
 )
