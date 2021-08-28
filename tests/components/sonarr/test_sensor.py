@@ -162,14 +162,3 @@ async def test_availability(
         await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
-
-    # state to available
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock)
-
-    future += timedelta(minutes=1)
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"

@@ -1,33 +1,33 @@
 """Base Entity for Sonarr."""
 from __future__ import annotations
 
-from sonarr import Sonarr
-
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_SW_VERSION,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import SonarrDataUpdateCoordinator
 
 
-class SonarrEntity(Entity):
+class SonarrEntity(CoordinatorEntity):
     """Defines a base Sonarr entity."""
 
     def __init__(
         self,
         *,
-        sonarr: Sonarr,
+        coordinator: SonarrDataUpdateCoordinator,
         entry_id: str,
         device_id: str,
     ) -> None:
         """Initialize the Sonarr entity."""
+        super().__init__(coordinator)
         self._entry_id = entry_id
         self._device_id = device_id
-        self.sonarr = sonarr
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -39,6 +39,6 @@ class SonarrEntity(Entity):
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: "Activity Sensor",
             ATTR_MANUFACTURER: "Sonarr",
-            ATTR_SW_VERSION: self.sonarr.app.info.version,
+            ATTR_SW_VERSION: self.coordinator.sonarr.app.info.version,
             "entry_type": "service",
         }

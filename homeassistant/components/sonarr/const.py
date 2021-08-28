@@ -10,9 +10,6 @@ CONF_UPCOMING_DAYS = "upcoming_days"
 CONF_URLBASE = "urlbase"
 CONF_WANTED_MAX_ITEMS = "wanted_max_items"
 
-# Data
-DATA_SONARR = "sonarr"
-
 # Defaults
 DEFAULT_BASE_PATH = "/api"
 DEFAULT_HOST = "localhost"

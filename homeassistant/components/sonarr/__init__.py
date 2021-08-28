@@ -1,10 +1,9 @@
 """The Sonarr component."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
+from sonarr import Sonarr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,21 +14,19 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
-    DATA_SONARR,
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
+from .coordinator import SonarrDataUpdateCoordinator
 
 PLATFORMS = ["sensor"]
-SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -56,21 +53,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         verify_ssl=entry.data[CONF_VERIFY_SSL],
     )
 
-    try:
-        await sonarr.update()
-    except SonarrAccessRestricted as err:
-        raise ConfigEntryAuthFailed(
-            "API Key is no longer valid. Please reauthenticate"
-        ) from err
-    except SonarrError as err:
-        raise ConfigEntryNotReady from err
+    coordinator = SonarrDataUpdateCoordinator(
+        hass,
+        sonarr=sonarr,
+        options=entry.options,
+    )
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_SONARR: sonarr,
-    }
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
