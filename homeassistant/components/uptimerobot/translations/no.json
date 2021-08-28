@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_failed_existing": "Kunne ikke oppdatere konfigurasjonsoppf\u00f8ringen. Fjern integrasjonen og sett den opp igjen.",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "reauth_failed_matching_account": "API-n\u00f8kkelen du oppgav, samsvarer ikke med konto-IDen for eksisterende konfigurasjon.",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Du m\u00e5 angi en ny skrivebeskyttet API-n\u00f8kkel fra Uptime Robot",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                },
+                "description": "Du m\u00e5 angi en skrivebeskyttet API-n\u00f8kkel fra Uptime Robot"
+            }
+        }
+    }
+}

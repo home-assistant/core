@@ -179,7 +179,6 @@ class BlockAttributeDescription:
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, aioshelly.Block], bool] | None = None
     extra_state_attributes: Callable[[aioshelly.Block], dict | None] | None = None
-    last_reset: str | None = None
 
 
 @dataclass
@@ -285,7 +284,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         self._unit: None | str | Callable[[dict], str] = unit
         self._unique_id: str = f"{super().unique_id}-{self.attribute}"
         self._name = get_entity_name(wrapper.device, block, self.description.name)
-        self._last_value: str | None = None
 
     @property
     def unique_id(self) -> str:

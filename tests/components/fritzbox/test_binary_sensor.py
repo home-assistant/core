@@ -14,8 +14,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
-    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -60,7 +60,7 @@ async def test_is_off(hass: HomeAssistant, fritz: Mock):
 
     state = hass.states.get(ENTITY_ID)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock):

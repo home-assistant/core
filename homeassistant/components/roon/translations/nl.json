@@ -16,7 +16,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Voer de hostnaam of het IP-adres van uw Roon-server in."
+                "description": "Kon de Roon-server niet vinden, voer de hostnaam of het IP-adres in."
             }
         }
     }

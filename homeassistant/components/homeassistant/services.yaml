@@ -74,3 +74,9 @@ reload_config_entry:
       example: 8955375327824e14ba89e4b29cc3ec9a
       selector:
         text:
+
+save_persistent_states:
+  name: Save Persistent States
+  description:
+    Save the persistent states (for entities derived from RestoreEntity) immediately.
+    Maintain the normal periodic saving interval.

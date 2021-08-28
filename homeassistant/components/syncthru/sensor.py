@@ -124,7 +124,7 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measuremnt."""
         return self._unit_of_measurement
 
@@ -148,7 +148,7 @@ class SyncThruMainSensor(SyncThruSensor):
         self._id_suffix = "_main"
 
     @property
-    def state(self):
+    def native_value(self):
         """Set state to human readable version of syncthru status."""
         return SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()]
 
@@ -182,7 +182,7 @@ class SyncThruTonerSensor(SyncThruSensor):
         return self.syncthru.toner_status().get(self._color, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Show amount of remaining toner."""
         return self.syncthru.toner_status().get(self._color, {}).get("remaining")
 
@@ -204,7 +204,7 @@ class SyncThruDrumSensor(SyncThruSensor):
         return self.syncthru.drum_status().get(self._color, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Show amount of remaining drum."""
         return self.syncthru.drum_status().get(self._color, {}).get("remaining")
 
@@ -225,7 +225,7 @@ class SyncThruInputTraySensor(SyncThruSensor):
         return self.syncthru.input_tray_status().get(self._number, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Display ready unless there is some error, then display error."""
         tray_state = (
             self.syncthru.input_tray_status().get(self._number, {}).get("newError")
@@ -251,7 +251,7 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         return self.syncthru.output_tray_status().get(self._number, {})
 
     @property
-    def state(self):
+    def native_value(self):
         """Display ready unless there is some error, then display error."""
         tray_state = (
             self.syncthru.output_tray_status().get(self._number, {}).get("status")

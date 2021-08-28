@@ -32,11 +32,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 
 from . import (
     TEST_CAMERA,
     TEST_CAMERA_DEVICE_IDENTIFIER,
+    TEST_CAMERA_ENTITY_ID,
     TEST_CAMERA_ID,
     TEST_CAMERA_NAME,
     TEST_CAMERAS,
@@ -249,6 +251,35 @@ async def test_setup_camera_with_correct_webhook(
 
     # Webhooks are correctly configured, so no set call should have been made.
     assert not client.async_set_camera.called
+
+
+async def test_setup_camera_with_no_home_assistant_urls(
+    hass: HomeAssistant,
+    caplog: Any,
+) -> None:
+    """Verify setup works without Home Assistant internal/external URLs."""
+
+    client = create_mock_motioneye_client()
+    config_entry = create_mock_motioneye_config_entry(hass, data={CONF_URL: TEST_URL})
+
+    with patch(
+        "homeassistant.components.motioneye.get_url", side_effect=NoURLAvailableError
+    ):
+        await setup_mock_motioneye_config_entry(
+            hass,
+            config_entry=config_entry,
+            client=client,
+        )
+
+    # Should log a warning ...
+    assert "Unable to get Home Assistant URL" in caplog.text
+
+    # ... should not set callbacks in the camera ...
+    assert not client.async_set_camera.called
+
+    # ... but camera should still be present.
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
 
 
 async def test_good_query(hass: HomeAssistant, aiohttp_client: Any) -> None:

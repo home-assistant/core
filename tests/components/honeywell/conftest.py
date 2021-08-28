@@ -31,13 +31,29 @@ def config_entry(config_data):
 def device():
     """Mock a somecomfort.Device."""
     mock_device = create_autospec(somecomfort.Device, instance=True)
-    mock_device.deviceid.return_value = "device1"
+    mock_device.deviceid = 1234567
     mock_device._data = {
         "canControlHumidification": False,
         "hasFan": False,
     }
     mock_device.system_mode = "off"
     mock_device.name = "device1"
+    mock_device.current_temperature = 20
+    mock_device.mac_address = "macaddress1"
+    return mock_device
+
+
+@pytest.fixture
+def another_device():
+    """Mock a somecomfort.Device."""
+    mock_device = create_autospec(somecomfort.Device, instance=True)
+    mock_device.deviceid = 7654321
+    mock_device._data = {
+        "canControlHumidification": False,
+        "hasFan": False,
+    }
+    mock_device.system_mode = "off"
+    mock_device.name = "device2"
     mock_device.current_temperature = 20
     mock_device.mac_address = "macaddress1"
     return mock_device

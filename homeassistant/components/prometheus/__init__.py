@@ -10,6 +10,8 @@ from homeassistant import core as hacore
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_ACTIONS,
 )
 from homeassistant.components.http import HomeAssistantView
@@ -315,28 +317,43 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_climate(self, state):
-        temp = state.attributes.get(ATTR_TEMPERATURE)
+    def _handle_climate_temp(self, state, attr, metric_name, metric_description):
+        temp = state.attributes.get(attr)
         if temp:
             if self._climate_units == TEMP_FAHRENHEIT:
                 temp = fahrenheit_to_celsius(temp)
             metric = self._metric(
-                "climate_target_temperature_celsius",
+                metric_name,
                 self.prometheus_cli.Gauge,
-                "Target temperature in degrees Celsius",
+                metric_description,
             )
             metric.labels(**self._labels(state)).set(temp)
 
-        current_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-        if current_temp:
-            if self._climate_units == TEMP_FAHRENHEIT:
-                current_temp = fahrenheit_to_celsius(current_temp)
-            metric = self._metric(
-                "climate_current_temperature_celsius",
-                self.prometheus_cli.Gauge,
-                "Current temperature in degrees Celsius",
-            )
-            metric.labels(**self._labels(state)).set(current_temp)
+    def _handle_climate(self, state):
+        self._handle_climate_temp(
+            state,
+            ATTR_TEMPERATURE,
+            "climate_target_temperature_celsius",
+            "Target temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_TARGET_TEMP_HIGH,
+            "climate_target_temperature_high_celsius",
+            "Target high temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_TARGET_TEMP_LOW,
+            "climate_target_temperature_low_celsius",
+            "Target low temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            ATTR_CURRENT_TEMPERATURE,
+            "climate_current_temperature_celsius",
+            "Current temperature in degrees Celsius",
+        )
 
         current_action = state.attributes.get(ATTR_HVAC_ACTION)
         if current_action:

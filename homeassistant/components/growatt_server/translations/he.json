@@ -4,6 +4,11 @@
             "invalid_auth": "\u05d0\u05d9\u05de\u05d5\u05ea \u05dc\u05d0 \u05d7\u05d5\u05e7\u05d9"
         },
         "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "\u05e6\u05de\u05d7"
+                }
+            },
             "user": {
                 "data": {
                     "name": "\u05e9\u05dd",

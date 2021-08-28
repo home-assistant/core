@@ -1,11 +1,30 @@
 """Support for the Airly sensor service."""
 from __future__ import annotations
 
-from typing import Any, cast
+from dataclasses import dataclass
+from typing import Any, Callable, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONF_NAME,
+    DEVICE_CLASS_AQI,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM1,
+    DEVICE_CLASS_PM10,
+    DEVICE_CLASS_PM25,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -18,8 +37,12 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
+    ATTR_API_HUMIDITY,
+    ATTR_API_PM1,
     ATTR_API_PM10,
     ATTR_API_PM25,
+    ATTR_API_PRESSURE,
+    ATTR_API_TEMPERATURE,
     ATTR_DESCRIPTION,
     ATTR_LEVEL,
     ATTR_LIMIT,
@@ -28,13 +51,72 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
-    SENSOR_TYPES,
     SUFFIX_LIMIT,
     SUFFIX_PERCENT,
 )
-from .model import AirlySensorEntityDescription
 
 PARALLEL_UPDATES = 1
+
+
+@dataclass
+class AirlySensorEntityDescription(SensorEntityDescription):
+    """Class describing Airly sensor entities."""
+
+    value: Callable = round
+
+
+SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
+    AirlySensorEntityDescription(
+        key=ATTR_API_CAQI,
+        device_class=DEVICE_CLASS_AQI,
+        name=ATTR_API_CAQI,
+        native_unit_of_measurement="CAQI",
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_PM1,
+        device_class=DEVICE_CLASS_PM1,
+        name=ATTR_API_PM1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_PM25,
+        device_class=DEVICE_CLASS_PM25,
+        name="PM2.5",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_PM10,
+        device_class=DEVICE_CLASS_PM10,
+        name=ATTR_API_PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_HUMIDITY,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        name=ATTR_API_HUMIDITY.capitalize(),
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+        value=lambda value: round(value, 1),
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_PRESSURE,
+        device_class=DEVICE_CLASS_PRESSURE,
+        name=ATTR_API_PRESSURE.capitalize(),
+        native_unit_of_measurement=PRESSURE_HPA,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_TEMPERATURE,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name=ATTR_API_TEMPERATURE.capitalize(),
+        native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
+        value=lambda value: round(value, 1),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -84,7 +166,7 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         state = self.coordinator.data[self.entity_description.key]
         return cast(StateType, self.entity_description.value(state))

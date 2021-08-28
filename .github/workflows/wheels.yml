@@ -66,6 +66,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
           - "3.9-alpine3.13"
+          - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2.3.4
@@ -106,6 +107,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
           - "3.9-alpine3.13"
+          - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2.3.4

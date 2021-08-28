@@ -149,6 +149,18 @@ def test_types(type_name, entity_id, state, attrs, config):
             "open",
             {ATTR_SUPPORTED_FEATURES: (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)},
         ),
+        (
+            "WindowCoveringBasic",
+            "cover.open_window",
+            "open",
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    cover.SUPPORT_OPEN
+                    | cover.SUPPORT_CLOSE
+                    | cover.SUPPORT_SET_TILT_POSITION
+                )
+            },
+        ),
     ],
 )
 def test_type_covers(type_name, entity_id, state, attrs):

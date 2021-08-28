@@ -9,10 +9,15 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
+            "link": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}({host})-t?",
+                "title": "Csatlakozzon a PowerView Hubhoz"
+            },
             "user": {
                 "data": {
                     "host": "IP c\u00edm"
-                }
+                },
+                "title": "Csatlakozzon a PowerView Hubhoz"
             }
         }
     }

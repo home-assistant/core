@@ -45,6 +45,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "hdmi_cec"
 
@@ -186,7 +187,7 @@ def parse_mapping(mapping, parents=None):
                 yield (val, pad_physical_address(cur))
 
 
-def setup(hass: HomeAssistant, base_config):  # noqa: C901
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
 
     # Parse configuration into a dict of device name to physical address
@@ -371,13 +372,32 @@ def setup(hass: HomeAssistant, base_config):  # noqa: C901
 class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._icon = None
         self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
+        self._set_attr_name()
+        if self._device.type in ICONS_BY_TYPE:
+            self._attr_icon = ICONS_BY_TYPE[self._device.type]
+        else:
+            self._attr_icon = ICON_UNKNOWN
+
+    def _set_attr_name(self):
+        """Set name."""
+        if (
+            self._device.osd_name is not None
+            and self.vendor_name is not None
+            and self.vendor_name != "Unknown"
+        ):
+            self._attr_name = f"{self.vendor_name} {self._device.osd_name}"
+        elif self._device.osd_name is None:
+            self._attr_name = f"{self._device.type_name} {self._logical_address}"
+        else:
+            self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
 
     def _hdmi_cec_unavailable(self, callback_event):
         # Change state to unavailable. Without this, entity would remain in
@@ -413,31 +433,6 @@ class CecEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def should_poll(self):
-        """
-        Return false.
-
-        CecEntity.update() is called by the HDMI network when there is new data.
-        """
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return (
-            f"{self.vendor_name} {self._device.osd_name}"
-            if (
-                self._device.osd_name is not None
-                and self.vendor_name is not None
-                and self.vendor_name != "Unknown"
-            )
-            else "%s %d" % (self._device.type_name, self._logical_address)
-            if self._device.osd_name is None
-            else "%s %d (%s)"
-            % (self._device.type_name, self._logical_address, self._device.osd_name)
-        )
-
-    @property
     def vendor_id(self):
         """Return the ID of the device's vendor."""
         return self._device.vendor_id
@@ -461,17 +456,6 @@ class CecEntity(Entity):
     def type_id(self):
         """Return the type ID of device."""
         return self._device.type
-
-    @property
-    def icon(self):
-        """Return the icon for device by its type."""
-        return (
-            self._icon
-            if self._icon is not None
-            else ICONS_BY_TYPE.get(self._device.type)
-            if self._device.type in ICONS_BY_TYPE
-            else ICON_UNKNOWN
-        )
 
     @property
     def extra_state_attributes(self):

@@ -271,7 +271,7 @@ class PeekIterator(Iterator):
     def replace_underlying_iterator(self, new_iterator: Iterator) -> None:
         """Replace the underlying iterator while preserving the buffer."""
         self._iterator = new_iterator
-        if self._next is not self._pop_buffer:
+        if not self._buffer:
             self._next = self._iterator.__next__
 
     def _pop_buffer(self) -> av.Packet:

@@ -243,7 +243,7 @@ class QNAPSensor(SensorEntity):
         return self.var_icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.var_units
 
@@ -256,7 +256,7 @@ class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.var_id == "cpu_temp":
             return self._api.data["system_stats"]["cpu"]["temp_c"]
@@ -268,7 +268,7 @@ class QNAPMemorySensor(QNAPSensor):
     """A QNAP sensor that monitors memory stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         free = float(self._api.data["system_stats"]["memory"]["free"]) / 1024
         if self.var_id == "memory_free":
@@ -296,7 +296,7 @@ class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.var_id == "network_link_status":
             nic = self._api.data["system_stats"]["nics"][self.monitor_device]
@@ -329,7 +329,7 @@ class QNAPSystemSensor(QNAPSensor):
     """A QNAP sensor that monitors overall system health."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.var_id == "status":
             return self._api.data["system_health"]
@@ -358,7 +358,7 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         data = self._api.data["smart_drive_health"][self.monitor_device]
 
@@ -392,7 +392,7 @@ class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         data = self._api.data["volumes"][self.monitor_device]
 
