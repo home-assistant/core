@@ -27,8 +27,15 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX, AmbientWeatherEntity
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN
+from . import AmbientWeatherEntity
+from .const import (
+    ATTR_LAST_DATA,
+    DATA_CLIENT,
+    DOMAIN,
+    TYPE_SOLARRADIATION,
+    TYPE_SOLARRADIATION_LX,
+    TYPE_SOLARRADIATION_PERCEIVED,
+)
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_BAROMABSIN = "baromabsin"
@@ -402,6 +409,12 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_SOLARRADIATION_LX,
         name="Solar Rad (lx)",
         native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    SensorEntityDescription(
+        key=TYPE_SOLARRADIATION_PERCEIVED,
+        name="Solar Rad (perceived)",
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_ILLUMINANCE,
     ),
     SensorEntityDescription(

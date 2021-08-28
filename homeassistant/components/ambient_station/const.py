@@ -12,3 +12,4 @@ DATA_CLIENT = "data_client"
 
 TYPE_SOLARRADIATION = "solarradiation"
 TYPE_SOLARRADIATION_LX = "solarradiation_lx"
+TYPE_SOLARRADIATION_PERCEIVED = "solarradiation_perceived"

@@ -1,6 +1,7 @@
 """Support for Ambient Weather Station Service."""
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from aioambient import Client
@@ -31,6 +32,7 @@ from .const import (
     LOGGER,
     TYPE_SOLARRADIATION,
     TYPE_SOLARRADIATION_LX,
+    TYPE_SOLARRADIATION_PERCEIVED,
 )
 
 PLATFORMS = ["binary_sensor", "sensor"]
@@ -40,6 +42,20 @@ DATA_CONFIG = "config"
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+
+
+def async_lux_to_perceived(value: float) -> int:
+    """Calculate illuminance (in lux)."""
+    lux = async_wm2_to_lx(value)
+
+    try:
+        perceived = round(math.log10(lux) / 5) * 100
+    except ValueError:
+        # If we've approached negative infinity, we'll get a math domain error; in that
+        # case, return 0.0:
+        return 0
+
+    return max(perceived, 0)
 
 
 @callback
@@ -52,7 +68,8 @@ def async_wm2_to_lx(value: float) -> int:
 def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
     """Hydrate station data with addition or normalized data."""
     if (irradiation := data.get(TYPE_SOLARRADIATION)) is not None:
-        data[TYPE_SOLARRADIATION_LX] = async_wm2_to_lx(irradiation)
+        lux = data[TYPE_SOLARRADIATION_LX] = async_wm2_to_lx(irradiation)
+        data[TYPE_SOLARRADIATION_PERCEIVED] = async_lux_to_perceived(lux)
 
     return data
 
