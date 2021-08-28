@@ -140,6 +140,7 @@ class NmapDeviceScanner:
         """Initialize the scanner."""
         self.devices = devices
         self.home_interval = None
+        self.consider_home = DEFAULT_CONSIDER_HOME
 
         self._hass = hass
         self._entry = entry
@@ -177,8 +178,6 @@ class NmapDeviceScanner:
             self.consider_home = timedelta(
                 seconds=cv.positive_float(config[CONF_CONSIDER_HOME])
             )
-        else:
-            self.consider_home = DEFAULT_CONSIDER_HOME
         self._scan_lock = asyncio.Lock()
         if self._hass.state == CoreState.running:
             await self._async_start_scanner()
