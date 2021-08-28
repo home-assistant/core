@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY,
@@ -47,7 +48,7 @@ TYPE_RELAY9 = "relay9"
 class AmbientBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensors."""
 
-    on_state: int
+    on_state: Literal[0, 1]
 
 
 @dataclass
