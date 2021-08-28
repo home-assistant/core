@@ -578,4 +578,4 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
         """Fetch new state data for the sensor."""
         self._attr_native_value = self._ambient.stations[self._mac_address][
             ATTR_LAST_DATA
-        ].get(self.entity_description.key)
+        ][self.entity_description.key]
