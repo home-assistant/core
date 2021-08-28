@@ -1,20 +1,31 @@
-"""Mixin class for handling connection state changes."""
+"""Base class Harmony entities."""
 import logging
 
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
+
+from .data import HarmonyData
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_MARK_DISCONNECTED = 10
 
 
-class ConnectionStateMixin:
-    """Base implementation for connection state handling."""
+class HarmonyEntity(Entity):
+    """Base entity for Harmony with connection state handling."""
 
-    def __init__(self):
-        """Initialize this mixin instance."""
+    def __init__(self, data: HarmonyData) -> None:
+        """Initialize the Harmony base entity."""
         super().__init__()
         self._unsub_mark_disconnected = None
+        self._name = data.name
+        self._data = data
+        self._attr_should_poll = False
+
+    @property
+    def available(self) -> bool:
+        """Return True if we're connected to the Hub, otherwise False."""
+        return self._data.available
 
     async def async_got_connected(self, _=None):
         """Notification that we're connected to the HUB."""
