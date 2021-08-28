@@ -1,0 +1,61 @@
+"""Test setting up sensors."""
+from unittest.mock import patch, AsyncMock, Mock
+
+from iotawattpy.sensor import Sensor
+import pytest
+
+from homeassistant.setup import async_setup_component
+from homeassistant.components.iotawatt.const import DOMAIN
+from homeassistant.const import (
+    ENERGY_WATT_HOUR,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_DEVICE_CLASS,
+)
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL_INCREASING,
+    ATTR_STATE_CLASS,
+    DEVICE_CLASS_ENERGY,
+)
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_iotawatt():
+    """Mock iotawatt"""
+    with patch("homeassistant.components.iotawatt.Iotawatt") as mock:
+        instance = mock.return_value
+        instance.update = AsyncMock()
+        instance.getSensors.return_value = {"sensors": {}}
+        yield instance
+
+
+async def test_sensors(hass, mock_iotawatt):
+    """Test sensors work."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_sensor_key"] = Sensor(
+        channel="1",
+        name="My Sensor",
+        io_type="Input",
+        unit="WattHours",
+        value="23",
+        begin="",
+        mac_addr="mock-mac",
+    )
+    MockConfigEntry(
+        domain=DOMAIN, data={"name": "Test", "host": "1.2.3.4"}
+    ).add_to_hass(hass)
+    assert await async_setup_component(hass, "iotawatt", {})
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    state = hass.states.get("sensor.iotawatt_input_my_sensor")
+    assert state is not None
+    assert state.state == "23"
+    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "IoTaWatt Input My Sensor"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
+    assert state.attributes["channel"] == "1"
+    assert state.attributes["type"] == "Input"
