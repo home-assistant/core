@@ -426,7 +426,7 @@ async def test_select_switch(hass, hk_driver, events):
     assert len(events) == 1
     assert not call_turn_off
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
+    acc.char_on.client_update_value(False)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
