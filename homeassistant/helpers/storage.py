@@ -113,7 +113,6 @@ class Store:
         """Load the data and ensure the task is removed."""
         if STORAGE_SEMAPHORE not in self.hass.data:
             self.hass.data[STORAGE_SEMAPHORE] = asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
-        _LOGGER.warning("STORAGE_SEMAPHORE: %s", self.hass.data[STORAGE_SEMAPHORE])
 
         try:
             async with self.hass.data[STORAGE_SEMAPHORE]:

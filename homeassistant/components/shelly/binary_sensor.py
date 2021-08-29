@@ -1,7 +1,7 @@
 """Binary sensor for Shelly."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, cast
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -46,7 +46,9 @@ SENSORS: Final = {
         name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
     ),
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
-        name="Door", device_class=DEVICE_CLASS_OPENING
+        name="Door",
+        device_class=DEVICE_CLASS_OPENING,
+        available=lambda block: cast(bool, block.dwIsOpened != -1),
     ),
     ("sensor", "flood"): BlockAttributeDescription(
         name="Flood", device_class=DEVICE_CLASS_MOISTURE
