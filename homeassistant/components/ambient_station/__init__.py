@@ -260,10 +260,10 @@ class AmbientWeatherEntity(Entity):
         @callback
         def update() -> None:
             """Update the state."""
-            if self.entity_description.key in [
+            if self.entity_description.key in (
                 TYPE_SOLARRADIATION_LX,
                 TYPE_SOLARRADIATION_PERCEIVED,
-            ]:
+            ):
                 target_key = TYPE_SOLARRADIATION
             else:
                 target_key = self.entity_description.key
