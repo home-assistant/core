@@ -245,7 +245,7 @@ class SelectSwitch(HomeAccessory):
 
         state = self.hass.states.get(self.entity_id)
         self.select_chars = {}
-        options = state.attributes["options"]
+        options = state.attributes[ATTR_OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
                 SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
