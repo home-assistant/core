@@ -70,7 +70,7 @@ class SynoDSMBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
         api: SynoApi,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         description: SynologyDSMBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Synology DSM binary_sensor entity."""
         super().__init__(api, coordinator, description)
 
@@ -105,7 +105,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         description: SynologyDSMBinarySensorEntityDescription,
         device_id: str | None = None,
-    ):
+    ) -> None:
         """Initialize the Synology DSM storage binary_sensor entity."""
         super().__init__(api, coordinator, description, device_id)
 
