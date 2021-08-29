@@ -47,11 +47,9 @@ class FliprBinarySensor(FliprEntity, BinarySensorEntity):
         description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize a Flipr sensor."""
-        if coordinator.config_entry:
-            server_unique_id = coordinator.config_entry.entry_id
         super().__init__(
             coordinator,
-            f"{description.key}-{server_unique_id}",
+            description,
         )
         self.entity_description = description
 

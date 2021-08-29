@@ -7,6 +7,7 @@ from flipr_api import FliprAPIRestClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -76,16 +77,19 @@ class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, server_unique_id: str
+        self, coordinator: DataUpdateCoordinator, description: EntityDescription
     ) -> None:
         """Initialize Flipr sensor."""
         super().__init__(coordinator)
         if coordinator.config_entry:
             flipr_id = coordinator.config_entry.data[CONF_FLIPR_ID]
-        self._attr_unique_id = f"{flipr_id}-{server_unique_id}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, flipr_id)},
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
-        }
-        self.flipr_id = flipr_id
+            self._attr_unique_id = (
+                f"{flipr_id}-{description.key}-{coordinator.config_entry.entry_id}"
+            )
+
+            self._attr_device_info = {
+                "identifiers": {(DOMAIN, flipr_id)},
+                "name": NAME,
+                "manufacturer": MANUFACTURER,
+            }
+            self.flipr_id = flipr_id
