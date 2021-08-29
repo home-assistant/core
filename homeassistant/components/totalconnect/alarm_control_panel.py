@@ -120,9 +120,6 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         elif self._partition.arming_state.is_triggered_gas():
             state = STATE_ALARM_TRIGGERED
             attr["triggered_source"] = "Carbon Monoxide"
-        else:
-            _LOGGER.info("Total Connect Client returned unknown status")
-            state = None
 
         self._state = state
         self._extra_state_attributes = attr
