@@ -8,7 +8,13 @@ from httpx import AsyncClient
 from iotawattpy.iotawatt import Iotawatt
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import (
@@ -21,7 +27,6 @@ from .const import (
     DEFAULT_ICON,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    IOTAWATT_API,
     SIGNAL_ADD_DEVICE,
 )
 
@@ -35,20 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     polling_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     session = AsyncClient()
-    if "username" in entry.data.keys():
-        api = Iotawatt(
-            entry.data["name"],
-            entry.data["host"],
-            session,
-            entry.data["username"],
-            entry.data["password"],
-        )
-    else:
-        api = Iotawatt(
-            entry.data["name"],
-            entry.data["host"],
-            session,
-        )
+    api = Iotawatt(
+        entry.data[CONF_NAME],
+        entry.data[CONF_HOST],
+        session,
+        entry.data.get(CONF_USERNAME, None),
+        entry.data.get(CONF_PASSWORD, None),
+    )
 
     coordinator = IotawattUpdater(
         hass,
@@ -61,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
-        IOTAWATT_API: api,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

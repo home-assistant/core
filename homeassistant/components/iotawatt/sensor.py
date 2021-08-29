@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for idx, ent in enumerate(coordinator.data["sensors"]):
         entity = IotaWattSensor(
             coordinator=coordinator,
-            entity=ent,
+            key=ent,
             mac_address=coordinator.data["sensors"][ent].hub_mac_address,
             name=coordinator.data["sensors"][ent].getName(),
         )
@@ -50,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         entity = IotaWattSensor(
             coordinator=coordinator,
-            entity=ent,
+            key=ent,
             mac_address=hub_mac_address,
             name=name,
         )
@@ -63,14 +63,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class IotaWattSensor(IotaWattEntity, SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
-    def __init__(self, coordinator, entity, mac_address, name):
+    def __init__(self, coordinator, key, mac_address, name):
         """Initialize the sensor."""
         super().__init__(
-            coordinator=coordinator, entity=entity, mac_address=mac_address, name=name
+            coordinator=coordinator, entity=key, mac_address=mac_address, name=name
         )
 
-        sensor = self.coordinator.data["sensors"][entity]
-        self._ent = entity
+        sensor = self.coordinator.data["sensors"][key]
+        self._ent = key
         self._name = name
         self._io_type = sensor.getType()
         self._attr_state_class = STATE_CLASS_MEASUREMENT
