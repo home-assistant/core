@@ -15,6 +15,7 @@ from .common import (
     RESPONSE_PARTITION_DETAILS,
     RESPONSE_SUCCESS,
     RESPONSE_USER_CODE_INVALID,
+    TOTALCONNECT_REQUEST,
     USERNAME,
 )
 
@@ -39,17 +40,14 @@ async def test_user_show_locations(hass):
     # user/pass provided, so check if valid then ask for usercodes on locations form
     responses = [
         RESPONSE_AUTHENTICATE,
-        RESPONSE_DISARMED,
-        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
         RESPONSE_USER_CODE_INVALID,
         RESPONSE_SUCCESS,
     ]
 
-    with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.request",
-        side_effect=responses,
-    ) as mock_request, patch(
+    with patch(TOTALCONNECT_REQUEST, side_effect=responses,) as mock_request, patch(
         "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
 
