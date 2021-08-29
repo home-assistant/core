@@ -18,8 +18,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import IotaWattEntity
 from .const import COORDINATOR, DOMAIN, SIGNAL_ADD_DEVICE
+from .entity import IotaWattEntity
 
 _LOGGER = logging.getLogger(__name__)
 
