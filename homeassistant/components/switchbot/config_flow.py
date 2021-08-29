@@ -3,14 +3,15 @@ from __future__ import annotations
 
 from asyncio import Lock
 import logging
+from typing import Any
 
 from switchbot import GetSwitchbotDevices  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_BOT,
@@ -29,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 CONNECT_LOCK = Lock()
 
 
-def _btle_connect(mac) -> dict | None:
+def _btle_connect(mac: str) -> dict:
     """Scan for BTLE advertisement data."""
     # Try to find switchbot mac in nearby devices,
     # by scanning for btle devices.
@@ -49,9 +50,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _validate_mac(self, data) -> None:
+    async def _validate_mac(self, data: dict) -> FlowResult:
         """Try to connect to Switchbot device and create entry if successful."""
-        await self.async_set_unique_id(format_mac(data[CONF_MAC]))
+        await self.async_set_unique_id(data[CONF_MAC].replace(":", ""))
         self._abort_if_unique_id_configured()
 
         # Validate bluetooth device mac.
@@ -73,11 +74,15 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> None:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SwitchbotOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> None:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
         errors = {}
@@ -112,13 +117,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_config) -> None:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
         _LOGGER.debug("import config: %s", import_config)
 
         import_config[CONF_MAC] = import_config[CONF_MAC].replace("-", ":").lower()
 
-        await self.async_set_unique_id(format_mac(import_config[CONF_MAC]))
+        await self.async_set_unique_id(import_config[CONF_MAC].replace(":", ""))
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
@@ -129,11 +134,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 class SwitchbotOptionsFlowHandler(OptionsFlow):
     """Handle Switchbot options."""
 
-    def __init__(self, config_entry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> None:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage Switchbot options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

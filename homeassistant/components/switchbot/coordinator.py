@@ -32,7 +32,6 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
         self.switchbot_api = api
         self.retry_count = retry_count
         self.scan_timeout = scan_timeout
-        self._switchbot_data = {}
         self.update_interval = timedelta(seconds=update_interval)
 
         super().__init__(
@@ -41,24 +40,20 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.api_lock = api_lock
 
-    def _update_data(self) -> bool:
+    def _update_data(self) -> dict | None:
         """Fetch device states from switchbot api."""
 
-        self._switchbot_data = self.switchbot_api.GetSwitchbotDevices().discover(
+        return self.switchbot_api.GetSwitchbotDevices().discover(
             retry=self.retry_count, scan_timeout=self.scan_timeout
         )
-
-        if self._switchbot_data:
-            return True
-        return False
 
     async def _async_update_data(self) -> dict | None:
         """Fetch data from switchbot."""
 
         async with self.api_lock:
-            _update_success = await self.hass.async_add_executor_job(self._update_data)
+            switchbot_data = await self.hass.async_add_executor_job(self._update_data)
 
-        if not _update_success:
+        if not switchbot_data:
             raise UpdateFailed("Unable to fetch switchbot services data")
 
-        return self._switchbot_data
+        return switchbot_data

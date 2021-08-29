@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -10,11 +11,13 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -25,6 +28,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .coordinator import SwitchbotDataUpdateCoordinator
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +44,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import yaml config and initiates config flow for Switchbot devices."""
 
@@ -62,26 +69,29 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
     """Set up Switchbot based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR]
+    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
 
     bot_device = []
 
     if entry.data[CONF_SENSOR_TYPE] == ATTR_BOT:
-        for idx in coordinator.data:
-            if idx == entry.unique_id.lower():
-
-                bot_device.append(
-                    SwitchBot(
-                        coordinator,
-                        idx,
-                        entry.data[CONF_MAC],
-                        entry.data[CONF_NAME],
-                        entry.data.get(CONF_PASSWORD, None),
-                        entry.options[CONF_RETRY_COUNT],
-                    )
-                )
+        bot_device.append(
+            SwitchBot(
+                coordinator,
+                entry.unique_id,
+                entry.data[CONF_MAC],
+                entry.data[CONF_NAME],
+                entry.data.get(CONF_PASSWORD, None),
+                entry.options[CONF_RETRY_COUNT],
+            )
+        )
 
     async_add_entities(bot_device)
 
@@ -89,12 +99,24 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    def __init__(self, coordinator, idx, mac, name, password, retry_count) -> None:
-        """Initialize the Switchbot."""
+    coordinator: SwitchbotDataUpdateCoordinator
 
+    def __init__(
+        self,
+        coordinator: SwitchbotDataUpdateCoordinator,
+        idx: str | None,
+        mac: str,
+        name: str,
+        password: str,
+        retry_count: int,
+    ) -> None:
+        """Initialize the Switchbot."""
+        super().__init__(coordinator)
+        self._idx = idx
         self._state: bool | None = None
         self._last_run_success: bool | None = None
-        self._name = name
+        self._model = self.coordinator.data[self._idx]["modelName"]
+        self.switchbot_name = name
         self._mac = mac
         self._device = self.coordinator.switchbot_api.Switchbot(
             mac=mac, password=password, retry_count=retry_count
@@ -107,10 +129,10 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if not last_state:
             return
-        self._attr_state = last_state.state == "off"
+        self._state = last_state.state == "on"
         self._last_run_success = last_state.attributes["last_run_success"]
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
@@ -122,7 +144,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         else:
             self._last_run_success = False
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
 
@@ -144,7 +166,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return bool(self._state)
+        return self.coordinator.data[self._idx]["data"]["isOn"]
 
     @property
     def unique_id(self) -> str:
