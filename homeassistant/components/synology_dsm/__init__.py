@@ -613,7 +613,9 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
 
         self._api = api
         self._attr_name = f"{api.network.hostname} {description.name}"
-        self._attr_unique_id: str = f"{api.information.serial}_{description.key}"
+        self._attr_unique_id: str = (
+            f"{api.information.serial}_{description.api_key}:{description.key}"
+        )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
