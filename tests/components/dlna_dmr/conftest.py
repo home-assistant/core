@@ -40,7 +40,7 @@ def skip_notifications_fixture() -> Iterable[None]:
         yield
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_ssdp_scanner() -> Iterable[Mock]:
     """Mock the SSDP module."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
