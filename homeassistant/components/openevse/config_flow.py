@@ -7,24 +7,23 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
-from .const import CONF_NAME, DEFAULT_HOST, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
 class OpenEVSEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for KeyMaster."""
+    """Config flow for OpenEVSE."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     DEFAULTS = {CONF_HOST: DEFAULT_HOST, CONF_NAME: DEFAULT_NAME}
 
     async def async_step_user(self, user_input=None):
@@ -63,7 +62,7 @@ class OpenEVSEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OpenEVSEOptionsFlow(config_entries.OptionsFlow):
-    """Options flow for KeyMaster."""
+    """Options flow for OpenEVSE."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
@@ -83,8 +82,8 @@ class OpenEVSEOptionsFlow(config_entries.OptionsFlow):
 
 def _get_schema(
     hass: HomeAssistant,
-    user_input,
-    default_dict,
+    user_input: dict[str, Any],
+    default_dict: dict[str, Any] | None,
     entry_id: str = None,
 ) -> vol.Schema:
     """Get a schema using the default_dict as a backup."""
@@ -93,7 +92,9 @@ def _get_schema(
 
     def _get_default(key: str, fallback_default: Any = None) -> dict[str, Any]:
         """Get default value for key."""
-        return user_input.get(key, default_dict.get(key, fallback_default))
+        if default_dict:
+            return user_input.get(key, default_dict.get(key, fallback_default))
+        return user_input.get(key, fallback_default)
 
     return vol.Schema(
         {
@@ -117,7 +118,6 @@ def _show_config_form(
     cls: OpenEVSEFlowHandler | OpenEVSEOptionsFlow,
     step_id: str,
     user_input: dict[str, Any],
-    errors: dict[str, str],
     description_placeholders: dict[str, str],
     defaults: dict[str, Any] = None,
     entry_id: str = None,
@@ -126,7 +126,6 @@ def _show_config_form(
     return cls.async_show_form(
         step_id=step_id,
         data_schema=_get_schema(cls.hass, user_input, defaults, entry_id),
-        errors=errors,
         description_placeholders=description_placeholders,
     )
 
@@ -140,30 +139,17 @@ async def _start_config_flow(
     entry_id: str = None,
 ):
     """Start a config flow."""
-    errors: dict[str, str] = {}
     description_placeholders: dict[str, str] = {}
 
     if user_input is not None:
         user_input[CONF_NAME] = slugify(user_input[CONF_NAME].lower())
 
-        if not errors:
-            return cls.async_create_entry(title=title, data=user_input)
-
-        return _show_config_form(
-            cls,
-            step_id,
-            user_input,
-            errors,
-            description_placeholders,
-            defaults,
-            entry_id,
-        )
+        return cls.async_create_entry(title=title, data=user_input)
 
     return _show_config_form(
         cls,
         step_id,
         user_input,
-        errors,
         description_placeholders,
         defaults,
         entry_id,

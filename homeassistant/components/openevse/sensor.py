@@ -110,7 +110,7 @@ async def async_setup_entry(
 
     entities = [OpenEVSESensor(charger, description) for description in SENSOR_TYPES]
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class OpenEVSESensor(SensorEntity):

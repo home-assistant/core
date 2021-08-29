@@ -1,6 +1,5 @@
 """Consts for OpenEVSE integration."""
 DOMAIN = "openevse"
-PLATFORMS = ["sensor"]
-CONF_NAME = "name"
+PLATFORMS = "sensor"
 DEFAULT_HOST = "openevse.local"
 DEFAULT_NAME = "OpenEVSE"
