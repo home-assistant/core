@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
     async def async_new_entities(sensor_info):
-        """Remove an entity."""
+        """Add an entity."""
         ent = sensor_info["entity"]
         hub_mac_address = sensor_info["mac_address"]
         name = sensor_info["name"]
