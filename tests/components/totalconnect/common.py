@@ -298,6 +298,10 @@ RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
     "ZoneStatus": ZONE_DETAIL_STATUS,
 }
 
+TOTALCONNECT_REQUEST = (
+    "homeassistant.components.totalconnect.TotalConnectClient.request"
+)
+
 
 async def setup_platform(hass, platform):
     """Set up the TotalConnect platform."""
@@ -314,7 +318,7 @@ async def setup_platform(hass, platform):
     ]
 
     with patch("homeassistant.components.totalconnect.PLATFORMS", [platform]), patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.request",
+        TOTALCONNECT_REQUEST,
         side_effect=responses,
     ) as mock_request:
         assert await async_setup_component(hass, DOMAIN, {})
