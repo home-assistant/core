@@ -6,10 +6,6 @@
   "requirements": [
     "iotawattpy==0.0.7"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@gtdiehl"
   ],
