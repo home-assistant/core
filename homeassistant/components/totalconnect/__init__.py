@@ -4,13 +4,14 @@ from datetime import timedelta
 import logging
 
 from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import AuthenticationError, TotalConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_USERCODES, DOMAIN
 
@@ -61,7 +62,7 @@ async def async_unload_entry(hass, entry: ConfigEntry):
 class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to fetch data from TotalConnect."""
 
-    def __init__(self, hass, client):
+    def __init__(self, hass: HomeAssistant, client):
         """Initialize."""
         self.hass = hass
         self.client = client
@@ -71,12 +72,21 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update data."""
-        return await self.hass.async_add_executor_job(self.sync_update_data)
+        await self.hass.async_add_executor_job(self.sync_update_data)
 
     def sync_update_data(self):
         """Fetch synchronous data from TotalConnect."""
-        for location_id in self.client.locations:
-            self.client.locations[location_id].get_panel_meta_data()
+        try:
+            for location_id in self.client.locations:
+                self.client.locations[location_id].get_panel_meta_data()
+        except AuthenticationError as exception:
+            # should only encounter if password changes during operation
+            raise ConfigEntryAuthFailed(
+                "TotalConnect authentication failed"
+            ) from exception
+        except TotalConnectError as exception:
+            raise UpdateFailed(exception) from exception
+        except ValueError as exception:
+            raise UpdateFailed("Unknown state from TotalConnect") from exception
 
-        # TODO: connection error handling ???
         return True
