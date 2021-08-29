@@ -28,17 +28,10 @@ DEFAULT_NAME = "solarlog"
 
 
 @dataclass
-class SolarlogRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    factor: float = None
-
-
-@dataclass
-class SolarLogSensorEntityDescription(
-    SolarlogRequiredKeysMixin, SensorEntityDescription
-):
+class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
+
+    factor: float | None = None
 
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
