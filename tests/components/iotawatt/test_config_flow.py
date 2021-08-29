@@ -1,8 +1,9 @@
 """Test the IoTawatt config flow."""
 from unittest.mock import patch
 
+import httpx
+
 from homeassistant import config_entries, setup
-from homeassistant.components.iotawatt.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -21,8 +22,8 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.iotawatt.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.iotawatt.config_flow.validate_input",
-        return_value={"title": "iotawatt"},
+        "iotawattpy.iotawatt.Iotawatt.connect",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -51,8 +52,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.iotawatt.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.iotawatt.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "iotawattpy.iotawatt.Iotawatt.connect",
+        return_value=False,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -66,10 +67,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_FORM
     assert len(mock_setup_entry.mock_calls) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -78,8 +75,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.iotawatt.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "iotawattpy.iotawatt.Iotawatt.connect",
+        side_effect=httpx.HTTPError("any"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
