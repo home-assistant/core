@@ -29,7 +29,7 @@ ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
-DEFAULT_NAME = "recollect_waste"
+DEFAULT_NAME = "Waste Pickup"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
