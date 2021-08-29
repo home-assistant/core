@@ -71,10 +71,11 @@ class IotaWattSensor(IotaWattEntity, SensorEntity):
 
         sensor = self.coordinator.data["sensors"][key]
         self._ent = key
-        self._name = name
         self._io_type = sensor.getType()
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_force_update = True
+        self._attr_name = f'IoTaWatt {self._io_type} {self.coordinator.data["sensors"][self._ent].getName()}'
+        self._attr_unique_id = self.coordinator.data["sensors"][self._ent].getSensorID()
 
         unit = sensor.getUnit()
         if unit == "Watts":
@@ -104,24 +105,10 @@ class IotaWattSensor(IotaWattEntity, SensorEntity):
         """Return the state attributes of the device."""
         if self._io_type == "Input":
             channel = self.coordinator.data["sensors"][self._ent].getChannel()
-        else:
-            channel = "N/A"
-
-        attrs = {"type": self._io_type, "channel": channel}
-
-        return attrs
+            attrs = {"type": self._io_type, "channel": channel}
+            return attrs
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data["sensors"][self._ent].getValue()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f'IoTaWatt {self._io_type} {self.coordinator.data["sensors"][self._ent].getName()}'
-
-    @property
-    def unique_id(self) -> str:
-        """Return the Uniqie ID for the sensor."""
-        return self.coordinator.data["sensors"][self._ent].getSensorID()
