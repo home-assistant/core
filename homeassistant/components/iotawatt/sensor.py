@@ -106,7 +106,10 @@ class IotaWattSensor(IotaWattEntity, SensorEntity):
         if self._io_type == "Input":
             channel = self.coordinator.data["sensors"][self._ent].getChannel()
             attrs = {"type": self._io_type, "channel": channel}
-            return attrs
+        else:
+            attrs = {"type": self._io_type}
+
+        return attrs
 
     @property
     def native_value(self):
