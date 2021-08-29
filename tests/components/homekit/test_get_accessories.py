@@ -262,6 +262,8 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Switch", "remote.test", "on", {}, {}),
         ("Switch", "scene.test", "on", {}, {}),
         ("Switch", "script.test", "on", {}, {}),
+        ("Switch", "input_select.test", "on", {}, {}),
+        ("Switch", "select.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SWITCH}),
         ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),
