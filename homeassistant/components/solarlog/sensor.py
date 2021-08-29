@@ -39,4 +39,9 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native sensor value."""
-        return self.coordinator.data[self.entity_description.json_key]
+        return (
+            getattr(self.coordinator.data, self.entity_description.key)
+            * self.entity_description.factor
+            if self.entity_description.factor
+            else getattr(self.coordinator.data, self.entity_description.key)
+        )
