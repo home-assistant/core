@@ -89,6 +89,7 @@ SUPPORTED_DOMAINS = [
     REMOTE_DOMAIN,
     "scene",
     "script",
+    "select",
     "sensor",
     "switch",
     "vacuum",
