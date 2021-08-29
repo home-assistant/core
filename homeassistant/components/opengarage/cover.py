@@ -108,7 +108,7 @@ class OpenGarageCover(CoverEntity):
 
     @property
     def extra_state_attributes(self):
-        """Return the device state attri    butes."""
+        """Return the device state attributes."""
         return self._extra_state_attributes
 
     @property
