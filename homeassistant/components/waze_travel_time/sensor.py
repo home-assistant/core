@@ -44,7 +44,6 @@ from .const import (
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     ENTITY_ID_PATTERN,
-    ICON,
     REGIONS,
     UNITS,
     VEHICLE_TYPES,
@@ -211,7 +210,12 @@ class WazeTravelTime(SensorEntity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        if self.vehicle_type == "taxi":
+            return "mdi:taxi"
+        if self.vehicle_type == "motorcycle":
+            return "mdi:motorbike"
+
+        return "mdi:car"
 
     @property
     def extra_state_attributes(self) -> dict | None:
