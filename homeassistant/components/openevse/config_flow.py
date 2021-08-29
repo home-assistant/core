@@ -83,7 +83,7 @@ class OpenEVSEOptionsFlow(config_entries.OptionsFlow):
 def _get_schema(
     hass: HomeAssistant,
     user_input: dict[str, Any],
-    default_dict: dict[str, Any] | None,
+    default_dict: dict[str, Any],
     entry_id: str = None,
 ) -> vol.Schema:
     """Get a schema using the default_dict as a backup."""
@@ -92,9 +92,7 @@ def _get_schema(
 
     def _get_default(key: str, fallback_default: Any = None) -> dict[str, Any]:
         """Get default value for key."""
-        if default_dict:
-            return user_input.get(key, default_dict.get(key, fallback_default))
-        return user_input.get(key, fallback_default)
+        return user_input.get(key, default_dict.get(key, fallback_default))
 
     return vol.Schema(
         {
@@ -114,43 +112,22 @@ def _get_schema(
     )
 
 
-def _show_config_form(
-    cls: OpenEVSEFlowHandler | OpenEVSEOptionsFlow,
-    step_id: str,
-    user_input: dict[str, Any],
-    description_placeholders: dict[str, str],
-    defaults: dict[str, Any] = None,
-    entry_id: str = None,
-):
-    """Show the configuration form to edit location data."""
-    return cls.async_show_form(
-        step_id=step_id,
-        data_schema=_get_schema(cls.hass, user_input, defaults, entry_id),
-        description_placeholders=description_placeholders,
-    )
-
-
 async def _start_config_flow(
     cls: OpenEVSEFlowHandler | OpenEVSEOptionsFlow,
     step_id: str,
     title: str,
     user_input: dict[str, Any],
-    defaults: dict[str, Any] = None,
+    defaults: dict[str, Any] = {},
     entry_id: str = None,
 ):
     """Start a config flow."""
-    description_placeholders: dict[str, str] = {}
 
     if user_input is not None:
         user_input[CONF_NAME] = slugify(user_input[CONF_NAME].lower())
 
         return cls.async_create_entry(title=title, data=user_input)
 
-    return _show_config_form(
-        cls,
-        step_id,
-        user_input,
-        description_placeholders,
-        defaults,
-        entry_id,
+    return cls.async_show_form(
+        step_id=step_id,
+        data_schema=_get_schema(cls.hass, user_input, defaults, entry_id),
     )
