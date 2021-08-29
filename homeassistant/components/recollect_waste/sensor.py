@@ -35,12 +35,6 @@ PLATFORM_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
-def async_get_utc_midnight(target_date: date) -> datetime:
-    """Get UTC midnight for a given (assumed local) date."""
-    return as_utc(datetime.combine(target_date, time(0)))
-
-
-@callback
 def async_get_pickup_type_names(
     entry: ConfigEntry, pickup_types: list[PickupType]
 ) -> list[str]:
@@ -51,6 +45,12 @@ def async_get_pickup_type_names(
         else t.name
         for t in pickup_types
     ]
+
+
+@callback
+def async_get_utc_midnight(target_date: date) -> datetime:
+    """Get UTC midnight for a given date."""
+    return as_utc(datetime.combine(target_date, time(0)))
 
 
 async def async_setup_entry(
