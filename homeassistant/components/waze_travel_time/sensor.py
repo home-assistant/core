@@ -173,6 +173,7 @@ class WazeTravelTime(SensorEntity):
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
+
         cmpl_re = re.compile(ENTITY_ID_PATTERN)
         if cmpl_re.fullmatch(origin):
             _LOGGER.debug("Found origin source entity %s", origin)
@@ -196,7 +197,7 @@ class WazeTravelTime(SensorEntity):
             await self.first_update()
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
@@ -204,11 +205,11 @@ class WazeTravelTime(SensorEntity):
         return None
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
-        if self.vehicle_type == "taxi":
+        if self._waze_data.vehicle_type == "taxi":
             return "mdi:taxi"
-        if self.vehicle_type == "motorcycle":
+        if self._waze_data.vehicle_type == "motorcycle":
             return "mdi:motorbike"
 
         return "mdi:car"
@@ -262,7 +263,7 @@ class WazeTravelTime(SensorEntity):
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(self, origin, destination, region, config_entry):
+    def __init__(self, origin, destination, region, config_entry: ConfigEntry) -> None:
         """Set up WazeRouteCalculator."""
         self.origin = origin
         self.destination = destination
