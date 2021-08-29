@@ -498,7 +498,10 @@ async def _async_get_supported_devices(hass):
     """Return all supported devices."""
     results = await device_automation.async_get_device_automations(hass, "trigger")
     dev_reg = device_registry.async_get(hass)
-    unsorted = {device_id: dev_reg.async_get(device_id).name for device_id in results}
+    unsorted = {
+        device_id: dev_reg.async_get(device_id).name or device_id
+        for device_id in results
+    }
     return dict(sorted(unsorted.items(), key=lambda item: item[1]))
 
 

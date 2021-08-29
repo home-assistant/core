@@ -17,7 +17,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.awair.*",
     "homeassistant.components.blueprint.*",
     "homeassistant.components.bmw_connected_drive.*",
-    "homeassistant.components.cert_expiry.*",
     "homeassistant.components.climacell.*",
     "homeassistant.components.cloud.*",
     "homeassistant.components.config.*",

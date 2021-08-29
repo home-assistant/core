@@ -25,24 +25,33 @@ import time
 from types import MappingProxyType
 from typing import cast
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ENDPOINTS,
+    ATTR_SETTINGS,
     ATTR_STREAMS,
+    CONF_LL_HLS,
+    CONF_PART_DURATION,
+    CONF_SEGMENT_DURATION,
     DOMAIN,
     HLS_PROVIDER,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
     RECORDER_PROVIDER,
+    SEGMENT_DURATION_ADJUSTER,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from .core import PROVIDERS, IdleTimer, StreamOutput
-from .hls import async_setup_hls
+from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings
+from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +87,24 @@ def create_stream(
     return stream
 
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_LL_HLS, default=False): cv.boolean,
+                vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
+                    cv.positive_float, vol.Range(min=2, max=10)
+                ),
+                vol.Optional(CONF_PART_DURATION, default=1): vol.All(
+                    cv.positive_float, vol.Range(min=0.2, max=1.5)
+                ),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
     # Set log level to error for libav
@@ -91,6 +118,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
+    if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
+        assert isinstance(conf[CONF_SEGMENT_DURATION], float)
+        assert isinstance(conf[CONF_PART_DURATION], float)
+        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
+            ll_hls=True,
+            min_segment_duration=conf[CONF_SEGMENT_DURATION]
+            - SEGMENT_DURATION_ADJUSTER,
+            part_target_duration=conf[CONF_PART_DURATION],
+            hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
+            hls_part_timeout=2 * conf[CONF_PART_DURATION],
+        )
+    else:
+        hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
+            ll_hls=False,
+            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+            - SEGMENT_DURATION_ADJUSTER,
+            part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+            hls_advance_part_limit=3,
+            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        )
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -206,11 +253,16 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import SegmentBuffer, stream_worker
 
-        segment_buffer = SegmentBuffer(self.outputs)
+        segment_buffer = SegmentBuffer(self.hass, self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
+            stream_worker(
+                self.source,
+                self.options,
+                segment_buffer,
+                self._thread_quit,
+            )
             segment_buffer.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
@@ -288,7 +340,7 @@ class Stream:
         _LOGGER.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
-        hls = self.outputs().get(HLS_PROVIDER)
+        hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
         if lookback > 0 and hls:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
