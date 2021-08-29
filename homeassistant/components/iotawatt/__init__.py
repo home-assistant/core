@@ -8,13 +8,7 @@ from httpx import AsyncClient
 from iotawattpy.iotawatt import Iotawatt
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import (
@@ -37,7 +31,6 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up iotawatt from a config entry."""
-    polling_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     session = AsyncClient()
     api = Iotawatt(
@@ -52,7 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass,
         api=api,
         name="IoTaWatt",
-        update_interval=polling_interval,
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -69,9 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class IotawattUpdater(DataUpdateCoordinator):
     """Class to manage fetching update data from the IoTaWatt Energy Device."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: str, name: str, update_interval: int
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: str, name: str) -> None:
         """Initialize IotaWattUpdater object."""
         self.api = api
         self.sensorlist: dict[str, list[str]] = {}
@@ -80,7 +70,7 @@ class IotawattUpdater(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=name,
-            update_interval=timedelta(seconds=update_interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
     async def _async_update_data(self):
