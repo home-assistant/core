@@ -74,7 +74,7 @@ class IotaWattSensor(IotaWattEntity, SensorEntity):
         self._io_type = sensor.getType()
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_force_update = True
-        self._attr_name = f"IoTaWatt {sensor.getType() } {coordinator.data['sensors'][self._ent].getName()}"
+        self._attr_name = f"IoTaWatt {sensor.getType()} {coordinator.data['sensors'][self._ent].getName()}"
         self._attr_unique_id = self.coordinator.data["sensors"][self._ent].getSensorID()
 
         unit = sensor.getUnit()
