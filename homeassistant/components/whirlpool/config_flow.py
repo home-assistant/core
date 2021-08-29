@@ -1,4 +1,5 @@
 """Config flow for Whirlpool Sixth Sense integration."""
+import asyncio
 import logging
 
 import aiohttp
@@ -23,7 +24,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     auth = Auth(data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         await auth.do_auth()
-    except aiohttp.ClientConnectionError as exc:
+    except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as exc:
         raise CannotConnect from exc
 
     if not auth.is_access_token_valid():
@@ -36,7 +37,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Whirlpool Sixth Sense."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

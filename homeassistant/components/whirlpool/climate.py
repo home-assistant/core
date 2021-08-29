@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+import asyncio
 import logging
 
 import aiohttp
@@ -63,14 +64,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirConEntity(ClimateEntity):
     """Representation of an air conditioner."""
 
+    _attr_fan_modes = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
+    _attr_hvac_modes = [
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_FAN_ONLY,
+        HVAC_MODE_OFF,
+    ]
+    _attr_max_temp = 30
+    _attr_min_temp = 16
+    _attr_supported_features = (
+        SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+    )
+    _attr_swing_modes = [SWING_HORIZONTAL, SWING_OFF]
+    _attr_target_temperature_step = 1
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, said, auth: Auth):
         """Initialize the entity."""
         self._aircon = Aircon(auth, said, self.schedule_update_ha_state)
 
-        self._name = said
-        self._supported_features = (
-            SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
-        )
+        self._attr_name = said
+        self._attr_unique_id = said
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
@@ -79,44 +94,14 @@ class AirConEntity(ClimateEntity):
         try:
             name = await self._aircon.fetch_name()
             if name is not None:
-                self._name = name
-        except aiohttp.ClientError:
+                self._attr_name = name
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Failed to get name")
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return 16
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return 30
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
-    def name(self):
-        """Return the name of the aircon."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._aircon.said
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._aircon.get_online()
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -127,11 +112,6 @@ class AirConEntity(ClimateEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._aircon.get_temp()
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -147,19 +127,9 @@ class AirConEntity(ClimateEntity):
         """Return the humidity we try to reach."""
         return self._aircon.get_humidity()
 
-    @property
-    def target_humidity_step(self):
-        """Return the supported step of target humidity."""
-        return 10
-
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self._aircon.set_humidity(humidity)
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_FAN_ONLY, HVAC_MODE_OFF]
 
     @property
     def hvac_mode(self):
@@ -186,11 +156,6 @@ class AirConEntity(ClimateEntity):
             await self._aircon.set_power_on(True)
 
     @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
-
-    @property
     def fan_mode(self):
         """Return the fan setting."""
         fanspeed = self._aircon.get_fanspeed()
@@ -202,11 +167,6 @@ class AirConEntity(ClimateEntity):
         if not fanspeed:
             return
         await self._aircon.set_fanspeed(fanspeed)
-
-    @property
-    def swing_modes(self):
-        """List of available swing modes."""
-        return [SWING_HORIZONTAL, SWING_OFF]
 
     @property
     def swing_mode(self):
