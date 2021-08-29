@@ -258,8 +258,9 @@ async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
     hass.states.async_set("light.demo", "on")
     hass.states.async_set("light.demo2", "on")
     zeroconf_mock = MagicMock()
+    uuid = await hass.helpers.instance_id.async_get()
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        await hass.async_add_executor_job(homekit.setup, zeroconf_mock)
+        await hass.async_add_executor_job(homekit.setup, zeroconf_mock, uuid)
 
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     mock_driver.assert_called_with(
@@ -273,6 +274,7 @@ async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
         persist_file=path,
         advertised_address=None,
         async_zeroconf_instance=zeroconf_mock,
+        zeroconf_server=f"{uuid}-hap.local.",
     )
     assert homekit.driver.safe_mode is False
 
@@ -300,8 +302,9 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_zeroconf):
 
     mock_zeroconf = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
+    uuid = await hass.helpers.instance_id.async_get()
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        await hass.async_add_executor_job(homekit.setup, mock_zeroconf)
+        await hass.async_add_executor_job(homekit.setup, mock_zeroconf, uuid)
     mock_driver.assert_called_with(
         hass,
         entry.entry_id,
@@ -313,6 +316,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_zeroconf):
         persist_file=path,
         advertised_address=None,
         async_zeroconf_instance=mock_zeroconf,
+        zeroconf_server=f"{uuid}-hap.local.",
     )
 
 
@@ -339,8 +343,9 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
 
     async_zeroconf_instance = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
+    uuid = await hass.helpers.instance_id.async_get()
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
-        await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance)
+        await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance, uuid)
     mock_driver.assert_called_with(
         hass,
         entry.entry_id,
@@ -352,6 +357,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
         persist_file=path,
         advertised_address="192.168.1.100",
         async_zeroconf_instance=async_zeroconf_instance,
+        zeroconf_server=f"{uuid}-hap.local.",
     )
 
 
