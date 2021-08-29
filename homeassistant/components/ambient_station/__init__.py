@@ -44,7 +44,7 @@ DEFAULT_SOCKET_MIN_RETRY = 15
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-def async_lux_to_perceived(value: int) -> int:
+def async_lx_to_perceived(value: int) -> int:
     """Calculate illuminance (in lux)."""
     lux = async_wm2_to_lx(value)
 
@@ -69,7 +69,7 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
     """Hydrate station data with addition or normalized data."""
     if (irradiation := data.get(TYPE_SOLARRADIATION)) is not None:
         lux = data[TYPE_SOLARRADIATION_LX] = async_wm2_to_lx(irradiation)
-        data[TYPE_SOLARRADIATION_PERCEIVED] = async_lux_to_perceived(lux)
+        data[TYPE_SOLARRADIATION_PERCEIVED] = async_lx_to_perceived(lux)
 
     return data
 
