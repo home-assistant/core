@@ -90,6 +90,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_import: import_data: %s", import_data)
 
         if not import_data or CONF_URL not in import_data:
+            LOGGER.debug("Entry not imported: incomplete_config")
             return self.async_abort(reason="incomplete_config")
 
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
@@ -104,12 +105,22 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if discovery[ssdp.ATTR_SSDP_LOCATION] == location:
                 # Device found via SSDP, it shouldn't need polling
                 poll_availability = False
+                LOGGER.debug(
+                    "Entry %s found via SSDP, with UDN %s",
+                    import_data[CONF_URL],
+                    discovery[ssdp.ATTR_UPNP_UDN],
+                )
                 break
         else:
             # Not in discoveries. Try connecting directly.
             try:
                 discovery = await self._async_connect(location)
             except ConnectError as err:
+                LOGGER.debug(
+                    "Entry %s not imported: %s. Is the device on?",
+                    import_data[CONF_URL],
+                    err.args[0],
+                )
                 return self.async_abort(reason=err.args[0])
 
         # Set options from the import_data, except listen_ip which is no longer used
@@ -123,6 +134,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if CONF_NAME in import_data:
             discovery[ssdp.ATTR_UPNP_FRIENDLY_NAME] = import_data[CONF_NAME]
 
+        LOGGER.debug("Entry %s ready for import", import_data[CONF_URL])
         return await self._async_create_entry_from_discovery(discovery, options)
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
