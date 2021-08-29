@@ -59,6 +59,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         self._location = coordinator.client.locations[location_id]
         self._partition_id = partition_id
         self._partition = self._location.partitions[partition_id]
+        self._device = self._location.devices[self._location.security_device_id]
         self._state = None
         self._extra_state_attributes = {}
 
@@ -83,6 +84,14 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._device.serial_number)},
+            "name": self._device.name,
+        }
 
     @property
     def state(self):
