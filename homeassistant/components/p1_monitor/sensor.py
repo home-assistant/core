@@ -193,32 +193,32 @@ SENSORS: dict[
     SERVICE_SETTINGS: (
         SensorEntityDescription(
             key="gas_consumption_tariff",
-            name="Gas Consumption - Tariff",
+            name="Gas Consumption Price",
             entity_registry_enabled_default=False,
             device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_consumption_low_tariff",
-            name="Energy Consumption - Low Tariff",
+            name="Energy Consumption Price - Low Tariff",
             device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_consumption_high_tariff",
-            name="Energy Consumption - High Tariff",
+            name="Energy Consumption Price - High Tariff",
             device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_production_low_tariff",
-            name="Energy Production - Low Tariff",
+            name="Energy Production Price - Low Tariff",
             device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),
         SensorEntityDescription(
             key="energy_production_high_tariff",
-            name="Energy Production - High Tariff",
+            name="Energy Production Price - High Tariff",
             device_class=DEVICE_CLASS_MONETARY,
             native_unit_of_measurement=CURRENCY_EURO,
         ),

@@ -157,7 +157,10 @@ async def test_settings(
     assert state
     assert entry.unique_id == f"{entry_id}_settings_energy_consumption_low_tariff"
     assert state.state == "0.20522"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - Low Tariff"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Energy Consumption Price - Low Tariff"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
 
@@ -167,7 +170,10 @@ async def test_settings(
     assert state
     assert entry.unique_id == f"{entry_id}_settings_energy_production_low_tariff"
     assert state.state == "0.20522"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production - Low Tariff"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Energy Production Price - Low Tariff"
+    )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
 
