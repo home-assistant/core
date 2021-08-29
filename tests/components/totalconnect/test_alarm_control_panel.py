@@ -52,6 +52,7 @@ from .common import (
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = "alarm_control_panel.test"
+ENTITY_ID_2 = "alarm_control_panel.test_partition_2"
 CODE = "-1"
 DATA = {ATTR_ENTITY_ID: ENTITY_ID}
 DELAY = timedelta(seconds=10)
@@ -73,6 +74,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
         entry = entity_registry.async_get(ENTITY_ID)
         # TotalConnect partition #1 alarm device unique_id is the location_id
         assert entry.unique_id == LOCATION_ID
+
+        entry2 = entity_registry.async_get(ENTITY_ID_2)
+        # TotalConnect partition #2 unique_id is the location_id + "_{partition_number}"
+        assert entry2.unique_id == LOCATION_ID + "_2"
         assert mock_request.call_count == 1
 
 
@@ -82,6 +87,7 @@ async def test_arm_home_success(hass: HomeAssistant) -> None:
     with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
         await setup_platform(hass, ALARM_DOMAIN)
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+        assert hass.states.get(ENTITY_ID_2).state == STATE_ALARM_DISARMED
         assert mock_request.call_count == 1
 
         await hass.services.async_call(
@@ -93,6 +99,8 @@ async def test_arm_home_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_HOME
+        # second partition should not be armed
+        assert hass.states.get(ENTITY_ID_2).state == STATE_ALARM_DISARMED
 
 
 async def test_arm_home_failure(hass: HomeAssistant) -> None:
