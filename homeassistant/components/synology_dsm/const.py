@@ -107,11 +107,9 @@ UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
         api_key=SynoCoreUpgrade.API_KEY,
         key="update_available",
         name="Update available",
-        # ATTR_UNIT_OF_MEASUREMENT: None,
         icon=None,
         device_class=DEVICE_CLASS_UPDATE,
         entity_registry_enabled_default=True,
-        # ATTR_STATE_CLASS: None,
     ),
 )
 
@@ -120,11 +118,9 @@ SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = 
         api_key=SynoCoreSecurity.API_KEY,
         key="status",
         name="Security status",
-        # ATTR_UNIT_OF_MEASUREMENT: None,
         icon=None,
         device_class=DEVICE_CLASS_SAFETY,
         entity_registry_enabled_default=True,
-        # ATTR_STATE_CLASS: None,
     ),
 )
 
@@ -133,21 +129,17 @@ STORAGE_DISK_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...
         api_key=SynoStorage.API_KEY,
         key="disk_exceed_bad_sector_thr",
         name="Exceeded Max Bad Sectors",
-        # ATTR_UNIT_OF_MEASUREMENT: None,
         icon=None,
         device_class=DEVICE_CLASS_SAFETY,
         entity_registry_enabled_default=True,
-        # ATTR_STATE_CLASS: None,
     ),
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_below_remain_life_thr",
         name="Below Min Remaining Life",
-        # ATTR_UNIT_OF_MEASUREMENT: None,
         icon=None,
         device_class=DEVICE_CLASS_SAFETY,
         entity_registry_enabled_default=True,
-        # ATTR_STATE_CLASS: None,
     ),
 )
 
@@ -438,10 +430,8 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
         name="home mode",
-        # ATTR_UNIT_OF_MEASUREMENT: None,
         icon="mdi:home-account",
         device_class=None,
         entity_registry_enabled_default=True,
-        # ATTR_STATE_CLASS: None,
     ),
 )
