@@ -17,7 +17,6 @@ EXCEPTIONS: Final = (
     exceptions.ResponseError,
     SerialException,
 )
-CONF_MANUAL_PATH = "Enter Manually"
 
 
 class CID:

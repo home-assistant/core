@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "no_devices_found": "No remaining device where found"
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -12,16 +13,12 @@
                     "name": "Name",
                     "port": "Port"
                 },
-                "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller id information with an option to reject an incoming call.",
-                "title": "Phone Modem"
+                "title": "Phone Modem",
+                "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller id information with an option to reject an incoming call."
             },
-            "user_manual": {
-                "data": {
-                    "name": "Name",
-                    "port": "Port"
-                },
-                "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller id information with an option to reject an incoming call.",
-                "title": "Phone Modem"
+            "usb_confirm": {
+                "title": "Phone Modem",
+                "description": "This is an integration for landline calls using a CX93001 voice modem. This can retrieve caller ID information with an option to reject an incoming call."
             }
         }
     }
