@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -159,11 +158,18 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
+    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_device_info = {
+        "name": "Waze",
+        "identifiers": {(DOMAIN, DOMAIN)},
+        "entry_type": "service",
+    }
+
     def __init__(self, unique_id, name, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._waze_data = waze_data
-        self._name = name
+        self._attr_name = name
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
@@ -190,22 +196,12 @@ class WazeTravelTime(SensorEntity):
             await self.first_update()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
 
         return None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TIME_MINUTES
 
     @property
     def icon(self):
@@ -261,20 +257,6 @@ class WazeTravelTime(SensorEntity):
         )
 
         self._waze_data.update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return {
-            "name": "Waze",
-            "identifiers": {(DOMAIN, DOMAIN)},
-            "entry_type": "service",
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return self._unique_id
 
 
 class WazeTravelTimeData:
