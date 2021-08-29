@@ -28,7 +28,7 @@ from .const import (
     STORAGE_VOL_SENSORS,
     SYNO_API,
     UTILISATION_SENSORS,
-    EntityInfo,
+    SynologyDSMSensorEntityDescription,
 )
 
 
@@ -42,77 +42,77 @@ async def async_setup_entry(
     coordinator = data[COORDINATOR_CENTRAL]
 
     entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
-        SynoDSMUtilSensor(api, sensor_type, sensor, coordinator)
-        for sensor_type, sensor in UTILISATION_SENSORS.items()
+        SynoDSMUtilSensor(api, coordinator, description)
+        for description in UTILISATION_SENSORS
     ]
 
     # Handle all volumes
     if api.storage.volumes_ids:
-        for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids):
-            entities += [
-                SynoDSMStorageSensor(
-                    api,
-                    sensor_type,
-                    sensor,
-                    coordinator,
-                    volume,
-                )
-                for sensor_type, sensor in STORAGE_VOL_SENSORS.items()
+        entities.extend(
+            [
+                SynoDSMStorageSensor(api, coordinator, description, volume)
+                for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids)
+                for description in STORAGE_VOL_SENSORS
             ]
+        )
 
     # Handle all disks
     if api.storage.disks_ids:
-        for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
-            entities += [
-                SynoDSMStorageSensor(
-                    api,
-                    sensor_type,
-                    sensor,
-                    coordinator,
-                    disk,
-                )
-                for sensor_type, sensor in STORAGE_DISK_SENSORS.items()
+        entities.extend(
+            [
+                SynoDSMStorageSensor(api, coordinator, description, disk)
+                for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids)
+                for description in STORAGE_DISK_SENSORS
             ]
+        )
 
-    entities += [
-        SynoDSMInfoSensor(api, sensor_type, sensor, coordinator)
-        for sensor_type, sensor in INFORMATION_SENSORS.items()
-    ]
+    entities.extend(
+        [
+            SynoDSMInfoSensor(api, coordinator, description)
+            for description in INFORMATION_SENSORS
+        ]
+    )
 
     async_add_entities(entities)
 
 
-class SynoDSMSensor(SynologyDSMBaseEntity):
+class SynoDSMSensor(SynologyDSMBaseEntity, SensorEntity):
     """Mixin for sensor specific attributes."""
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._unit
+    entity_description: SynologyDSMSensorEntityDescription
+
+    def __init__(
+        self,
+        api: SynoApi,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMSensorEntityDescription,
+    ):
+        """Initialize the Synology DSM sensor entity."""
+        super().__init__(api, coordinator, description)
 
 
-class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
+class SynoDSMUtilSensor(SynoDSMSensor):
     """Representation a Synology Utilisation sensor."""
 
     @property
     def native_value(self) -> Any | None:
         """Return the state."""
-        attr = getattr(self._api.utilisation, self.entity_type)
+        attr = getattr(self._api.utilisation, self.entity_description.key)
         if callable(attr):
             attr = attr()
         if attr is None:
             return None
 
         # Data (RAM)
-        if self._unit == DATA_MEGABYTES:
+        if self.native_unit_of_measurement == DATA_MEGABYTES:
             return round(attr / 1024.0 ** 2, 1)
 
         # Network
-        if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
+        if self.native_unit_of_measurement == DATA_RATE_KILOBYTES_PER_SECOND:
             return round(attr / 1024.0, 1)
 
         # CPU load average
-        if self._unit == ENTITY_UNIT_LOAD:
+        if self.native_unit_of_measurement == ENTITY_UNIT_LOAD:
             return round(attr / 100, 2)
 
         return attr
@@ -123,46 +123,57 @@ class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
         return bool(self._api.utilisation)
 
 
-class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity):
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     """Representation a Synology Storage sensor."""
+
+    entity_description: SynologyDSMSensorEntityDescription
+
+    def __init__(
+        self,
+        api: SynoApi,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMSensorEntityDescription,
+        device_id: str | None = None,
+    ):
+        """Initialize the Synology DSM storage sensor entity."""
+        super().__init__(api, coordinator, description, device_id)
 
     @property
     def native_value(self) -> Any | None:
         """Return the state."""
-        attr = getattr(self._api.storage, self.entity_type)(self._device_id)
+        attr = getattr(self._api.storage, self.entity_description.key)(self._device_id)
         if attr is None:
             return None
 
         # Data (disk space)
-        if self._unit == DATA_TERABYTES:
+        if self.native_unit_of_measurement == DATA_TERABYTES:
             return round(attr / 1024.0 ** 4, 2)
 
         return attr
 
 
-class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
+class SynoDSMInfoSensor(SynoDSMSensor):
     """Representation a Synology information sensor."""
 
     def __init__(
         self,
         api: SynoApi,
-        entity_type: str,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMSensorEntityDescription,
     ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""
-        super().__init__(api, entity_type, entity_info, coordinator)
+        super().__init__(api, coordinator, description)
         self._previous_uptime: str | None = None
         self._last_boot: str | None = None
 
     @property
     def native_value(self) -> Any | None:
         """Return the state."""
-        attr = getattr(self._api.information, self.entity_type)
+        attr = getattr(self._api.information, self.entity_description.key)
         if attr is None:
             return None
 
-        if self.entity_type == "uptime":
+        if self.entity_description.key == "uptime":
             # reboot happened or entity creation
             if self._previous_uptime is None or self._previous_uptime > attr:
                 last_boot = utcnow() - timedelta(seconds=attr)
