@@ -17,11 +17,12 @@ import logging
 import threading
 from unittest.mock import patch
 
+from aiohttp import web
 import async_timeout
 import pytest
 
 from homeassistant.components.stream import Stream
-from homeassistant.components.stream.core import Segment
+from homeassistant.components.stream.core import Segment, StreamOutput
 
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
@@ -118,5 +119,97 @@ def record_worker_sync(hass):
         "homeassistant.components.stream.recorder.recorder_save_worker",
         side_effect=sync.recorder_save_worker,
         autospec=True,
+    ):
+        yield sync
+
+
+class HLSSync:
+    """Test fixture that intercepts stream worker calls to StreamOutput."""
+
+    def __init__(self):
+        """Initialize HLSSync."""
+        self._request_event = asyncio.Event()
+        self._original_recv = StreamOutput.recv
+        self._original_part_recv = StreamOutput.part_recv
+        self._original_bad_request = web.HTTPBadRequest
+        self._original_not_found = web.HTTPNotFound
+        self._original_response = web.Response
+        self._num_requests = 0
+        self._num_recvs = 0
+        self._num_finished = 0
+
+    def reset_request_pool(self, num_requests: int, reset_finished=True):
+        """Use to reset the request counter between segments."""
+        self._num_recvs = 0
+        if reset_finished:
+            self._num_finished = 0
+        self._num_requests = num_requests
+
+    async def wait_for_handler(self):
+        """Set up HLSSync to block calls to put until requests are set up."""
+        if not self.check_requests_ready():
+            await self._request_event.wait()
+        self.reset_request_pool(num_requests=self._num_requests, reset_finished=False)
+
+    def check_requests_ready(self):
+        """Unblock the pending put call if the requests are all finished or blocking."""
+        if self._num_recvs + self._num_finished == self._num_requests:
+            self._request_event.set()
+            self._request_event.clear()
+            return True
+        return False
+
+    def bad_request(self):
+        """Intercept the HTTPBadRequest call so we know when the web handler is finished."""
+        self._num_finished += 1
+        self.check_requests_ready()
+        return self._original_bad_request()
+
+    def not_found(self):
+        """Intercept the HTTPNotFound call so we know when the web handler is finished."""
+        self._num_finished += 1
+        self.check_requests_ready()
+        return self._original_not_found()
+
+    def response(self, body, headers, status=200):
+        """Intercept the Response call so we know when the web handler is finished."""
+        self._num_finished += 1
+        self.check_requests_ready()
+        return self._original_response(body=body, headers=headers, status=status)
+
+    async def recv(self, output: StreamOutput, **kw):
+        """Intercept the recv call so we know when the response is blocking on recv."""
+        self._num_recvs += 1
+        self.check_requests_ready()
+        return await self._original_recv(output)
+
+    async def part_recv(self, output: StreamOutput, **kw):
+        """Intercept the recv call so we know when the response is blocking on recv."""
+        self._num_recvs += 1
+        self.check_requests_ready()
+        return await self._original_part_recv(output)
+
+
+@pytest.fixture()
+def hls_sync():
+    """Patch HLSOutput to allow test to synchronize playlist requests and responses."""
+    sync = HLSSync()
+    with patch(
+        "homeassistant.components.stream.core.StreamOutput.recv",
+        side_effect=sync.recv,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.stream.core.StreamOutput.part_recv",
+        side_effect=sync.part_recv,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.stream.hls.web.HTTPBadRequest",
+        side_effect=sync.bad_request,
+    ), patch(
+        "homeassistant.components.stream.hls.web.HTTPNotFound",
+        side_effect=sync.not_found,
+    ), patch(
+        "homeassistant.components.stream.hls.web.Response",
+        side_effect=sync.response,
     ):
         yield sync
