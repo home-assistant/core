@@ -90,6 +90,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         attr = {
             "location_name": self._name,
             "location_id": self._location_id,
+            "partition": self._partition_id,
             "ac_loss": self._location.ac_loss,
             "low_battery": self._location.low_battery,
             "cover_tampered": self._location.is_cover_tampered(),
