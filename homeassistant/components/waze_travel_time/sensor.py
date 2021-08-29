@@ -26,12 +26,6 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_DESTINATION,
-    ATTR_DISTANCE,
-    ATTR_DURATION,
-    ATTR_ORIGIN,
-    ATTR_ROUTE,
-    ATTRIBUTION,
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
@@ -220,18 +214,19 @@ class WazeTravelTime(SensorEntity):
         return ICON
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict | None:
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None
 
-        res = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        res[ATTR_DURATION] = self._waze_data.duration
-        res[ATTR_DISTANCE] = self._waze_data.distance
-        res[ATTR_ROUTE] = self._waze_data.route
-        res[ATTR_ORIGIN] = self._waze_data.origin
-        res[ATTR_DESTINATION] = self._waze_data.destination
-        return res
+        return {
+            ATTR_ATTRIBUTION: "Powered by Waze",
+            "duration": self._waze_data.duration,
+            "distance": self._waze_data.distance,
+            "route": self._waze_data.route,
+            "origin": self._waze_data.origin,
+            "destination": self._waze_data.destination,
+        }
 
     async def first_update(self, _=None):
         """Run first update and write state."""
