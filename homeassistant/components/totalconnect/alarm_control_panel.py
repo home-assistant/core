@@ -139,29 +139,49 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Return the state attributes of the device."""
         return self._extra_state_attributes
 
-    def alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
+        await self.hass.async_add_executor_job(self._disarm)
+        await self.coordinator.async_request_refresh()
+
+    def _disarm(self, code=None):
+        """Disarm synchronous."""
         try:
             ArmingHelper(self._partition).disarm()
         except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to disarm {self._name}.")
 
-    def alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
+        await self.hass.async_add_executor_job(self._arm_home)
+        await self.coordinator.async_request_refresh()
+
+    def _arm_home(self):
+        """Arm home synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay()
         except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to arm home {self._name}.")
 
-    def alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
+        await self.hass.async_add_executor_job(self._arm_away)
+        await self.coordinator.async_request_refresh()
+
+    def _arm_away(self, code=None):
+        """Arm away synchronous."""
         try:
             ArmingHelper(self._partition).arm_away()
         except BadResultCodeError:
             raise HomeAssistantError(f"TotalConnect failed to arm away {self._name}.")
 
-    def alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
+        await self.hass.async_add_executor_job(self._arm_night)
+        await self.coordinator.async_request_refresh()
+
+    def _arm_night(self, code=None):
+        """Arm night synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay_night()
         except BadResultCodeError:
