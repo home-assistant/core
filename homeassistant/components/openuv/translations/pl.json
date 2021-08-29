@@ -21,7 +21,11 @@
     "options": {
         "step": {
             "init": {
-                "title": "Skonfiguruj OpenUV"
+                "data": {
+                    "from_window": "Pocz\u0105tkowy indeks UV",
+                    "to_window": "Ko\u0144cowy indeks UV"
+                },
+                "title": "Konfiguracja OpenUV"
             }
         }
     }
