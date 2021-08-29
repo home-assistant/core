@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
 )
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
@@ -59,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_entities)
 
 
-class IotaWattSensor(IotaWattEntity):
+class IotaWattSensor(IotaWattEntity, SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
     def __init__(self, coordinator, entity, mac_address, name):
@@ -72,23 +73,22 @@ class IotaWattSensor(IotaWattEntity):
         self._ent = entity
         self._name = name
         self._io_type = sensor.getType()
-        self._state = None
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_force_update = True
 
         unit = sensor.getUnit()
         if unit == "Watts":
-            self._attr_unit_of_measurement = POWER_WATT
+            self._attr_native_unit_of_measurement = POWER_WATT
             self._attr_device_class = DEVICE_CLASS_POWER
         elif unit == "WattHours":
-            self._attr_unit_of_measurement = ENERGY_WATT_HOUR
+            self._attr_native_unit_of_measurement = ENERGY_WATT_HOUR
             self._attr_device_class = DEVICE_CLASS_ENERGY
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         elif unit == "Volts":
-            self._attr_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+            self._attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
             self._attr_device_class = DEVICE_CLASS_VOLTAGE
         else:
-            self._attr_unit_of_measurement = unit
+            self._attr_native_unit_of_measurement = unit
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -112,20 +112,14 @@ class IotaWattSensor(IotaWattEntity):
         return attrs
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data["sensors"][self._ent].getValue()
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        name = (
-            "IoTaWatt "
-            + str(self._io_type)
-            + " "
-            + str(self.coordinator.data["sensors"][self._ent].getName())
-        )
-        return name
+        return f'IoTaWatt {self._io_type} {self.coordinator.data["sensors"][self._ent].getName()}'
 
     @property
     def unique_id(self) -> str:

@@ -6,13 +6,10 @@ import logging
 
 from httpx import AsyncClient
 from iotawattpy.iotawatt import Iotawatt
-import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -28,16 +25,9 @@ from .const import (
     SIGNAL_ADD_DEVICE,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the iotawatt component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -67,20 +57,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=polling_interval,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
         IOTAWATT_API: api,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -121,7 +105,7 @@ class IotawattUpdater(DataUpdateCoordinator):
         return sensors
 
 
-class IotaWattEntity(CoordinatorEntity, SensorEntity):
+class IotaWattEntity(CoordinatorEntity):
     """Defines the base IoTaWatt Energy Device entity."""
 
     def __init__(self, coordinator: IotawattUpdater, entity, mac_address, name):
@@ -129,21 +113,21 @@ class IotaWattEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._entity = entity
-        self._name = name
-        self._icon = DEFAULT_ICON
-        self._mac_address = mac_address
+        self._attr_name = name
+        self._attr_icon = DEFAULT_ICON
+        self._attr_unique_id = mac_address
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._mac_address
+        return self._attr_unique_id
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the name of the entity."""
-        return self._name
+        return self._attr_name
 
     @property
     def icon(self):
         """Return the icon for the entity."""
-        return self._icon
+        return self._attr_icon

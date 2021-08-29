@@ -8,7 +8,7 @@ from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
@@ -16,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): str,
         vol.Required(CONF_HOST): str,
     }
 )
@@ -33,6 +32,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         is_connected = await iotawatt.connect()
     except (KeyError, json.JSONDecodeError, httpx.HTTPError) as err:
         raise CannotConnect from err
+    finally:
+        await session.aclose()
 
     if not is_connected:
         raise InvalidAuth
