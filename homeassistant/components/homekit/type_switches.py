@@ -9,12 +9,12 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components.switch import DOMAIN
 from homeassistant.components.input_select import (
-    DOMAIN as INPUT_SELECT_DOMAIN,
     ATTR_OPTIONS,
+    DOMAIN as INPUT_SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,

@@ -10,7 +10,13 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
-from homeassistant.components.homekit.type_switches import Outlet, Switch, Vacuum, Valve
+from homeassistant.components.homekit.type_switches import (
+    Outlet,
+    SelectSwitch,
+    Switch,
+    Vacuum,
+    Valve,
+)
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
