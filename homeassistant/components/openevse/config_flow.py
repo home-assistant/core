@@ -117,7 +117,7 @@ async def _start_config_flow(
     step_id: str,
     title: str,
     user_input: dict[str, Any],
-    defaults: dict[str, Any] = {},
+    defaults: dict[str, Any],
     entry_id: str = None,
 ):
     """Start a config flow."""
