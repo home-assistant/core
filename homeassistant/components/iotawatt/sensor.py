@@ -40,6 +40,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
         "Hz",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash",
     ),
     "PF": SensorEntityDescription(
         "PF",
@@ -63,17 +64,19 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
         "VA",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
-        device_class=DEVICE_CLASS_CURRENT,
+        icon="mdi:flash",
     ),
     "VAR": SensorEntityDescription(
         "VAR",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash",
     ),
     "VARh": SensorEntityDescription(
         "VARh",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE_HOURS,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash",
     ),
     "Volts": SensorEntityDescription(
         "Volts",
