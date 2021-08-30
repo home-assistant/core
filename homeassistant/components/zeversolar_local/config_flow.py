@@ -36,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     inverter_id = await api.inverter_id(url)
 
     return {
-        "title": "Zeversolar invertor.",
+        "title": f"Zeversolar invertor - {inverter_id}",
         ZEVER_URL: url,
         ZEVER_INVERTER_ID: inverter_id,
     }
