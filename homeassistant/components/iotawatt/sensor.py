@@ -189,7 +189,10 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._key not in self.coordinator.data["sensors"]:
-            entity_registry.async_get(self.hass).async_remove(self.entity_id)
+            if self._attr_unique_id:
+                entity_registry.async_get(self.hass).async_remove(self.entity_id)
+            else:
+                self.hass.async_create_task(self.async_remove())
             return
 
         super()._handle_coordinator_update()
