@@ -9,10 +9,10 @@
       "step": {
         "user": {
           "data": {
-            "name": "Alias",
-            "host": "Hostname/IP",
-            "password": "Password (optional)",
-            "username": "Username (optional)"
+            "name": "[%key:common::config_flow::data::name%]",
+            "host": "[%key:common::config_flow::data::host%]",
+            "password": "[%key:common::config_flow::data::password%] (optional)",
+            "username": "[%key:common::config_flow::data::username%] (optional)"
           },
           "description": "Please enter the connection information of OpenEVSE charger.",
           "title": "OpenEVSE Setup"
@@ -26,10 +26,10 @@
       "step": {
         "init": {
             "data": {
-                "name": "Alias",
-                "host": "Host/IP",
-                "password": "Password (optional)",
-                "username": "Username (optional)"
+                "name": "[%key:common::config_flow::data::name%]",
+                "host": "[%key:common::config_flow::data::host%]",
+                "password": "[%key:common::config_flow::data::password%] (optional)",
+                "username": "[%key:common::config_flow::data::username%] (optional)"
             },
             "description": "Please enter the connection information of OpenEVSE charger.",
             "title": "OpenEVSE Setup"
