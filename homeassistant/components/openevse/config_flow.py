@@ -125,14 +125,18 @@ async def _start_config_flow(
     errors = {}
     if user_input is not None:
         user_input[CONF_NAME] = slugify(user_input[CONF_NAME].lower())
-        check = await cls.hass.async_add_executor_job(
+        check, msg = await cls.hass.async_add_executor_job(
             test_connection,
             user_input[CONF_HOST],
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
         )
+        if msg == "cannot_connect":
+            errors = {CONF_HOST: "cannot_connect"}
+        elif msg == "invalid_auth":
+            errors = {CONF_USERNAME: "invalid_auth", CONF_PASSWORD: "invalid_auth"}
+
         if not check:
-            errors["base"] = "cannot_connect"
             return cls.async_show_form(
                 step_id=step_id,
                 data_schema=_get_schema(cls.hass, user_input, defaults, entry_id),

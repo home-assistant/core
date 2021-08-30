@@ -40,12 +40,13 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-def test_connection(host: str, username: str, password: str) -> bool:
+def test_connection(host: str, username: str, password: str) -> tuple:
     """Test connection to charger."""
     charger = openevsewifi.Charger(host, username=username, password=password)
     try:
         charger.status
-    except (RequestException, InvalidAuthentication) as e:
-        _LOGGER.error("Problem communicating with charger error message: %s", e)
-        return False
-    return True
+    except RequestException:
+        return (False, "cannot_connect")
+    except InvalidAuthentication:
+        return (False, "invalid_auth")
+    return (True, "")

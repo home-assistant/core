@@ -1,6 +1,8 @@
 """Test OpenEVSE config flow."""
 from unittest.mock import patch
 
+import requests
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -124,8 +126,8 @@ async def test_flow_import(
         assert result["reason"] == "already_configured"
 
 
-async def test_invalid_auth(hass):
-    """Test that the user step works."""
+async def test_connection_error(hass, requests_mock):
+    """Test connection error."""
     conf = {
         CONF_NAME: "Testing",
         CONF_HOST: "somefakehost.local",
@@ -142,11 +144,45 @@ async def test_invalid_auth(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
 
-        with patch(
-            "homeassistant.components.openevse.test_connection", return_value=False
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_USER}, data=conf
-            )
-            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-            assert result["errors"] == {"base": "cannot_connect"}
+        requests_mock.post(
+            "http://somefakehost.local/r", exc=requests.exceptions.ConnectionError()
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+
+async def test_invalid_auth(hass, requests_mock):
+    """Test invalid authentication."""
+    conf = {
+        CONF_NAME: "Testing",
+        CONF_HOST: "somefakehost.local",
+        CONF_USERNAME: "fakeuser",
+        CONF_PASSWORD: "fakepwd",
+    }
+
+    with patch(
+        "homeassistant.components.openevse.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        requests_mock.post("http://somefakehost.local/r", status_code=401)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {
+            CONF_USERNAME: "invalid_auth",
+            CONF_PASSWORD: "invalid_auth",
+        }
