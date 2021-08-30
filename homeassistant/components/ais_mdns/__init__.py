@@ -86,16 +86,6 @@ def setup(hass, config):
         properties=params,
     )
 
-    # FTP
-    ftp_info = ServiceInfo(
-        "_ftp._tcp.local.",
-        name=host_name + "._ftp._tcp.local.",
-        server=f"{host_name}.local.",
-        addresses=[host_ip_pton],
-        port=21,
-        properties=params,
-    )
-
     def zeroconf_hass_start(_event):
         """Expose Home Assistant on zeroconf when it starts.
 
@@ -104,7 +94,6 @@ def setup(hass, config):
         _LOGGER.info("Starting Zeroconf broadcast")
         try:
             zero_config.register_service(http_info)
-            zero_config.register_service(ftp_info)
         except NonUniqueNameException:
             _LOGGER.error(
                 "Home Assistant instance with identical name present in the local network"
@@ -115,7 +104,6 @@ def setup(hass, config):
     def stop_zeroconf(event):
         """Stop Zeroconf."""
         zero_config.unregister_service(http_info)
-        zero_config.unregister_service(ftp_info)
         zero_config.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)

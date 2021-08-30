@@ -206,7 +206,7 @@ def _get_external_url(
 
         return "https://" + ais_global.get_sercure_android_id_dom() + ".paczka.pro"
     else:
-        return "http://" + hass.states.get("sensor.internal_ip_address").state + ":8180"
+        return "http://" + hass.config.api.local_ip + ":" + str(hass.config.api.port)
 
     raise NoURLAvailableError
 
@@ -222,5 +222,4 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
 
         if not require_current_request or cloud_url.host == _get_request_host():
             return normalize_url(str(cloud_url))
-
     raise NoURLAvailableError
