@@ -64,7 +64,7 @@ async def test_sensors(hass, mock_iotawatt):
 async def test_sensor_type_output(hass, mock_iotawatt):
     """Tests the sensor type of Output."""
     mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = Sensor(
-        channel="1",
+        channel="N/A",
         name="My WattHour Sensor",
         io_type="Output",
         unit="WattHours",
