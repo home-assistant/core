@@ -662,7 +662,7 @@ async def async_setup_entry(
     )
 
     entities = [
-        BrSensor(hass, config.get(CONF_NAME, "Buienradar"), coordinates, description)
+        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
         for description in SENSOR_TYPES
     ]
 
@@ -679,12 +679,9 @@ class BrSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
 
-    def __init__(
-        self, hass, client_name, coordinates, description: SensorEntityDescription
-    ):
+    def __init__(self, client_name, coordinates, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
-        self.hass = hass
         self._attr_name = f"{client_name} {description.name}"
         self._measured = None
         self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
@@ -702,7 +699,7 @@ class BrSensor(SensorEntity):
     @callback
     def data_updated(self, data):
         """Update data."""
-        if self._load_data(data) and self.hass:
+        if self.hass and self._load_data(data):
             self.async_write_ha_state()
 
     @callback
