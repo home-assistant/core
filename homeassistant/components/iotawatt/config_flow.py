@@ -45,7 +45,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self._data = {}
-        self._errors = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
