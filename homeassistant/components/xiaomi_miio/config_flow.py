@@ -3,6 +3,7 @@ import logging
 from re import search
 
 from micloud import MiCloud
+from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -231,8 +232,13 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
             miio_cloud = MiCloud(cloud_username, cloud_password)
-            if not await self.hass.async_add_executor_job(miio_cloud.login):
-                errors["base"] = "cloud_login_error"
+            try:
+                if not await self.hass.async_add_executor_job(miio_cloud.login):
+                    errors["base"] = "cloud_login_error"
+            except MiCloudAccessDenied:
+                 errors["base"] = "cloud_login_error"
+
+            if errors:
                 return self.async_show_form(
                     step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
                 )
