@@ -83,7 +83,6 @@ ATTR_TURBO_MODE_SUPPORTED = "turbo_mode_supported"
 ATTR_SLEEP_MODE = "sleep_mode"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
-ATTR_MOTOR_SPEED = "motor_speed"
 
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
