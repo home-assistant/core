@@ -1100,7 +1100,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.0.0
+onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
 open-garage==0.1.5
@@ -1139,7 +1139,7 @@ orvibo==1.1.1
 ovoenergy==1.1.12
 
 # homeassistant.components.p1_monitor
-p1monitor==0.2.0
+p1monitor==1.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1581,7 +1581,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.8.0
+pylitterbot==2021.8.1
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -2134,7 +2134,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==11.0.5
+simplisafe-python==11.0.6
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2452,14 +2452,11 @@ youless-api==0.12
 # homeassistant.components.media_extractor
 youtube_dl>=2021.06.06
 
-# homeassistant.components.onvif
-zeep[async]==4.0.0
-
 # homeassistant.components.zengge
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.0
+zeroconf==0.36.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.60

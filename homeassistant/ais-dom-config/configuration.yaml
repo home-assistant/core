@@ -123,3 +123,5 @@ my:
 
 tts:
   - platform: ais_tts_local
+
+zeroconf:
