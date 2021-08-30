@@ -100,6 +100,7 @@ homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
+homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
 homeassistant.components.tts.*
