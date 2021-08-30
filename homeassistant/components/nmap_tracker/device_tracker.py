@@ -12,7 +12,11 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
@@ -38,6 +42,9 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOSTS): cv.ensure_list,
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
+        vol.Required(
+            CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME.total_seconds()
+        ): cv.time_period,
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS): cv.string,
     }
@@ -53,9 +60,15 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     else:
         scan_interval = TRACKER_SCAN_INTERVAL
 
+    if CONF_CONSIDER_HOME in validated_config:
+        consider_home = validated_config[CONF_CONSIDER_HOME].total_seconds()
+    else:
+        consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
+
     import_config = {
         CONF_HOSTS: ",".join(validated_config[CONF_HOSTS]),
         CONF_HOME_INTERVAL: validated_config[CONF_HOME_INTERVAL],
+        CONF_CONSIDER_HOME: consider_home,
         CONF_EXCLUDE: ",".join(validated_config[CONF_EXCLUDE]),
         CONF_OPTIONS: validated_config[CONF_OPTIONS],
         CONF_SCAN_INTERVAL: scan_interval,
