@@ -327,7 +327,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
                     "state_topic": "test-topic",
                     "unit_of_measurement": "kWh",
                     "value_template": "{{ value_json.value | float / 60000 }}",
-                    "last_reset_value_template": "{{ now().fromtimestamp(value_json.time / 1000).replace(tzinfo=now().tzinfo) }}",
+                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
                 },
                 **extra,
             }
@@ -342,7 +342,7 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
     )
     state = hass.states.get("sensor.test")
     assert float(state.state) == pytest.approx(0.015796176944444445)
-    assert state.attributes.get("last_reset") == "2021-08-19T17:05:00+00:00"
+    assert state.attributes.get("last_reset") == "2021-08-19T15:05:00+00:00"
     assert "'last_reset_topic' must be same as 'state_topic'" not in caplog.text
     assert (
         "'last_reset_value_template' must be set if 'last_reset_topic' is set"
