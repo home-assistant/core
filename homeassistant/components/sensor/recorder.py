@@ -200,11 +200,15 @@ def _normalize_states(
                     hass.data[WARN_UNSTABLE_UNIT] = set()
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
+                    extra = ""
+                    if old_metadata := statistics.get_metadata(hass, entity_id):
+                        extra = f" and matches the unit of already compiled statistics {old_metadata['unit_of_measurement']}"
                     _LOGGER.warning(
-                        "The unit of %s is changing, got %s, generation of long term "
-                        "statistics will be suppressed unless the unit is stable",
+                        "The unit of %s is changing, got multiple%s, generation of long term "
+                        "statistics will be suppressed unless the unit is stable%s",
                         entity_id,
                         all_units,
+                        extra,
                     )
                 return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -320,7 +324,7 @@ def compile_statistics(
                         entity_id,
                         unit,
                         old_metadata["unit_of_measurement"],
-                        unit,
+                        old_metadata["unit_of_measurement"],
                     )
                 continue
 
