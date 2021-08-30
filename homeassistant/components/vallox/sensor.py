@@ -22,7 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, METRIC_KEY_MODE, SIGNAL_VALLOX_STATE_UPDATE, ValloxStateProxy
+from . import ValloxStateProxy
+from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, SIGNAL_VALLOX_STATE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class ValloxFanSpeedSensor(ValloxSensor):
         """Fetch state from the ventilation unit."""
         try:
             # If device is in regular operation, continue.
-            if self._state_proxy.fetch_metric(METRIC_KEY_MODE) == 0:
+            if self._state_proxy.fetch_metric(METRIC_KEY_MODE) == MODE_ON:
                 await super().async_update()
             else:
                 # Report zero percent otherwise.
