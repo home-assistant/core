@@ -4,7 +4,7 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "communication": "Unable to connect to OpenEVSE charger. Please check the log for details."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {
@@ -20,7 +20,7 @@
     },
     "options": {
         "error": {
-            "communication": "Unable to connect to OpenEVSE charger. Please check the log for details."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "init": {

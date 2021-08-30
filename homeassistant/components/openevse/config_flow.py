@@ -14,6 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
+from . import test_connection
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,13 +122,27 @@ async def _start_config_flow(
     entry_id: str = None,
 ):
     """Start a config flow."""
-
+    errors = {}
     if user_input is not None:
         user_input[CONF_NAME] = slugify(user_input[CONF_NAME].lower())
+        check = await cls.hass.async_add_executor_job(
+            test_connection,
+            user_input[CONF_HOST],
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+        )
+        if not check:
+            errors["base"] = "cannot_connect"
+            return cls.async_show_form(
+                step_id=step_id,
+                data_schema=_get_schema(cls.hass, user_input, defaults, entry_id),
+                errors=errors,
+            )
 
         return cls.async_create_entry(title=title, data=user_input)
 
     return cls.async_show_form(
         step_id=step_id,
         data_schema=_get_schema(cls.hass, user_input, defaults, entry_id),
+        errors=errors,
     )

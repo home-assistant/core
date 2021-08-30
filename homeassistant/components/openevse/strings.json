@@ -4,7 +4,7 @@
         "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
       },
       "error": {
-        "communication": "Unable to connect to OpenEVSE charger. Please check the log for details."
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
       },
       "step": {
         "user": {
@@ -20,7 +20,7 @@
     },
     "options": {
       "error": {
-        "communication": "Unable to connect to OpenEVSE charger. Please check the log for details."    
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"    
       },
       "step": {
         "init": {

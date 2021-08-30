@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_step_user(hass):
+async def test_step_user(hass, mock_charger):
     """Test that the user step works."""
     conf = {
         CONF_NAME: "Testing",
@@ -41,7 +41,7 @@ async def test_step_user(hass):
         }
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, mock_charger):
     """Test config flow options."""
     conf = {
         CONF_NAME: "Testing",
@@ -122,3 +122,31 @@ async def test_flow_import(
         assert len(mock_setup_entry.mock_calls) == 0
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_invalid_auth(hass):
+    """Test that the user step works."""
+    conf = {
+        CONF_NAME: "Testing",
+        CONF_HOST: "somefakehost.local",
+        CONF_USERNAME: "fakeuser",
+        CONF_PASSWORD: "fakepwd",
+    }
+
+    with patch(
+        "homeassistant.components.openevse.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+        with patch(
+            "homeassistant.components.openevse.test_connection", return_value=False
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_USER}, data=conf
+            )
+            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+            assert result["errors"] == {"base": "cannot_connect"}

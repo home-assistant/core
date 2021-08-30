@@ -1,6 +1,10 @@
 """The openevse component."""
 import logging
 
+import openevsewifi
+from openevsewifi import InvalidAuthentication
+from requests import RequestException
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -34,3 +38,14 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
     )
 
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+def test_connection(host: str, username: str, password: str) -> bool:
+    """Test connection to charger."""
+    charger = openevsewifi.Charger(host, username=username, password=password)
+    try:
+        charger.status
+    except (RequestException, InvalidAuthentication) as e:
+        _LOGGER.error("Problem communicating with charger error message: %s", e)
+        return False
+    return True
