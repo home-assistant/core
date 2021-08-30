@@ -42,7 +42,8 @@ from .const import (
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription, T
+from .renault_coordinator import T
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
 
 
