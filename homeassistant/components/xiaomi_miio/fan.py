@@ -594,7 +594,6 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
         self._preset_modes = list(self.PRESET_MODE_MAPPING.keys())
         self._supported_features = SUPPORT_PRESET_MODE
-        self._speed_count = 1
 
     @property
     def preset_mode(self):
