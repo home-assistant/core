@@ -34,8 +34,9 @@ RUN pip3 install -r requirements.txt \
    && pip3 install -r requirements_test.txt \
    && rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 # Additional library needed by fjaraskupan tests and accordingly by VScode Tests Discovery
-RUN apt-get update
-RUN apt-get install bluez
+RUN apt-get update && apt-get install -y bluez \
+   && apt-get clean \
+   && rm -rf /var/lib/apt/lists/*
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
