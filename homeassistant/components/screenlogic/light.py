@@ -1,9 +1,9 @@
-"""Support for a ScreenLogic 'circuit' switch."""
+"""Support for a ScreenLogic light 'circuit' switch."""
 import logging
 
 from screenlogicpy.const import DATA as SL_DATA, GENERIC_CIRCUIT_NAMES
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.light import LightEntity
 
 from . import ScreenLogicCircuitEntity
 from .const import DOMAIN, LIGHT_CIRCUITS
@@ -16,14 +16,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
     async_add_entities(
         [
-            ScreenLogicSwitch(
+            ScreenLogicLight(
                 coordinator, circuit_num, circuit["name"] not in GENERIC_CIRCUIT_NAMES
             )
             for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items()
-            if circuit["function"] not in LIGHT_CIRCUITS
+            if circuit["function"] in LIGHT_CIRCUITS
         ]
     )
 
 
-class ScreenLogicSwitch(ScreenLogicCircuitEntity, SwitchEntity):
-    """Class to represent a ScreenLogic Switch."""
+class ScreenLogicLight(ScreenLogicCircuitEntity, LightEntity):
+    """Class to represent a ScreenLogic Light."""

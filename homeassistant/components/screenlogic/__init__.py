@@ -5,7 +5,9 @@ import logging
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
+    DATA as SL_DATA,
     EQUIPMENT,
+    ON_OFF,
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
@@ -29,7 +31,7 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
+PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -221,3 +223,44 @@ class ScreenlogicEntity(CoordinatorEntity):
             "manufacturer": "Pentair",
             "model": equipment_model,
         }
+
+
+class ScreenLogicCircuitEntity(ScreenlogicEntity):
+    """ScreenLogic circuit entity."""
+
+    @property
+    def name(self):
+        """Get the name of the switch."""
+        return f"{self.gateway_name} {self.circuit['name']}"
+
+    @property
+    def is_on(self) -> bool:
+        """Get whether the switch is in on state."""
+        return self.circuit["value"] == 1
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Send the ON command."""
+        return await self._async_set_circuit(ON_OFF.ON)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Send the OFF command."""
+        return await self._async_set_circuit(ON_OFF.OFF)
+
+    async def _async_set_circuit(self, circuit_value) -> None:
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_circuit, self._data_key, circuit_value
+            )
+
+        if success:
+            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning(
+                "Failed to set_circuit %s %s", self._data_key, circuit_value
+            )
+
+    @property
+    def circuit(self):
+        """Shortcut to access the circuit."""
+        return self.coordinator.data[SL_DATA.KEY_CIRCUITS][self._data_key]
