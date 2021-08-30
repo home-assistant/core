@@ -925,7 +925,7 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
                 id
                 for id, device in dev_reg.devices.items()
                 if (name := device.name_by_user or device.name)
-                and (str(entity_id_or_device_name).casefold() == name.casefold())
+                and (str(entity_id_or_device_name) == name)
             ),
             None,
         )
