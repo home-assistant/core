@@ -113,28 +113,28 @@ def _retrieve_link_noise_margin_sent_state(
     status: FritzStatus, last_value: str
 ) -> float:
     """Return upload noise margin."""
-    return status.noise_margin[0]  # type: ignore[no-any-return]
+    return status.noise_margin[0] / 10  # type: ignore[no-any-return]
 
 
 def _retrieve_link_noise_margin_received_state(
     status: FritzStatus, last_value: str
 ) -> float:
     """Return download noise margin."""
-    return status.noise_margin[1]  # type: ignore[no-any-return]
+    return status.noise_margin[1] / 10  # type: ignore[no-any-return]
 
 
 def _retrieve_link_attenuation_sent_state(
     status: FritzStatus, last_value: str
 ) -> float:
     """Return upload line attenuation."""
-    return status.attenuation[0]  # type: ignore[no-any-return]
+    return status.attenuation[0] / 10  # type: ignore[no-any-return]
 
 
 def _retrieve_link_attenuation_received_state(
     status: FritzStatus, last_value: str
 ) -> float:
     """Return download line attenuation."""
-    return status.attenuation[1]  # type: ignore[no-any-return]
+    return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict, total=False):
