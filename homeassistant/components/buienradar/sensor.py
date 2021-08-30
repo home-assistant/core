@@ -661,18 +661,14 @@ async def async_setup_entry(
         timeframe,
     )
 
-    entities: list[BrSensor] = []
-    data = BrData(hass, coordinates, timeframe, entities)
-
-    for description in SENSOR_TYPES:
-        entities.append(
-            BrSensor(
-                data, config.get(CONF_NAME, "Buienradar"), coordinates, description
-            )
-        )
+    entities = [
+        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
+        for description in SENSOR_TYPES
+    ]
 
     async_add_entities(entities)
 
+    data = BrData(hass, coordinates, timeframe, entities)
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
 
@@ -683,12 +679,9 @@ class BrSensor(SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_should_poll = False
 
-    def __init__(
-        self, data, client_name, coordinates, description: SensorEntityDescription
-    ):
+    def __init__(self, client_name, coordinates, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
-        self._data = data
         self._attr_name = f"{client_name} {description.name}"
         self._measured = None
         self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
@@ -858,7 +851,3 @@ class BrSensor(SensorEntity):
 
         self._attr_extra_state_attributes = result
         return True
-
-    def add_to_platform_abort(self):
-        """Remove a disabled device from BRData entities list."""
-        self._data.devices.remove(self)
