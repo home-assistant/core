@@ -242,7 +242,7 @@ class WazeTravelTime(SensorEntity):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        _LOGGER.debug("Fetching Route for %s", self._name)
+        _LOGGER.debug("Fetching Route for %s", self._attr_name)
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
             self._waze_data.origin = get_location_from_entity(
