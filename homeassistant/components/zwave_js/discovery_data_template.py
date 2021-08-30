@@ -12,6 +12,7 @@ from zwave_js_server.const.command_class.meter import (
     POWER_FACTOR_METER_TYPES,
     POWER_METER_TYPES,
     VOLTAGE_METER_TYPES,
+    ElectricScale,
     MeterScaleType,
 )
 from zwave_js_server.const.command_class.multilevel_sensor import (
@@ -27,8 +28,6 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     TEMPERATURE_SENSORS,
     TIMESTAMP_SENSORS,
     VOLTAGE_SENSORS,
-    ElectricScale,
-    MeterScaleType,
     MultilevelSensorType,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -196,7 +195,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             # We do this because even though these are energy scales, they don't meet
             # the unit requirements for the energy device class.
             if scale_type in (
-                ElectricScale.PULSE,
+                ElectricScale.PULSE_COUNT,
                 ElectricScale.KILOVOLT_AMPERE_HOUR,
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
             ):
