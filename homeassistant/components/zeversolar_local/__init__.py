@@ -7,10 +7,11 @@ import logging
 from zeversolarlocal import api
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COORDINATOR, DOMAIN, ZEVER_URL
+from .const import COORDINATOR, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local access to the zeversolar invertor from a config entry."""
 
-    zever_url = entry.data[ZEVER_URL]
+    zever_url = entry.data[CONF_URL]
 
     async def async_update_data() -> api.SolarData:
         """Get solar data from the zever solar inverter."""

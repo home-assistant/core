@@ -8,17 +8,18 @@ import voluptuous as vol
 from zeversolarlocal import api
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, ZEVER_HOST, ZEVER_INVERTER_ID, ZEVER_URL
+from .const import DOMAIN, ZEVER_INVERTER_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(ZEVER_HOST): str,
+        vol.Required(CONF_HOST): str,
     }
 )
 
@@ -29,7 +30,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    url = api.default_url(data[ZEVER_HOST])
+    url = api.default_url(data[CONF_HOST])
 
     # If parsing of data is wrong or inverter is
     # unreachable, this will raise ZeverError.
@@ -37,7 +38,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     return {
         "title": f"Zeversolar invertor - {inverter_id}",
-        ZEVER_URL: url,
+        CONF_URL: url,
         ZEVER_INVERTER_ID: inverter_id,
     }
 

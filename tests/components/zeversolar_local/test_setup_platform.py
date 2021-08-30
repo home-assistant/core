@@ -4,11 +4,8 @@ from unittest.mock import patch
 from zeversolarlocal.api import SolarData
 
 from homeassistant.components.zeversolar_local import async_unload_entry
-from homeassistant.components.zeversolar_local.const import (
-    DOMAIN,
-    ZEVER_INVERTER_ID,
-    ZEVER_URL,
-)
+from homeassistant.components.zeversolar_local.const import DOMAIN, ZEVER_INVERTER_ID
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -19,7 +16,7 @@ async def test_setup(hass: HomeAssistant):
     """Test a successful setup."""
     inverter_id = "abcd"
     entry_data = {
-        ZEVER_URL: "http://1.1.1.1/home.cgi",
+        CONF_URL: "http://1.1.1.1/home.cgi",
         ZEVER_INVERTER_ID: inverter_id,
         "title": "Zeversolar invertor.",
     }
@@ -53,7 +50,7 @@ async def test_unload_entry(hass: HomeAssistant):
     """Test unloading the entry."""
     inverter_id = "abcd"
     entry_data = {
-        ZEVER_URL: "http://1.1.1.1/home.cgi",
+        CONF_URL: "http://1.1.1.1/home.cgi",
         ZEVER_INVERTER_ID: inverter_id,
         "title": "Zeversolar invertor.",
     }

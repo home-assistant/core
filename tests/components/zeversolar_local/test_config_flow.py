@@ -6,12 +6,8 @@ from zeversolarlocal.api import ZeverError, default_url
 
 from homeassistant import config_entries
 from homeassistant.components.zeversolar_local import config_flow
-from homeassistant.components.zeversolar_local.const import (
-    DOMAIN,
-    ZEVER_HOST,
-    ZEVER_INVERTER_ID,
-    ZEVER_URL,
-)
+from homeassistant.components.zeversolar_local.const import DOMAIN, ZEVER_INVERTER_ID
+from homeassistant.const import CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -22,7 +18,7 @@ async def test_form(hass: HomeAssistant) -> None:
     config_entry_data = {
         "title": "Zeversolar invertor.",
         ZEVER_INVERTER_ID: "inverterid",
-        ZEVER_URL: "http://0.0.0.0",
+        CONF_URL: "http://0.0.0.0",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -41,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                ZEVER_HOST: "1.1.1.1",
+                CONF_HOST: "1.1.1.1",
             },
         )
         await hass.async_block_till_done()
@@ -68,7 +64,7 @@ async def test_form_cannot_connect(side_effect, error, hass: HomeAssistant) -> N
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                ZEVER_HOST: "1.1.1.1",
+                CONF_HOST: "1.1.1.1",
             },
         )
 
@@ -78,9 +74,9 @@ async def test_form_cannot_connect(side_effect, error, hass: HomeAssistant) -> N
 
 async def test_validate_input(hass):
     """Test user input validation."""
-    data = {ZEVER_HOST: "1.1.1.1"}
+    data = {CONF_HOST: "1.1.1.1"}
     expected_zever_id = "1234"
-    expected_url = default_url(data[ZEVER_HOST])
+    expected_url = default_url(data[CONF_HOST])
 
     with patch(
         "homeassistant.components.zeversolar_local.api.inverter_id",
@@ -89,7 +85,7 @@ async def test_validate_input(hass):
         result = await config_flow.validate_input(hass, data=data)
 
     assert result == {
-        "title": "Zeversolar invertor.",
-        ZEVER_URL: expected_url,
+        "title": f"Zeversolar invertor - {expected_zever_id}",
+        CONF_URL: expected_url,
         ZEVER_INVERTER_ID: expected_zever_id,
     }
