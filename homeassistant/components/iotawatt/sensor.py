@@ -1,6 +1,9 @@
 """Support for IoTaWatt Energy monitor."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable
+
 from iotawattpy.sensor import Sensor
 
 from homeassistant.components.sensor import (
@@ -30,56 +33,65 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from .const import DOMAIN, VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
 from .coordinator import IotawattUpdater
 
-ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
-    "Amps": SensorEntityDescription(
+
+@dataclass
+class IotaWattSensorEntityDescription(SensorEntityDescription):
+    """Class describing IotaWatt sensor entities."""
+
+    value: Callable | None = None
+
+
+ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
+    "Amps": IotaWattSensorEntityDescription(
         "Amps",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_CURRENT,
     ),
-    "Hz": SensorEntityDescription(
+    "Hz": IotaWattSensorEntityDescription(
         "Hz",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
     ),
-    "PF": SensorEntityDescription(
+    "PF": IotaWattSensorEntityDescription(
         "PF",
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_POWER_FACTOR,
+        value=lambda value: value * 100,
     ),
-    "Watts": SensorEntityDescription(
+    "Watts": IotaWattSensorEntityDescription(
         "Watts",
         native_unit_of_measurement=POWER_WATT,
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_POWER,
     ),
-    "WattHours": SensorEntityDescription(
+    "WattHours": IotaWattSensorEntityDescription(
         "WattHours",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
     ),
-    "VA": SensorEntityDescription(
+    "VA": IotaWattSensorEntityDescription(
         "VA",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
     ),
-    "VAR": SensorEntityDescription(
+    "VAR": IotaWattSensorEntityDescription(
         "VAR",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
     ),
-    "VARh": SensorEntityDescription(
+    "VARh": IotaWattSensorEntityDescription(
         "VARh",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE_HOURS,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
     ),
-    "Volts": SensorEntityDescription(
+    "Volts": IotaWattSensorEntityDescription(
         "Volts",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -104,7 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             name=coordinator.data["sensors"][key].getName(),
             entity_description=ENTITY_DESCRIPTION_KEY_MAP.get(
                 coordinator.data["sensors"][key].getUnit(),
-                SensorEntityDescription("base_sensor"),
+                IotaWattSensorEntityDescription("base_sensor"),
             ),
         )
 
@@ -127,9 +139,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
+    entity_description: IotaWattSensorEntityDescription
     _attr_force_update = True
 
-    def __init__(self, coordinator, key, mac_address, name, entity_description):
+    def __init__(
+        self,
+        coordinator,
+        key,
+        mac_address,
+        name,
+        entity_description: IotaWattSensorEntityDescription,
+    ):
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator)
 
@@ -185,4 +205,7 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> entity.StateType:
         """Return the state of the sensor."""
+        if func := self.entity_description.value:
+            return func(self._sensor_data.getValue())
+
         return self._sensor_data.getValue()
