@@ -40,6 +40,7 @@ class IotawattUpdater(DataUpdateCoordinator):
                     "entity": sensor,
                     "mac_address": sensors["sensors"][sensor].hub_mac_address,
                     "name": sensors["sensors"][sensor].getName(),
+                    "unit": sensors["sensors"][sensor].getUnit(),
                 }
                 async_dispatcher_send(self.hass, SIGNAL_ADD_DEVICE, to_add)
                 self.sensorlist[sensor] = sensors["sensors"][sensor]

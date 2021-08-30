@@ -1,24 +1,12 @@
 """Support for IoTaWatt Energy monitor."""
 import logging
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import COORDINATOR, DOMAIN, SIGNAL_ADD_DEVICE
+from .const import COORDINATOR, DOMAIN, ENTITY_DESCRIPTION_KEY_MAP, SIGNAL_ADD_DEVICE
 from .entity import IotaWattEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +25,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             key=ent,
             mac_address=coordinator.data["sensors"][ent].hub_mac_address,
             name=coordinator.data["sensors"][ent].getName(),
+            entity_description=ENTITY_DESCRIPTION_KEY_MAP.get(
+                coordinator.data["sensors"][ent].getUnit(),
+                SensorEntityDescription("base_sensor"),
+            ),
         )
         entities.append(entity)
 
@@ -47,12 +39,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ent = sensor_info["entity"]
         hub_mac_address = sensor_info["mac_address"]
         name = sensor_info["name"]
+        unit = sensor_info["unit"]
 
         entity = IotaWattSensor(
             coordinator=coordinator,
             key=ent,
             mac_address=hub_mac_address,
             name=name,
+            entity_description=ENTITY_DESCRIPTION_KEY_MAP.get(
+                unit, SensorEntityDescription("base_sensor")
+            ),
         )
         entities = [entity]
         async_add_entities(entities)
@@ -63,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class IotaWattSensor(IotaWattEntity, SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
-    def __init__(self, coordinator, key, mac_address, name):
+    def __init__(self, coordinator, key, mac_address, name, entity_description):
         """Initialize the sensor."""
         super().__init__(
             coordinator=coordinator, entity=key, mac_address=mac_address, name=name
@@ -72,24 +68,10 @@ class IotaWattSensor(IotaWattEntity, SensorEntity):
         sensor = self.coordinator.data["sensors"][key]
         self._ent = key
         self._io_type = sensor.getType()
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
         self._attr_force_update = True
         self._attr_name = f"IoTaWatt {sensor.getType()} {coordinator.data['sensors'][self._ent].getName()}"
         self._attr_unique_id = self.coordinator.data["sensors"][self._ent].getSensorID()
-
-        unit = sensor.getUnit()
-        if unit == "Watts":
-            self._attr_native_unit_of_measurement = POWER_WATT
-            self._attr_device_class = DEVICE_CLASS_POWER
-        elif unit == "WattHours":
-            self._attr_native_unit_of_measurement = ENERGY_WATT_HOUR
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-        elif unit == "Volts":
-            self._attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-            self._attr_device_class = DEVICE_CLASS_VOLTAGE
-        else:
-            self._attr_native_unit_of_measurement = unit
+        self.entity_description = entity_description
 
     @callback
     def _handle_coordinator_update(self) -> None:
