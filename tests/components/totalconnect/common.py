@@ -13,13 +13,24 @@ from tests.common import MockConfigEntry
 
 LOCATION_ID = "123456"
 
+DEVICE_INFO_BASIC_1 = {
+    "DeviceID": "987654",
+    "DeviceName": "test",
+    "DeviceClassID": 1,
+    "DeviceSerialNumber": "987654321ABC",
+    "DeviceFlags": "PromptForUserCode=0,PromptForInstallerCode=0,PromptForImportSecuritySettings=0,AllowUserSlotEditing=0,CalCapable=1,CanBeSentToPanel=0,CanArmNightStay=0,CanSupportMultiPartition=0,PartitionCount=0,MaxPartitionCount=0,OnBoardingSupport=0,PartitionAdded=0,DuplicateUserSyncStatus=0,PanelType=8,PanelVariant=1,BLEDisarmCapable=0,ArmHomeSupported=0,DuplicateUserCodeCheck=1,CanSupportRapid=0,IsKeypadSupported=1,WifiEnrollmentSupported=0,IsConnectedPanel=0,ArmNightInSceneSupported=0,BuiltInCameraSettingsSupported=0,ZWaveThermostatScheduleDisabled=0,MultipleAuthorityLevelSupported=0,VideoOnPanelSupported=0,EnableBLEMode=0,IsPanelWiFiResetSupported=0,IsCompetitorClearBypass=0,IsNotReadyStateSupported=0,isArmStatusWithoutExitDelayNotSupported=0",
+    "SecurityPanelTypeID": None,
+    "DeviceSerialText": None,
+}
+DEVICE_LIST = [DEVICE_INFO_BASIC_1]
+
 LOCATION_INFO_BASIC_NORMAL = {
     "LocationID": LOCATION_ID,
     "LocationName": "test",
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
     "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
-    "DeviceList": None,
+    "DeviceList": {"DeviceInfoBasic": DEVICE_LIST},
 }
 
 LOCATIONS = {"LocationInfoBasic": [LOCATION_INFO_BASIC_NORMAL]}
