@@ -1264,7 +1264,7 @@ sunwatcher==0.2.1
 surepy==0.7.0
 
 # homeassistant.components.system_bridge
-systembridge==2.0.6
+systembridge==2.1.0
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11

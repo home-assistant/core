@@ -2251,7 +2251,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridge==2.0.6
+systembridge==2.1.0
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
