@@ -1,10 +1,8 @@
 """Config flow for iotawatt integration."""
 from __future__ import annotations
 
-import json
 import logging
 
-import httpx
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
@@ -12,7 +10,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import httpx_client
 
-from .const import DOMAIN
+from .const import CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +28,7 @@ async def validate_input(
     )
     try:
         is_connected = await iotawatt.connect()
-    except (KeyError, json.JSONDecodeError, httpx.HTTPError):
+    except CONNECTION_ERRORS:
         return {"base": "cannot_connect"}
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception")

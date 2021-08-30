@@ -21,6 +21,7 @@ def mock_iotawatt(entry):
     """Mock iotawatt."""
     with patch("homeassistant.components.iotawatt.coordinator.Iotawatt") as mock:
         instance = mock.return_value
+        instance.connect = AsyncMock(return_value=True)
         instance.update = AsyncMock()
         instance.getSensors.return_value = {"sensors": {}}
         yield instance
