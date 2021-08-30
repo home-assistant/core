@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
 )
 from homeassistant.core import callback
@@ -22,15 +23,25 @@ from .const import (
     CONSUMPTION_ID,
     CONSUMPTION_NAME,
     DOMAIN,
+    FROM_GRID_ID,
+    FROM_GRID_NAME,
     ICON,
     MDI_ICONS,
+    NET_PRODUCTION_ID,
+    NET_PRODUCTION_NAME,
     PRODUCTION_ID,
     PRODUCTION_NAME,
+    PRODUCTION_PCT_ID,
+    PRODUCTION_PCT_NAME,
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TRENDS_COORDINATOR,
+    SOLAR_POWERED_ID,
+    SOLAR_POWERED_NAME,
+    TO_GRID_ID,
+    TO_GRID_NAME,
 )
 
 
@@ -55,7 +66,16 @@ TRENDS_SENSOR_TYPES = {
 }
 
 # Production/consumption variants
-SENSOR_VARIANTS = [PRODUCTION_ID, CONSUMPTION_ID]
+SENSOR_VARIANTS = [(PRODUCTION_ID, PRODUCTION_NAME), (CONSUMPTION_ID, CONSUMPTION_NAME)]
+
+# Trend production/consumption variants
+TREND_SENSOR_VARIANTS = SENSOR_VARIANTS + [
+    (PRODUCTION_PCT_ID, PRODUCTION_PCT_NAME),
+    (NET_PRODUCTION_ID, NET_PRODUCTION_NAME),
+    (FROM_GRID_ID, FROM_GRID_NAME),
+    (TO_GRID_ID, TO_GRID_NAME),
+    (SOLAR_POWERED_ID, SOLAR_POWERED_NAME),
+]
 
 
 def sense_to_mdi(sense_icon):
@@ -86,15 +106,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if device["tags"]["DeviceListAllowed"] == "true"
     ]
 
-    for var in SENSOR_VARIANTS:
+    for variant_id, variant_name in SENSOR_VARIANTS:
         name = ACTIVE_SENSOR_TYPE.name
         sensor_type = ACTIVE_SENSOR_TYPE.sensor_type
-        is_production = var == PRODUCTION_ID
 
-        unique_id = f"{sense_monitor_id}-active-{var}"
+        unique_id = f"{sense_monitor_id}-active-{variant_id}"
         devices.append(
             SenseActiveSensor(
-                data, name, sensor_type, is_production, sense_monitor_id, var, unique_id
+                data,
+                name,
+                sensor_type,
+                sense_monitor_id,
+                variant_id,
+                variant_name,
+                unique_id,
             )
         )
 
@@ -102,18 +127,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
     for type_id, typ in TRENDS_SENSOR_TYPES.items():
-        for var in SENSOR_VARIANTS:
+        for variant_id, variant_name in TREND_SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type
-            is_production = var == PRODUCTION_ID
 
-            unique_id = f"{sense_monitor_id}-{type_id}-{var}"
+            unique_id = f"{sense_monitor_id}-{type_id}-{variant_id}"
             devices.append(
                 SenseTrendsSensor(
                     data,
                     name,
                     sensor_type,
-                    is_production,
+                    variant_id,
+                    variant_name,
                     trends_coordinator,
                     unique_id,
                 )
@@ -137,19 +162,19 @@ class SenseActiveSensor(SensorEntity):
         data,
         name,
         sensor_type,
-        is_production,
         sense_monitor_id,
-        sensor_id,
+        variant_id,
+        variant_name,
         unique_id,
     ):
         """Initialize the Sense sensor."""
-        name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._attr_name = f"{name} {name_type}"
+        self._attr_name = f"{name} {variant_name}"
         self._attr_unique_id = unique_id
         self._data = data
         self._sense_monitor_id = sense_monitor_id
         self._sensor_type = sensor_type
-        self._is_production = is_production
+        self._variant_id = variant_id
+        self._variant_name = variant_name
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -166,7 +191,7 @@ class SenseActiveSensor(SensorEntity):
         """Update the sensor from the data. Must not do I/O."""
         new_state = round(
             self._data.active_solar_power
-            if self._is_production
+            if self._variant_id == PRODUCTION_ID
             else self._data.active_power
         )
         if self._attr_available and self._attr_native_value == new_state:
@@ -235,24 +260,29 @@ class SenseTrendsSensor(SensorEntity):
         data,
         name,
         sensor_type,
-        is_production,
+        variant_id,
+        variant_name,
         trends_coordinator,
         unique_id,
     ):
         """Initialize the Sense sensor."""
-        name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._attr_name = f"{name} {name_type}"
+        self._attr_name = f"{name} {variant_name}"
         self._attr_unique_id = unique_id
         self._data = data
         self._sensor_type = sensor_type
         self._coordinator = trends_coordinator
-        self._is_production = is_production
+        self._variant_id = variant_id
         self._had_any_update = False
+
+        if variant_id in [PRODUCTION_PCT_ID, SOLAR_POWERED_ID]:
+            self._attr_native_unit_of_measurement = PERCENTAGE
+            self._attr_state_class = None
+            self._attr_device_class = None
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return round(self._data.get_trend(self._sensor_type, self._is_production), 1)
+        return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
 
     @property
     def available(self):
