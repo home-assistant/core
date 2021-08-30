@@ -277,6 +277,15 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         precision=1,
     ),
     GrowattSensorEntityDescription(
+        key="tlx_energy_total_input_1",
+        name="Lifetime total energy input 1",
+        api_key="epv1Total",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        precision=1,
+    ),
+    GrowattSensorEntityDescription(
         key="tlx_energy_today_input_1",
         name="Energy Today Input 1",
         api_key="epv1Today",
@@ -307,6 +316,15 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv1",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
+        precision=1,
+    ),
+    GrowattSensorEntityDescription(
+        key="tlx_energy_total_input_2",
+        name="Lifetime total energy input 2",
+        api_key="epv2Total",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         precision=1,
     ),
     GrowattSensorEntityDescription(
