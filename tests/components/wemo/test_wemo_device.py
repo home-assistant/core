@@ -1,5 +1,6 @@
 """Tests for wemo_device.py."""
 import asyncio
+from datetime import timedelta
 from unittest.mock import patch
 
 import async_timeout
@@ -8,19 +9,17 @@ from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant import runner
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, wemo_device
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .conftest import MOCK_HOST
+
+from tests.common import async_fire_time_changed
 
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(True))
 
@@ -200,13 +199,8 @@ class TestInsight:
         pywemo_registry.is_subscribed.return_value = subscribed
         pywemo_device.reset_mock()
         pywemo_device.get_state.return_value = state
-        await async_setup_component(hass, HA_DOMAIN, {})
-        await hass.services.async_call(
-            HA_DOMAIN,
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
-            blocking=True,
-        )
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+        await hass.async_block_till_done()
         if expected:
             pywemo_device.get_state.assert_any_call(True)
         else:
