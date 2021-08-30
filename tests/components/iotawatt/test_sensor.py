@@ -31,6 +31,8 @@ async def test_sensor_add_remove(hass, mock_iotawatt):
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
+    assert hass.states.get("sensor.my_sensor") is not None
+
     mock_iotawatt.getSensors.return_value["sensors"].pop("my_sensor_key")
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
