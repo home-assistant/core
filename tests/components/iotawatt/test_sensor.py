@@ -14,11 +14,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
-    POWER_WATT,
 )
 from homeassistant.setup import async_setup_component
 
@@ -65,32 +61,14 @@ async def test_sensors(hass, mock_iotawatt):
     assert state.attributes["type"] == "Input"
 
 
-async def test_sensor_units(hass, mock_iotawatt):
-    """Tests the different types of units."""
-    mock_iotawatt.getSensors.return_value["sensors"]["my_watt_sensor_key"] = Sensor(
+async def test_sensor_type_output(hass, mock_iotawatt):
+    """Tests the sensor type of Output."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = Sensor(
         channel="1",
-        name="My Watt Sensor",
-        io_type="Input",
-        unit="Watts",
-        value="23",
-        begin="",
-        mac_addr="mock-mac",
-    )
-    mock_iotawatt.getSensors.return_value["sensors"]["my_volt_sensor_key"] = Sensor(
-        channel="2",
-        name="My Volt Sensor",
-        io_type="Input",
-        unit="Volts",
-        value="118",
-        begin="",
-        mac_addr="mock-mac",
-    )
-    mock_iotawatt.getSensors.return_value["sensors"]["my_pf_sensor_key"] = Sensor(
-        channel="3",
-        name="My PF Sensor",
+        name="My WattHour Sensor",
         io_type="Output",
-        unit="PF",
-        value="0.95",
+        unit="WattHours",
+        value="243",
         begin="",
         mac_addr="mock-mac",
     )
@@ -100,29 +78,12 @@ async def test_sensor_units(hass, mock_iotawatt):
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 3
+    assert len(hass.states.async_entity_ids()) == 1
 
-    state = hass.states.get("sensor.iotawatt_input_my_watt_sensor")
+    state = hass.states.get("sensor.iotawatt_output_my_watthour_sensor")
     assert state is not None
-    assert state.state == "23"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "IoTaWatt Input My Watt Sensor"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
-    assert state.attributes["channel"] == "1"
-    assert state.attributes["type"] == "Input"
-
-    state = hass.states.get("sensor.iotawatt_input_my_volt_sensor")
-    assert state is not None
-    assert state.state == "118"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "IoTaWatt Input My Volt Sensor"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_POTENTIAL_VOLT
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_VOLTAGE
-    assert state.attributes["channel"] == "2"
-    assert state.attributes["type"] == "Input"
-
-    state = hass.states.get("sensor.iotawatt_output_my_pf_sensor")
-    assert state is not None
-    assert state.state == "0.95"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "IoTaWatt Output My PF Sensor"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "PF"
+    assert state.state == "243"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "IoTaWatt Output My WattHour Sensor"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
     assert state.attributes["type"] == "Output"
