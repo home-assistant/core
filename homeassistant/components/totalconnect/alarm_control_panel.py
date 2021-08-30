@@ -155,8 +155,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Disarm synchronous."""
         try:
             ArmingHelper(self._partition).disarm()
-        except BadResultCodeError:
-            raise HomeAssistantError(f"TotalConnect failed to disarm {self._name}.")
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to disarm {self._name}."
+            ) from error
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -167,8 +169,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm home synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay()
-        except BadResultCodeError:
-            raise HomeAssistantError(f"TotalConnect failed to arm home {self._name}.")
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to arm home {self._name}."
+            ) from error
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -179,8 +183,10 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm away synchronous."""
         try:
             ArmingHelper(self._partition).arm_away()
-        except BadResultCodeError:
-            raise HomeAssistantError(f"TotalConnect failed to arm away {self._name}.")
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to arm away {self._name}."
+            ) from error
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
@@ -191,5 +197,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm night synchronous."""
         try:
             ArmingHelper(self._partition).arm_stay_night()
-        except BadResultCodeError:
-            raise HomeAssistantError(f"TotalConnect failed to arm night {self._name}.")
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to arm night {self._name}."
+            ) from error
