@@ -914,14 +914,21 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def device_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get a device ID from an entity ID."""
-    if not isinstance(entity_id, str) or "." not in entity_id:
-        raise TemplateError(f"Must provide an entity ID, got {entity_id}")  # type: ignore
+def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
+    """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
-    entity = entity_reg.async_get(entity_id)
+    entity = entity_reg.async_get(entity_id_or_device_name)
     if entity is None:
-        return None
+        dev_reg = device_registry.async_get(hass)
+        return next(
+            (
+                id
+                for id, device in dev_reg.devices.items()
+                if (name := device.name_by_user or device.name)
+                and (str(entity_id_or_device_name).casefold() == name.casefold())
+            ),
+            None,
+        )
     return entity.device_id
 
 
