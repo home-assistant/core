@@ -13,6 +13,7 @@ from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import LOGGER
 from .discovery_data_template import (
@@ -667,7 +668,9 @@ DISCOVERY_SCHEMAS = [
 
 
 @callback
-def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
+def async_discover_values(
+    node: ZwaveNode, device: DeviceEntry
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         for schema in DISCOVERY_SCHEMAS:
@@ -758,7 +761,11 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                     resolved_data = schema.data_template.resolve_data(value)
                 except UnknownValueData as err:
                     LOGGER.error(
-                        "Discovery for value %s will be skipped: %s", value, err
+                        "Discovery for value %s on device '%s' (%s) will be skipped: %s",
+                        value,
+                        device.name_by_user or device.name,
+                        node,
+                        err,
                     )
                     continue
                 additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
