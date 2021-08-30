@@ -55,7 +55,11 @@ class ZeverSolarLocalTotalEnergySensor(ZeverSolarSensor):
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-    _attr_name = "total generated energy."
+
+    def __init__(self, coordinator, zever_inverter_id):
+        """Init."""
+        self._attr_name = f"total generated energy - {zever_inverter_id}"
+        super().__init__(coordinator, zever_inverter_id)
 
     @property
     def native_value(self) -> StateType:
@@ -69,7 +73,11 @@ class ZeverSolarLocalCurrentPowerSensor(ZeverSolarSensor):
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_native_unit_of_measurement = POWER_WATT
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_name = "Current solar power production."
+
+    def __init__(self, coordinator, zever_inverter_id):
+        """Init."""
+        self._attr_name = f"Current solar power production - {zever_inverter_id}"
+        super().__init__(coordinator, zever_inverter_id)
 
     @property
     def native_value(self) -> StateType:

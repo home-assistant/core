@@ -33,16 +33,18 @@ async def test_setup(hass: HomeAssistant):
 
     registry = er.async_get(hass)
 
-    total_energy_entity = registry.async_get("sensor.total_generated_energy")
+    total_energy_name = f"sensor.total_generated_energy_{inverter_id}"
+    total_energy_entity = registry.async_get(total_energy_name)
     assert total_energy_entity
     assert inverter_id in total_energy_entity.unique_id
-    generated_energy = hass.states.get("sensor.total_generated_energy")
+    generated_energy = hass.states.get(total_energy_name)
     assert generated_energy.state == "1"
 
-    current_power_entity = registry.async_get("sensor.current_solar_power_production")
+    power_production_name = f"sensor.current_solar_power_production_{inverter_id}"
+    current_power_entity = registry.async_get(power_production_name)
     assert current_power_entity
     assert inverter_id in total_energy_entity.unique_id
-    current_power = hass.states.get("sensor.current_solar_power_production")
+    current_power = hass.states.get(power_production_name)
     assert current_power.state == "2"
 
 
