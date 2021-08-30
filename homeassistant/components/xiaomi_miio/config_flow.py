@@ -236,7 +236,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if not await self.hass.async_add_executor_job(miio_cloud.login):
                     errors["base"] = "cloud_login_error"
             except MiCloudAccessDenied:
-                 errors["base"] = "cloud_login_error"
+                errors["base"] = "cloud_login_error"
 
             if errors:
                 return self.async_show_form(
