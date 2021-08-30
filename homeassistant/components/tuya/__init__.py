@@ -12,7 +12,6 @@ from tuya_iot import (
     TuyaHomeManager,
     TuyaOpenAPI,
     TuyaOpenMQ,
-    tuya_logger,
 )
 import voluptuous as vol
 
@@ -146,13 +145,6 @@ def async_remove_hass_device(hass: HomeAssistant, device_id: str) -> None:
     for entity in list(__device_registry.devices.values()):
         if device_id in list(entity.identifiers)[0]:
             __device_registry.async_remove_device(entity.id)
-
-
-async def async_setup(hass, config):
-    """Set up the Tuya integration."""
-    tuya_logger.setLevel(_LOGGER.level)
-
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
