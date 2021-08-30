@@ -1,4 +1,4 @@
-"""Constants for the Local access to the zeversolar invertor integration."""
+"""Constants for the Local access to the zeversolar inverter integration."""
 
 DOMAIN = "zeversolar_local"
 COORDINATOR = "coordinator"

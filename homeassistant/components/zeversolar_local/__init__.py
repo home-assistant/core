@@ -1,4 +1,4 @@
-"""Local access to the zeversolar invertor integration."""
+"""Local access to the zeversolar inverter integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Local access to the zeversolar invertor from a config entry."""
+    """Set up Local access to the zeversolar inverter from a config entry."""
 
     zever_url = entry.data[CONF_URL]
 

@@ -1,4 +1,4 @@
-"""Config flow for Local access to the zeversolar invertor integration."""
+"""Config flow for Local access to the zeversolar inverter integration."""
 from __future__ import annotations
 
 import logging
@@ -37,14 +37,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     inverter_id = await api.inverter_id(url)
 
     return {
-        "title": f"Zeversolar invertor - {inverter_id}",
+        "title": f"Zeversolar inverter - {inverter_id}",
         CONF_URL: url,
         ZEVER_INVERTER_ID: inverter_id,
     }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Local access to the zeversolar invertor."""
+    """Handle a config flow for Local access to the zeversolar inverter."""
 
     VERSION = 1
 
