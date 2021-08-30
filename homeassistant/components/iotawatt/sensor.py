@@ -24,7 +24,8 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry, update_coordinator
+from homeassistant.helpers import entity, entity_registry, update_coordinator
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN, VOLT_AMPERE_REACTIVE, VOLT_AMPERE_REACTIVE_HOURS
 from .coordinator import IotawattUpdater
@@ -133,7 +134,9 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         super().__init__(coordinator=coordinator)
 
         self._key = key
-        self._attr_unique_id = self._sensor_data.getSensorID()
+        data = self._sensor_data
+        if data.getType() == "Input":
+            self._attr_unique_id = f"{data.hub_mac_address}-input-{data.getChannel()}"
         self.entity_description = entity_description
 
     @property
@@ -145,6 +148,20 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     def name(self) -> str | None:
         """Return name of the entity."""
         return self._sensor_data.getName()
+
+    @property
+    def device_info(self) -> entity.DeviceInfo | None:
+        """Return device info."""
+        if not self._attr_unique_id:
+            return None
+
+        return {
+            "connections": {
+                (CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
+            },
+            "manufacturer": "IoTaWatt",
+            "model": "IoTaWatt",
+        }
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -166,6 +183,6 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         return attrs
 
     @property
-    def native_value(self):
+    def native_value(self) -> entity.StateType:
         """Return the state of the sensor."""
         return self._sensor_data.getValue()
