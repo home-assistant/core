@@ -69,7 +69,7 @@ async def async_setup_entry(
         return
 
     entities = []
-    for sensor_type, sensor_data in SENSOR_DATA.items():
+    for sensor_type in SENSOR_DATA:
         entities.append(FritzBoxBinarySensor(fritzbox_tools, entry.title, sensor_type))
 
     if entities:
