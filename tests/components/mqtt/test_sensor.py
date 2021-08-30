@@ -306,28 +306,6 @@ async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
     assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
 
 
-async def test_last_reset_deprecated(hass, mqtt_mock, caplog):
-    """Test the setting of the last_reset property via MQTT."""
-    assert await async_setup_component(
-        hass,
-        sensor.DOMAIN,
-        {
-            sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "test-topic",
-                "unit_of_measurement": "fav unit",
-                "last_reset_topic": "last-reset-topic",
-                "last_reset_value_template": "{{ value_json.last_reset }}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert "The 'last_reset_topic' option is deprecated" in caplog.text
-    assert "The 'last_reset_value_template' option is deprecated" in caplog.text
-
-
 async def test_force_update_disabled(hass, mqtt_mock):
     """Test force update option."""
     assert await async_setup_component(

@@ -276,6 +276,7 @@ class SenseTrendsSensor(SensorEntity):
 
         if variant_id in [PRODUCTION_PCT_ID, SOLAR_POWERED_ID]:
             self._attr_native_unit_of_measurement = PERCENTAGE
+            self._attr_entity_registry_enabled_default = False
             self._attr_state_class = None
             self._attr_device_class = None
 
