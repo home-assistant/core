@@ -699,7 +699,7 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part duration metadata matches the durations in the media
     running_metadata_duration = 0
     for segment in complete_segments:
-        for part in segment.parts_by_byterange.values():
+        for part in segment.parts:
             av_part = av.open(io.BytesIO(segment.init + part.data))
             running_metadata_duration += part.duration
             # av_part.duration will just return the largest dts in av_part.
@@ -713,7 +713,7 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part durations are consistent with the Segment durations
     for segment in complete_segments:
         assert math.isclose(
-            sum(part.duration for part in segment.parts_by_byterange.values()),
+            sum(part.duration for part in segment.parts),
             segment.duration,
             abs_tol=1e-6,
         )
@@ -751,7 +751,7 @@ async def test_has_keyframe(hass, record_worker_sync):
 
     # check that the Part has_keyframe metadata matches the keyframes in the media
     for segment in complete_segments:
-        for part in segment.parts_by_byterange.values():
+        for part in segment.parts:
             av_part = av.open(io.BytesIO(segment.init + part.data))
             media_has_keyframe = any(
                 packet.is_keyframe for packet in av_part.demux(av_part.streams.video[0])
