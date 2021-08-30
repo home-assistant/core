@@ -68,7 +68,6 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:water-pump",
         native_unit_of_measurement="index",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
