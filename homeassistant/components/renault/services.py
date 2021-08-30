@@ -11,16 +11,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DOMAIN,
-    REGEX_VIN,
-    SERVICE_AC_CANCEL,
-    SERVICE_AC_START,
-    SERVICE_CHARGE_SET_MODE,
-    SERVICE_CHARGE_SET_SCHEDULES,
-    SERVICE_CHARGE_START,
-    SERVICES,
-)
+from .const import DOMAIN
 from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
 
@@ -31,6 +22,8 @@ ATTR_SCHEDULES = "schedules"
 ATTR_TEMPERATURE = "temperature"
 ATTR_VIN = "vin"
 ATTR_WHEN = "when"
+
+REGEX_VIN = "(?i)^VF1[\\w]{14}$"
 
 SERVICE_AC_CANCEL_SCHEMA = vol.Schema(
     {
@@ -84,6 +77,19 @@ SERVICE_CHARGE_START_SCHEMA = vol.Schema(
         vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
     }
 )
+
+SERVICE_AC_CANCEL = "ac_cancel"
+SERVICE_AC_START = "ac_start"
+SERVICE_CHARGE_SET_MODE = "charge_set_mode"
+SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
+SERVICE_CHARGE_START = "charge_start"
+SERVICES = [
+    SERVICE_AC_CANCEL,
+    SERVICE_AC_START,
+    SERVICE_CHARGE_SET_MODE,
+    SERVICE_CHARGE_SET_SCHEDULES,
+    SERVICE_CHARGE_START,
+]
 
 
 def setup_services(hass: HomeAssistant) -> None:
