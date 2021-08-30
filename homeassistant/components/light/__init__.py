@@ -56,6 +56,7 @@ COLOR_MODE_UNKNOWN = "unknown"  # Ambiguous color mode
 COLOR_MODE_ONOFF = "onoff"  # Must be the only supported mode
 COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
 COLOR_MODE_COLOR_TEMP = "color_temp"
+COLOR_MODE_EFFECT = "effect"
 COLOR_MODE_HS = "hs"
 COLOR_MODE_XY = "xy"
 COLOR_MODE_RGB = "rgb"
@@ -67,6 +68,7 @@ VALID_COLOR_MODES = {
     COLOR_MODE_ONOFF,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_EFFECT,
     COLOR_MODE_HS,
     COLOR_MODE_XY,
     COLOR_MODE_RGB,
