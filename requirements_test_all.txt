@@ -504,6 +504,9 @@ influxdb-client==1.14.0
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
+# homeassistant.components.iotawatt
+iotawattpy==0.0.8
+
 # homeassistant.components.gogogate2
 ismartgate==4.0.0
 
