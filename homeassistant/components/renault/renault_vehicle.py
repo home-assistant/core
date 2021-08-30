@@ -29,7 +29,7 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class RenaultCoordinatorDescription:
-    """Class describing Renault sensor entities."""
+    """Class describing Renault coordinators."""
 
     endpoint: str
     key: str
@@ -77,21 +77,23 @@ class RenaultVehicleProxy:
         return self._device_info
 
     async def async_initialise(self) -> None:
-        """Load available sensors."""
-        for coord in COORDINATORS:
+        """Load available coordinators."""
+        self.coordinators = {
+            coord.key: RenaultDataUpdateCoordinator(
+                self.hass,
+                LOGGER,
+                # Name of the data. For logging purposes.
+                name=f"{self.details.vin} {coord.key}",
+                update_method=coord.update_method(self._vehicle),
+                # Polling interval. Will only be polled if there are subscribers.
+                update_interval=self._scan_interval,
+            )
+            for coord in COORDINATORS
             if (
-                not coord.needs_electricity or self.details.uses_electricity()
-            ) and await self.endpoint_available(coord.endpoint):
-                update_method = coord.update_method(self._vehicle)
-                self.coordinators[coord.key] = RenaultDataUpdateCoordinator(
-                    self.hass,
-                    LOGGER,
-                    # Name of the data. For logging purposes.
-                    name=f"{self.details.vin} {coord.key}",
-                    update_method=update_method,
-                    # Polling interval. Will only be polled if there are subscribers.
-                    update_interval=self._scan_interval,
-                )
+                self.details.supports_endpoint(coord.endpoint)
+                and (not coord.needs_electricity or self.details.uses_electricity())
+            )
+        }
         # Check all coordinators
         await asyncio.gather(
             *(
@@ -118,12 +120,6 @@ class RenaultVehicleProxy:
                     coordinator.last_exception,
                 )
                 del self.coordinators[key]
-
-    async def endpoint_available(self, endpoint: str) -> bool:
-        """Ensure the endpoint is available to avoid unnecessary queries."""
-        return await self._vehicle.supports_endpoint(
-            endpoint
-        ) and await self._vehicle.has_contract_for_endpoint(endpoint)
 
 
 COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
