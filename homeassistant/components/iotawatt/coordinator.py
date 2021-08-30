@@ -7,7 +7,7 @@ import logging
 from iotawattpy.iotawatt import Iotawatt
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -21,7 +21,7 @@ class IotawattUpdater(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize IotaWattUpdater object."""
         self.api = Iotawatt(
-            entry.data[CONF_NAME],
+            entry.title,
             entry.data[CONF_HOST],
             httpx_client.get_async_client(hass),
             entry.data.get(CONF_USERNAME),
