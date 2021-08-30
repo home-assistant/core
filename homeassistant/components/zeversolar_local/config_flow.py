@@ -31,9 +31,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     url = api.default_url(data[ZEVER_HOST])
 
-    # If parsing of data is wrong this will raise ZeverSolarError.
-    # If invertor is not reachable (which could be normal as it runs on
-    # solar energy) it will raise ZeverSolarTimeout.
+    # If parsing of data is wrong or inverter is
+    # unreachable, this will raise ZeverError.
     inverter_id = await api.inverter_id(url)
 
     return {
@@ -51,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step when user initializes a integration."""
+        """Step when user initializes an integration."""
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA

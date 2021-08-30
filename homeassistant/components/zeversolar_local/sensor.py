@@ -34,12 +34,18 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
+def _make_unique_id(zever_inverter_id: str, attr_device_class: str) -> str:
+    return f"{zever_inverter_id}_{attr_device_class}"
+
+
 class ZeverSolarSensor(CoordinatorEntity, SensorEntity):
     """Base class of a zeversolar sensor."""
 
     def __init__(self, coordinator, zever_inverter_id):
         """Init."""
-        self._attr_unique_id = f"{zever_inverter_id}_{self._attr_device_class}"
+        self._attr_unique_id = _make_unique_id(
+            zever_inverter_id, self._attr_device_class
+        )
         super().__init__(coordinator)
 
 
