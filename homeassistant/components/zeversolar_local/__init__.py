@@ -24,11 +24,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> api.SolarData:
         """Get solar data from the zever solar inverter."""
+        _LOGGER.debug("Updating zeversolar data")
         try:
             # not using a timeout here. Timeout is managed by the
             # zeversolarlocal package itself as it is a vital part of the
             # working of the package.
-            _LOGGER.debug("Updating zeversolar data")
             return await api.solardata(zever_url, timeout=2)
         except api.ZeverError as err:
             raise UpdateFailed(err) from err
