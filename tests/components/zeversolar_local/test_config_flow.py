@@ -16,7 +16,6 @@ async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     config_entry_data = {
-        "title": "Zeversolar invertor.",
         ZEVER_INVERTER_ID: "inverterid",
         CONF_URL: "http://0.0.0.0",
     }
