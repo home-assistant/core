@@ -9,11 +9,7 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
-from homeassistant.components.input_select import (
-    ATTR_OPTIONS,
-    DOMAIN as INPUT_SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
-)
+from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -242,7 +238,7 @@ class SelectSwitch(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
-
+        self.domain = split_entity_id(self.entity_id)[0]
         state = self.hass.states.get(self.entity_id)
         self.select_chars = {}
         options = state.attributes[ATTR_OPTIONS]
@@ -266,15 +262,14 @@ class SelectSwitch(HomeAccessory):
         self.async_update_state(state)
 
     def select_option(self, option):
-        """Set preset_mode if call came from HomeKit."""
-        _LOGGER.debug("%s: Set option to %d", self.entity_id, option)
+        """Set option from HomeKit."""
+        _LOGGER.debug("%s: Set option to %s", self.entity_id, option)
         params = {ATTR_ENTITY_ID: self.entity_id, "option": option}
-        self.async_call_service(INPUT_SELECT_DOMAIN, SERVICE_SELECT_OPTION, params)
+        self.async_call_service(self.domain, SERVICE_SELECT_OPTION, params)
 
     @callback
     def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_option = new_state.state
         for option, char in self.select_chars.items():
-            hk_value = option == current_option
-            char.set_value(hk_value)
+            char.set_value(option == current_option)
