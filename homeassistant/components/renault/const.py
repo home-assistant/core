@@ -6,8 +6,6 @@ CONF_KAMEREON_ACCOUNT_ID = "kamereon_account_id"
 
 DEFAULT_SCAN_INTERVAL = 300  # 5 minutes
 
-REGEX_VIN = "(?i)^VF1[\\w]{14}$"
-
 PLATFORMS = [
     "sensor",
 ]
