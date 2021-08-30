@@ -1,7 +1,7 @@
 """Config flow for the Amber Electric integration."""
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import amberelectric
 from amberelectric.api import amber_api
@@ -12,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant, callback
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
+from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
 
 
 @callback
@@ -35,7 +35,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._sites: list[Site] | None = None
         self._api_token: str | None = None
 
-    def fetch_sites(self, token: str) -> list[Site] | None:
+    def _fetch_sites(self, token: str) -> list[Site] | None:
         configuration = amberelectric.Configuration(access_token=token)
         api = amber_api.AmberApi.create(configuration)
 
@@ -62,7 +62,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             token = user_input[CONF_API_TOKEN]
             self._sites = await self.hass.async_add_executor_job(
-                self.fetch_sites, token
+                self._fetch_sites, token
             )
 
             if self._sites is not None:
@@ -85,6 +85,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_site(self, user_input: dict[str, Any] = None):
+        """Step to select site."""
         self._errors = {}
 
         api_token = self._api_token
@@ -123,6 +124,17 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SITE_NMI: "",
                 CONF_SITE_NAME: "",
             }
+
+            if self._sites is None:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(CONF_API_TOKEN, default=api_token): str,
+                        }
+                    ),
+                    errors={CONF_API_TOKEN: "no_site"},
+                )
 
         return self.async_show_form(
             step_id="site",
