@@ -16,10 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     iotawatt = Iotawatt(
         "",
         data["host"],
