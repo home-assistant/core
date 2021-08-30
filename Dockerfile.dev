@@ -34,7 +34,7 @@ RUN pip3 install -r requirements.txt \
    && pip3 install -r requirements_test.txt \
    && rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 # Additional library needed by fjaraskupan tests and accordingly by VScode Tests Discovery
-RUN apt-get update && apt-get install -y bluez \
+RUN apt-get update && apt-get install --no-install-recommends -y bluez \
    && apt-get clean \
    && rm -rf /var/lib/apt/lists/*
 
