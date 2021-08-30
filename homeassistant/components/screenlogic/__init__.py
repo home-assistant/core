@@ -31,7 +31,7 @@ from .services import async_load_screenlogic_services, async_unload_screenlogic_
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
+PLATFORMS = ["switch", "sensor", "binary_sensor", "climate", "light"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
