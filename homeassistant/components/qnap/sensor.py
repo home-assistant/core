@@ -91,7 +91,7 @@ _DRIVE_MON_COND = {
         "mdi:checkbox-marked-circle-outline",
         None,
     ],
-    "drive_temp": ["Temperature", TEMP_CELSIUS, None, None, DEVICE_CLASS_TEMPERATURE],
+    "drive_temp": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
 }
 _VOLUME_MON_COND = {
     "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie", None],

@@ -769,6 +769,16 @@ def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
     return node
 
 
+@pytest.fixture(name="lock_id_lock_as_id150_not_ready")
+def node_not_ready(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node that's not ready."""
+    state = copy.deepcopy(lock_id_lock_as_id150_state)
+    state["ready"] = False
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_radio_thermostat_ct101_multiple_temp_units")
 def climate_radio_thermostat_ct101_multiple_temp_units_fixture(
     client, climate_radio_thermostat_ct101_multiple_temp_units_state

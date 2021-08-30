@@ -32,7 +32,7 @@
                     "scan_options": "Options d'analyse brutes configurables pour Nmap",
                     "track_new_devices": "Suivre les nouveaux appareils"
                 },
-                "description": "Configurer les h\u00f4tes \u00e0 analyser par Nmap. L'adresse r\u00e9seau et les exclusions peuvent \u00eatre des adresses IP (192.168.1.1),R\u00e9seaux IP (192.168.0.0/24) ou plages IP (192.168.1.0-32)."
+                "description": "Configurer les h\u00f4tes \u00e0 analyser par Nmap. L'adresse r\u00e9seau et les exclusions peuvent \u00eatre des adresses IP (192.168.1.1), des r\u00e9seaux IP (192.168.0.0/24) ou des plages IP (192.168.1.0-32)."
             }
         }
     },

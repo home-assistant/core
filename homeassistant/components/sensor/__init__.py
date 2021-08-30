@@ -51,6 +51,8 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
+from .const import CONF_STATE_CLASS  # noqa: F401
+
 _LOGGER: Final = logging.getLogger(__name__)
 
 ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11

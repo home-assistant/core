@@ -1,6 +1,7 @@
 """Tests for the Renault integration."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
@@ -10,6 +11,7 @@ from renault_api.renault_account import RenaultAccount
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
+    ATTR_ICON,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -20,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from .const import MOCK_CONFIG, MOCK_VEHICLES
+from .const import ICON_FOR_EMPTY_VALUES, MOCK_CONFIG, MOCK_VEHICLES
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -62,6 +64,12 @@ def get_fixtures(vehicle_type: str) -> dict[str, Any]:
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleHvacStatusDataSchema),
     }
+
+
+def get_no_data_icon(expected_entity: MappingProxyType):
+    """Check attribute for  icon for inactive sensors."""
+    entity_id = expected_entity["entity_id"]
+    return ICON_FOR_EMPTY_VALUES.get(entity_id, expected_entity.get(ATTR_ICON))
 
 
 async def setup_renault_integration_simple(hass: HomeAssistant):

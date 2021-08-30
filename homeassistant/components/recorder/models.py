@@ -70,7 +70,7 @@ DOUBLE_TYPE = (
     Float()
     .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
-    .with_variant(postgresql.DOUBLE_PRECISION, "postgresql")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
@@ -267,6 +267,7 @@ class Statistics(Base):  # type: ignore
 class StatisticMetaData(TypedDict, total=False):
     """Statistic meta data class."""
 
+    statistic_id: str
     unit_of_measurement: str | None
     has_mean: bool
     has_sum: bool

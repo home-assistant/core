@@ -40,6 +40,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_BATTERY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
+        available=lambda block: cast(bool, block.battery != -1),
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -176,6 +177,7 @@ SENSORS: Final = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: cast(bool, block.luminosity != -1),
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
