@@ -38,21 +38,21 @@ _LOGGER = logging.getLogger(__name__)
 SENSORS = (
     SensorEntityDescription(
         key="zigbee:InstantaneousDemand",
-        name="Meter Power Demand",
+        name="Eagle-200 Meter Power Demand",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationDelivered",
-        name="Total Meter Energy Delivered",
+        name="Eagle-200 Total Meter Energy Delivered",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationReceived",
-        name="Total Meter Energy Received",
+        name="Eagle-200 Total Meter Energy Received",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
