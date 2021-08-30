@@ -38,6 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSORS = (
     SensorEntityDescription(
         key="zigbee:InstantaneousDemand",
+        # We can drop the "Eagle-200" part of the name in HA 2021.12
         name="Eagle-200 Meter Power Demand",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
