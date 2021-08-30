@@ -174,9 +174,6 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> entity.DeviceInfo | None:
         """Return device info."""
-        if not self._attr_unique_id:
-            return None
-
         return {
             "connections": {
                 (CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)

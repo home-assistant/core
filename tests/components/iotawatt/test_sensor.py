@@ -20,30 +20,16 @@ from . import INPUT_SENSOR, OUTPUT_SENSOR
 from tests.common import async_fire_time_changed
 
 
-async def test_sensor_add_remove(hass, mock_iotawatt):
-    """Test sensor adding and removing works."""
+async def test_sensor_type_input(hass, mock_iotawatt):
+    """Test input sensors work."""
     assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 0
 
+    # Discover this sensor during a regular update.
     mock_iotawatt.getSensors.return_value["sensors"]["my_sensor_key"] = INPUT_SENSOR
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.my_sensor") is not None
-
-    mock_iotawatt.getSensors.return_value["sensors"].pop("my_sensor_key")
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.my_sensor") is None
-
-
-async def test_sensor_type_input(hass, mock_iotawatt):
-    """Test input sensors work."""
-    mock_iotawatt.getSensors.return_value["sensors"]["my_sensor_key"] = INPUT_SENSOR
-    assert await async_setup_component(hass, "iotawatt", {})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1
@@ -57,6 +43,12 @@ async def test_sensor_type_input(hass, mock_iotawatt):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
     assert state.attributes["channel"] == "1"
     assert state.attributes["type"] == "Input"
+
+    mock_iotawatt.getSensors.return_value["sensors"].pop("my_sensor_key")
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_sensor") is None
 
 
 async def test_sensor_type_output(hass, mock_iotawatt):
@@ -76,3 +68,9 @@ async def test_sensor_type_output(hass, mock_iotawatt):
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
     assert state.attributes["type"] == "Output"
+
+    mock_iotawatt.getSensors.return_value["sensors"].pop("my_watthour_sensor_key")
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_watthour_sensor") is None
