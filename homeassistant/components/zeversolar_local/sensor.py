@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data[COORDINATOR]
-    _LOGGER.debug("Setting up zever solar sensors.")
+    _LOGGER.debug("Setting up zever solar sensors")
     sensors = [
         ZeverSolarLocalTotalEnergySensor(coordinator, entry.data[ZEVER_INVERTER_ID]),
         ZeverSolarLocalCurrentPowerSensor(coordinator, entry.data[ZEVER_INVERTER_ID]),

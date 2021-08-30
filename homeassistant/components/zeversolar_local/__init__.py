@@ -31,14 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("Updating zeversolar data")
             return await api.solardata(zever_url, timeout=2)
         except api.ZeverError as err:
-            raise UpdateFailed(err)
+            raise UpdateFailed(err) from None
 
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="zeversolar_local",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=15),  # todo: make this configurable.
+        update_interval=timedelta(seconds=15),
     )
 
     await coordinator.async_config_entry_first_refresh()
