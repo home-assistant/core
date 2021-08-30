@@ -319,6 +319,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 config_entry.data[CONF_API_KEY],
                 config_entry.data[CONF_APP_KEY],
                 session=session,
+                logger=LOGGER,
             ),
         )
         hass.loop.create_task(ambient.ws_connect())
