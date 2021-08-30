@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import cast
 
@@ -144,10 +144,6 @@ class RenaultVehicleProxy:
         """Get charge mode information from vehicle."""
         return await self._vehicle.get_charge_mode()
 
-    async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:
-        """Get charging settings information from vehicle."""
-        return await self._vehicle.get_charging_settings()
-
     async def get_cockpit(self) -> models.KamereonVehicleCockpitData:
         """Get cockpit information from vehicle."""
         return await self._vehicle.get_cockpit()
@@ -155,30 +151,3 @@ class RenaultVehicleProxy:
     async def get_hvac_status(self) -> models.KamereonVehicleHvacStatusData:
         """Get hvac status information from vehicle."""
         return await self._vehicle.get_hvac_status()
-
-    async def send_ac_start(
-        self, temperature: float, when: datetime | None = None
-    ) -> models.KamereonVehicleHvacStartActionData:
-        """Start A/C on vehicle."""
-        return await self._vehicle.set_ac_start(temperature, when)
-
-    async def send_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:
-        """Cancel A/C on vehicle."""
-        return await self._vehicle.set_ac_stop()
-
-    async def send_charge_start(self) -> models.KamereonVehicleChargingStartActionData:
-        """Start charge on vehicle."""
-        return await self._vehicle.set_charge_start()
-
-    async def send_set_charge_mode(
-        self, charge_mode: str
-    ) -> models.KamereonVehicleChargeModeActionData:
-        """Set charge mode on vehicle."""
-        return await self._vehicle.set_charge_mode(charge_mode)
-
-    async def send_set_charge_schedules(
-        self, schedules: models.KamereonVehicleChargingSettingsData
-    ) -> models.KamereonVehicleChargeScheduleActionData:
-        """Set charge schedules on vehicle."""
-        assert schedules.schedules is not None
-        return await self._vehicle.set_charge_schedules(schedules.schedules)

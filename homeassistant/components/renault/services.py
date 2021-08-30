@@ -1,6 +1,10 @@
 """Support for Renault services."""
+from __future__ import annotations
+
+from datetime import datetime
 import logging
 from types import MappingProxyType
+from typing import Any
 
 import voluptuous as vol
 
@@ -87,41 +91,42 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def ac_cancel(service_call: ServiceCall) -> None:
         """Cancel A/C."""
-        vehicle = get_vehicle(service_call.data)
+        proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("A/C cancel attempt")
-        result = await vehicle.send_ac_stop()
+        result = await proxy._vehicle.set_ac_stop()
         LOGGER.info("A/C cancel result: %s", result)
 
     async def ac_start(service_call: ServiceCall) -> None:
         """Start A/C."""
-        temperature = service_call.data[ATTR_TEMPERATURE]
-        when = service_call.data.get(ATTR_WHEN, None)
-        vehicle = get_vehicle(service_call.data)
+        temperature: float = service_call.data[ATTR_TEMPERATURE]
+        when: datetime | None = service_call.data.get(ATTR_WHEN)
+        proxy = get_vehicle_proxy(service_call.data)
 
-        LOGGER.debug("A/C start attempt: %s / %s", when, temperature)
-        result = await vehicle.send_ac_start(temperature=temperature, when=when)
+        LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
+        result = await proxy._vehicle.set_ac_start(temperature, when)
         LOGGER.info("A/C start result: %s", result.raw_data)
 
     async def charge_set_mode(service_call: ServiceCall) -> None:
         """Set charge mode."""
         charge_mode: str = service_call.data[ATTR_CHARGE_MODE]
-        vehicle = get_vehicle(service_call.data)
+        proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("Charge set mode attempt: %s", charge_mode)
-        result = await vehicle.send_set_charge_mode(charge_mode)
+        result = await proxy._vehicle.set_charge_mode(charge_mode)
         LOGGER.info("Charge set mode result: %s", result)
 
     async def charge_set_schedules(service_call: ServiceCall) -> None:
         """Set charge schedules."""
-        schedules: list = service_call.data[ATTR_SCHEDULES]
-        vehicle = get_vehicle(service_call.data)
-        charge_schedules = await vehicle.get_charging_settings()
+        schedules: list[dict[str, Any]] = service_call.data[ATTR_SCHEDULES]
+        proxy = get_vehicle_proxy(service_call.data)
+        charge_schedules = await proxy._vehicle.get_charging_settings()
         for schedule in schedules:
             charge_schedules.update(schedule)
 
+        assert charge_schedules.schedules is not None
         LOGGER.debug("Charge set schedules attempt: %s", schedules)
-        result = await vehicle.send_set_charge_schedules(charge_schedules)
+        result = await proxy._vehicle.set_charge_schedules(charge_schedules.schedules)
         LOGGER.info("Charge set schedules result: %s", result)
         LOGGER.info(
             "It may take some time before these changes are reflected in your vehicle"
@@ -129,13 +134,13 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def charge_start(service_call: ServiceCall) -> None:
         """Start charge."""
-        vehicle = get_vehicle(service_call.data)
+        proxy = get_vehicle_proxy(service_call.data)
 
         LOGGER.debug("Charge start attempt")
-        result = await vehicle.send_charge_start()
+        result = await proxy._vehicle.set_charge_start()
         LOGGER.info("Charge start result: %s", result)
 
-    def get_vehicle(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
+    def get_vehicle_proxy(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
         vin: str = service_call_data[ATTR_VIN]
         proxy: RenaultHub
