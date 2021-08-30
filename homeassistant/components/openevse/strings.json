@@ -14,8 +14,7 @@
             "password": "[%key:common::config_flow::data::password%] (optional)",
             "username": "[%key:common::config_flow::data::username%] (optional)"
           },
-          "description": "Please enter the connection information of OpenEVSE charger.",
-          "title": "OpenEVSE Setup"
+          "description": "Please enter the connection information of OpenEVSE charger."
         }
       }
     },
@@ -31,8 +30,7 @@
                 "password": "[%key:common::config_flow::data::password%] (optional)",
                 "username": "[%key:common::config_flow::data::username%] (optional)"
             },
-            "description": "Please enter the connection information of OpenEVSE charger.",
-            "title": "OpenEVSE Setup"
+            "description": "[%key:component::openevse::config::step::user::description%]"
         }
       }
     }
