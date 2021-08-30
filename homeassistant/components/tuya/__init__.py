@@ -2,7 +2,6 @@
 """Support for Tuya Smart devices."""
 
 import itertools
-import json
 import logging
 
 from tuya_iot import (
@@ -23,7 +22,6 @@ from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
-from .aes_cbc import AES_ACCOUNT_KEY, KEY_KEY, XOR_KEY, AesCBC as Aes
 from .const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
@@ -70,52 +68,13 @@ CONFIG_SCHEMA = vol.Schema(
 # decrypt or encrypt entry info
 
 
-def entry_decrypt(hass: HomeAssistant, entry: ConfigEntry, init_entry_data):
-    """Decrypt code from config entry."""
-    aes = Aes()
-    # decrypt the new account info
-    if XOR_KEY in init_entry_data:
-        _LOGGER.debug("tuya.__init__.exist_xor_cache-->True")
-        key_iv = aes.xor_decrypt(init_entry_data[XOR_KEY], init_entry_data[KEY_KEY])
-        cbc_key = key_iv[0:16]
-        cbc_iv = key_iv[16:32]
-        decrpyt_str = aes.cbc_decrypt(cbc_key, cbc_iv, init_entry_data[AES_ACCOUNT_KEY])
-        entry_data = aes.json_to_dict(decrpyt_str)
-    else:
-        # if not exist xor cache, use old account info
-        _LOGGER.debug("tuya.__init__.exist_xor_cache-->False")
-        entry_data = init_entry_data
-        cbc_key = aes.random_16()
-        cbc_iv = aes.random_16()
-        access_id = init_entry_data[CONF_ACCESS_ID]
-        access_id_entry = aes.cbc_encrypt(cbc_key, cbc_iv, access_id)
-        merged_data = cbc_key + cbc_iv
-        c_xor_entry = aes.xor_encrypt(merged_data, access_id_entry)
-        # account info encrypted with AES-CBC
-        user_input_encrpt = aes.cbc_encrypt(
-            cbc_key, cbc_iv, json.dumps(dict(init_entry_data))
-        )
-        # update old account info
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                AES_ACCOUNT_KEY: user_input_encrpt,
-                XOR_KEY: c_xor_entry,
-                KEY_KEY: access_id_entry,
-            },
-        )
-    return entry_data
-
-
 async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    init_entry_data = entry.data
     # decrypt or encrypt entry info
-    entry_data = entry_decrypt(hass, entry, init_entry_data)
-    project_type = ProjectType(entry_data[CONF_PROJECT_TYPE])
+    project_type = ProjectType(entry.data[CONF_PROJECT_TYPE])
     api = TuyaOpenAPI(
-        entry_data[CONF_ENDPOINT],
-        entry_data[CONF_ACCESS_ID],
-        entry_data[CONF_ACCESS_SECRET],
+        entry.data[CONF_ENDPOINT],
+        entry.data[CONF_ACCESS_ID],
+        entry.data[CONF_ACCESS_SECRET],
         project_type,
     )
 
@@ -123,15 +82,15 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if project_type == ProjectType.INDUSTY_SOLUTIONS:
         response = await hass.async_add_executor_job(
-            api.login, entry_data[CONF_USERNAME], entry_data[CONF_PASSWORD]
+            api.login, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
         )
     else:
         response = await hass.async_add_executor_job(
             api.login,
-            entry_data[CONF_USERNAME],
-            entry_data[CONF_PASSWORD],
-            entry_data[CONF_COUNTRY_CODE],
-            entry_data[CONF_APP_TYPE],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_COUNTRY_CODE],
+            entry.data[CONF_APP_TYPE],
         )
 
     if response.get("success", False) is False:
