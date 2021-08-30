@@ -5,27 +5,29 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from zwave_js_server.const import (
-    CO2_SENSORS,
-    CO_SENSORS,
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.meter import (
     CURRENT_METER_TYPES,
-    CURRENT_SENSORS,
-    ENERGY_METER_TYPES,
-    ENERGY_SENSORS,
-    HUMIDITY_SENSORS,
-    ILLUMINANCE_SENSORS,
+    ENERGY_TOTAL_INCREASING_METER_TYPES,
     POWER_FACTOR_METER_TYPES,
     POWER_METER_TYPES,
+    VOLTAGE_METER_TYPES,
+    ElectricScale,
+    MeterScaleType,
+)
+from zwave_js_server.const.command_class.multilevel_sensor import (
+    CO2_SENSORS,
+    CO_SENSORS,
+    CURRENT_SENSORS,
+    ENERGY_MEASUREMENT_SENSORS,
+    HUMIDITY_SENSORS,
+    ILLUMINANCE_SENSORS,
     POWER_SENSORS,
     PRESSURE_SENSORS,
     SIGNAL_STRENGTH_SENSORS,
     TEMPERATURE_SENSORS,
     TIMESTAMP_SENSORS,
-    VOLTAGE_METER_TYPES,
     VOLTAGE_SENSORS,
-    CommandClass,
-    ElectricScale,
-    MeterScaleType,
     MultilevelSensorType,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -59,7 +61,7 @@ from .const import (
 METER_DEVICE_CLASS_MAP: dict[str, set[MeterScaleType]] = {
     ENTITY_DESC_KEY_CURRENT: CURRENT_METER_TYPES,
     ENTITY_DESC_KEY_VOLTAGE: VOLTAGE_METER_TYPES,
-    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ENERGY_METER_TYPES,
+    ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: ENERGY_TOTAL_INCREASING_METER_TYPES,
     ENTITY_DESC_KEY_POWER: POWER_METER_TYPES,
     ENTITY_DESC_KEY_POWER_FACTOR: POWER_FACTOR_METER_TYPES,
 }
@@ -68,7 +70,7 @@ MULTILEVEL_SENSOR_DEVICE_CLASS_MAP: dict[str, set[MultilevelSensorType]] = {
     ENTITY_DESC_KEY_CO: CO_SENSORS,
     ENTITY_DESC_KEY_CO2: CO2_SENSORS,
     ENTITY_DESC_KEY_CURRENT: CURRENT_SENSORS,
-    ENTITY_DESC_KEY_ENERGY_MEASUREMENT: ENERGY_SENSORS,
+    ENTITY_DESC_KEY_ENERGY_MEASUREMENT: ENERGY_MEASUREMENT_SENSORS,
     ENTITY_DESC_KEY_HUMIDITY: HUMIDITY_SENSORS,
     ENTITY_DESC_KEY_ILLUMINANCE: ILLUMINANCE_SENSORS,
     ENTITY_DESC_KEY_POWER: POWER_SENSORS,
@@ -193,7 +195,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             # We do this because even though these are energy scales, they don't meet
             # the unit requirements for the energy device class.
             if scale_type in (
-                ElectricScale.PULSE,
+                ElectricScale.PULSE_COUNT,
                 ElectricScale.KILOVOLT_AMPERE_HOUR,
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
             ):
