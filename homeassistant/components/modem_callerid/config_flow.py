@@ -37,7 +37,6 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         description = discovery_info["description"]
 
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        self.usb_path = dev_path
         uid = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         _, errors = await self.validate_input(dev_path=dev_path, uid=uid)
         if errors is None:
