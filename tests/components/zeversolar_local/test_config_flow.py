@@ -43,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Zeversolar invertor."
+    assert result2["title"] == "Inverter - inverterid"
     assert result2["data"] == config_entry_data
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -85,7 +85,6 @@ async def test_validate_input(hass):
         result = await config_flow.validate_input(hass, data=data)
 
     assert result == {
-        "title": f"Zeversolar invertor - {expected_zever_id}",
         CONF_URL: expected_url,
         ZEVER_INVERTER_ID: expected_zever_id,
     }

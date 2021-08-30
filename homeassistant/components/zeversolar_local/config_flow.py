@@ -37,7 +37,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     inverter_id = await api.inverter_id(url)
 
     return {
-        "title": f"Zeversolar inverter - {inverter_id}",
         CONF_URL: url,
         ZEVER_INVERTER_ID: inverter_id,
     }
@@ -68,7 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(info[ZEVER_INVERTER_ID])
-            return self.async_create_entry(title=info["title"], data=info)
+            return self.async_create_entry(
+                title=f"Inverter - {info[ZEVER_INVERTER_ID]}", data=info
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
