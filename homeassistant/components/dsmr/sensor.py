@@ -146,6 +146,7 @@ async def async_setup_entry(
 
                 if transport:
                     # Register listener to close transport on HA shutdown
+                    @callback
                     def close_transport(_event: EventType) -> None:
                         """Close the transport on HA shutdown."""
                         if not transport:
