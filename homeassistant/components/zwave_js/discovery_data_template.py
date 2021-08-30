@@ -44,6 +44,7 @@ from .const import (
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_HUMIDITY,
     ENTITY_DESC_KEY_ILLUMINANCE,
+    ENTITY_DESC_KEY_MEASUREMENT,
     ENTITY_DESC_KEY_POWER,
     ENTITY_DESC_KEY_POWER_FACTOR,
     ENTITY_DESC_KEY_PRESSURE,
@@ -197,6 +198,11 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                 ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
             ):
                 return ENTITY_DESC_KEY_TOTAL_INCREASING
+            # We do this because even though these are power scales, they don't meet
+            # the unit requirements for the energy power class.
+            if scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
+                return ENTITY_DESC_KEY_MEASUREMENT
+
             for key, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
                     return key
