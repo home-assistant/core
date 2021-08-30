@@ -25,7 +25,6 @@ async def test_form(hass: HomeAssistant) -> None:
         ZEVER_URL: "http://0.0.0.0",
     }
 
-    # await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
