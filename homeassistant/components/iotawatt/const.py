@@ -12,6 +12,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
@@ -32,8 +33,9 @@ VOLT_AMPERE_REACTIVE_HOURS = "VARh"
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
     "Amps": SensorEntityDescription(
         "Amps",
-        native_unit_of_measurement=POWER_VOLT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
+        device_class=DEVICE_CLASS_CURRENT,
     ),
     "Hz": SensorEntityDescription(
         "Hz",
