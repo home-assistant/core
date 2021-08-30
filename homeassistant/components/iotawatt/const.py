@@ -20,11 +20,7 @@ from homeassistant.const import (
     POWER_WATT,
 )
 
-DEFAULT_ICON = "mdi:flash"
-DEFAULT_SCAN_INTERVAL = 30
 DOMAIN = "iotawatt"
-COORDINATOR = "coordinator"
-SIGNAL_ADD_DEVICE = "iotawatt_add_device"
 
 POWER_FACTOR = "PF"
 VOLT_AMPERE_REACTIVE = "VAR"

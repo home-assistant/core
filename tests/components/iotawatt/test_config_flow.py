@@ -28,7 +28,6 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "name": "iotawatt",
                 "host": "1.1.1.1",
             },
         )
@@ -36,36 +35,76 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        "host": "1.1.1.1",
+    }
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+async def test_form_auth(hass: HomeAssistant) -> None:
+    """Test we handle auth."""
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.iotawatt.async_setup_entry",
-        return_value=True,
-    ), patch(
         "iotawattpy.iotawatt.Iotawatt.connect",
         return_value=False,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "name": "iotawatt",
-                "host": "1.1.1.1",
-            },
+            {"host": "1.1.1.1"},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "auth"
+
+    with patch(
+        "iotawattpy.iotawatt.Iotawatt.connect",
+        return_value=False,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "mock-user",
+                "password": "mock-pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["step_id"] == "auth"
+    assert result3["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.iotawatt.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "iotawattpy.iotawatt.Iotawatt.connect",
+        return_value=True,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "mock-user",
+                "password": "mock-pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] == RESULT_TYPE_CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {
+        "host": "1.1.1.1",
+        "username": "mock-user",
+        "password": "mock-pass",
+    }
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -80,10 +119,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "name": "iotawatt",
-                "host": "1.1.1.1",
-            },
+            {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
@@ -102,10 +138,7 @@ async def test_form_setup_exception(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "name": "iotawatt",
-                "host": "1.1.1.1",
-            },
+            {"host": "1.1.1.1"},
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
