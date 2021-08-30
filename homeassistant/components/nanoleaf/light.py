@@ -86,7 +86,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         super().__init__(nanoleaf)
         self._attr_unique_id = nanoleaf.serial_no
         self._attr_name = nanoleaf.name
-        self._attr_supported_color_modes = (COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS)
+        self._attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
         self._attr_supported_features = SUPPORT_EFFECT | SUPPORT_TRANSITION
         self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
         self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
