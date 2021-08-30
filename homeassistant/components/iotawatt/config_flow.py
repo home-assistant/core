@@ -15,11 +15,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, str]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     iotawatt = Iotawatt(
         "",
-        data["host"],
+        data[CONF_HOST],
         httpx_client.get_async_client(hass),
         data.get(CONF_USERNAME),
         data.get(CONF_PASSWORD),
@@ -35,12 +37,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     if not is_connected:
         return {"base": "invalid_auth"}
 
+    return {}
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iotawatt."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -60,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=schema)
 
         if not (errors := await validate_input(self.hass, user_input)):
-            return self.async_create_entry(title=user_input["host"], data=user_input)
+            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         if errors == {"base": "invalid_auth"}:
             self._data.update(user_input)
@@ -93,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="auth", data_schema=data_schema, errors=errors
             )
 
-        return self.async_create_entry(title=data["host"], data=data)
+        return self.async_create_entry(title=data[CONF_HOST], data=data)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

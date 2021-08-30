@@ -27,7 +27,6 @@ class IotawattUpdater(DataUpdateCoordinator):
             entry.data.get(CONF_USERNAME),
             entry.data.get(CONF_PASSWORD),
         )
-        self.sensorlist: dict[str, list[str]] = {}
 
         super().__init__(
             hass=hass,
