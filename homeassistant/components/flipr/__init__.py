@@ -81,6 +81,7 @@ class FliprEntity(CoordinatorEntity):
     ) -> None:
         """Initialize Flipr sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
         if coordinator.config_entry:
             flipr_id = coordinator.config_entry.data[CONF_FLIPR_ID]
             self._attr_unique_id = (

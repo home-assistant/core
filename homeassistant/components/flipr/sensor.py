@@ -11,7 +11,6 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_MILLIVOLT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FliprEntity
 from .const import ATTRIBUTION, DOMAIN
@@ -60,18 +59,6 @@ class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
 
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize Flipr sensor super class."""
-        super().__init__(
-            coordinator,
-            description,
-        )
-        self.entity_description = description
 
     @property
     def name(self):

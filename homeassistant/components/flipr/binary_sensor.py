@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FliprEntity
 from .const import DOMAIN
@@ -40,18 +39,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class FliprBinarySensor(FliprEntity, BinarySensorEntity):
     """Representation of Flipr binary sensors."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        description: BinarySensorEntityDescription,
-    ) -> None:
-        """Initialize a Flipr sensor."""
-        super().__init__(
-            coordinator,
-            description,
-        )
-        self.entity_description = description
 
     @property
     def is_on(self):
