@@ -6,10 +6,6 @@
   "requirements": [
     "zeversolarlocal==0.0.9"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@sander76"
   ],
