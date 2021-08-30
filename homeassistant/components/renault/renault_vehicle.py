@@ -60,6 +60,11 @@ class RenaultVehicleProxy:
         """Return a device description for device registry."""
         return self._device_info
 
+    @property
+    def vehicle(self) -> RenaultVehicle:
+        """Return the underlying vehicle."""
+        return self._vehicle
+
     async def async_initialise(self) -> None:
         """Load available sensors."""
         if await self.endpoint_available("cockpit"):
