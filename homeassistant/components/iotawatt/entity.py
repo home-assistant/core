@@ -16,18 +16,3 @@ class IotaWattEntity(CoordinatorEntity):
         self._attr_name = name
         self._attr_icon = DEFAULT_ICON
         self._attr_unique_id = mac_address
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._attr_unique_id
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._attr_name
-
-    @property
-    def icon(self):
-        """Return the icon for the entity."""
-        return self._attr_icon
