@@ -79,6 +79,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -593,6 +594,7 @@ async def test_pymodbus_constructor_fail(hass, caplog):
     config = {
         DOMAIN: [
             {
+                CONF_NAME: TEST_MODBUS_NAME,
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
@@ -606,7 +608,8 @@ async def test_pymodbus_constructor_fail(hass, caplog):
         mock_pb.side_effect = ModbusException("test no class")
         assert await async_setup_component(hass, DOMAIN, config) is False
         await hass.async_block_till_done()
-        assert caplog.messages[0].startswith("Pymodbus: Modbus Error: test")
+        message = f"Pymodbus: {TEST_MODBUS_NAME}: Modbus Error: test"
+        assert caplog.messages[0].startswith(message)
         assert caplog.records[0].levelname == "ERROR"
         assert mock_pb.called
 
@@ -684,3 +687,29 @@ async def test_delay(hass, mock_pymodbus):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_TYPE: TCP,
+            CONF_HOST: TEST_MODBUS_HOST,
+            CONF_PORT: TEST_PORT_TCP,
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 117,
+                    CONF_SCAN_INTERVAL: 0,
+                }
+            ],
+        },
+    ],
+)
+async def test_shutdown(hass, caplog, mock_pymodbus, mock_modbus_with_pymodbus):
+    """Run test for shutdown."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert mock_pymodbus.close.called
+    assert caplog.text == ""

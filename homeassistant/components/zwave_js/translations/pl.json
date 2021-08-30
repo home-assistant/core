@@ -59,17 +59,17 @@
     },
     "device_automation": {
         "condition_type": {
-            "config_parameter": "Warto\u015b\u0107 parametru jest {subtype}",
-            "node_status": "Stan w\u0119z\u0142a",
-            "value": "Aktualna warto\u015b\u0107 warto\u015bci Z-Wave"
+            "config_parameter": "warto\u015b\u0107 parametru jest {subtype}",
+            "node_status": "stan w\u0119z\u0142a",
+            "value": "aktualna warto\u015b\u0107 Z-Wave"
         },
         "trigger_type": {
-            "event.notification.entry_control": "Wys\u0142ano powiadomienie kontroli wpisu",
-            "event.notification.notification": "Wys\u0142ano powiadomienie",
-            "event.value_notification.basic": "Podstawowe wydarzenie CC na {subtype}",
-            "event.value_notification.central_scene": "Akcja sceny centralnej na {subtype}",
-            "event.value_notification.scene_activation": "Aktywacja sceny na {subtype}",
-            "state.node_status": "Zmieni\u0142 si\u0119 stan w\u0119z\u0142a",
+            "event.notification.entry_control": "zostanie wys\u0142ane powiadomienie kontroli wpisu",
+            "event.notification.notification": "zostanie wys\u0142ane powiadomienie",
+            "event.value_notification.basic": "wyst\u0105pi podstawowe wydarzenie CC na {subtype}",
+            "event.value_notification.central_scene": "wyst\u0105pi akcja sceny centralnej na {subtype}",
+            "event.value_notification.scene_activation": "zostanie aktywowana scena na {subtype}",
+            "state.node_status": "zmieni si\u0119 stan w\u0119z\u0142a",
             "zwave_js.value_updated.config_parameter": "zmieni si\u0119 warto\u015b\u0107 parametru konfiguracji {subtype}",
             "zwave_js.value_updated.value": "zmieni si\u0119 warto\u015b\u0107 na Z-Wave JS"
         }
