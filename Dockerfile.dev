@@ -6,6 +6,8 @@ RUN \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        # Additional library needed by fjaraskupan tests and accordingly by VScode Tests Discovery
+        bluez \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
@@ -33,10 +35,6 @@ COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
 RUN pip3 install -r requirements.txt \
    && pip3 install -r requirements_test.txt \
    && rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
-# Additional library needed by fjaraskupan tests and accordingly by VScode Tests Discovery
-RUN apt-get update && apt-get install --no-install-recommends -y bluez \
-   && apt-get clean \
-   && rm -rf /var/lib/apt/lists/*
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
