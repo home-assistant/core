@@ -376,7 +376,7 @@ async def async_setup_entry(
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda bridge: round(
+                    value=lambda bridge, index=index: round(
                         bridge.processes.load.cpus[index].load, 2
                     ),
                 ),
@@ -390,7 +390,7 @@ async def async_setup_entry(
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda bridge: round(
+                    value=lambda bridge, index=index: round(
                         bridge.processes.load.cpus[index].loadIdle, 2
                     ),
                 ),
@@ -404,7 +404,7 @@ async def async_setup_entry(
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda bridge: round(
+                    value=lambda bridge, index=index: round(
                         bridge.processes.load.cpus[index].loadSystem, 2
                     ),
                 ),
@@ -418,7 +418,7 @@ async def async_setup_entry(
                     state_class=STATE_CLASS_MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda bridge: round(
+                    value=lambda bridge, index=index: round(
                         bridge.processes.load.cpus[index].loadUser, 2
                     ),
                 ),
