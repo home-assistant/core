@@ -16,6 +16,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
+    _LOGGER.warning("SL_DATA.KEY_CIRCUITS: %s", coordinator.data[SL_DATA.KEY_CIRCUITS])
+
     for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items():
         enabled = circuit["name"] not in GENERIC_CIRCUIT_NAMES
         entities.append(ScreenLogicSwitch(coordinator, circuit_num, enabled))
