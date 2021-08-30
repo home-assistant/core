@@ -24,6 +24,7 @@ from zwave_js_server.const import (
     VOLTAGE_METER_TYPES,
     VOLTAGE_SENSORS,
     CommandClass,
+    ElectricScale,
     MeterScaleType,
     MultilevelSensorType,
 )
@@ -50,6 +51,7 @@ from .const import (
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TIMESTAMP,
+    ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
 )
 
@@ -187,6 +189,14 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
 
         if value.command_class == CommandClass.METER:
             scale_type = get_meter_scale_type(value)
+            # We do this because even though these are energy scales, they don't meet
+            # the unit requirements for the energy device class.
+            if scale_type in (
+                ElectricScale.PULSE,
+                ElectricScale.KILOVOLT_AMPERE_HOUR,
+                ElectricScale.KILOVOLT_AMPERE_REACTIVE_HOUR,
+            ):
+                return ENTITY_DESC_KEY_TOTAL_INCREASING
             for key, scale_type_set in METER_DEVICE_CLASS_MAP.items():
                 if scale_type in scale_type_set:
                     return key

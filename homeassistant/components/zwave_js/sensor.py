@@ -70,6 +70,7 @@ from .const import (
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TIMESTAMP,
+    ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
     SERVICE_RESET_METER,
 )
@@ -167,6 +168,11 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=None,
+    ),
+    ENTITY_DESC_KEY_TOTAL_INCREASING: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TOTAL_INCREASING,
+        device_class=None,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 }
 
