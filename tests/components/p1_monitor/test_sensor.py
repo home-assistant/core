@@ -151,29 +151,23 @@ async def test_settings(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.monitor_energy_consumption_low_tariff")
-    entry = entity_registry.async_get("sensor.monitor_energy_consumption_low_tariff")
+    state = hass.states.get("sensor.monitor_energy_consumption_price_low")
+    entry = entity_registry.async_get("sensor.monitor_energy_consumption_price_low")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_settings_energy_consumption_low_tariff"
+    assert entry.unique_id == f"{entry_id}_settings_energy_consumption_price_low"
     assert state.state == "0.20522"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy Consumption Price - Low Tariff"
-    )
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
 
-    state = hass.states.get("sensor.monitor_energy_production_low_tariff")
-    entry = entity_registry.async_get("sensor.monitor_energy_production_low_tariff")
+    state = hass.states.get("sensor.monitor_energy_production_price_low")
+    entry = entity_registry.async_get("sensor.monitor_energy_production_price_low")
     assert entry
     assert state
-    assert entry.unique_id == f"{entry_id}_settings_energy_production_low_tariff"
+    assert entry.unique_id == f"{entry_id}_settings_energy_production_price_low"
     assert state.state == "0.20522"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Energy Production Price - Low Tariff"
-    )
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
 
