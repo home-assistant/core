@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
 from .helpers import (
+    AddressType,
     DeviceConnectionType,
     InputType,
     async_register_lcn_address_devices,
@@ -166,30 +167,34 @@ class LcnEntity(Entity):
         self._name: str = config[CONF_NAME]
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        address = (
+    def address(self) -> AddressType:
+        """Return LCN address."""
+        return (
             self.device_connection.seg_id,
             self.device_connection.addr_id,
             self.device_connection.is_group,
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
         domain_config = (self.config[CONF_DOMAIN], self.config[CONF_RESOURCE])
 
-        return generate_unique_id(self.entry_id, address, domain_config)
+        return generate_unique_id(self.entry_id, self.address, domain_config)
 
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
-        if self.device_connection.is_group:
-            hw_type = f"group ({self.config[CONF_RESOURCE]})"
-        else:
-            hw_type = f"module ({self.config[CONF_RESOURCE]})"
+        address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
+        hw_model = (
+            f"LCN {self.config[CONF_DOMAIN]} ({address}.{self.config[CONF_RESOURCE]})"
+        )
 
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Issendorff",
-            "model": hw_type,
+            "model": hw_model,
             "via_device": (
                 DOMAIN,
                 generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
