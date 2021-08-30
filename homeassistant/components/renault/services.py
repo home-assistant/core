@@ -22,28 +22,28 @@ from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
 
-SCHEMA_CHARGE_MODE = "charge_mode"
-SCHEMA_SCHEDULES = "schedules"
-SCHEMA_TEMPERATURE = "temperature"
-SCHEMA_VIN = "vin"
-SCHEMA_WHEN = "when"
+ATTR_CHARGE_MODE = "charge_mode"
+ATTR_SCHEDULES = "schedules"
+ATTR_TEMPERATURE = "temperature"
+ATTR_VIN = "vin"
+ATTR_WHEN = "when"
 
 SERVICE_AC_CANCEL_SCHEMA = vol.Schema(
     {
-        vol.Required(SCHEMA_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
     }
 )
 SERVICE_AC_START_SCHEMA = vol.Schema(
     {
-        vol.Required(SCHEMA_VIN): cv.matches_regex(REGEX_VIN),
-        vol.Required(SCHEMA_TEMPERATURE): cv.positive_float,
-        vol.Optional(SCHEMA_WHEN): cv.datetime,
+        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_TEMPERATURE): cv.positive_float,
+        vol.Optional(ATTR_WHEN): cv.datetime,
     }
 )
 SERVICE_CHARGE_SET_MODE_SCHEMA = vol.Schema(
     {
-        vol.Required(SCHEMA_VIN): cv.matches_regex(REGEX_VIN),
-        vol.Required(SCHEMA_CHARGE_MODE): vol.In(
+        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_CHARGE_MODE): vol.In(
             ["always", "always_charging", "schedule_mode"]
         ),
     }
@@ -69,15 +69,15 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = vol.Schema(
     {
-        vol.Required(SCHEMA_VIN): cv.matches_regex(REGEX_VIN),
-        vol.Required(SCHEMA_SCHEDULES): vol.All(
+        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_SCHEDULES): vol.All(
             cv.ensure_list, [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
     }
 )
 SERVICE_CHARGE_START_SCHEMA = vol.Schema(
     {
-        vol.Required(SCHEMA_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
     }
 )
 
@@ -95,8 +95,8 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def ac_start(service_call: ServiceCall) -> None:
         """Start A/C."""
-        temperature = service_call.data[SCHEMA_TEMPERATURE]
-        when = service_call.data.get(SCHEMA_WHEN, None)
+        temperature = service_call.data[ATTR_TEMPERATURE]
+        when = service_call.data.get(ATTR_WHEN, None)
         vehicle = get_vehicle(service_call.data)
 
         LOGGER.debug("A/C start attempt: %s / %s", when, temperature)
@@ -105,7 +105,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def charge_set_mode(service_call: ServiceCall) -> None:
         """Set charge mode."""
-        charge_mode: str = service_call.data[SCHEMA_CHARGE_MODE]
+        charge_mode: str = service_call.data[ATTR_CHARGE_MODE]
         vehicle = get_vehicle(service_call.data)
 
         LOGGER.debug("Charge set mode attempt: %s", charge_mode)
@@ -114,7 +114,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def charge_set_schedules(service_call: ServiceCall) -> None:
         """Set charge schedules."""
-        schedules: list = service_call.data[SCHEMA_SCHEDULES]
+        schedules: list = service_call.data[ATTR_SCHEDULES]
         vehicle = get_vehicle(service_call.data)
         charge_schedules = await vehicle.get_charging_settings()
         for schedule in schedules:
@@ -137,7 +137,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     def get_vehicle(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
-        vin: str = service_call_data[SCHEMA_VIN]
+        vin: str = service_call_data[ATTR_VIN]
         proxy: RenaultHub
         for proxy in hass.data[DOMAIN].values():
             vehicle = proxy.vehicles.get(vin)

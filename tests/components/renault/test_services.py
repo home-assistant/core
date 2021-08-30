@@ -16,11 +16,11 @@ from homeassistant.components.renault.const import (
     SERVICES,
 )
 from homeassistant.components.renault.services import (
-    SCHEMA_CHARGE_MODE,
-    SCHEMA_SCHEDULES,
-    SCHEMA_TEMPERATURE,
-    SCHEMA_VIN,
-    SCHEMA_WHEN,
+    ATTR_CHARGE_MODE,
+    ATTR_SCHEDULES,
+    ATTR_TEMPERATURE,
+    ATTR_VIN,
+    ATTR_WHEN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -53,7 +53,7 @@ async def test_service_set_ac_cancel(hass: HomeAssistant):
     await setup_renault_integration_vehicle(hass, "zoe_40")
 
     data = {
-        SCHEMA_VIN: MOCK_VIN,
+        ATTR_VIN: MOCK_VIN,
     }
 
     with patch(
@@ -77,8 +77,8 @@ async def test_service_set_ac_start_simple(hass: HomeAssistant):
 
     temperature = 13.5
     data = {
-        SCHEMA_VIN: MOCK_VIN,
-        SCHEMA_TEMPERATURE: temperature,
+        ATTR_VIN: MOCK_VIN,
+        ATTR_TEMPERATURE: temperature,
     }
 
     with patch(
@@ -103,9 +103,9 @@ async def test_service_set_ac_start_with_date(hass: HomeAssistant):
     temperature = 13.5
     when = datetime(2025, 8, 23, 17, 12, 45)
     data = {
-        SCHEMA_VIN: MOCK_VIN,
-        SCHEMA_TEMPERATURE: temperature,
-        SCHEMA_WHEN: when,
+        ATTR_VIN: MOCK_VIN,
+        ATTR_TEMPERATURE: temperature,
+        ATTR_WHEN: when,
     }
 
     with patch(
@@ -129,8 +129,8 @@ async def test_service_set_charge_mode(hass: HomeAssistant):
 
     mode = "always"
     data = {
-        SCHEMA_VIN: MOCK_VIN,
-        SCHEMA_CHARGE_MODE: mode,
+        ATTR_VIN: MOCK_VIN,
+        ATTR_CHARGE_MODE: mode,
     }
 
     with patch(
@@ -154,8 +154,8 @@ async def test_service_set_charge_schedule(hass: HomeAssistant):
 
     schedules = {"id": 2}
     data = {
-        SCHEMA_VIN: MOCK_VIN,
-        SCHEMA_SCHEDULES: schedules,
+        ATTR_VIN: MOCK_VIN,
+        ATTR_SCHEDULES: schedules,
     }
 
     with patch(
@@ -198,8 +198,8 @@ async def test_service_set_charge_schedule_multi(hass: HomeAssistant):
         {"id": 3},
     ]
     data = {
-        SCHEMA_VIN: MOCK_VIN,
-        SCHEMA_SCHEDULES: schedules,
+        ATTR_VIN: MOCK_VIN,
+        ATTR_SCHEDULES: schedules,
     }
 
     with patch(
@@ -228,7 +228,7 @@ async def test_service_set_charge_start(hass: HomeAssistant):
     await setup_renault_integration_vehicle(hass, "zoe_40")
 
     data = {
-        SCHEMA_VIN: MOCK_VIN,
+        ATTR_VIN: MOCK_VIN,
     }
 
     with patch(
@@ -251,7 +251,7 @@ async def test_service_invalid_vin(hass: HomeAssistant):
     await setup_renault_integration_vehicle(hass, "zoe_40")
 
     data = {
-        SCHEMA_VIN: MOCK_VIN.replace("A", "B"),
+        ATTR_VIN: MOCK_VIN.replace("A", "B"),
     }
 
     with pytest.raises(ValueError):
