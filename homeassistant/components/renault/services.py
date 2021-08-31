@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -108,7 +108,8 @@ def setup_services(hass: HomeAssistant) -> None:
         for schedule in schedules:
             charge_schedules.update(schedule)
 
-        assert charge_schedules.schedules is not None
+        if TYPE_CHECKING:
+            assert charge_schedules.schedules is not None
         LOGGER.debug("Charge set schedules attempt: %s", schedules)
         result = await proxy.vehicle.set_charge_schedules(charge_schedules.schedules)
         LOGGER.debug("Charge set schedules result: %s", result)
