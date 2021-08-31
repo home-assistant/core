@@ -1027,8 +1027,22 @@ def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     if _area_id is None:
         return []
     ent_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_area(ent_reg, _area_id)
-    return [entry.entity_id for entry in entries]
+    entity_ids = [
+        entry.entity_id
+        for entry in entity_registry.async_entries_for_area(ent_reg, _area_id)
+    ]
+    dev_reg = device_registry.async_get(hass)
+    # We also need to add entities tied to a device in the area that don't themselves
+    # have an area specified since they inherit the area from the device.
+    entity_ids.extend(
+        [
+            entity.entity_id
+            for device in device_registry.async_entries_for_area(dev_reg, _area_id)
+            for entity in entity_registry.async_entries_for_device(ent_reg, device.id)
+            if entity.area_id is None
+        ]
+    )
+    return entity_ids
 
 
 def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:

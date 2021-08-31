@@ -1902,6 +1902,7 @@ async def test_area_entities(hass):
     """Test area_entities function."""
     config_entry = MockConfigEntry(domain="light")
     entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
     area_registry = mock_area_registry(hass)
 
     # Test non existing device id
@@ -1929,6 +1930,24 @@ async def test_area_entities(hass):
 
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
     assert_result_info(info, ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test for entities that inherit area from device
+    device_entry = device_registry.async_get_or_create(
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        config_entry_id=config_entry.entry_id,
+        suggested_area="sensor.fake",
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "hue_light",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_entities }}}}")
+    assert_result_info(info, ["light.hue_5678", "light.hue_light_5678"])
     assert info.rate_limit is None
 
 
