@@ -192,7 +192,9 @@ class DeviceListener(TuyaDeviceListener):
                 self,
                 device.id,
             )
-            async_dispatcher_send(self.hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
+            async_dispatcher_send(
+                self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}"
+            )
 
     def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""
