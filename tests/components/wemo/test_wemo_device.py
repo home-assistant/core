@@ -1,7 +1,7 @@
 """Tests for wemo_device.py."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import async_timeout
 import pytest
@@ -177,12 +177,12 @@ class TestInsight:
         yield pywemo_device
 
     @pytest.mark.parametrize(
-        "subscribed,state,expected",
+        "subscribed,state,expected_calls",
         [
-            (False, 0, True),
-            (False, 1, True),
-            (True, 0, True),
-            (True, 1, False),
+            (False, 0, [call(), call(True), call(), call()]),
+            (False, 1, [call(), call(True), call(), call()]),
+            (True, 0, [call(), call(True), call(), call()]),
+            (True, 1, [call(), call(), call()]),
         ],
     )
     async def test_should_poll(
@@ -190,21 +190,15 @@ class TestInsight:
         hass,
         subscribed,
         state,
-        expected,
+        expected_calls,
         wemo_entity,
         pywemo_device,
         pywemo_registry,
     ):
         """Validate the should_poll returns the correct value."""
         pywemo_registry.is_subscribed.return_value = subscribed
-        pywemo_device.reset_mock()
+        pywemo_device.get_state.reset_mock()
         pywemo_device.get_state.return_value = state
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
         await hass.async_block_till_done()
-        if expected:
-            pywemo_device.get_state.assert_any_call(True)
-        else:
-            for call in pywemo_device.get_state.mock_calls:
-                # All calls have no args/kwargs
-                assert not call.args
-                assert not call.kwargs
+        pywemo_device.get_state.assert_has_calls(expected_calls)
