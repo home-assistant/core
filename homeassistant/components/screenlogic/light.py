@@ -6,7 +6,7 @@ from screenlogicpy.const import DATA as SL_DATA, GENERIC_CIRCUIT_NAMES
 from homeassistant.components.light import LightEntity
 
 from . import ScreenLogicCircuitEntity
-from .const import DOMAIN, LIGHT_CIRCUITS
+from .const import DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
