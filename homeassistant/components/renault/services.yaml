@@ -11,9 +11,18 @@ ac_start:
     temperature:
       description: Target A/C temperature in °C.
       example: "21"
+      required: true
+      selector:
+        number:
+          min: 15
+          max: 25
+          step: 0.5
+          unit_of_measurement: °C
     when:
       description: Timestamp for the start of the A/C (optional - defaults to now).
       example: "2020-05-01T17:45:00"
+      selector:
+        text:
 
 ac_cancel:
   description: Cancel A/C on vehicle.
