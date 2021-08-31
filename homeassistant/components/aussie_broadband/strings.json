@@ -8,22 +8,43 @@
         }
       },
       "service": {
-        "title": "Select Service",
+        "title": "Select Services",
         "data": {
-          "service_id": "Service"
+          "services": "Services"
         }
       },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]"
+      "reauth": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Update password for {username}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_services_found": "No services were found for this account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Select Services",
+        "data": {
+          "services": "Services",
+          "scan_interval": "Update Interval (minutes)"
+        }
+      }
+    },
+    "abort": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

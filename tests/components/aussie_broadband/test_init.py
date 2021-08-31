@@ -1,8 +1,8 @@
 """Test the Aussie Broadband init."""
 from unittest.mock import patch
 
-from aussiebb import AuthenticationException
-import requests
+from aiohttp import ClientConnectionError
+from aussiebb.asyncio import AuthenticationException
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigEntryState
@@ -13,23 +13,23 @@ from .common import setup_platform
 
 async def test_unload(hass: HomeAssistant) -> None:
     """Test unload."""
-    entry = await setup_platform(hass, "sensor")
+    entry = await setup_platform(hass)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_auth_failure(hass: HomeAssistant) -> None:
-    """Test init with an auth failure."""
+    """Test init with an authentication failure."""
     with patch(
         "homeassistant.components.aussie_broadband.config_flow.ConfigFlow.async_step_reauth",
         return_value={"type": data_entry_flow.RESULT_TYPE_FORM},
     ) as mock_async_step_reauth:
-        await setup_platform(hass, "sensor", AuthenticationException())
+        await setup_platform(hass, side_effect=AuthenticationException())
         mock_async_step_reauth.assert_called_once()
 
 
 async def test_net_failure(hass: HomeAssistant) -> None:
-    """Test init with an auth failure."""
-    entry = await setup_platform(hass, "sensor", requests.exceptions.ConnectionError())
+    """Test init with a network failure."""
+    entry = await setup_platform(hass, side_effect=ClientConnectionError())
     assert entry.state is ConfigEntryState.SETUP_RETRY
