@@ -5,8 +5,6 @@
         "title": "Setup EnaSolar Inverter connection",
         "data": {
           "host": "FQDN or IP Address of the Inverter",
-          "sun_up": "The time that polling will start each day",
-          "sun_down": "The time that polling will cease each day",
           "name": "A name for the Inverter (optional)"
         },
         "description": "Enter the connection data"
@@ -21,14 +19,25 @@
       }
     },
     "error": {
-      "already_configured": "This inverter has already been added",
-      "cannot_connect": "Unable to connect to inverter",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "time_invalid": "Time must be HH:MM",
       "time_range": "Polling must cease after polling starts",
       "capability_invalid": "Invalid - See documentation for capability"
     },
     "abort": {
-      "already_configured": "This inverter has already been added"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "sun_up": "The time that polling will start each day",
+          "sun_down": "The time that polling will cease each day"
+        },
+        "title": "EnaSolar Polling"
+      }
     }
   }
 }

@@ -36,6 +36,8 @@ from .const import (
     CONF_MAX_OUTPUT,
     CONF_SUN_DOWN,
     CONF_SUN_UP,
+    DEFAULT_SUN_DOWN,
+    DEFAULT_SUN_UP,
     ENASOLAR_UNIT_MAPPINGS,
     SCAN_DATA_MIN_INTERVAL,
     SCAN_MAX_INTERVAL,
@@ -78,11 +80,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
         raise PlatformNotReady
 
-    enasolar.sun_up = dt_util.parse_time(config_entry.data[CONF_SUN_UP])
-    enasolar.sun_down = dt_util.parse_time(config_entry.data[CONF_SUN_DOWN])
+    if config_entry.options != {}:
+        enasolar.sun_up = dt_util.parse_time(config_entry.options[CONF_SUN_UP])
+        enasolar.sun_down = dt_util.parse_time(config_entry.options[CONF_SUN_DOWN])
+    else:
+        enasolar.sun_up = dt_util.parse_time(DEFAULT_SUN_UP)
+        enasolar.sun_down = dt_util.parse_time(DEFAULT_SUN_DOWN)
+
     enasolar.capability = config_entry.data[CONF_CAPABILITY]
     enasolar.dc_strings = config_entry.data[CONF_DC_STRINGS]
     enasolar.max_output = config_entry.data[CONF_MAX_OUTPUT]
+
+    _LOGGER.info("Polling between %s and %s", enasolar.sun_up, enasolar.sun_down)
 
     enasolar.setup_sensors()
 

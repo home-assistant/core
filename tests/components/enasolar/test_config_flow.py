@@ -12,8 +12,6 @@ from homeassistant.components.enasolar.const import (
     CONF_SUN_DOWN,
     CONF_SUN_UP,
     DEFAULT_HOST,
-    DEFAULT_SUN_DOWN,
-    DEFAULT_SUN_UP,
     DOMAIN,
 )
 
@@ -54,8 +52,6 @@ async def test_form(hass):
             {
                 "host": DEFAULT_HOST,
                 "name": NAME,
-                "sun_up": "06:00",
-                "sun_down": "22:00",
             },
         )
         await hass.async_block_till_done()
@@ -123,8 +119,6 @@ async def test_user(hass):
             {
                 CONF_HOST: DEFAULT_HOST,
                 CONF_NAME: NAME,
-                CONF_SUN_UP: DEFAULT_SUN_UP,
-                CONF_SUN_DOWN: DEFAULT_SUN_DOWN,
             }
         )
 
@@ -248,16 +242,12 @@ async def test_abort_if_already_setup(hass):
         data={
             CONF_NAME: NAME,
             CONF_HOST: DEFAULT_HOST,
-            CONF_SUN_UP: "06:00",
-            CONF_SUN_DOWN: "22:00",
         },
     ).add_to_hass(hass)
 
     test_data = {
         CONF_NAME: "My Other Inverter",
         CONF_HOST: DEFAULT_HOST,
-        CONF_SUN_UP: "06:00",
-        CONF_SUN_DOWN: "22:00",
     }
 
     # Should fail, same HOST different NAME (default)
@@ -266,9 +256,31 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_configured"
 
     # Should fail, same HOST and NAME
-    result = await flow.async_step_user(test_data)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "already_configured"}
+    with patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._get_serial_no",
+        return_value=1234567890,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._get_max_output",
+        return_value=3.8,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._get_dc_strings",
+        return_value=1,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._get_capability",
+        return_value=256,
+    ), patch(
+        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._get_name",
+        return_value="My Inverter",
+    ):
+        result = await flow.async_step_import(test_data)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
     # SHOULD pass, diff HOST, different NAME
     test_data[CONF_HOST] = "192.168.1.100"
@@ -325,3 +337,33 @@ async def test_abort_if_already_setup(hass):
         result = await flow.async_step_import(test_data)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "inverter"
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "my.inverter.fqdn", CONF_NAME: "My Inverter"},
+        options={},
+        entry_id=1,
+        version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SUN_UP: "06:00", CONF_SUN_DOWN: "22:00"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {CONF_SUN_UP: "06:00", CONF_SUN_DOWN: "22:00"}

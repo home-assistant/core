@@ -83,53 +83,34 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Connection to EnaSolar inverter '%s' failed (%s)", host, e)
         return False
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get options flow for this handler."""
+        return EnaSolarOptionsFlowHandler(config_entry)
+
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
         self._errors = {}
 
         if user_input is not None:
-            input_valid = True
-            if dt_util.parse_time(user_input[CONF_SUN_UP]) is None:
-                self._errors[CONF_SUN_UP] = "time_invalid"
-                input_valid = False
-            if dt_util.parse_time(user_input[CONF_SUN_DOWN]) is None:
-                self._errors[CONF_SUN_DOWN] = "time_invalid"
-                input_valid = False
-            if input_valid:
-                if dt_util.parse_time(user_input[CONF_SUN_UP]) >= dt_util.parse_time(
-                    user_input[CONF_SUN_DOWN]
-                ):
-                    self._errors[CONF_SUN_DOWN] = "time_range"
-                    input_valid = False
             self._data[CONF_HOST] = user_input[CONF_HOST]
             if self._host_in_configuration_exists(self._data[CONF_HOST]):
                 self._errors[CONF_HOST] = "already_configured"
-                input_valid = False
-            if input_valid:
-                self._data[CONF_NAME] = user_input[CONF_NAME]
-                self._data[CONF_SUN_UP] = user_input[CONF_SUN_UP]
-                self._data[CONF_SUN_DOWN] = user_input[CONF_SUN_DOWN]
-                if await self._try_connect(self._data[CONF_HOST]):
-                    await self.async_set_unique_id(self._get_serial_no())
-                    return await self.async_step_inverter()
+            self._data[CONF_NAME] = user_input[CONF_NAME]
+            if await self._try_connect(self._data[CONF_HOST]):
+                await self.async_set_unique_id(self._get_serial_no())
+                return await self.async_step_inverter()
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
             user_input[CONF_HOST] = DEFAULT_HOST
-            user_input[CONF_SUN_UP] = DEFAULT_SUN_UP
-            user_input[CONF_SUN_DOWN] = DEFAULT_SUN_DOWN
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): cv.string,
-                    vol.Required(
-                        CONF_SUN_UP, default=user_input[CONF_SUN_UP]
-                    ): cv.string,
-                    vol.Required(
-                        CONF_SUN_DOWN, default=user_input[CONF_SUN_DOWN]
-                    ): cv.string,
                     vol.Optional(CONF_NAME, default=user_input[CONF_NAME]): cv.string,
                 }
             ),
@@ -185,3 +166,58 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._host_in_configuration_exists(host):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
+
+
+class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
+    """Allow Polling window to be updated."""
+
+    def __init__(self, config_entry):
+        """Initialize EnaSolar options flow."""
+        self.config_entry = config_entry
+        self._options = dict(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Allow user to reset the Polling times."""
+
+        self._errors = {}
+        if user_input is not None:
+            input_valid = True
+            if dt_util.parse_time(user_input[CONF_SUN_UP]) is None:
+                self._errors[CONF_SUN_UP] = "time_invalid"
+                input_valid = False
+            if dt_util.parse_time(user_input[CONF_SUN_DOWN]) is None:
+                self._errors[CONF_SUN_DOWN] = "time_invalid"
+                input_valid = False
+            if input_valid:
+                if dt_util.parse_time(user_input[CONF_SUN_UP]) >= dt_util.parse_time(
+                    user_input[CONF_SUN_DOWN]
+                ):
+                    self._errors[CONF_SUN_DOWN] = "time_range"
+                    input_valid = False
+            if input_valid:
+                self._options[CONF_SUN_UP] = user_input[CONF_SUN_UP]
+                self._options[CONF_SUN_DOWN] = user_input[CONF_SUN_DOWN]
+                return self.async_create_entry(title="", data=self._options)
+        else:
+            user_input = {}
+            if self._options == {}:
+                user_input[CONF_SUN_UP] = DEFAULT_SUN_UP
+                user_input[CONF_SUN_DOWN] = DEFAULT_SUN_DOWN
+            else:
+                user_input[CONF_SUN_UP] = self._options[CONF_SUN_UP]
+                user_input[CONF_SUN_DOWN] = self._options[CONF_SUN_DOWN]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SUN_UP, default=user_input[CONF_SUN_UP]
+                    ): cv.string,
+                    vol.Required(
+                        CONF_SUN_DOWN, default=user_input[CONF_SUN_DOWN]
+                    ): cv.string,
+                }
+            ),
+            errors=self._errors,
+        )
