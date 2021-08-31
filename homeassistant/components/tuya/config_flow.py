@@ -25,6 +25,7 @@ from .const import (
 
 RESULT_SINGLE_INSTANCE = "single_instance_allowed"
 RESULT_AUTH_FAILED = "invalid_auth"
+TUYA_ENDPOINT_BASE = "https://openapi.tuyacn.com"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,11 +66,9 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.conf_project_type = None
         self.project_type = ProjectType.SMART_HOME
-        self.is_import = False
 
     @staticmethod
     def _try_login(user_input):
-        _LOGGER.debug("TuyaConfigFlow._try_login start, user_input: %s", user_input)
         project_type = ProjectType(user_input[CONF_PROJECT_TYPE])
         api = TuyaOpenAPI(
             user_input[CONF_ENDPOINT]
@@ -84,7 +83,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if project_type == ProjectType.INDUSTY_SOLUTIONS:
             response = api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         else:
-            api.endpoint = "https://openapi.tuyacn.com"
+            api.endpoint = TUYA_ENDPOINT_BASE
             response = api.login(
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
@@ -98,67 +97,50 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("TuyaConfigFlow._try_login finish, response:, %s", response)
         return response
 
-    async def async_step_import(self, user_input=None):
-        """Step import."""
-        self.is_import = True
-        return await self.async_step_user(user_input)
-
     async def async_step_project_type(self, user_input=None):
         """Step project type."""
         self.conf_project_type = user_input[CONF_PROJECT_TYPE]
         self.project_type = ProjectType(self.conf_project_type)
-        return (
-            self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_SMART_HOME)
-            if self.project_type == ProjectType.SMART_HOME
-            else self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
+        if self.project_type == ProjectType.SMART_HOME:
+            return self.async_show_form(
+                step_id="login", data_schema=DATA_SCHEMA_SMART_HOME
             )
-        )
+        else:
+            return self.async_show_form(
+                step_id="login", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
+            )
 
     async def async_step_user(self, user_input=None):
         """Step user."""
-        _LOGGER.debug(
-            "TuyaConfigFlow.async_step_user start, is_import= %s}", self.is_import
-        )
-        _LOGGER.debug(
-            "TuyaConfigFlow.async_step_user start, user_input= %s", user_input
+        return self.async_show_form(
+            step_id="project_type", data_schema=DATA_SCHEMA_PROJECT_TYPE
         )
 
+    async def async_step_login(self, user_input=None):
+        """Setp login."""
         if self._async_current_entries():
             return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
 
         errors = {}
-        if user_input is not None:
-            if self.conf_project_type is not None:
-                user_input[CONF_PROJECT_TYPE] = self.conf_project_type
+        if self.conf_project_type is not None:
+            user_input[CONF_PROJECT_TYPE] = self.conf_project_type
 
-            response = await self.hass.async_add_executor_job(
-                self._try_login, user_input
+        response = await self.hass.async_add_executor_job(self._try_login, user_input)
+
+        if response.get("success", False):
+            _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
+            return self.async_create_entry(
+                title=user_input[CONF_USERNAME],
+                data=user_input,
             )
-
-            if response.get("success", False):
-                _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input,
-                )
-
-            errors["base"] = RESULT_AUTH_FAILED
-            if self.is_import:
-                return self.async_abort(reason=errors["base"])
-
-            return (
-                self.async_show_form(
-                    step_id="user", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
-                )
-                if self.project_type == ProjectType.SMART_HOME
-                else self.async_show_form(
-                    step_id="user",
-                    data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
-                    errors=errors,
-                )
+        errors["base"] = RESULT_AUTH_FAILED
+        if self.project_type == ProjectType.SMART_HOME:
+            return self.async_show_form(
+                step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
             )
-
-        return self.async_show_form(
-            step_id="project_type", data_schema=DATA_SCHEMA_PROJECT_TYPE, errors=errors
-        )
+        else:
+            return self.async_show_form(
+                step_id="login",
+                data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
+                errors=errors,
+            )

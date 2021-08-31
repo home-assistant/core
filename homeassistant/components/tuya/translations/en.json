@@ -16,7 +16,7 @@
                   "tuya_project_type": "Tuya cloud project type"
                 }
             },
-            "user": {
+            "login": {
                 "data": {
                     "endpoint": "Availability Zone",
                     "access_id": "Access ID",
