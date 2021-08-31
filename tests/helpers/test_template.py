@@ -1823,6 +1823,16 @@ async def test_area_id(hass):
     assert_result_info(info, area_entry_entity_id.id)
     assert info.rate_limit is None
 
+    # Make sure that when entity doesn't have an area but its device does, that's what
+    # gets returned
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_entity_id.id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
 
 async def test_area_name(hass):
     """Test area_name function."""
@@ -1889,6 +1899,16 @@ async def test_area_name(hass):
     assert info.rate_limit is None
 
     info = render_to_info(hass, f"{{{{ area_name('{area_entry.id}') }}}}")
+    assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+    # Make sure that when entity doesn't have an area but its device does, that's what
+    # gets returned
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=None
+    )
+
+    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, area_entry.name)
     assert info.rate_limit is None
 
