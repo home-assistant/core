@@ -88,7 +88,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
         LOGGER.debug("A/C cancel attempt")
         result = await proxy.vehicle.set_ac_stop()
-        LOGGER.info("A/C cancel result: %s", result)
+        LOGGER.debug("A/C cancel result: %s", result)
 
     async def ac_start(service_call: ServiceCall) -> None:
         """Start A/C."""
@@ -98,7 +98,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
         LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
         result = await proxy.vehicle.set_ac_start(temperature, when)
-        LOGGER.info("A/C start result: %s", result.raw_data)
+        LOGGER.debug("A/C start result: %s", result.raw_data)
 
     async def charge_set_schedules(service_call: ServiceCall) -> None:
         """Set charge schedules."""
@@ -111,8 +111,8 @@ def setup_services(hass: HomeAssistant) -> None:
         assert charge_schedules.schedules is not None
         LOGGER.debug("Charge set schedules attempt: %s", schedules)
         result = await proxy.vehicle.set_charge_schedules(charge_schedules.schedules)
-        LOGGER.info("Charge set schedules result: %s", result)
-        LOGGER.info(
+        LOGGER.debug("Charge set schedules result: %s", result)
+        LOGGER.debug(
             "It may take some time before these changes are reflected in your vehicle"
         )
 
@@ -122,7 +122,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
         LOGGER.debug("Charge start attempt")
         result = await proxy.vehicle.set_charge_start()
-        LOGGER.info("Charge start result: %s", result)
+        LOGGER.debug("Charge start result: %s", result)
 
     def get_vehicle_proxy(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
