@@ -172,6 +172,7 @@ async def test_sync_google_when_started(hass, mock_cloud_login, cloud_prefs):
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
         await config.async_connect_agent_user("mock-user-id")
+        await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
 
 
