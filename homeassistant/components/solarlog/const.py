@@ -19,6 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
+from homeassistant.util import dt
 
 DOMAIN = "solarlog"
 
@@ -145,6 +146,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
+        last_reset=dt.utc_from_timestamp(0),
         factor=0.001,
     ),
     SolarLogSensorEntityDescription(
