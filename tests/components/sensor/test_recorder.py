@@ -273,6 +273,9 @@ def test_compile_hourly_sum_statistics_amount(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+    assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
+    assert "Compiling initial sum statistics for sensor.test1" in caplog.text
+    assert "Detected new cycle for sensor.test1, value dropped" not in caplog.text
 
 
 @pytest.mark.parametrize("state_class", ["measurement"])
@@ -424,6 +427,9 @@ def test_compile_hourly_sum_statistics_total_increasing(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+    assert "Detected new cycle for sensor.test1, last_reset set to" not in caplog.text
+    assert "Compiling initial sum statistics for sensor.test1" in caplog.text
+    assert "Detected new cycle for sensor.test1, value dropped" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -42,7 +42,8 @@ from .const import (
     DEVICE_CLASS_PLUG_STATE,
     DOMAIN,
 )
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription, T
+from .renault_coordinator import T
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -61,7 +62,7 @@ class RenaultSensorEntityDescription(
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
-    requires_fuel: bool | None = None
+    requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
 
 
