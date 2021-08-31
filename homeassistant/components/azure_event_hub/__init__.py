@@ -73,7 +73,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
         conn_str_client = True
     else:
         client_args = {
-            "fully_qualified_namespace": f"{config[CONF_EVENT_HUB_NAMESPACE]}.servicebus.windows.net",
+            "fully_qualified_namespace": f"{config[CONF_EVENT_HUB_NAMESPACE]}.servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}/messages",
             "eventhub_name": config[CONF_EVENT_HUB_INSTANCE_NAME],
             "credential": EventHubSharedKeyCredential(
                 policy=config[CONF_EVENT_HUB_SAS_POLICY],
