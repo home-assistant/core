@@ -91,7 +91,7 @@ class RenaultVehicleProxy:
             for coord in COORDINATORS
             if (
                 self.details.supports_endpoint(coord.endpoint)
-                and (not coord.needs_electricity or self.details.uses_electricity())
+                and (not coord.requires_electricity or self.details.uses_electricity())
             )
         }
         # Check all coordinators
