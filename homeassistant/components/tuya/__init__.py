@@ -167,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
 
-    hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: {}}
+    hass.data[DOMAIN] = {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: set()}
 
     success = await _init_tuya_sdk(hass, entry)
     if not success:
@@ -190,7 +190,7 @@ class DeviceListener(TuyaDeviceListener):
             _LOGGER.debug(
                 "_update-->%s;->>%s",
                 self,
-                self.hass.data[DOMAIN][TUYA_HA_DEVICES][device.id].tuya_device.status,
+                device.id,
             )
             async_dispatcher_send(self.hass, TUYA_HA_SIGNAL_UPDATE_ENTITY)
 

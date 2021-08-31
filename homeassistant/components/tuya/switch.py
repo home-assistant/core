@@ -125,9 +125,7 @@ def _setup_entities(hass, device_ids: list):
 
             if tuya_ha_switch is not None:
                 entities.append(tuya_ha_switch)
-                hass.data[DOMAIN][TUYA_HA_DEVICES][
-                    tuya_ha_switch.tuya_device.id
-                ] = tuya_ha_switch
+                hass.data[DOMAIN][TUYA_HA_DEVICES].add(tuya_ha_switch.tuya_device.id)
     return entities
 
 
