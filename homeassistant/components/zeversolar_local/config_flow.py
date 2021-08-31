@@ -67,6 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(info[ZEVER_INVERTER_ID])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=f"Inverter - {info[ZEVER_INVERTER_ID]}", data=info
             )
