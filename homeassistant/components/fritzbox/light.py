@@ -13,14 +13,7 @@ from homeassistant.components.light import (
     COLOR_MODE_HS,
     LightEntity,
 )
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -33,7 +26,6 @@ from .const import (
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
-from .model import EntityInfo
 
 SUPPORTED_COLOR_MODES = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
 
@@ -57,13 +49,6 @@ async def async_setup_entry(
 
         entities.append(
             FritzboxLight(
-                {
-                    ATTR_NAME: f"{device.name}",
-                    ATTR_ENTITY_ID: f"{device.ain}",
-                    ATTR_UNIT_OF_MEASUREMENT: None,
-                    ATTR_DEVICE_CLASS: None,
-                    ATTR_STATE_CLASS: None,
-                },
                 coordinator,
                 ain,
                 supported_colors,
@@ -79,14 +64,13 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
 
     def __init__(
         self,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
         ain: str,
         supported_colors: dict,
         supported_color_temps: list[str],
     ) -> None:
         """Initialize the FritzboxLight entity."""
-        super().__init__(entity_info, coordinator, ain)
+        super().__init__(coordinator, ain, None)
 
         max_kelvin = int(max(supported_color_temps))
         min_kelvin = int(min(supported_color_temps))
