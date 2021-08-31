@@ -8,14 +8,12 @@ from renault_api.kamereon.models import ChargeSchedule
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import (
-    ATTR_CHARGE_MODE,
     ATTR_SCHEDULES,
     ATTR_TEMPERATURE,
     ATTR_VIN,
     ATTR_WHEN,
     SERVICE_AC_CANCEL,
     SERVICE_AC_START,
-    SERVICE_CHARGE_SET_MODE,
     SERVICE_CHARGE_SET_SCHEDULES,
     SERVICE_CHARGE_START,
     SERVICES,
@@ -119,31 +117,6 @@ async def test_service_set_ac_start_with_date(hass: HomeAssistant):
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (temperature, when)
-
-
-async def test_service_set_charge_mode(hass: HomeAssistant):
-    """Test that service invokes renault_api with correct data."""
-    await setup_renault_integration_vehicle(hass, "zoe_40")
-
-    mode = "always"
-    data = {
-        ATTR_VIN: MOCK_VIN,
-        ATTR_CHARGE_MODE: mode,
-    }
-
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_charge_mode",
-        return_value=(
-            schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_charge_mode.json")
-            )
-        ),
-    ) as mock_action:
-        await hass.services.async_call(
-            DOMAIN, SERVICE_CHARGE_SET_MODE, service_data=data, blocking=True
-        )
-    assert len(mock_action.mock_calls) == 1
-    assert mock_action.mock_calls[0][1] == (mode,)
 
 
 async def test_service_set_charge_schedule(hass: HomeAssistant):

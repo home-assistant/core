@@ -18,16 +18,6 @@ ac_cancel:
       description: VIN of vehicle that will have the A/C cancelled.
       example: "VF1xxxxxxxxxxxxxx"
 
-charge_set_mode:
-  description: Set charge mode on vehicle.
-  fields:
-    vin:
-      description: VIN of vehicle that will have the charge mode updated.
-      example: "VF1xxxxxxxxxxxxxx"
-    charge_mode:
-      description: Charge mode to apply.
-      example: "always or always_charging or schedule_mode"
-
 charge_set_schedules:
   description: Update charge schedule on vehicle.
   fields:

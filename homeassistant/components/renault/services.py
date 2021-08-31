@@ -17,7 +17,6 @@ from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
 
-ATTR_CHARGE_MODE = "charge_mode"
 ATTR_SCHEDULES = "schedules"
 ATTR_TEMPERATURE = "temperature"
 ATTR_VIN = "vin"
@@ -35,14 +34,6 @@ SERVICE_AC_START_SCHEMA = vol.Schema(
         vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
         vol.Required(ATTR_TEMPERATURE): cv.positive_float,
         vol.Optional(ATTR_WHEN): cv.datetime,
-    }
-)
-SERVICE_CHARGE_SET_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
-        vol.Required(ATTR_CHARGE_MODE): vol.In(
-            ["always", "always_charging", "schedule_mode"]
-        ),
     }
 )
 SERVICE_CHARGE_SET_SCHEDULE_DAY_SCHEMA = vol.Schema(
@@ -80,13 +71,11 @@ SERVICE_CHARGE_START_SCHEMA = vol.Schema(
 
 SERVICE_AC_CANCEL = "ac_cancel"
 SERVICE_AC_START = "ac_start"
-SERVICE_CHARGE_SET_MODE = "charge_set_mode"
 SERVICE_CHARGE_SET_SCHEDULES = "charge_set_schedules"
 SERVICE_CHARGE_START = "charge_start"
 SERVICES = [
     SERVICE_AC_CANCEL,
     SERVICE_AC_START,
-    SERVICE_CHARGE_SET_MODE,
     SERVICE_CHARGE_SET_SCHEDULES,
     SERVICE_CHARGE_START,
 ]
@@ -112,15 +101,6 @@ def setup_services(hass: HomeAssistant) -> None:
         LOGGER.debug("A/C start attempt: %s / %s", temperature, when)
         result = await proxy.vehicle.set_ac_start(temperature, when)
         LOGGER.info("A/C start result: %s", result.raw_data)
-
-    async def charge_set_mode(service_call: ServiceCall) -> None:
-        """Set charge mode."""
-        charge_mode: str = service_call.data[ATTR_CHARGE_MODE]
-        proxy = get_vehicle_proxy(service_call.data)
-
-        LOGGER.debug("Charge set mode attempt: %s", charge_mode)
-        result = await proxy.vehicle.set_charge_mode(charge_mode)
-        LOGGER.info("Charge set mode result: %s", result)
 
     async def charge_set_schedules(service_call: ServiceCall) -> None:
         """Set charge schedules."""
@@ -167,12 +147,6 @@ def setup_services(hass: HomeAssistant) -> None:
         SERVICE_AC_START,
         ac_start,
         schema=SERVICE_AC_START_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHARGE_SET_MODE,
-        charge_set_mode,
-        schema=SERVICE_CHARGE_SET_MODE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
