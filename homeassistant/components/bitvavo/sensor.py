@@ -1,6 +1,7 @@
 """Sensor for the Bitvavo integration."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class Ticker(CoordinatorEntity):
+class Ticker(CoordinatorEntity, SensorEntity):
     """Implementation of the ticker sensor."""
 
     def __init__(self, coordinator: BitvavoDataUpdateCoordinator, symbol):
@@ -98,7 +99,7 @@ class Ticker(CoordinatorEntity):
         }
 
 
-class Balance(CoordinatorEntity):
+class Balance(CoordinatorEntity, SensorEntity):
     """Implementation of the balance sensor."""
 
     def __init__(self, coordinator: BitvavoDataUpdateCoordinator, balance):
@@ -155,7 +156,7 @@ class Balance(CoordinatorEntity):
         }
 
 
-class OpenOrders(CoordinatorEntity):
+class OpenOrders(CoordinatorEntity, SensorEntity):
     """Implementation of the open orders sensor."""
 
     def __init__(self, coordinator: BitvavoDataUpdateCoordinator, order):
@@ -208,7 +209,7 @@ class OpenOrders(CoordinatorEntity):
         }
 
 
-class TotalAssetValue(CoordinatorEntity):
+class TotalAssetValue(CoordinatorEntity, SensorEntity):
     """Implementation of the total asset value sensor."""
 
     def __init__(self, coordinator: BitvavoDataUpdateCoordinator, currency):
