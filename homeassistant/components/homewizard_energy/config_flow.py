@@ -32,6 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[ConfigType] = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
+
+        _LOGGER.debug("config_flow async_step_user")
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
@@ -182,12 +185,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "unique_id": self.context["unique_id"],
         }
 
-        return await self.async_step_discovery_confirm()
+        return await self.async_step_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None):
+    async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
 
-        _LOGGER.debug("config_flow async_step_discovery_confirm")
+        _LOGGER.debug("config_flow async_step_confirm")
 
         errors = {}
 
@@ -201,7 +204,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(
-                step_id="discovery_confirm",
+                step_id="confirm",
                 description_placeholders={"name": self.context["product_name"]},
                 data_schema=schema,
                 errors=errors,
@@ -211,7 +214,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("API not enabled")
             return self.async_abort(reason="api_not_enabled")
 
-        _LOGGER.debug("async_step_discovery_confirm _create_entry")
+        _LOGGER.debug("async_step_confirm _create_entry")
         self.context["custom_name"] = (
             user_input["name"] if user_input["name"] != "" else self.context["name"]
         )
