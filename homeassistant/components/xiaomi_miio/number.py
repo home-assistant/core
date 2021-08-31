@@ -325,7 +325,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
             self._device.set_led_brightness_level,
-            int(level),
+            level,
         )
 
     async def async_set_favorite_rpm(self, rpm: int):
@@ -333,5 +333,5 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         return await self._try_command(
             "Setting the favorite rpm of the miio device failed.",
             self._device.set_favorite_rpm,
-            int(rpm),
+            rpm,
         )
