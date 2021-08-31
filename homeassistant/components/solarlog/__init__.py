@@ -54,49 +54,18 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update the data from the SolarLog device."""
         try:
-            api = await self.hass.async_add_executor_job(SolarLog, self.host)
+            data = await self.hass.async_add_executor_job(SolarLog, self.host)
         except (OSError, Timeout, HTTPError) as err:
             raise update_coordinator.UpdateFailed(err)
 
-        if api.time.year == 1999:
+        if data.time.year == 1999:
             raise update_coordinator.UpdateFailed(
                 "Invalid data returned (can happen after Solarlog restart)."
             )
 
         self.logger.debug(
             "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
-            api.time,
+            data.time,
         )
 
-        data = {}
-
-        try:
-            data["TIME"] = api.time
-            data["powerAC"] = api.power_ac
-            data["powerDC"] = api.power_dc
-            data["voltageAC"] = api.voltage_ac
-            data["voltageDC"] = api.voltage_dc
-            data["yieldDAY"] = api.yield_day / 1000
-            data["yieldYESTERDAY"] = api.yield_yesterday / 1000
-            data["yieldMONTH"] = api.yield_month / 1000
-            data["yieldYEAR"] = api.yield_year / 1000
-            data["yieldTOTAL"] = api.yield_total / 1000
-            data["consumptionAC"] = api.consumption_ac
-            data["consumptionDAY"] = api.consumption_day / 1000
-            data["consumptionYESTERDAY"] = api.consumption_yesterday / 1000
-            data["consumptionMONTH"] = api.consumption_month / 1000
-            data["consumptionYEAR"] = api.consumption_year / 1000
-            data["consumptionTOTAL"] = api.consumption_total / 1000
-            data["totalPOWER"] = api.total_power
-            data["alternatorLOSS"] = api.alternator_loss
-            data["CAPACITY"] = round(api.capacity * 100, 0)
-            data["EFFICIENCY"] = round(api.efficiency * 100, 0)
-            data["powerAVAILABLE"] = api.power_available
-            data["USAGE"] = round(api.usage * 100, 0)
-        except AttributeError as err:
-            raise update_coordinator.UpdateFailed(
-                f"Missing details data in Solarlog response: {err}"
-            ) from err
-
-        _LOGGER.debug("Updated Solarlog overview data: %s", data)
         return data
