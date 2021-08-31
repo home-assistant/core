@@ -4,9 +4,7 @@ from unittest.mock import AsyncMock, patch
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 import pytest
 
-from homeassistant.components.devolo_home_network.entity_classes import (
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from homeassistant.components.devolo_home_network.sensor import MIN_TIME_BETWEEN_UPDATES
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
