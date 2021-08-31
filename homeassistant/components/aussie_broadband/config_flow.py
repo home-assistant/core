@@ -32,12 +32,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def auth(self, user_input: dict[str, str]):
         """Reusable Auth Helper."""
+        self.client = AussieBB(
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+            async_get_clientsession(self.hass),
+        )
         try:
-            self.client = AussieBB(
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                async_get_clientsession(self.hass),
-            )
             return await self.client.login()
         except AuthenticationException:
             return {"base": "invalid_auth"}

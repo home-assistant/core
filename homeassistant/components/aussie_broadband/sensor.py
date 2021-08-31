@@ -1,193 +1,141 @@
 """Support for Aussie Broadband metric sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, DATA_KILOBYTES, DATA_MEGABYTES
+from homeassistant.const import DATA_KILOBYTES, DATA_MEGABYTES, TIME_DAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN, SERVICE_ID
+
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    # Internet Services sensors
+    SensorEntityDescription(
+        key="usedMb",
+        name="Total Usage",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:network",
+    ),
+    SensorEntityDescription(
+        key="downloadedMb",
+        name="Downloaded",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:download-network",
+    ),
+    SensorEntityDescription(
+        key="uploadedMb",
+        name="Uploaded",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=DATA_MEGABYTES,
+        icon="mdi:upload-network",
+    ),
+    # Mobile Phone Services sensors
+    SensorEntityDescription(
+        key="national",
+        name="National Calls",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:phone",
+    ),
+    SensorEntityDescription(
+        key="mobile",
+        name="Mobile Calls",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:phone",
+    ),
+    SensorEntityDescription(
+        key="international",
+        name="International Calls",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:phone-plus",
+    ),
+    SensorEntityDescription(
+        key="sms",
+        name="SMS Sent",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:message-processing",
+    ),
+    SensorEntityDescription(
+        key="internet",
+        name="Data Usage",
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        native_unit_of_measurement=DATA_KILOBYTES,
+        icon="mdi:network",
+    ),
+    SensorEntityDescription(
+        key="voicemail",
+        name="Voicemail Calls",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:phone",
+    ),
+    SensorEntityDescription(
+        key="other",
+        name="Other Calls",
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:phone",
+    ),
+    # Generic sensors
+    SensorEntityDescription(
+        key="daysTotal",
+        name="Billing Cycle Length",
+        native_unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar-range",
+    ),
+    SensorEntityDescription(
+        key="daysRemaining",
+        name="Billing Cycle Remaining",
+        native_unit_of_measurement=TIME_DAYS,
+        icon="mdi:calendar-clock",
+    ),
 )
-
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     """Set up the Aussie Broadband sensor platform from a config entry."""
-    client = hass.data[DOMAIN][entry.entry_id]["client"]
-    services = hass.data[DOMAIN][entry.entry_id]["services"]
-    update_interval = timedelta(
-        minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+
+    for service in hass.data[DOMAIN][entry.entry_id]["services"]:
+        print(service)
+        for description in SENSOR_DESCRIPTIONS:
+            print(description.key, description.key in service["coordinator"].data)
+
+    async_add_entities(
+        [
+            AussieBroadandSensorEntity(service, description)
+            for service in hass.data[DOMAIN][entry.entry_id]["services"]
+            for description in SENSOR_DESCRIPTIONS
+            if description.key in service["coordinator"].data
+        ]
     )
-
-    # Create an appropriate refresh function
-    def update_data_factory(service_id):
-        async def async_update_data():
-            return await client.get_usage(service_id)
-
-        return async_update_data
-
-    entities = []
-    for service in services:
-        # Initiate a Data Update Coordinator for this endpoint
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=service["service_id"],
-            update_interval=update_interval,
-            update_method=update_data_factory(service[SERVICE_ID]),
-        )  # type: DataUpdateCoordinator
-        await coordinator.async_config_entry_first_refresh()
-
-        # Create the appropriate entities based on the service type
-        if service["type"] == "PhoneMobile":
-            entities.extend(
-                [
-                    AussieBroadandPhoneInternet(coordinator, service),
-                    AussieBroadandPhoneNational(coordinator, service),
-                    AussieBroadandPhoneMobile(coordinator, service),
-                    AussieBroadandPhoneSMS(coordinator, service),
-                    AussieBroadandBillingCycleLength(coordinator, service),
-                    AussieBroadandBillingCycleRemaining(coordinator, service),
-                ]
-            )
-        else:
-            entities.extend(
-                [
-                    AussieBroadandTotalUsage(coordinator, service),
-                    AussieBroadandDownloaded(coordinator, service),
-                    AussieBroadandUploaded(coordinator, service),
-                    AussieBroadandBillingCycleLength(coordinator, service),
-                    AussieBroadandBillingCycleRemaining(coordinator, service),
-                ]
-            )
-
-    async_add_entities(entities)
     return True
 
 
 class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
     """Base class for Aussie Broadband metric sensors."""
 
-    _attribute: str
-    _name: str
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        service: dict,
-    ) -> None:
+    def __init__(self, service: dict, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{service[SERVICE_ID]}:{self._attribute}"
-        self._attr_name = f"{service['name']} {self._name}"
+        super().__init__(service["coordinator"])
+        self.entity_description = description
+        self._attr_unique_id = f"{service[SERVICE_ID]}:{description.key}"
+        self._attr_name = f"{service['name']} {description.name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[self._attribute]
-
-
-class AussieBroadandTotalUsage(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Total Usage sensor."""
-
-    _attribute = "usedMb"
-    _name = "Total Usage"
-    _attr_unit_of_measurement = DATA_MEGABYTES
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-
-class AussieBroadandDownloaded(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Download Usage sensor."""
-
-    _attribute = "downloadedMb"
-    _name = "Downloaded"
-    _attr_unit_of_measurement = DATA_MEGABYTES
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-
-class AussieBroadandUploaded(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Upload Usage sensor."""
-
-    _attribute = "uploadedMb"
-    _name = "Uploaded"
-    _attr_unit_of_measurement = DATA_MEGABYTES
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-
-class AussieBroadandBillingCycleLength(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Billing Cycle Length sensor."""
-
-    _attribute = "daysTotal"
-    _name = "Billing Cycle Length"
-    _attr_unit_of_measurement = "days"
-
-
-class AussieBroadandBillingCycleRemaining(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Billing Cycle Remaining sensor."""
-
-    _attribute = "daysRemaining"
-    _name = "Billing Cycle Remaining"
-    _attr_unit_of_measurement = "days"
-
-
-class AussieBroadandPhoneInternet(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Phone Data Usage sensor."""
-
-    _attribute = "internet"
-    _name = "Data Usage"
-    _attr_unit_of_measurement = DATA_KILOBYTES
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self._attribute]["kbytes"]
-
-
-class AussieBroadandPhoneNational(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Phone Data Usaage sensor."""
-
-    _attribute = "national"
-    _name = "National Calls"
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self._attribute]["calls"]
-
-
-class AussieBroadandPhoneMobile(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Phone Data Usaage sensor."""
-
-    _attribute = "mobile"
-    _name = "Mobile Calls"
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self._attribute]["calls"]
-
-
-class AussieBroadandPhoneSMS(AussieBroadandSensorEntity):
-    """Representation of a Aussie Broadband Phone SMS count sensor."""
-
-    _attribute = "sms"
-    _name = "SMS Sent"
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self._attribute]["calls"]
+        if self.entity_description.key == "internet":
+            return self.coordinator.data[self.entity_description.key]["kbytes"]
+        if self.entity_description.key in ("national", "mobile", "sms"):
+            return self.coordinator.data[self.entity_description.key]["calls"]
+        return self.coordinator.data[self.entity_description.key]
