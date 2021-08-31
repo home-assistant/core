@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_LOCALE, DOMAIN, PLATFORMS
 from .renault_hub import RenaultHub
-from .services import setup_services, unload_services
+from .services import SERVICE_AC_START, setup_services, unload_services
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -31,7 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
-    setup_services(hass)
+    if not hass.services.has_service(DOMAIN, SERVICE_AC_START):
+        setup_services(hass)
 
     return True
 
