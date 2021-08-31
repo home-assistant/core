@@ -62,7 +62,7 @@ class RenaultSensorEntityDescription(
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
-    requires_fuel: bool | None = None
+    requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
 
 
