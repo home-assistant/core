@@ -83,14 +83,6 @@ class YoulessBaseSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement for the sensor."""
-        if self.get_sensor is None:
-            return None
-
-        return self.get_sensor.unit_of_measurement
-
-    @property
     def native_value(self) -> StateType:
         """Determine the state value, only if a sensor is initialized."""
         if self.get_sensor is None:
