@@ -30,7 +30,7 @@ FAKE_DATA = {
 }
 
 
-async def setup_platform(hass, platforms=[], side_effect=None):
+async def setup_platform(hass, platforms=[], side_effect=None, usage={}):
     """Set up the Aussie Broadband platform."""
     mock_entry = MockConfigEntry(
         domain=AUSSIE_BROADBAND_DOMAIN,
@@ -49,6 +49,8 @@ async def setup_platform(hass, platforms=[], side_effect=None):
         "aussiebb.asyncio.AussieBB.get_services",
         return_value=FAKE_SERVICES,
         side_effect=side_effect,
+    ), patch(
+        "aussiebb.asyncio.AussieBB.get_usage", return_value=usage
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
