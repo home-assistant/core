@@ -3,7 +3,8 @@ from iotawattpy.sensor import Sensor
 
 INPUT_SENSOR = Sensor(
     channel="1",
-    name="My Sensor",
+    base_name="My Sensor",
+    suffix=None,
     io_type="Input",
     unit="WattHours",
     value="23",
@@ -12,7 +13,8 @@ INPUT_SENSOR = Sensor(
 )
 OUTPUT_SENSOR = Sensor(
     channel="N/A",
-    name="My WattHour Sensor",
+    base_name="My WattHour Sensor",
+    suffix=None,
     io_type="Output",
     unit="WattHours",
     value="243",
