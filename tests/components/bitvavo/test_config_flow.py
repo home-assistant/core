@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from bitvavo.BitvavoExceptions import BitvavoException
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components.bitvavo.const import (
     CONF_API_SECRET,
     CONF_MARKETS,
@@ -21,8 +21,6 @@ from tests.common import MockConfigEntry, load_fixture
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -48,8 +46,6 @@ async def test_user_form(hass):
     ), patch(
         "homeassistant.components.bitvavo.async_setup_entry", return_value=True
     ):
-
-        await setup.async_setup_component(hass, "persistent_notification", {})
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={CONF_SOURCE: SOURCE_USER}
