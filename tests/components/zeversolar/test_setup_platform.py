@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from zeversolarlocal.api import SolarData
 
-from homeassistant.components.zeversolar_local import async_unload_entry
-from homeassistant.components.zeversolar_local.const import DOMAIN, ZEVER_INVERTER_ID
+from homeassistant.components.zeversolar import async_unload_entry
+from homeassistant.components.zeversolar.const import DOMAIN, ZEVER_INVERTER_ID
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -25,7 +25,7 @@ async def test_setup(hass: HomeAssistant):
 
     mock_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.zeversolar_local.config_flow.api.solardata",
+        "homeassistant.components.zeversolar.config_flow.api.solardata",
         return_value=SolarData(daily_energy=1, current_power=2),
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -59,7 +59,7 @@ async def test_unload_entry(hass: HomeAssistant):
     mock_entry = MockConfigEntry(domain=DOMAIN, unique_id="1234", data=entry_data)
     mock_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.zeversolar_local.config_flow.api.solardata",
+        "homeassistant.components.zeversolar.config_flow.api.solardata",
         return_value=SolarData(daily_energy=1, current_power=2),
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)

@@ -1,8 +1,8 @@
 {
-  "domain": "zeversolar_local",
+  "domain": "zeversolar",
   "name": "Zeversolar local",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/zeversolar_local",
+  "documentation": "https://www.home-assistant.io/integrations/zeversolar",
   "requirements": [
     "zeversolarlocal==0.0.9"
   ],

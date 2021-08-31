@@ -598,7 +598,7 @@ homeassistant/components/yi/* @bachya
 homeassistant/components/youless/* @gjong
 homeassistant/components/zeroconf/* @bdraco
 homeassistant/components/zerproc/* @emlove
-homeassistant/components/zeversolar_local/* @sander76
+homeassistant/components/zeversolar/* @sander76
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core

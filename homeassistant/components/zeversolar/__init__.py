@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="zeversolar_local",
+        name="zeversolar",
         update_method=async_update_data,
         update_interval=timedelta(seconds=15),
     )

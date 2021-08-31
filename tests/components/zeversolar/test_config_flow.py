@@ -5,7 +5,7 @@ import pytest
 from zeversolarlocal.api import ZeverError
 
 from homeassistant import config_entries
-from homeassistant.components.zeversolar_local.const import DOMAIN, ZEVER_INVERTER_ID
+from homeassistant.components.zeversolar.const import DOMAIN, ZEVER_INVERTER_ID
 from homeassistant.const import CONF_HOST, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -28,10 +28,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.zeversolar_local.config_flow.api.inverter_id",
+        "homeassistant.components.zeversolar.config_flow.api.inverter_id",
         return_value=inverter_id,
     ), patch(
-        "homeassistant.components.zeversolar_local.async_setup_entry",
+        "homeassistant.components.zeversolar.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -58,7 +58,7 @@ async def test_form_cannot_connect(side_effect, error, hass: HomeAssistant) -> N
     )
 
     with patch(
-        "homeassistant.components.zeversolar_local.config_flow.api.inverter_id",
+        "homeassistant.components.zeversolar.config_flow.api.inverter_id",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
