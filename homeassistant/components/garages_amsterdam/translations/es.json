@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Nombre del garaje"
+                },
+                "title": "Elige un garaje para vigilar"
+            }
+        }
+    },
+    "title": "Garajes Amsterdam"
+}

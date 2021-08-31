@@ -10,7 +10,7 @@
             "service_unavailable": "\u00dchendamine nurjus",
             "unknown_client_mac": "Sellel MAC-aadressil pole \u00fchtegi klienti saadaval"
         },
-        "flow_title": "UniFi Network {site} ( {host} )",
+        "flow_title": "{site} ( {host} )",
         "step": {
             "user": {
                 "data": {

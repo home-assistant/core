@@ -83,7 +83,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
-    def __init__(self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator):
+    def __init__(
+        self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
+    ) -> None:
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
         self.sharkiq = sharkiq

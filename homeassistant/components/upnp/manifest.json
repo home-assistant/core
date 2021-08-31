@@ -1,10 +1,11 @@
 {
   "domain": "upnp",
-  "name": "UPnP",
+  "name": "UPnP/IGD",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.16.2"],
-  "codeowners": ["@StevenLooman"],
+  "requirements": ["async-upnp-client==0.20.0"],
+  "dependencies": ["network", "ssdp"],
+  "codeowners": ["@StevenLooman","@ehendrix23"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"

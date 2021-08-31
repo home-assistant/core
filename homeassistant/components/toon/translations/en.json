@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "The selected agreement is already configured.",
-            "authorize_url_fail": "Unknown error generating an authorize url.",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
             "no_agreements": "This account has no Toon displays.",

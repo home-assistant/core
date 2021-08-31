@@ -21,6 +21,7 @@ from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 
 from .const import (
     CONF_EXPIRATION,
+    CONF_MFA,
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
@@ -36,7 +37,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the tesla flow."""
         self.username = None
         self.reauth = False
@@ -99,6 +100,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME, default=self.username): str,
                 vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_MFA): str,
             }
         )
 
@@ -114,7 +116,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Tesla."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -149,7 +151,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE}, timeout=60)
 
     try:
         controller = TeslaAPI(
@@ -158,7 +160,9 @@ async def validate_input(hass: core.HomeAssistant, data):
             password=data[CONF_PASSWORD],
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        result = await controller.connect(test_login=True)
+        result = await controller.connect(
+            test_login=True, mfa_code=(data[CONF_MFA] if CONF_MFA in data else "")
+        )
         config[CONF_TOKEN] = result["refresh_token"]
         config[CONF_ACCESS_TOKEN] = result["access_token"]
         config[CONF_EXPIRATION] = result[CONF_EXPIRATION]
@@ -171,7 +175,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
             raise InvalidAuth() from ex
-        _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
+        _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         raise CannotConnect() from ex
     finally:
         await async_client.aclose()

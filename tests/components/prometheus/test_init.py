@@ -31,9 +31,12 @@ class FilterTest:
     should_pass: bool
 
 
-async def prometheus_client(hass, hass_client):
+async def prometheus_client(hass, hass_client, namespace):
     """Initialize an hass_client with Prometheus component."""
-    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: {}})
+    config = {}
+    if namespace is not None:
+        config[prometheus.CONF_PROM_NAMESPACE] = namespace
+    await async_setup_component(hass, prometheus.DOMAIN, {prometheus.DOMAIN: config})
 
     await async_setup_component(hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]})
 
@@ -47,14 +50,14 @@ async def prometheus_client(hass, hass_client):
     )
 
     sensor1 = DemoSensor(
-        None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None
+        None, "Television Energy", 74, None, None, ENERGY_KILO_WATT_HOUR, None
     )
     sensor1.hass = hass
     sensor1.entity_id = "sensor.television_energy"
     await sensor1.async_update_ha_state()
 
     sensor2 = DemoSensor(
-        None, "Radio Energy", 14, DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, None
+        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
@@ -65,13 +68,19 @@ async def prometheus_client(hass, hass_client):
         await sensor2.async_update_ha_state()
 
     sensor3 = DemoSensor(
-        None, "Electricity price", 0.123, None, f"SEK/{ENERGY_KILO_WATT_HOUR}", None
+        None,
+        "Electricity price",
+        0.123,
+        None,
+        None,
+        f"SEK/{ENERGY_KILO_WATT_HOUR}",
+        None,
     )
     sensor3.hass = hass
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
 
-    sensor4 = DemoSensor(None, "Wind Direction", 25, None, DEGREE, None)
+    sensor4 = DemoSensor(None, "Wind Direction", 25, None, None, DEGREE, None)
     sensor4.hass = hass
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()
@@ -80,6 +89,7 @@ async def prometheus_client(hass, hass_client):
         None,
         "SPS30 PM <1µm Weight concentration",
         3.7069,
+        None,
         None,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         None,
@@ -91,9 +101,9 @@ async def prometheus_client(hass, hass_client):
     return await hass_client()
 
 
-async def test_view(hass, hass_client):
+async def test_view_empty_namespace(hass, hass_client):
     """Test prometheus metrics view."""
-    client = await prometheus_client(hass, hass_client)
+    client = await prometheus_client(hass, hass_client, "")
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
@@ -110,7 +120,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'temperature_c{domain="sensor",'
+        'sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
@@ -122,9 +132,27 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'current_temperature_c{domain="climate",'
+        'climate_current_temperature_celsius{domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 25.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_celsius{domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 20.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_low_celsius{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee"} 21.0' in body
+    )
+
+    assert (
+        'climate_target_temperature_high_celsius{domain="climate",'
+        'entity="climate.ecobee",'
+        'friendly_name="Ecobee"} 24.0' in body
     )
 
     assert (
@@ -153,7 +181,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'humidity_percent{domain="sensor",'
+        'sensor_humidity_percent{domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
@@ -165,7 +193,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'power_kwh{domain="sensor",'
+        'sensor_power_kwh{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 14.0' in body
     )
@@ -198,6 +226,31 @@ async def test_view(hass, hass_client):
         'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
         'entity="sensor.sps30_pm_1um_weight_concentration",'
         'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
+    )
+
+
+async def test_view_default_namespace(hass, hass_client):
+    """Test prometheus metrics view."""
+    client = await prometheus_client(hass, hass_client, None)
+    resp = await client.get(prometheus.API_ENDPOINT)
+
+    assert resp.status == 200
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
+    body = await resp.text()
+    body = body.split("\n")
+
+    assert len(body) > 3
+
+    assert "# HELP python_info Python platform information" in body
+    assert (
+        "# HELP python_gc_objects_collected_total "
+        "Objects collected during gc" in body
+    )
+
+    assert (
+        'homeassistant_sensor_temperature_celsius{domain="sensor",'
+        'entity="sensor.outside_temperature",'
+        'friendly_name="Outside Temperature"} 15.6' in body
     )
 
 

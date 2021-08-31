@@ -42,7 +42,7 @@ async def test_list_devices(hass, client, registry):
     await client.send_json({"id": 5, "type": "config/device_registry/list"})
     msg = await client.receive_json()
 
-    dev1, dev2 = [entry.pop("id") for entry in msg["result"]]
+    dev1, dev2 = (entry.pop("id") for entry in msg["result"])
 
     assert msg["result"] == [
         {

@@ -5,7 +5,7 @@ import asyncio
 import collections
 from collections import OrderedDict
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools as ft
 from io import StringIO
 import json
@@ -29,12 +29,11 @@ from homeassistant.auth import (
     providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
-from homeassistant.components import recorder
+from homeassistant.components import device_automation, recorder
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
-    _async_get_device_automations as async_get_device_automations,
 )
-from homeassistant.components.mqtt.models import Message
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -44,7 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -67,6 +66,16 @@ _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+
+async def async_get_device_automations(
+    hass: HomeAssistant, automation_type: str, device_id: str
+) -> Any:
+    """Get a device automation for a single device id."""
+    automations = await device_automation.async_get_device_automations(
+        hass, automation_type, [device_id]
+    )
+    return automations.get(device_id)
 
 
 def threadsafe_callback_factory(func):
@@ -270,7 +279,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.time_zone = date_util.get_time_zone("US/Pacific")
+    hass.config.time_zone = "US/Pacific"
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -353,7 +362,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = Message(topic, payload, qos, retain)
+    msg = ReceiveMessage(topic, payload, qos, retain)
     hass.data["mqtt"]._mqtt_handle_message(msg)
 
 
@@ -361,7 +370,9 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, datetime_, fire_all=False):
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime, fire_all: bool = False
+) -> None:
     """Fire a time changes event."""
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
@@ -730,7 +741,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
         title="Mock Title",
         state=None,
         options={},
-        system_options={},
+        pref_disable_new_entities=None,
+        pref_disable_polling=None,
         unique_id=None,
         disabled_by=None,
         reason=None,
@@ -740,7 +752,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "entry_id": entry_id or uuid_util.random_uuid_hex(),
             "domain": domain,
             "data": data or {},
-            "system_options": system_options,
+            "pref_disable_new_entities": pref_disable_new_entities,
+            "pref_disable_polling": pref_disable_polling,
             "options": options,
             "version": version,
             "title": title,

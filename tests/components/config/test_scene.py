@@ -8,6 +8,55 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.yaml import dump
 
 
+async def test_create_scene(hass, hass_client):
+    """Test creating a scene."""
+    with patch.object(config, "SECTIONS", ["scene"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_client()
+
+    def mock_read(path):
+        """Mock reading data."""
+        return None
+
+    written = []
+
+    def mock_write(path, data):
+        """Mock writing data."""
+        data = dump(data)
+        written.append(data)
+
+    with patch("homeassistant.components.config._read", mock_read), patch(
+        "homeassistant.components.config._write", mock_write
+    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
+        resp = await client.post(
+            "/api/config/scene/config/light_off",
+            data=json.dumps(
+                {
+                    # "id": "light_off",
+                    "name": "Lights off",
+                    "entities": {"light.bedroom": {"state": "off"}},
+                }
+            ),
+        )
+
+    assert resp.status == 200
+    result = await resp.json()
+    assert result == {"result": "ok"}
+
+    assert len(written) == 1
+    written_yaml = written[0]
+    assert (
+        written_yaml
+        == """- id: light_off
+  name: Lights off
+  entities:
+    light.bedroom:
+      state: 'off'
+"""
+    )
+
+
 async def test_update_scene(hass, hass_client):
     """Test updating a scene."""
     with patch.object(config, "SECTIONS", ["scene"]):

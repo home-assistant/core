@@ -2,7 +2,7 @@
 
 from google_nest_sdm.device import Device
 
-from homeassistant.components.nest.device_info import DeviceInfo
+from homeassistant.components.nest.device_info import NestDeviceInfo
 
 
 def test_device_custom_name():
@@ -20,7 +20,7 @@ def test_device_custom_name():
         auth=None,
     )
 
-    device_info = DeviceInfo(device)
+    device_info = NestDeviceInfo(device)
     assert device_info.device_name == "My Doorbell"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
@@ -45,7 +45,7 @@ def test_device_name_room():
         auth=None,
     )
 
-    device_info = DeviceInfo(device)
+    device_info = NestDeviceInfo(device)
     assert device_info.device_name == "Some Room"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
@@ -64,7 +64,7 @@ def test_device_no_name():
         auth=None,
     )
 
-    device_info = DeviceInfo(device)
+    device_info = NestDeviceInfo(device)
     assert device_info.device_name == "Doorbell"
     assert device_info.device_model == "Doorbell"
     assert device_info.device_brand == "Google Nest"
@@ -91,7 +91,7 @@ def test_device_invalid_type():
         auth=None,
     )
 
-    device_info = DeviceInfo(device)
+    device_info = NestDeviceInfo(device)
     assert device_info.device_name == "My Doorbell"
     assert device_info.device_model is None
     assert device_info.device_brand == "Google Nest"

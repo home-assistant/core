@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
-from pytz import utc
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -55,6 +54,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.util import dt as dt_util
 
 from .test_config_flow import TEST_MAC
 
@@ -106,17 +106,17 @@ def mirobo_is_got_error_fixture():
     mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
     mock_timer_1.cron = "5 5 1 8 1"
-    mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+    mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC)
 
     mock_timer_2 = MagicMock()
     mock_timer_2.enabled = False
     mock_timer_2.cron = "5 5 1 8 2"
-    mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+    mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+        mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -143,8 +143,8 @@ def mirobo_old_speeds_fixture(request):
     mock_vacuum.fan_speed_presets.return_value = request.param
     mock_vacuum.status().fanspeed = list(request.param.values())[0]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+        mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -180,17 +180,17 @@ def mirobo_is_on_fixture():
     mock_timer_1 = MagicMock()
     mock_timer_1.enabled = True
     mock_timer_1.cron = "5 5 1 8 1"
-    mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+    mock_timer_1.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC)
 
     mock_timer_2 = MagicMock()
     mock_timer_2.enabled = False
     mock_timer_2.cron = "5 5 1 8 2"
-    mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc)
+    mock_timer_2.next_schedule = datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC)
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vaccum_cls:
-        mock_vaccum_cls.return_value = mock_vacuum
+    with patch("homeassistant.components.xiaomi_miio.vacuum.Vacuum") as mock_vacuum_cls:
+        mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -255,12 +255,12 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
         {
             "enabled": True,
             "cron": "5 5 1 8 1",
-            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC),
         },
         {
             "enabled": False,
             "cron": "5 5 1 8 2",
-            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC),
         },
     ]
 
@@ -353,12 +353,12 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
         {
             "enabled": True,
             "cron": "5 5 1 8 1",
-            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC),
         },
         {
             "enabled": False,
             "cron": "5 5 1 8 2",
-            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=utc),
+            "next_schedule": datetime(2020, 5, 23, 13, 21, 10, tzinfo=dt_util.UTC),
         },
     ]
 

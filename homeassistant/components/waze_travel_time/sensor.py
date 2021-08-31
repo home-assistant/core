@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import re
-from typing import Callable
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 import voluptuous as vol
@@ -24,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Config, CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DESTINATION,
@@ -112,7 +112,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[SensorEntity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Waze travel time sensor entry."""
     defaults = {
@@ -127,7 +127,7 @@ async def async_setup_entry(
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = {}
-        for key in [
+        for key in (
             CONF_INCL_FILTER,
             CONF_EXCL_FILTER,
             CONF_REALTIME,
@@ -136,7 +136,7 @@ async def async_setup_entry(
             CONF_AVOID_SUBSCRIPTION_ROADS,
             CONF_AVOID_FERRIES,
             CONF_UNITS,
-        ]:
+        ):
             if key in new_data:
                 options[key] = new_data.pop(key)
             elif key in defaults:
@@ -158,7 +158,7 @@ async def async_setup_entry(
         config_entry,
     )
 
-    sensor = WazeTravelTime(config_entry.unique_id, name, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.entry_id, name, origin, destination, data)
 
     async_add_entities([sensor], False)
 
@@ -202,7 +202,7 @@ class WazeTravelTime(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
@@ -210,7 +210,7 @@ class WazeTravelTime(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return TIME_MINUTES
 

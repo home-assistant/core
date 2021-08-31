@@ -3,48 +3,50 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Hashable
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import voluptuous as vol
 
-from homeassistant.core import Context, callback
+from homeassistant.auth.models import RefreshToken, User
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from . import const, messages
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+if TYPE_CHECKING:
+    from .http import WebSocketAdapter
 
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
-    def __init__(self, logger, hass, send_message, user, refresh_token):
+    def __init__(
+        self,
+        logger: WebSocketAdapter,
+        hass: HomeAssistant,
+        send_message: Callable[[str | dict[str, Any]], None],
+        user: User,
+        refresh_token: RefreshToken,
+    ) -> None:
         """Initialize an active connection."""
         self.logger = logger
         self.hass = hass
         self.send_message = send_message
         self.user = user
-        if refresh_token:
-            self.refresh_token_id = refresh_token.id
-        else:
-            self.refresh_token_id = None
-
+        self.refresh_token_id = refresh_token.id
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
-    def context(self, msg):
+    def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
-        user = self.user
-        if user is None:
-            return Context()
-        return Context(user_id=user.id)
+        return Context(user_id=self.user.id)
 
     @callback
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
 
-    async def send_big_result(self, msg_id, result):
+    async def send_big_result(self, msg_id: int, result: Any) -> None:
         """Send a result message that would be expensive to JSON serialize."""
         content = await self.hass.async_add_executor_job(
             const.JSON_DUMP, messages.result_message(msg_id, result)
@@ -57,7 +59,7 @@ class ActiveConnection:
         self.send_message(messages.error_message(msg_id, code, message))
 
     @callback
-    def async_handle(self, msg):
+    def async_handle(self, msg: dict[str, Any]) -> None:
         """Handle a single incoming message."""
         handlers = self.hass.data[const.DOMAIN]
 
@@ -102,13 +104,13 @@ class ActiveConnection:
         self.last_id = cur_id
 
     @callback
-    def async_close(self):
+    def async_close(self) -> None:
         """Close down connection."""
         for unsub in self.subscriptions.values():
             unsub()
 
     @callback
-    def async_handle_exception(self, msg, err):
+    def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:
         """Handle an exception while processing a handler."""
         log_handler = self.logger.error
 

@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             entry.data[HMIPC_HAPID]
             for entry in hass.config_entries.async_entries(DOMAIN)
         }:
-            hass.async_add_job(
+            hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": config_entries.SOURCE_IMPORT},

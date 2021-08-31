@@ -9,7 +9,7 @@
             "invalid_auth": "Tuvastamise viga",
             "unknown": "Tundmatu viga"
         },
-        "flow_title": "Envoy {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {

@@ -1044,6 +1044,7 @@ async def test_trigger_entity(hass):
                             "attributes": {
                                 "plus_one": "{{ trigger.event.data.beer + 1 }}"
                             },
+                            "state_class": "measurement",
                         }
                     ],
                 },
@@ -1100,6 +1101,7 @@ async def test_trigger_entity(hass):
     assert state.attributes.get("entity_picture") == "/local/dogs.png"
     assert state.attributes.get("plus_one") == 3
     assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.attributes.get("state_class") == "measurement"
     assert state.context is context
 
 
@@ -1167,3 +1169,31 @@ async def test_trigger_not_allowed_platform_config(hass, caplog):
         "You can only add triggers to template entities if they are defined under `template:`."
         in caplog.text
     )
+
+
+async def test_config_top_level(hass):
+    """Test unique_id option only creates one sensor per id."""
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "sensor": {
+                    "name": "top-level",
+                    "device_class": "battery",
+                    "state_class": "measurement",
+                    "state": "5",
+                    "unit_of_measurement": "%",
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    state = hass.states.get("sensor.top_level")
+    assert state is not None
+    assert state.state == "5"
+    assert state.attributes["device_class"] == "battery"
+    assert state.attributes["state_class"] == "measurement"

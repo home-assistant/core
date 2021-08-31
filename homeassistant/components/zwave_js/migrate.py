@@ -84,7 +84,11 @@ def async_migrate_old_entity(
         if entry.domain != platform or entry.unique_id in registered_unique_ids:
             continue
 
-        old_ent_value_id = ValueID.from_unique_id(entry.unique_id)
+        try:
+            old_ent_value_id = ValueID.from_unique_id(entry.unique_id)
+        # Skip non value ID based unique ID's (e.g. node status sensor)
+        except IndexError:
+            continue
 
         if value_id.is_same_value_different_endpoints(old_ent_value_id):
             existing_entity_entries.append(entry)

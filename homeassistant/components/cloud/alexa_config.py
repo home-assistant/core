@@ -17,7 +17,7 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry, start
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -42,7 +42,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
         cloud_user: str,
         prefs: CloudPreferences,
         cloud: Cloud,
-    ):
+    ) -> None:
         """Initialize the Alexa config."""
         super().__init__(hass)
         self._config = config
@@ -107,8 +107,12 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def async_initialize(self):
         """Initialize the Alexa config."""
-        if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
-            await async_setup_component(self.hass, ALEXA_DOMAIN, {})
+
+        async def hass_started(hass):
+            if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
+                await async_setup_component(self.hass, ALEXA_DOMAIN, {})
+
+        start.async_at_start(self.hass, hass_started)
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

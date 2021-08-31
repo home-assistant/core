@@ -1,4 +1,5 @@
 """Test Hue bridge."""
+import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -12,8 +13,19 @@ from homeassistant.components.hue.const import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 
+ORIG_SUBSCRIBE_EVENTS = bridge.HueBridge._subscribe_events
 
-async def test_bridge_setup(hass):
+
+@pytest.fixture(autouse=True)
+def mock_subscribe_events():
+    """Mock subscribe events method."""
+    with patch(
+        "homeassistant.components.hue.bridge.HueBridge._subscribe_events"
+    ) as mock:
+        yield mock
+
+
+async def test_bridge_setup(hass, mock_subscribe_events):
     """Test a successful setup."""
     entry = Mock()
     api = Mock(initialize=AsyncMock())
@@ -30,6 +42,8 @@ async def test_bridge_setup(hass):
     assert len(mock_forward.mock_calls) == 3
     forward_entries = {c[1][1] for c in mock_forward.mock_calls}
     assert forward_entries == {"light", "binary_sensor", "sensor"}
+
+    assert len(mock_subscribe_events.mock_calls) == 1
 
 
 async def test_bridge_setup_invalid_username(hass):
@@ -78,20 +92,23 @@ async def test_reset_if_entry_had_wrong_auth(hass):
     assert await hue_bridge.async_reset()
 
 
-async def test_reset_unloads_entry_if_setup(hass):
+async def test_reset_unloads_entry_if_setup(hass, mock_subscribe_events):
     """Test calling reset while the entry has been setup."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
     hue_bridge = bridge.HueBridge(hass, entry)
 
-    with patch.object(bridge, "authenticate_bridge", return_value=Mock()), patch(
-        "aiohue.Bridge", return_value=Mock()
+    with patch.object(bridge, "authenticate_bridge"), patch(
+        "aiohue.Bridge"
     ), patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
         assert await hue_bridge.async_setup() is True
 
+    await asyncio.sleep(0)
+
     assert len(hass.services.async_services()) == 0
     assert len(mock_forward.mock_calls) == 3
+    assert len(mock_subscribe_events.mock_calls) == 1
 
     with patch.object(
         hass.config_entries, "async_forward_entry_unload", return_value=True
@@ -109,9 +126,7 @@ async def test_handle_unauthorized(hass):
     entry.options = {CONF_ALLOW_HUE_GROUPS: False, CONF_ALLOW_UNREACHABLE: False}
     hue_bridge = bridge.HueBridge(hass, entry)
 
-    with patch.object(bridge, "authenticate_bridge", return_value=Mock()), patch(
-        "aiohue.Bridge", return_value=Mock()
-    ):
+    with patch.object(bridge, "authenticate_bridge"), patch("aiohue.Bridge"):
         assert await hue_bridge.async_setup() is True
 
     assert hue_bridge.authorized is True
@@ -166,7 +181,6 @@ async def test_hue_activate_scene(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
     hue_bridge = bridge.HueBridge(hass, config_entry)
@@ -200,7 +214,6 @@ async def test_hue_activate_scene_transition(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
     hue_bridge = bridge.HueBridge(hass, config_entry)
@@ -234,7 +247,6 @@ async def test_hue_activate_scene_group_not_found(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
     hue_bridge = bridge.HueBridge(hass, config_entry)
@@ -263,7 +275,6 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
     hue_bridge = bridge.HueBridge(hass, config_entry)
@@ -282,3 +293,77 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
     call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
     with patch("aiohue.Bridge", return_value=mock_api):
         assert await hue_bridge.hue_activate_scene(call.data) is False
+
+
+async def test_event_updates(hass, caplog):
+    """Test calling reset while the entry has been setup."""
+    events = asyncio.Queue()
+
+    async def iterate_queue():
+        while True:
+            event = await events.get()
+            if event is None:
+                return
+            yield event
+
+    async def wait_empty_queue():
+        count = 0
+        while not events.empty() and count < 50:
+            await asyncio.sleep(0)
+            count += 1
+
+    hue_bridge = bridge.HueBridge(None, None)
+    hue_bridge.api = Mock(listen_events=iterate_queue)
+    subscription_task = asyncio.create_task(ORIG_SUBSCRIBE_EVENTS(hue_bridge))
+
+    calls = []
+
+    def obj_updated():
+        calls.append(True)
+
+    unsub = hue_bridge.listen_updates("lights", "2", obj_updated)
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="1"))
+
+    await wait_empty_queue()
+    assert len(calls) == 0
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
+
+    await wait_empty_queue()
+    assert len(calls) == 1
+
+    unsub()
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
+
+    await wait_empty_queue()
+    assert len(calls) == 1
+
+    # Test we can override update listener.
+    def obj_updated_false():
+        calls.append(False)
+
+    unsub = hue_bridge.listen_updates("lights", "2", obj_updated)
+    unsub_false = hue_bridge.listen_updates("lights", "2", obj_updated_false)
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
+
+    await wait_empty_queue()
+    assert len(calls) == 3
+    assert calls[-2] is True
+    assert calls[-1] is False
+
+    # Also call multiple times to make sure that works.
+    unsub()
+    unsub()
+    unsub_false()
+    unsub_false()
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
+
+    await wait_empty_queue()
+    assert len(calls) == 3
+
+    events.put_nowait(None)
+    await subscription_task

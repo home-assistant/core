@@ -53,7 +53,7 @@ async def async_setup(hass, hass_config):
     for heater in heaters:
         await heater.update()
 
-    for platform in ["water_heater", "binary_sensor", "sensor", "climate"]:
+    for platform in ("water_heater", "binary_sensor", "sensor", "climate"):
         hass.async_create_task(
             async_load_platform(hass, platform, DOMAIN, {}, hass_config)
         )

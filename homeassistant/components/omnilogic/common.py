@@ -6,7 +6,12 @@ import logging
 from omnilogic import OmniLogic, OmniLogicException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -14,13 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    ALL_ITEM_KINDS,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    DOMAIN,
-)
+from .const import ALL_ITEM_KINDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         config_entry: ConfigEntry,
         polling_interval: int,
-    ):
+    ) -> None:
         """Initialize the global Omnilogic data updater."""
         self.api = api
         self.config_entry = config_entry
@@ -89,7 +88,7 @@ class OmniLogicEntity(CoordinatorEntity):
         name: str,
         item_id: tuple,
         icon: str,
-    ):
+    ) -> None:
         """Initialize the OmniLogic Entity."""
         super().__init__(coordinator)
 
@@ -176,3 +175,5 @@ def check_guard(state_key, item, entity_setting):
             for guard_key, guard_value in guard_condition.items()
         ):
             return True
+
+    return False

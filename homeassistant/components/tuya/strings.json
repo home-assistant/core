@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "Tuya configuration",
     "step": {
       "user": {
         "title": "Tuya",

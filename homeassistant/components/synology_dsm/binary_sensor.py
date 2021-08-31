@@ -5,8 +5,9 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SynologyDSMBaseEntity, SynologyDSMDeviceEntity
+from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
 from .const import (
     COORDINATOR_CENTRAL,
     DOMAIN,
@@ -18,26 +19,26 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS binary sensor."""
 
     data = hass.data[DOMAIN][entry.unique_id]
-    api = data[SYNO_API]
+    api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
-    entities = [
-        SynoDSMSecurityBinarySensor(
-            api, sensor_type, SECURITY_BINARY_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in SECURITY_BINARY_SENSORS
+    entities: list[
+        SynoDSMSecurityBinarySensor
+        | SynoDSMUpgradeBinarySensor
+        | SynoDSMStorageBinarySensor
+    ] = [
+        SynoDSMSecurityBinarySensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in SECURITY_BINARY_SENSORS.items()
     ]
 
     entities += [
-        SynoDSMUpgradeBinarySensor(
-            api, sensor_type, UPGRADE_BINARY_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in UPGRADE_BINARY_SENSORS
+        SynoDSMUpgradeBinarySensor(api, sensor_type, sensor, coordinator)
+        for sensor_type, sensor in UPGRADE_BINARY_SENSORS.items()
     ]
 
     # Handle all disks
@@ -47,11 +48,11 @@ async def async_setup_entry(
                 SynoDSMStorageBinarySensor(
                     api,
                     sensor_type,
-                    STORAGE_DISK_BINARY_SENSORS[sensor_type],
+                    sensor,
                     coordinator,
                     disk,
                 )
-                for sensor_type in STORAGE_DISK_BINARY_SENSORS
+                for sensor_type, sensor in STORAGE_DISK_BINARY_SENSORS.items()
             ]
 
     async_add_entities(entities)
@@ -63,7 +64,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.security, self.entity_type) != "safe"
+        return getattr(self._api.security, self.entity_type) != "safe"  # type: ignore[no-any-return]
 
     @property
     def available(self) -> bool:
@@ -73,7 +74,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
-        return self._api.security.status_by_check
+        return self._api.security.status_by_check  # type: ignore[no-any-return]
 
 
 class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
@@ -82,7 +83,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.storage, self.entity_type)(self._device_id)
+        return bool(getattr(self._api.storage, self.entity_type)(self._device_id))
 
 
 class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
@@ -91,7 +92,7 @@ class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.upgrade, self.entity_type)
+        return bool(getattr(self._api.upgrade, self.entity_type))
 
     @property
     def available(self) -> bool:

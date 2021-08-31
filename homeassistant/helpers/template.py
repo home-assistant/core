@@ -22,9 +22,9 @@ from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 import jinja2
-from jinja2 import contextfilter, contextfunction
+from jinja2 import pass_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
-from jinja2.utils import Namespace  # type: ignore
+from jinja2.utils import Namespace
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -43,7 +43,12 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity_registry, location as loc_helper
+from homeassistant.helpers import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    location as loc_helper,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -147,7 +152,7 @@ def gen_result_wrapper(kls):
     class Wrapper(kls, ResultWrapper):
         """Wrapper of a kls that can store render_result."""
 
-        def __init__(self, *args: tuple, render_result: str | None = None) -> None:
+        def __init__(self, *args: Any, render_result: str | None = None) -> None:
             super().__init__(*args)
             self.render_result = render_result
 
@@ -175,7 +180,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: str | None = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -581,9 +586,8 @@ class Template:
         self._strict = strict
         env = self._env
 
-        self._compiled = cast(
-            jinja2.Template,
-            jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
+        self._compiled = jinja2.Template.from_code(
+            env, self._compiled_code, env.globals, None
         )
 
         return self._compiled
@@ -903,11 +907,125 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
-def device_entities(hass: HomeAssistant, device_id: str) -> Iterable[str]:
+def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     """Get entity ids for entities tied to a device."""
     entity_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_device(entity_reg, device_id)
+    entries = entity_registry.async_entries_for_device(entity_reg, _device_id)
     return [entry.entity_id for entry in entries]
+
+
+def device_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get a device ID from an entity ID."""
+    if not isinstance(entity_id, str) or "." not in entity_id:
+        raise TemplateError(f"Must provide an entity ID, got {entity_id}")  # type: ignore
+    entity_reg = entity_registry.async_get(hass)
+    entity = entity_reg.async_get(entity_id)
+    if entity is None:
+        return None
+    return entity.device_id
+
+
+def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
+    """Get the device specific attribute."""
+    device_reg = device_registry.async_get(hass)
+    if not isinstance(device_or_entity_id, str):
+        raise TemplateError("Must provide a device or entity ID")
+    device = None
+    if (
+        "." in device_or_entity_id
+        and (_device_id := device_id(hass, device_or_entity_id)) is not None
+    ):
+        device = device_reg.async_get(_device_id)
+    elif "." not in device_or_entity_id:
+        device = device_reg.async_get(device_or_entity_id)
+    if device is None or not hasattr(device, attr_name):
+        return None
+    return getattr(device, attr_name)
+
+
+def is_device_attr(
+    hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
+) -> bool:
+    """Test if a device's attribute is a specific value."""
+    return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
+
+
+def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the area ID from an area name, device id, or entity id."""
+    area_reg = area_registry.async_get(hass)
+    if area := area_reg.async_get_area_by_name(str(lookup_value)):
+        return area.id
+
+    ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+        config_validation as cv,
+    )
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            # If entity has an area ID, return that
+            if entity.area_id:
+                return entity.area_id
+            # If entity has a device ID, return the area ID for the device
+            if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
+                return device.area_id
+
+    # Check if this could be a device ID
+    if device := dev_reg.async_get(lookup_value):
+        return device.area_id
+
+    return None
+
+
+def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> str:
+    """Get area name from valid area ID."""
+    area = area_reg.async_get_area(valid_area_id)
+    assert area
+    return area.name
+
+
+def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the area name from an area id, device id, or entity id."""
+    area_reg = area_registry.async_get(hass)
+    area = area_reg.async_get_area(lookup_value)
+    if area:
+        return area.name
+
+    dev_reg = device_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
+        config_validation as cv,
+    )
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            # If entity has an area ID, get the area name for that
+            if entity.area_id:
+                return _get_area_name(area_reg, entity.area_id)
+            # If entity has a device ID and the device exists with an area ID, get the
+            # area name for that
+            if (
+                entity.device_id
+                and (device := dev_reg.async_get(entity.device_id))
+                and device.area_id
+            ):
+                return _get_area_name(area_reg, device.area_id)
+
+    if (device := dev_reg.async_get(lookup_value)) and device.area_id:
+        return _get_area_name(area_reg, device.area_id)
+
+    return None
 
 
 def closest(hass, *args):
@@ -1316,7 +1434,7 @@ def to_json(value):
     return json.dumps(value)
 
 
-@contextfilter
+@pass_context
 def random_every_time(context, values):
     """Choose a random value.
 
@@ -1421,6 +1539,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan"] = arc_tangent
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
+        self.filters["as_datetime"] = dt_util.parse_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["as_local"] = dt_util.as_local
         self.filters["timestamp_custom"] = timestamp_custom
@@ -1455,6 +1574,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
+        self.globals["as_datetime"] = dt_util.parse_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = relative_time
@@ -1480,10 +1600,22 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             def wrapper(*args, **kwargs):
                 return func(hass, *args[1:], **kwargs)
 
-            return contextfunction(wrapper)
+            return pass_context(wrapper)
 
         self.globals["device_entities"] = hassfunction(device_entities)
-        self.filters["device_entities"] = contextfilter(self.globals["device_entities"])
+        self.filters["device_entities"] = pass_context(self.globals["device_entities"])
+
+        self.globals["device_attr"] = hassfunction(device_attr)
+        self.globals["is_device_attr"] = hassfunction(is_device_attr)
+
+        self.globals["device_id"] = hassfunction(device_id)
+        self.filters["device_id"] = pass_context(self.globals["device_id"])
+
+        self.globals["area_id"] = hassfunction(area_id)
+        self.filters["area_id"] = pass_context(self.globals["area_id"])
+
+        self.globals["area_name"] = hassfunction(area_name)
+        self.filters["area_name"] = pass_context(self.globals["area_name"])
 
         if limited:
             # Only device_entities is available to limited templates, mark other
@@ -1506,8 +1638,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "states",
                 "utcnow",
                 "now",
+                "device_attr",
+                "is_device_attr",
+                "device_id",
+                "area_id",
+                "area_name",
             ]
-            hass_filters = ["closest", "expand"]
+            hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
@@ -1515,9 +1652,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return
 
         self.globals["expand"] = hassfunction(expand)
-        self.filters["expand"] = contextfilter(self.globals["expand"])
+        self.filters["expand"] = pass_context(self.globals["expand"])
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = contextfilter(hassfunction(closest_filter))
+        self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_state"] = hassfunction(is_state)
         self.globals["is_state_attr"] = hassfunction(is_state_attr)

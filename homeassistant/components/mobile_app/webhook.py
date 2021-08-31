@@ -268,7 +268,7 @@ async def webhook_stream_camera(hass, config_entry, data):
             status=HTTP_BAD_REQUEST,
         )
 
-    resp = {"mjpeg_path": "/api/camera_proxy_stream/%s" % (camera.entity_id)}
+    resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
 
     if camera.attributes[ATTR_SUPPORTED_FEATURES] & CAMERA_SUPPORT_STREAM:
         try:

@@ -89,7 +89,7 @@ class MinioEventThread(threading.Thread):
         prefix: str,
         suffix: str,
         events: list[str],
-    ):
+    ) -> None:
         """Copy over all Minio client options."""
         super().__init__()
         self._queue = queue

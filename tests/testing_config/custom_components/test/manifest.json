@@ -4,5 +4,6 @@
   "documentation": "http://example.com",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "version": "1.2.3"
 }

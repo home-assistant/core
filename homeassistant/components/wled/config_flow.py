@@ -1,16 +1,24 @@
 """Config flow to configure the WLED integration."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
-from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
+from homeassistant.config_entries import (
+    SOURCE_ZEROCONF,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT, DOMAIN
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -18,16 +26,22 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> WLEDOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return WLEDOptionsFlowHandler(config_entry)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: ConfigType | None = None
+        self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        if discovery_info is None:
-            return self.async_abort(reason="cannot_connect")
 
         # Hostname is format: wled-livingroom.local.
         host = discovery_info["hostname"].rstrip(".")
@@ -46,13 +60,13 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_flow(discovery_info, True)
 
     async def async_step_zeroconf_confirm(
-        self, user_input: ConfigType = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         return await self._handle_config_flow(user_input)
 
     async def _handle_config_flow(
-        self, user_input: ConfigType | None = None, prepare: bool = False
+        self, user_input: dict[str, Any] | None = None, prepare: bool = False
     ) -> FlowResult:
         """Config flow handler for WLED."""
         source = self.context.get("source")
@@ -62,6 +76,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             if source == SOURCE_ZEROCONF:
                 return self._show_confirm_dialog()
             return self._show_setup_form()
+
+        # if prepare is True, user_input can not be None.
+        assert user_input is not None
 
         if source == SOURCE_ZEROCONF:
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
@@ -109,4 +126,33 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={"name": name},
             errors=errors or {},
+        )
+
+
+class WLEDOptionsFlowHandler(OptionsFlow):
+    """Handle WLED options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize WLED options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage WLED options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_KEEP_MASTER_LIGHT,
+                        default=self.config_entry.options.get(
+                            CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
+                        ),
+                    ): bool,
+                }
+            ),
         )

@@ -15,7 +15,7 @@ from .const import (
     DEFAULT_RECONNECT_INTERVAL,
     DOMAIN,
 )
-from .errors import AlreadyConfigured, CannotConnect
+from .errors import CannotConnect
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -40,13 +40,6 @@ async def connect_client(hass, user_input):
 
 async def validate_input(hass: HomeAssistant, user_input):
     """Validate the user input allows us to connect."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and entry.data[CONF_PORT] == user_input[CONF_PORT]
-        ):
-            raise AlreadyConfigured
-
     try:
         client = await connect_client(hass, user_input)
     except asyncio.TimeoutError as err:
@@ -81,12 +74,13 @@ class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 await validate_input(self.hass, user_input)
                 address = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 return self.async_create_entry(title=address, data=user_input)
-            except AlreadyConfigured:
-                errors["base"] = "already_configured"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 

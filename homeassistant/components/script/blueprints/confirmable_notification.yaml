@@ -51,6 +51,10 @@ blueprint:
 mode: restart
 
 sequence:
+  - alias: "Set up variables"
+    variables:
+      action_confirm: "{{ 'CONFIRM_' ~ context.id }}"
+      action_dismiss: "{{ 'DISMISS_' ~ context.id }}"
   - alias: "Send notification"
     domain: mobile_app
     type: notify
@@ -59,16 +63,22 @@ sequence:
     message: !input message
     data:
       actions:
-        - action: "CONFIRM"
+        - action: "{{ action_confirm }}"
           title: !input confirm_text
-        - action: "DISMISS"
+        - action: "{{ action_dismiss }}"
           title: !input dismiss_text
   - alias: "Awaiting response"
     wait_for_trigger:
       - platform: event
         event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ action_confirm }}"
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ action_dismiss }}"
   - choose:
-      - conditions: "{{ wait.trigger.event.data.action == 'CONFIRM' }}"
+      - conditions: "{{ wait.trigger.event.data.action == action_confirm }}"
         sequence: !input confirm_action
-      - conditions: "{{ wait.trigger.event.data.action == 'DISMISS' }}"
+      - conditions: "{{ wait.trigger.event.data.action == action_dismiss }}"
         sequence: !input dismiss_action

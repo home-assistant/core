@@ -12,15 +12,16 @@
         },
         "error": {
             "authentication_error": "Onjuiste HomeKit-code. Controleer het en probeer het opnieuw.",
+            "insecure_setup_code": "De gevraagde setup-code is onveilig vanwege de triviale aard ervan. Dit accessoire voldoet niet aan de basisbeveiligingsvereisten.",
             "max_peers_error": "Apparaat heeft geweigerd om koppelingen toe te voegen omdat het geen vrije koppelingsopslag heeft.",
             "pairing_failed": "Er deed zich een fout voor tijdens het koppelen met dit apparaat. Dit kan een tijdelijke storing zijn of uw apparaat wordt mogelijk momenteel niet ondersteund.",
             "unable_to_pair": "Kan niet koppelen, probeer het opnieuw.",
             "unknown_error": "Apparaat meldde een onbekende fout. Koppelen mislukt."
         },
-        "flow_title": "{name} via HomeKit-accessoireprotocol",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
-                "description": "Onderbreek het koppelen op alle controllers, of probeer het apparaat opnieuw op te starten, en ga dan verder om het koppelen te hervatten.",
+                "description": "Onderbreek het koppelen op alle controllers, of probeer het apparaat opnieuw op te starten, ga dan verder om het koppelen te hervatten.",
                 "title": "Het apparaat is al aan het koppelen met een andere controller"
             },
             "max_tries_error": {
@@ -29,6 +30,7 @@
             },
             "pair": {
                 "data": {
+                    "allow_insecure_setup_codes": "Koppelen met onveilige setup-codes toestaan.",
                     "pairing_code": "Koppelingscode"
                 },
                 "description": "HomeKit Controller communiceert met {name} via het lokale netwerk met behulp van een beveiligde versleutelde verbinding zonder een aparte HomeKit-controller of iCloud. Voer uw HomeKit-koppelcode in (in de indeling XXX-XX-XXX) om dit accessoire te gebruiken. Deze code is meestal te vinden op het apparaat zelf of in de verpakking.",

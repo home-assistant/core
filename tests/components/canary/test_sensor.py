@@ -118,9 +118,10 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         await hass.async_block_till_done()
 
     entity_id = "sensor.home_dining_room_air_quality"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_ABNORMAL
+    state1 = hass.states.get(entity_id)
+    assert state1
+    assert state1.state == "0.59"
+    assert state1.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_ABNORMAL
 
     instance.get_latest_readings.return_value = [
         mock_reading("temperature", "21.12"),
@@ -133,9 +134,10 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_VERY_ABNORMAL
+    state2 = hass.states.get(entity_id)
+    assert state2
+    assert state2.state == "0.4"
+    assert state2.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_VERY_ABNORMAL
 
     instance.get_latest_readings.return_value = [
         mock_reading("temperature", "21.12"),
@@ -148,9 +150,10 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
     await hass.helpers.entity_component.async_update_entity(entity_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_NORMAL
+    state3 = hass.states.get(entity_id)
+    assert state3
+    assert state3.state == "1.0"
+    assert state3.attributes[ATTR_AIR_QUALITY] == STATE_AIR_QUALITY_NORMAL
 
 
 async def test_sensors_flex(hass, canary) -> None:

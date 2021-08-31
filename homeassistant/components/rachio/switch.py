@@ -140,7 +140,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     if has_flex_sched:
-        platform = entity_platform.current_platform.get()
+        platform = entity_platform.async_get_current_platform()
         platform.async_register_entity_service(
             SERVICE_SET_ZONE_MOISTURE,
             {vol.Required(ATTR_PERCENT): cv.positive_int},
@@ -418,9 +418,8 @@ class RachioZone(RachioSwitch):
                 CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
             )
         )
-        self._controller.rachio.zone.start(
-            self.zone_id, manual_run_time.total_seconds()
-        )
+        # The API limit is 3 hours, and requires an int be passed
+        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
         _LOGGER.debug(
             "Watering %s on %s for %s",
             self.name,

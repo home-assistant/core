@@ -9,7 +9,7 @@
             "cannot_connect": "Kon niet verbinden",
             "invalid_auth": "Ongeldige authenticatie"
         },
-        "flow_title": "Sonarr: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "description": "De Sonarr-integratie moet handmatig opnieuw worden geverifieerd met de Sonarr-API die wordt gehost op: {host}",

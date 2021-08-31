@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from itertools import chain
 
-from gogogate2_api.common import AbstractDoor, get_configured_doors
+from ismartgate.common import AbstractDoor, get_configured_doors
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -72,7 +72,7 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.voltage  # This is a percentage, not an absolute voltage
@@ -110,13 +110,13 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement."""
         return TEMP_CELSIUS
 

@@ -9,7 +9,7 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
             "unsupported_version": "BleBox \u88dd\u7f6e\u97cc\u9ad4\u904e\u820a\uff0c\u8acb\u5148\u9032\u884c\u66f4\u65b0\u3002"
         },
-        "flow_title": "BleBox \u88dd\u7f6e\uff1a{name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

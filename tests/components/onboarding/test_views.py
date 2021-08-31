@@ -74,6 +74,9 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_host_info",
         return_value={},
     ), patch(
+        "homeassistant.components.hassio.HassIO.get_store",
+        return_value={},
+    ), patch(
         "homeassistant.components.hassio.HassIO.get_supervisor_info",
         return_value={"diagnostics": True},
     ), patch(
@@ -184,7 +187,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     # Validate created areas
     area_registry = ar.async_get(hass)
     assert len(area_registry.areas) == 3
-    assert sorted([area.name for area in area_registry.async_list_areas()]) == [
+    assert sorted(area.name for area in area_registry.async_list_areas()) == [
         "Bedroom",
         "Kitchen",
         "Living Room",

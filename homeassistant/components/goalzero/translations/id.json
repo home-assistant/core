@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Akun sudah dikonfigurasi"
+            "already_configured": "Akun sudah dikonfigurasi",
+            "invalid_host": "Nama host atau alamat IP tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",

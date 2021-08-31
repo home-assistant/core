@@ -5,8 +5,7 @@
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
-            "invalid_auth": "Ongeldige authenticatie",
-            "unknown": "Onverwachte fout"
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "reauth_confirm": {

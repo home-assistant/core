@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 urz\u0105dzenia AVR firmy Denon"
         },
-        "flow_title": "Denon AVR: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Prosz\u0119 potwierdzi\u0107 dodanie urz\u0105dzenia",

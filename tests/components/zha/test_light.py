@@ -297,12 +297,12 @@ async def async_test_on_off_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
     await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 3})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at light
     await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 3})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
@@ -421,7 +421,7 @@ async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected
     await send_attributes_report(
         hass, cluster, {1: level + 10, 0: level, 2: level - 10 or 22}
     )
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
     assert hass.states.get(entity_id).state == expected_state
     # hass uses None for brightness of 0 in state attributes
     if level == 0:

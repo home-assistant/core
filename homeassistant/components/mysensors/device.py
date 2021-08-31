@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Any
 
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -36,6 +37,8 @@ MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 class MySensorsDevice:
     """Representation of a MySensors device."""
 
+    hass: HomeAssistant
+
     def __init__(
         self,
         gateway_id: GatewayId,
@@ -43,7 +46,7 @@ class MySensorsDevice:
         node_id: int,
         child_id: int,
         value_type: int,
-    ):
+    ) -> None:
         """Set up the MySensors device."""
         self.gateway_id: GatewayId = gateway_id
         self.gateway: BaseAsyncGateway = gateway
@@ -51,9 +54,8 @@ class MySensorsDevice:
         self.child_id: int = child_id
         self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
         self.child_type = self._child.type
-        self._values = {}
+        self._values: dict[int, Any] = {}
         self._update_scheduled = False
-        self.hass = None
 
     @property
     def dev_id(self) -> DevId:
@@ -64,10 +66,10 @@ class MySensorsDevice:
         return self.gateway_id, self.node_id, self.child_id, self.value_type
 
     @property
-    def _logger(self):
+    def _logger(self) -> logging.Logger:
         return logging.getLogger(f"{__name__}.{self.name}")
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Remove this entity from home assistant."""
         for platform in PLATFORM_TYPES:
             platform_str = MYSENSORS_PLATFORM_DEVICES.format(platform)
@@ -89,17 +91,26 @@ class MySensorsDevice:
 
     @property
     def sketch_name(self) -> str:
-        """Return the name of the sketch running on the whole node (will be the same for several entities!)."""
-        return self._node.sketch_name
+        """Return the name of the sketch running on the whole node.
+
+        The name will be the same for several entities.
+        """
+        return self._node.sketch_name  # type: ignore[no-any-return]
 
     @property
     def sketch_version(self) -> str:
-        """Return the version of the sketch running on the whole node (will be the same for several entities!)."""
-        return self._node.sketch_version
+        """Return the version of the sketch running on the whole node.
+
+        The name will be the same for several entities.
+        """
+        return self._node.sketch_version  # type: ignore[no-any-return]
 
     @property
     def node_name(self) -> str:
-        """Name of the whole node (will be the same for several entities!)."""
+        """Name of the whole node.
+
+        The name will be the same for several entities.
+        """
         return f"{self.sketch_name} {self.node_id}"
 
     @property
@@ -109,7 +120,7 @@ class MySensorsDevice:
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return a dict that allows home assistant to puzzle all entities belonging to a node together."""
+        """Return the device info."""
         return {
             "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
             "name": self.node_name,
@@ -118,13 +129,13 @@ class MySensorsDevice:
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this entity."""
         return f"{self.node_name} {self.child_id}"
 
     @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes."""
+    def _extra_attributes(self) -> dict[str, Any]:
+        """Return device specific attributes."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         attr = {
@@ -134,10 +145,6 @@ class MySensorsDevice:
             ATTR_DESCRIPTION: child.description,
             ATTR_NODE_ID: self.node_id,
         }
-        # This works when we are actually an Entity (i.e. all platforms except device_tracker)
-        if hasattr(self, "platform"):
-            # pylint: disable=no-member
-            attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
 
         set_req = self.gateway.const.SetReq
 
@@ -146,7 +153,7 @@ class MySensorsDevice:
 
         return attr
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -173,17 +180,17 @@ class MySensorsDevice:
             else:
                 self._values[value_type] = value
 
-    async def _async_update_callback(self):
+    async def _async_update_callback(self) -> None:
         """Update the device."""
         raise NotImplementedError
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the device after delay."""
         if self._update_scheduled:
             return
 
-        async def update():
+        async def update() -> None:
             """Perform update."""
             try:
                 await self._async_update_callback()
@@ -197,31 +204,47 @@ class MySensorsDevice:
         self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
 
 
-def get_mysensors_devices(hass, domain: str) -> dict[DevId, MySensorsDevice]:
+def get_mysensors_devices(
+    hass: HomeAssistant, domain: str
+) -> dict[DevId, MySensorsDevice]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    return hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)]
+    devices: dict[DevId, MySensorsDevice] = hass.data[DOMAIN][
+        MYSENSORS_PLATFORM_DEVICES.format(domain)
+    ]
+    return devices
 
 
 class MySensorsEntity(MySensorsDevice, Entity):
     """Representation of a MySensors entity."""
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return the polling state. The gateway pushes its states."""
         return False
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if entity is available."""
         return self.value_type in self._values
 
-    async def _async_update_callback(self):
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        attr = self._extra_attributes
+
+        assert self.platform
+        assert self.platform.config_entry
+        attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
+
+        return attr
+
+    async def _async_update_callback(self) -> None:
         """Update the entity."""
         await self.async_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self.async_on_remove(
             async_dispatcher_connect(

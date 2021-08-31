@@ -60,6 +60,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class DeLijnPublicTransportSensor(SensorEntity):
     """Representation of a Ruter sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
     def __init__(self, line):
         """Initialize the sensor."""
         self.line = line
@@ -105,17 +107,12 @@ class DeLijnPublicTransportSensor(SensorEntity):
         return self._available
 
     @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 

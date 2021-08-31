@@ -25,13 +25,14 @@ from homeassistant.components.mysensors.const import (
     ConfGatewayType,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 
 from tests.common import MockConfigEntry
 
 
 async def get_form(
     hass: HomeAssistant, gatway_type: ConfGatewayType, expected_step_id: str
-):
+) -> FlowResult:
     """Get a form for the given gateway type."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     stepuser = await hass.config_entries.flow.async_init(
@@ -107,7 +108,7 @@ async def test_missing_mqtt(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "mqtt_required"}
 
 
-async def test_config_serial(hass: HomeAssistant):
+async def test_config_serial(hass: HomeAssistant) -> None:
     """Test configuring a gateway via serial."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_SERIAL, "gw_serial")
     flow_id = step["flow_id"]
@@ -147,7 +148,7 @@ async def test_config_serial(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_config_tcp(hass: HomeAssistant):
+async def test_config_tcp(hass: HomeAssistant) -> None:
     """Test configuring a gateway via tcp."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
     flow_id = step["flow_id"]
@@ -184,7 +185,7 @@ async def test_config_tcp(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_fail_to_connect(hass: HomeAssistant):
+async def test_fail_to_connect(hass: HomeAssistant) -> None:
     """Test configuring a gateway via tcp."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
     flow_id = step["flow_id"]
@@ -209,8 +210,9 @@ async def test_fail_to_connect(hass: HomeAssistant):
 
     assert result2["type"] == "form"
     assert "errors" in result2
-    assert "base" in result2["errors"]
-    assert result2["errors"]["base"] == "cannot_connect"
+    errors = result2["errors"]
+    assert errors
+    assert errors.get("base") == "cannot_connect"
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -268,16 +270,6 @@ async def test_fail_to_connect(hass: HomeAssistant):
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.1",
-            },
-            CONF_VERSION,
-            "invalid_version",
-        ),
-        (
-            CONF_GATEWAY_TYPE_TCP,
-            "gw_tcp",
-            {
-                CONF_TCP_PORT: 5003,
-                CONF_DEVICE: "127.0.0.1",
                 CONF_VERSION: "4",
             },
             CONF_VERSION,
@@ -300,6 +292,7 @@ async def test_fail_to_connect(hass: HomeAssistant):
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.",
+                CONF_VERSION: "2.4",
             },
             CONF_DEVICE,
             "invalid_ip",
@@ -310,6 +303,7 @@ async def test_fail_to_connect(hass: HomeAssistant):
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "abcd",
+                CONF_VERSION: "2.4",
             },
             CONF_DEVICE,
             "invalid_ip",
@@ -367,12 +361,12 @@ async def test_fail_to_connect(hass: HomeAssistant):
 )
 async def test_config_invalid(
     hass: HomeAssistant,
-    mqtt: config_entries.ConfigEntry,
+    mqtt: None,
     gateway_type: ConfGatewayType,
     expected_step_id: str,
     user_input: dict[str, Any],
-    err_field,
-    err_string,
+    err_field: str,
+    err_string: str,
 ) -> None:
     """Perform a test that is expected to generate an error."""
     step = await get_form(hass, gateway_type, expected_step_id)
@@ -380,6 +374,9 @@ async def test_config_invalid(
 
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
+    ), patch(
+        "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
+        side_effect=OSError,
     ), patch(
         "homeassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -394,8 +391,10 @@ async def test_config_invalid(
 
     assert result2["type"] == "form"
     assert "errors" in result2
-    assert err_field in result2["errors"]
-    assert result2["errors"][err_field] == err_string
+    errors = result2["errors"]
+    assert errors
+    assert err_field in errors
+    assert errors[err_field] == err_string
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 

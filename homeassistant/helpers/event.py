@@ -71,8 +71,8 @@ class TrackStates:
     """
 
     all_states: bool
-    entities: set
-    domains: set
+    entities: set[str]
+    domains: set[str]
 
 
 @dataclass
@@ -139,7 +139,7 @@ def threaded_listener_factory(
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[str, State, State], None],
+    action: Callable[[str, State, State], Awaitable[None] | None],
     from_state: None | str | Iterable[str] = None,
     to_state: None | str | Iterable[str] = None,
 ) -> CALLBACK_TYPE:
@@ -394,7 +394,7 @@ def async_track_entity_registry_updated_event(
 
 @callback
 def _async_dispatch_domain_event(
-    hass: HomeAssistant, event: Event, callbacks: dict[str, list]
+    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob]]
 ) -> None:
     domain = split_entity_id(event.data["entity_id"])[0]
 
@@ -534,7 +534,7 @@ class _TrackStateChangeFiltered:
         hass: HomeAssistant,
         track_states: TrackStates,
         action: Callable[[Event], Any],
-    ):
+    ) -> None:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._action = action
@@ -620,7 +620,7 @@ class _TrackStateChangeFiltered:
         self._listeners.pop(listener_name)()
 
     @callback
-    def _setup_entities_listener(self, domains: set, entities: set) -> None:
+    def _setup_entities_listener(self, domains: set[str], entities: set[str]) -> None:
         if domains:
             entities = entities.copy()
             entities.update(self.hass.states.async_entity_ids(domains))
@@ -634,7 +634,7 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
-    def _setup_domains_listener(self, domains: set) -> None:
+    def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
@@ -683,7 +683,7 @@ def async_track_state_change_filtered(
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
-    action: Callable[[str, State | None, State | None], None],
+    action: Callable[[str, State | None, State | None], Awaitable[None] | None],
     variables: TemplateVarsType | None = None,
 ) -> Callable[[], None]:
     """Add a listener that fires when a a template evaluates to 'true'.
@@ -775,7 +775,7 @@ class _TrackTemplateResultInfo:
         hass: HomeAssistant,
         track_templates: Iterable[TrackTemplate],
         action: Callable,
-    ):
+    ) -> None:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._job = HassJob(action)
@@ -977,10 +977,10 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_domain_all_in_render_info(self._info[template])
+                        _suppress_domain_all_in_render_info(info)
                         if self._rate_limit.async_has_timer(template)
-                        else self._info[template]
-                        for template in self._info
+                        else info
+                        for template, info in self._info.items()
                     ]
                 )
             )
@@ -1072,7 +1072,7 @@ def async_track_template_result(
 def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
-    action: Callable[..., None],
+    action: Callable[..., Awaitable[None] | None],
     async_check_same_func: Callable[[str, State | None, State | None], bool],
     entity_ids: str | Iterable[str] = MATCH_ALL,
 ) -> CALLBACK_TYPE:
@@ -1141,7 +1141,7 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[..., None],
+    action: HassJob | Callable[..., Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
@@ -1162,7 +1162,7 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[..., None],
+    action: HassJob | Callable[..., Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
@@ -1213,12 +1213,14 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 @callback
 @bind_hass
 def async_call_later(
-    hass: HomeAssistant, delay: float, action: HassJob | Callable[..., None]
+    hass: HomeAssistant,
+    delay: float | timedelta,
+    action: HassJob | Callable[..., Awaitable[None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
-    return async_track_point_in_utc_time(
-        hass, action, dt_util.utcnow() + timedelta(seconds=delay)
-    )
+    if not isinstance(delay, timedelta):
+        delay = timedelta(seconds=delay)
+    return async_track_point_in_utc_time(hass, action, dt_util.utcnow() + delay)
 
 
 call_later = threaded_listener_factory(async_call_later)
@@ -1228,7 +1230,7 @@ call_later = threaded_listener_factory(async_call_later)
 @bind_hass
 def async_track_time_interval(
     hass: HomeAssistant,
-    action: Callable[..., None | Awaitable],
+    action: Callable[..., Awaitable[None] | None],
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
@@ -1360,7 +1362,7 @@ time_tracker_utcnow = dt_util.utcnow
 @bind_hass
 def async_track_utc_time_change(
     hass: HomeAssistant,
-    action: Callable[..., None],
+    action: Callable[..., Awaitable[None] | None],
     hour: Any | None = None,
     minute: Any | None = None,
     second: Any | None = None,
@@ -1438,7 +1440,9 @@ def async_track_time_change(
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def process_state_match(parameter: None | str | Iterable[str]) -> Callable[[str], bool]:
+def process_state_match(
+    parameter: None | str | Iterable[str],
+) -> Callable[[str | None], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True

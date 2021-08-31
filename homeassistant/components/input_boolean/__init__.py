@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -77,7 +78,7 @@ class InputBooleanStorageCollection(collection.StorageCollection):
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if input_boolean is True."""
     return hass.states.is_state(entity_id, STATE_ON)
 
@@ -144,14 +145,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, config: dict | None):
+    _attr_should_poll = False
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a boolean input."""
         self._config = config
         self.editable = True
-        self._state = config.get(CONF_INITIAL)
+        self._attr_is_on = config.get(CONF_INITIAL, False)
+        self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputBoolean:
+    def from_yaml(cls, config: ConfigType) -> InputBoolean:
         """Return entity instance initialized from yaml storage."""
         input_bool = cls(config)
         input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -159,56 +163,41 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         return input_bool
 
     @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
-
-    @property
-    def name(self):
+    def name(self) -> str | None:
         """Return name of the boolean input."""
         return self._config.get(CONF_NAME)
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the entity."""
-        return {ATTR_EDITABLE: self.editable}
-
-    @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
-    def is_on(self):
-        """Return true if entity is on."""
-        return self._state
+    def extra_state_attributes(self) -> dict[str, bool]:
+        """Return the state attributes of the entity."""
+        return {ATTR_EDITABLE: self.editable}
 
-    @property
-    def unique_id(self):
-        """Return a unique ID for the person."""
-        return self._config[CONF_ID]
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
-        # If not None, we got an initial value.
+        # Don't restore if we got an initial value.
         await super().async_added_to_hass()
-        if self._state is not None:
+        if self._config.get(CONF_INITIAL) is not None:
             return
 
         state = await self.async_get_last_state()
-        self._state = state and state.state == STATE_ON
+        self._attr_is_on = state is not None and state.state == STATE_ON
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

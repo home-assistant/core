@@ -49,12 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 def _is_file(value) -> bool:
     """Validate that the value is an existing file."""
     file_in = os.path.expanduser(str(value))
-
-    if not os.path.isfile(file_in):
-        return False
-    if not os.access(file_in, os.R_OK):
-        return False
-    return True
+    return os.path.isfile(file_in) and os.access(file_in, os.R_OK)
 
 
 def _get_ip(host):
@@ -184,7 +179,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for AsusWrt."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

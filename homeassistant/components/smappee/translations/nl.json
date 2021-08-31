@@ -9,7 +9,7 @@
             "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
-        "flow_title": "Smappee: {name}",
+        "flow_title": "{name}",
         "step": {
             "environment": {
                 "data": {

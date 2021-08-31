@@ -37,15 +37,14 @@ see:
     gps_accuracy:
       name: GPS accuracy
       description: Accuracy of GPS coordinates.
-      example: "80"
       selector:
         number:
           min: 1
           max: 100
+          unit_of_measurement: "%"
     battery:
       name: Battery level
       description: Battery level of device.
-      example: "100"
       selector:
         number:
           min: 0

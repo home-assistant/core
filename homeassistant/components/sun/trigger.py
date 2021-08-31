@@ -15,7 +15,7 @@ from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "sun",
         vol.Required(CONF_EVENT): cv.sun_event,
@@ -26,7 +26,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info.get("trigger_data", {}) if automation_info else {}
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
     description = event
@@ -41,11 +41,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": "sun",
                     "event": event,
                     "offset": offset,
                     "description": description,
-                    "id": trigger_id,
                 }
             },
         )

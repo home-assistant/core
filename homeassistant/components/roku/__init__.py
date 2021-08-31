@@ -1,40 +1,23 @@
 """Support for Roku."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from rokuecp import Roku, RokuConnectionError, RokuError
-from rokuecp.models import Device
+from rokuecp import RokuConnectionError, RokuError
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-from homeassistant.util.dt import utcnow
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    ATTR_SUGGESTED_AREA,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .coordinator import RokuDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
-SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -75,74 +58,3 @@ def roku_exception_handler(func):
                 _LOGGER.error("Invalid response from API: %s", error)
 
     return handler
-
-
-class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
-    """Class to manage fetching Roku data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        host: str,
-    ):
-        """Initialize global Roku data updater."""
-        self.roku = Roku(host=host, session=async_get_clientsession(hass))
-
-        self.full_update_interval = timedelta(minutes=15)
-        self.last_full_update = None
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-
-    async def _async_update_data(self) -> Device:
-        """Fetch data from Roku."""
-        full_update = self.last_full_update is None or utcnow() >= (
-            self.last_full_update + self.full_update_interval
-        )
-
-        try:
-            data = await self.roku.update(full_update=full_update)
-
-            if full_update:
-                self.last_full_update = utcnow()
-
-            return data
-        except RokuError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
-
-
-class RokuEntity(CoordinatorEntity):
-    """Defines a base Roku entity."""
-
-    def __init__(
-        self, *, device_id: str, name: str, coordinator: RokuDataUpdateCoordinator
-    ) -> None:
-        """Initialize the Roku entity."""
-        super().__init__(coordinator)
-        self._device_id = device_id
-        self._name = name
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Roku device."""
-        if self._device_id is None:
-            return None
-
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
-            ATTR_NAME: self.name,
-            ATTR_MANUFACTURER: self.coordinator.data.info.brand,
-            ATTR_MODEL: self.coordinator.data.info.model_name,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
-            ATTR_SUGGESTED_AREA: self.coordinator.data.info.device_location,
-        }

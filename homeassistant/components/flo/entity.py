@@ -13,28 +13,22 @@ from .device import FloDeviceDataUpdateCoordinator
 class FloEntity(Entity):
     """A base class for Flo entities."""
 
+    _attr_force_update = False
+    _attr_should_poll = False
+
     def __init__(
         self,
         entity_type: str,
         name: str,
         device: FloDeviceDataUpdateCoordinator,
         **kwargs,
-    ):
+    ) -> None:
         """Init Flo entity."""
-        self._unique_id: str = f"{device.mac_address}_{entity_type}"
-        self._name: str = name
+        self._attr_name = name
+        self._attr_unique_id = f"{device.mac_address}_{entity_type}"
+
         self._device: FloDeviceDataUpdateCoordinator = device
         self._state: Any = None
-
-    @property
-    def name(self) -> str:
-        """Return Entity's default name."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -52,16 +46,6 @@ class FloEntity(Entity):
     def available(self) -> bool:
         """Return True if device is available."""
         return self._device.available
-
-    @property
-    def force_update(self) -> bool:
-        """Force update this entity."""
-        return False
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return False
 
     async def async_update(self):
         """Update Flo entity."""

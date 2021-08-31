@@ -1,6 +1,4 @@
 """Support for deCONZ devices."""
-import voluptuous as vol
-
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -15,10 +13,6 @@ from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
 from .gateway import DeconzGateway
 from .services import async_setup_services, async_unload_services
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
-)
-
 
 async def async_setup_entry(hass, config_entry):
     """Set up a deCONZ bridge for a config entry.
@@ -26,8 +20,7 @@ async def async_setup_entry(hass, config_entry):
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     await async_update_group_unique_id(hass, config_entry)
 
@@ -39,7 +32,7 @@ async def async_setup_entry(hass, config_entry):
     if not await gateway.async_setup():
         return False
 
-    hass.data[DOMAIN][config_entry.unique_id] = gateway
+    hass.data[DOMAIN][config_entry.entry_id] = gateway
 
     await gateway.async_update_device_registry()
 
@@ -54,7 +47,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload deCONZ config entry."""
-    gateway = hass.data[DOMAIN].pop(config_entry.unique_id)
+    gateway = hass.data[DOMAIN].pop(config_entry.entry_id)
 
     if not hass.data[DOMAIN]:
         await async_unload_services(hass)

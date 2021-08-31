@@ -8,7 +8,7 @@
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "flow_title": "{mac} ({ip})",
         "step": {
             "user": {
                 "data": {

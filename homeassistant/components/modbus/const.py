@@ -1,30 +1,46 @@
 """Constants used in modbus integration."""
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_COVERS,
+    CONF_LIGHTS,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+)
 
 # configuration names
 CONF_BAUDRATE = "baudrate"
-CONF_BINARY_SENSOR = "binary_sensor"
 CONF_BYTESIZE = "bytesize"
-CONF_CLIMATE = "climate"
 CONF_CLIMATES = "climates"
+CONF_CLOSE_COMM_ON_ERROR = "close_comm_on_error"
 CONF_COILS = "coils"
-CONF_COVER = "cover"
 CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
 CONF_DATA_COUNT = "data_count"
 CONF_DATA_TYPE = "data_type"
+CONF_FANS = "fans"
 CONF_HUB = "hub"
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
+CONF_LAZY_ERROR = "lazy_error_count"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
+CONF_MSG_WAIT = "message_wait_milliseconds"
 CONF_PARITY = "parity"
 CONF_REGISTER = "register"
 CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
+CONF_RETRIES = "retries"
+CONF_RETRY_ON_EMPTY = "retry_on_empty"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
-CONF_SENSOR = "sensor"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OFF = "state_off"
@@ -40,12 +56,16 @@ CONF_SWAP_BYTE = "byte"
 CONF_SWAP_NONE = "none"
 CONF_SWAP_WORD = "word"
 CONF_SWAP_WORD_BYTE = "word_byte"
-CONF_SWITCH = "switch"
 CONF_TARGET_TEMP = "target_temp_register"
 CONF_VERIFY = "verify"
 CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 CONF_WRITE_TYPE = "write_type"
+
+RTUOVERTCP = "rtuovertcp"
+SERIAL = "serial"
+TCP = "tcp"
+UDP = "udp"
 
 # service call attributes
 ATTR_ADDRESS = "address"
@@ -61,12 +81,27 @@ DATA_TYPE_FLOAT = "float"
 DATA_TYPE_INT = "int"
 DATA_TYPE_UINT = "uint"
 DATA_TYPE_STRING = "string"
+DATA_TYPE_INT16 = "int16"
+DATA_TYPE_INT32 = "int32"
+DATA_TYPE_INT64 = "int64"
+DATA_TYPE_UINT16 = "uint16"
+DATA_TYPE_UINT32 = "uint32"
+DATA_TYPE_UINT64 = "uint64"
+DATA_TYPE_FLOAT16 = "float16"
+DATA_TYPE_FLOAT32 = "float32"
+DATA_TYPE_FLOAT64 = "float64"
 
 # call types
 CALL_TYPE_COIL = "coil"
 CALL_TYPE_DISCRETE = "discrete_input"
 CALL_TYPE_REGISTER_HOLDING = "holding"
 CALL_TYPE_REGISTER_INPUT = "input"
+CALL_TYPE_WRITE_COIL = "write_coil"
+CALL_TYPE_WRITE_COILS = "write_coils"
+CALL_TYPE_WRITE_REGISTER = "write_register"
+CALL_TYPE_WRITE_REGISTERS = "write_registers"
+CALL_TYPE_X_COILS = "coils"
+CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 
 # service calls
 SERVICE_WRITE_COIL = "write_coil"
@@ -77,10 +112,17 @@ DEFAULT_HUB = "modbus_hub"
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
-DEFAULT_STRUCT_FORMAT = {
-    DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-    DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-    DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-}
+
+
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
+
+PLATFORMS = (
+    (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),
+    (CLIMATE_DOMAIN, CONF_CLIMATES),
+    (COVER_DOMAIN, CONF_COVERS),
+    (LIGHT_DOMAIN, CONF_LIGHTS),
+    (FAN_DOMAIN, CONF_FANS),
+    (SENSOR_DOMAIN, CONF_SENSORS),
+    (SWITCH_DOMAIN, CONF_SWITCHES),
+)

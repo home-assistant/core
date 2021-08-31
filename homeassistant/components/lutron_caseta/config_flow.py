@@ -14,7 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
 from .const import (
-    ABORT_REASON_ALREADY_CONFIGURED,
     ABORT_REASON_CANNOT_CONNECT,
     BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
@@ -89,8 +88,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle pairing with the hub."""
         errors = {}
         # Abort if existing entry with matching host exists.
-        if self._async_data_host_is_already_configured():
-            return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
+        self._async_abort_entries_match({CONF_HOST: self.data[CONF_HOST]})
 
         self._configure_tls_assets()
 
@@ -139,7 +137,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _write_tls_assets(self, assets):
         """Write the tls assets to disk."""
         for asset_key, conf_key in FILE_MAPPING.items():
-            with open(self.hass.config.path(self.data[conf_key]), "w") as file_handle:
+            with open(
+                self.hass.config.path(self.data[conf_key]), "w", encoding="utf8"
+            ) as file_handle:
                 file_handle.write(assets[asset_key])
 
     def _tls_assets_exist(self):
@@ -155,15 +155,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for asset_key, conf_key in FILE_MAPPING.items():
             self.data[conf_key] = TLS_ASSET_TEMPLATE.format(self.bridge_id, asset_key)
 
-    @callback
-    def _async_data_host_is_already_configured(self):
-        """Check to see if the host is already configured."""
-        return any(
-            self.data[CONF_HOST] == entry.data[CONF_HOST]
-            for entry in self._async_current_entries()
-            if CONF_HOST in entry.data
-        )
-
     async def async_step_import(self, import_info):
         """Import a new Caseta bridge as a config entry.
 
@@ -174,8 +165,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_HOST] = host
 
         # Abort if existing entry with matching host exists.
-        if self._async_data_host_is_already_configured():
-            return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
+        self._async_abort_entries_match({CONF_HOST: self.data[CONF_HOST]})
 
         self.data[CONF_KEYFILE] = import_info[CONF_KEYFILE]
         self.data[CONF_CERTFILE] = import_info[CONF_CERTFILE]

@@ -26,6 +26,25 @@ from tests.common import async_capture_events, async_fire_time_changed
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
     "dark": {"primary-color": "black"},
+    "light_only": {
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+        },
+    },
+    "dark_only": {
+        "primary-color": "blue",
+        "modes": {
+            "dark": {"secondary-color": "white"},
+        },
+    },
+    "light_and_dark": {
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+            "dark": {"secondary-color": "white"},
+        },
+    },
 }
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: MOCK_THEMES}}
@@ -278,6 +297,15 @@ async def test_themes_set_dark_theme(hass, themes_ws_client):
     msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] is None
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "light_and_dark", "mode": "dark"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 8, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
 async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client):

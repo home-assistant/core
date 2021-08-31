@@ -8,8 +8,11 @@ import homeassistant.components.light as light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
+    SUPPORT_TRANSITION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -378,6 +381,63 @@ async def test_on_action(hass, calls):
     assert len(calls) == 1
 
 
+async def test_on_action_with_transition(hass, calls):
+    """Test on action with transition."""
+    assert await setup.async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "value_template": "{{states.light.test_state.state}}",
+                        "turn_on": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "transition": "{{transition}}",
+                            },
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "supports_transition_template": "{{true}}",
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                                "transition": "{{transition}}",
+                            },
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_TRANSITION: 5},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data["transition"] == 5
+
+
 async def test_on_action_optimistic(hass, calls):
     """Test on action with optimistic state."""
     assert await setup.async_setup_component(
@@ -443,7 +503,9 @@ async def test_off_action(hass, calls):
                             "service": "light.turn_on",
                             "entity_id": "light.test_state",
                         },
-                        "turn_off": {"service": "test.automation"},
+                        "turn_off": {
+                            "service": "test.automation",
+                        },
                         "set_level": {
                             "service": "light.turn_on",
                             "data_template": {
@@ -475,6 +537,63 @@ async def test_off_action(hass, calls):
     )
 
     assert len(calls) == 1
+
+
+async def test_off_action_with_transition(hass, calls):
+    """Test off action with transition."""
+    assert await setup.async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "value_template": "{{states.light.test_state.state}}",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "transition": "{{transition}}",
+                            },
+                        },
+                        "supports_transition_template": "{{true}}",
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                                "transition": "{{transition}}",
+                            },
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_TRANSITION: 2},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data["transition"] == 2
 
 
 async def test_off_action_optimistic(hass, calls):
@@ -1117,6 +1236,417 @@ async def test_color_template(hass, expected_hs, template):
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("hs_color") == expected_hs
+
+
+async def test_effect_action_valid_effect(hass, calls):
+    """Test setting valid effect with template."""
+    assert await setup.async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "value_template": "{{true}}",
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                            },
+                        },
+                        "set_effect": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "entity_id": "test.test_state",
+                                "effect": "{{effect}}",
+                            },
+                        },
+                        "effect_list_template": "{{ ['Disco', 'Police'] }}",
+                        "effect_template": "{{ 'Disco' }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_EFFECT: "Disco"},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data["effect"] == "Disco"
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+    assert state.attributes.get("effect") == "Disco"
+
+
+async def test_effect_action_invalid_effect(hass, calls):
+    """Test setting invalid effect with template."""
+    assert await setup.async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "value_template": "{{true}}",
+                        "turn_on": {"service": "test.automation"},
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                            },
+                        },
+                        "set_effect": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "entity_id": "test.test_state",
+                                "effect": "{{effect}}",
+                            },
+                        },
+                        "effect_list_template": "{{ ['Disco', 'Police'] }}",
+                        "effect_template": "{{ None }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_EFFECT: "RGB"},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data["effect"] == "RGB"
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+    assert state.attributes.get("effect") is None
+
+
+@pytest.mark.parametrize(
+    "expected_effect_list,template",
+    [
+        (
+            ["Strobe color", "Police", "Christmas", "RGB", "Random Loop"],
+            "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}",
+        ),
+        (
+            ["Police", "RGB", "Random Loop"],
+            "{{ ['Police', 'RGB', 'Random Loop'] }}",
+        ),
+        (None, "{{ [] }}"),
+        (None, "{{ '[]' }}"),
+        (None, "{{ 124 }}"),
+        (None, "{{ '124' }}"),
+        (None, "{{ none }}"),
+        (None, ""),
+    ],
+)
+async def test_effect_list_template(hass, expected_effect_list, template):
+    """Test the template for the effect list."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await setup.async_setup_component(
+            hass,
+            light.DOMAIN,
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{ 1 == 1 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_effect": {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "entity_id": "test.test_state",
+                                    "effect": "{{effect}}",
+                                },
+                            },
+                            "effect_list_template": template,
+                            "effect_template": "{{ None }}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+    assert state.attributes.get("effect_list") == expected_effect_list
+
+
+@pytest.mark.parametrize(
+    "expected_effect,template",
+    [
+        (None, "Disco"),
+        (None, "None"),
+        (None, "{{ None }}"),
+        ("Police", "Police"),
+        ("Strobe color", "{{ 'Strobe color' }}"),
+    ],
+)
+async def test_effect_template(hass, expected_effect, template):
+    """Test the template for the effect."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await setup.async_setup_component(
+            hass,
+            light.DOMAIN,
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{ 1 == 1 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_effect": {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "entity_id": "test.test_state",
+                                    "effect": "{{effect}}",
+                                },
+                            },
+                            "effect_list_template": "{{ ['Strobe color', 'Police', 'Christmas', 'RGB', 'Random Loop'] }}",
+                            "effect_template": template,
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+    assert state.attributes.get("effect") == expected_effect
+
+
+@pytest.mark.parametrize(
+    "expected_min_mireds,template",
+    [
+        (118, "{{118}}"),
+        (153, "{{x - 12}}"),
+        (153, "None"),
+        (153, "{{ none }}"),
+        (153, ""),
+        (153, "{{ 'a' }}"),
+    ],
+)
+async def test_min_mireds_template(hass, expected_min_mireds, template):
+    """Test the template for the min mireds."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await setup.async_setup_component(
+            hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{ 1 == 1 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_temperature": {
+                                "service": "light.turn_on",
+                                "data_template": {
+                                    "entity_id": "light.test_state",
+                                    "color_temp": "{{color_temp}}",
+                                },
+                            },
+                            "temperature_template": "{{200}}",
+                            "min_mireds_template": template,
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+    assert state.attributes.get("min_mireds") == expected_min_mireds
+
+
+@pytest.mark.parametrize(
+    "expected_max_mireds,template",
+    [
+        (488, "{{488}}"),
+        (500, "{{x - 12}}"),
+        (500, "None"),
+        (500, "{{ none }}"),
+        (500, ""),
+        (500, "{{ 'a' }}"),
+    ],
+)
+async def test_max_mireds_template(hass, expected_max_mireds, template):
+    """Test the template for the max mireds."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await setup.async_setup_component(
+            hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{ 1 == 1 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_temperature": {
+                                "service": "light.turn_on",
+                                "data_template": {
+                                    "entity_id": "light.test_state",
+                                    "color_temp": "{{color_temp}}",
+                                },
+                            },
+                            "temperature_template": "{{200}}",
+                            "max_mireds_template": template,
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+    assert state.attributes.get("max_mireds") == expected_max_mireds
+
+
+@pytest.mark.parametrize(
+    "expected_supports_transition,template",
+    [
+        (True, "{{true}}"),
+        (True, "{{1 == 1}}"),
+        (False, "{{false}}"),
+        (False, "{{ none }}"),
+        (False, ""),
+        (False, "None"),
+    ],
+)
+async def test_supports_transition_template(
+    hass, expected_supports_transition, template
+):
+    """Test the template for the supports transition."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await setup.async_setup_component(
+            hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{ 1 == 1 }}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_temperature": {
+                                "service": "light.turn_on",
+                                "data_template": {
+                                    "entity_id": "light.test_state",
+                                    "color_temp": "{{color_temp}}",
+                                },
+                            },
+                            "supports_transition_template": template,
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+
+    expected_value = 1
+
+    if expected_supports_transition is True:
+        expected_value = 0
+
+    assert state is not None
+    assert (
+        int(state.attributes.get("supported_features")) & SUPPORT_TRANSITION
+    ) != expected_value
 
 
 async def test_available_template_with_entities(hass):

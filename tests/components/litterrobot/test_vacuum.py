@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
@@ -92,6 +93,11 @@ async def test_vacuum_with_error(hass: HomeAssistant, mock_account_with_error):
             "set_wait_time",
             {"minutes": 3},
         ),
+        (
+            SERVICE_SET_WAIT_TIME,
+            "set_wait_time",
+            {"minutes": "15"},
+        ),
     ],
 )
 async def test_commands(hass: HomeAssistant, mock_account, service, command, extra):
@@ -117,21 +123,19 @@ async def test_commands(hass: HomeAssistant, mock_account, service, command, ext
     getattr(mock_account.robots[0], command).assert_called_once()
 
 
-async def test_invalid_commands(
-    hass: HomeAssistant, caplog, mock_account_with_side_effects
-):
-    """Test sending invalid commands to the vacuum."""
-    await setup_integration(hass, mock_account_with_side_effects, PLATFORM_DOMAIN)
+async def test_invalid_wait_time(hass: HomeAssistant, mock_account):
+    """Test an attempt to send an invalid wait time to the vacuum."""
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
     assert vacuum.state == STATE_DOCKED
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_WAIT_TIME,
-        {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, "minutes": 15},
-        blocking=True,
-    )
-    mock_account_with_side_effects.robots[0].set_wait_time.assert_called_once()
-    assert "Invalid command: oops" in caplog.text
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_WAIT_TIME,
+            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, "minutes": 10},
+            blocking=True,
+        )
+    assert not mock_account.robots[0].set_wait_time.called

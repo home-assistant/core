@@ -20,6 +20,10 @@
         }
     },
     "options": {
+        "error": {
+            "int": "El campo siguiente debe ser un n\u00famero entero.",
+            "loop_range": "El bucle de RF debe ser un n\u00famero entero entre 1 y 4."
+        },
         "step": {
             "arm_settings": {
                 "data": {
@@ -29,6 +33,17 @@
             "init": {
                 "data": {
                     "edit_select": "Editar"
+                }
+            },
+            "zone_details": {
+                "data": {
+                    "zone_name": "Nombre de zona",
+                    "zone_rfid": "Serie RF"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "N\u00famero de zona"
                 }
             }
         }

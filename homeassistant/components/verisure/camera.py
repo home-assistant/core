@@ -1,10 +1,8 @@
 """Support for Verisure cameras."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 import errno
 import os
-from typing import Callable
 
 from verisure import Error as VerisureError
 
@@ -12,8 +10,11 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import current_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
@@ -23,12 +24,12 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    platform = current_platform.get()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CAPTURE_SMARTCAM,
         {},
@@ -52,25 +53,18 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         coordinator: VerisureDataUpdateCoordinator,
         serial_number: str,
         directory_path: str,
-    ):
+    ) -> None:
         """Initialize Verisure File Camera component."""
         super().__init__(coordinator)
         Camera.__init__(self)
+
+        self._attr_name = coordinator.data["cameras"][serial_number]["area"]
+        self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
         self._directory_path = directory_path
         self._image = None
         self._image_id = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["cameras"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.serial_number
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -85,7 +79,9 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
             "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
         }
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.check_imagelist()
         if not self._image:

@@ -2,7 +2,7 @@
   "domain": "filter",
   "name": "Filter",
   "documentation": "https://www.home-assistant.io/integrations/filter",
-  "dependencies": ["history"],
+  "dependencies": ["recorder"],
   "codeowners": ["@dgomes"],
   "quality_scale": "internal",
   "iot_class": "local_push"

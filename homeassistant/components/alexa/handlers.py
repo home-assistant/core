@@ -62,7 +62,6 @@ from .errors import (
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
-    AlexaSecurityPanelUnauthorizedError,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
     AlexaVideoActionNotPermittedForContentError,
@@ -927,11 +926,9 @@ async def async_api_disarm(hass, config, directive, context):
         if payload["authorization"]["type"] == "FOUR_DIGIT_PIN":
             data["code"] = value
 
-    if not await hass.services.async_call(
+    await hass.services.async_call(
         entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
-    ):
-        msg = "Invalid Code"
-        raise AlexaSecurityPanelUnauthorizedError(msg)
+    )
 
     response.add_context_property(
         {
@@ -960,6 +957,16 @@ async def async_api_set_mode(hass, config, directive, context):
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
+
+    # Fan preset_mode
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
+        preset_mode = mode.split(".")[1]
+        if preset_mode in entity.attributes.get(fan.ATTR_PRESET_MODES):
+            service = fan.SERVICE_SET_PRESET_MODE
+            data[fan.ATTR_PRESET_MODE] = preset_mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
+            raise AlexaInvalidValueError(msg)
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":

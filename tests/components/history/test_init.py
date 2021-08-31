@@ -1,20 +1,22 @@
 """The tests the History component."""
 # pylint: disable=protected-access,invalid-name
-from copy import copy
 from datetime import timedelta
 import json
 from unittest.mock import patch, sentinel
 
 import pytest
+from pytest import approx
 
 from homeassistant.components import history, recorder
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.recorder.models import process_timestamp
 import homeassistant.core as ha
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import init_recorder_component, mock_state_change_event
+from tests.common import init_recorder_component
 from tests.components.recorder.common import trigger_db_commit, wait_recording_done
 
 
@@ -23,151 +25,6 @@ def test_setup():
     """Test setup method of history."""
     # Verification occurs in the fixture
     pass
-
-
-def test_get_states(hass_history):
-    """Test getting states at a specific point in time."""
-    hass = hass_history
-    states = []
-
-    now = dt_util.utcnow()
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-            states.append(state)
-
-        wait_recording_done(hass)
-
-    future = now + timedelta(seconds=1)
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
-        for i in range(5):
-            state = ha.State(
-                f"test.point_in_time_{i % 5}",
-                f"State {i}",
-                {"attribute_test": i},
-            )
-
-            mock_state_change_event(hass, state)
-
-        wait_recording_done(hass)
-
-    # Get states returns everything before POINT
-    for state1, state2 in zip(
-        states,
-        sorted(history.get_states(hass, future), key=lambda state: state.entity_id),
-    ):
-        assert state1 == state2
-
-    # Test get_state here because we have a DB setup
-    assert states[0] == history.get_state(hass, future, states[0].entity_id)
-
-    time_before_recorder_ran = now - timedelta(days=1000)
-    assert history.get_states(hass, time_before_recorder_ran) == []
-
-    assert history.get_state(hass, time_before_recorder_ran, "demo.id") is None
-
-
-def test_state_changes_during_period(hass_history):
-    """Test state change during period."""
-    hass = hass_history
-    entity_id = "media_player.test"
-
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
-
-    start = dt_util.utcnow()
-    point = start + timedelta(seconds=1)
-    end = point + timedelta(seconds=1)
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
-        set_state("idle")
-        set_state("YouTube")
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
-        states = [
-            set_state("idle"),
-            set_state("Netflix"),
-            set_state("Plex"),
-            set_state("YouTube"),
-        ]
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=end):
-        set_state("Netflix")
-        set_state("Plex")
-
-    hist = history.state_changes_during_period(hass, start, end, entity_id)
-
-    assert states == hist[entity_id]
-
-
-def test_get_last_state_changes(hass_history):
-    """Test number of state changes."""
-    hass = hass_history
-    entity_id = "sensor.test"
-
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
-
-    start = dt_util.utcnow() - timedelta(minutes=2)
-    point = start + timedelta(minutes=1)
-    point2 = point + timedelta(minutes=1)
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
-        set_state("1")
-
-    states = []
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
-        states.append(set_state("2"))
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point2):
-        states.append(set_state("3"))
-
-    hist = history.get_last_state_changes(hass, 2, entity_id)
-
-    assert states == hist[entity_id]
-
-
-def test_ensure_state_can_be_copied(hass_history):
-    """Ensure a state can pass though copy().
-
-    The filter integration uses copy() on states
-    from history.
-    """
-    hass = hass_history
-    entity_id = "sensor.test"
-
-    def set_state(state):
-        """Set the state."""
-        hass.states.set(entity_id, state)
-        wait_recording_done(hass)
-        return hass.states.get(entity_id)
-
-    start = dt_util.utcnow() - timedelta(minutes=2)
-    point = start + timedelta(minutes=1)
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=start):
-        set_state("1")
-
-    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=point):
-        set_state("2")
-
-    hist = history.get_last_state_changes(hass, 2, entity_id)
-
-    assert copy(hist[entity_id][0]) == hist[entity_id][0]
-    assert copy(hist[entity_id][1]) == hist[entity_id][1]
 
 
 def test_get_significant_states(hass_history):
@@ -179,7 +36,7 @@ def test_get_significant_states(hass_history):
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(hass, zero, four, filters=history.Filters())
+    hist = get_significant_states(hass, zero, four, filters=history.Filters())
     assert states == hist
 
 
@@ -195,7 +52,7 @@ def test_get_significant_states_minimal_response(hass_history):
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass, zero, four, filters=history.Filters(), minimal_response=True
     )
 
@@ -236,7 +93,7 @@ def test_get_significant_states_with_initial(hass_history):
             if state.last_changed == one:
                 state.last_changed = one_and_half
 
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass,
         one_and_half,
         four,
@@ -263,7 +120,7 @@ def test_get_significant_states_without_initial(hass_history):
         )
     del states["media_player.test2"]
 
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass,
         one_and_half,
         four,
@@ -283,7 +140,7 @@ def test_get_significant_states_entity_id(hass_history):
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
 
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass, zero, four, ["media_player.test"], filters=history.Filters()
     )
     assert states == hist
@@ -298,7 +155,7 @@ def test_get_significant_states_multiple_entity_ids(hass_history):
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
 
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass,
         zero,
         four,
@@ -570,12 +427,12 @@ def test_get_significant_states_are_ordered(hass_history):
     hass = hass_history
     zero, four, _states = record_states(hass)
     entity_ids = ["media_player.test", "media_player.test2"]
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass, zero, four, entity_ids, filters=history.Filters()
     )
     assert list(hist.keys()) == entity_ids
     entity_ids = ["media_player.test2", "media_player.test"]
-    hist = history.get_significant_states(
+    hist = get_significant_states(
         hass, zero, four, entity_ids, filters=history.Filters()
     )
     assert list(hist.keys()) == entity_ids
@@ -619,14 +476,14 @@ def test_get_significant_states_only(hass_history):
         # everything is different
         states.append(set_state("412", attributes={"attribute": 54.23}))
 
-    hist = history.get_significant_states(hass, start, significant_changes_only=True)
+    hist = get_significant_states(hass, start, significant_changes_only=True)
 
     assert len(hist[entity_id]) == 2
     assert states[0] not in hist[entity_id]
     assert states[1] in hist[entity_id]
     assert states[2] in hist[entity_id]
 
-    hist = history.get_significant_states(hass, start, significant_changes_only=False)
+    hist = get_significant_states(hass, start, significant_changes_only=False)
 
     assert len(hist[entity_id]) == 3
     assert states == hist[entity_id]
@@ -644,7 +501,7 @@ def check_significant_states(hass, zero, four, states, config):
         filters.included_entities = include.get(history.CONF_ENTITIES, [])
         filters.included_domains = include.get(history.CONF_DOMAINS, [])
 
-    hist = history.get_significant_states(hass, zero, four, filters=filters)
+    hist = get_significant_states(hass, zero, four, filters=filters)
     assert states == hist
 
 
@@ -971,3 +828,217 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
     assert response_json[1][0]["entity_id"] == "light.cow"
+
+
+POWER_SENSOR_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "kW",
+}
+PRESSURE_SENSOR_ATTRIBUTES = {
+    "device_class": "pressure",
+    "state_class": "measurement",
+    "unit_of_measurement": "hPa",
+}
+TEMPERATURE_SENSOR_ATTRIBUTES = {
+    "device_class": "temperature",
+    "state_class": "measurement",
+    "unit_of_measurement": "°C",
+}
+
+
+@pytest.mark.parametrize(
+    "units, attributes, state, value",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+    ],
+)
+async def test_statistics_during_period(
+    hass, hass_ws_client, units, attributes, state, value
+):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("sensor.test", state, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": now.isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+
+async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
+    """Test statistics_during_period."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": "cats",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_start_time"
+
+
+async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {"history": {}},
+    )
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": "dogs",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_end_time"
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
+    ],
+)
+async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit):
+    """Test list_statistic_ids."""
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "history", {"history": {}})
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    # Remove the state, statistics will now be fetched from the database
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 3, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
+    await client.send_json(
+        {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json(
+        {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "mean"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
+    await client.send_json(
+        {"id": 6, "type": "history/list_statistic_ids", "statistic_type": "sum"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []

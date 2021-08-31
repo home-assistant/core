@@ -91,7 +91,8 @@ TRANS_SCHEMA = vol.All(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}, extra=vol.ALLOW_EXTRA
+    vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}),
+    extra=vol.ALLOW_EXTRA,
 )
 
 PLATFORMS = ["sensor", "switch"]
@@ -446,6 +447,8 @@ class TransmissionData:
 
     def stop_torrents(self):
         """Stop all active torrents."""
+        if len(self._torrents) == 0:
+            return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)
 

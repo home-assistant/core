@@ -12,7 +12,8 @@
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
                 },
-                "title": "Konfigurieren Sie die Grippe in Ihrer N\u00e4he"
+                "description": "\u00dcberwache benutzerbasierte und CDC-Berichte f\u00fcr ein Koordinatenpaar.",
+                "title": "Konfiguriere Grippe in deiner N\u00e4he"
             }
         }
     }

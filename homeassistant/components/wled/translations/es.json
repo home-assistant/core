@@ -20,5 +20,14 @@
                 "title": "Dispositivo WLED detectado"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Mantenga la luz principal, incluso con 1 segmento de LED."
+                }
+            }
+        }
     }
 }

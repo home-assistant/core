@@ -1,7 +1,6 @@
 """Entity representing a Sonos power sensor."""
 from __future__ import annotations
 
-import datetime
 import logging
 from typing import Any
 
@@ -12,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SONOS_CREATE_BATTERY
-from .entity import SonosSensorEntity
+from .entity import SonosEntity
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SonosPowerEntity(SonosSensorEntity, BinarySensorEntity):
+class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
     @property
@@ -50,7 +49,7 @@ class SonosPowerEntity(SonosSensorEntity, BinarySensorEntity):
         """Return the entity's device class."""
         return DEVICE_CLASS_BATTERY_CHARGING
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
@@ -65,3 +64,8 @@ class SonosPowerEntity(SonosSensorEntity, BinarySensorEntity):
         return {
             ATTR_BATTERY_POWER_SOURCE: self.speaker.power_source,
         }
+
+    @property
+    def available(self) -> bool:
+        """Return whether this device is available."""
+        return self.speaker.available and (self.speaker.charging is not None)

@@ -5,11 +5,15 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const.command_class.barrior_operator import BarrierState
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -20,20 +24,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
-
-BARRIER_TARGET_CLOSE = 0
-BARRIER_TARGET_OPEN = 255
-
-BARRIER_STATE_CLOSED = 0
-BARRIER_STATE_CLOSING = 252
-BARRIER_STATE_STOPPED = 253
-BARRIER_STATE_OPENING = 254
-BARRIER_STATE_OPEN = 255
 
 
 async def async_setup_entry(
@@ -54,7 +49,7 @@ async def async_setup_entry(
             entities.append(ZWaveCover(config_entry, client, info))
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{COVER_DOMAIN}",
@@ -75,6 +70,22 @@ def percent_to_zwave_position(value: int) -> int:
 
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveCover entity."""
+        super().__init__(config_entry, client, info)
+
+        # Entity class attributes
+        self._attr_device_class = DEVICE_CLASS_WINDOW
+        if self.info.platform_hint == "window_shutter":
+            self._attr_device_class = DEVICE_CLASS_SHUTTER
+        if self.info.platform_hint == "window_blind":
+            self._attr_device_class = DEVICE_CLASS_BLIND
 
     @property
     def is_closed(self) -> bool | None:
@@ -111,16 +122,30 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
-        if target_value:
-            await self.info.node.async_set_value(target_value, False)
-        target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
-        if target_value:
-            await self.info.node.async_set_value(target_value, False)
+        open_value = (
+            self.get_zwave_value("Open")
+            or self.get_zwave_value("Up")
+            or self.get_zwave_value("On")
+        )
+        if open_value:
+            # Stop the cover if it's opening
+            await self.info.node.async_set_value(open_value, False)
+
+        close_value = (
+            self.get_zwave_value("Close")
+            or self.get_zwave_value("Down")
+            or self.get_zwave_value("Off")
+        )
+        if close_value:
+            # Stop the cover if it's closing
+            await self.info.node.async_set_value(close_value, False)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
+
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_device_class = DEVICE_CLASS_GARAGE
 
     def __init__(
         self,
@@ -135,28 +160,18 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         )
 
     @property
-    def supported_features(self) -> int | None:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
-
-    @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         if self.info.primary_value.value is None:
             return None
-        return bool(self.info.primary_value.value == BARRIER_STATE_OPENING)
+        return bool(self.info.primary_value.value == BarrierState.OPENING)
 
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         if self.info.primary_value.value is None:
             return None
-        return bool(self.info.primary_value.value == BARRIER_STATE_CLOSING)
+        return bool(self.info.primary_value.value == BarrierState.CLOSING)
 
     @property
     def is_closed(self) -> bool | None:
@@ -167,15 +182,15 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         # issuing an open cover command. Return None in this case which
         # produces an unknown state and allows it to be resolved with an open
         # command.
-        if self.info.primary_value.value == BARRIER_STATE_STOPPED:
+        if self.info.primary_value.value == BarrierState.STOPPED:
             return None
 
-        return bool(self.info.primary_value.value == BARRIER_STATE_CLOSED)
+        return bool(self.info.primary_value.value == BarrierState.CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
-        await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_OPEN)
+        await self.info.node.async_set_value(self._target_state, BarrierState.OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
-        await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_CLOSE)
+        await self.info.node.async_set_value(self._target_state, BarrierState.CLOSED)

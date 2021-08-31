@@ -19,7 +19,7 @@ class KeyedRateLimit:
     def __init__(
         self,
         hass: HomeAssistant,
-    ):
+    ) -> None:
         """Initialize ratelimit tracker."""
         self.hass = hass
         self._last_triggered: dict[Hashable, datetime] = {}

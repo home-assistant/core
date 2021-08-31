@@ -40,8 +40,10 @@
                     "max_temp": "Maxim\u00e1lis c\u00e9l-sz\u00ednh\u0151m\u00e9rs\u00e9klet (haszn\u00e1lja a min-t \u00e9s a max-ot = 0-t az alap\u00e9rtelmezett be\u00e1ll\u00edt\u00e1shoz)",
                     "min_kelvin": "Minimum t\u00e1mogatott sz\u00ednh\u0151m\u00e9rs\u00e9klet kelvinben",
                     "min_temp": "Min. C\u00e9l-sz\u00ednh\u0151m\u00e9rs\u00e9klet (alap\u00e9rtelmez\u00e9s szerint haszn\u00e1ljon min-t \u00e9s max-ot = 0-t az alap\u00e9rtelmezett be\u00e1ll\u00edt\u00e1shoz)",
+                    "set_temp_divided": "A h\u0151m\u00e9rs\u00e9klet be\u00e1ll\u00edt\u00e1s\u00e1hoz osztott h\u0151m\u00e9rs\u00e9kleti \u00e9rt\u00e9ket haszn\u00e1ljon",
                     "support_color": "Sz\u00ednt\u00e1mogat\u00e1s k\u00e9nyszer\u00edt\u00e9se",
                     "temp_divider": "Sz\u00ednh\u0151m\u00e9rs\u00e9klet-\u00e9rt\u00e9kek oszt\u00f3ja (0 = alap\u00e9rtelmezett)",
+                    "temp_step_override": "C\u00e9lh\u0151m\u00e9rs\u00e9klet l\u00e9pcs\u0151",
                     "tuya_max_coltemp": "Az eszk\u00f6z \u00e1ltal megadott maxim\u00e1lis sz\u00ednh\u0151m\u00e9rs\u00e9klet",
                     "unit_of_measurement": "Az eszk\u00f6z \u00e1ltal haszn\u00e1lt h\u0151m\u00e9rs\u00e9kleti egys\u00e9g"
                 },

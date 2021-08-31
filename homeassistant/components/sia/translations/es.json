@@ -1,0 +1,40 @@
+{
+    "config": {
+        "error": {
+            "invalid_account_format": "La cuenta no es un valor hexadecimal, por favor utilice s\u00f3lo 0-9 y A-F.",
+            "invalid_account_length": "La cuenta no tiene la longitud adecuada, tiene que tener entre 3 y 16 caracteres.",
+            "invalid_key_format": "La clave no es un valor hexadecimal, por favor utilice s\u00f3lo 0-9 y A-F.",
+            "invalid_key_length": "La clave no tiene la longitud correcta, tiene que ser de 16, 24 o 32 caracteres hexadecimales.",
+            "invalid_ping": "El intervalo de ping debe estar entre 1 y 1440 minutos.",
+            "invalid_zones": "Tiene que haber al menos 1 zona."
+        },
+        "step": {
+            "additional_account": {
+                "title": "Agrega otra cuenta al puerto actual."
+            },
+            "user": {
+                "data": {
+                    "account": "ID de la cuenta",
+                    "additional_account": "Cuentas adicionales",
+                    "encryption_key": "Clave de encriptaci\u00f3n",
+                    "ping_interval": "Intervalo de ping (min)",
+                    "protocol": "Protocolo",
+                    "zones": "N\u00famero de zonas de la cuenta"
+                },
+                "title": "Cree una conexi\u00f3n para sistemas de alarma basados en SIA."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Ignore la verificaci\u00f3n de la marca de tiempo de los eventos SIA"
+                },
+                "description": "Configure las opciones para la cuenta: {account}",
+                "title": "Opciones para la configuraci\u00f3n de SIA."
+            }
+        }
+    },
+    "title": "Sistemas de alarma SIA"
+}

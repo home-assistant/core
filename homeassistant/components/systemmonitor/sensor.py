@@ -9,7 +9,7 @@ import logging
 import os
 import socket
 import sys
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import psutil
 import voluptuous as vol
@@ -22,6 +22,7 @@ from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
@@ -36,6 +37,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -71,7 +73,7 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
     ),
     "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, True),
     "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, True),
-    "last_boot": ("Last boot", None, "mdi:clock", DEVICE_CLASS_TIMESTAMP, False),
+    "last_boot": ("Last boot", None, None, DEVICE_CLASS_TIMESTAMP, False),
     "load_15m": ("Load (15m)", " ", CPU_ICON, None, False),
     "load_1m": ("Load (1m)", " ", CPU_ICON, None, False),
     "load_5m": ("Load (5m)", " ", CPU_ICON, None, False),
@@ -107,8 +109,8 @@ SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = 
     "processor_temperature": (
         "Processor temperature",
         TEMP_CELSIUS,
-        CPU_ICON,
         None,
+        DEVICE_CLASS_TEMPERATURE,
         False,
     ),
     "swap_free": ("Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, False),
@@ -198,12 +200,12 @@ class SensorData:
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: Any | None = None,
 ) -> None:
     """Set up the system monitor sensors."""
     entities = []
-    sensor_registry: dict[str, SensorData] = {}
+    sensor_registry: dict[tuple[str, str], SensorData] = {}
 
     for resource in config[CONF_RESOURCES]:
         type_ = resource[CONF_TYPE]
@@ -225,7 +227,9 @@ async def async_setup_platform(
             _LOGGER.warning("Cannot read CPU / processor temperature information")
             continue
 
-        sensor_registry[type_] = SensorData(argument, None, None, None, None)
+        sensor_registry[(type_, argument)] = SensorData(
+            argument, None, None, None, None
+        )
         entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -236,7 +240,7 @@ async def async_setup_platform(
 
 async def async_setup_sensor_registry_updates(
     hass: HomeAssistant,
-    sensor_registry: dict[str, SensorData],
+    sensor_registry: dict[tuple[str, str], SensorData],
     scan_interval: datetime.timedelta,
 ) -> None:
     """Update the registry and create polling."""
@@ -245,11 +249,11 @@ async def async_setup_sensor_registry_updates(
 
     def _update_sensors() -> None:
         """Update sensors and store the result in the registry."""
-        for type_, data in sensor_registry.items():
+        for (type_, argument), data in sensor_registry.items():
             try:
                 state, value, update_time = _update(type_, data)
             except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Error updating sensor: %s", type_)
+                _LOGGER.exception("Error updating sensor: %s (%s)", type_, argument)
                 data.last_exception = ex
             else:
                 data.state = state
@@ -295,7 +299,7 @@ class SystemMonitorSensor(SensorEntity):
 
     def __init__(
         self,
-        sensor_registry: dict[str, SensorData],
+        sensor_registry: dict[tuple[str, str], SensorData],
         sensor_type: str,
         argument: str = "",
     ) -> None:
@@ -304,6 +308,7 @@ class SystemMonitorSensor(SensorEntity):
         self._name: str = f"{self.sensor_type[SENSOR_TYPE_NAME]} {argument}".rstrip()
         self._unique_id: str = slugify(f"{sensor_type}_{argument}")
         self._sensor_registry = sensor_registry
+        self._argument: str = argument
 
     @property
     def name(self) -> str:
@@ -326,12 +331,12 @@ class SystemMonitorSensor(SensorEntity):
         return self.sensor_type[SENSOR_TYPE_ICON]  # type: ignore[no-any-return]
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the device."""
         return self.data.state
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.sensor_type[SENSOR_TYPE_UOM]  # type: ignore[no-any-return]
 
@@ -353,7 +358,7 @@ class SystemMonitorSensor(SensorEntity):
     @property
     def data(self) -> SensorData:
         """Return registry entry for the data."""
-        return self._sensor_registry[self._type]
+        return self._sensor_registry[(self._type, self._argument)]
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -409,20 +414,20 @@ def _update(  # noqa: C901
                     err.pid,
                     err.name,
                 )
-    elif type_ in ["network_out", "network_in"]:
+    elif type_ in ("network_out", "network_in"):
         counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
             state = round(counter / 1024 ** 2, 1)
         else:
             state = None
-    elif type_ in ["packets_out", "packets_in"]:
+    elif type_ in ("packets_out", "packets_in"):
         counters = _net_io_counters()
         if data.argument in counters:
             state = counters[data.argument][IO_COUNTER[type_]]
         else:
             state = None
-    elif type_ in ["throughput_network_out", "throughput_network_in"]:
+    elif type_ in ("throughput_network_out", "throughput_network_in"):
         counters = _net_io_counters()
         if data.argument in counters:
             counter = counters[data.argument][IO_COUNTER[type_]]
@@ -440,7 +445,7 @@ def _update(  # noqa: C901
             value = counter
         else:
             state = None
-    elif type_ in ["ipv4_address", "ipv6_address"]:
+    elif type_ in ("ipv4_address", "ipv6_address"):
         addresses = _net_if_addrs()
         if data.argument in addresses:
             for addr in addresses[data.argument]:

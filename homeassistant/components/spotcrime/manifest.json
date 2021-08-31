@@ -1,8 +1,0 @@
-{
-  "domain": "spotcrime",
-  "name": "Spot Crime",
-  "documentation": "https://www.home-assistant.io/integrations/spotcrime",
-  "requirements": ["spotcrime==1.0.4"],
-  "codeowners": [],
-  "iot_class": "cloud_polling"
-}

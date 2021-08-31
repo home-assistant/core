@@ -30,7 +30,7 @@ class Life360ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @property
     def configured_usernames(self):
         """Return tuple of configured usernames."""
-        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entries = self._async_current_entries()
         if entries:
             return (entry.data[CONF_USERNAME] for entry in entries)
         return ()

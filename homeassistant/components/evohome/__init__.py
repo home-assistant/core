@@ -180,7 +180,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def load_auth_tokens(store) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
-        tokens = dict(app_storage if app_storage else {})
+        tokens = dict(app_storage or {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
             # any tokens won't be valid, and store might be be corrupt
@@ -406,10 +406,12 @@ class EvoBroker:
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
-        app_storage = {CONF_USERNAME: self.client.username}
-        app_storage[REFRESH_TOKEN] = self.client.refresh_token
-        app_storage[ACCESS_TOKEN] = self.client.access_token
-        app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
+        app_storage = {
+            CONF_USERNAME: self.client.username,
+            REFRESH_TOKEN: self.client.refresh_token,
+            ACCESS_TOKEN: self.client.access_token,
+            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
+        }
 
         if self.client_v1 and self.client_v1.user_data:
             app_storage[USER_DATA] = {
@@ -529,7 +531,7 @@ class EvoDevice(Entity):
             return
         if payload["unique_id"] != self._unique_id:
             return
-        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
@@ -651,10 +653,10 @@ class EvoChild(EvoDevice):
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-            for key, offset, idx in [
+            for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-            ]:
+            ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]

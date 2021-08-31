@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -33,7 +33,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -65,7 +66,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
@@ -86,7 +87,7 @@ async def async_setup_entry(
             (
                 key
                 for key in config_entry.data.get(CONF_APPS, {})
-                if key in [CONF_INCLUDE, CONF_EXCLUDE]
+                if key in (CONF_INCLUDE, CONF_EXCLUDE)
             ),
             None,
         )
@@ -120,7 +121,7 @@ async def async_setup_entry(
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
     async_add_entities([entity], update_before_add=True)
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
     )
@@ -380,17 +381,17 @@ class VizioDevice(MediaPlayerEntity):
         # show the combination with , otherwise just return inputs
         if self._available_apps:
             return [
-                *[
+                *(
                     _input
                     for _input in self._available_inputs
                     if _input not in INPUT_APPS
-                ],
+                ),
                 *self._available_apps,
-                *[
+                *(
                     app
                     for app in self._get_additional_app_names()
                     if app not in self._available_apps
-                ],
+                ),
             ]
 
         return self._available_inputs

@@ -46,6 +46,7 @@ MOCK_FLOW_RESULT = {
     "type": data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
     "title": "test_ps4",
     "data": MOCK_DATA,
+    "options": {},
 }
 
 MOCK_ENTRY_ID = "SomeID"
@@ -55,7 +56,7 @@ MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY
 MOCK_LOCATION = location.LocationInfo(
     "0.0.0.0",
     "US",
-    "United States",
+    "USD",
     "CA",
     "California",
     "San Diego",

@@ -11,15 +11,6 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "Email",
-                    "password": "Password",
-                    "region": "Region"
-                },
-                "description": "Authentication failed for Mazda Connected Services. Please enter your current credentials.",
-                "title": "Mazda Connected Services - Authentication Failed"
-            },
             "user": {
                 "data": {
                     "email": "Email",

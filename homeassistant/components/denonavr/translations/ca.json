@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "No s'ha pogut descobrir un receptor de xarxa AVR de Denon"
         },
-        "flow_title": "Receptor de xarxa AVR de Denon: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Confirma l'addici\u00f3 del receptor",

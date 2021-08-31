@@ -4,6 +4,8 @@ set_value:
   name: Set
   description: Set the value of a Number entity.
   target:
+    entity:
+      domain: number
   fields:
     value:
       name: Value

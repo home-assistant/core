@@ -7,13 +7,6 @@
             "cannot_connect": "Feeler beim verbannen",
             "invalid_ws_url": "Ong\u00eblteg Websocket URL",
             "unknown": "Onerwaarte Feeler"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
-            }
         }
     },
     "title": "Z-Wave JS"
