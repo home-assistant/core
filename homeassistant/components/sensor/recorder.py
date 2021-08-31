@@ -282,7 +282,7 @@ def reset_detected(
     return state < 0.9 * previous_state
 
 
-def compile_statistics(
+def compile_statistics(  # noqa: C901
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
     """Compile statistics for all entities during start-end.
@@ -376,6 +376,19 @@ def compile_statistics(
                     and (last_reset := state.attributes.get("last_reset"))
                     != old_last_reset
                 ):
+                    if old_state is None:
+                        _LOGGER.info(
+                            "Compiling initial sum statistics for %s, zero point set to %s",
+                            entity_id,
+                            fstate,
+                        )
+                    else:
+                        _LOGGER.info(
+                            "Detected new cycle for %s, last_reset set to %s (old last_reset %s)",
+                            entity_id,
+                            last_reset,
+                            old_last_reset,
+                        )
                     reset = True
                 elif old_state is None and last_reset is None:
                     reset = True
@@ -390,7 +403,7 @@ def compile_statistics(
                 ):
                     reset = True
                     _LOGGER.info(
-                        "Detected new cycle for %s, zero point set to %s (old zero point %s)",
+                        "Detected new cycle for %s, value dropped from %s to %s",
                         entity_id,
                         fstate,
                         new_state,
