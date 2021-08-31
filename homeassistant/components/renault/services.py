@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
 from .renault_hub import RenaultHub
@@ -19,19 +19,17 @@ LOGGER = logging.getLogger(__name__)
 
 ATTR_SCHEDULES = "schedules"
 ATTR_TEMPERATURE = "temperature"
-ATTR_VIN = "vin"
+ATTR_VEHICLE = "vehicle"
 ATTR_WHEN = "when"
-
-REGEX_VIN = "(?i)^VF1[\\w]{14}$"
 
 SERVICE_AC_CANCEL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_VEHICLE): cv.string,
     }
 )
 SERVICE_AC_START_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_VEHICLE): cv.string,
         vol.Required(ATTR_TEMPERATURE): cv.positive_float,
         vol.Optional(ATTR_WHEN): cv.datetime,
     }
@@ -57,7 +55,7 @@ SERVICE_CHARGE_SET_SCHEDULE_SCHEMA = vol.Schema(
 )
 SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_VEHICLE): cv.string,
         vol.Required(ATTR_SCHEDULES): vol.All(
             cv.ensure_list, [SERVICE_CHARGE_SET_SCHEDULE_SCHEMA]
         ),
@@ -65,7 +63,7 @@ SERVICE_CHARGE_SET_SCHEDULES_SCHEMA = vol.Schema(
 )
 SERVICE_CHARGE_START_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_VIN): cv.matches_regex(REGEX_VIN),
+        vol.Required(ATTR_VEHICLE): cv.string,
     }
 )
 
@@ -128,13 +126,18 @@ def setup_services(hass: HomeAssistant) -> None:
 
     def get_vehicle_proxy(service_call_data: MappingProxyType) -> RenaultVehicleProxy:
         """Get vehicle from service_call data."""
-        vin: str = service_call_data[ATTR_VIN]
+        device_registry = dr.async_get(hass)
+        device_id = service_call_data[ATTR_VEHICLE]
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            raise ValueError(f"Unable to find device with id: {device_id}")
+
         proxy: RenaultHub
         for proxy in hass.data[DOMAIN].values():
-            vehicle = proxy.vehicles.get(vin)
-            if vehicle is not None:
-                return vehicle
-        raise ValueError(f"Unable to find vehicle with VIN: {vin}")
+            for vin, vehicle in proxy.vehicles.items():
+                if (DOMAIN, vin) in device_entry.identifiers:
+                    return vehicle
+        raise ValueError(f"Unable to find vehicle with VIN: {device_entry.identifiers}")
 
     hass.services.async_register(
         DOMAIN,

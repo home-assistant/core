@@ -1,9 +1,13 @@
 ac_start:
   description: Start A/C on vehicle.
   fields:
-    vin:
-      description: VIN of vehicle that will have the A/C started.
-      example: "VF1xxxxxxxxxxxxxx"
+    vehicle:
+      name: Vehicle
+      description: The vehicle to send the command to.
+      required: true
+      selector:
+        device:
+          integration: renault
     temperature:
       description: Target A/C temperature in °C.
       example: "21"
@@ -14,16 +18,24 @@ ac_start:
 ac_cancel:
   description: Cancel A/C on vehicle.
   fields:
-    vin:
-      description: VIN of vehicle that will have the A/C cancelled.
-      example: "VF1xxxxxxxxxxxxxx"
+    vehicle:
+      name: Vehicle
+      description: The vehicle to send the command to.
+      required: true
+      selector:
+        device:
+          integration: renault
 
 charge_set_schedules:
   description: Update charge schedule on vehicle.
   fields:
-    vin:
-      description: VIN of vehicle that will have the charge schedule updated.
-      example: "VF1xxxxxxxxxxxxxx"
+    vehicle:
+      name: Vehicle
+      description: The vehicle to send the command to.
+      required: true
+      selector:
+        device:
+          integration: renault
     schedules:
       description: Schedule details.
       example: >-
@@ -55,6 +67,10 @@ charge_set_schedules:
 charge_start:
   description: Start charge on vehicle.
   fields:
-    vin:
-      description: VIN of vehicle that will have the charge started.
-      example: "VF1xxxxxxxxxxxxxx"
+    vehicle:
+      name: Vehicle
+      description: The vehicle to send the command to.
+      required: true
+      selector:
+        device:
+          integration: renault
