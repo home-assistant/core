@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator, circuit_num, circuit["name"] not in GENERIC_CIRCUIT_NAMES
             )
             for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items()
-            if circuit["function"] in LIGHT_CIRCUITS
+            if circuit["function"] in LIGHT_CIRCUIT_FUNCTIONS
         ]
     )
 
