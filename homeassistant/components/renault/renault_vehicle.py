@@ -80,14 +80,14 @@ class RenaultVehicleProxy:
         """Load available coordinators."""
         self.coordinators = {
             coord.key: RenaultDataUpdateCoordinator(
-                    self.hass,
-                    LOGGER,
-                    # Name of the data. For logging purposes.
+                self.hass,
+                LOGGER,
+                # Name of the data. For logging purposes.
                 name=f"{self.details.vin} {coord.key}",
                 update_method=coord.update_method(self._vehicle),
-                    # Polling interval. Will only be polled if there are subscribers.
-                    update_interval=self._scan_interval,
-                )
+                # Polling interval. Will only be polled if there are subscribers.
+                update_interval=self._scan_interval,
+            )
             for coord in COORDINATORS
             if (
                 self.details.supports_endpoint(coord.endpoint)
