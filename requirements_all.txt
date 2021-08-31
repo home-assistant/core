@@ -136,7 +136,7 @@ aio_geojson_nsw_rfs_incidents==0.4
 aio_georss_gdacs==0.5
 
 # homeassistant.components.ambient_station
-aioambient==1.2.6
+aioambient==1.3.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.3.4
@@ -864,6 +864,9 @@ influxdb-client==1.14.0
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
+# homeassistant.components.iotawatt
+iotawattpy==0.0.8
+
 # homeassistant.components.iperf3
 iperf3==0.1.11
 
@@ -1530,7 +1533,7 @@ pyipma==2.0.5
 pyipp==0.11.0
 
 # homeassistant.components.iqvia
-pyiqvia==1.0.0
+pyiqvia==1.1.0
 
 # homeassistant.components.irish_rail_transport
 pyirishrail==0.0.2
@@ -1668,7 +1671,7 @@ pyobihai==1.3.1
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==2.1.0
+pyopenuv==2.2.0
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -2456,7 +2459,7 @@ youtube_dl>=2021.06.06
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.1
+zeroconf==0.36.2
 
 # homeassistant.components.zha
 zha-quirks==0.0.60
@@ -2489,4 +2492,4 @@ zigpy==0.37.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.29.0
+zwave-js-server-python==0.29.1

@@ -957,6 +957,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
         return area.id
 
     ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
     from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
         config_validation as cv,
@@ -968,10 +969,14 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
         pass
     else:
         if entity := ent_reg.async_get(lookup_value):
-            return entity.area_id
+            # If entity has an area ID, return that
+            if entity.area_id:
+                return entity.area_id
+            # If entity has a device ID, return the area ID for the device
+            if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
+                return device.area_id
 
-    # Check if this could be a device ID (hex string)
-    dev_reg = device_registry.async_get(hass)
+    # Check if this could be a device ID
     if device := dev_reg.async_get(lookup_value):
         return device.area_id
 
@@ -992,6 +997,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     if area:
         return area.name
 
+    dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
     from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
@@ -1004,11 +1010,18 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
         pass
     else:
         if entity := ent_reg.async_get(lookup_value):
+            # If entity has an area ID, get the area name for that
             if entity.area_id:
                 return _get_area_name(area_reg, entity.area_id)
-            return None
+            # If entity has a device ID and the device exists with an area ID, get the
+            # area name for that
+            if (
+                entity.device_id
+                and (device := dev_reg.async_get(entity.device_id))
+                and device.area_id
+            ):
+                return _get_area_name(area_reg, device.area_id)
 
-    dev_reg = device_registry.async_get(hass)
     if (device := dev_reg.async_get(lookup_value)) and device.area_id:
         return _get_area_name(area_reg, device.area_id)
 
