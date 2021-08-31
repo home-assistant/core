@@ -592,7 +592,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
-        self._preset_modes = list(self.PRESET_MODE_MAPPING.keys())
+        self._preset_modes = list(self.PRESET_MODE_MAPPING)
         self._supported_features = SUPPORT_PRESET_MODE
 
     @property
