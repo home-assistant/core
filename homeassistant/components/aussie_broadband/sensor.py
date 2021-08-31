@@ -65,7 +65,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="internet",
-        name="Data Usage",
+        name="Data Used",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=DATA_KILOBYTES,
         icon="mdi:network",
@@ -104,11 +104,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     """Set up the Aussie Broadband sensor platform from a config entry."""
-
-    for service in hass.data[DOMAIN][entry.entry_id]["services"]:
-        print(service)
-        for description in SENSOR_DESCRIPTIONS:
-            print(description.key, description.key in service["coordinator"].data)
 
     async_add_entities(
         [
