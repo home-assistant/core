@@ -918,18 +918,19 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
     entity = entity_reg.async_get(entity_id_or_device_name)
-    if entity is None:
-        dev_reg = device_registry.async_get(hass)
-        return next(
-            (
-                id
-                for id, device in dev_reg.devices.items()
-                if (name := device.name_by_user or device.name)
-                and (str(entity_id_or_device_name) == name)
-            ),
-            None,
-        )
-    return entity.device_id
+    if entity is not None:
+        return entity.device_id
+
+    dev_reg = device_registry.async_get(hass)
+    return next(
+        (
+            id
+            for id, device in dev_reg.devices.items()
+            if (name := device.name_by_user or device.name)
+            and (str(entity_id_or_device_name) == name)
+        ),
+        None,
+    )
 
 
 def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
