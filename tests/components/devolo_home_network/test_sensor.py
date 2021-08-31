@@ -76,7 +76,7 @@ async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
     state_key = f"{DOMAIN}.neighboring_wifi_networks"
     entry = configure_integration(hass)
     with patch(
-        "homeassistant.components.devolo_home_network.device.DevoloDevice.entity_registry_enabled_default",
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
         return_value=True,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -122,7 +122,7 @@ async def test_update_connected_plc_devices(hass: HomeAssistant):
     state_key = f"{DOMAIN}.connected_plc_devices"
     entry = configure_integration(hass)
     with patch(
-        "homeassistant.components.devolo_home_network.device.DevoloDevice.entity_registry_enabled_default",
+        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
         return_value=True,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
