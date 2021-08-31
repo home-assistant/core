@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRPURIFIER_2S,
+    FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -47,6 +48,7 @@ from .const import (
     KEY_DEVICE,
     MODEL_AIRPURIFIER_2H,
     MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -193,7 +195,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
 
-    if model in MODELS_PURIFIER_MIOT:
+    if model == MODEL_AIRPURIFIER_3C:
+        entity = XiaomiAirPurifierMB4(
+            name,
+            device,
+            config_entry,
+            unique_id,
+            coordinator,
+        )
+    elif model in MODELS_PURIFIER_MIOT:
         entity = XiaomiAirPurifierMiot(
             name,
             device,
@@ -567,11 +577,35 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
             self._fan_level = fan_level
             self.async_write_ha_state()
 
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the fan.
 
-        This method is a coroutine.
-        """
+class XiaomiAirPurifierMB4(XiaomiGenericDevice):
+    """Representation of a Xiaomi Air Purifier MB4."""
+
+    PRESET_MODE_MAPPING = {
+        "Auto": AirpurifierMiotOperationMode.Auto,
+        "Silent": AirpurifierMiotOperationMode.Silent,
+        "Favorite": AirpurifierMiotOperationMode.Favorite,
+    }
+
+    def __init__(self, name, device, entry, unique_id, coordinator):
+        """Initialize Air Purifier MB4."""
+        super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
+        self._preset_modes = list(self.PRESET_MODE_MAPPING)
+        self._supported_features = SUPPORT_PRESET_MODE
+
+    @property
+    def preset_mode(self):
+        """Get the active preset mode."""
+        if self.coordinator.data.is_on:
+            preset_mode = AirpurifierMiotOperationMode(self._mode).name
+            return preset_mode if preset_mode in self._preset_modes else None
+
+        return None
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
         if preset_mode not in self.preset_modes:
             _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
             return
@@ -582,6 +616,14 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         ):
             self._mode = self.PRESET_MODE_MAPPING[preset_mode].value
             self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        self._available = True
+        self._state = self.coordinator.data.is_on
+        self._mode = self.coordinator.data.mode.value
+        self.async_write_ha_state()
 
 
 class XiaomiAirFresh(XiaomiGenericDevice):
