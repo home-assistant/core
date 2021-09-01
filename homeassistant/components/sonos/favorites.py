@@ -50,10 +50,10 @@ class SonosFavorites(SonosHouseholdCoordinator):
     @callback
     def async_handle_event(self, event_id: str, container_ids: str, soco: SoCo) -> None:
         """Create a task to update from an event callback."""
-        if not (m := re.search(r"FV:2,(\d+)", container_ids)):
+        if not (match := re.search(r"FV:2,(\d+)", container_ids)):
             return
 
-        container_id = int(m.groups()[0])
+        container_id = int(match.groups()[0])
         event_id = int(event_id.split(",")[-1])
 
         self.hass.async_create_task(
@@ -87,7 +87,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
             self.last_processed_event_id = event_id
             await self.async_update_entities(soco, container_id)
 
-    def update_cache(self, soco: SoCo, container_id: int | None = None) -> bool:
+    def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known favorites and return if cache has changed."""
         new_favorites = soco.music_library.get_sonos_favorites()
 

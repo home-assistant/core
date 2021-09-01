@@ -69,7 +69,7 @@ class SonosHouseholdCoordinator:
                 break
 
     async def async_update_entities(
-        self, soco: SoCo, event_id: int | None = None
+        self, soco: SoCo, update_id: int | None = None
     ) -> None:
         """Update the cache and update entities."""
         raise NotImplementedError()

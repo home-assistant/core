@@ -1,8 +1,9 @@
 """Class representing Sonos alarms."""
 from __future__ import annotations
 
+from collections.abc import Iterator
 import logging
-from typing import Any, Iterator
+from typing import Any
 
 from soco import SoCo
 from soco.alarms import Alarm, Alarms
@@ -68,11 +69,11 @@ class SonosAlarms(SonosHouseholdCoordinator):
                 return
             await self.async_update_entities(soco, event_id)
 
-    def update_cache(self, soco: SoCo, event_id: int | None = None) -> bool:
+    def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
         self.alarms.update(soco)
 
-        if event_id and self.alarms.last_id < event_id:
+        if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
             return False
 
