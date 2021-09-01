@@ -169,9 +169,7 @@ class WazeTravelTime(SensorEntity):
         "entry_type": "service",
     }
 
-    def __init__(
-        self, unique_id: str, name: str, origin, destination, waze_data
-    ) -> None:
+    def __init__(self, unique_id, name, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
         self._attr_unique_id = unique_id
         self._waze_data = waze_data
@@ -260,9 +258,7 @@ class WazeTravelTime(SensorEntity):
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(
-        self, origin, destination, region: str, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, origin, destination, region, config_entry):
         """Set up WazeRouteCalculator."""
         self.origin = origin
         self.destination = destination
