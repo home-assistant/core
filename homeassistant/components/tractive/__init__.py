@@ -21,7 +21,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_BUZZER,
     ATTR_DAILY_GOAL,
+    ATTR_LED,
+    ATTR_LIVE_TRACKING,
     ATTR_MINUTES_ACTIVE,
     CLIENT,
     DOMAIN,
@@ -33,7 +36,7 @@ from .const import (
     TRACKER_POSITION_UPDATED,
 )
 
-PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
+PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -191,6 +194,9 @@ class TractiveClient:
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
+            ATTR_BUZZER: event["buzzer_control"]["active"],
+            ATTR_LED: event["led_control"]["active"],
+            ATTR_LIVE_TRACKING: event["live_tracking"]["active"],
         }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
