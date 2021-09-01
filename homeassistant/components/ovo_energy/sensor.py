@@ -57,7 +57,6 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         name="OVO Last Electricity Cost",
         device_class=DEVICE_CLASS_MONETARY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        icon="mdi:cash-multiple",
         value=lambda usage: usage.electricity[-1].consumption,
     ),
     OVOEnergySensorEntityDescription(
@@ -157,8 +156,8 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         super().__init__(
             coordinator,
             client,
-            f"{DOMAIN}_{client.account_id}_{description.key}",
         )
+        self._attr_unique_id = f"{DOMAIN}_{client.account_id}_{description.key}"
         self.entity_description = description
 
     @property

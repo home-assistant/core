@@ -108,6 +108,7 @@ TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
 TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
 TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -2286,3 +2287,61 @@ class ChannelTrait(_Trait):
             blocking=True,
             context=data.context,
         )
+
+
+@register_trait
+class SensorStateTrait(_Trait):
+    """Trait to get sensor state.
+
+    https://developers.google.com/actions/smarthome/traits/sensorstate
+    """
+
+    sensor_types = {
+        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
+        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+            "VolatileOrganicCompounds",
+            "PARTS_PER_MILLION",
+        ),
+    }
+
+    name = TRAIT_SENSOR_STATE
+    commands = []
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == sensor.DOMAIN and device_class in (
+            sensor.DEVICE_CLASS_AQI,
+            sensor.DEVICE_CLASS_CO,
+            sensor.DEVICE_CLASS_CO2,
+            sensor.DEVICE_CLASS_PM25,
+            sensor.DEVICE_CLASS_PM10,
+            sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        )
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        data = self.sensor_types.get(device_class)
+        if data is not None:
+            return {
+                "sensorStatesSupported": {
+                    "name": data[0],
+                    "numericCapabilities": {"rawValueUnit": data[1]},
+                }
+            }
+
+    def query_attributes(self):
+        """Return the attributes of this trait for this entity."""
+        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        data = self.sensor_types.get(device_class)
+        if data is not None:
+            return {
+                "currentSensorStateData": [
+                    {"name": data[0], "rawValue": self.state.state}
+                ]
+            }

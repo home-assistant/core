@@ -249,6 +249,7 @@ homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
+homeassistant/components/iotawatt/* @gtdiehl
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes @abmantis
 homeassistant/components/ipp/* @ctalkington
@@ -553,6 +554,7 @@ homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
+homeassistant/components/vallox/* @andre-richter
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/vera/* @pavoni

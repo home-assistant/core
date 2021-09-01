@@ -200,11 +200,18 @@ def _normalize_states(
                     hass.data[WARN_UNSTABLE_UNIT] = set()
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
+                    extra = ""
+                    if old_metadata := statistics.get_metadata(hass, entity_id):
+                        extra = (
+                            " and matches the unit of already compiled statistics "
+                            f"({old_metadata['unit_of_measurement']})"
+                        )
                     _LOGGER.warning(
-                        "The unit of %s is changing, got %s, generation of long term "
-                        "statistics will be suppressed unless the unit is stable",
+                        "The unit of %s is changing, got multiple %s, generation of long term "
+                        "statistics will be suppressed unless the unit is stable%s",
                         entity_id,
                         all_units,
+                        extra,
                     )
                 return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -275,7 +282,22 @@ def reset_detected(
     return state < 0.9 * previous_state
 
 
-def compile_statistics(
+def _wanted_statistics(
+    entities: list[tuple[str, str, str | None]]
+) -> dict[str, set[str]]:
+    """Prepare a dict with wanted statistics for entities."""
+    wanted_statistics = {}
+    for entity_id, state_class, device_class in entities:
+        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
+            wanted_statistics[entity_id] = DEVICE_CLASS_STATISTICS[state_class][
+                device_class
+            ]
+        else:
+            wanted_statistics[entity_id] = DEFAULT_STATISTICS[state_class]
+    return wanted_statistics
+
+
+def compile_statistics(  # noqa: C901
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
     """Compile statistics for all entities during start-end.
@@ -286,17 +308,32 @@ def compile_statistics(
 
     entities = _get_entities(hass)
 
+    wanted_statistics = _wanted_statistics(entities)
+
     # Get history between start and end
-    history_list = history.get_significant_states(  # type: ignore
-        hass, start - datetime.timedelta.resolution, end, [i[0] for i in entities]
-    )
+    entities_full_history = [i[0] for i in entities if "sum" in wanted_statistics[i[0]]]
+    history_list = {}
+    if entities_full_history:
+        history_list = history.get_significant_states(  # type: ignore
+            hass,
+            start - datetime.timedelta.resolution,
+            end,
+            entity_ids=entities_full_history,
+            significant_changes_only=False,
+        )
+    entities_significant_history = [
+        i[0] for i in entities if "sum" not in wanted_statistics[i[0]]
+    ]
+    if entities_significant_history:
+        _history_list = history.get_significant_states(  # type: ignore
+            hass,
+            start - datetime.timedelta.resolution,
+            end,
+            entity_ids=entities_significant_history,
+        )
+        history_list = {**history_list, **_history_list}
 
     for entity_id, state_class, device_class in entities:
-        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            wanted_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
-        else:
-            wanted_statistics = DEFAULT_STATISTICS[state_class]
-
         if entity_id not in history_list:
             continue
 
@@ -320,7 +357,7 @@ def compile_statistics(
                         entity_id,
                         unit,
                         old_metadata["unit_of_measurement"],
-                        unit,
+                        old_metadata["unit_of_measurement"],
                     )
                 continue
 
@@ -329,21 +366,21 @@ def compile_statistics(
         # Set meta data
         result[entity_id]["meta"] = {
             "unit_of_measurement": unit,
-            "has_mean": "mean" in wanted_statistics,
-            "has_sum": "sum" in wanted_statistics,
+            "has_mean": "mean" in wanted_statistics[entity_id],
+            "has_sum": "sum" in wanted_statistics[entity_id],
         }
 
         # Make calculations
         stat: dict = {}
-        if "max" in wanted_statistics:
+        if "max" in wanted_statistics[entity_id]:
             stat["max"] = max(*itertools.islice(zip(*fstates), 1))
-        if "min" in wanted_statistics:
+        if "min" in wanted_statistics[entity_id]:
             stat["min"] = min(*itertools.islice(zip(*fstates), 1))
 
-        if "mean" in wanted_statistics:
+        if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
 
-        if "sum" in wanted_statistics:
+        if "sum" in wanted_statistics[entity_id]:
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
@@ -369,6 +406,19 @@ def compile_statistics(
                     and (last_reset := state.attributes.get("last_reset"))
                     != old_last_reset
                 ):
+                    if old_state is None:
+                        _LOGGER.info(
+                            "Compiling initial sum statistics for %s, zero point set to %s",
+                            entity_id,
+                            fstate,
+                        )
+                    else:
+                        _LOGGER.info(
+                            "Detected new cycle for %s, last_reset set to %s (old last_reset %s)",
+                            entity_id,
+                            last_reset,
+                            old_last_reset,
+                        )
                     reset = True
                 elif old_state is None and last_reset is None:
                     reset = True
@@ -383,7 +433,7 @@ def compile_statistics(
                 ):
                     reset = True
                     _LOGGER.info(
-                        "Detected new cycle for %s, zero point set to %s (old zero point %s)",
+                        "Detected new cycle for %s, value dropped from %s to %s",
                         entity_id,
                         fstate,
                         new_state,
@@ -396,11 +446,8 @@ def compile_statistics(
                     # ..and update the starting point
                     new_state = fstate
                     old_last_reset = last_reset
-                    # Force a new cycle for STATE_CLASS_TOTAL_INCREASING to start at 0
-                    if (
-                        state_class == STATE_CLASS_TOTAL_INCREASING
-                        and old_state is not None
-                    ):
+                    # Force a new cycle for an existing sensor to start at 0
+                    if old_state is not None:
                         old_state = 0.0
                     else:
                         old_state = new_state

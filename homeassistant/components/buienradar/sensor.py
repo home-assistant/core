@@ -699,7 +699,7 @@ class BrSensor(SensorEntity):
     @callback
     def data_updated(self, data):
         """Update data."""
-        if self._load_data(data) and self.hass:
+        if self.hass and self._load_data(data):
             self.async_write_ha_state()
 
     @callback

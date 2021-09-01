@@ -48,6 +48,8 @@ def mock_cloud_login(hass, mock_cloud_setup):
         },
         "test",
     )
+    with patch.object(hass.data[const.DOMAIN].auth, "async_check_token"):
+        yield
 
 
 @pytest.fixture

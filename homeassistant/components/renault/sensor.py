@@ -7,7 +7,6 @@ from typing import Callable, cast
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
-    KamereonVehicleChargeModeData,
     KamereonVehicleCockpitData,
     KamereonVehicleHvacStatusData,
 )
@@ -36,13 +35,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    DEVICE_CLASS_CHARGE_MODE,
-    DEVICE_CLASS_CHARGE_STATE,
-    DEVICE_CLASS_PLUG_STATE,
-    DOMAIN,
-)
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription, T
+from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
+from .renault_coordinator import T
+from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -61,7 +56,7 @@ class RenaultSensorEntityDescription(
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
-    requires_fuel: bool | None = None
+    requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
 
 
@@ -107,13 +102,6 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
         if self.entity_description.value_lambda is None:
             return self.data
         return self.entity_description.value_lambda(self)
-
-
-def _get_charge_mode_icon(entity: RenaultSensor[T]) -> str:
-    """Return the icon of this entity."""
-    if entity.data == "schedule_mode":
-        return "mdi:calendar-clock"
-    return "mdi:calendar-remove"
 
 
 def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
@@ -282,14 +270,5 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Outside Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=STATE_CLASS_MEASUREMENT,
-    ),
-    RenaultSensorEntityDescription(
-        key="charge_mode",
-        coordinator="charge_mode",
-        data_key="chargeMode",
-        device_class=DEVICE_CLASS_CHARGE_MODE,
-        entity_class=RenaultSensor[KamereonVehicleChargeModeData],
-        icon_lambda=_get_charge_mode_icon,
-        name="Charge Mode",
     ),
 )

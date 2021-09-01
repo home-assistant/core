@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ToneID
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.sound_switch import ToneID
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
