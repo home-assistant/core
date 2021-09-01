@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FOLDER = "folder"
 CONF_PATTERNS = "patterns"
+CONF_USE_POLLING = "use_polling"
 DEFAULT_PATTERN = "*"
 DOMAIN = "folder_watcher"
 
@@ -27,6 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
+                        vol.Optional(CONF_USE_POLLING, default=[False]): cv.boolean
                     }
                 )
             ],
@@ -42,10 +44,11 @@ def setup(hass, config):
     for watcher in conf:
         path = watcher[CONF_FOLDER]
         patterns = watcher[CONF_PATTERNS]
+        use_polling = watcher[CONF_USE_POLLING]
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Folder %s is not valid or allowed", path)
             return False
-        Watcher(path, patterns, hass)
+        Watcher(path, patterns, use_polling, hass)
 
     return True
 
@@ -102,8 +105,10 @@ def create_event_handler(patterns, hass):
 class Watcher:
     """Class for starting Watchdog."""
 
-    def __init__(self, path, patterns, hass):
+    def __init__(self, path, patterns, use_polling, hass):
         """Initialise the watchdog observer."""
+        if use_polling:
+            from watchdog.observers.polling import PollingObserver as Observer
         self._observer = Observer()
         self._observer.schedule(
             create_event_handler(patterns, hass), path, recursive=True
