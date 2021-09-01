@@ -35,13 +35,13 @@ class TractiveSwitchEntityDescription(SwitchEntityDescription):
 SWITCH_TYPES = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
-        name="Buzzer",
+        name="Tracker Buzzer",
         icon="mdi:volume-high",
         method="async_set_buzzer",
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LED,
-        name="LED",
+        name="Tracker LED",
         icon="mdi:led-on",
         method="async_set_led",
     ),
