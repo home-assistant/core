@@ -201,7 +201,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             ):
                 return ENTITY_DESC_KEY_TOTAL_INCREASING
             # We do this because even though these are power scales, they don't meet
-            # the unit requirements for the energy power class.
+            # the unit requirements for the power device class.
             if scale_type == ElectricScale.KILOVOLT_AMPERE_REACTIVE:
                 return ENTITY_DESC_KEY_MEASUREMENT
 
