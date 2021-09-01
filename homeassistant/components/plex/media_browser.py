@@ -191,7 +191,7 @@ def browse_media(  # noqa: C901
         return BrowseMedia(**payload)
 
     try:
-        if media_content_type in ["server", None]:
+        if media_content_type in ("server", None):
             return server_payload(entity.plex_server)
 
         if media_content_type == "library":

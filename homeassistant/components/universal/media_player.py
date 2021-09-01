@@ -612,7 +612,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_toggle(self):
         """Toggle the power on the media player."""
-        await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
+        if SERVICE_TOGGLE in self._cmds:
+            await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
+        else:
+            # Delegate to turn_on or turn_off by default
+            await super().async_toggle()
 
     async def async_update(self):
         """Update state in HA."""

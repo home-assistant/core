@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from collections import namedtuple
 from collections.abc import Sequence
-from datetime import datetime
 
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import DeviceEntity
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -33,7 +36,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.util.dt import utc_from_timestamp
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -133,7 +135,7 @@ CAPABILITY_TO_SENSORS = {
             "Energy Meter",
             ENERGY_KILO_WATT_HOUR,
             DEVICE_CLASS_ENERGY,
-            STATE_CLASS_MEASUREMENT,
+            STATE_CLASS_TOTAL_INCREASING,
         )
     ],
     Capability.equivalent_carbon_dioxide_measurement: [
@@ -492,7 +494,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return f"{self._device.device_id}.{self._attribute}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.status.attributes[self._attribute].value
 
@@ -502,17 +504,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         unit = self._device.status.attributes[self._attribute].unit
         return UNITS.get(unit, unit) if unit else self._default_unit
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the time when the sensor was last reset, if any."""
-        if self._attribute == Attribute.energy:
-            return utc_from_timestamp(0)
-        return None
 
 
 class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
@@ -534,7 +529,7 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
         return f"{self._device.device_id}.{THREE_AXIS_NAMES[self._index]}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         three_axis = self._device.status.attributes[Attribute.three_axis].value
         try:
@@ -554,8 +549,9 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self.report_name = report_name
-        # This is an exception for STATE_CLASS_MEASUREMENT per @balloob
         self._attr_state_class = STATE_CLASS_MEASUREMENT
+        if self.report_name != "power":
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
     @property
     def name(self) -> str:
@@ -565,10 +561,10 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self.report_name}"
+        return f"{self._device.device_id}.{self.report_name}_meter"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         value = self._device.status.attributes[Attribute.power_consumption].value
         if value is None or value.get(self.report_name) is None:
@@ -585,15 +581,8 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         return DEVICE_CLASS_ENERGY
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self.report_name == "power":
             return POWER_WATT
         return ENERGY_KILO_WATT_HOUR
-
-    @property
-    def last_reset(self) -> datetime | None:
-        """Return the time when the sensor was last reset, if any."""
-        if self.report_name != "power":
-            return utc_from_timestamp(0)
-        return None

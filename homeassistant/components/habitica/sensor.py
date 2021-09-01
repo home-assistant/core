@@ -155,12 +155,12 @@ class HabitipySensor(SensorEntity):
         return f"{DOMAIN}_{self._name}_{self._sensor_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._sensor_type.unit
 
@@ -195,7 +195,7 @@ class HabitipyTaskSensor(SensorEntity):
         return f"{DOMAIN}_{self._name}_{self._task_name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 
@@ -220,6 +220,6 @@ class HabitipyTaskSensor(SensorEntity):
             return attrs
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._task_type.unit

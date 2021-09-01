@@ -33,9 +33,9 @@ WEMO_MODEL_DISPATCH = {
     "CoffeeMaker": [SWITCH_DOMAIN],
     "Dimmer": [LIGHT_DOMAIN],
     "Humidifier": [FAN_DOMAIN],
-    "Insight": [SENSOR_DOMAIN, SWITCH_DOMAIN],
+    "Insight": [BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN],
     "LightSwitch": [SWITCH_DOMAIN],
-    "Maker": [SWITCH_DOMAIN],
+    "Maker": [BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN],
     "Motion": [BINARY_SENSOR_DOMAIN],
     "OutdoorPlug": [SWITCH_DOMAIN],
     "Sensor": [BINARY_SENSOR_DOMAIN],
@@ -152,7 +152,7 @@ class WemoDispatcher:
         if wemo.serialnumber in self._added_serial_numbers:
             return
 
-        device = await async_register_device(hass, self._config_entry, wemo)
+        coordinator = await async_register_device(hass, self._config_entry, wemo)
         for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [SWITCH_DOMAIN]):
             # Three cases:
             # - First time we see component, we need to load it and initialize the backlog
@@ -160,7 +160,7 @@ class WemoDispatcher:
             # - Component is loaded, backlog is gone, dispatch discovery
 
             if component not in self._loaded_components:
-                hass.data[DOMAIN]["pending"][component] = [device]
+                hass.data[DOMAIN]["pending"][component] = [coordinator]
                 self._loaded_components.add(component)
                 hass.async_create_task(
                     hass.config_entries.async_forward_entry_setup(
@@ -169,13 +169,13 @@ class WemoDispatcher:
                 )
 
             elif component in hass.data[DOMAIN]["pending"]:
-                hass.data[DOMAIN]["pending"][component].append(device)
+                hass.data[DOMAIN]["pending"][component].append(coordinator)
 
             else:
                 async_dispatcher_send(
                     hass,
                     f"{DOMAIN}.{component}",
-                    device,
+                    coordinator,
                 )
 
         self._added_serial_numbers.add(wemo.serialnumber)

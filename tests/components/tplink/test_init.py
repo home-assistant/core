@@ -1,7 +1,6 @@
 """Tests for the TP-Link component."""
 from __future__ import annotations
 
-from datetime import datetime
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -223,11 +222,6 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.tplink.common.SmartPlug.is_dimmable",
         False,
-    ), patch(
-        "homeassistant.components.tplink.get_time_offset",
-        return_value=(
-            datetime.now() - datetime.now().replace(hour=0, minute=0, second=0)
-        ),
     ):
 
         light = SmartBulb("123.123.123.123")
@@ -418,12 +412,7 @@ async def test_unload(hass, platform):
     ), patch(
         f"homeassistant.components.tplink.{platform}.async_setup_entry",
         return_value=mock_coro(True),
-    ) as async_setup_entry, patch(
-        "homeassistant.components.tplink.get_time_offset",
-        return_value=(
-            datetime.now() - datetime.now().replace(hour=0, minute=0, second=0)
-        ),
-    ):
+    ) as async_setup_entry:
         config = {
             tplink.DOMAIN: {
                 platform: [{CONF_HOST: "123.123.123.123"}],

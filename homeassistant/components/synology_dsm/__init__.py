@@ -686,10 +686,10 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         """Initialize the Synology DSM disk or volume entity."""
         super().__init__(api, entity_type, entity_info, coordinator)
         self._device_id = device_id
-        self._device_name = None
-        self._device_manufacturer = None
-        self._device_model = None
-        self._device_firmware = None
+        self._device_name: str | None = None
+        self._device_manufacturer: str | None = None
+        self._device_model: str | None = None
+        self._device_firmware: str | None = None
         self._device_type = None
 
         if "volume" in entity_type:
@@ -730,8 +730,8 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
                 (DOMAIN, f"{self._api.information.serial}_{self._device_id}")
             },
             "name": f"Synology NAS ({self._device_name} - {self._device_type})",
-            "manufacturer": self._device_manufacturer,  # type: ignore[typeddict-item]
-            "model": self._device_model,  # type: ignore[typeddict-item]
-            "sw_version": self._device_firmware,  # type: ignore[typeddict-item]
+            "manufacturer": self._device_manufacturer,
+            "model": self._device_model,
+            "sw_version": self._device_firmware,
             "via_device": (DOMAIN, self._api.information.serial),
         }

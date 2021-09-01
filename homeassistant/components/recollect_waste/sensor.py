@@ -1,6 +1,8 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
+from datetime import date, datetime, time
+
 from aiorecollect.client import PickupType
 import voluptuous as vol
 
@@ -74,6 +76,12 @@ async def async_setup_platform(
     )
 
 
+@callback
+def async_get_utc_midnight(target_date: date) -> datetime:
+    """Get UTC midnight for a given date."""
+    return as_utc(datetime.combine(target_date, time(0)))
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -124,7 +132,9 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
+                ATTR_NEXT_PICKUP_DATE: async_get_utc_midnight(
+                    next_pickup_event.date
+                ).isoformat(),
             }
         )
-        self._attr_state = as_utc(pickup_event.date).isoformat()
+        self._attr_native_value = async_get_utc_midnight(pickup_event.date).isoformat()

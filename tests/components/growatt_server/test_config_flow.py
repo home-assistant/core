@@ -149,30 +149,6 @@ async def test_one_plant_on_account(hass):
     assert result["data"][CONF_PLANT_ID] == "123456"
 
 
-async def test_import_one_plant(hass):
-    """Test import step with a single plant."""
-    import_data = FIXTURE_USER_INPUT.copy()
-
-    with patch(
-        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
-    ), patch(
-        "growattServer.GrowattApi.plant_list",
-        return_value=GROWATT_PLANT_LIST_RESPONSE,
-    ), patch(
-        "homeassistant.components.growatt_server.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=import_data,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
-    assert result["data"][CONF_PLANT_ID] == "123456"
-
-
 async def test_existing_plant_configured(hass):
     """Test entering an existing plant_id."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="123456")

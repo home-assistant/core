@@ -5,7 +5,8 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import ColorComponent, CommandClass
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.color_switch import ColorComponent
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -287,39 +288,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             else:
                 zwave_transition = {TRANSITION_DURATION: "default"}
 
-        if combined_color_val and isinstance(combined_color_val.value, dict):
-            colors_dict = {}
-            for color, value in colors.items():
-                color_name = MULTI_COLOR_MAP[color]
-                colors_dict[color_name] = value
-            # set updated color object
-            await self.info.node.async_set_value(
-                combined_color_val, colors_dict, zwave_transition
-            )
-            return
-
-        # fallback to setting the color(s) one by one if multicolor fails
-        # not sure this is needed at all, but just in case
+        colors_dict = {}
         for color, value in colors.items():
-            await self._async_set_color(color, value)
-
-    async def _async_set_color(
-        self,
-        color: ColorComponent,
-        new_value: int,
-        transition: dict[str, str] | None = None,
-    ) -> None:
-        """Set defined color to given value."""
-        # actually set the new color value
-        target_zwave_value = self.get_zwave_value(
-            "targetColor",
-            CommandClass.SWITCH_COLOR,
-            value_property_key=color.value,
+            color_name = MULTI_COLOR_MAP[color]
+            colors_dict[color_name] = value
+        # set updated color object
+        await self.info.node.async_set_value(
+            combined_color_val, colors_dict, zwave_transition
         )
-        if target_zwave_value is None:
-            # guard for unsupported color
-            return
-        await self.info.node.async_set_value(target_zwave_value, new_value, transition)
 
     async def _async_set_brightness(
         self, brightness: int | None, transition: float | None = None

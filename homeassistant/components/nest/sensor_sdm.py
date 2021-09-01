@@ -95,13 +95,13 @@ class TemperatureSensor(SensorBase):
         return f"{self._device_info.device_name} Temperature"
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
         return trait.ambient_temperature_celsius
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
@@ -126,13 +126,13 @@ class HumiditySensor(SensorBase):
         return f"{self._device_info.device_name} Humidity"
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
         return trait.ambient_humidity_percent
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return PERCENTAGE
 

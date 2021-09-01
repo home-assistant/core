@@ -42,4 +42,4 @@ class ArduinoSensor(SensorEntity):
 
     def update(self):
         """Get the latest value from the pin."""
-        self._attr_state = self._board.get_analog_inputs()[self._pin][1]
+        self._attr_native_value = self._board.get_analog_inputs()[self._pin][1]

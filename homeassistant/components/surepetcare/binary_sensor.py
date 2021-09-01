@@ -24,11 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
 ) -> None:
-    """Set up Sure PetCare Flaps sensors based on a config entry."""
+    """Set up Sure PetCare Flaps binary sensors based on a config entry."""
     if discovery_info is None:
         return
 
-    entities: list[SurepyEntity] = []
+    entities: list[SurepyEntity | Pet | Hub | DeviceConnectivity] = []
 
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
@@ -42,8 +42,7 @@ async def async_setup_platform(
             EntityType.FELAQUA,
         ]:
             entities.append(DeviceConnectivity(surepy_entity.id, spc))
-
-        if surepy_entity.type == EntityType.PET:
+        elif surepy_entity.type == EntityType.PET:
             entities.append(Pet(surepy_entity.id, spc))
         elif surepy_entity.type == EntityType.HUB:
             entities.append(Hub(surepy_entity.id, spc))
@@ -75,15 +74,9 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         else:
             name = f"Unnamed {surepy_entity.type.name.capitalize()}"
 
-        self._name = f"{surepy_entity.type.name.capitalize()} {name.capitalize()}"
-
         self._attr_device_class = device_class
+        self._attr_name = f"{surepy_entity.type.name.capitalize()} {name.capitalize()}"
         self._attr_unique_id = f"{surepy_entity.household_id}-{self._id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return self._name
 
     @abstractmethod
     @callback
@@ -99,7 +92,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
 
 class Hub(SurePetcareBinarySensor):
-    """Sure Petcare Pet."""
+    """Sure Petcare Hub."""
 
     def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Hub."""
@@ -119,8 +112,8 @@ class Hub(SurePetcareBinarySensor):
                 ),
             }
         else:
-            self._attr_extra_state_attributes = None
-        _LOGGER.debug("%s -> state: %s", self._name, state)
+            self._attr_extra_state_attributes = {}
+        _LOGGER.debug("%s -> state: %s", self.name, state)
         self.async_write_ha_state()
 
 
@@ -146,13 +139,13 @@ class Pet(SurePetcareBinarySensor):
                 "where": state.where,
             }
         else:
-            self._attr_extra_state_attributes = None
-        _LOGGER.debug("%s -> state: %s", self._name, state)
+            self._attr_extra_state_attributes = {}
+        _LOGGER.debug("%s -> state: %s", self.name, state)
         self.async_write_ha_state()
 
 
 class DeviceConnectivity(SurePetcareBinarySensor):
-    """Sure Petcare Pet."""
+    """Sure Petcare Device."""
 
     def __init__(
         self,
@@ -161,14 +154,10 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     ) -> None:
         """Initialize a Sure Petcare Device."""
         super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY)
+        self._attr_name = f"{self.name}_connectivity"
         self._attr_unique_id = (
             f"{self._spc.states[self._id].household_id}-{self._id}-connectivity"
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return f"{self._name}_connectivity"
 
     @callback
     def _async_update(self) -> None:
@@ -182,6 +171,6 @@ class DeviceConnectivity(SurePetcareBinarySensor):
                 "hub_rssi": f'{state["signal"]["hub_rssi"]:.2f}',
             }
         else:
-            self._attr_extra_state_attributes = None
-        _LOGGER.debug("%s -> state: %s", self._name, state)
+            self._attr_extra_state_attributes = {}
+        _LOGGER.debug("%s -> state: %s", self.name, state)
         self.async_write_ha_state()
