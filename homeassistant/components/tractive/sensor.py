@@ -63,7 +63,9 @@ class TractiveHardwareSensor(TractiveSensor):
     @callback
     def handle_hardware_status_update(self, event):
         """Handle hardware status update."""
-        self._attr_native_value = event[self.entity_description.key]
+        if (_state := event[self.entity_description.key]) is None:
+            return
+        self._attr_native_value = _state
         self._attr_available = True
         self.async_write_ha_state()
 
