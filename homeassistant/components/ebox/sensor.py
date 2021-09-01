@@ -45,79 +45,79 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="usage",
         name="Usage",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
     ),
     SensorEntityDescription(
         key="balance",
         name="Balance",
-        unit_of_measurement=PRICE,
+        native_unit_of_measurement=PRICE,
         icon="mdi:cash-usd",
     ),
     SensorEntityDescription(
         key="limit",
         name="Data limit",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="days_left",
         name="Days left",
-        unit_of_measurement=TIME_DAYS,
+        native_unit_of_measurement=TIME_DAYS,
         icon="mdi:calendar-today",
     ),
     SensorEntityDescription(
         key="before_offpeak_download",
         name="Download before offpeak",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="before_offpeak_upload",
         name="Upload before offpeak",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="before_offpeak_total",
         name="Total before offpeak",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="offpeak_download",
         name="Offpeak download",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="offpeak_upload",
         name="Offpeak Upload",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="offpeak_total",
         name="Offpeak Total",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="download",
         name="Download",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="upload",
         name="Upload",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
         key="total",
         name="Total",
-        unit_of_measurement=DATA_GIGABITS,
+        native_unit_of_measurement=DATA_GIGABITS,
         icon="mdi:download",
     ),
 )
@@ -179,7 +179,7 @@ class EBoxSensor(SensorEntity):
         """Get the latest data from EBox and update the state."""
         await self.ebox_data.async_update()
         if self.entity_description.key in self.ebox_data.data:
-            self._attr_state = round(
+            self._attr_native_value = round(
                 self.ebox_data.data[self.entity_description.key], 2
             )
 

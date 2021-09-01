@@ -146,7 +146,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 
         self._attr_available = True
         if lock_activity is not None:
-            self._attr_state = lock_activity.operated_by
+            self._attr_native_value = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
             self._operated_autorelock = lock_activity.operated_autorelock
@@ -208,7 +208,7 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     """Representation of an August sensor."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, data, sensor_type, device, old_device):
         """Initialize the sensor."""
@@ -223,8 +223,8 @@ class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
-        self._attr_state = state_provider(self._detail)
-        self._attr_available = self._attr_state is not None
+        self._attr_native_value = state_provider(self._detail)
+        self._attr_available = self._attr_native_value is not None
 
     @property
     def old_unique_id(self) -> str:

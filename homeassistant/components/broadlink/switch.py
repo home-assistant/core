@@ -142,9 +142,6 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         super().__init__(device)
         self._command_on = command_on
         self._command_off = command_off
-
-        self._attr_assumed_state = True
-        self._attr_device_class = DEVICE_CLASS_SWITCH
         self._attr_name = f"{device.name} Switch"
 
     async def async_added_to_hass(self):

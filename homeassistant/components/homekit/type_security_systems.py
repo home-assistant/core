@@ -158,15 +158,12 @@ class SecuritySystem(HomeAccessory):
         """Update security state after state changed."""
         hass_state = new_state.state
         if (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None:
-            if self.char_current_state.value != current_state:
-                self.char_current_state.set_value(current_state)
-                _LOGGER.debug(
-                    "%s: Updated current state to %s (%d)",
-                    self.entity_id,
-                    hass_state,
-                    current_state,
-                )
-
+            self.char_current_state.set_value(current_state)
+            _LOGGER.debug(
+                "%s: Updated current state to %s (%d)",
+                self.entity_id,
+                hass_state,
+                current_state,
+            )
         if (target_state := HASS_TO_HOMEKIT_TARGET.get(hass_state)) is not None:
-            if self.char_target_state.value != target_state:
-                self.char_target_state.set_value(target_state)
+            self.char_target_state.set_value(target_state)

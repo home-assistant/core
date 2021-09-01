@@ -76,7 +76,3 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self.data.update(user_input)
         return self.async_create_entry(title=self.data[CONF_NAME], data=self.data)
-
-    async def async_step_import(self, import_data):
-        """Migrate old yaml config to config flow."""
-        return await self.async_step_user(import_data)

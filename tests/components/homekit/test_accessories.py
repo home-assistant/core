@@ -14,9 +14,6 @@ from homeassistant.components.homekit.accessories import (
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
@@ -36,7 +33,10 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
+    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -109,7 +109,7 @@ async def test_home_accessory(hass, hk_driver):
         {
             ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
             ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_SOFTWARE_VERSION: "0.4.3 that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "0.4.3 that exceeds the maximum maximum maximum maximum maximum maximum length",
             ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
         },
     )
@@ -142,7 +142,7 @@ async def test_home_accessory(hass, hk_driver):
         {
             ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
             ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
-            ATTR_SOFTWARE_VERSION: "will_not_match_regex",
+            ATTR_SW_VERSION: "will_not_match_regex",
             ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
         },
     )
@@ -205,7 +205,7 @@ async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
         {
             ATTR_MODEL: None,
             ATTR_MANUFACTURER: None,
-            ATTR_SOFTWARE_VERSION: None,
+            ATTR_SW_VERSION: None,
             ATTR_INTEGRATION: None,
         },
     )
@@ -651,7 +651,7 @@ def test_home_bridge(hk_driver):
     assert bridge.hass == "hass"
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
@@ -662,7 +662,7 @@ def test_home_bridge(hk_driver):
 
     bridge = HomeBridge("hass", hk_driver, "test_name")
     assert bridge.display_name == "test_name"
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
 
     # setup_message
@@ -696,9 +696,9 @@ def test_home_driver():
     with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
         "homeassistant.components.homekit.accessories.dismiss_setup_message"
     ) as mock_dissmiss_msg:
-        driver.pair("client_uuid", "client_public")
+        driver.pair("client_uuid", "client_public", b"1")
 
-    mock_pair.assert_called_with("client_uuid", "client_public")
+    mock_pair.assert_called_with("client_uuid", "client_public", b"1")
     mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair

@@ -112,7 +112,7 @@ class AlphaVantageSensor(SensorEntity):
         self._symbol = symbol[CONF_SYMBOL]
         self._attr_name = symbol.get(CONF_NAME, self._symbol)
         self._timeseries = timeseries
-        self._attr_unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
+        self._attr_native_unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
         self._attr_icon = ICONS.get(symbol.get(CONF_CURRENCY, "USD"))
 
     def update(self):
@@ -120,7 +120,7 @@ class AlphaVantageSensor(SensorEntity):
         _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         values = next(iter(all_values.values()))
-        self._attr_state = values["1. open"]
+        self._attr_native_value = values["1. open"]
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -148,7 +148,7 @@ class AlphaVantageForeignExchange(SensorEntity):
             else f"{self._to_currency}/{self._from_currency}"
         )
         self._attr_icon = ICONS.get(self._from_currency, "USD")
-        self._attr_unit_of_measurement = self._to_currency
+        self._attr_native_unit_of_measurement = self._to_currency
 
     def update(self):
         """Get the latest data and updates the states."""
@@ -160,7 +160,7 @@ class AlphaVantageForeignExchange(SensorEntity):
         values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency
         )
-        self._attr_state = round(float(values["5. Exchange Rate"]), 4)
+        self._attr_native_value = round(float(values["5. Exchange Rate"]), 4)
         self._attr_extra_state_attributes = (
             {
                 ATTR_ATTRIBUTION: ATTRIBUTION,

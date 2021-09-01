@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_hub
 from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
@@ -30,7 +31,6 @@ from .const import (
     CONF_STATE_OPENING,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
-    MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
 
@@ -50,7 +50,7 @@ async def async_setup_platform(
 
     covers = []
     for cover in discovery_info[CONF_COVERS]:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
         covers.append(ModbusCover(hub, cover))
 
     async_add_entities(covers)
@@ -109,22 +109,13 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
                 STATE_UNAVAILABLE: None,
                 STATE_UNKNOWN: None,
             }
-            self._value = convert[state.state]
+            self._set_attr_state(convert[state.state])
 
-    @property
-    def is_opening(self):
-        """Return if the cover is opening or not."""
-        return self._value == self._state_opening
-
-    @property
-    def is_closing(self):
-        """Return if the cover is closing or not."""
-        return self._value == self._state_closing
-
-    @property
-    def is_closed(self):
-        """Return if the cover is closed or not."""
-        return self._value == self._state_closed
+    def _set_attr_state(self, value):
+        """Convert received value to HA state."""
+        self._attr_is_opening = value == self._state_opening
+        self._attr_is_closing = value == self._state_closing
+        self._attr_is_closed = value == self._state_closed
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
@@ -155,12 +146,17 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
-            return None
+            return
+        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._input_type == CALL_TYPE_COIL:
-            self._value = bool(result.bits[0] & 1)
+            self._set_attr_state(bool(result.bits[0] & 1))
         else:
-            self._value = int(result.registers[0])
+            self._set_attr_state(int(result.registers[0]))
         self.async_write_ha_state()

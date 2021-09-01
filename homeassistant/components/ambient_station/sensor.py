@@ -61,7 +61,7 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
             ambient, mac_address, station_name, sensor_type, sensor_name, device_class
         )
 
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
 
     @callback
     def update_from_latest_data(self) -> None:
@@ -75,10 +75,10 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
             ].get(TYPE_SOLARRADIATION)
 
             if w_m2_brightness_val is None:
-                self._attr_state = None
+                self._attr_native_value = None
             else:
-                self._attr_state = round(float(w_m2_brightness_val) / 0.0079)
+                self._attr_native_value = round(float(w_m2_brightness_val) / 0.0079)
         else:
-            self._attr_state = self._ambient.stations[self._mac_address][
+            self._attr_native_value = self._ambient.stations[self._mac_address][
                 ATTR_LAST_DATA
             ].get(self._sensor_type)
