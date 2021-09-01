@@ -9,6 +9,7 @@ from miio import (
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
+    AirPurifierMB4,
     AirPurifierMiot,
     DeviceException,
     Fan,
@@ -31,6 +32,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRPURIFIER_3C,
     MODEL_FAN_P5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -139,6 +141,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
+    elif model in MODEL_AIRPURIFIER_3C:
+        device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
     elif model.startswith("zhimi.airpurifier."):

@@ -17,6 +17,7 @@ from .const import (
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
+    FEATURE_FLAGS_AIRPURIFIER_3C,
     FEATURE_FLAGS_AIRPURIFIER_MIIO,
     FEATURE_FLAGS_AIRPURIFIER_MIOT,
     FEATURE_FLAGS_AIRPURIFIER_PRO,
@@ -28,6 +29,8 @@ from .const import (
     FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
+    FEATURE_SET_FAVORITE_RPM,
+    FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
     FEATURE_SET_OSCILLATION_ANGLE_MAX_140,
@@ -39,6 +42,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1,
@@ -58,6 +62,8 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_FAVORITE_LEVEL = "favorite_level"
+ATTR_FAVORITE_RPM = "favorite_rpm"
+ATTR_LED_BRIGHTNESS_LEVEL = "led_brightness_level"
 ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
@@ -143,6 +149,25 @@ NUMBER_TYPES = {
         step=1,
         method="async_set_delay_off_countdown",
     ),
+    FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
+        key=ATTR_LED_BRIGHTNESS_LEVEL,
+        name="Led Brightness",
+        icon="mdi:brightness-6",
+        min_value=0,
+        max_value=8,
+        step=1,
+        method="async_set_led_brightness_level",
+    ),
+    FEATURE_SET_FAVORITE_RPM: XiaomiMiioNumberDescription(
+        key=ATTR_FAVORITE_RPM,
+        name="Favorite Motor Speed",
+        icon="mdi:star-cog",
+        unit_of_measurement="rpm",
+        min_value=300,
+        max_value=2300,
+        step=10,
+        method="async_set_favorite_rpm",
+    ),
 }
 
 MODEL_TO_FEATURES_MAP = {
@@ -151,6 +176,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRPURIFIER_2S: FEATURE_FLAGS_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3C: FEATURE_FLAGS_AIRPURIFIER_3C,
     MODEL_AIRPURIFIER_PRO: FEATURE_FLAGS_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7: FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V1: FEATURE_FLAGS_AIRPURIFIER_V1,
@@ -292,4 +318,20 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             "Setting delay off miio device failed.",
             self._device.delay_off,
             delay_off_countdown * 60,
+        )
+
+    async def async_set_led_brightness_level(self, level: int):
+        """Set the led brightness level."""
+        return await self._try_command(
+            "Setting the led brightness level of the miio device failed.",
+            self._device.set_led_brightness_level,
+            level,
+        )
+
+    async def async_set_favorite_rpm(self, rpm: int):
+        """Set the target motor speed."""
+        return await self._try_command(
+            "Setting the favorite rpm of the miio device failed.",
+            self._device.set_favorite_rpm,
+            rpm,
         )

@@ -8,7 +8,6 @@ from iotawattpy.sensor import Sensor
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -47,12 +46,14 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_CURRENT,
+        entity_registry_enabled_default=False,
     ),
     "Hz": IotaWattSensorEntityDescription(
         "Hz",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
+        entity_registry_enabled_default=False,
     ),
     "PF": IotaWattSensorEntityDescription(
         "PF",
@@ -60,6 +61,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_POWER_FACTOR,
         value=lambda value: value * 100,
+        entity_registry_enabled_default=False,
     ),
     "Watts": IotaWattSensorEntityDescription(
         "Watts",
@@ -70,7 +72,6 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     "WattHours": IotaWattSensorEntityDescription(
         "WattHours",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     "VA": IotaWattSensorEntityDescription(
@@ -78,24 +79,28 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
+        entity_registry_enabled_default=False,
     ),
     "VAR": IotaWattSensorEntityDescription(
         "VAR",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
+        entity_registry_enabled_default=False,
     ),
     "VARh": IotaWattSensorEntityDescription(
         "VARh",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE_HOURS,
         state_class=STATE_CLASS_MEASUREMENT,
         icon="mdi:flash",
+        entity_registry_enabled_default=False,
     ),
     "Volts": IotaWattSensorEntityDescription(
         "Volts",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=STATE_CLASS_MEASUREMENT,
         device_class=DEVICE_CLASS_VOLTAGE,
+        entity_registry_enabled_default=False,
     ),
 }
 
