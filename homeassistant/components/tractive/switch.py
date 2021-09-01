@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from aiotractive import TractiveError
+from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import callback
