@@ -21,18 +21,27 @@ import threading
 from unittest.mock import patch
 
 import av
+import pytest
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    ATTR_SETTINGS,
+    CONF_LL_HLS,
+    CONF_PART_DURATION,
+    CONF_SEGMENT_DURATION,
+    DOMAIN,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     PACKETS_TO_WAIT_FOR_AUDIO,
-    TARGET_SEGMENT_DURATION,
+    SEGMENT_DURATION_ADJUSTER,
+    TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
+from homeassistant.components.stream.core import StreamSettings
 from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 from homeassistant.setup import async_setup_component
 
 from tests.components.stream.common import generate_h264_video
+from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
@@ -43,7 +52,8 @@ AUDIO_SAMPLE_RATE = 11025
 KEYFRAME_INTERVAL = 1  # in seconds
 PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
 SEGMENT_DURATION = (
-    math.ceil(TARGET_SEGMENT_DURATION / KEYFRAME_INTERVAL) * KEYFRAME_INTERVAL
+    math.ceil(TARGET_SEGMENT_DURATION_NON_LL_HLS / KEYFRAME_INTERVAL)
+    * KEYFRAME_INTERVAL
 )  # in seconds
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
@@ -51,6 +61,21 @@ OUT_OF_ORDER_PACKET_INDEX = 3 * VIDEO_FRAME_RATE
 PACKETS_PER_SEGMENT = SEGMENT_DURATION / PACKET_DURATION
 SEGMENTS_PER_PACKET = PACKET_DURATION / SEGMENT_DURATION
 TIMEOUT = 15
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_settings(hass):
+    """Set the stream settings data in hass before each test."""
+    hass.data[DOMAIN] = {
+        ATTR_SETTINGS: StreamSettings(
+            ll_hls=False,
+            min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+            - SEGMENT_DURATION_ADJUSTER,
+            part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+            hls_advance_part_limit=3,
+            hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        )
+    }
 
 
 class FakeAvInputStream:
@@ -235,7 +260,7 @@ async def async_decode_stream(hass, packets, py_av=None):
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
-        segment_buffer = SegmentBuffer(stream.outputs)
+        segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
         await hass.async_block_till_done()
 
@@ -248,7 +273,7 @@ async def test_stream_open_fails(hass):
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(stream.outputs)
+        segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
         await hass.async_block_till_done()
         av_open.assert_called_once()
@@ -638,7 +663,7 @@ async def test_worker_log(hass, caplog):
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        segment_buffer = SegmentBuffer(stream.outputs)
+        segment_buffer = SegmentBuffer(hass, stream.outputs)
         stream_worker(
             "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
         )
@@ -649,7 +674,17 @@ async def test_worker_log(hass, caplog):
 
 async def test_durations(hass, record_worker_sync):
     """Test that the duration metadata matches the media."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                CONF_PART_DURATION: TEST_PART_DURATION,
+            }
+        },
+    )
 
     source = generate_h264_video()
     stream = create_stream(hass, source, {})
@@ -678,7 +713,9 @@ async def test_durations(hass, record_worker_sync):
     # check that the Part durations are consistent with the Segment durations
     for segment in complete_segments:
         assert math.isclose(
-            sum(part.duration for part in segment.parts), segment.duration, abs_tol=1e-6
+            sum(part.duration for part in segment.parts),
+            segment.duration,
+            abs_tol=1e-6,
         )
 
     await record_worker_sync.join()
@@ -688,7 +725,19 @@ async def test_durations(hass, record_worker_sync):
 
 async def test_has_keyframe(hass, record_worker_sync):
     """Test that the has_keyframe metadata matches the media."""
-    await async_setup_component(hass, "stream", {"stream": {}})
+    await async_setup_component(
+        hass,
+        "stream",
+        {
+            "stream": {
+                CONF_LL_HLS: True,
+                CONF_SEGMENT_DURATION: SEGMENT_DURATION,
+                # Our test video has keyframes every second. Use smaller parts so we have more
+                # part boundaries to better test keyframe logic.
+                CONF_PART_DURATION: 0.25,
+            }
+        },
+    )
 
     source = generate_h264_video()
     stream = create_stream(hass, source, {})
@@ -697,10 +746,7 @@ async def test_has_keyframe(hass, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
-    # Our test video has keyframes every second. Use smaller parts so we have more
-    # part boundaries to better test keyframe logic.
-    with patch("homeassistant.components.stream.worker.TARGET_PART_DURATION", 0.25):
-        complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    complete_segments = list(await record_worker_sync.get_segments())[:-1]
     assert len(complete_segments) >= 1
 
     # check that the Part has_keyframe metadata matches the keyframes in the media

@@ -242,7 +242,7 @@ class ModbusHub:
             self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
-        log_text = f"Pymodbus: {text}"
+        log_text = f"Pymodbus: {self.name}: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
@@ -292,13 +292,13 @@ class ModbusHub:
         for call in self.entity_timers:
             call()
         self.entity_timers = []
-        if self._client:
-            async with self._lock:
+        async with self._lock:
+            if self._client:
                 try:
                     self._client.close()
                 except ModbusException as exception_error:
                     self._log_error(str(exception_error))
-            self._client = None
+                self._client = None
 
     def _pymodbus_connect(self):
         """Connect client."""
@@ -327,9 +327,9 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
-        if not self._client:
-            return None
         async with self._lock:
+            if not self._client:
+                return None
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )

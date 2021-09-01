@@ -286,6 +286,11 @@ class Scanner:
         if header_st is not None:
             self.seen.add((header_st, header_location))
 
+    def _async_unsee(self, header_st: str | None, header_location: str | None) -> None:
+        """If we see a device in a new location, unsee the original location."""
+        if header_st is not None:
+            self.seen.remove((header_st, header_location))
+
     async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
         """Process SSDP entries."""
         _LOGGER.debug("_async_process_entry: %s", headers)
@@ -293,7 +298,12 @@ class Scanner:
         h_location = headers.get("location")
 
         if h_st and (udn := _udn_from_usn(headers.get("usn"))):
-            self.cache[(udn, h_st)] = headers
+            cache_key = (udn, h_st)
+            if old_headers := self.cache.get(cache_key):
+                old_h_location = old_headers.get("location")
+                if h_location != old_h_location:
+                    self._async_unsee(old_headers.get("st"), old_h_location)
+            self.cache[cache_key] = headers
 
         callbacks = self._async_get_matching_callbacks(headers)
         if self._async_seen(h_st, h_location) and not callbacks:

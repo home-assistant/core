@@ -145,7 +145,7 @@ async def async_setup_entry(  # noqa: C901
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_values(node):
+        for disc_info in async_discover_values(node, device):
             platform = disc_info.platform
 
             # This migration logic was added in 2021.3 to handle a breaking change to
