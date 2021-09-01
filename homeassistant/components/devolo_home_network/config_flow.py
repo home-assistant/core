@@ -79,9 +79,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle zerooconf discovery."""
-        if discovery_info is None:
-            return self.async_abort(reason="cannot_connect")
-
         if discovery_info["properties"]["MT"] in ["2600", "2601"]:
             return self.async_abort(reason="home_control")
 

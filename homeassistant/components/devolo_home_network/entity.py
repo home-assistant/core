@@ -37,7 +37,7 @@ class DevoloEntity(Entity):
         """Register dispatcher when added."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
