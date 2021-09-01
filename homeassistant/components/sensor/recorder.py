@@ -282,6 +282,21 @@ def reset_detected(
     return state < 0.9 * previous_state
 
 
+def _wanted_statistics(
+    entities: list[tuple[str, str, str | None]]
+) -> dict[str, set[str]]:
+    """Prepare a dict with wanted statistics for entities."""
+    wanted_statistics = {}
+    for entity_id, state_class, device_class in entities:
+        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
+            wanted_statistics[entity_id] = DEVICE_CLASS_STATISTICS[state_class][
+                device_class
+            ]
+        else:
+            wanted_statistics[entity_id] = DEFAULT_STATISTICS[state_class]
+    return wanted_statistics
+
+
 def compile_statistics(  # noqa: C901
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
@@ -293,17 +308,32 @@ def compile_statistics(  # noqa: C901
 
     entities = _get_entities(hass)
 
+    wanted_statistics = _wanted_statistics(entities)
+
     # Get history between start and end
-    history_list = history.get_significant_states(  # type: ignore
-        hass, start - datetime.timedelta.resolution, end, [i[0] for i in entities]
-    )
+    entities_full_history = [i[0] for i in entities if "sum" in wanted_statistics[i[0]]]
+    history_list = {}
+    if entities_full_history:
+        history_list = history.get_significant_states(  # type: ignore
+            hass,
+            start - datetime.timedelta.resolution,
+            end,
+            entity_ids=entities_full_history,
+            significant_changes_only=False,
+        )
+    entities_significant_history = [
+        i[0] for i in entities if "sum" not in wanted_statistics[i[0]]
+    ]
+    if entities_significant_history:
+        _history_list = history.get_significant_states(  # type: ignore
+            hass,
+            start - datetime.timedelta.resolution,
+            end,
+            entity_ids=entities_significant_history,
+        )
+        history_list = {**history_list, **_history_list}
 
     for entity_id, state_class, device_class in entities:
-        if device_class in DEVICE_CLASS_STATISTICS[state_class]:
-            wanted_statistics = DEVICE_CLASS_STATISTICS[state_class][device_class]
-        else:
-            wanted_statistics = DEFAULT_STATISTICS[state_class]
-
         if entity_id not in history_list:
             continue
 
@@ -336,21 +366,21 @@ def compile_statistics(  # noqa: C901
         # Set meta data
         result[entity_id]["meta"] = {
             "unit_of_measurement": unit,
-            "has_mean": "mean" in wanted_statistics,
-            "has_sum": "sum" in wanted_statistics,
+            "has_mean": "mean" in wanted_statistics[entity_id],
+            "has_sum": "sum" in wanted_statistics[entity_id],
         }
 
         # Make calculations
         stat: dict = {}
-        if "max" in wanted_statistics:
+        if "max" in wanted_statistics[entity_id]:
             stat["max"] = max(*itertools.islice(zip(*fstates), 1))
-        if "min" in wanted_statistics:
+        if "min" in wanted_statistics[entity_id]:
             stat["min"] = min(*itertools.islice(zip(*fstates), 1))
 
-        if "mean" in wanted_statistics:
+        if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
 
-        if "sum" in wanted_statistics:
+        if "sum" in wanted_statistics[entity_id]:
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
