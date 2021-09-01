@@ -111,9 +111,6 @@ aioesphomeapi==8.0.0
 # homeassistant.components.flo
 aioflo==0.4.1
 
-# homeassistant.components.github
-aiogithubapi==21.8.0
-
 # homeassistant.components.guardian
 aioguardian==1.0.8
 
