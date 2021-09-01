@@ -142,7 +142,7 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
 
 
 class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
-    """Representation of Advantage Air Zone wireless signal sensor."""
+    """Representation of Advantage Air Zone temperature sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
