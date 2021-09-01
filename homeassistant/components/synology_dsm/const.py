@@ -10,7 +10,10 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_SAFETY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_UPDATE,
+)
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -23,6 +26,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 
 
@@ -81,8 +85,8 @@ UPGRADE_BINARY_SENSORS: dict[str, EntityInfo] = {
     f"{SynoCoreUpgrade.API_KEY}:update_available": {
         ATTR_NAME: "Update available",
         ATTR_UNIT_OF_MEASUREMENT: None,
-        ATTR_ICON: "mdi:update",
-        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_UPDATE,
         ENTITY_ENABLE: True,
         ATTR_STATE_CLASS: None,
     },
@@ -233,7 +237,7 @@ UTILISATION_SENSORS: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     f"{SynoCoreUtilization.API_KEY}:network_up": {
-        ATTR_NAME: "Network Up",
+        ATTR_NAME: "Upload Throughput",
         ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_KILOBYTES_PER_SECOND,
         ATTR_ICON: "mdi:upload",
         ATTR_DEVICE_CLASS: None,
@@ -241,7 +245,7 @@ UTILISATION_SENSORS: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
     },
     f"{SynoCoreUtilization.API_KEY}:network_down": {
-        ATTR_NAME: "Network Down",
+        ATTR_NAME: "Download Throughput",
         ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_KILOBYTES_PER_SECOND,
         ATTR_ICON: "mdi:download",
         ATTR_DEVICE_CLASS: None,
@@ -284,7 +288,7 @@ STORAGE_VOL_SENSORS: dict[str, EntityInfo] = {
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
         ATTR_NAME: "Average Disk Temp",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
@@ -292,7 +296,7 @@ STORAGE_VOL_SENSORS: dict[str, EntityInfo] = {
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
         ATTR_NAME: "Maximum Disk Temp",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: False,
@@ -318,7 +322,7 @@ STORAGE_DISK_SENSORS: dict[str, EntityInfo] = {
     },
     f"{SynoStorage.API_KEY}:disk_temp": {
         ATTR_NAME: "Temperature",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
@@ -329,7 +333,7 @@ STORAGE_DISK_SENSORS: dict[str, EntityInfo] = {
 INFORMATION_SENSORS: dict[str, EntityInfo] = {
     f"{SynoDSMInformation.API_KEY}:temperature": {
         ATTR_NAME: "temperature",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
@@ -356,11 +360,3 @@ SURVEILLANCE_SWITCH: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: None,
     },
 }
-
-
-TEMP_SENSORS_KEYS = [
-    "volume_disk_temp_avg",
-    "volume_disk_temp_max",
-    "disk_temp",
-    "temperature",
-]

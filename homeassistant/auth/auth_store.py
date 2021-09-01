@@ -17,6 +17,8 @@ from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
 from .permissions import PermissionLookup, system_policies
 from .permissions.types import PolicyType
 
+# mypy: disallow-any-generics
+
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth"
 GROUP_NAME_ADMIN = "Administrators"
@@ -491,7 +493,7 @@ class AuthStore:
         self._store.async_delay_save(self._data_to_save, 1)
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return the data to store."""
         assert self._users is not None
         assert self._groups is not None

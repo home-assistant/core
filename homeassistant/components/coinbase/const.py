@@ -18,6 +18,8 @@ API_ACCOUNT_NATIVE_BALANCE = "native_balance"
 API_ACCOUNT_NAME = "name"
 API_ACCOUNTS_DATA = "data"
 API_RATES = "rates"
+API_RESOURCE_TYPE = "type"
+API_TYPE_VAULT = "vault"
 
 WALLETS = {
     "1INCH": "1INCH",

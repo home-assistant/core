@@ -126,10 +126,10 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     ) -> dict[str, Any]:
         """Convert a motionEye camera to MjpegCamera internal properties."""
         auth = None
-        if camera.get(KEY_STREAMING_AUTH_MODE) in [
+        if camera.get(KEY_STREAMING_AUTH_MODE) in (
             HTTP_BASIC_AUTHENTICATION,
             HTTP_DIGEST_AUTHENTICATION,
-        ]:
+        ):
             auth = camera[KEY_STREAMING_AUTH_MODE]
 
         return {

@@ -153,7 +153,7 @@ class MobileAppNotificationService(BaseNotificationService):
                     )
                     result = await response.json()
 
-                if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
+                if response.status in (HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED):
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
                     continue
 

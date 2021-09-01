@@ -16,7 +16,9 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
+from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
+from homeassistant.components.sensor import STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -286,6 +288,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
     CONF_OPERATION_MODES = "operation_modes"
     CONF_CONTROLLER_MODES = "controller_modes"
+    CONF_DEFAULT_CONTROLLER_MODE = "default_controller_mode"
     CONF_ON_OFF_ADDRESS = "on_off_address"
     CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
     CONF_ON_OFF_INVERT = "on_off_invert"
@@ -361,6 +364,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
                     cv.ensure_list, [vol.In(CONTROLLER_MODES)]
                 ),
+                vol.Optional(
+                    CONF_DEFAULT_CONTROLLER_MODE, default=HVAC_MODE_HEAT
+                ): vol.In(HVAC_MODES),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
             }
@@ -724,6 +730,7 @@ class SensorSchema(KNXPlatformSchema):
 
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_STATE_CLASS = "state_class"
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
 
@@ -732,6 +739,7 @@ class SensorSchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
+            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
             vol.Required(CONF_TYPE): sensor_type_validator,
             vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
         }

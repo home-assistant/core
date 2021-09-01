@@ -1,7 +1,6 @@
 """Support for RFXtrx devices."""
 import asyncio
 import binascii
-from collections import OrderedDict
 import copy
 import functools
 import logging
@@ -22,20 +21,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
-    DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
-    LENGTH_MILLIMETERS,
-    PERCENTAGE,
-    POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_HPA,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    UV_INDEX,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -65,38 +51,6 @@ DOMAIN = "rfxtrx"
 DEFAULT_SIGNAL_REPETITIONS = 1
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
-
-DATA_TYPES = OrderedDict(
-    [
-        ("Temperature", TEMP_CELSIUS),
-        ("Temperature2", TEMP_CELSIUS),
-        ("Humidity", PERCENTAGE),
-        ("Barometer", PRESSURE_HPA),
-        ("Wind direction", DEGREE),
-        ("Rain rate", PRECIPITATION_MILLIMETERS_PER_HOUR),
-        ("Energy usage", POWER_WATT),
-        ("Total usage", ENERGY_KILO_WATT_HOUR),
-        ("Sound", None),
-        ("Sensor Status", None),
-        ("Counter value", "count"),
-        ("UV", UV_INDEX),
-        ("Humidity status", None),
-        ("Forecast", None),
-        ("Forecast numeric", None),
-        ("Rain total", LENGTH_MILLIMETERS),
-        ("Wind average speed", SPEED_METERS_PER_SECOND),
-        ("Wind gust", SPEED_METERS_PER_SECOND),
-        ("Chill", TEMP_CELSIUS),
-        ("Count", "count"),
-        ("Current Ch. 1", ELECTRIC_CURRENT_AMPERE),
-        ("Current Ch. 2", ELECTRIC_CURRENT_AMPERE),
-        ("Current Ch. 3", ELECTRIC_CURRENT_AMPERE),
-        ("Voltage", ELECTRIC_POTENTIAL_VOLT),
-        ("Current", ELECTRIC_CURRENT_AMPERE),
-        ("Battery numeric", PERCENTAGE),
-        ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
-    ]
-)
 
 _LOGGER = logging.getLogger(__name__)
 

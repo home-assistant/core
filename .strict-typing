@@ -15,6 +15,7 @@ homeassistant.components.alarm_control_panel.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
+homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
@@ -63,6 +64,7 @@ homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
+homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*
@@ -103,6 +105,7 @@ homeassistant.components.tile.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
+homeassistant.components.uptimerobot.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*

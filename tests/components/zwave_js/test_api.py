@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 
 import pytest
-from zwave_js_server.const import LogLevel
+from zwave_js_server.const import InclusionStrategy, LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     FailedCommand,
@@ -29,6 +29,7 @@ from homeassistant.components.zwave_js.api import (
     OPTED_IN,
     PROPERTY,
     PROPERTY_KEY,
+    SECURE,
     TYPE,
     VALUE,
 )
@@ -318,6 +319,31 @@ async def test_ping_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_add_node_secure(
+    hass, nortek_thermostat_added_event, integration, client, hass_ws_client
+):
+    """Test the add_node websocket command with secure flag."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {ID: 1, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id, SECURE: True}
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"inclusionStrategy": InclusionStrategy.SECURITY_S0},
+    }
+
+    client.async_send_command.reset_mock()
+
+
 async def test_add_node(
     hass, nortek_thermostat_added_event, integration, client, hass_ws_client
 ):
@@ -333,6 +359,12 @@ async def test_add_node(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"inclusionStrategy": InclusionStrategy.INSECURE},
+    }
 
     event = Event(
         type="inclusion started",
@@ -599,6 +631,52 @@ async def test_remove_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_replace_failed_node_secure(
+    hass,
+    nortek_thermostat,
+    integration,
+    client,
+    hass_ws_client,
+):
+    """Test the replace_failed_node websocket command with secure flag."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    dev_reg = dr.async_get(hass)
+
+    # Create device registry entry for mock node
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-67")},
+        name="Node 67",
+    )
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            SECURE: True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": nortek_thermostat.node_id,
+        "options": {"inclusionStrategy": InclusionStrategy.SECURITY_S0},
+    }
+
+    client.async_send_command.reset_mock()
+
+
 async def test_replace_failed_node(
     hass,
     nortek_thermostat,
@@ -637,6 +715,15 @@ async def test_replace_failed_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert msg["result"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": nortek_thermostat.node_id,
+        "options": {"inclusionStrategy": InclusionStrategy.INSECURE},
+    }
+
+    client.async_send_command.reset_mock()
 
     event = Event(
         type="inclusion started",

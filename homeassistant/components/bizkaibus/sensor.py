@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BizkaibusSensor(SensorEntity):
     """The class for handling the data."""
 
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, data, name):
         """Initialize the sensor."""
@@ -48,7 +48,7 @@ class BizkaibusSensor(SensorEntity):
         """Get the latest data from the webservice."""
         self.data.update()
         with suppress(TypeError):
-            self._attr_state = self.data.info[0][ATTR_DUE_IN]
+            self._attr_native_value = self.data.info[0][ATTR_DUE_IN]
 
 
 class Bizkaibus:

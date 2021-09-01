@@ -426,7 +426,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         return f"{self.key}.{self.item}"
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return sensor state."""
         return self._state
 
@@ -436,7 +436,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         return self.meta.device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return sensor's unit of measurement."""
         return self.meta.unit or self._unit
 

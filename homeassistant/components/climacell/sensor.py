@@ -68,7 +68,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
-        self._attr_unit_of_measurement = (
+        self._attr_native_unit_of_measurement = (
             description.unit_metric
             if hass.config.units.is_metric
             else description.unit_imperial
@@ -80,7 +80,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         """Return the raw state."""
 
     @property
-    def state(self) -> str | int | float | None:
+    def native_value(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
         if (
