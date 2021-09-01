@@ -1,6 +1,7 @@
 """Helper to gather system info."""
 from __future__ import annotations
 
+from getpass import getuser
 import os
 import platform
 from typing import Any
@@ -22,6 +23,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
         "virtualenv": is_virtual_env(),
         "python_version": platform.python_version(),
         "docker": False,
+        "user": getuser(),
         "arch": platform.machine(),
         "timezone": str(hass.config.time_zone),
         "os_name": platform.system(),
@@ -37,7 +39,8 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     # Determine installation type on current data
     if info_object["docker"]:
-        info_object["installation_type"] = "Home Assistant Container"
+        if info_object["user"] == "root":
+            info_object["installation_type"] = "Home Assistant Container"
     elif is_virtual_env():
         info_object["installation_type"] = "Home Assistant Core"
 

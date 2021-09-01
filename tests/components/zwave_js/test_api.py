@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 
 import pytest
-from zwave_js_server.const import LogLevel
+from zwave_js_server.const import InclusionStrategy, LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     FailedCommand,
@@ -29,6 +29,7 @@ from homeassistant.components.zwave_js.api import (
     OPTED_IN,
     PROPERTY,
     PROPERTY_KEY,
+    SECURE,
     TYPE,
     VALUE,
 )
@@ -318,6 +319,31 @@ async def test_ping_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_add_node_secure(
+    hass, nortek_thermostat_added_event, integration, client, hass_ws_client
+):
+    """Test the add_node websocket command with secure flag."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {ID: 1, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id, SECURE: True}
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"inclusionStrategy": InclusionStrategy.SECURITY_S0},
+    }
+
+    client.async_send_command.reset_mock()
+
+
 async def test_add_node(
     hass, nortek_thermostat_added_event, integration, client, hass_ws_client
 ):
@@ -333,6 +359,12 @@ async def test_add_node(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"inclusionStrategy": InclusionStrategy.INSECURE},
+    }
 
     event = Event(
         type="inclusion started",
@@ -599,6 +631,52 @@ async def test_remove_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_replace_failed_node_secure(
+    hass,
+    nortek_thermostat,
+    integration,
+    client,
+    hass_ws_client,
+):
+    """Test the replace_failed_node websocket command with secure flag."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    dev_reg = dr.async_get(hass)
+
+    # Create device registry entry for mock node
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-67")},
+        name="Node 67",
+    )
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            SECURE: True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": nortek_thermostat.node_id,
+        "options": {"inclusionStrategy": InclusionStrategy.SECURITY_S0},
+    }
+
+    client.async_send_command.reset_mock()
+
+
 async def test_replace_failed_node(
     hass,
     nortek_thermostat,
@@ -637,6 +715,15 @@ async def test_replace_failed_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert msg["result"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": nortek_thermostat.node_id,
+        "options": {"inclusionStrategy": InclusionStrategy.INSECURE},
+    }
+
+    client.async_send_command.reset_mock()
 
     event = Event(
         type="inclusion started",
@@ -929,6 +1016,7 @@ async def test_subscribe_heal_network_progress(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"] is None
 
     # Fire heal network progress
     event = Event(
@@ -959,6 +1047,39 @@ async def test_subscribe_heal_network_progress(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_heal_network_progress_initial_value(
+    hass, integration, client, hass_ws_client
+):
+    """Test subscribe_heal_network_progress command when heal network in progress."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    assert not client.driver.controller.heal_network_progress
+
+    # Fire heal network progress before sending heal network progress command
+    event = Event(
+        "heal network progress",
+        {
+            "source": "controller",
+            "event": "heal network progress",
+            "progress": {67: "pending"},
+        },
+    )
+    client.driver.controller.receive_event(event)
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_heal_network_progress",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"67": "pending"}
 
 
 async def test_stop_healing_network(
@@ -2403,6 +2524,7 @@ async def test_subscribe_firmware_update_status(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"] is None
 
     event = Event(
         type="firmware update progress",
@@ -2441,6 +2563,44 @@ async def test_subscribe_firmware_update_status(
         "status": 255,
         "wait_time": 10,
     }
+
+
+async def test_subscribe_firmware_update_status_initial_value(
+    hass, integration, multisensor_6, client, hass_ws_client
+):
+    """Test subscribe_firmware_update_status websocket command with in progress update."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    assert multisensor_6.firmware_update_progress is None
+
+    # Send a firmware update progress event before the WS command
+    event = Event(
+        type="firmware update progress",
+        data={
+            "source": "node",
+            "event": "firmware update progress",
+            "nodeId": multisensor_6.node_id,
+            "sentFragments": 1,
+            "totalFragments": 10,
+        },
+    )
+    multisensor_6.receive_event(event)
+
+    client.async_send_command_no_wait.return_value = {}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"sent_fragments": 1, "total_fragments": 10}
 
 
 async def test_subscribe_firmware_update_status_failures(
@@ -2630,3 +2790,195 @@ async def test_install_config_update(hass, client, integration, hass_ws_client):
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_subscribe_controller_statistics(
+    hass, integration, client, hass_ws_client
+):
+    """Test the subscribe_controller_statistics command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_controller_statistics",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "messages_tx": 0,
+        "messages_rx": 0,
+        "messages_dropped_tx": 0,
+        "messages_dropped_rx": 0,
+        "nak": 0,
+        "can": 0,
+        "timeout_ack": 0,
+        "timout_response": 0,
+        "timeout_callback": 0,
+    }
+
+    # Fire statistics updated
+    event = Event(
+        "statistics updated",
+        {
+            "source": "controller",
+            "event": "statistics updated",
+            "statistics": {
+                "messagesTX": 1,
+                "messagesRX": 1,
+                "messagesDroppedTX": 1,
+                "messagesDroppedRX": 1,
+                "NAK": 1,
+                "CAN": 1,
+                "timeoutACK": 1,
+                "timeoutResponse": 1,
+                "timeoutCallback": 1,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "statistics updated",
+        "source": "controller",
+        "messages_tx": 1,
+        "messages_rx": 1,
+        "messages_dropped_tx": 1,
+        "messages_dropped_rx": 1,
+        "nak": 1,
+        "can": 1,
+        "timeout_ack": 1,
+        "timout_response": 1,
+        "timeout_callback": 1,
+    }
+
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_controller_statistics",
+            ENTRY_ID: "fake_entry_id",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_controller_statistics",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_subscribe_node_statistics(
+    hass, multisensor_6, integration, client, hass_ws_client
+):
+    """Test the subscribe_node_statistics command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_node_statistics",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "commands_tx": 0,
+        "commands_rx": 0,
+        "commands_dropped_tx": 0,
+        "commands_dropped_rx": 0,
+        "timeout_response": 0,
+    }
+
+    # Fire statistics updated
+    event = Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": multisensor_6.node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 1,
+                "commandsDroppedTX": 1,
+                "commandsDroppedRX": 1,
+                "timeoutResponse": 1,
+            },
+        },
+    )
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "statistics updated",
+        "source": "node",
+        "node_id": multisensor_6.node_id,
+        "commands_tx": 1,
+        "commands_rx": 1,
+        "commands_dropped_tx": 1,
+        "commands_dropped_rx": 1,
+        "timeout_response": 1,
+    }
+
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_node_statistics",
+            ENTRY_ID: "fake_entry_id",
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with improper node ID fails
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_node_statistics",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id + 100,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/subscribe_node_statistics",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED

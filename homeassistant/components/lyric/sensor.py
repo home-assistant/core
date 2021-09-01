@@ -1,10 +1,16 @@
 """Support for Honeywell Lyric sensor platform."""
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Callable, cast
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -12,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -33,6 +40,22 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 }
 
 
+@dataclass
+class LyricSensorEntityDescription(SensorEntityDescription):
+    """Class describing Honeywell Lyric sensor entities."""
+
+    value: Callable[[LyricDevice], StateType] = round
+
+
+def get_datetime_from_future_time(time: str) -> datetime:
+    """Get datetime from future time provided."""
+    time = dt_util.parse_time(time)
+    now = dt_util.utcnow()
+    if time <= now.time():
+        now = now + timedelta(days=1)
+    return dt_util.as_utc(datetime.combine(now.date(), time))
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
@@ -41,212 +64,126 @@ async def async_setup_entry(
 
     entities = []
 
+    def get_setpoint_status(status: str, time: str) -> str:
+        if status == PRESET_HOLD_UNTIL:
+            return f"Held until {time}"
+        return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)
+
     for location in coordinator.data.locations:
         for device in location.devices:
-            cls_list = []
             if device.indoorTemperature:
-                cls_list.append(LyricIndoorTemperatureSensor)
-            if device.outdoorTemperature:
-                cls_list.append(LyricOutdoorTemperatureSensor)
-            if device.displayedOutdoorHumidity:
-                cls_list.append(LyricOutdoorHumiditySensor)
-            if device.changeableValues:
-                if device.changeableValues.nextPeriodTime:
-                    cls_list.append(LyricNextPeriodSensor)
-                if device.changeableValues.thermostatSetpointStatus:
-                    cls_list.append(LyricSetpointStatusSensor)
-            for cls in cls_list:
                 entities.append(
-                    cls(
+                    LyricSensor(
                         coordinator,
+                        LyricSensorEntityDescription(
+                            key=f"{device.macID}_indoor_temperature",
+                            name="Indoor Temperature",
+                            device_class=DEVICE_CLASS_TEMPERATURE,
+                            state_class=STATE_CLASS_MEASUREMENT,
+                            native_unit_of_measurement=hass.config.units.temperature_unit,
+                            value=lambda device: device.indoorTemperature,
+                        ),
                         location,
                         device,
-                        hass.config.units.temperature_unit,
                     )
                 )
+            if device.outdoorTemperature:
+                entities.append(
+                    LyricSensor(
+                        coordinator,
+                        LyricSensorEntityDescription(
+                            key=f"{device.macID}_outdoor_temperature",
+                            name="Outdoor Temperature",
+                            device_class=DEVICE_CLASS_TEMPERATURE,
+                            state_class=STATE_CLASS_MEASUREMENT,
+                            native_unit_of_measurement=hass.config.units.temperature_unit,
+                            value=lambda device: device.outdoorTemperature,
+                        ),
+                        location,
+                        device,
+                    )
+                )
+            if device.displayedOutdoorHumidity:
+                entities.append(
+                    LyricSensor(
+                        coordinator,
+                        LyricSensorEntityDescription(
+                            key=f"{device.macID}_outdoor_humidity",
+                            name="Outdoor Humidity",
+                            device_class=DEVICE_CLASS_HUMIDITY,
+                            state_class=STATE_CLASS_MEASUREMENT,
+                            native_unit_of_measurement="%",
+                            value=lambda device: device.displayedOutdoorHumidity,
+                        ),
+                        location,
+                        device,
+                    )
+                )
+            if device.changeableValues:
+                if device.changeableValues.nextPeriodTime:
+                    entities.append(
+                        LyricSensor(
+                            coordinator,
+                            LyricSensorEntityDescription(
+                                key=f"{device.macID}_next_period_time",
+                                name="Next Period Time",
+                                device_class=DEVICE_CLASS_TIMESTAMP,
+                                value=lambda device: get_datetime_from_future_time(
+                                    device.changeableValues.nextPeriodTime
+                                ).isoformat(),
+                            ),
+                            location,
+                            device,
+                        )
+                    )
+                if device.changeableValues.thermostatSetpointStatus:
+                    entities.append(
+                        LyricSensor(
+                            coordinator,
+                            LyricSensorEntityDescription(
+                                key=f"{device.macID}_setpoint_status",
+                                name="Setpoint Status",
+                                icon="mdi:thermostat",
+                                value=lambda device: get_setpoint_status(
+                                    device.changeableValues.thermostatSetpointStatus,
+                                    device.changeableValues.nextPeriodTime,
+                                ),
+                            ),
+                            location,
+                            device,
+                        )
+                    )
 
     async_add_entities(entities, True)
 
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):
-    """Defines a Honeywell Lyric sensor."""
+    """Define a Honeywell Lyric sensor."""
+
+    coordinator: DataUpdateCoordinator
+    entity_description: LyricSensorEntityDescription
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
+        description: LyricSensorEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
-        key: str,
-        name: str,
-        icon: str,
-        device_class: str = None,
-        unit_of_measurement: str = None,
     ) -> None:
-        """Initialize Honeywell Lyric sensor."""
-        self._device_class = device_class
-        self._unit_of_measurement = unit_of_measurement
-
-        super().__init__(coordinator, location, device, key, name, icon)
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-
-class LyricIndoorTemperatureSensor(LyricSensor):
-    """Defines a Honeywell Lyric sensor."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        location: LyricLocation,
-        device: LyricDevice,
-        unit_of_measurement: str = None,
-    ) -> None:
-        """Initialize Honeywell Lyric sensor."""
-
+        """Initialize."""
         super().__init__(
             coordinator,
             location,
             device,
-            f"{device.macID}_indoor_temperature",
-            "Indoor Temperature",
-            None,
-            DEVICE_CLASS_TEMPERATURE,
-            unit_of_measurement,
+            description.key,
         )
+        self.entity_description = description
 
     @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self.device.indoorTemperature
-
-
-class LyricOutdoorTemperatureSensor(LyricSensor):
-    """Defines a Honeywell Lyric sensor."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        location: LyricLocation,
-        device: LyricDevice,
-        unit_of_measurement: str = None,
-    ) -> None:
-        """Initialize Honeywell Lyric sensor."""
-
-        super().__init__(
-            coordinator,
-            location,
-            device,
-            f"{device.macID}_outdoor_temperature",
-            "Outdoor Temperature",
-            None,
-            DEVICE_CLASS_TEMPERATURE,
-            unit_of_measurement,
-        )
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self.device.outdoorTemperature
-
-
-class LyricOutdoorHumiditySensor(LyricSensor):
-    """Defines a Honeywell Lyric sensor."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        location: LyricLocation,
-        device: LyricDevice,
-        unit_of_measurement: str = None,
-    ) -> None:
-        """Initialize Honeywell Lyric sensor."""
-
-        super().__init__(
-            coordinator,
-            location,
-            device,
-            f"{device.macID}_outdoor_humidity",
-            "Outdoor Humidity",
-            None,
-            DEVICE_CLASS_HUMIDITY,
-            "%",
-        )
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        return self.device.displayedOutdoorHumidity
-
-
-class LyricNextPeriodSensor(LyricSensor):
-    """Defines a Honeywell Lyric sensor."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        location: LyricLocation,
-        device: LyricDevice,
-        unit_of_measurement: str = None,
-    ) -> None:
-        """Initialize Honeywell Lyric sensor."""
-
-        super().__init__(
-            coordinator,
-            location,
-            device,
-            f"{device.macID}_next_period_time",
-            "Next Period Time",
-            None,
-            DEVICE_CLASS_TIMESTAMP,
-        )
-
-    @property
-    def state(self) -> datetime:
-        """Return the state of the sensor."""
-        device = self.device
-        time = dt_util.parse_time(device.changeableValues.nextPeriodTime)
-        now = dt_util.utcnow()
-        if time <= now.time():
-            now = now + timedelta(days=1)
-        return dt_util.as_utc(datetime.combine(now.date(), time))
-
-
-class LyricSetpointStatusSensor(LyricSensor):
-    """Defines a Honeywell Lyric sensor."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        location: LyricLocation,
-        device: LyricDevice,
-        unit_of_measurement: str = None,
-    ) -> None:
-        """Initialize Honeywell Lyric sensor."""
-
-        super().__init__(
-            coordinator,
-            location,
-            device,
-            f"{device.macID}_setpoint_status",
-            "Setpoint Status",
-            "mdi:thermostat",
-            None,
-        )
-
-    @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
-        device = self.device
-        if device.changeableValues.thermostatSetpointStatus == PRESET_HOLD_UNTIL:
-            return f"Held until {device.changeableValues.nextPeriodTime}"
-        return LYRIC_SETPOINT_STATUS_NAMES.get(
-            device.changeableValues.thermostatSetpointStatus, "Unknown"
-        )
+    def native_value(self) -> StateType:
+        """Return the state."""
+        device: LyricDevice = self.device
+        try:
+            return cast(StateType, self.entity_description.value(device))
+        except TypeError:
+            return None

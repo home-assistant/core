@@ -42,14 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MANUAL_PATH = "Enter Manually"
 
 CONNECTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(FLOW_TYPE, default=FLOW_NET): vol.In(
-            {
-                FLOW_NET: f"Network: {SMILE} / {STRETCH}",
-                FLOW_USB: "USB: To be added later",
-            }
-        ),
-    },
+    {vol.Required(FLOW_TYPE, default=FLOW_NET): vol.In([FLOW_NET, FLOW_USB])}
 )
 
 # PLACEHOLDER USB connection validation
@@ -124,7 +117,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: self.discovery_info[CONF_HOST],
             CONF_NAME: _name,
@@ -147,8 +139,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
                 user_input[CONF_PORT] = self.discovery_info[CONF_PORT]
                 user_input[CONF_USERNAME] = self.discovery_info[CONF_USERNAME]
-
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
                 api = await validate_gw_input(self.hass, user_input)

@@ -10,7 +10,7 @@ from aiohttp import hdrs, web, web_exceptions, web_request
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client
-from zwave_js_server.const import CommandClass, LogLevel
+from zwave_js_server.const import CommandClass, InclusionStrategy, LogLevel
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
     FailedCommand,
@@ -19,13 +19,14 @@ from zwave_js_server.exceptions import (
     SetValueFailed,
 )
 from zwave_js_server.firmware import begin_firmware_update
+from zwave_js_server.model.controller import ControllerStatistics
 from zwave_js_server.model.firmware import (
     FirmwareUpdateFinished,
     FirmwareUpdateProgress,
 )
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.node import Node, NodeStatistics
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -200,6 +201,10 @@ def async_register_api(hass: HomeAssistant) -> None:
     )
     websocket_api.async_register_command(hass, websocket_check_for_config_updates)
     websocket_api.async_register_command(hass, websocket_install_config_update)
+    websocket_api.async_register_command(
+        hass, websocket_subscribe_controller_statistics
+    )
+    websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
     hass.http.register_view(DumpView())
     hass.http.register_view(FirmwareUploadView())
 
@@ -381,7 +386,11 @@ async def websocket_add_node(
 ) -> None:
     """Add a node to the Z-Wave network."""
     controller = client.driver.controller
-    include_non_secure = not msg[SECURE]
+
+    if msg[SECURE]:
+        inclusion_strategy = InclusionStrategy.SECURITY_S0
+    else:
+        inclusion_strategy = InclusionStrategy.INSECURE
 
     @callback
     def async_cleanup() -> None:
@@ -449,7 +458,7 @@ async def websocket_add_node(
         ),
     ]
 
-    result = await controller.async_begin_inclusion(include_non_secure)
+    result = await controller.async_begin_inclusion(inclusion_strategy)
     connection.send_result(
         msg[ID],
         result,
@@ -589,8 +598,12 @@ async def websocket_replace_failed_node(
 ) -> None:
     """Replace a failed node with a new node."""
     controller = client.driver.controller
-    include_non_secure = not msg[SECURE]
     node_id = msg[NODE_ID]
+
+    if msg[SECURE]:
+        inclusion_strategy = InclusionStrategy.SECURITY_S0
+    else:
+        inclusion_strategy = InclusionStrategy.INSECURE
 
     @callback
     def async_cleanup() -> None:
@@ -672,7 +685,7 @@ async def websocket_replace_failed_node(
         ),
     ]
 
-    result = await controller.async_replace_failed_node(node_id, include_non_secure)
+    result = await controller.async_replace_failed_node(node_id, inclusion_strategy)
     connection.send_result(
         msg[ID],
         result,
@@ -796,7 +809,7 @@ async def websocket_subscribe_heal_network_progress(
         controller.on("heal network done", partial(forward_event, "result")),
     ]
 
-    connection.send_result(msg[ID])
+    connection.send_result(msg[ID], controller.heal_network_progress)
 
 
 @websocket_api.require_admin
@@ -1332,6 +1345,16 @@ async def websocket_abort_firmware_update(
     connection.send_result(msg[ID])
 
 
+def _get_firmware_update_progress_dict(
+    progress: FirmwareUpdateProgress,
+) -> dict[str, int]:
+    """Get a dictionary of firmware update progress."""
+    return {
+        "sent_fragments": progress.sent_fragments,
+        "total_fragments": progress.total_fragments,
+    }
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -1348,7 +1371,7 @@ async def websocket_subscribe_firmware_update_status(
     msg: dict,
     node: Node,
 ) -> None:
-    """Subsribe to the status of a firmware update."""
+    """Subscribe to the status of a firmware update."""
 
     @callback
     def async_cleanup() -> None:
@@ -1364,8 +1387,7 @@ async def websocket_subscribe_firmware_update_status(
                 msg[ID],
                 {
                     "event": event["event"],
-                    "sent_fragments": progress.sent_fragments,
-                    "total_fragments": progress.total_fragments,
+                    **_get_firmware_update_progress_dict(progress),
                 },
             )
         )
@@ -1390,7 +1412,10 @@ async def websocket_subscribe_firmware_update_status(
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    connection.send_result(msg[ID])
+    progress = node.firmware_update_progress
+    connection.send_result(
+        msg[ID], _get_firmware_update_progress_dict(progress) if progress else None
+    )
 
 
 class FirmwareUploadView(HomeAssistantView):
@@ -1487,3 +1512,126 @@ async def websocket_install_config_update(
     """Check for config updates."""
     success = await client.driver.async_install_config_update()
     connection.send_result(msg[ID], success)
+
+
+def _get_controller_statistics_dict(
+    statistics: ControllerStatistics,
+) -> dict[str, int]:
+    """Get dictionary of controller statistics."""
+    return {
+        "messages_tx": statistics.messages_tx,
+        "messages_rx": statistics.messages_rx,
+        "messages_dropped_tx": statistics.messages_dropped_tx,
+        "messages_dropped_rx": statistics.messages_dropped_rx,
+        "nak": statistics.nak,
+        "can": statistics.can,
+        "timeout_ack": statistics.timeout_ack,
+        "timout_response": statistics.timeout_response,
+        "timeout_callback": statistics.timeout_callback,
+    }
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_controller_statistics",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_get_entry
+async def websocket_subscribe_controller_statistics(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Subsribe to the statistics updates for a controller."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_stats(event: dict) -> None:
+        statistics: ControllerStatistics = event["statistics_updated"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "source": "controller",
+                    **_get_controller_statistics_dict(statistics),
+                },
+            )
+        )
+
+    controller = client.driver.controller
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        controller.on("statistics updated", forward_stats)
+    ]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(
+        msg[ID], _get_controller_statistics_dict(controller.statistics)
+    )
+
+
+def _get_node_statistics_dict(statistics: NodeStatistics) -> dict[str, int]:
+    """Get dictionary of node statistics."""
+    return {
+        "commands_tx": statistics.commands_tx,
+        "commands_rx": statistics.commands_rx,
+        "commands_dropped_tx": statistics.commands_dropped_tx,
+        "commands_dropped_rx": statistics.commands_dropped_rx,
+        "timeout_response": statistics.timeout_response,
+    }
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_node_statistics",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@websocket_api.async_response
+@async_get_node
+async def websocket_subscribe_node_statistics(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Subsribe to the statistics updates for a node."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_stats(event: dict) -> None:
+        statistics: NodeStatistics = event["statistics_updated"]
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "source": "node",
+                    "node_id": node.node_id,
+                    **_get_node_statistics_dict(statistics),
+                },
+            )
+        )
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("statistics updated", forward_stats)]
+    connection.subscriptions[msg["id"]] = async_cleanup
+
+    connection.send_result(msg[ID], _get_node_statistics_dict(node.statistics))

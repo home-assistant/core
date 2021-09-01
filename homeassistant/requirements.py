@@ -14,6 +14,7 @@ import homeassistant.util.package as pkg_util
 
 # mypy: disallow-any-generics
 
+PIP_TIMEOUT = 60  # The default is too low when the internet connection is satellite or high latency
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
@@ -169,6 +170,7 @@ def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
     kwargs = {
         "constraints": os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE),
         "no_cache_dir": is_docker,
+        "timeout": PIP_TIMEOUT,
     }
     if "WHEELS_LINKS" in os.environ:
         kwargs["find_links"] = os.environ["WHEELS_LINKS"]

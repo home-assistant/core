@@ -1,32 +1,36 @@
 """Support for the CO2signal platform."""
-from datetime import timedelta
-import logging
+from __future__ import annotations
 
-import CO2Signal
+from dataclasses import dataclass
+from datetime import timedelta
+from typing import cast
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_NAME,
-    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_TOKEN,
-    ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, update_coordinator
+from homeassistant.helpers.typing import StateType
 
+from . import CO2SignalCoordinator, CO2SignalResponse
 from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
-from .util import get_extra_name
 
-_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=3)
 
-CO2_INTENSITY_UNIT = f"CO2eq/{ENERGY_KILO_WATT_HOUR}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
@@ -34,6 +38,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_LONGITUDE, "coords", msg=MSG_LOCATION): cv.longitude,
         vol.Optional(CONF_COUNTRY_CODE): cv.string,
     }
+)
+
+
+@dataclass
+class CO2SensorEntityDescription:
+    """Provide a description of a CO2 sensor."""
+
+    key: str
+    name: str
+    unit_of_measurement: str | None = None
+    # For backwards compat, allow description to override unique ID key to use
+    unique_id: str | None = None
+
+
+SENSORS = (
+    CO2SensorEntityDescription(
+        key="carbonIntensity",
+        name="CO2 intensity",
+        unique_id="co2intensity",
+        # No unit, it's extracted from response.
+    ),
+    CO2SensorEntityDescription(
+        key="fossilFuelPercentage",
+        name="Grid fossil fuel percentage",
+        unit_of_measurement=PERCENTAGE,
+    ),
 )
 
 
@@ -48,59 +78,58 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the CO2signal sensor."""
-    name = "CO2 intensity"
-    if extra_name := get_extra_name(hass, entry.data):
-        name += f" - {extra_name}"
-
-    async_add_entities(
-        [
-            CO2Sensor(
-                name,
-                entry.data,
-                entry_id=entry.entry_id,
-            )
-        ],
-        True,
-    )
+    coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)
 
 
-class CO2Sensor(SensorEntity):
+class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
+    _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_icon = "mdi:molecule-co2"
-    _attr_unit_of_measurement = CO2_INTENSITY_UNIT
 
-    def __init__(self, name, config, entry_id):
+    def __init__(
+        self, coordinator: CO2SignalCoordinator, description: CO2SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
-        self._config = config
+        super().__init__(coordinator)
+        self._description = description
+
+        name = description.name
+        if extra_name := coordinator.get_extra_name():
+            name = f"{extra_name} - {name}"
+
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_extra_state_attributes = {
+            "country_code": coordinator.data["countryCode"],
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
         self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, entry_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, coordinator.entry_id)},
             ATTR_NAME: "CO2 signal",
             ATTR_MANUFACTURER: "Tmrow.com",
             "entry_type": "service",
         }
-        self._attr_unique_id = f"{entry_id}_co2intensity"
-
-    def update(self):
-        """Get the latest data and updates the states."""
-        _LOGGER.debug("Update data for %s", self.name)
-
-        if CONF_COUNTRY_CODE in self._config:
-            kwargs = {"country_code": self._config[CONF_COUNTRY_CODE]}
-        elif CONF_LATITUDE in self._config:
-            kwargs = {
-                "latitude": self._config[CONF_LATITUDE],
-                "longitude": self._config[CONF_LONGITUDE],
-            }
-        else:
-            kwargs = {
-                "latitude": self.hass.config.latitude,
-                "longitude": self.hass.config.longitude,
-            }
-
-        self._attr_state = round(
-            CO2Signal.get_latest_carbon_intensity(self._config[CONF_API_KEY], **kwargs),
-            2,
+        self._attr_unique_id = (
+            f"{coordinator.entry_id}_{description.unique_id or description.key}"
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.coordinator.data["data"].get(self._description.key) is not None
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return sensor state."""
+        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        if self._description.unit_of_measurement:
+            return self._description.unit_of_measurement
+        return cast(str, self.coordinator.data["units"].get(self._description.key))

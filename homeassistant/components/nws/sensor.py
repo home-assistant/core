@@ -28,7 +28,7 @@ from .const import (
     NWS_DATA,
     OBSERVATION_VALID_TIME,
     SENSOR_TYPES,
-    NWSSensorMetadata,
+    NWSSensorEntityDescription,
 )
 
 PARALLEL_UPDATES = 0
@@ -39,32 +39,29 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hass_data = hass.data[DOMAIN][entry.entry_id]
     station = entry.data[CONF_STATION]
 
-    entities = []
-    for sensor_type, metadata in SENSOR_TYPES.items():
-        entities.append(
-            NWSSensor(
-                hass,
-                entry.data,
-                hass_data,
-                sensor_type,
-                metadata,
-                station,
-            ),
+    async_add_entities(
+        NWSSensor(
+            hass=hass,
+            entry_data=entry.data,
+            hass_data=hass_data,
+            description=description,
+            station=station,
         )
-
-    async_add_entities(entities, False)
+        for description in SENSOR_TYPES
+    )
 
 
 class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
+
+    entity_description: NWSSensorEntityDescription
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry_data,
         hass_data,
-        sensor_type,
-        metadata: NWSSensorMetadata,
+        description: NWSSensorEntityDescription,
         station,
     ):
         """Initialise the platform with a data instance."""
@@ -72,32 +69,29 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         self._nws = hass_data[NWS_DATA]
         self._latitude = entry_data[CONF_LATITUDE]
         self._longitude = entry_data[CONF_LONGITUDE]
-        self._type = sensor_type
-        self._metadata = metadata
+        self.entity_description = description
 
-        self._attr_name = f"{station} {metadata.label}"
-        self._attr_icon = metadata.icon
-        self._attr_device_class = metadata.device_class
-        if hass.config.units.is_metric:
-            self._attr_unit_of_measurement = metadata.unit
-        else:
-            self._attr_unit_of_measurement = metadata.unit_convert
+        self._attr_name = f"{station} {description.name}"
+        if not hass.config.units.is_metric:
+            self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
-        value = self._nws.observation.get(self._type)
+        value = self._nws.observation.get(self.entity_description.key)
         if value is None:
             return None
-        if self._attr_unit_of_measurement == SPEED_MILES_PER_HOUR:
+        # Set alias to unit property -> prevent unnecessary hasattr calls
+        unit_of_measurement = self.native_unit_of_measurement
+        if unit_of_measurement == SPEED_MILES_PER_HOUR:
             return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
-        if self._attr_unit_of_measurement == LENGTH_MILES:
+        if unit_of_measurement == LENGTH_MILES:
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
-        if self._attr_unit_of_measurement == PRESSURE_INHG:
+        if unit_of_measurement == PRESSURE_INHG:
             return round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
-        if self._attr_unit_of_measurement == TEMP_CELSIUS:
+        if unit_of_measurement == TEMP_CELSIUS:
             return round(value, 1)
-        if self._attr_unit_of_measurement == PERCENTAGE:
+        if unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
 
@@ -109,7 +103,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{base_unique_id(self._latitude, self._longitude)}_{self._type}"
+        return f"{base_unique_id(self._latitude, self._longitude)}_{self.entity_description.key}"
 
     @property
     def available(self):

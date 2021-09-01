@@ -1,9 +1,10 @@
 """Constants for Glances component."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import sys
-from typing import NamedTuple
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
@@ -30,147 +31,167 @@ else:
     CPU_ICON = "mdi:cpu-32-bit"
 
 
-class GlancesSensorMetadata(NamedTuple):
-    """Sensor metadata for an individual Glances sensor."""
+@dataclass
+class GlancesSensorEntityDescription(SensorEntityDescription):
+    """Describe Glances sensor entity."""
 
-    type: str
-    name_suffix: str
-    unit_of_measurement: str
-    icon: str | None = None
-    device_class: str | None = None
+    type: str | None = None
+    name_suffix: str | None = None
 
 
-SENSOR_TYPES: dict[str, GlancesSensorMetadata] = {
-    "disk_use_percent": GlancesSensorMetadata(
+SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
+    GlancesSensorEntityDescription(
+        key="disk_use_percent",
         type="fs",
         name_suffix="used percent",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
     ),
-    "disk_use": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="disk_use",
         type="fs",
         name_suffix="used",
-        unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:harddisk",
     ),
-    "disk_free": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="disk_free",
         type="fs",
         name_suffix="free",
-        unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:harddisk",
     ),
-    "memory_use_percent": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="memory_use_percent",
         type="mem",
         name_suffix="RAM used percent",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
     ),
-    "memory_use": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="memory_use",
         type="mem",
         name_suffix="RAM used",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
     ),
-    "memory_free": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="memory_free",
         type="mem",
         name_suffix="RAM free",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
     ),
-    "swap_use_percent": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="swap_use_percent",
         type="memswap",
         name_suffix="Swap used percent",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
     ),
-    "swap_use": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="swap_use",
         type="memswap",
         name_suffix="Swap used",
-        unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:memory",
     ),
-    "swap_free": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="swap_free",
         type="memswap",
         name_suffix="Swap free",
-        unit_of_measurement=DATA_GIBIBYTES,
+        native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:memory",
     ),
-    "processor_load": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="processor_load",
         type="load",
         name_suffix="CPU load",
-        unit_of_measurement="15 min",
+        native_unit_of_measurement="15 min",
         icon=CPU_ICON,
     ),
-    "process_running": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="process_running",
         type="processcount",
         name_suffix="Running",
-        unit_of_measurement="Count",
+        native_unit_of_measurement="Count",
         icon=CPU_ICON,
     ),
-    "process_total": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="process_total",
         type="processcount",
         name_suffix="Total",
-        unit_of_measurement="Count",
+        native_unit_of_measurement="Count",
         icon=CPU_ICON,
     ),
-    "process_thread": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="process_thread",
         type="processcount",
         name_suffix="Thread",
-        unit_of_measurement="Count",
+        native_unit_of_measurement="Count",
         icon=CPU_ICON,
     ),
-    "process_sleeping": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="process_sleeping",
         type="processcount",
         name_suffix="Sleeping",
-        unit_of_measurement="Count",
+        native_unit_of_measurement="Count",
         icon=CPU_ICON,
     ),
-    "cpu_use_percent": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="cpu_use_percent",
         type="cpu",
         name_suffix="CPU used",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon=CPU_ICON,
     ),
-    "temperature_core": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="temperature_core",
         type="sensors",
         name_suffix="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
-    "temperature_hdd": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="temperature_hdd",
         type="sensors",
         name_suffix="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
-    "fan_speed": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="fan_speed",
         type="sensors",
         name_suffix="Fan speed",
-        unit_of_measurement="RPM",
+        native_unit_of_measurement="RPM",
         icon="mdi:fan",
     ),
-    "battery": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="battery",
         type="sensors",
         name_suffix="Charge",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:battery",
     ),
-    "docker_active": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="docker_active",
         type="docker",
         name_suffix="Containers active",
-        unit_of_measurement="",
+        native_unit_of_measurement="",
         icon="mdi:docker",
     ),
-    "docker_cpu_use": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="docker_cpu_use",
         type="docker",
         name_suffix="Containers CPU used",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon="mdi:docker",
     ),
-    "docker_memory_use": GlancesSensorMetadata(
+    GlancesSensorEntityDescription(
+        key="docker_memory_use",
         type="docker",
         name_suffix="Containers RAM used",
-        unit_of_measurement=DATA_MEBIBYTES,
+        native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:docker",
     ),
-}
+)

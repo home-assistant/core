@@ -1,12 +1,14 @@
 """Type definitions for GIOS integration."""
 from __future__ import annotations
 
-from typing import Callable, TypedDict
+from dataclasses import dataclass
+from typing import Callable
+
+from homeassistant.components.sensor import SensorEntityDescription
 
 
-class SensorDescription(TypedDict, total=False):
-    """Sensor description class."""
+@dataclass
+class GiosSensorEntityDescription(SensorEntityDescription):
+    """Class describing GIOS sensor entities."""
 
-    unit: str
-    state_class: str
-    value: Callable
+    value: Callable | None = round

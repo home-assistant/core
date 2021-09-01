@@ -1,5 +1,4 @@
 """Climate platform for Advantage Air integration."""
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -84,39 +83,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirClimateEntity(AdvantageAirEntity, ClimateEntity):
     """AdvantageAir Climate class."""
 
-    @property
-    def temperature_unit(self):
-        """Return the temperature unit."""
-        return TEMP_CELSIUS
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported temperature step."""
-        return PRECISION_WHOLE
-
-    @property
-    def max_temp(self):
-        """Return the maximum supported temperature."""
-        return 32
-
-    @property
-    def min_temp(self):
-        """Return the minimum supported temperature."""
-        return 16
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_max_temp = 32
+    _attr_min_temp = 16
 
 
 class AdvantageAirAC(AdvantageAirClimateEntity):
     """AdvantageAir AC unit."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return self._ac["name"]
+    _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_hvac_modes = AC_HVAC_MODES
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}'
+    def __init__(self, instance, ac_key):
+        """Initialize an AdvantageAir AC unit."""
+        super().__init__(instance, ac_key)
+        self._attr_name = self._ac["name"]
+        self._attr_unique_id = f'{self.coordinator.data["system"]["rid"]}-{ac_key}'
+        if self._ac.get("myAutoModeEnabled"):
+            self._attr_hvac_modes = AC_HVAC_MODES + [HVAC_MODE_AUTO]
 
     @property
     def target_temperature(self):
@@ -131,26 +117,9 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
         return HVAC_MODE_OFF
 
     @property
-    def hvac_modes(self):
-        """Return the supported HVAC modes."""
-        if self._ac.get("myAutoModeEnabled"):
-            return AC_HVAC_MODES + [HVAC_MODE_AUTO]
-        return AC_HVAC_MODES
-
-    @property
     def fan_mode(self):
         """Return the current fan modes."""
         return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
-
-    @property
-    def fan_modes(self):
-        """Return the supported fan modes."""
-        return [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""
@@ -185,15 +154,23 @@ class AdvantageAirAC(AdvantageAirClimateEntity):
 class AdvantageAirZone(AdvantageAirClimateEntity):
     """AdvantageAir Zone control."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return self._zone["name"]
+    _attr_hvac_modes = ZONE_HVAC_MODES
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+
+    def __init__(self, instance, ac_key, zone_key):
+        """Initialize an AdvantageAir Zone control."""
+        super().__init__(instance, ac_key, zone_key)
+        self._attr_name = self._zone["name"]
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}'
+        )
 
     @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}'
+    def hvac_mode(self):
+        """Return the current state as HVAC mode."""
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            return HVAC_MODE_FAN_ONLY
+        return HVAC_MODE_OFF
 
     @property
     def current_temperature(self):
@@ -204,23 +181,6 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     def target_temperature(self):
         """Return the target temperature."""
         return self._zone["setTemp"]
-
-    @property
-    def hvac_mode(self):
-        """Return the current HVAC modes."""
-        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return HVAC_MODE_FAN_ONLY
-        return HVAC_MODE_OFF
-
-    @property
-    def hvac_modes(self):
-        """Return supported HVAC modes."""
-        return ZONE_HVAC_MODES
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set the HVAC Mode and State."""

@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import DOMAIN, DomainData
 
@@ -29,7 +29,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
 
     async def _async_step_user_base(
-        self, user_input: ConfigType | None = None, error: str | None = None
+        self, user_input: dict[str, Any] | None = None, error: str | None = None
     ) -> FlowResult:
         if user_input is not None:
             return await self._async_authenticate_or_add(user_input)
@@ -46,7 +46,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self._async_step_user_base(user_input=user_input)
 
@@ -59,14 +61,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context[CONF_NAME] = value
         self.context["title_placeholders"] = {"name": self._name}
 
-    def _set_user_input(self, user_input: ConfigType | None) -> None:
+    def _set_user_input(self, user_input: dict[str, Any] | None) -> None:
         if user_input is None:
             return
         self._host = user_input[CONF_HOST]
         self._port = user_input[CONF_PORT]
 
     async def _async_authenticate_or_add(
-        self, user_input: ConfigType | None
+        self, user_input: dict[str, Any] | None
     ) -> FlowResult:
         self._set_user_input(user_input)
         error, device_info = await self.fetch_device_info()
@@ -82,7 +84,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self._async_get_entry()
 
     async def async_step_discovery_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
@@ -109,10 +111,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             already_configured = False
 
-            if CONF_HOST in entry.data and entry.data[CONF_HOST] in [
+            if CONF_HOST in entry.data and entry.data[CONF_HOST] in (
                 address,
                 discovery_info[CONF_HOST],
-            ]:
+            ):
                 # Is this address or IP address already configured?
                 already_configured = True
             elif DomainData.get(self.hass).is_entry_loaded(entry):
@@ -154,7 +156,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_authenticate(
-        self, user_input: ConfigType | None = None, error: str | None = None
+        self, user_input: dict[str, Any] | None = None, error: str | None = None
     ) -> FlowResult:
         """Handle getting password for authentication."""
         if user_input is not None:

@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
-from pysonos import SoCo
+from soco import SoCo
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer

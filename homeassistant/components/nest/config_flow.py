@@ -35,7 +35,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_flow_implementation(hass, domain, name, gen_authorize_url, convert_code):
+def register_flow_implementation(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    gen_authorize_url: str,
+    convert_code: str,
+) -> None:
     """Register a flow implementation for legacy api.
 
     domain: Domain of the component responsible for the implementation.
@@ -74,7 +80,7 @@ class NestFlowHandler(
     DOMAIN = DOMAIN
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize NestFlowHandler."""
         super().__init__()
         # When invoked for reauth, allows updating an existing config entry

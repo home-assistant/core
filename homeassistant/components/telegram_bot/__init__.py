@@ -286,7 +286,7 @@ def load_data(
             _LOGGER.warning("Can't load data in %s after %s retries", url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                return open(filepath, "rb")  # pylint: disable=consider-using-with
+                return open(filepath, "rb")
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
@@ -848,7 +848,7 @@ class BaseTelegramBotEntity:
 
         if (
             msg_data["from"].get("id") not in self.allowed_chat_ids
-            and msg_data["chat"].get("id") not in self.allowed_chat_ids
+            and msg_data["message"]["chat"].get("id") not in self.allowed_chat_ids
         ):
             # Neither from id nor chat id was in allowed_chat_ids,
             # origin is not allowed.

@@ -175,11 +175,6 @@ class PiHoleEntity(CoordinatorEntity):
         self._server_unique_id = server_unique_id
 
     @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:pi-hole"
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         return {

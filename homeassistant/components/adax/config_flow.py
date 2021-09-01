@@ -52,8 +52,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
+        await self.async_set_unique_id(user_input[ACCOUNT_ID])
+        self._abort_if_unique_id_configured()
+
         try:
-            self._async_abort_entries_match({ACCOUNT_ID: user_input[ACCOUNT_ID]})
             await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"

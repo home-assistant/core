@@ -4,14 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import get_hub
 from .base_platform import BaseStructPlatform
-from .const import MODBUS_DOMAIN
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -31,7 +31,7 @@ async def async_setup_platform(
         return
 
     for entry in discovery_info[CONF_SENSORS]:
-        hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub = get_hub(hass, discovery_info[CONF_NAME])
         sensors.append(ModbusRegisterSensor(hub, entry))
 
     async_add_entities(sensors)
@@ -47,24 +47,15 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     ) -> None:
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
-        self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
+            self._attr_native_value = state.state
 
     async def async_update(self, now=None):
         """Update the state of the sensor."""
@@ -74,10 +65,15 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             self._slave, self._address, self._count, self._input_type
         )
         if result is None:
-            self._available = False
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
+            self._attr_available = False
             self.async_write_ha_state()
             return
 
-        self.unpack_structure_result(result.registers)
-        self._available = True
+        self._attr_native_value = self.unpack_structure_result(result.registers)
+        self._lazy_errors = self._lazy_error_count
+        self._attr_available = True
         self.async_write_ha_state()

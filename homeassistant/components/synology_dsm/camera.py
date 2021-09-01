@@ -10,23 +10,21 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
-from .const import (
-    COORDINATOR_CAMERAS,
-    DOMAIN,
-    ENTITY_CLASS,
-    ENTITY_ENABLE,
-    ENTITY_ICON,
-    ENTITY_NAME,
-    ENTITY_UNIT,
-    SYNO_API,
-)
+from .const import COORDINATOR_CAMERAS, DOMAIN, ENTITY_ENABLE, SYNO_API
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,11 +68,12 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             api,
             f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera_id}",
             {
-                ENTITY_NAME: coordinator.data["cameras"][camera_id].name,
+                ATTR_NAME: coordinator.data["cameras"][camera_id].name,
                 ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,
-                ENTITY_CLASS: None,
-                ENTITY_ICON: None,
-                ENTITY_UNIT: None,
+                ATTR_DEVICE_CLASS: None,
+                ATTR_ICON: None,
+                ATTR_UNIT_OF_MEASUREMENT: None,
+                ATTR_STATE_CLASS: None,
             },
             coordinator,
         )
@@ -124,7 +123,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         """Return the camera motion detection status."""
         return self.camera_data.is_motion_detection_enabled  # type: ignore[no-any-return]
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         _LOGGER.debug(
             "SynoDSMCamera.camera_image(%s)",

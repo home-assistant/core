@@ -80,10 +80,10 @@ class TransmissionSensor(CoordinatorEntity, SensorEntity):
 class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
-    _attr_unit_of_measurement = DATA_RATE_MEGABYTES_PER_SECOND
+    _attr_native_unit_of_measurement = DATA_RATE_MEGABYTES_PER_SECOND
 
     @property
-    def state(self) -> float:
+    def native_value(self) -> float:
         """Return the state of the entity."""
         data = self.coordinator.data
         mb_spd = (
@@ -99,7 +99,7 @@ class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the entity."""
         state = STATE_IDLE
         upload = self.coordinator.data.uploadSpeed
@@ -123,7 +123,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         "active": ("seeding", "downloading"),
         "total": None,
     }
-    _attr_unit_of_measurement = "Torrents"
+    _attr_native_unit_of_measurement = "Torrents"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -139,7 +139,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         }
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the entity."""
         torrents = _filter_torrents(
             self.coordinator.tm_data.torrents,

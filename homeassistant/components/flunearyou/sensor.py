@@ -1,13 +1,20 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_STATE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DATA_COORDINATOR, DOMAIN
 
@@ -31,20 +38,63 @@ SENSOR_TYPE_USER_NO_SYMPTOMS = "none"
 SENSOR_TYPE_USER_SYMPTOMS = "symptoms"
 SENSOR_TYPE_USER_TOTAL = "total"
 
-CDC_SENSORS = [
-    (SENSOR_TYPE_CDC_LEVEL, "CDC Level", "mdi:biohazard", None),
-    (SENSOR_TYPE_CDC_LEVEL2, "CDC Level 2", "mdi:biohazard", None),
-]
+CDC_SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CDC_LEVEL,
+        name="CDC Level",
+        icon="mdi:biohazard",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CDC_LEVEL2,
+        name="CDC Level 2",
+        icon="mdi:biohazard",
+    ),
+)
 
-USER_SENSORS = [
-    (SENSOR_TYPE_USER_CHICK, "Avian Flu Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_DENGUE, "Dengue Fever Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_FLU, "Flu Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_LEPTO, "Leptospirosis Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_NO_SYMPTOMS, "No Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_SYMPTOMS, "Flu-like Symptoms", "mdi:alert", "reports"),
-    (SENSOR_TYPE_USER_TOTAL, "Total Symptoms", "mdi:alert", "reports"),
-]
+USER_SENSOR_DESCRIPTIONS = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_CHICK,
+        name="Avian Flu Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_DENGUE,
+        name="Dengue Fever Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_FLU,
+        name="Flu Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_LEPTO,
+        name="Leptospirosis Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_NO_SYMPTOMS,
+        name="No Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_SYMPTOMS,
+        name="Flu-like Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_USER_TOTAL,
+        name="Total Symptoms",
+        icon="mdi:alert",
+        native_unit_of_measurement="reports",
+    ),
+)
 
 EXTENDED_SENSOR_TYPE_MAPPING = {
     SENSOR_TYPE_USER_FLU: "ili",
@@ -53,55 +103,44 @@ EXTENDED_SENSOR_TYPE_MAPPING = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Flu Near You sensors based on a config entry."""
     coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
 
-    sensors = []
-
-    for (sensor_type, name, icon, unit) in CDC_SENSORS:
-        sensors.append(
-            CdcSensor(
-                coordinators[CATEGORY_CDC_REPORT],
-                entry,
-                sensor_type,
-                name,
-                icon,
-                unit,
-            )
-        )
-
-    for (sensor_type, name, icon, unit) in USER_SENSORS:
-        sensors.append(
-            UserSensor(
-                coordinators[CATEGORY_USER_REPORT],
-                entry,
-                sensor_type,
-                name,
-                icon,
-                unit,
-            )
-        )
-
+    sensors: list[CdcSensor | UserSensor] = [
+        CdcSensor(coordinators[CATEGORY_CDC_REPORT], entry, description)
+        for description in CDC_SENSOR_DESCRIPTIONS
+    ]
+    sensors.extend(
+        [
+            UserSensor(coordinators[CATEGORY_USER_REPORT], entry, description)
+            for description in USER_SENSOR_DESCRIPTIONS
+        ]
+    )
     async_add_entities(sensors)
 
 
 class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     """Define a base Flu Near You sensor."""
 
-    def __init__(self, coordinator, entry, sensor_type, name, icon, unit):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        entry: ConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_icon = icon
-        self._attr_name = name
         self._attr_unique_id = (
             f"{entry.data[CONF_LATITUDE]},"
-            f"{entry.data[CONF_LONGITUDE]}_{sensor_type}"
+            f"{entry.data[CONF_LONGITUDE]}_{description.key}"
         )
-        self._attr_unit_of_measurement = unit
         self._entry = entry
-        self._sensor_type = sensor_type
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -109,13 +148,13 @@ class FluNearYouSensor(CoordinatorEntity, SensorEntity):
         self.update_from_latest_data()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
         self.update_from_latest_data()
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the sensor."""
         raise NotImplementedError
 
@@ -124,7 +163,7 @@ class CdcSensor(FluNearYouSensor):
     """Define a sensor for CDC reports."""
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the sensor."""
         self._attr_extra_state_attributes.update(
             {
@@ -132,14 +171,14 @@ class CdcSensor(FluNearYouSensor):
                 ATTR_STATE: self.coordinator.data["name"],
             }
         )
-        self._attr_state = self.coordinator.data[self._sensor_type]
+        self._attr_native_value = self.coordinator.data[self.entity_description.key]
 
 
 class UserSensor(FluNearYouSensor):
     """Define a sensor for user reports."""
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the sensor."""
         self._attr_extra_state_attributes.update(
             {
@@ -151,10 +190,10 @@ class UserSensor(FluNearYouSensor):
             }
         )
 
-        if self._sensor_type in self.coordinator.data["state"]["data"]:
-            states_key = self._sensor_type
-        elif self._sensor_type in EXTENDED_SENSOR_TYPE_MAPPING:
-            states_key = EXTENDED_SENSOR_TYPE_MAPPING[self._sensor_type]
+        if self.entity_description.key in self.coordinator.data["state"]["data"]:
+            states_key = self.entity_description.key
+        elif self.entity_description.key in EXTENDED_SENSOR_TYPE_MAPPING:
+            states_key = EXTENDED_SENSOR_TYPE_MAPPING[self.entity_description.key]
 
         self._attr_extra_state_attributes[
             ATTR_STATE_REPORTS_THIS_WEEK
@@ -163,8 +202,8 @@ class UserSensor(FluNearYouSensor):
             ATTR_STATE_REPORTS_LAST_WEEK
         ] = self.coordinator.data["state"]["last_week_data"][states_key]
 
-        if self._sensor_type == SENSOR_TYPE_USER_TOTAL:
-            self._attr_state = sum(
+        if self.entity_description.key == SENSOR_TYPE_USER_TOTAL:
+            self._attr_native_value = sum(
                 v
                 for k, v in self.coordinator.data["local"].items()
                 if k
@@ -177,4 +216,6 @@ class UserSensor(FluNearYouSensor):
                 )
             )
         else:
-            self._attr_state = self.coordinator.data["local"][self._sensor_type]
+            self._attr_native_value = self.coordinator.data["local"][
+                self.entity_description.key
+            ]

@@ -13,9 +13,6 @@ ATTR_STATE_WINDOW_OPEN: Final = "window_open"
 
 ATTR_TEMPERATURE_UNIT: Final = "temperature_unit"
 
-ATTR_TOTAL_CONSUMPTION: Final = "total_consumption"
-ATTR_TOTAL_CONSUMPTION_UNIT: Final = "total_consumption_unit"
-
 CONF_CONNECTIONS: Final = "connections"
 CONF_COORDINATOR: Final = "coordinator"
 

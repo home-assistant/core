@@ -1,10 +1,10 @@
 """The airvisual component."""
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
-from typing import Any, Dict, cast
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry,
 )
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -216,8 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 )
 
             try:
-                data = await api_coro
-                return cast(Dict[str, Any], data)
+                return await api_coro
             except (InvalidKeyError, KeyExpiredError) as ex:
                 raise ConfigEntryAuthFailed from ex
             except AirVisualError as err:
@@ -261,8 +261,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 async with NodeSamba(
                     config_entry.data[CONF_IP_ADDRESS], config_entry.data[CONF_PASSWORD]
                 ) as node:
-                    data = await node.async_get_latest_measurements()
-                    return cast(Dict[str, Any], data)
+                    return await node.async_get_latest_measurements()
             except NodeProError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -360,13 +359,14 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
-        }
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

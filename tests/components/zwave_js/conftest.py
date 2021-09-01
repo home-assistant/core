@@ -166,13 +166,13 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
-@pytest.fixture(name="create_shapshot")
-def create_snapshot_fixture():
-    """Mock create snapshot."""
+@pytest.fixture(name="create_backup")
+def create_backup_fixture():
+    """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_snapshot"
-    ) as create_shapshot:
-        yield create_shapshot
+        "homeassistant.components.zwave_js.addon.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -445,6 +445,14 @@ def ge_in_wall_dimmer_switch_state_fixture():
 def aeotec_zw164_siren_state_fixture():
     """Load the aeotec zw164 siren node state fixture data."""
     return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
+
+
+@pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="session")
+def lock_popp_electric_strike_lock_control_state_fixture():
+    """Load the popp electric strike lock control node state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/lock_popp_electric_strike_lock_control_state.json")
+    )
 
 
 @pytest.fixture(name="client")
@@ -761,6 +769,16 @@ def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
     return node
 
 
+@pytest.fixture(name="lock_id_lock_as_id150_not_ready")
+def node_not_ready(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node that's not ready."""
+    state = copy.deepcopy(lock_id_lock_as_id150_state)
+    state["ready"] = False
+    node = Node(client, state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_radio_thermostat_ct101_multiple_temp_units")
 def climate_radio_thermostat_ct101_multiple_temp_units_fixture(
     client, climate_radio_thermostat_ct101_multiple_temp_units_state
@@ -825,8 +843,18 @@ def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
 
 @pytest.fixture(name="aeotec_zw164_siren")
 def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
-    """Mock a wallmote central scene node."""
+    """Mock a aeotec zw164 siren node."""
     node = Node(client, copy.deepcopy(aeotec_zw164_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_popp_electric_strike_lock_control")
+def lock_popp_electric_strike_lock_control_fixture(
+    client, lock_popp_electric_strike_lock_control_state
+):
+    """Mock a popp electric strike lock control node."""
+    node = Node(client, copy.deepcopy(lock_popp_electric_strike_lock_control_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

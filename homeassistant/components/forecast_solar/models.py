@@ -6,16 +6,11 @@ from typing import Any, Callable
 
 from forecast_solar.models import Estimate
 
+from homeassistant.components.sensor import SensorEntityDescription
+
 
 @dataclass
-class ForecastSolarSensor:
-    """Represents an Forecast.Solar Sensor."""
+class ForecastSolarSensorEntityDescription(SensorEntityDescription):
+    """Describes a Forecast.Solar Sensor."""
 
-    key: str
-    name: str
-
-    device_class: str | None = None
-    entity_registry_enabled_default: bool = True
     state: Callable[[Estimate], Any] | None = None
-    state_class: str | None = None
-    unit_of_measurement: str | None = None

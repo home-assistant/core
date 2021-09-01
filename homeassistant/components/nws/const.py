@@ -1,9 +1,10 @@
 """Constants for National Weather Service Integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import NamedTuple
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
@@ -99,92 +100,100 @@ OBSERVATION_VALID_TIME = timedelta(minutes=20)
 FORECAST_VALID_TIME = timedelta(minutes=45)
 
 
-class NWSSensorMetadata(NamedTuple):
-    """Sensor metadata for an individual NWS sensor."""
+@dataclass
+class NWSSensorEntityDescription(SensorEntityDescription):
+    """Class describing NWSSensor entities."""
 
-    label: str
-    icon: str | None
-    device_class: str | None
-    unit: str
-    unit_convert: str
+    unit_convert: str | None = None
 
 
-SENSOR_TYPES: dict[str, NWSSensorMetadata] = {
-    "dewpoint": NWSSensorMetadata(
-        "Dew Point",
+SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
+    NWSSensorEntityDescription(
+        key="dewpoint",
+        name="Dew Point",
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         unit_convert=TEMP_CELSIUS,
     ),
-    "temperature": NWSSensorMetadata(
-        "Temperature",
+    NWSSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         unit_convert=TEMP_CELSIUS,
     ),
-    "windChill": NWSSensorMetadata(
-        "Wind Chill",
+    NWSSensorEntityDescription(
+        key="windChill",
+        name="Wind Chill",
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         unit_convert=TEMP_CELSIUS,
     ),
-    "heatIndex": NWSSensorMetadata(
-        "Heat Index",
+    NWSSensorEntityDescription(
+        key="heatIndex",
+        name="Heat Index",
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        unit=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         unit_convert=TEMP_CELSIUS,
     ),
-    "relativeHumidity": NWSSensorMetadata(
-        "Relative Humidity",
+    NWSSensorEntityDescription(
+        key="relativeHumidity",
+        name="Relative Humidity",
         icon=None,
         device_class=DEVICE_CLASS_HUMIDITY,
-        unit=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         unit_convert=PERCENTAGE,
     ),
-    "windSpeed": NWSSensorMetadata(
-        "Wind Speed",
+    NWSSensorEntityDescription(
+        key="windSpeed",
+        name="Wind Speed",
         icon="mdi:weather-windy",
         device_class=None,
-        unit=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         unit_convert=SPEED_MILES_PER_HOUR,
     ),
-    "windGust": NWSSensorMetadata(
-        "Wind Gust",
+    NWSSensorEntityDescription(
+        key="windGust",
+        name="Wind Gust",
         icon="mdi:weather-windy",
         device_class=None,
-        unit=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         unit_convert=SPEED_MILES_PER_HOUR,
     ),
-    "windDirection": NWSSensorMetadata(
-        "Wind Direction",
+    NWSSensorEntityDescription(
+        key="windDirection",
+        name="Wind Direction",
         icon="mdi:compass-rose",
         device_class=None,
-        unit=DEGREE,
+        native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
     ),
-    "barometricPressure": NWSSensorMetadata(
-        "Barometric Pressure",
+    NWSSensorEntityDescription(
+        key="barometricPressure",
+        name="Barometric Pressure",
         icon=None,
         device_class=DEVICE_CLASS_PRESSURE,
-        unit=PRESSURE_PA,
+        native_unit_of_measurement=PRESSURE_PA,
         unit_convert=PRESSURE_INHG,
     ),
-    "seaLevelPressure": NWSSensorMetadata(
-        "Sea Level Pressure",
+    NWSSensorEntityDescription(
+        key="seaLevelPressure",
+        name="Sea Level Pressure",
         icon=None,
         device_class=DEVICE_CLASS_PRESSURE,
-        unit=PRESSURE_PA,
+        native_unit_of_measurement=PRESSURE_PA,
         unit_convert=PRESSURE_INHG,
     ),
-    "visibility": NWSSensorMetadata(
-        "Visibility",
+    NWSSensorEntityDescription(
+        key="visibility",
+        name="Visibility",
         icon="mdi:eye",
         device_class=None,
-        unit=LENGTH_METERS,
+        native_unit_of_measurement=LENGTH_METERS,
         unit_convert=LENGTH_MILES,
     ),
-}
+)

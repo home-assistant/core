@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, MutableMapping
-from typing import Any, cast
+from collections.abc import Awaitable
+from typing import cast
 
 from aioguardian import Client
 
@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -26,6 +27,7 @@ from .const import (
     CONF_UID,
     DATA_CLIENT,
     DATA_COORDINATOR,
+    DATA_COORDINATOR_PAIRED_SENSOR,
     DATA_PAIRED_SENSOR_MANAGER,
     DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
@@ -44,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         {
             DATA_CLIENT: {},
             DATA_COORDINATOR: {},
+            DATA_COORDINATOR_PAIRED_SENSOR: {},
             DATA_PAIRED_SENSOR_MANAGER: {},
             DATA_UNSUB_DISPATCHER_CONNECT: {},
         },
@@ -51,9 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Client(
         entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT]
     )
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {
-        API_SENSOR_PAIRED_SENSOR_STATUS: {}
-    }
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id] = []
 
     # The valve controller's UDP-based API can't handle concurrent requests very well,
@@ -113,6 +115,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR].pop(entry.entry_id)
         for unsub in hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id]:
             unsub()
         hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT].pop(entry.entry_id)
@@ -143,8 +146,8 @@ class PairedSensorManager:
 
         self._paired_uids.add(uid)
 
-        coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-            API_SENSOR_PAIRED_SENSOR_STATUS
+        coordinator = self._hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
+            self._entry.entry_id
         ][uid] = GuardianDataUpdateCoordinator(
             self._hass,
             client=self._client,
@@ -194,8 +197,8 @@ class PairedSensorManager:
 
         # Clear out objects related to this paired sensor:
         self._paired_uids.remove(uid)
-        self._hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
-            API_SENSOR_PAIRED_SENSOR_STATUS
+        self._hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
+            self._entry.entry_id
         ].pop(uid)
 
         # Remove the paired sensor device from the device registry (which will
@@ -211,22 +214,13 @@ class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
 
     def __init__(  # pylint: disable=super-init-not-called
-        self,
-        entry: ConfigEntry,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_class = device_class
         self._attr_device_info = {"manufacturer": "Elexa"}
-        self._attr_extra_state_attributes: MutableMapping[str, Any] = {
-            ATTR_ATTRIBUTION: "Data provided by Elexa"
-        }
-        self._attr_icon = icon
-        self._attr_name = name
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._entry = entry
+        self.entity_description = description
 
     @callback
     def _async_update_from_latest_data(self) -> None:
@@ -244,13 +238,10 @@ class PairedSensorEntity(GuardianEntity):
         self,
         entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, kind, name, device_class, icon)
+        super().__init__(entry, description)
 
         paired_sensor_uid = coordinator.data["uid"]
         self._attr_device_info = {
@@ -258,9 +249,10 @@ class PairedSensorEntity(GuardianEntity):
             "name": f"Guardian Paired Sensor {paired_sensor_uid}",
             "via_device": (DOMAIN, entry.data[CONF_UID]),
         }
-        self._attr_name = f"Guardian Paired Sensor {paired_sensor_uid}: {name}"
-        self._attr_unique_id = f"{paired_sensor_uid}_{kind}"
-        self._kind = kind
+        self._attr_name = (
+            f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"
+        )
+        self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
         self.coordinator = coordinator
 
     async def async_added_to_hass(self) -> None:
@@ -275,22 +267,18 @@ class ValveControllerEntity(GuardianEntity):
         self,
         entry: ConfigEntry,
         coordinators: dict[str, DataUpdateCoordinator],
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(entry, kind, name, device_class, icon)
+        super().__init__(entry, description)
 
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.data[CONF_UID])},
             "name": f"Guardian Valve Controller {entry.data[CONF_UID]}",
             "model": coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
         }
-        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {name}"
-        self._attr_unique_id = f"{entry.data[CONF_UID]}_{kind}"
-        self._kind = kind
+        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {description.name}"
+        self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators
 
     @property
@@ -299,7 +287,6 @@ class ValveControllerEntity(GuardianEntity):
         return any(
             coordinator.last_update_success
             for coordinator in self.coordinators.values()
-            if coordinator
         )
 
     async def _async_continue_entity_setup(self) -> None:

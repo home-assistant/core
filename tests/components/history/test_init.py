@@ -1025,8 +1025,7 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
         {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
     )
     response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == []
+    assert not response["success"]
 
     await client.send_json(
         {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "mean"}

@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DiffuserSwitch(SwitchEntity, DiffuserEntity):
+class DiffuserSwitch(DiffuserEntity, SwitchEntity):
     """Representation of a diffuser switch."""
 
     _attr_icon = "mdi:fan"
@@ -42,14 +42,6 @@ class DiffuserSwitch(SwitchEntity, DiffuserEntity):
         """Initialize the diffuser switch."""
         super().__init__(diffuser, coordinator, "")
         self._attr_is_on = self._diffuser.is_on
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the device state attributes."""
-        return {
-            "fan_speed": self._diffuser.perfume_amount,
-            "room_size": self._diffuser.room_size,
-        }
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

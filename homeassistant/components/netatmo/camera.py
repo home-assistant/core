@@ -36,7 +36,6 @@ from .const import (
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
-    UNKNOWN,
     WEBHOOK_LIGHT_MODE,
     WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
@@ -132,9 +131,7 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         self._id = camera_id
         self._home_id = home_id
-        self._device_name = self._data.get_camera(camera_id=camera_id).get(
-            "name", UNKNOWN
-        )
+        self._device_name = self._data.get_camera(camera_id=camera_id)["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._model = camera_type
         self._attr_unique_id = f"{self._id}-{self._model}"
@@ -171,13 +168,13 @@ class NetatmoCamera(NetatmoBase, Camera):
             return
 
         if data["home_id"] == self._home_id and data["camera_id"] == self._id:
-            if data[WEBHOOK_PUSH_TYPE] in ["NACamera-off", "NACamera-disconnection"]:
+            if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
                 self.is_streaming = False
                 self._status = "off"
-            elif data[WEBHOOK_PUSH_TYPE] in [
+            elif data[WEBHOOK_PUSH_TYPE] in (
                 "NACamera-on",
                 WEBHOOK_NACAMERA_CONNECTION,
-            ]:
+            ):
                 self.is_streaming = True
                 self._status = "on"
             elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:
@@ -197,10 +194,14 @@ class NetatmoCamera(NetatmoBase, Camera):
             self.data_handler.data[self._data_classes[0]["name"]],
         )
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         try:
-            return await self._data.async_get_live_snapshot(camera_id=self._id)
+            return cast(
+                bytes, await self._data.async_get_live_snapshot(camera_id=self._id)
+            )
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,

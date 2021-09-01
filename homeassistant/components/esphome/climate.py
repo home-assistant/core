@@ -228,9 +228,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= SUPPORT_TARGET_TEMPERATURE
         if self.preset_modes:
             features |= SUPPORT_PRESET_MODE
-        if self._static_info.supported_fan_modes:
+        if self.fan_modes:
             features |= SUPPORT_FAN_MODE
-        if self._static_info.supported_swing_modes:
+        if self.swing_modes:
             features |= SUPPORT_SWING_MODE
         return features
 

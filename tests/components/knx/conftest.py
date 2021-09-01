@@ -19,6 +19,8 @@ from homeassistant.setup import async_setup_component
 class KNXTestKit:
     """Test helper for the KNX integration."""
 
+    INDIVIDUAL_ADDRESS = "1.2.3"
+
     def __init__(self, hass: HomeAssistant):
         """Init KNX test helper class."""
         self.hass: HomeAssistant = hass
@@ -148,7 +150,7 @@ class KNXTestKit:
                 destination_address=GroupAddress(group_address),
                 direction=TelegramDirection.INCOMING,
                 payload=payload,
-                source_address=IndividualAddress("1.2.3"),
+                source_address=IndividualAddress(self.INDIVIDUAL_ADDRESS),
             )
         )
         await self.hass.async_block_till_done()

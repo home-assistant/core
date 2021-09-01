@@ -10,11 +10,10 @@ from aiohttp import web
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeBaseEntity, platform_async_setup_entry
+from . import EsphomeEntity, platform_async_setup_entry
 
 
 async def async_setup_entry(
@@ -32,38 +31,28 @@ async def async_setup_entry(
     )
 
 
-class EsphomeCamera(Camera, EsphomeBaseEntity[CameraInfo, CameraState]):
+class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
     """A camera implementation for ESPHome."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize."""
         Camera.__init__(self)
-        EsphomeBaseEntity.__init__(self, *args, **kwargs)
+        EsphomeEntity.__init__(self, *args, **kwargs)
         self._image_cond = asyncio.Condition()
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                (
-                    f"esphome_{self._entry_id}"
-                    f"_update_{self._component_key}_{self._key}"
-                ),
-                self._on_state_update,
-            )
-        )
-
-    async def _on_state_update(self) -> None:
+    @callback
+    def _on_state_update(self) -> None:
         """Notify listeners of new image when update arrives."""
-        self.async_write_ha_state()
+        super()._on_state_update()
+        self.hass.async_create_task(self._on_state_update_coro())
+
+    async def _on_state_update_coro(self) -> None:
         async with self._image_cond:
             self._image_cond.notify_all()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         if not self.available:
             return None

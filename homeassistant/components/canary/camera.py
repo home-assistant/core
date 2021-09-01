@@ -1,7 +1,6 @@
 """Support for Canary camera."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from typing import Final
 
@@ -9,9 +8,9 @@ from aiohttp.web import Request, StreamResponse
 from canary.api import Device, Location
 from canary.live_stream_api import LiveStreamSession
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     Camera,
@@ -21,7 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle
@@ -30,7 +28,6 @@ from .const import (
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_TIMEOUT,
     DOMAIN,
     MANUFACTURER,
 )
@@ -73,7 +70,6 @@ async def async_setup_entry(
                         coordinator,
                         location_id,
                         device,
-                        DEFAULT_TIMEOUT,
                         ffmpeg_arguments,
                     )
                 )
@@ -92,7 +88,6 @@ class CanaryCamera(CoordinatorEntity, Camera):
         coordinator: CanaryDataUpdateCoordinator,
         location_id: str,
         device: Device,
-        timeout: int,
         ffmpeg_args: str,
     ) -> None:
         """Initialize a Canary security camera."""
@@ -102,36 +97,20 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device
-        self._device_id: str = device.device_id
-        self._device_name: str = device.name
-        self._device_type_name = device.device_type["name"]
-        self._timeout = timeout
         self._live_stream_session: LiveStreamSession | None = None
+        self._attr_name = device.name
+        self._attr_unique_id = str(device.device_id)
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, str(device.device_id))},
+            "name": device.name,
+            "model": device.device_type["name"],
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def location(self) -> Location:
         """Return information about the location."""
         return self.coordinator.data["locations"][self._location_id]
-
-    @property
-    def name(self) -> str:
-        """Return the name of this device."""
-        return self._device_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this camera."""
-        return str(self._device_id)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, str(self._device_id))},
-            "name": self._device_name,
-            "model": self._device_type_name,
-            "manufacturer": MANUFACTURER,
-        }
 
     @property
     def is_recording(self) -> bool:
@@ -143,22 +122,21 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
         live_stream_url = await self.hass.async_add_executor_job(
             getattr, self._live_stream_session, "live_stream_url"
         )
-
-        ffmpeg = ImageFrame(self._ffmpeg.binary)
-        image: bytes | None = await asyncio.shield(
-            ffmpeg.get_image(
-                live_stream_url,
-                output_format=IMAGE_JPEG,
-                extra_cmd=self._ffmpeg_arguments,
-            )
+        return await ffmpeg.async_get_image(
+            self.hass,
+            live_stream_url,
+            extra_cmd=self._ffmpeg_arguments,
+            width=width,
+            height=height,
         )
-        return image
 
     async def handle_async_mjpeg_stream(
         self, request: Request

@@ -23,10 +23,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ), patch(
+    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -65,10 +62,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == RESULT_TYPE_FORM
 
-    with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ), patch(
+    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -109,10 +103,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == RESULT_TYPE_FORM
 
-    with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ), patch(
+    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -148,7 +139,7 @@ async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> No
     )
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         side_effect=ValueError(err_str),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -170,7 +161,7 @@ async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         side_effect=Exception("Boom"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -192,7 +183,7 @@ async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         return_value={"status": "error"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -212,7 +203,7 @@ async def test_import(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         return_value=VALID_PAYLOAD,
     ):
         assert await async_setup_component(
@@ -221,10 +212,20 @@ async def test_import(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries("co2signal")) == 1
+
     state = hass.states.get("sensor.co2_intensity")
     assert state is not None
     assert state.state == "45.99"
     assert state.name == "CO2 intensity"
+    assert state.attributes["unit_of_measurement"] == "gCO2eq/kWh"
+    assert state.attributes["country_code"] == "FR"
+
+    state = hass.states.get("sensor.grid_fossil_fuel_percentage")
+    assert state is not None
+    assert state.state == "5.46"
+    assert state.name == "Grid fossil fuel percentage"
+    assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["country_code"] == "FR"
 
 
 async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
@@ -233,7 +234,7 @@ async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="co2signal", data={"api_key": "abcd"}).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         return_value=VALID_PAYLOAD,
     ):
         assert await async_setup_component(
@@ -252,7 +253,7 @@ async def test_import_abort_existing_country(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         return_value=VALID_PAYLOAD,
     ):
         assert await async_setup_component(
@@ -279,7 +280,7 @@ async def test_import_abort_existing_coordinates(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.co2signal.config_flow.CO2Signal.get_latest",
+        "CO2Signal.get_latest",
         return_value=VALID_PAYLOAD,
     ):
         assert await async_setup_component(

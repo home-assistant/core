@@ -3,6 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
+
 from homeassistant.components.cover import (
     DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
@@ -42,25 +45,30 @@ async def async_setup_entry(
 class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     """Representation of a cover device within devolo Home Control."""
 
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
+        """Initialize a climate entity within devolo Home Control."""
+        super().__init__(
+            homecontrol=homecontrol,
+            device_instance=device_instance,
+            element_uid=element_uid,
+        )
+
+        self._attr_device_class = DEVICE_CLASS_BLIND
+        self._attr_supported_features = (
+            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        )
+
     @property
     def current_cover_position(self) -> int:
         """Return the current position. 0 is closed. 100 is open."""
         return self._value
 
     @property
-    def device_class(self) -> str:
-        """Return the class of the device."""
-        return DEVICE_CLASS_BLIND
-
-    @property
     def is_closed(self) -> bool:
         """Return if the blind is closed or not."""
         return not bool(self._value)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the blind."""
