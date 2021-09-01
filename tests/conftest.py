@@ -480,7 +480,9 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 @pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True):
+    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
+        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+    ):
         yield
 
 
