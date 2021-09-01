@@ -8,6 +8,7 @@ from typing import Any, Optional, cast
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import parse_datetime, as_utc
 
 from .renault_coordinator import T
 from .renault_vehicle import RenaultVehicleProxy
@@ -60,5 +61,10 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
         elif self.entity_description.coordinator == "location":
             last_update = self._get_data_attr("lastUpdateTime")
         if last_update:
-            return {ATTR_LAST_UPDATE: last_update}
+            return {ATTR_LAST_UPDATE: self._convert_to_utc_string(last_update)}
         return None
+
+    def _convert_to_utc_string(self, value: StateType) -> str:
+        """Convert date to UTC iso format."""
+        original_dt = parse_datetime(cast(str, value))
+        return as_utc(original_dt).isoformat()
