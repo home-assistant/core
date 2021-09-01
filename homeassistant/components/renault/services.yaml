@@ -72,6 +72,9 @@ charge_set_schedules:
             'sunday':{'startTime':'T12:00Z','duration':240}
           },
         ]
+      required: true
+      selector:
+        object:
 
 charge_start:
   description: Start charge on vehicle.
