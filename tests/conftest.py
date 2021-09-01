@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp.test_utils import make_mocked_request
 import multidict
 import pytest
+import pytest_socket
 import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
@@ -324,6 +325,9 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
     async def auth_client():
         """Return an authenticated client."""
+        # Allow creating sockets, but restricted to 127.0.0.1
+        pytest_socket.enable_socket()
+        pytest_socket.socket_allow_hosts("127.0.0.1")
         return await aiohttp_client(
             hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
         )
@@ -374,6 +378,9 @@ def hass_ws_client(aiohttp_client, hass_access_token, hass):
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
 
+        # Allow creating sockets, but restricted to 127.0.0.1
+        pytest_socket.enable_socket()
+        pytest_socket.socket_allow_hosts("127.0.0.1")
         client = await aiohttp_client(hass.http.app)
 
         with patch("homeassistant.components.http.auth.setup_auth"):
