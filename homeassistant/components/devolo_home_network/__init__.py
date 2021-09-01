@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def disconnect(event: Event) -> None:
-        await hass.data[DOMAIN][entry.entry_id]["device"].async_disconnect()
+        await hass.data[DOMAIN][entry.entry_id].async_disconnect()
 
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
     entry.async_on_unload(

@@ -5,6 +5,7 @@ from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -43,3 +44,15 @@ async def test_unload_entry(hass: HomeAssistant):
     await hass.async_block_till_done()
     await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_device")
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_hass_stop(hass: HomeAssistant):
+    """Test homeassistant stop event."""
+    entry = configure_integration(hass)
+    with patch("devolo_plc_api.device.Device.async_disconnect") as async_disconnect:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        assert async_disconnect.assert_called_once
