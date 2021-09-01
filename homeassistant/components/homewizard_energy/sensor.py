@@ -6,12 +6,14 @@ from typing import Final
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_ID,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
@@ -22,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
     ATTR_ACTIVE_POWER_L1_W,
@@ -64,13 +65,12 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_WIFI_SSID,
         name="Wifi SSID",
         icon="mdi:wifi",
-        unit_of_measurement="",
     ),
     SensorEntityDescription(
         key=ATTR_WIFI_STRENGTH,
         name="Wifi Strength",
         icon="mdi:wifi",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -78,39 +78,39 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_TOTAL_POWER_IMPORT_T1_KWH,
         name="Total power import T1",
         icon="mdi:home-import-outline",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=ATTR_TOTAL_POWER_IMPORT_T2_KWH,
         name="Total power import T2",
         icon="mdi:home-import-outline",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=ATTR_TOTAL_POWER_EXPORT_T1_KWH,
         name="Total power export T1",
         icon="mdi:home-export-outline",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=ATTR_TOTAL_POWER_EXPORT_T2_KWH,
         name="Total power export T2",
         icon="mdi:home-export-outline",
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=ATTR_ACTIVE_POWER_W,
         name="Active power",
         icon="mdi:transmission-tower",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -118,7 +118,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_ACTIVE_POWER_L1_W,
         name="Active power L1",
         icon="mdi:transmission-tower",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -126,7 +126,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_ACTIVE_POWER_L2_W,
         name="Active power L2",
         icon="mdi:transmission-tower",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -134,7 +134,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_ACTIVE_POWER_L3_W,
         name="Active power L3",
         icon="mdi:transmission-tower",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -142,8 +142,9 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key=ATTR_TOTAL_GAS_M3,
         name="Total gas",
         icon="mdi:fire",
-        unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        device_class=DEVICE_CLASS_GAS,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=ATTR_GAS_TIMESTAMP,
@@ -192,7 +193,6 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         self.name = "{} {}".format(entry_data["custom_name"], description.name)
         self.data_type = description.key
         self.unique_id = "{}_{}".format(entry_data["unique_id"], description.key)
-        self._attr_last_reset = utc_from_timestamp(0)
 
         # Some values are given, but set to NULL (eg. gas_timestamp when no gas meter is connected)
         if self.data[CONF_DATA][self.data_type] is None:
