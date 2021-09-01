@@ -176,6 +176,7 @@ class WazeTravelTime(SensorEntity):
         self._attr_unique_id = unique_id
         self._waze_data = waze_data
         self._attr_name = name
+        self._attr_icon = "mdi:car"
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
@@ -209,16 +210,6 @@ class WazeTravelTime(SensorEntity):
             return round(self._waze_data.duration)
 
         return None
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        if self._waze_data.vehicle_type == "taxi":
-            return "mdi:taxi"
-        if self._waze_data.vehicle_type == "motorcycle":
-            return "mdi:motorbike"
-
-        return "mdi:car"
 
     @property
     def extra_state_attributes(self) -> dict | None:
