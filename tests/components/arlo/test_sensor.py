@@ -5,8 +5,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.arlo import DATA_ARLO, sensor as arlo
+from homeassistant.components.arlo.sensor import SENSOR_TYPES
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -17,49 +19,55 @@ def _get_named_tuple(input_dict):
     return namedtuple("Struct", input_dict.keys())(*input_dict.values())
 
 
-def _get_sensor(name="Last", sensor_type="last_capture", data=None):
+def _get_sensor(hass, name="Last", sensor_type="last_capture", data=None):
     if data is None:
         data = {}
-    return arlo.ArloSensor(name, data, sensor_type)
+    sensor_entry = next(
+        sensor_entry for sensor_entry in SENSOR_TYPES if sensor_entry.key == sensor_type
+    )
+    sensor_entry.name = name
+    sensor = arlo.ArloSensor(data, sensor_entry)
+    sensor.hass = hass
+    return sensor
 
 
 @pytest.fixture()
-def default_sensor():
+def default_sensor(hass):
     """Create an ArloSensor with default values."""
-    return _get_sensor()
+    return _get_sensor(hass)
 
 
 @pytest.fixture()
-def battery_sensor():
+def battery_sensor(hass):
     """Create an ArloSensor with battery data."""
     data = _get_named_tuple({"battery_level": 50})
-    return _get_sensor("Battery Level", "battery_level", data)
+    return _get_sensor(hass, "Battery Level", "battery_level", data)
 
 
 @pytest.fixture()
-def temperature_sensor():
+def temperature_sensor(hass):
     """Create a temperature ArloSensor."""
-    return _get_sensor("Temperature", "temperature")
+    return _get_sensor(hass, "Temperature", "temperature")
 
 
 @pytest.fixture()
-def humidity_sensor():
+def humidity_sensor(hass):
     """Create a humidity ArloSensor."""
-    return _get_sensor("Humidity", "humidity")
+    return _get_sensor(hass, "Humidity", "humidity")
 
 
 @pytest.fixture()
-def cameras_sensor():
+def cameras_sensor(hass):
     """Create a total cameras ArloSensor."""
     data = _get_named_tuple({"cameras": [0, 0]})
-    return _get_sensor("Arlo Cameras", "total_cameras", data)
+    return _get_sensor(hass, "Arlo Cameras", "total_cameras", data)
 
 
 @pytest.fixture()
-def captured_sensor():
+def captured_sensor(hass):
     """Create a captured today ArloSensor."""
     data = _get_named_tuple({"captured_today": [0, 0, 0, 0, 0]})
-    return _get_sensor("Captured Today", "captured_today", data)
+    return _get_sensor(hass, "Captured Today", "captured_today", data)
 
 
 class PlatformSetupFixture:
@@ -80,14 +88,6 @@ class PlatformSetupFixture:
 def platform_setup():
     """Create an instance of the PlatformSetupFixture class."""
     return PlatformSetupFixture()
-
-
-@pytest.fixture()
-def sensor_with_hass_data(default_sensor, hass):
-    """Create a sensor with async_dispatcher_connected mocked."""
-    hass.data = {}
-    default_sensor.hass = hass
-    return default_sensor
 
 
 @pytest.fixture()
@@ -139,14 +139,14 @@ def test_sensor_name(default_sensor):
     assert default_sensor.name == "Last"
 
 
-async def test_async_added_to_hass(sensor_with_hass_data, mock_dispatch):
+async def test_async_added_to_hass(default_sensor, mock_dispatch):
     """Test dispatcher called when added."""
-    await sensor_with_hass_data.async_added_to_hass()
+    await default_sensor.async_added_to_hass()
     assert len(mock_dispatch.mock_calls) == 1
     kall = mock_dispatch.call_args
     args, kwargs = kall
     assert len(args) == 3
-    assert args[0] == sensor_with_hass_data.hass
+    assert args[0] == default_sensor.hass
     assert args[1] == "arlo_update"
     assert not kwargs
 
@@ -156,14 +156,14 @@ def test_sensor_state_default(default_sensor):
     assert default_sensor.state is None
 
 
-def test_sensor_icon_battery(battery_sensor):
-    """Test the battery icon."""
-    assert battery_sensor.icon == "mdi:battery-50"
+def test_sensor_device_class__battery(battery_sensor):
+    """Test the battery device_class."""
+    assert battery_sensor.device_class == DEVICE_CLASS_BATTERY
 
 
-def test_sensor_icon(temperature_sensor):
-    """Test the icon property."""
-    assert temperature_sensor.icon == "mdi:thermometer"
+def test_sensor_device_class(temperature_sensor):
+    """Test the device_class property."""
+    assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
 
 
 def test_unit_of_measure(default_sensor, battery_sensor):
@@ -191,22 +191,22 @@ def test_update_captured_today(captured_sensor):
     assert captured_sensor.state == 5
 
 
-def _test_attributes(sensor_type):
+def _test_attributes(hass, sensor_type):
     data = _get_named_tuple({"model_id": "TEST123"})
-    sensor = _get_sensor("test", sensor_type, data)
+    sensor = _get_sensor(hass, "test", sensor_type, data)
     attrs = sensor.extra_state_attributes
     assert attrs.get(ATTR_ATTRIBUTION) == "Data provided by arlo.netgear.com"
     assert attrs.get("brand") == "Netgear Arlo"
     assert attrs.get("model") == "TEST123"
 
 
-def test_state_attributes():
+def test_state_attributes(hass):
     """Test attributes for camera sensor types."""
-    _test_attributes("battery_level")
-    _test_attributes("signal_strength")
-    _test_attributes("temperature")
-    _test_attributes("humidity")
-    _test_attributes("air_quality")
+    _test_attributes(hass, "battery_level")
+    _test_attributes(hass, "signal_strength")
+    _test_attributes(hass, "temperature")
+    _test_attributes(hass, "humidity")
+    _test_attributes(hass, "air_quality")
 
 
 def test_attributes_total_cameras(cameras_sensor):
@@ -217,17 +217,17 @@ def test_attributes_total_cameras(cameras_sensor):
     assert attrs.get("model") is None
 
 
-def _test_update(sensor_type, key, value):
+def _test_update(hass, sensor_type, key, value):
     data = _get_named_tuple({key: value})
-    sensor = _get_sensor("test", sensor_type, data)
+    sensor = _get_sensor(hass, "test", sensor_type, data)
     sensor.update()
     assert sensor.state == value
 
 
-def test_update():
+def test_update(hass):
     """Test update method for direct transcription sensor types."""
-    _test_update("battery_level", "battery_level", 100)
-    _test_update("signal_strength", "signal_strength", 100)
-    _test_update("temperature", "ambient_temperature", 21.4)
-    _test_update("humidity", "ambient_humidity", 45.1)
-    _test_update("air_quality", "ambient_air_quality", 14.2)
+    _test_update(hass, "battery_level", "battery_level", 100)
+    _test_update(hass, "signal_strength", "signal_strength", 100)
+    _test_update(hass, "temperature", "ambient_temperature", 21.4)
+    _test_update(hass, "humidity", "ambient_humidity", 45.1)
+    _test_update(hass, "air_quality", "ambient_air_quality", 14.2)

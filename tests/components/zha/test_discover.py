@@ -266,7 +266,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         )
 
     assert device_info["event_channels"] == sorted(
-        [ch.id for pool in channels.pools for ch in pool.client_channels.values()]
+        ch.id for pool in channels.pools for ch in pool.client_channels.values()
     )
     assert new_ent.call_count == len(
         [

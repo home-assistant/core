@@ -7,17 +7,19 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import get_capability, get_supported_features
 
 from . import DOMAIN, const
+
+# mypy: disallow-any-generics
 
 SET_HUMIDITY_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -40,7 +42,9 @@ ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DO
 ACTION_SCHEMA = vol.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Humidifier devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = await toggle_entity.async_get_actions(hass, device_id, DOMAIN)
@@ -50,7 +54,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         base_action = {
             CONF_DEVICE_ID: device_id,
@@ -59,11 +63,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         }
         actions.append({**base_action, CONF_TYPE: "set_humidity"})
 
-        # We need a state or else we can't populate the available modes.
-        if state is None:
-            continue
-
-        if state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_MODES:
+        if supported_features & const.SUPPORT_MODES:
             actions.append({**base_action, CONF_TYPE: "set_mode"})
 
     return actions
@@ -93,7 +93,6 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(hass, config):
     """List action capabilities."""
-    state = hass.states.get(config[CONF_ENTITY_ID])
     action_type = config[CONF_TYPE]
 
     fields = {}
@@ -101,9 +100,12 @@ async def async_get_action_capabilities(hass, config):
     if action_type == "set_humidity":
         fields[vol.Required(const.ATTR_HUMIDITY)] = vol.Coerce(int)
     elif action_type == "set_mode":
-        if state:
-            available_modes = state.attributes.get(const.ATTR_AVAILABLE_MODES, [])
-        else:
+        try:
+            available_modes = (
+                get_capability(hass, config[ATTR_ENTITY_ID], const.ATTR_AVAILABLE_MODES)
+                or []
+            )
+        except HomeAssistantError:
             available_modes = []
         fields[vol.Required(ATTR_MODE)] = vol.In(available_modes)
     else:

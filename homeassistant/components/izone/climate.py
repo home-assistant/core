@@ -12,6 +12,7 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_TOP,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -54,6 +55,7 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
     Controller.Fan.MED: FAN_MEDIUM,
     Controller.Fan.HIGH: FAN_HIGH,
+    Controller.Fan.TOP: FAN_TOP,
     Controller.Fan.AUTO: FAN_AUTO,
 }
 

@@ -15,16 +15,25 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
 )
-from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import template
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service, get_test_home_assistant
+from tests.common import async_mock_service, get_test_home_assistant, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
@@ -84,6 +93,7 @@ class TestScriptComponent(unittest.TestCase):
 
     def test_passing_variables(self):
         """Test different ways of passing in variables."""
+        mock_restore_cache(self.hass, ())
         calls = []
         context = Context()
 
@@ -679,6 +689,7 @@ async def test_script_variables(hass, caplog):
             "script": {
                 "script1": {
                     "variables": {
+                        "this_variable": "{{this.entity_id}}",
                         "test_var": "from_config",
                         "templated_config_var": "{{ var_from_service | default('config-default') }}",
                     },
@@ -688,6 +699,8 @@ async def test_script_variables(hass, caplog):
                             "data": {
                                 "value": "{{ test_var }}",
                                 "templated_config_var": "{{ templated_config_var }}",
+                                "this_template": "{{this.entity_id}}",
+                                "this_variable": "{{this_variable}}",
                             },
                         },
                     ],
@@ -731,6 +744,10 @@ async def test_script_variables(hass, caplog):
     assert len(mock_calls) == 1
     assert mock_calls[0].data["value"] == "from_config"
     assert mock_calls[0].data["templated_config_var"] == "hello"
+    # Verify this available to all templates
+    assert mock_calls[0].data.get("this_template") == "script.script1"
+    # Verify this available during trigger variables rendering
+    assert mock_calls[0].data.get("this_variable") == "script.script1"
 
     await hass.services.async_call(
         "script", "script1", {"test_var": "from_service"}, blocking=True
@@ -758,3 +775,70 @@ async def test_script_variables(hass, caplog):
 
     assert len(mock_calls) == 4
     assert mock_calls[3].data["value"] == 1
+
+
+async def test_script_this_var_always(hass, caplog):
+    """Test script always has reference to this, even with no variabls are configured."""
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {
+                                "this_template": "{{this.entity_id}}",
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+    )
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await hass.services.async_call("script", "script1", blocking=True)
+
+    assert len(mock_calls) == 1
+    # Verify this available to all templates
+    assert mock_calls[0].data.get("this_template") == "script.script1"
+    assert "Error rendering variables" not in caplog.text
+
+
+async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
+    """Test if last triggered is restored on start."""
+    time = dt_util.utcnow()
+    mock_restore_cache(
+        hass,
+        (
+            State("script.no_last_triggered", STATE_OFF),
+            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
+        ),
+    )
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "no_last_triggered": {
+                    "sequence": [{"delay": {"seconds": 5}}],
+                },
+                "last_triggered": {
+                    "sequence": [{"delay": {"seconds": 5}}],
+                },
+            },
+        },
+    )
+
+    state = hass.states.get("script.no_last_triggered")
+    assert state
+    assert state.attributes["last_triggered"] is None
+
+    state = hass.states.get("script.last_triggered")
+    assert state
+    assert state.attributes["last_triggered"] == time

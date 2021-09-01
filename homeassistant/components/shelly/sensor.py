@@ -1,17 +1,25 @@
 """Sensor for Shelly."""
+from __future__ import annotations
+
+from typing import Final, cast
+
 from homeassistant.components import sensor
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    VOLT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
@@ -25,13 +33,14 @@ from .entity import (
 )
 from .utils import get_device_uptime, temperature_unit
 
-SENSORS = {
+SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
         name="Battery",
         unit=PERCENTAGE,
         device_class=sensor.DEVICE_CLASS_BATTERY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
+        available=lambda block: cast(bool, block.battery != -1),
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -43,7 +52,7 @@ SENSORS = {
     ),
     ("emeter", "current"): BlockAttributeDescription(
         name="Current",
-        unit=ELECTRICAL_CURRENT_AMPERE,
+        unit=ELECTRIC_CURRENT_AMPERE,
         value=lambda value: value,
         device_class=sensor.DEVICE_CLASS_CURRENT,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
@@ -72,7 +81,7 @@ SENSORS = {
     ),
     ("emeter", "voltage"): BlockAttributeDescription(
         name="Voltage",
-        unit=VOLT,
+        unit=ELECTRIC_POTENTIAL_VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
@@ -103,28 +112,28 @@ SENSORS = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
         default_enabled=False,
     ),
     ("relay", "energy"): BlockAttributeDescription(
@@ -132,14 +141,14 @@ SENSORS = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
@@ -153,7 +162,7 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: block.extTemp != 999,
+        available=lambda block: cast(bool, block.extTemp != 999),
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
@@ -161,13 +170,14 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: block.extTemp != 999,
+        available=lambda block: cast(bool, block.extTemp != 999),
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: cast(bool, block.luminosity != -1),
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
@@ -186,7 +196,7 @@ SENSORS = {
     ),
     ("adc", "adc"): BlockAttributeDescription(
         name="ADC",
-        unit=VOLT,
+        unit=ELECTRIC_POTENTIAL_VOLT,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
@@ -199,7 +209,7 @@ SENSORS = {
     ),
 }
 
-REST_SENSORS = {
+REST_SENSORS: Final = {
     "rssi": RestAttributeDescription(
         name="RSSI",
         unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -217,7 +227,11 @@ REST_SENSORS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up sensors for device."""
     if config_entry.data["sleep_period"]:
         await async_setup_entry_attribute_entities(
@@ -236,36 +250,36 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
     @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
     @property
-    def state_class(self):
+    def state_class(self) -> str | None:
         """State class of sensor."""
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
-        return self._unit
+        return cast(str, self._unit)
 
 
 class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
     @property
-    def state_class(self):
+    def state_class(self) -> str | None:
         """State class of sensor."""
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
 
@@ -274,7 +288,7 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
             return self.attribute_value
@@ -282,11 +296,11 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.last_state
 
     @property
-    def state_class(self):
+    def state_class(self) -> str | None:
         """State class of sensor."""
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
-        return self._unit
+        return cast(str, self._unit)

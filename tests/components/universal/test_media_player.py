@@ -998,7 +998,8 @@ class TestMediaPlayer(unittest.TestCase):
         assert len(self.mock_mp_2.service_calls["shuffle_set"]) == 1
 
         asyncio.run_coroutine_threadsafe(ump.async_toggle(), self.hass.loop).result()
-        assert len(self.mock_mp_2.service_calls["toggle"]) == 1
+        # Delegate to turn_off
+        assert len(self.mock_mp_2.service_calls["turn_off"]) == 2
 
     def test_service_call_to_command(self):
         """Test service call to command."""

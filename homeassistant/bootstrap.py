@@ -332,15 +332,17 @@ def async_enable_logging(
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
 
+        err_handler: logging.handlers.RotatingFileHandler | logging.handlers.TimedRotatingFileHandler
         if log_rotate_days:
-            err_handler: logging.FileHandler = (
-                logging.handlers.TimedRotatingFileHandler(
-                    err_log_path, when="midnight", backupCount=log_rotate_days
-                )
+            err_handler = logging.handlers.TimedRotatingFileHandler(
+                err_log_path, when="midnight", backupCount=log_rotate_days
             )
         else:
-            err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
+            err_handler = logging.handlers.RotatingFileHandler(
+                err_log_path, backupCount=1
+            )
 
+        err_handler.doRollover()
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 

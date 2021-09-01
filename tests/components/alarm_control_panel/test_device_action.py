@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
@@ -50,6 +51,7 @@ def entity_reg(hass):
         (True, 0, const.SUPPORT_ALARM_ARM_AWAY, ["disarm", "arm_away"]),
         (True, 0, const.SUPPORT_ALARM_ARM_HOME, ["disarm", "arm_home"]),
         (True, 0, const.SUPPORT_ALARM_ARM_NIGHT, ["disarm", "arm_night"]),
+        (True, 0, const.SUPPORT_ALARM_ARM_VACATION, ["disarm", "arm_vacation"]),
         (True, 0, const.SUPPORT_ALARM_TRIGGER, ["disarm", "trigger"]),
     ],
 )
@@ -150,13 +152,14 @@ async def test_get_action_capabilities(
         "arm_away": {"extra_fields": []},
         "arm_home": {"extra_fields": []},
         "arm_night": {"extra_fields": []},
+        "arm_vacation": {"extra_fields": []},
         "disarm": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
         "trigger": {"extra_fields": []},
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == 6
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -196,13 +199,16 @@ async def test_get_action_capabilities_arm_code(
         "arm_night": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
+        "arm_vacation": {
+            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+        },
         "disarm": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
         "trigger": {"extra_fields": []},
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == 6
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -257,6 +263,18 @@ async def test_action(hass, enable_custom_integrations):
                     },
                 },
                 {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_arm_vacation",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "alarm_control_panel.alarm_no_arm_code",
+                        "type": "arm_vacation",
+                    },
+                },
+                {
                     "trigger": {"platform": "event", "event_type": "test_event_disarm"},
                     "action": {
                         "domain": DOMAIN,
@@ -300,6 +318,13 @@ async def test_action(hass, enable_custom_integrations):
     assert (
         hass.states.get("alarm_control_panel.alarm_no_arm_code").state
         == STATE_ALARM_ARMED_HOME
+    )
+
+    hass.bus.async_fire("test_event_arm_vacation")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("alarm_control_panel.alarm_no_arm_code").state
+        == STATE_ALARM_ARMED_VACATION
     )
 
     hass.bus.async_fire("test_event_arm_night")

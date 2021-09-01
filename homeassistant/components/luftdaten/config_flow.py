@@ -81,7 +81,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form({CONF_SENSOR_ID: "invalid_sensor"})
 
         available_sensors = [
-            x for x in luftdaten.values if luftdaten.values[x] is not None
+            x for x, x_values in luftdaten.values.items() if x_values is not None
         ]
 
         if available_sensors:

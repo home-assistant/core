@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"

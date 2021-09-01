@@ -12,9 +12,9 @@
         "step": {
             "user": {
                 "data": {
-                    "country_code": "L\u00e4ndercode Ihres Kontos (z. B. 1 f\u00fcr USA oder 86 f\u00fcr China)",
+                    "country_code": "L\u00e4ndercode deines Kontos (z. B. 1 f\u00fcr USA oder 86 f\u00fcr China)",
                     "password": "Passwort",
-                    "platform": "Die App, in der Ihr Konto registriert ist",
+                    "platform": "Die App, in der dein Konto registriert ist",
                     "username": "Benutzername"
                 },
                 "description": "Gib deine Tuya-Anmeldeinformationen ein.",
@@ -53,11 +53,11 @@
             "init": {
                 "data": {
                     "discovery_interval": "Abfrageintervall f\u00fcr Ger\u00e4teabruf in Sekunden",
-                    "list_devices": "W\u00e4hlen Sie die zu konfigurierenden Ger\u00e4te aus oder lassen Sie sie leer, um die Konfiguration zu speichern",
-                    "query_device": "W\u00e4hlen Sie ein Ger\u00e4t aus, das die Abfragemethode f\u00fcr eine schnellere Statusaktualisierung verwendet.",
+                    "list_devices": "W\u00e4hle die zu konfigurierenden Ger\u00e4te aus oder lasse sie leer, um die Konfiguration zu speichern",
+                    "query_device": "W\u00e4hle ein Ger\u00e4t aus, das die Abfragemethode f\u00fcr eine schnellere Statusaktualisierung verwendet.",
                     "query_interval": "Ger\u00e4teabrufintervall in Sekunden"
                 },
-                "description": "Stellen Sie das Abfrageintervall nicht zu niedrig ein, sonst schlagen die Aufrufe fehl und erzeugen eine Fehlermeldung im Protokoll",
+                "description": "Stelle das Abfrageintervall nicht zu niedrig ein, sonst schlagen die Aufrufe fehl und erzeugen eine Fehlermeldung im Protokoll",
                 "title": "Tuya-Optionen konfigurieren"
             }
         }

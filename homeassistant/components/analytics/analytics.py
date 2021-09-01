@@ -1,5 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
+from typing import cast
 import uuid
 
 import aiohttp
@@ -8,6 +9,10 @@ import async_timeout
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.energy import (
+    DOMAIN as ENERGY_DOMAIN,
+    is_configured as energy_is_configured,
+)
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -26,8 +31,10 @@ from .const import (
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
     ATTR_BOARD,
+    ATTR_CONFIGURED,
     ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
+    ATTR_ENERGY,
     ATTR_HEALTHY,
     ATTR_INTEGRATION_COUNT,
     ATTR_INTEGRATIONS,
@@ -58,7 +65,11 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False, ATTR_UUID: None}
+        self._data: dict = {
+            ATTR_PREFERENCES: {},
+            ATTR_ONBOARDED: False,
+            ATTR_UUID: None,
+        }
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @property
@@ -97,7 +108,7 @@ class Analytics:
 
     async def load(self) -> None:
         """Load preferences."""
-        stored = await self._store.async_load()
+        stored = cast(dict, await self._store.async_load())
         if stored:
             self._data = stored
 
@@ -171,10 +182,10 @@ class Analytics:
             ATTR_STATISTICS, False
         ):
             configured_integrations = await asyncio.gather(
-                *[
+                *(
                     async_get_integration(self.hass, domain)
                     for domain in async_get_loaded_integrations(self.hass)
-                ],
+                ),
                 return_exceptions=True,
             )
 
@@ -201,10 +212,10 @@ class Analytics:
 
             if supervisor_info is not None:
                 installed_addons = await asyncio.gather(
-                    *[
+                    *(
                         hassio.async_get_addon_info(self.hass, addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
-                    ]
+                    )
                 )
                 for addon in installed_addons:
                     addons.append(
@@ -221,6 +232,11 @@ class Analytics:
             payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
             if supervisor_info is not None:
                 payload[ATTR_ADDONS] = addons
+
+            if ENERGY_DOMAIN in integrations:
+                payload[ATTR_ENERGY] = {
+                    ATTR_CONFIGURED: await energy_is_configured(self.hass)
+                }
 
         if self.preferences.get(ATTR_STATISTICS, False):
             payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())

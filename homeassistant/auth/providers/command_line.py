@@ -1,7 +1,7 @@
 """Auth provider that validates credentials via an external command."""
 from __future__ import annotations
 
-import asyncio.subprocess
+import asyncio
 import collections
 from collections.abc import Mapping
 import logging
@@ -16,6 +16,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+
+# mypy: disallow-any-generics
 
 CONF_ARGS = "args"
 CONF_META = "meta"
@@ -56,7 +58,7 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return CommandLineLoginFlow(self)
 
@@ -64,7 +66,7 @@ class CommandLineAuthProvider(AuthProvider):
         """Validate a username and password."""
         env = {"username": username, "password": password}
         try:
-            process = await asyncio.subprocess.create_subprocess_exec(  # pylint: disable=no-member
+            process = await asyncio.create_subprocess_exec(
                 self.config[CONF_COMMAND],
                 *self.config[CONF_ARGS],
                 env=env,

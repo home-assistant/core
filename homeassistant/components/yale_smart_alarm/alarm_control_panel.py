@@ -1,14 +1,7 @@
-"""Component for interacting with the Yale Smart Alarm System API."""
-import logging
+"""Support for Yale Alarm."""
+from __future__ import annotations
 
 import voluptuous as vol
-from yalesmartalarmclient.client import (
-    YALE_STATE_ARM_FULL,
-    YALE_STATE_ARM_PARTIAL,
-    YALE_STATE_DISARM,
-    AuthenticationError,
-    YaleSmartAlarmClient,
-)
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -18,23 +11,38 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    ConfigType,
+    DiscoveryInfoType,
+)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-CONF_AREA_ID = "area_id"
-
-DEFAULT_NAME = "Yale Smart Alarm"
-
-DEFAULT_AREA_ID = "1"
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_AREA_ID,
+    COORDINATOR,
+    DEFAULT_AREA_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+    MANUFACTURER,
+    MODEL,
+    STATE_MAP,
+)
+from .coordinator import YaleDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -46,66 +54,83 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the alarm platform."""
-    name = config[CONF_NAME]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    area_id = config[CONF_AREA_ID]
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import Yale configuration from YAML."""
+    LOGGER.warning(
+        "Loading Yale Alarm via platform setup is deprecated; Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    try:
-        client = YaleSmartAlarmClient(username, password, area_id)
-    except AuthenticationError:
-        _LOGGER.error("Authentication failed. Check credentials")
-        return
 
-    add_entities([YaleAlarmDevice(name, client)], True)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the alarm entry."""
+
+    async_add_entities(
+        [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id][COORDINATOR])]
+    )
 
 
-class YaleAlarmDevice(AlarmControlPanelEntity):
+class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
-    def __init__(self, name, client):
+    def __init__(self, coordinator: YaleDataUpdateCoordinator) -> None:
         """Initialize the Yale Alarm Device."""
-        self._name = name
-        self._client = client
-        self._state = None
-
-        self._state_map = {
-            YALE_STATE_DISARM: STATE_ALARM_DISARMED,
-            YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
-            YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY,
-        }
+        super().__init__(coordinator)
+        self._attr_name: str = coordinator.entry.data[CONF_NAME]
+        self._attr_unique_id = coordinator.entry.entry_id
+        self._identifier: str = coordinator.entry.data[CONF_USERNAME]
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        return {
+            ATTR_NAME: str(self.name),
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_MODEL: MODEL,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._identifier)},
+        }
 
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        return STATE_MAP.get(self.coordinator.data["alarm"])
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return STATE_MAP.get(self.coordinator.data["alarm"]) is not None
+
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return False
 
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
-    def update(self):
-        """Return the state of the device."""
-        armed_status = self._client.get_armed_status()
-
-        self._state = self._state_map.get(armed_status)
-
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._client.disarm()
+        self.coordinator.yale.disarm()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._client.arm_partial()
+        self.coordinator.yale.arm_partial()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._client.arm_full()
+        self.coordinator.yale.arm_full()

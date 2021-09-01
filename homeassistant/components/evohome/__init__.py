@@ -531,7 +531,7 @@ class EvoDevice(Entity):
             return
         if payload["unique_id"] != self._unique_id:
             return
-        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
@@ -653,10 +653,10 @@ class EvoChild(EvoDevice):
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-            for key, offset, idx in [
+            for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-            ]:
+            ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]

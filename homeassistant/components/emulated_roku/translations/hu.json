@@ -6,9 +6,12 @@
         "step": {
             "user": {
                 "data": {
+                    "advertise_ip": "IP c\u00edm k\u00f6zl\u00e9se",
+                    "advertise_port": "Port k\u00f6zl\u00e9se",
                     "host_ip": "Hoszt IP c\u00edm",
                     "listen_port": "Port figyel\u00e9se",
-                    "name": "N\u00e9v"
+                    "name": "N\u00e9v",
+                    "upnp_bind_multicast": "K\u00f6t\u00f6tt multicast (igaz/hamis)"
                 },
                 "title": "A kiszolg\u00e1l\u00f3 szerver konfigur\u00e1l\u00e1sa"
             }

@@ -25,7 +25,13 @@
     "treeIndex": 0,
     "weedIndex": 0,
     "grassIndex": 0,
-    "fireIndex": 10
+    "fireIndex": 10,
+    "temperatureApparent": 101.3,
+    "dewPoint": 72.82,
+    "pressureSurfaceLevel": 29.47,
+    "solarGHI": 0,
+    "cloudBase": 0.74,
+    "cloudCeiling": 0.74
   },
   "forecasts": {
     "nowcast": [

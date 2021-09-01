@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/modern_forms",
   "requirements": [
-    "aiomodernforms==0.1.5"
+    "aiomodernforms==0.1.8"
   ],
   "zeroconf": [
     {"type":"_easylink._tcp.local.", "name":"wac*"}

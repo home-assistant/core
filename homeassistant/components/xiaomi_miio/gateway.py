@@ -1,6 +1,7 @@
 """Code to handle a Xiaomi Gateway."""
 import logging
 
+from construct.core import ChecksumError
 from micloud import MiCloud
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
@@ -74,37 +75,59 @@ class ConnectXiaomiGateway:
         try:
             self._gateway_device = gateway.Gateway(self._host, self._token)
             # get the gateway info
-            self._gateway_device.info()
+            self._gateway_info = self._gateway_device.info()
+        except DeviceException as error:
+            if isinstance(error.__cause__, ChecksumError):
+                raise ConfigEntryAuthFailed(error) from error
 
-            # get the connected sub devices
-            if self._use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU:
-                if (
-                    self._cloud_username is None
-                    or self._cloud_password is None
-                    or self._cloud_country is None
-                ):
-                    raise ConfigEntryAuthFailed(
-                        "Missing cloud credentials in Xiaomi Miio configuration"
-                    )
+            _LOGGER.error(
+                "DeviceException during setup of xiaomi gateway with host %s: %s",
+                self._host,
+                error,
+            )
+            return False
 
-                # use miio-cloud
+        # get the connected sub devices
+        use_cloud = self._use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU
+        if not use_cloud:
+            # use local query (not supported by all gateway types)
+            try:
+                self._gateway_device.discover_devices()
+            except DeviceException as error:
+                _LOGGER.info(
+                    "DeviceException during getting subdevices of xiaomi gateway"
+                    " with host %s, trying cloud to obtain subdevices: %s",
+                    self._host,
+                    error,
+                )
+                use_cloud = True
+
+        if use_cloud:
+            # use miio-cloud
+            if (
+                self._cloud_username is None
+                or self._cloud_password is None
+                or self._cloud_country is None
+            ):
+                raise ConfigEntryAuthFailed(
+                    "Missing cloud credentials in Xiaomi Miio configuration"
+                )
+
+            try:
                 miio_cloud = MiCloud(self._cloud_username, self._cloud_password)
                 if not miio_cloud.login():
                     raise ConfigEntryAuthFailed(
-                        "Could not login to Xioami Miio Cloud, check the credentials"
+                        "Could not login to Xiaomi Miio Cloud, check the credentials"
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
-            else:
-                # use local query (not supported by all gateway types)
-                self._gateway_device.discover_devices()
-
-        except DeviceException:
-            _LOGGER.error(
-                "DeviceException during setup of xiaomi gateway with host %s",
-                self._host,
-            )
-            return False
+            except DeviceException as error:
+                _LOGGER.error(
+                    "DeviceException during setup of xiaomi gateway with host %s: %s",
+                    self._host,
+                    error,
+                )
+                return False
 
         return True
 

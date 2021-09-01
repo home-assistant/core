@@ -1,14 +1,12 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Callable
 
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
-
-import homeassistant.util.dt as dt_util
 
 from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
@@ -23,13 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @retryable_database_job("purge")
 def purge_old_data(
-    instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
+    instance: Recorder, purge_before: datetime, repack: bool, apply_filter: bool = False
 ) -> bool:
-    """Purge events and states older than purge_days ago.
+    """Purge events and states older than purge_before.
 
     Cleans up an timeframe of an hour, based on the oldest record.
     """
-    purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),

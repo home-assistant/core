@@ -190,7 +190,9 @@ async def async_send_message(  # noqa: C901
                         _LOGGER.info("Sending file to %s", recipient)
                         message = self.Message(sto=recipient, stype="chat")
                     message["body"] = url
-                    message["oob"]["url"] = url
+                    message["oob"][  # pylint: disable=invalid-sequence-index
+                        "url"
+                    ] = url
                     try:
                         message.send()
                     except (IqError, IqTimeout, XMPPError) as ex:

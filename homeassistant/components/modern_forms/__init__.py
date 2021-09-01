@@ -11,9 +11,20 @@ from aiomodernforms import (
 )
 from aiomodernforms.models import Device as ModernFormsDeviceState
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -23,11 +34,15 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, DOMAIN
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
+    BINARY_SENSOR_DOMAIN,
+    LIGHT_DOMAIN,
     FAN_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +160,7 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
     def device_info(self) -> DeviceInfo:
         """Return device information about this Modern Forms device."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},  # type: ignore
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},
             ATTR_NAME: self.coordinator.data.info.device_name,
             ATTR_MANUFACTURER: "Modern Forms",
             ATTR_MODEL: self.coordinator.data.info.fan_type,

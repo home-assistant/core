@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
-        "flow_title": "Sony Songpal {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}({host})-t?"

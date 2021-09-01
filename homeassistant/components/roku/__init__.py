@@ -1,11 +1,9 @@
 """Support for Roku."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-from rokuecp import Roku, RokuConnectionError, RokuError
-from rokuecp.models import Device
+from rokuecp import RokuConnectionError, RokuError
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
@@ -13,16 +11,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .coordinator import RokuDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
-SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -63,42 +58,3 @@ def roku_exception_handler(func):
                 _LOGGER.error("Invalid response from API: %s", error)
 
     return handler
-
-
-class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
-    """Class to manage fetching Roku data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        host: str,
-    ) -> None:
-        """Initialize global Roku data updater."""
-        self.roku = Roku(host=host, session=async_get_clientsession(hass))
-
-        self.full_update_interval = timedelta(minutes=15)
-        self.last_full_update = None
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-
-    async def _async_update_data(self) -> Device:
-        """Fetch data from Roku."""
-        full_update = self.last_full_update is None or utcnow() >= (
-            self.last_full_update + self.full_update_interval
-        )
-
-        try:
-            data = await self.roku.update(full_update=full_update)
-
-            if full_update:
-                self.last_full_update = utcnow()
-
-            return data
-        except RokuError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error

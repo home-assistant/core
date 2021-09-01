@@ -198,7 +198,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
         """Return device information about this AdGuard Home instance."""
         return {
             "identifiers": {
-                (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)
+                (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore
             },
             "name": "AdGuard Home",
             "manufacturer": "AdGuard Team",

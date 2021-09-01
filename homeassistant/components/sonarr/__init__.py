@@ -23,7 +23,6 @@ from .const import (
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
     DATA_SONARR,
-    DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
@@ -66,12 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SonarrError as err:
         raise ConfigEntryNotReady from err
 
-    undo_listener = entry.add_update_listener(_async_update_listener)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SONARR: sonarr,
-        DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -82,8 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

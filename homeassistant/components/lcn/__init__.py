@@ -1,5 +1,8 @@
 """Support for LCN devices."""
+from __future__ import annotations
+
 import logging
+from typing import Callable
 
 import pypck
 
@@ -12,18 +15,25 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
-from .helpers import generate_unique_id, import_lcn_config
+from .helpers import (
+    DeviceConnectionType,
+    InputType,
+    generate_unique_id,
+    import_lcn_config,
+)
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
     if DOMAIN not in config:
         return True
@@ -43,7 +53,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     if config_entry.entry_id in hass.data[DOMAIN]:
@@ -104,7 +116,9 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -126,16 +140,18 @@ async def async_unload_entry(hass, config_entry):
 class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
-    def __init__(self, config, entry_id, device_connection):
+    def __init__(
+        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
+    ) -> None:
         """Initialize the LCN device."""
         self.config = config
         self.entry_id = entry_id
         self.device_connection = device_connection
-        self._unregister_for_inputs = None
-        self._name = config[CONF_NAME]
+        self._unregister_for_inputs: Callable | None = None
+        self._name: str = config[CONF_NAME]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         unique_device_id = generate_unique_id(
             (
@@ -147,26 +163,26 @@ class LcnEntity(Entity):
         return f"{self.entry_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Lcn device entity pushes its state to HA."""
         return False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         if not self.device_connection.is_group:
             self._unregister_for_inputs = self.device_connection.register_for_inputs(
                 self.input_received
             )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._unregister_for_inputs is not None:
             self._unregister_for_inputs()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
-    def input_received(self, input_obj):
+    def input_received(self, input_obj: InputType) -> None:
         """Set state/value when LCN input object (command) is received."""

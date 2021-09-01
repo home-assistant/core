@@ -120,7 +120,7 @@ def path(value: Any) -> str:
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -131,12 +131,13 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -145,7 +146,8 @@ def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -647,6 +649,16 @@ def url(value: Any) -> str:
         return cast(str, vol.Schema(vol.Url())(url_in))
 
     raise vol.Invalid("invalid url")
+
+
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
 
 
 def x10_address(value: str) -> str:
@@ -1269,3 +1281,168 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
 }
+
+
+# Validate currencies adopted by countries
+currency = vol.In(
+    {
+        "AED",
+        "AFN",
+        "ALL",
+        "AMD",
+        "ANG",
+        "AOA",
+        "ARS",
+        "AUD",
+        "AWG",
+        "AZN",
+        "BAM",
+        "BBD",
+        "BDT",
+        "BGN",
+        "BHD",
+        "BIF",
+        "BMD",
+        "BND",
+        "BOB",
+        "BRL",
+        "BSD",
+        "BTN",
+        "BWP",
+        "BYN",
+        "BYR",
+        "BZD",
+        "CAD",
+        "CDF",
+        "CHF",
+        "CLP",
+        "CNY",
+        "COP",
+        "CRC",
+        "CUP",
+        "CVE",
+        "CZK",
+        "DJF",
+        "DKK",
+        "DOP",
+        "DZD",
+        "EGP",
+        "ERN",
+        "ETB",
+        "EUR",
+        "FJD",
+        "FKP",
+        "GBP",
+        "GEL",
+        "GHS",
+        "GIP",
+        "GMD",
+        "GNF",
+        "GTQ",
+        "GYD",
+        "HKD",
+        "HNL",
+        "HRK",
+        "HTG",
+        "HUF",
+        "IDR",
+        "ILS",
+        "INR",
+        "IQD",
+        "IRR",
+        "ISK",
+        "JMD",
+        "JOD",
+        "JPY",
+        "KES",
+        "KGS",
+        "KHR",
+        "KMF",
+        "KPW",
+        "KRW",
+        "KWD",
+        "KYD",
+        "KZT",
+        "LAK",
+        "LBP",
+        "LKR",
+        "LRD",
+        "LSL",
+        "LTL",
+        "LYD",
+        "MAD",
+        "MDL",
+        "MGA",
+        "MKD",
+        "MMK",
+        "MNT",
+        "MOP",
+        "MRO",
+        "MUR",
+        "MVR",
+        "MWK",
+        "MXN",
+        "MYR",
+        "MZN",
+        "NAD",
+        "NGN",
+        "NIO",
+        "NOK",
+        "NPR",
+        "NZD",
+        "OMR",
+        "PAB",
+        "PEN",
+        "PGK",
+        "PHP",
+        "PKR",
+        "PLN",
+        "PYG",
+        "QAR",
+        "RON",
+        "RSD",
+        "RUB",
+        "RWF",
+        "SAR",
+        "SBD",
+        "SCR",
+        "SDG",
+        "SEK",
+        "SGD",
+        "SHP",
+        "SLL",
+        "SOS",
+        "SRD",
+        "SSP",
+        "STD",
+        "SYP",
+        "SZL",
+        "THB",
+        "TJS",
+        "TMT",
+        "TND",
+        "TOP",
+        "TRY",
+        "TTD",
+        "TWD",
+        "TZS",
+        "UAH",
+        "UGX",
+        "USD",
+        "UYU",
+        "UZS",
+        "VEF",
+        "VND",
+        "VUV",
+        "WST",
+        "XAF",
+        "XCD",
+        "XOF",
+        "XPF",
+        "YER",
+        "ZAR",
+        "ZMK",
+        "ZWL",
+    },
+    msg="invalid ISO 4217 formatted currency",
+)

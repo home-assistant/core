@@ -315,9 +315,9 @@ def test_event_eq():
     now = dt_util.utcnow()
     data = {"some": "attr"}
     context = ha.Context()
-    event1, event2 = [
+    event1, event2 = (
         ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
-    ]
+    )
 
     assert event1 == event2
 
@@ -912,6 +912,7 @@ def test_config_defaults():
     assert config.media_dirs == {}
     assert config.safe_mode is False
     assert config.legacy_templates is False
+    assert config.currency == "EUR"
 
 
 def test_config_path_with_file():
@@ -952,6 +953,7 @@ def test_config_as_dict():
         "state": "RUNNING",
         "external_url": None,
         "internal_url": None,
+        "currency": "EUR",
     }
 
     assert expected == config.as_dict()
@@ -1370,6 +1372,33 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     }
     await config.async_load()
     assert config.location_name == "Test Name"
+
+
+async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
+    """Test that we warn when detecting invalid internal/extenral url."""
+    config = ha.Config(hass)
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": None,
+            "external_url": None,
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" not in caplog.text
+    assert "Invalid internal_url set" not in caplog.text
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": "https://community.home-assistant.io/profile",
+            "external_url": "https://www.home-assistant.io/blue",
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" in caplog.text
+    assert "Invalid internal_url set" in caplog.text
 
 
 async def test_start_events(hass):
