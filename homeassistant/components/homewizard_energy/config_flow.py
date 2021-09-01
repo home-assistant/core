@@ -80,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_check(entry_info)
 
     async def async_step_check(self, entry_info):
-        """Perform some checks and create entry if OK."""
+        """Validate API connection and fetch metadata."""
 
         _LOGGER.debug("config_flow async_step_check")
 
@@ -149,7 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
-        """Handle user-confirmation of discovered node."""
+        """Handle user-confirmation of node."""
 
         _LOGGER.debug("config_flow async_step_confirm")
 
