@@ -29,7 +29,6 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
-    valid_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -154,6 +153,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         data: dict[str, Any] = {"key": self._static_info.key, "state": True}
         # The list of color modes that would fit this service call
         color_modes = self._native_supported_color_modes
+        try_keep_current_mode = True
 
         # rgb/brightness input is in range 0-255, but esphome uses 0-1
 
@@ -170,6 +170,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["rgb"] = tuple(x / (color_bri or 1) for x in rgb)
             data["color_brightness"] = color_bri
             color_modes = _filter_color_modes(color_modes, LightColorCapability.RGB)
+            try_keep_current_mode = False
 
         if (rgbw_ha := kwargs.get(ATTR_RGBW_COLOR)) is not None:
             # pylint: disable=invalid-name
@@ -182,6 +183,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             color_modes = _filter_color_modes(
                 color_modes, LightColorCapability.RGB | LightColorCapability.WHITE
             )
+            try_keep_current_mode = False
 
         if (rgbww_ha := kwargs.get(ATTR_RGBWW_COLOR)) is not None:
             # pylint: disable=invalid-name
@@ -206,8 +208,10 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                     ct_ratio = ww / (cw + ww)
                     data["color_temperature"] = min_ct + ct_ratio * (max_ct - min_ct)
                 color_modes = _filter_color_modes(
-                    color_modes, LightColorCapability.COLOR_TEMPERATURE
+                    color_modes,
+                    LightColorCapability.COLOR_TEMPERATURE | LightColorCapability.WHITE,
                 )
+            try_keep_current_mode = False
 
             data["color_brightness"] = color_bri
 
@@ -227,6 +231,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLD_WARM_WHITE
                 )
+            try_keep_current_mode = False
 
         if (effect := kwargs.get(ATTR_EFFECT)) is not None:
             data["effect"] = effect
@@ -236,13 +241,30 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             # HA only sends `white` in turn_on, and reads total brightness through brightness property
             data["brightness"] = white_ha / 255
             data["white"] = 1.0
-            color_modes = _filter_color_modes(color_modes, LightColorCapability.WHITE)
+            color_modes = _filter_color_modes(
+                color_modes,
+                LightColorCapability.BRIGHTNESS | LightColorCapability.WHITE,
+            )
+            try_keep_current_mode = False
 
         if self._supports_color_mode and color_modes:
             # try the color mode with the least complexity (fewest capabilities set)
             # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
             color_modes.sort(key=lambda mode: bin(mode).count("1"))
             data["color_mode"] = color_modes[0]
+        if self._supports_color_mode and color_modes:
+            if (
+                try_keep_current_mode
+                and self._state is not None
+                and self._state.color_mode in color_modes
+            ):
+                # if possible, stay with the color mode that is already set
+                data["color_mode"] = self._state.color_mode
+            else:
+                # otherwise try the color mode with the least complexity (fewest capabilities set)
+                # popcount with bin() function because it appears to be the best way: https://stackoverflow.com/a/9831671
+                color_modes.sort(key=lambda mode: bin(mode).count("1"))
+                data["color_mode"] = color_modes[0]
 
         await self._client.light_command(**data)
 
@@ -351,9 +373,14 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
-        return valid_supported_color_modes(
-            map(_color_mode_to_ha, self._native_supported_color_modes)
-        )
+        supported = set(map(_color_mode_to_ha, self._native_supported_color_modes))
+        if COLOR_MODE_ONOFF in supported and len(supported) > 1:
+            supported.remove(COLOR_MODE_ONOFF)
+        if COLOR_MODE_BRIGHTNESS in supported and len(supported) > 1:
+            supported.remove(COLOR_MODE_BRIGHTNESS)
+        if COLOR_MODE_WHITE in supported and len(supported) == 1:
+            supported.remove(COLOR_MODE_WHITE)
+        return supported
 
     @property
     def effect_list(self) -> list[str]:
