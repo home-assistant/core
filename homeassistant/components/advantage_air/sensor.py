@@ -147,7 +147,6 @@ class AdvantageAirZoneTemp(AdvantageAirEntity, SensorEntity):
     _attr_native_unit_of_measurement = TEMP_CELSIUS
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_state_class = STATE_CLASS_MEASUREMENT
-    _attr_icon = "mdi:thermometer"
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, instance, ac_key, zone_key):
