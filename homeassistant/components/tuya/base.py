@@ -69,6 +69,6 @@ class TuyaHaEntity(Entity):
             )
         )
 
-    def _send_command(self, commands) -> None:
+    def _send_command(self, commands: list[str]) -> None:
         """Send command to the device."""
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
