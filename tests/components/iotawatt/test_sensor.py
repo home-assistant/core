@@ -1,11 +1,7 @@
 """Test setting up sensors."""
 from datetime import timedelta
 
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DEVICE_CLASS_ENERGY,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DEVICE_CLASS_ENERGY
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -37,7 +33,7 @@ async def test_sensor_type_input(hass, mock_iotawatt):
     state = hass.states.get("sensor.my_sensor")
     assert state is not None
     assert state.state == "23"
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert ATTR_STATE_CLASS not in state.attributes
     assert state.attributes[ATTR_FRIENDLY_NAME] == "My Sensor"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
