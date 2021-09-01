@@ -457,9 +457,8 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         key="watts",
         name="Watts",
         native_unit_of_measurement=POWER_WATT,
-        device_class=DEVICE_CLASS_POWER
+        device_class=DEVICE_CLASS_POWER,
     ),
-    
 }
 
 STATE_TYPES = {
