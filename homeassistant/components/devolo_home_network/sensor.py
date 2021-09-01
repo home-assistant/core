@@ -6,6 +6,7 @@ from datetime import timedelta
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
@@ -41,10 +42,13 @@ class DevoloNetworkOverviewEntity(DevoloEntity):
 
     def __init__(self, device: Device, device_name: str) -> None:
         """Initialize entity."""
+        self.entity_description = SensorEntityDescription(
+            key="connected_plc_devices",
+            entity_registry_enabled_default=False,
+            icon="mdi:lan",
+            name="Connected PLC devices",
+        )
         super().__init__(device, device_name)
-        self._attr_entity_registry_enabled_default = False
-        self._attr_icon = "mdi:lan"
-        self._attr_name = "Connected PLC devices"
         self._attr_unique_id = f"{self._device.serial_number}_connected_plc_devices"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -68,10 +72,13 @@ class DevoloWifiClientsEntity(DevoloEntity):
 
     def __init__(self, device: Device, device_name: str) -> None:
         """Initialize entity."""
+        self.entity_description = SensorEntityDescription(
+            key="connected_wifi_clients",
+            entity_registry_enabled_default=True,
+            icon="mdi:wifi",
+            name="Connected wifi clients",
+        )
         super().__init__(device, device_name)
-        self._attr_entity_registry_enabled_default = True
-        self._attr_icon = "mdi:wifi"
-        self._attr_name = "Connected wifi clients"
         self._attr_unique_id = f"{self._device.serial_number}_connected_wifi_clients"
 
     async def async_update(self) -> None:
@@ -91,10 +98,13 @@ class DevoloWifiNetworksEntity(DevoloEntity):
 
     def __init__(self, device: Device, device_name: str) -> None:
         """Initialize entity."""
+        self.entity_description = SensorEntityDescription(
+            key="neighboring_wifi_networks",
+            entity_registry_enabled_default=False,
+            icon="mdi:wifi-marker",
+            name="Neighboring wifi networks",
+        )
         super().__init__(device, device_name)
-        self._attr_entity_registry_enabled_default = False
-        self._attr_icon = "mdi:wifi-marker"
-        self._attr_name = "Neighboring wifi networks"
         self._attr_unique_id = f"{self._device.serial_number}_neighboring_wifi_networks"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
