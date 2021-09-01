@@ -64,17 +64,17 @@ class MoonSensor(SensorEntity):
         """Return the state of the device."""
         if self._state < 0.5 or self._state > 27.5:
             return STATE_NEW_MOON
-        elif self._state < 6.5:
+        if self._state < 6.5:
             return STATE_WAXING_CRESCENT
-        elif self._state < 7.5:
+        if self._state < 7.5:
             return STATE_FIRST_QUARTER
-        elif self._state < 13.5:
+        if self._state < 13.5:
             return STATE_WAXING_GIBBOUS
-        elif self._state < 14.5:
+        if self._state < 14.5:
             return STATE_FULL_MOON
-        elif self._state < 20.5:
+        if self._state < 20.5:
             return STATE_WANING_GIBBOUS
-        elif self._state < 21.5:
+        if self._state < 21.5:
             return STATE_LAST_QUARTER
         return STATE_WANING_CRESCENT
 
