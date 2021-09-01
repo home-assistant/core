@@ -185,3 +185,21 @@ async def test_stream(hassio_client, aioclient_mock):
     aioclient_mock.get("http://127.0.0.1/test")
     await hassio_client.get("/api/hassio/test", data="test")
     assert isinstance(aioclient_mock.mock_calls[-1][2], StreamReader)
+
+
+async def test_entrypoint_cache_control(hassio_client, aioclient_mock):
+    """Test that we return cache control for requests to the entrypoint only."""
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.fdhkusd8y43r.js")
+
+    resp1 = await hassio_client.get("/api/hassio/app/entrypoint.js")
+    resp2 = await hassio_client.get("/api/hassio/app/entrypoint.fdhkusd8y43r.js")
+
+    # Check we got right response
+    assert resp1.status == 200
+    assert resp2.status == 200
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert resp1.headers["Cache-Control"] == "no-store, max-age=0"
+
+    assert "Cache-Control" not in resp2.headers
