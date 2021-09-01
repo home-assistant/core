@@ -55,7 +55,7 @@ def mock_setup_entry():
         yield
 
 
-async def test_user_connection_works(hass, mock_client):
+async def test_user_connection_works(hass, mock_client, mock_zeroconf):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -86,7 +86,9 @@ async def test_user_connection_works(hass, mock_client):
     assert mock_client.password == ""
 
 
-async def test_user_resolve_error(hass, mock_api_connection_error, mock_client):
+async def test_user_resolve_error(
+    hass, mock_api_connection_error, mock_client, mock_zeroconf
+):
     """Test user step with IP resolve error."""
 
     class MockResolveError(mock_api_connection_error):
@@ -116,7 +118,9 @@ async def test_user_resolve_error(hass, mock_api_connection_error, mock_client):
     assert len(mock_client.disconnect.mock_calls) == 1
 
 
-async def test_user_connection_error(hass, mock_api_connection_error, mock_client):
+async def test_user_connection_error(
+    hass, mock_api_connection_error, mock_client, mock_zeroconf
+):
     """Test user step with connection error."""
     mock_client.device_info.side_effect = mock_api_connection_error
 
@@ -135,7 +139,7 @@ async def test_user_connection_error(hass, mock_api_connection_error, mock_clien
     assert len(mock_client.disconnect.mock_calls) == 1
 
 
-async def test_user_with_password(hass, mock_client):
+async def test_user_with_password(hass, mock_client, mock_zeroconf):
     """Test user step with password."""
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(True, "test"))
 
@@ -161,7 +165,9 @@ async def test_user_with_password(hass, mock_client):
     assert mock_client.password == "password1"
 
 
-async def test_user_invalid_password(hass, mock_api_connection_error, mock_client):
+async def test_user_invalid_password(
+    hass, mock_api_connection_error, mock_client, mock_zeroconf
+):
     """Test user step with invalid password."""
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(True, "test"))
 
@@ -185,7 +191,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_discovery_initiation(hass, mock_client):
+async def test_discovery_initiation(hass, mock_client, mock_zeroconf):
     """Test discovery importing works."""
     mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
