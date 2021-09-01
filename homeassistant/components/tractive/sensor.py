@@ -63,9 +63,7 @@ class TractiveHardwareSensor(TractiveSensor):
     @callback
     def handle_hardware_status_update(self, event):
         """Handle hardware status update."""
-        if (_state := event[self.entity_description.key]) is None:
-            return
-        self._attr_native_value = _state
+        self._attr_native_value = event[self.entity_description.key]
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -138,6 +136,7 @@ SENSOR_TYPES = (
     TractiveSensorEntityDescription(
         key=ATTR_LIVE_TRACKING_REMAINING,
         name="Live tracking remaining time",
+        icon="mdi:clock-end",
         native_unit_of_measurement=TIME_SECONDS,
         entity_class=TractiveHardwareSensor,
     ),

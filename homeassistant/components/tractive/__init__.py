@@ -154,12 +154,9 @@ class TractiveClient:
     def _send_hardware_update(self, event):
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
-            ATTR_LIVE_TRACKING_REMAINING: event.get("live_tracking", {}).get(
-                "remaining"
-            ),
+            ATTR_LIVE_TRACKING_REMAINING: event["live_tracking"]["remaining"],
+            ATTR_TRACKER_STATE: event["tracker_state"].lower(),
         }
-        if event.get("tracker_state") is not None:
-            payload[ATTR_TRACKER_STATE] = event["tracker_state"].lower()
 
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
