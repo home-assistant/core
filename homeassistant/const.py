@@ -700,5 +700,7 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# The ID of the Home Assistant Cast App
-CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
+# The ID of the Home Assistant Media Player Cast App
+CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
+# The ID of the Home Assistant Lovelace Cast App
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "B12CE3CA"

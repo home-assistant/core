@@ -35,7 +35,7 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CAST_APP_ID_HOMEASSISTANT,
+    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -309,7 +309,7 @@ class CameraStreamTrait(_Trait):
         )
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
-            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT,
+            "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
         }
 
 
