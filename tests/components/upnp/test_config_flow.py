@@ -1,7 +1,6 @@
 """Test UPnP/IGD config flow."""
 
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
@@ -16,8 +15,7 @@ from homeassistant.components.upnp.const import (
     DOMAIN,
     DOMAIN_DEVICES,
 )
-from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 from .common import (
@@ -29,25 +27,17 @@ from .common import (
     TEST_UDN,
     TEST_USN,
 )
-from .mock_ssdp_scanner import mock_ssdp_scanner  # noqa: F401
-from .mock_upnp_device import mock_upnp_device  # noqa: F401
+from .common import mock_upnp_device  # noqa: F401
+from .common import ssdp_instant_discovery  # noqa: F401
+from .common import ssdp_listener  # noqa: F401
+from .common import ssdp_no_discovery  # noqa: F401
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
-async def test_flow_ssdp_discovery(
-    hass: HomeAssistant,
-):
+@pytest.mark.usefixtures("ssdp_listener", "ssdp_instant_discovery", "mock_upnp_device")
+async def test_flow_ssdp(hass: HomeAssistant):
     """Test config flow: discovered + configured through ssdp."""
-    # Ensure we have a ssdp Scanner.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
-    ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
-    # Speed up callback in ssdp.async_register_callback.
-    hass.state = CoreState.not_running
-
     # Discovered via step ssdp.
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -71,7 +61,7 @@ async def test_flow_ssdp_discovery(
     }
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner")
+@pytest.mark.usefixtures("ssdp_listener")
 async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     """Test config flow: incomplete discovery through ssdp."""
     # Discovered via step ssdp.
@@ -89,7 +79,7 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
     assert result["reason"] == "incomplete_discovery"
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner")
+@pytest.mark.usefixtures("ssdp_listener")
 async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
     """Test config flow: discovery through ssdp, but ignored, as hostname is used by existing config entry."""
     # Existing entry.
@@ -114,17 +104,9 @@ async def test_flow_ssdp_discovery_ignored(hass: HomeAssistant):
     assert result["reason"] == "discovery_ignored"
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
+@pytest.mark.usefixtures("ssdp_listener", "ssdp_instant_discovery", "mock_upnp_device")
 async def test_flow_user(hass: HomeAssistant):
     """Test config flow: discovered + configured through user."""
-    # Ensure we have a ssdp Scanner.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
-    ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
-    # Speed up callback in ssdp.async_register_callback.
-    hass.state = CoreState.not_running
-
     # Discovered via step user.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -146,17 +128,9 @@ async def test_flow_user(hass: HomeAssistant):
     }
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
+@pytest.mark.usefixtures("ssdp_listener", "ssdp_instant_discovery", "mock_upnp_device")
 async def test_flow_import(hass: HomeAssistant):
     """Test config flow: configured through configuration.yaml."""
-    # Ensure we have a ssdp Scanner.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
-    ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
-    # Speed up callback in ssdp.async_register_callback.
-    hass.state = CoreState.not_running
-
     # Discovered via step import.
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
@@ -170,7 +144,7 @@ async def test_flow_import(hass: HomeAssistant):
     }
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner")
+@pytest.mark.usefixtures("ssdp_listener")
 async def test_flow_import_already_configured(hass: HomeAssistant):
     """Test config flow: configured through configuration.yaml, but existing config entry."""
     # Existing entry.
@@ -194,37 +168,20 @@ async def test_flow_import_already_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner")
+@pytest.mark.usefixtures("ssdp_listener", "ssdp_no_discovery")
 async def test_flow_import_no_devices_found(hass: HomeAssistant):
     """Test config flow: no devices found, configured through configuration.yaml."""
-    # Ensure we have a ssdp Scanner.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
-    ssdp_scanner.cache.clear()
-
     # Discovered via step import.
-    with patch(
-        "homeassistant.components.upnp.config_flow.SSDP_SEARCH_TIMEOUT", new=0.0
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "no_devices_found"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
+@pytest.mark.usefixtures("ssdp_listener", "ssdp_instant_discovery", "mock_upnp_device")
 async def test_options_flow(hass: HomeAssistant):
     """Test options flow."""
-    # Ensure we have a ssdp Scanner.
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    ssdp_scanner: ssdp.Scanner = hass.data[ssdp.DOMAIN]
-    ssdp_scanner.cache[(TEST_UDN, TEST_ST)] = TEST_DISCOVERY
-    # Speed up callback in ssdp.async_register_callback.
-    hass.state = CoreState.not_running
-
     # Set up config entry.
     config_entry = MockConfigEntry(
         domain=DOMAIN,

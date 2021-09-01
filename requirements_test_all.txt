@@ -202,7 +202,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.19.2
+async-upnp-client==0.21.0.dev0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2

@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 
@@ -41,8 +42,10 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     """Wait for a device to be discovered."""
     device_discovered_event = asyncio.Event()
 
-    @callback
-    def device_discovered(info: Mapping[str, Any]) -> None:
+    async def device_discovered(info: Mapping[str, Any], change: SsdpChange) -> None:
+        if change == SsdpChange.BYEBYE:
+            return
+
         _LOGGER.info(
             "Device discovered: %s, at: %s",
             info[ssdp.ATTR_SSDP_USN],
@@ -50,14 +53,14 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
         )
         device_discovered_event.set()
 
-    cancel_discovered_callback_1 = ssdp.async_register_callback(
+    cancel_discovered_callback_1 = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
             ssdp.ATTR_SSDP_ST: ST_IGD_V1,
         },
     )
-    cancel_discovered_callback_2 = ssdp.async_register_callback(
+    cancel_discovered_callback_2 = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
@@ -78,11 +81,11 @@ async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     return True
 
 
-def _discovery_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
+async def _async_discover_igd_devices(hass: HomeAssistant) -> list[Mapping[str, Any]]:
     """Discovery IGD devices."""
-    return ssdp.async_get_discovery_info_by_st(
+    return await ssdp.async_get_discovery_info_by_st(
         hass, ST_IGD_V1
-    ) + ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
+    ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -122,7 +125,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_discovery(discovery)
 
         # Discover devices.
-        discoveries = _discovery_igd_devices(self.hass)
+        discoveries = await _async_discover_igd_devices(self.hass)
 
         # Store discoveries which have not been configured.
         current_unique_ids = {
@@ -172,7 +175,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Discover devices.
         await _async_wait_for_discoveries(self.hass)
-        discoveries = _discovery_igd_devices(self.hass)
+        discoveries = await _async_discover_igd_devices(self.hass)
 
         # Ensure anything to add. If not, silently abort.
         if not discoveries:
