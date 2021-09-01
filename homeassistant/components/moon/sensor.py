@@ -62,19 +62,19 @@ class MoonSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the device."""
-        if self._state == 0:
+        if self._state < 0.5 or self._state > 27.5:
             return STATE_NEW_MOON
-        if self._state < 7:
+        elif self._state < 6.5:
             return STATE_WAXING_CRESCENT
-        if self._state == 7:
+        elif self._state < 7.5:
             return STATE_FIRST_QUARTER
-        if self._state < 14:
+        elif self._state < 13.5:
             return STATE_WAXING_GIBBOUS
-        if self._state == 14:
+        elif self._state < 14.5:
             return STATE_FULL_MOON
-        if self._state < 21:
+        elif self._state < 20.5:
             return STATE_WANING_GIBBOUS
-        if self._state == 21:
+        elif self._state < 21.5:
             return STATE_LAST_QUARTER
         return STATE_WANING_CRESCENT
 
