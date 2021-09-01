@@ -64,11 +64,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# decrypt or encrypt entry info
-
 
 async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    # decrypt or encrypt entry info
     project_type = ProjectType(entry.data[CONF_PROJECT_TYPE])
     api = TuyaOpenAPI(
         entry.data[CONF_ENDPOINT],
