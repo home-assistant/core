@@ -97,43 +97,37 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("TuyaConfigFlow._try_login finish, response:, %s", response)
         return response
 
-    async def async_step_project_type(self, user_input=None):
-        """Step project type."""
-        self.conf_project_type = user_input[CONF_PROJECT_TYPE]
-        self.project_type = ProjectType(self.conf_project_type)
-        if self.project_type == ProjectType.SMART_HOME:
-            return self.async_show_form(
-                step_id="login", data_schema=DATA_SCHEMA_SMART_HOME
-            )
-        else:
-            return self.async_show_form(
-                step_id="login", data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS
-            )
-
     async def async_step_user(self, user_input=None):
         """Step user."""
-        return self.async_show_form(
-            step_id="project_type", data_schema=DATA_SCHEMA_PROJECT_TYPE
-        )
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA_PROJECT_TYPE
+            )
+
+        self.conf_project_type = user_input[CONF_PROJECT_TYPE]
+        self.project_type = ProjectType(self.conf_project_type)
+
+        return await self.async_step_login(user_input)
 
     async def async_step_login(self, user_input=None):
-        """Setp login."""
-        if self._async_current_entries():
-            return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
-
+        """Step login."""
         errors = {}
-        if self.conf_project_type is not None:
-            user_input[CONF_PROJECT_TYPE] = self.conf_project_type
+        if CONF_USERNAME in user_input:
+            if self.conf_project_type is not None:
+                user_input[CONF_PROJECT_TYPE] = self.conf_project_type
 
-        response = await self.hass.async_add_executor_job(self._try_login, user_input)
+                response = await self.hass.async_add_executor_job(
+                    self._try_login, user_input
+                )
 
-        if response.get("success", False):
-            _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
-            return self.async_create_entry(
-                title=user_input[CONF_USERNAME],
-                data=user_input,
-            )
-        errors["base"] = RESULT_AUTH_FAILED
+                if response.get("success", False):
+                    _LOGGER.debug("TuyaConfigFlow.async_step_user login success")
+                    return self.async_create_entry(
+                        title=user_input[CONF_USERNAME],
+                        data=user_input,
+                    )
+                errors["base"] = RESULT_AUTH_FAILED
+
         if self.project_type == ProjectType.SMART_HOME:
             return self.async_show_form(
                 step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
