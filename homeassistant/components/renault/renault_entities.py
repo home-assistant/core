@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Optional, cast
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import parse_datetime, as_utc
+from homeassistant.util.dt import as_utc, parse_datetime
 
 from .renault_coordinator import T
 from .renault_vehicle import RenaultVehicleProxy
@@ -67,4 +67,6 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
     def _convert_to_utc_string(self, value: StateType) -> str:
         """Convert date to UTC iso format."""
         original_dt = parse_datetime(cast(str, value))
+        if TYPE_CHECKING:
+            assert original_dt is not None
         return as_utc(original_dt).isoformat()
