@@ -208,6 +208,9 @@ class DeviceListener(TuyaDeviceListener):
                         device.category,
                         ha_tuya_map.keys(),
                     )
+                    self.hass.data[DOMAIN][self.entry.entry_id][TUYA_HA_DEVICES].add(
+                        device.id
+                    )
                     dispatcher_send(
                         self.hass, TUYA_DISCOVERY_NEW.format(key), [device.id]
                     )
