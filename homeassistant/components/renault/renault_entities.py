@@ -61,13 +61,13 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
         elif self.entity_description.coordinator == "location":
             last_update = self._get_data_attr("lastUpdateTime")
         if last_update:
-            return {ATTR_LAST_UPDATE: _convert_to_utc_string(last_update)}
+            return {ATTR_LAST_UPDATE: _convert_to_utc_string(cast(str, last_update))}
         return None
 
 
-def _convert_to_utc_string(value: StateType) -> str:
+def _convert_to_utc_string(value: str) -> str:
     """Convert date to UTC iso format."""
-    original_dt = parse_datetime(cast(str, value))
+    original_dt = parse_datetime(value)
     if TYPE_CHECKING:
         assert original_dt is not None
     return as_utc(original_dt).isoformat()
