@@ -42,7 +42,11 @@ async def test_zeroconf_abort_if_existing_entry(hass):
 
 
 async def test_full_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
+    requests_mock,
 ):
     """Check a full flow."""
     assert await setup.async_setup_component(
@@ -160,7 +164,11 @@ async def test_abort_if_spotify_error(
 
 
 async def test_reauthentication(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass,
+    aiohttp_client,
+    aioclient_mock,
+    current_request_with_host,
+    requests_mock,
 ):
     """Test Spotify reauthentication."""
     await setup.async_setup_component(
