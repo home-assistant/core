@@ -18,7 +18,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     # Internet Services sensors
     SensorEntityDescription(
         key="usedMb",
-        name="Total Usage",
+        name="Data Used",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:network",
