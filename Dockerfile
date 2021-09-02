@@ -16,6 +16,13 @@ RUN \
     -e ./homeassistant \
     && python3 -m compileall homeassistant/homeassistant
 
+# Fix Bug with Alpine 3.14 and sqlite 3.35
+ARG BUILD_ARCH
+RUN \
+    curl -O http://dl-cdn.alpinelinux.org/alpine/v3.13/main/${BUILD_ARCH}/sqlite-libs-3.34.1-r0.apk \
+    && apk add sqlite-libs-3.34.1-r0.apk \
+    && rm -f sqlite-libs-3.34.1-r0.apk
+
 # Home Assistant S6-Overlay
 COPY rootfs /
 
