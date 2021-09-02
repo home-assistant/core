@@ -17,6 +17,7 @@ RUN \
     && python3 -m compileall homeassistant/homeassistant
 
 # Fix Bug with Alpine 3.14 and sqlite 3.35
+# https://gitlab.alpinelinux.org/alpine/aports/-/issues/12524
 ARG BUILD_ARCH
 RUN \
     if [ "${BUILD_ARCH}" = "amd64" ]; then \
