@@ -247,7 +247,7 @@ async def test_reauth(hass):
             )
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
+        assert result2["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
         assert result2["errors"] == {"base": "invalid_credentials"}
 
         # Valid credentials
