@@ -245,7 +245,11 @@ async def test_scan_not_all_match(
     assert not mock_flow_init.mock_calls
 
 
-async def test_start_stop_scanner(hass, ssdp_listener):
+@patch(
+    "homeassistant.components.ssdp.Scanner._async_build_source_set",
+    return_value={IPv4Address("192.168.1.1")},
+)
+async def test_start_stop_scanner(mock_source_set, hass, ssdp_listener):
     """Test we start and stop the scanner."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
