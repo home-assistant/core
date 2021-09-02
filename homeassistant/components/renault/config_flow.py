@@ -101,29 +101,29 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        if user_input:
-            if TYPE_CHECKING:
-                assert self._original_data
+        if not user_input:
+            return self._show_reauth_confirm_form()
 
-            # Check credentials
-            self.renault_hub = RenaultHub(self.hass, self._original_data[CONF_LOCALE])
-            if not await self.renault_hub.attempt_login(
-                self._original_data[CONF_USERNAME], user_input[CONF_PASSWORD]
-            ):
-                return self._show_reauth_confirm_form({"base": "invalid_credentials"})
+        if TYPE_CHECKING:
+            assert self._original_data
 
-            # Update existing entry
-            data = self._original_data.copy()
-            data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-            existing_entry = await self.async_set_unique_id(
-                self._original_data[CONF_KAMEREON_ACCOUNT_ID]
-            )
-            if TYPE_CHECKING:
-                assert existing_entry
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-        return self._show_reauth_confirm_form()
+        # Check credentials
+        self.renault_hub = RenaultHub(self.hass, self._original_data[CONF_LOCALE])
+        if not await self.renault_hub.attempt_login(
+            self._original_data[CONF_USERNAME], user_input[CONF_PASSWORD]
+        ):
+            return self._show_reauth_confirm_form({"base": "invalid_credentials"})
+
+        # Update existing entry
+        data = {**self._original_data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
+        existing_entry = await self.async_set_unique_id(
+            self._original_data[CONF_KAMEREON_ACCOUNT_ID]
+        )
+        if TYPE_CHECKING:
+            assert existing_entry
+        self.hass.config_entries.async_update_entry(existing_entry, data=data)
+        await self.hass.config_entries.async_reload(existing_entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
     def _show_reauth_confirm_form(
         self, errors: dict[str, Any] | None = None
