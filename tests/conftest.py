@@ -489,6 +489,16 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
+def mock_get_source_ip():
+    """Mock network util's async_get_source_ip."""
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
     with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
