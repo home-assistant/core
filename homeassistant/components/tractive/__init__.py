@@ -191,12 +191,13 @@ class TractiveClient:
                 continue
 
     def _send_hardware_update(self, event):
+        # Sometimes hardware event doesn't contain complete data.
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
-            ATTR_BUZZER: event["buzzer_control"]["active"],
-            ATTR_LED: event["led_control"]["active"],
-            ATTR_LIVE_TRACKING: event["live_tracking"]["active"],
+            ATTR_LIVE_TRACKING: event.get("live_tracking", {}).get("active"),
+            ATTR_BUZZER: event.get("buzzer_control", {}).get("active"),
+            ATTR_LED: event.get("led_control", {}).get("active"),
         }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
