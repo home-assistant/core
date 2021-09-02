@@ -429,10 +429,10 @@ ELECTRIC_POTENTIAL_VOLT: Final = "V"
 # Degree units
 DEGREE: Final = "°"
 
-# Currency units
-CURRENCY_EURO: Final = "€"
-CURRENCY_DOLLAR: Final = "$"
-CURRENCY_CENT: Final = "¢"
+# Currency units, any ISO4217 currency code is also allowed
+CURRENCY_EURO: Final = "EUR"
+CURRENCY_US_DOLLAR: Final = "USD"
+CURRENCY_DEFAULT: Final = "currency_default"  # HA core config currency
 
 # Temperature units
 TEMP_CELSIUS: Final = "°C"

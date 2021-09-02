@@ -10,7 +10,7 @@ from homeassistant.components.nsw_fuel_station import (
     StationPriceData,
 )
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
+from homeassistant.const import ATTR_ATTRIBUTION, VOLUME_LITERS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -119,7 +119,7 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the units of measurement."""
-        return f"{CURRENCY_CENT}/{VOLUME_LITERS}"
+        return f"¢/{VOLUME_LITERS}"
 
     def _get_station_name(self):
         default_name = f"station {self._station_id}"

@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CURRENCY_DEFAULT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     VOLUME_CUBIC_METERS,
@@ -363,4 +364,4 @@ class EnergyCostSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
-        return self.hass.config.currency
+        return CURRENCY_DEFAULT

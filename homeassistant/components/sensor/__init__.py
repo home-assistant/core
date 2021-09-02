@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CURRENCY_DEFAULT,
     DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO,
@@ -256,6 +257,9 @@ class SensorEntity(Entity):
 
         if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return self.hass.config.units.temperature_unit
+
+        if native_unit_of_measurement == CURRENCY_DEFAULT:
+            return self.hass.config.currency
 
         return native_unit_of_measurement
 
