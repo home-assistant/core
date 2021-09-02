@@ -1968,7 +1968,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.8.2
+pyuptimerobot==21.9.0
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
