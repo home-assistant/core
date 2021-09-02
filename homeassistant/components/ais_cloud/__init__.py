@@ -16,7 +16,7 @@ from homeassistant.helpers import aiohttp_client
 
 DOMAIN = "ais_cloud"
 _LOGGER = logging.getLogger(__name__)
-CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
+CLOUD_APP_URL = "https://" + ais_global.AIS_HOST + "/ords/f?p=100:1&x01=TOKEN:"
 
 
 def check_url(url_address):
@@ -146,7 +146,7 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(websocket_add_ais_media_source)
 
     def state_changed(state_event):
-        """ Called on state change """
+        """Called on state change"""
         if ais_global.G_AIS_START_IS_DONE is False:
             return
 
@@ -423,8 +423,8 @@ async def websocket_add_ais_media_source(hass, connection, msg):
 class AisCloudWS:
     def __init__(self, hass):
         """Initialize the cloud WS connections."""
-        self.url = "https://powiedz.co/ords/dom/dom/"
-        self.url_gh = "https://powiedz.co/ords/dom/gh/"
+        self.url = "https://" + ais_global.AIS_HOST + "/ords/dom/dom/"
+        self.url_gh = "https://" + ais_global.AIS_HOST + "/ords/dom/gh/"
         self.hass = hass
         ais_global.set_ais_android_id_dom_file_path(
             hass.config.config_dir + "/.dom/.ais_secure_android_id_dom"
@@ -734,7 +734,7 @@ class AisCloudWS:
     async def async_delete_oauth(self, service):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         # TODO do the same for others like Spotify
-        rest_url = "http://powiedz.co/ords/dom/auth/" + service
+        rest_url = "http://" + ais_global.AIS_HOST + "/ords/dom/auth/" + service
         with async_timeout.timeout(10):
             ws_resp = await web_session.delete(rest_url, headers=self.cloud_ws_header)
             return await ws_resp.json()
@@ -2226,7 +2226,7 @@ async def async_handle_get_gates_info(hass, message):
     login = message.get("username", "").lower()
     password = message.get("password", "")
     web_session = aiohttp_client.async_get_clientsession(hass)
-    rest_url = "https://powiedz.co/ords/dom/dom/gates_info"
+    rest_url = "https://" + ais_global.AIS_HOST + "/ords/dom/dom/gates_info"
     try:
         # during the system start lot of things is done 300 sec should be enough
         cloud_ws_token = ais_global.get_sercure_android_id_dom()
@@ -2279,7 +2279,7 @@ async def async_handle_restore_from_backup(hass, message):
     # we need to use password even if it's empty - to prevent the prompt
     backup_password = "-p" + backup_password
     home_dir = "/data/data/pl.sviete.dom/files/home/"
-    ws_url = "https://powiedz.co/ords/dom/dom/"
+    ws_url = "https://" + ais_global.AIS_HOST + "/ords/dom/dom/"
     cloud_ws_token = gate_id
     cloud_ws_header = {"Authorization": f"{cloud_ws_token}"}
     log = ""

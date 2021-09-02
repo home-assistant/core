@@ -95,7 +95,9 @@ class GoogleHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         auth_url = (
             "https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?client_id="
             + client_id
-            + "&redirect_uri=https://powiedz.co/ords/dom/auth/google_calendar_callback"
+            + "&redirect_uri=https://"
+            + ais_global.AIS_HOST
+            + "/ords/dom/auth/google_calendar_callback"
             + "&response_type=code&scope=https://www.googleapis.com/auth/calendar"
             + "&access_type=offline"
             + "&state="

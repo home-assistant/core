@@ -42,7 +42,7 @@ async def _process_command(hass, call):
                     # "IMAGE_URL": "",
                     "NAME": "Asystent",
                     "MEDIA_SOURCE": ais_global.G_AN_GOOGLE_ASSISTANT,
-                    "media_content_id": "https://powiedz.co" + ret["audio"],
+                    "media_content_id": "https://" + ais_global.AIS_HOST + ret["audio"],
                 }
                 _audio_info = json.dumps(_audio_info)
                 await hass.services.async_call(

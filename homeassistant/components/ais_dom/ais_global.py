@@ -8,6 +8,9 @@ import socket
 
 import requests
 
+# AIS HOST
+AIS_HOST = "powiedz.co"
+
 # LV settings
 G_EMPTY_OPTION = "-"
 G_FAVORITE_OPTION = "Moje Ulubione"
@@ -157,30 +160,31 @@ G_AIS_EXCLUDE_DB_DEFAULT_EMPTY = {
 }
 G_AIS_EXCLUDE_DB_DEFAULT = {
     "domains": [
-            "ais_ai_service",
-            "ais_amplifier_service",
-            "ais_audiobooks_service",
-            "ais_bookmarks",
-            "ais_cloud",
-            "ais_dom",
-            "ais_dom_device",
-            "ais_drives_service",
-            "ais_exo_player",
-            "ais_files",
-            "ais_google_home",
-            "ais_help",
-            "ais_host",
-            "ais_ingress",
-            "ais_knowledge_service",
-            "ais_mdns",
-            "ais_shell_command",
-            "ais_spotify_service",
-            "ais_updater",
-            "ais_usb",
-            "ais_wifi_service",
-            "ais_yt_service",
-            "media_player",
-            "group"],
+        "ais_ai_service",
+        "ais_amplifier_service",
+        "ais_audiobooks_service",
+        "ais_bookmarks",
+        "ais_cloud",
+        "ais_dom",
+        "ais_dom_device",
+        "ais_drives_service",
+        "ais_exo_player",
+        "ais_files",
+        "ais_google_home",
+        "ais_help",
+        "ais_host",
+        "ais_ingress",
+        "ais_knowledge_service",
+        "ais_mdns",
+        "ais_shell_command",
+        "ais_spotify_service",
+        "ais_updater",
+        "ais_usb",
+        "ais_wifi_service",
+        "ais_yt_service",
+        "media_player",
+        "group",
+    ],
     "entity_globs": [
         "automation.ais_*",
         "binary_sensor.ais_*",
@@ -241,7 +245,7 @@ G_AIS_EXCLUDE_DB_DEFAULT = {
         "binary_sensor.updater",
         "weather.dom",
         "binary_sensor.selected_entity",
-    ]
+    ],
 }
 
 

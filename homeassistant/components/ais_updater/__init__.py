@@ -56,7 +56,7 @@ UPDATE_STATUS_UPDATED = "updated"
 UPDATE_STATUS_RESTART = "restart"
 UPDATE_STATUS_UNKNOWN = "unknown"
 
-UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
+UPDATER_URL = "https://" + ais_global.AIS_HOST + "/ords/dom/dom/updater_new"
 UPDATER_STATUS_FILE = ".ais_update_status"
 UPDATER_DOWNLOAD_FOLDER = "ais_update"
 APT_VERSION_INFO_FILE = ".ais_apt"
@@ -455,7 +455,7 @@ async def get_system_info(hass, include_components):
         "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
         "linux_apt_version": G_CURRENT_LINUX_V,
         "zigbee2mqtt_version": G_CURRENT_ZIGBEE2MQTT_V,
-        "gate_model": ais_global.get_ais_gate_model()
+        "gate_model": ais_global.get_ais_gate_model(),
     }
 
     if include_components:
@@ -490,7 +490,7 @@ def get_system_info_sync(hass):
         "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
         "linux_apt_version": G_CURRENT_LINUX_V,
         "zigbee2mqtt_version": G_CURRENT_ZIGBEE2MQTT_V,
-        "gate_model": ais_global.get_ais_gate_model()
+        "gate_model": ais_global.get_ais_gate_model(),
     }
     return info_object
 
@@ -899,9 +899,11 @@ def do_download_upgrade(hass, call):
     if reinstall_zigbee2mqtt:
         # download zigbee update zip
         try:
-            zigbee_update_url = "http://powiedz.co/ota/zigbee.zip"
+            zigbee_update_url = "http://" + ais_global.AIS_HOST + "/ota/zigbee.zip"
             if beta:
-                zigbee_update_url = "http://powiedz.co/ota/zigbee_beta.zip"
+                zigbee_update_url = (
+                    "http://" + ais_global.AIS_HOST + "/ota/zigbee_beta.zip"
+                )
             ws_resp = requests.get(zigbee_update_url, timeout=360)
             if ws_resp.status_code != 200:
                 _LOGGER.error(

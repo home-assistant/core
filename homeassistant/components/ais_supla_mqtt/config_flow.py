@@ -74,8 +74,9 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             json_ws_resp = ais_dom.key("supla_mqtt_prod_client_id")
             self.client_id = json_ws_resp["key"]
             gate_id = ais_global.get_sercure_android_id_dom()
+            redirect_uri = REDIRECT_URL.replace("AIS_HOST", ais_global.AIS_HOST)
             auth_url = (
-                f"{OAUTH_URL}?client_id={self.client_id}&redirect_uri={REDIRECT_URL}&scope={AUTH_SCOPE}&response_type"
+                f"{OAUTH_URL}?client_id={self.client_id}&redirect_uri={redirect_uri}&scope={AUTH_SCOPE}&response_type"
                 f"=code&state={gate_id}ais0dom{url_host}ais0domsupla-mqtt-{self.flow_id}"
             )
             return self.async_external_step(step_id="obtain_token", url=auth_url)
@@ -93,7 +94,7 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "grant_type": "authorization_code",
             "client_id": self.client_id,
             "client_secret": client_secret,
-            "redirect_uri": REDIRECT_URL,
+            "redirect_uri": REDIRECT_URL.replace("AIS_HOST", ais_global.AIS_HOST),
             "code": code,
         }
 
