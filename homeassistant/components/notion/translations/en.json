@@ -1,13 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "no_devices": "No devices found in account"
+            "unknown": "Unexpected error"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "password": "Password",
