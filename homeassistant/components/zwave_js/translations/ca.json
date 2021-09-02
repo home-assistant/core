@@ -8,7 +8,9 @@
             "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS.",
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "discovery_requires_supervisor": "El descobriment requereix el supervisor.",
+            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave."
         },
         "error": {
             "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS. Comprova la configuraci\u00f3.",
@@ -16,6 +18,7 @@
             "invalid_ws_url": "URL del websocket inv\u00e0lid",
             "unknown": "Error inesperat"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Espera mentre finalitza la instal\u00b7laci\u00f3 del complement Z-Wave JS. Pot tardar uns quants minuts.",
             "start_addon": "Espera mentre es completa la inicialitzaci\u00f3 del complement Z-Wave JS. Pot tardar uns segons."
@@ -48,7 +51,27 @@
             },
             "start_addon": {
                 "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
+            },
+            "usb_confirm": {
+                "description": "Vols configurar {name} amb el complement Z-Wave JS?"
             }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Configura el valor del par\u00e0metre {subtype}",
+            "node_status": "Estat del node",
+            "value": "Valor actual d'un valor Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Ha enviat una notificaci\u00f3 de control d'entrada",
+            "event.notification.notification": "Ha enviat una notificaci\u00f3",
+            "event.value_notification.basic": "Esdeveniment CC b\u00e0sic a {subtype}",
+            "event.value_notification.central_scene": "Acci\u00f3 d'escena central a {subtype}",
+            "event.value_notification.scene_activation": "Activaci\u00f3 d'escena a {subtype}",
+            "state.node_status": "L'estat del node ha canviat",
+            "zwave_js.value_updated.config_parameter": "Canvi del valor del par\u00e0metre de configuraci\u00f3 {subtype}",
+            "zwave_js.value_updated.value": "Canvi del valor en un valor Z-Wave JS"
         }
     },
     "options": {

@@ -8,7 +8,7 @@ import os
 
 import aiohttp
 from aiohttp import ClientTimeout, hdrs, web
-from aiohttp.web_exceptions import HTTPBadGateway
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
@@ -185,7 +185,11 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
-    connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
+    if (peername := request.transport.get_extra_info("peername")) is None:
+        _LOGGER.error("Can't set forward_for header, missing peername")
+        raise HTTPBadRequest()
+
+    connected_ip = ip_address(peername[0])
     if forward_for:
         forward_for = f"{forward_for}, {connected_ip!s}"
     else:

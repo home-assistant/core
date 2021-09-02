@@ -15,10 +15,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.helpers import start
 from homeassistant.helpers.area_registry import AreaEntry
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -105,15 +105,14 @@ class AbstractConfig(ABC):
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_load()
 
-        if self.hass.state == CoreState.running:
-            await self.async_sync_entities_all()
+        if not self.enabled:
             return
 
         async def sync_google(_):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
+        start.async_at_start(self.hass, sync_google)
 
     @property
     def enabled(self):
@@ -212,10 +211,10 @@ class AbstractConfig(ABC):
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
         res = await gather(
-            *[
+            *(
                 self.async_sync_entities(agent_user_id)
                 for agent_user_id in self._store.agent_user_ids
-            ]
+            )
         )
         return max(res, default=204)
 

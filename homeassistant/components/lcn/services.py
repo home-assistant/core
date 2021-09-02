@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -40,7 +41,12 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import get_device_connection, is_address, is_states_string
+from .helpers import (
+    DeviceConnectionType,
+    get_device_connection,
+    is_address,
+    is_states_string,
+)
 
 
 class LcnServiceCall:
@@ -48,11 +54,11 @@ class LcnServiceCall:
 
     schema = vol.Schema({vol.Required(CONF_ADDRESS): is_address})
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize service call."""
         self.hass = hass
 
-    def get_device_connection(self, service):
+    def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
         address, host_name = service.data[CONF_ADDRESS]
 
@@ -66,7 +72,7 @@ class LcnServiceCall:
                 return device_connection
         raise ValueError("Invalid host name.")
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         raise NotImplementedError
 
@@ -86,7 +92,7 @@ class OutputAbs(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
         brightness = service.data[CONF_BRIGHTNESS]
@@ -110,7 +116,7 @@ class OutputRel(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
         brightness = service.data[CONF_BRIGHTNESS]
@@ -131,7 +137,7 @@ class OutputToggle(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
         transition = pypck.lcn_defs.time_to_ramp_value(
@@ -147,7 +153,7 @@ class Relays(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({vol.Required(CONF_STATE): is_states_string})
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         states = [
             pypck.lcn_defs.RelayStateModifier[state]
@@ -168,7 +174,7 @@ class Led(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         led = pypck.lcn_defs.LedPort[service.data[CONF_LED]]
         led_state = pypck.lcn_defs.LedStatus[service.data[CONF_STATE]]
@@ -196,7 +202,7 @@ class VarAbs(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
         value = service.data[CONF_VALUE]
@@ -213,7 +219,7 @@ class VarReset(LcnServiceCall):
         {vol.Required(CONF_VARIABLE): vol.All(vol.Upper, vol.In(VARIABLES + SETPOINTS))}
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
 
@@ -239,7 +245,7 @@ class VarRel(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
         value = service.data[CONF_VALUE]
@@ -260,7 +266,7 @@ class LockRegulator(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         setpoint = pypck.lcn_defs.Var[service.data[CONF_SETPOINT]]
         state = service.data[CONF_STATE]
@@ -288,7 +294,7 @@ class SendKeys(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         device_connection = self.get_device_connection(service)
 
@@ -331,7 +337,7 @@ class LockKeys(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         device_connection = self.get_device_connection(service)
 
@@ -368,7 +374,7 @@ class DynText(LcnServiceCall):
         }
     )
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         row_id = service.data[CONF_ROW] - 1
         text = service.data[CONF_TEXT]
@@ -382,7 +388,7 @@ class Pck(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({vol.Required(CONF_PCK): str})
 
-    async def async_call_service(self, service):
+    async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         pck = service.data[CONF_PCK]
         device_connection = self.get_device_connection(service)

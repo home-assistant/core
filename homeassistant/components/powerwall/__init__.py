@@ -41,6 +41,8 @@ PLATFORMS = ["binary_sensor", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
+MAX_LOGIN_FAILURES = 5
+
 
 async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
@@ -111,17 +113,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
+    login_failed_count = 0
 
     async def async_update_data():
         """Fetch data from API endpoint."""
         # Check if we had an error before
+        nonlocal login_failed_count
         _LOGGER.debug("Checking if update failed")
         if hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
             return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
 
         _LOGGER.debug("Updating data")
         try:
-            return await _async_update_powerwall_data(hass, entry, power_wall)
+            data = await _async_update_powerwall_data(hass, entry, power_wall)
         except AccessDeniedError as err:
             if password is None:
                 raise ConfigEntryAuthFailed from err
@@ -131,7 +135,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.async_add_executor_job(power_wall.login, "", password)
                 return await _async_update_powerwall_data(hass, entry, power_wall)
             except AccessDeniedError as ex:
-                raise ConfigEntryAuthFailed from ex
+                login_failed_count += 1
+                if login_failed_count == MAX_LOGIN_FAILURES:
+                    raise ConfigEntryAuthFailed from ex
+                raise UpdateFailed(
+                    f"Login attempt {login_failed_count}/{MAX_LOGIN_FAILURES} failed, will retry"
+                ) from ex
+        else:
+            login_failed_count = 0
+            return data
 
     coordinator = DataUpdateCoordinator(
         hass,

@@ -7,6 +7,7 @@ from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -379,15 +380,20 @@ async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
 
 
 @pytest.mark.parametrize(
-    "units,temperature", [(TEMP_CELSIUS, 25), (TEMP_FAHRENHEIT, 74)]
+    "units,temperature", [(TEMP_CELSIUS, 26), (TEMP_FAHRENHEIT, 74)]
 )
 async def test_send_target_temperature(hass, discovery, device, units, temperature):
     """Test for sending target temperature command to the device."""
     hass.config.units.temperature_unit = units
+
+    fake_device = device()
     if units == TEMP_FAHRENHEIT:
-        device().temperature_units = 1
+        fake_device.temperature_units = 1
 
     await async_setup_gree(hass)
+
+    # Make sure we're trying to test something that isn't the default
+    assert fake_device.current_temperature != temperature
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -399,8 +405,13 @@ async def test_send_target_temperature(hass, discovery, device, units, temperatu
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+    assert (
+        state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+        == fake_device.current_temperature
+    )
 
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
     hass.config.units.temperature_unit = TEMP_CELSIUS
 
 

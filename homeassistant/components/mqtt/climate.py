@@ -119,6 +119,31 @@ CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
 
+MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        climate.ATTR_AUX_HEAT,
+        climate.ATTR_CURRENT_HUMIDITY,
+        climate.ATTR_CURRENT_TEMPERATURE,
+        climate.ATTR_FAN_MODE,
+        climate.ATTR_FAN_MODES,
+        climate.ATTR_HUMIDITY,
+        climate.ATTR_HVAC_ACTION,
+        climate.ATTR_HVAC_MODES,
+        climate.ATTR_MAX_HUMIDITY,
+        climate.ATTR_MAX_TEMP,
+        climate.ATTR_MIN_HUMIDITY,
+        climate.ATTR_MIN_TEMP,
+        climate.ATTR_PRESET_MODE,
+        climate.ATTR_PRESET_MODES,
+        climate.ATTR_SWING_MODE,
+        climate.ATTR_SWING_MODES,
+        climate.ATTR_TARGET_TEMP_HIGH,
+        climate.ATTR_TARGET_TEMP_LOW,
+        climate.ATTR_TARGET_TEMP_STEP,
+        climate.ATTR_TEMPERATURE,
+    }
+)
+
 VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
     CONF_AWAY_MODE_STATE_TEMPLATE,
@@ -275,6 +300,8 @@ async def _async_setup_entity(
 
 class MqttClimate(MqttEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
+
+    _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the climate device."""

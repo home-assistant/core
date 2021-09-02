@@ -10,7 +10,7 @@ on:
   pull_request: ~
 
 env:
-  CACHE_VERSION: 1
+  CACHE_VERSION: 2
   DEFAULT_PYTHON: 3.8
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   SQLALCHEMY_WARN_20: 1
@@ -740,4 +740,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.5.2
+        uses: codecov/codecov-action@v2.0.3

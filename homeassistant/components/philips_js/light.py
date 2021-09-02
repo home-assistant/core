@@ -18,8 +18,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
@@ -34,7 +33,7 @@ EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
@@ -237,28 +236,33 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
     def _update_from_coordinator(self):
         current = self._tv.ambilight_current_configuration
         color = None
-        if current and current["isExpert"]:
-            if settings := _get_settings(current):
-                color = settings["color"]
-
-        if color:
-            self._attr_hs_color = (
-                color["hue"] * 360.0 / 255.0,
-                color["saturation"] * 100.0 / 255.0,
-            )
-            self._attr_brightness = color["brightness"]
-        elif data := self._tv.ambilight_cached:
-            hsv_h, hsv_s, hsv_v = color_RGB_to_hsv(*_average_pixels(data))
-            self._attr_hs_color = hsv_h, hsv_s
-            self._attr_brightness = hsv_v * 255.0 / 100.0
-        else:
-            self._attr_hs_color = None
-            self._attr_brightness = None
 
         if (cache_keys := _get_cache_keys(self._tv)) != self._cache_keys:
             self._cache_keys = cache_keys
             self._attr_effect_list = self._calculate_effect_list()
             self._attr_effect = self._calculate_effect()
+
+        if current and current["isExpert"]:
+            if settings := _get_settings(current):
+                color = settings["color"]
+
+        mode, _, _ = _parse_effect(self._attr_effect)
+
+        if mode == EFFECT_EXPERT and color:
+            self._attr_hs_color = (
+                color["hue"] * 360.0 / 255.0,
+                color["saturation"] * 100.0 / 255.0,
+            )
+            self._attr_brightness = color["brightness"]
+        elif mode == EFFECT_MODE and self._tv.ambilight_cached:
+            hsv_h, hsv_s, hsv_v = color_RGB_to_hsv(
+                *_average_pixels(self._tv.ambilight_cached)
+            )
+            self._attr_hs_color = hsv_h, hsv_s
+            self._attr_brightness = hsv_v * 255.0 / 100.0
+        else:
+            self._attr_hs_color = None
+            self._attr_brightness = None
 
     @callback
     def _handle_coordinator_update(self) -> None:

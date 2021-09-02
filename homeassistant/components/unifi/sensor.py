@@ -86,7 +86,7 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
-    _attr_unit_of_measurement = DATA_MEGABYTES
+    _attr_native_unit_of_measurement = DATA_MEGABYTES
 
     @property
     def name(self) -> str:
@@ -105,7 +105,7 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = RX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
@@ -118,7 +118,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = TX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
@@ -133,13 +133,41 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
+    def __init__(self, client, controller):
+        """Set up tracked client."""
+        super().__init__(client, controller)
+
+        self.last_updated_time = self.client.uptime
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update sensor when time has changed significantly.
+
+        This will help avoid unnecessary updates to the state machine.
+        """
+        update_state = True
+
+        if self.client.uptime < 1000000000:
+            if self.client.uptime > self.last_updated_time:
+                update_state = False
+        else:
+            if self.client.uptime <= self.last_updated_time:
+                update_state = False
+
+        self.last_updated_time = self.client.uptime
+
+        if not update_state:
+            return
+
+        super().async_update_callback()
+
     @property
     def name(self) -> str:
         """Return the name of the client."""
         return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def state(self) -> datetime:
+    def native_value(self) -> datetime:
         """Return the uptime of the client."""
         if self.client.uptime < 1000000000:
             return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()

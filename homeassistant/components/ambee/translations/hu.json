@@ -10,7 +10,8 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "API kulcs"
+                    "api_key": "API kulcs",
+                    "description": "Hiteles\u00edtse mag\u00e1t \u00fajra az Ambee-fi\u00f3kj\u00e1val."
                 }
             },
             "user": {
@@ -19,7 +20,8 @@
                     "latitude": "Sz\u00e9less\u00e9g",
                     "longitude": "Hossz\u00fas\u00e1g",
                     "name": "N\u00e9v"
-                }
+                },
+                "description": "\u00c1ll\u00edtsa be az Ambee-t a Homeassistanttal val\u00f3 integr\u00e1ci\u00f3hoz."
             }
         }
     }

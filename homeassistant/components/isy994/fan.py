@@ -83,7 +83,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Send the turn on command to the ISY994 fan device."""
-        await self.async_set_percentage(percentage)
+        await self.async_set_percentage(percentage or 67)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 fan device."""

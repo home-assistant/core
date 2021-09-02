@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Host"
                 },
-                "description": "Es wurde kein Roomba oder Braava in Ihrem Netzwerk entdeckt. Die BLID ist der Teil des Ger\u00e4te-Hostnamens nach `iRobot-` oder `Roomba-`. Bitte folgen Sie den Schritten, die in der Dokumentation unter: {auth_help_url}",
+                "description": "Es wurde kein Roomba oder Braava in deinem Netzwerk entdeckt.",
                 "title": "Manuell mit dem Ger\u00e4t verbinden"
             },
             "user": {
@@ -45,7 +45,7 @@
                     "host": "Host",
                     "password": "Passwort"
                 },
-                "description": "W\u00e4hlen Sie einen Roomba oder Braava aus.",
+                "description": "W\u00e4hle einen Roomba oder Braava aus.",
                 "title": "Automatisch mit dem Ger\u00e4t verbinden"
             }
         }

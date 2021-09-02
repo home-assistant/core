@@ -66,6 +66,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(
         self,
         name,
@@ -80,33 +82,10 @@ class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
         self._unique_id = unique_id
         self._sensor_type = sensor_type
         self._sensor_name = sensor_configuration[SENSOR_NAME]
-        self._unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
-        self._device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._sensor_name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        return self._unique_id
-
-    @property
-    def device_class(self):
-        """Return the device_class."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_name = f"{self._name} {self._sensor_name}"
+        self._attr_unique_id = self._unique_id
+        self._attr_device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS)
+        self._attr_native_unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
 
 
 class AemetSensor(AbstractAemetSensor):
@@ -127,7 +106,7 @@ class AemetSensor(AbstractAemetSensor):
         self._weather_coordinator = weather_coordinator
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._weather_coordinator.data.get(self._sensor_type)
 
@@ -150,14 +129,12 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
         self._weather_coordinator = weather_coordinator
         self._forecast_mode = forecast_mode
+        self._attr_entity_registry_enabled_default = (
+            self._forecast_mode == FORECAST_MODE_DAILY
+        )
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._forecast_mode == FORECAST_MODE_DAILY
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         forecast = None
         forecasts = self._weather_coordinator.data.get(

@@ -8,7 +8,9 @@
             "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
-            "cannot_connect": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi",
+            "discovery_requires_supervisor": "Il rilevamento richiede il Supervisor.",
+            "not_zwave_device": "Il dispositivo rilevato non \u00e8 un dispositivo Z-Wave."
         },
         "error": {
             "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS. Controlla la configurazione.",
@@ -16,6 +18,7 @@
             "invalid_ws_url": "URL websocket non valido",
             "unknown": "Errore imprevisto"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Attendi il termine dell'installazione del componente aggiuntivo Z-Wave JS. Questa operazione pu\u00f2 richiedere diversi minuti.",
             "start_addon": "Attendi il completamento dell'avvio del componente aggiuntivo Z-Wave JS. L'operazione potrebbe richiedere alcuni secondi."
@@ -48,7 +51,27 @@
             },
             "start_addon": {
                 "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
+            },
+            "usb_confirm": {
+                "description": "Vuoi configurare {name} con il componente aggiuntivo JS Z-Wave?"
             }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Valore del parametro di configurazione {subtype}",
+            "node_status": "Stato del nodo",
+            "value": "Valore corrente di un valore Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Inviata una notifica di controllo delle entrate",
+            "event.notification.notification": "Inviata una notifica",
+            "event.value_notification.basic": "Evento CC di base su {subtype}",
+            "event.value_notification.central_scene": "Azione della scena centrale su {subtype}",
+            "event.value_notification.scene_activation": "Attivazione scena su {subtype}",
+            "state.node_status": "Lo stato del nodo \u00e8 cambiato",
+            "zwave_js.value_updated.config_parameter": "Variazione sul parametro di configurazione {subtype}",
+            "zwave_js.value_updated.value": "Variazione su un valore Z-Wave JS"
         }
     },
     "options": {

@@ -25,5 +25,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Configura els webhooks de motionEye per enviar esdeveniments a Home Assistant",
+                    "webhook_set_overwrite": "Sobreescriu els webhooks no reconeguts"
+                }
+            }
+        }
     }
 }

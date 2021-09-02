@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{model} {host}",
+    "flow_title": "{model} {id} ({host})",
     "step": {
       "user": {
         "description": "If you leave the host empty, discovery will be used to find devices.",

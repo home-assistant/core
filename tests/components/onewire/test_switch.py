@@ -39,7 +39,7 @@ async def test_owserver_switch(owproxy, hass, device_id):
     # Force enable switches
     patch_device_switches = copy.deepcopy(DEVICE_SWITCHES)
     for item in patch_device_switches[device_id[0:2]]:
-        item["default_disabled"] = False
+        item.entity_registry_enabled_default = True
 
     with patch(
         "homeassistant.components.onewire.PLATFORMS", [SWITCH_DOMAIN]

@@ -335,7 +335,7 @@ async def test_saving_loading(hass, hass_storage):
             assert r_token.last_used_at is None
             assert r_token.last_used_ip is None
         else:
-            assert False, "Unknown client_id: %s" % r_token.client_id
+            assert False, f"Unknown client_id: {r_token.client_id}"
 
 
 async def test_cannot_retrieve_expired_access_token(hass):

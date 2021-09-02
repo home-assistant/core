@@ -27,6 +27,8 @@ from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from .. import InvalidAuthError
 from ..models import Credentials, RefreshToken, UserMeta
 
+# mypy: disallow-any-generics
+
 IPAddress = Union[IPv4Address, IPv6Address]
 IPNetwork = Union[IPv4Network, IPv6Network]
 
@@ -82,11 +84,22 @@ class TrustedNetworksAuthProvider(AuthProvider):
         return cast(Dict[IPNetwork, Any], self.config[CONF_TRUSTED_USERS])
 
     @property
+    def trusted_proxies(self) -> list[IPNetwork]:
+        """Return trusted proxies in the system."""
+        if not self.hass.http:
+            return []
+
+        return [
+            ip_network(trusted_proxy)
+            for trusted_proxy in self.hass.http.trusted_proxies
+        ]
+
+    @property
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -177,6 +190,9 @@ class TrustedNetworksAuthProvider(AuthProvider):
             ip_addr in trusted_network for trusted_network in self.trusted_networks
         ):
             raise InvalidAuthError("Not in trusted_networks")
+
+        if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
+            raise InvalidAuthError("Can't allow access from a proxy server")
 
     @callback
     def async_validate_refresh_token(

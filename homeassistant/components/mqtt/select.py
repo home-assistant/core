@@ -33,6 +33,12 @@ CONF_OPTIONS = "options"
 DEFAULT_NAME = "MQTT Select"
 DEFAULT_OPTIMISTIC = False
 
+MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        select.ATTR_OPTIONS,
+    }
+)
+
 
 def validate_config(config):
     """Validate that the configuration is valid, throws if it isn't."""
@@ -81,6 +87,8 @@ async def _async_setup_entity(
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
+    _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
+
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT select."""
         self._config = config
@@ -118,7 +126,10 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(payload)
 
-            if payload not in self.options:
+            if payload.lower() == "none":
+                payload = None
+
+            if payload is not None and payload not in self.options:
                 _LOGGER.error(
                     "Invalid option for %s: '%s' (valid options: %s)",
                     self.entity_id,

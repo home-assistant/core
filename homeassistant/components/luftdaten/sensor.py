@@ -31,14 +31,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = []
     for sensor_type in luftdaten.sensor_conditions:
         try:
-            name, icon, unit = SENSORS[sensor_type]
+            name, icon, unit, device_class = SENSORS[sensor_type]
         except KeyError:
             _LOGGER.debug("Unknown sensor value type: %s", sensor_type)
             continue
 
         sensors.append(
             LuftdatenSensor(
-                luftdaten, sensor_type, name, icon, unit, entry.data[CONF_SHOW_ON_MAP]
+                luftdaten,
+                sensor_type,
+                name,
+                icon,
+                unit,
+                device_class,
+                entry.data[CONF_SHOW_ON_MAP],
             )
         )
 
@@ -48,7 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class LuftdatenSensor(SensorEntity):
     """Implementation of a Luftdaten sensor."""
 
-    def __init__(self, luftdaten, sensor_type, name, icon, unit, show):
+    def __init__(self, luftdaten, sensor_type, name, icon, unit, device_class, show):
         """Initialize the Luftdaten sensor."""
         self._async_unsub_dispatcher_connect = None
         self.luftdaten = luftdaten
@@ -59,6 +65,7 @@ class LuftdatenSensor(SensorEntity):
         self._unit_of_measurement = unit
         self._show_on_map = show
         self._attrs = {}
+        self._attr_device_class = device_class
 
     @property
     def icon(self):
@@ -66,7 +73,7 @@ class LuftdatenSensor(SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self._data is not None:
             try:
@@ -75,7 +82,7 @@ class LuftdatenSensor(SensorEntity):
                 return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 

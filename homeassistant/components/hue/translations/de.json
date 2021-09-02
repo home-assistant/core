@@ -8,7 +8,7 @@
             "discover_timeout": "Es k\u00f6nnen keine Hue Bridges erkannt werden",
             "no_bridges": "Keine Philips Hue Bridges erkannt",
             "not_hue_bridge": "Keine Philips Hue Bridge entdeckt",
-            "unknown": "Unbekannter Fehler ist aufgetreten"
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "linking": "Unerwarteter Fehler",

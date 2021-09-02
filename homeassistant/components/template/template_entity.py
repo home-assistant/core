@@ -112,6 +112,9 @@ class _TemplateAttribute:
 class TemplateEntity(Entity):
     """Entity that uses templates to calculate attributes."""
 
+    _attr_available = True
+    _attr_entity_picture = None
+    _attr_icon = None
     _attr_should_poll = False
 
     def __init__(
@@ -128,7 +131,6 @@ class TemplateEntity(Entity):
         self._attribute_templates = attribute_templates
         self._attr_extra_state_attributes = {}
         self._availability_template = availability_template
-        self._attr_available = True
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
         self._self_ref_update_count = 0

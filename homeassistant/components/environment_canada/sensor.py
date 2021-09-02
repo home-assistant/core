@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -77,6 +78,7 @@ class ECSensor(SensorEntity):
         self._state = None
         self._attr = None
         self._unit = None
+        self._device_class = None
 
     @property
     def unique_id(self) -> str:
@@ -89,7 +91,7 @@ class ECSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -99,9 +101,14 @@ class ECSensor(SensorEntity):
         return self._attr
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
 
     def update(self):
         """Update current conditions."""
@@ -130,11 +137,12 @@ class ECSensor(SensorEntity):
         else:
             self._state = value
 
-        if sensor_data.get("unit") == "C" or self.sensor_type in [
+        if sensor_data.get("unit") == "C" or self.sensor_type in (
             "wind_chill",
             "humidex",
-        ]:
+        ):
             self._unit = TEMP_CELSIUS
+            self._device_class = DEVICE_CLASS_TEMPERATURE
         else:
             self._unit = sensor_data.get("unit")
 

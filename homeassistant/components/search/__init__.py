@@ -1,4 +1,6 @@
 """The Search integration."""
+from __future__ import annotations
+
 from collections import defaultdict, deque
 import logging
 
@@ -9,12 +11,13 @@ from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import entity_sources as get_entity_sources
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "search"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Search component."""
     websocket_api.async_register_command(hass, websocket_search_related)
     return True
@@ -71,7 +74,7 @@ class Searcher:
         hass: HomeAssistant,
         device_reg: device_registry.DeviceRegistry,
         entity_reg: entity_registry.EntityRegistry,
-        entity_sources: "dict[str, dict[str, str]]",
+        entity_sources: dict[str, dict[str, str]],
     ) -> None:
         """Search results."""
         self.hass = hass

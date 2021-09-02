@@ -56,7 +56,7 @@ async def device_scan(identifier, loop, cache=None):
         if matches:
             return cache, matches[0]
 
-    for hosts in [_host_filter(), None]:
+    for hosts in (_host_filter(), None):
         scan_result = await scan(loop, timeout=3, hosts=hosts)
         matches = [atv for atv in scan_result if _filter_device(atv)]
 

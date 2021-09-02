@@ -8,7 +8,9 @@
             "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "discovery_requires_supervisor": "Discovery requires the supervisor.",
+            "not_zwave_device": "Discovered device is not a Z-Wave device."
         },
         "error": {
             "addon_start_failed": "Failed to start the Z-Wave JS add-on. Check the configuration.",
@@ -16,6 +18,7 @@
             "invalid_ws_url": "Invalid websocket URL",
             "unknown": "Unexpected error"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
             "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
@@ -48,7 +51,27 @@
             },
             "start_addon": {
                 "title": "The Z-Wave JS add-on is starting."
+            },
+            "usb_confirm": {
+                "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
             }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Config parameter {subtype} value",
+            "node_status": "Node status",
+            "value": "Current value of a Z-Wave Value"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Sent an Entry Control notification",
+            "event.notification.notification": "Sent a notification",
+            "event.value_notification.basic": "Basic CC event on {subtype}",
+            "event.value_notification.central_scene": "Central Scene action on {subtype}",
+            "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+            "state.node_status": "Node status changed",
+            "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+            "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
         }
     },
     "options": {

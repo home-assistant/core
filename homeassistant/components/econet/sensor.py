@@ -82,7 +82,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         self._device_name = device_name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensors state."""
         value = getattr(self._econet, SENSOR_NAMES_TO_ATTRIBUTES[self._device_name])
         if isinstance(value, float):
@@ -90,7 +90,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         return value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         unit_of_measurement = SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT[self._device_name]
         if self._device_name == POWER_USAGE_TODAY:

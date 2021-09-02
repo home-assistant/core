@@ -15,8 +15,8 @@ import voluptuous as vol
 
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.models import (
-    Message as MQTTMessage,
-    PublishPayloadType,
+    ReceiveMessage as MQTTReceiveMessage,
+    ReceivePayloadType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -188,12 +188,12 @@ async def _get_gateway(
             mqtt.async_publish(topic, payload, qos, retain)
 
         def sub_callback(
-            topic: str, sub_cb: Callable[[str, PublishPayloadType, int], None], qos: int
+            topic: str, sub_cb: Callable[[str, ReceivePayloadType, int], None], qos: int
         ) -> None:
             """Call MQTT subscribe function."""
 
             @callback
-            def internal_callback(msg: MQTTMessage) -> None:
+            def internal_callback(msg: MQTTReceiveMessage) -> None:
                 """Call callback."""
                 sub_cb(msg.topic, msg.payload, msg.qos)
 

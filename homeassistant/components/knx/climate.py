@@ -12,7 +12,6 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     SUPPORT_PRESET_MODE,
@@ -28,6 +27,7 @@ from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DOMAIN, PRESET_MODES
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
 
+ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
 PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
@@ -156,10 +156,14 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
         temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
         group_address_on_off=config.get(ClimateSchema.CONF_ON_OFF_ADDRESS),
         group_address_on_off_state=config.get(ClimateSchema.CONF_ON_OFF_STATE_ADDRESS),
+        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+        group_address_active_state=config.get(ClimateSchema.CONF_ACTIVE_STATE_ADDRESS),
+        group_address_command_value_state=config.get(
+            ClimateSchema.CONF_COMMAND_VALUE_STATE_ADDRESS
+        ),
         min_temp=config.get(ClimateSchema.CONF_MIN_TEMP),
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
-        on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
     )
 
 
@@ -167,19 +171,22 @@ class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
+        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        if self.preset_modes:
+            self._attr_supported_features |= SUPPORT_PRESET_MODE
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
             f"{self._device.temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
+            f"{self._device._setpoint_shift.group_address}"
         )
+        self.default_hvac_mode: str = config[ClimateSchema.CONF_DEFAULT_CONTROLLER_MODE]
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
@@ -224,10 +231,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
             return HVAC_MODE_OFF
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             return CONTROLLER_MODES.get(
-                self._device.mode.controller_mode.value, HVAC_MODE_HEAT
+                self._device.mode.controller_mode.value, self.default_hvac_mode
             )
-        # default to "heat"
-        return HVAC_MODE_HEAT
+        return self.default_hvac_mode
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -241,12 +247,11 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
         if self._device.supports_on_off:
             if not ha_controller_modes:
-                ha_controller_modes.append(HVAC_MODE_HEAT)
+                ha_controller_modes.append(self.default_hvac_mode)
             ha_controller_modes.append(HVAC_MODE_OFF)
 
         hvac_modes = list(set(filter(None, ha_controller_modes)))
-        # default to ["heat"]
-        return hvac_modes if hvac_modes else [HVAC_MODE_HEAT]
+        return hvac_modes if hvac_modes else [self.default_hvac_mode]
 
     @property
     def hvac_action(self) -> str | None:
@@ -256,6 +261,8 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """
         if self._device.supports_on_off and not self._device.is_on:
             return CURRENT_HVAC_OFF
+        if self._device.is_active is False:
+            return CURRENT_HVAC_IDLE
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             return CURRENT_HVAC_ACTIONS.get(
                 self._device.mode.controller_mode.value, CURRENT_HVAC_IDLE
@@ -310,6 +317,15 @@ class KNXClimate(KnxEntity, ClimateEntity):
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self._device.mode.set_operation_mode(knx_operation_mode)
             self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        attr: dict[str, Any] = {}
+
+        if self._device.command_value.initialized:
+            attr[ATTR_COMMAND_VALUE] = self._device.command_value.value
+        return attr
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""

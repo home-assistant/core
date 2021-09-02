@@ -1,4 +1,6 @@
 """The Control4 integration."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -149,9 +151,9 @@ class Control4Entity(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
-        device_name: str,
-        device_manufacturer: str,
-        device_model: str,
+        device_name: str | None,
+        device_manufacturer: str | None,
+        device_model: str | None,
         device_id: int,
     ) -> None:
         """Initialize a Control4 entity."""
@@ -174,7 +176,7 @@ class Control4Entity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._idx
+        return str(self._idx)
 
     @property
     def device_info(self):

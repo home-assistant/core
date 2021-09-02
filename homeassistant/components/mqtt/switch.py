@@ -32,6 +32,13 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
+MQTT_SWITCH_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        switch.ATTR_CURRENT_POWER_W,
+        switch.ATTR_TODAY_ENERGY_KWH,
+    }
+)
+
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
@@ -77,6 +84,8 @@ async def _async_setup_entity(
 
 class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
+
+    _attributes_extra_blocked = MQTT_SWITCH_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT switch."""

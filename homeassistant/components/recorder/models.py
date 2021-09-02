@@ -1,6 +1,10 @@
 """Models for SQLAlchemy."""
+from __future__ import annotations
+
+from datetime import datetime
 import json
 import logging
+from typing import TypedDict
 
 from sqlalchemy import (
     Boolean,
@@ -15,9 +19,8 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -36,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 16
+SCHEMA_VERSION = 20
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +50,8 @@ TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
+TABLE_STATISTICS_META = "statistics_meta"
+TABLE_STATISTICS_RUNS = "statistics_runs"
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -54,20 +59,30 @@ ALL_TABLES = [
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
+    TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
 ]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
 class Events(Base):  # type: ignore
     """Event history data."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
+    __table_args__ = (
+        # Used for fetching events at a specific time
+        # see logbook
+        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, Identity(), primary_key=True)
     event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
@@ -78,12 +93,6 @@ class Events(Base):  # type: ignore
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
     context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-
-    __table_args__ = (
-        # Used for fetching events at a specific time
-        # see logbook
-        Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
-    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -99,7 +108,8 @@ class Events(Base):  # type: ignore
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            event_data=event_data
+            or json.dumps(event.data, cls=JSONEncoder, separators=(",", ":")),
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -108,7 +118,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
@@ -131,10 +141,12 @@ class Events(Base):  # type: ignore
 class States(Base):  # type: ignore
     """State change history."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
+    __table_args__ = (
+        # Used for fetching the state of entities at a specific time
+        # (get_states in history.py)
+        Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_STATES
     state_id = Column(Integer, Identity(), primary_key=True)
     domain = Column(String(MAX_LENGTH_STATE_DOMAIN))
@@ -150,12 +162,6 @@ class States(Base):  # type: ignore
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     event = relationship("Events", uselist=False)
     old_state = relationship("States", remote_side=[state_id])
-
-    __table_args__ = (
-        # Used for fetching the state of entities at a specific time
-        # (get_states in history.py)
-        Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
-    )
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -186,7 +192,9 @@ class States(Base):  # type: ignore
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(dict(state.attributes), cls=JSONEncoder)
+            dbstate.attributes = json.dumps(
+                dict(state.attributes), cls=JSONEncoder, separators=(",", ":")
+            )
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
@@ -212,53 +220,98 @@ class States(Base):  # type: ignore
             return None
 
 
+class StatisticData(TypedDict, total=False):
+    """Statistic data class."""
+
+    mean: float
+    min: float
+    max: float
+    last_reset: datetime | None
+    state: float
+    sum: float
+
+
 class Statistics(Base):  # type: ignore
     """Statistics."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
+    )
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-    source = Column(String(32))
-    statistic_id = Column(String(255))
-    start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
-    last_reset = Column(DATETIME_TYPE)
-    state = Column(Float())
-    sum = Column(Float())
-
-    __table_args__ = (
-        # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "statistic_id", "start"),
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
     )
+    start = Column(DATETIME_TYPE, index=True)
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
 
     @staticmethod
-    def from_stats(source, statistic_id, start, stats):
+    def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
         """Create object from a statistics."""
         return Statistics(
-            source=source,
-            statistic_id=statistic_id,
+            metadata_id=metadata_id,
             start=start,
             **stats,
+        )
+
+
+class StatisticMetaData(TypedDict, total=False):
+    """Statistic meta data class."""
+
+    statistic_id: str
+    unit_of_measurement: str | None
+    has_mean: bool
+    has_sum: bool
+
+
+class StatisticsMeta(Base):  # type: ignore
+    """Statistics meta data."""
+
+    __tablename__ = TABLE_STATISTICS_META
+    id = Column(Integer, primary_key=True)
+    statistic_id = Column(String(255), index=True)
+    source = Column(String(32))
+    unit_of_measurement = Column(String(255))
+    has_mean = Column(Boolean)
+    has_sum = Column(Boolean)
+
+    @staticmethod
+    def from_meta(
+        source: str,
+        statistic_id: str,
+        unit_of_measurement: str | None,
+        has_mean: bool,
+        has_sum: bool,
+    ) -> StatisticsMeta:
+        """Create object from meta data."""
+        return StatisticsMeta(
+            source=source,
+            statistic_id=statistic_id,
+            unit_of_measurement=unit_of_measurement,
+            has_mean=has_mean,
+            has_sum=has_sum,
         )
 
 
 class RecorderRuns(Base):  # type: ignore
     """Representation of recorder run."""
 
+    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
     start = Column(DateTime(timezone=True), default=dt_util.utcnow)
     end = Column(DateTime(timezone=True))
     closed_incorrect = Column(Boolean, default=False)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-
-    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -317,6 +370,22 @@ class SchemaChanges(Base):  # type: ignore
         )
 
 
+class StatisticsRuns(Base):  # type: ignore
+    """Representation of statistics run."""
+
+    __tablename__ = TABLE_STATISTICS_RUNS
+    run_id = Column(Integer, primary_key=True)
+    start = Column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StatisticsRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f")>"
+        )
+
+
 def process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
@@ -327,7 +396,7 @@ def process_timestamp(ts):
     return dt_util.as_utc(ts)
 
 
-def process_timestamp_to_utc_isoformat(ts):
+def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     """Process a timestamp into UTC isotime."""
     if ts is None:
         return None
