@@ -44,6 +44,7 @@ from .const import (
     TRANSIENT_DEVICE_MODELS,
 )
 from .media_browser import browse_media
+from .media_search import continue_media
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -492,12 +493,12 @@ class PlexMediaPlayer(MediaPlayerEntity):
         else:
             shuffle = src.pop("shuffle", 0)
             continuous = src.pop("continuous", 0)
-            continuation = src.pop("_continue", None)
+            resume_query = src.pop("episode_resume_query", None)
 
             media = self.plex_server.lookup_media(media_type, **src)
 
-            if continuation:
-                media = self.plex_server.continue_media(media, continuation)
+            if resume_query:
+                media = continue_media(media, resume_query)
 
             if media is None:
                 _LOGGER.error("Media could not be found: %s", media_id)
