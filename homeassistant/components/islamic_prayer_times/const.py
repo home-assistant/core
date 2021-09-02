@@ -11,8 +11,8 @@ PRAYER_TIMES_ICON: Final = "mdi:calendar-clock"
 
 
 SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
-    SensorEntityDescription(key="Fajr", name="Fajer prayer"),
-    SensorEntityDescription(key="Dhuhr", name="Dhuhur prayer"),
+    SensorEntityDescription(key="Fajr", name="Fajr prayer"),
+    SensorEntityDescription(key="Dhuhr", name="Dhuhr prayer"),
     SensorEntityDescription(key="Asr", name="Asr prayer"),
     SensorEntityDescription(key="Maghrib", name="Maghrib prayer"),
     SensorEntityDescription(key="Isha", name="Isha prayer"),
