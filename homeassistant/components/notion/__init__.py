@@ -68,14 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for attr, result in zip(tasks, results):
+            if isinstance(result, InvalidCredentialsError):
+                raise ConfigEntryAuthFailed(
+                    "Invalid username and/or password"
+                ) from result
             if isinstance(result, NotionError):
                 raise UpdateFailed(
                     f"There was a Notion error while updating {attr}: {result}"
-                )
+                ) from result
             if isinstance(result, Exception):
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
-                )
+                ) from result
 
             for item in result:
                 if attr == "bridges" and item["id"] not in data["bridges"]:
