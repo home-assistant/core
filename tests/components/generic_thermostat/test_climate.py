@@ -324,6 +324,24 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
     assert state.attributes.get("temperature") == 23
 
 
+async def test_set_preset_mode_ignores_case(hass, setup_comp_2):
+    """Test the setting away mode twice in a row.
+
+    Verify original temperature is restored.
+    """
+    await common.async_set_temperature(hass, 23)
+    await common.async_set_preset_mode(hass, "Away")
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == "away"
+    await common.async_set_preset_mode(hass, "None")
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == "none"
+    with pytest.raises(ValueError):
+        await common.async_set_preset_mode(hass, "Sleep")
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == "none"
+
+
 async def test_sensor_bad_value(hass, setup_comp_2):
     """Test sensor that have None as state."""
     state = hass.states.get(ENTITY)

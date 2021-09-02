@@ -68,6 +68,9 @@ CONF_AWAY_TEMP = "away_temp"
 CONF_PRECISION = "precision"
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
+SUPPORTED_PRESETS = [PRESET_AWAY, PRESET_NONE]
+assert all(x.lower() == x for x in SUPPORTED_PRESETS)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HEATER): cv.entity_id,
@@ -521,6 +524,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""
+        preset_mode = preset_mode.lower()
+        if preset_mode not in SUPPORTED_PRESETS:
+            raise ValueError(f"Got unsupported preset_mode {preset_mode}")
         if preset_mode == PRESET_AWAY and not self._is_away:
             self._is_away = True
             self._saved_target_temp = self._target_temp
