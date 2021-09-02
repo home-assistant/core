@@ -1,10 +1,10 @@
 """AVM FRITZ!Box binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from dataclasses import dataclass
 import datetime
 import logging
-from typing import TypedDict
+from typing import Callable
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -139,112 +140,123 @@ def _retrieve_link_attenuation_received_state(
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
-class SensorData(TypedDict, total=False):
-    """Sensor data class."""
+@dataclass
+class SensorData(SensorEntityDescription):
+    """Fritz sensor data class."""
 
-    name: str
-    device_class: str | None
-    state_class: str | None
-    unit_of_measurement: str | None
-    icon: str | None
-    state_provider: Callable
-    connection_type: str | None
+    state_provider: Callable | None = None
+    connection_type: str | None = None
 
 
 SENSOR_DATA = {
     "external_ip": SensorData(
+        key="external_ip",
         name="External IP",
         icon="mdi:earth",
         state_provider=_retrieve_external_ip_state,
     ),
     "device_uptime": SensorData(
+        key="device_uptime",
         name="Device Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
         state_provider=_retrieve_device_uptime_state,
     ),
     "connection_uptime": SensorData(
+        key="connection_uptime",
         name="Connection Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
         state_provider=_retrieve_connection_uptime_state,
     ),
     "kb_s_sent": SensorData(
+        key="kb_s_sent",
         name="Upload Throughput",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_kb_s_sent_state,
     ),
     "kb_s_received": SensorData(
+        key="kb_s_received",
         name="Download Throughput",
         state_class=STATE_CLASS_MEASUREMENT,
-        unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_kb_s_received_state,
     ),
     "max_kb_s_sent": SensorData(
+        key="max_kb_s_sent",
         name="Max Connection Upload Throughput",
-        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_max_kb_s_sent_state,
     ),
     "max_kb_s_received": SensorData(
+        key="max_kb_s_received",
         name="Max Connection Download Throughput",
-        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_max_kb_s_received_state,
     ),
     "gb_sent": SensorData(
+        key="gb_sent",
         name="GB sent",
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:upload",
         state_provider=_retrieve_gb_sent_state,
     ),
     "gb_received": SensorData(
+        key="gb_received",
         name="GB received",
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:download",
         state_provider=_retrieve_gb_received_state,
     ),
     "link_kb_s_sent": SensorData(
+        key="link_kb_s_sent",
         name="Link Upload Throughput",
-        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
         state_provider=_retrieve_link_kb_s_sent_state,
         connection_type=DSL_CONNECTION,
     ),
     "link_kb_s_received": SensorData(
+        key="link_kb_s_received",
         name="Link Download Throughput",
-        unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
+        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
         state_provider=_retrieve_link_kb_s_received_state,
         connection_type=DSL_CONNECTION,
     ),
     "link_noise_margin_sent": SensorData(
+        key="link_noise_margin_sent",
         name="Link Upload Noise Margin",
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
         state_provider=_retrieve_link_noise_margin_sent_state,
         connection_type=DSL_CONNECTION,
     ),
     "link_noise_margin_received": SensorData(
+        key="link_noise_margin_received",
         name="Link Download Noise Margin",
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
         state_provider=_retrieve_link_noise_margin_received_state,
         connection_type=DSL_CONNECTION,
     ),
     "link_attenuation_sent": SensorData(
+        key="link_attenuation_sent",
         name="Link Upload Power Attenuation",
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:upload",
         state_provider=_retrieve_link_attenuation_sent_state,
         connection_type=DSL_CONNECTION,
     ),
     "link_attenuation_received": SensorData(
+        key="link_attenuation_received",
         name="Link Download Power Attenuation",
-        unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         icon="mdi:download",
         state_provider=_retrieve_link_attenuation_received_state,
         connection_type=DSL_CONNECTION,
@@ -284,7 +296,7 @@ async def async_setup_entry(
         pass
 
     for sensor_type, sensor_data in SENSOR_DATA.items():
-        if not dsl and sensor_data.get("connection_type") == DSL_CONNECTION:
+        if not dsl and sensor_data.connection_type == DSL_CONNECTION:
             continue
         entities.append(FritzBoxSensor(fritzbox_tools, entry.title, sensor_type))
 
@@ -302,20 +314,20 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._last_device_value: str | None = None
         self._attr_available = True
-        self._attr_device_class = self._sensor_data.get("device_class")
-        self._attr_icon = self._sensor_data.get("icon")
-        self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
-        self._attr_state_class = self._sensor_data.get("state_class")
-        self._attr_native_unit_of_measurement = self._sensor_data.get(
-            "unit_of_measurement"
+        self._attr_device_class = self._sensor_data.device_class
+        self._attr_icon = self._sensor_data.icon
+        self._attr_name = f"{device_friendly_name} {self._sensor_data.name}"
+        self._attr_state_class = self._sensor_data.state_class
+        self._attr_native_unit_of_measurement = (
+            self._sensor_data.native_unit_of_measurement
         )
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
-    def _state_provider(self) -> Callable:
+    def _state_provider(self) -> Callable | None:
         """Return the state provider for the binary sensor."""
-        return self._sensor_data["state_provider"]
+        return self._sensor_data.state_provider
 
     def update(self) -> None:
         """Update data."""
@@ -329,6 +341,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        self._attr_native_value = self._last_device_value = self._state_provider(
-            status, self._last_device_value
-        )
+        if self._state_provider:
+            self._attr_native_value = self._last_device_value = self._state_provider(
+                status, self._last_device_value
+            )

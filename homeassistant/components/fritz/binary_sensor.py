@@ -1,8 +1,9 @@
 """AVM FRITZ!Box connectivity sensor."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
-from typing import Callable, TypedDict
+from typing import Callable
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -12,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PLUG,
     BinarySensorEntity,
 )
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,21 +34,22 @@ def _retrieve_link_state(status: FritzStatus) -> bool:
     return bool(status.is_linked)
 
 
-class SensorData(TypedDict):
-    """Sensor data class."""
+@dataclass
+class SensorData(SensorEntityDescription):
+    """Fritz sensor data class."""
 
-    name: str
-    device_class: str | None
-    state_provider: Callable
+    state_provider: Callable | None = None
 
 
 SENSOR_DATA = {
     "is_connected": SensorData(
+        key="is_connected",
         name="Connection",
         device_class=DEVICE_CLASS_CONNECTIVITY,
         state_provider=_retrieve_connection_state,
     ),
     "is_linked": SensorData(
+        key="is_linked",
         name="Link",
         device_class=DEVICE_CLASS_PLUG,
         state_provider=_retrieve_link_state,
@@ -85,15 +88,15 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
         """Init FRITZ!Box connectivity class."""
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._attr_available = True
-        self._attr_device_class = self._sensor_data.get("device_class")
-        self._attr_name = f"{device_friendly_name} {self._sensor_data['name']}"
+        self._attr_device_class = self._sensor_data.device_class
+        self._attr_name = f"{device_friendly_name} {self._sensor_data.name}"
         self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
-    def _state_provider(self) -> Callable:
+    def _state_provider(self) -> Callable | None:
         """Return the state provider for the binary sensor."""
-        return self._sensor_data["state_provider"]
+        return self._sensor_data.state_provider
 
     def update(self) -> None:
         """Update data."""
@@ -107,4 +110,5 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
             self._attr_available = False
             return
 
-        self._attr_is_on = self._state_provider(status)
+        if self._state_provider:
+            self._attr_is_on = self._state_provider(status)
