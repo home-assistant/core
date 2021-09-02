@@ -2375,7 +2375,7 @@ vsure==1.7.3
 vtjp==0.1.14
 
 # homeassistant.components.vulcan
-vulcan-api==2.0.1
+vulcan-api==2.0.2
 
 # homeassistant.components.vultr
 vultr==0.1.2
