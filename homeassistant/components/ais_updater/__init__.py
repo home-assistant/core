@@ -601,6 +601,9 @@ async def get_newest_version(hass, include_components, go_to_download):
         if "force" in res:
             force = res["force"]
 
+        if "ais_cloud_services_host" in res:
+            ais_global.AIS_HOST = res["ais_cloud_services_host"]
+
         hass.states.async_set(
             ENTITY_ID,
             info,
@@ -625,6 +628,7 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "force": force,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
+                "ais_cloud_services_host": ais_global.AIS_HOST
             },
         )
         if need_to_update and go_to_download:
