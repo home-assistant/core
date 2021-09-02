@@ -332,6 +332,17 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
+def hass_client_no_auth(hass, aiohttp_client):
+    """Return an unauthenticated HTTP client."""
+
+    async def client():
+        """Return an authenticated client."""
+        return await aiohttp_client(hass.http.app)
+
+    return client
+
+
+@pytest.fixture
 def current_request():
     """Mock current request."""
     with patch("homeassistant.components.http.current_request") as mock_request_context:
