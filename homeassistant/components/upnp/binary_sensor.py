@@ -9,11 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpDataUpdateCoordinator, UpnpEntity, UpnpSensorEntityDescription
+from . import UpnpBinarySensorEntityDescription, UpnpDataUpdateCoordinator, UpnpEntity
 from .const import DOMAIN, LOGGER, WAN_STATUS
 
-BINARYSENSOR_ENTITY_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
-    UpnpSensorEntityDescription(
+BINARYSENSOR_ENTITY_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] = (
+    UpnpBinarySensorEntityDescription(
         key=WAN_STATUS,
         name="wan status",
     ),
@@ -48,7 +48,7 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        entity_description: UpnpSensorEntityDescription,
+        entity_description: UpnpBinarySensorEntityDescription,
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator=coordinator, entity_description=entity_description)

@@ -12,14 +12,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.network.const import PUBLIC_TARGET_IP
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -195,10 +194,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 @dataclass
-class UpnpSensorEntityDescription(
-    SensorEntityDescription, BinarySensorEntityDescription
-):
+class UpnpBinarySensorEntityDescription(EntityDescription):
     """A class that describes UPnP entities."""
+
+    format: str = "s"
+
+
+@dataclass
+class UpnpSensorEntityDescription(EntityDescription):
+    """A class that describes a sensor UPnP entities."""
 
     format: str = "s"
 
@@ -233,12 +237,13 @@ class UpnpEntity(CoordinatorEntity):
     """Base class for UPnP/IGD entities."""
 
     coordinator: UpnpDataUpdateCoordinator
-    entity_description: UpnpSensorEntityDescription
+    entity_description: UpnpSensorEntityDescription | UpnpBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
-        entity_description: UpnpSensorEntityDescription,
+        entity_description: UpnpSensorEntityDescription
+        | UpnpBinarySensorEntityDescription,
     ) -> None:
         """Initialize the base entities."""
         super().__init__(coordinator)

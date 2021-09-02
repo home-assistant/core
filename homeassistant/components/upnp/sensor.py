@@ -190,6 +190,7 @@ class DerivedUpnpSensor(UpnpSensor):
 
         # Calculate derivative.
         delta_value = current_value - self._last_value
+        # pyright: reportGeneralTypeIssues=false
         if self.entity_description.native_unit_of_measurement == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
