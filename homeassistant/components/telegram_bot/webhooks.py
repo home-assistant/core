@@ -33,9 +33,8 @@ async def async_setup_platform(hass, config):
     bot = initialize_bot(config)
 
     current_status = await hass.async_add_executor_job(bot.getWebhookInfo)
-    base_url = config.get(
-        CONF_URL, get_url(hass, require_ssl=True, allow_internal=False)
-    )
+    if not (base_url := config.get(CONF_URL)):
+        base_url = get_url(hass, require_ssl=True, allow_internal=False)
 
     # Some logging of Bot current status:
     last_error_date = getattr(current_status, "last_error_date", None)
