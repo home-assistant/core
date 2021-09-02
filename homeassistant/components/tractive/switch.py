@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiotractive.exceptions import TractiveError
 
@@ -100,6 +100,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
         self._attr_unique_id = unique_id
         self._attr_available = False
         self._tracker = tracker
+        self._method = getattr(self, description.method)
         self.entity_description = description
 
     @callback
@@ -138,9 +139,8 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on a switch."""
-        method = getattr(self, cast(str, self.entity_description.method))
         try:
-            result = await method(True)
+            result = await self._method(True)
         except TractiveError as error:
             _LOGGER.error(error)
         # Write state back to avoid switch flips with a slow response
@@ -150,9 +150,8 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off a switch."""
-        method = getattr(self, cast(str, self.entity_description.method))
         try:
-            result = await method(False)
+            result = await self._method(False)
         except TractiveError as error:
             _LOGGER.error(error)
         # Write state back to avoid switch flips with a slow response
