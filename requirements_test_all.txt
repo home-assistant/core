@@ -1109,7 +1109,7 @@ pytradfri[async]==7.0.6
 pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.8.2
+pyuptimerobot==21.9.0
 
 # homeassistant.components.vera
 pyvera==0.3.13
