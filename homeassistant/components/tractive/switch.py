@@ -143,6 +143,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             result = await self._method(True)
         except TractiveError as error:
             _LOGGER.error(error)
+            return
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = True
@@ -154,6 +155,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
             result = await self._method(False)
         except TractiveError as error:
             _LOGGER.error(error)
+            return
         # Write state back to avoid switch flips with a slow response
         if result["pending"]:
             self._attr_is_on = False
