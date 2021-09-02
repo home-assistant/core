@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.generic_thermostat import (
     DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
 )
+from homeassistant.components.generic_thermostat.climate import SUPPORTED_PRESETS
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_RELOAD,
@@ -325,10 +326,9 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
 
 
 async def test_set_preset_mode_ignores_case(hass, setup_comp_2):
-    """Test the setting away mode twice in a row.
+    """Test an invalid mode raises an error and ignore case when checking modes."""
+    assert all(x.lower() == x for x in SUPPORTED_PRESETS)
 
-    Verify original temperature is restored.
-    """
     await common.async_set_temperature(hass, 23)
     await common.async_set_preset_mode(hass, "Away")
     state = hass.states.get(ENTITY)
