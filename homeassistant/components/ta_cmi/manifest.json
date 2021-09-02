@@ -1,0 +1,14 @@
+{
+  "domain": "ta_cmi",
+  "name": "Technische Alternative C.M.I.",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/ta_cmi",
+  "requirements": [
+    "ta-cmi==0.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@DeerMaximum"
+  ],
+  "iot_class": "local_polling"
+}

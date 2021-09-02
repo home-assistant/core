@@ -1007,6 +1007,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/syslog/ @fabaff
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
+/homeassistant/components/ta_cmi/ @DeerMaximum
 /homeassistant/components/tado/ @michaelarnauts @north3221
 /tests/components/tado/ @michaelarnauts @north3221
 /homeassistant/components/tag/ @balloob @dmulcahey
