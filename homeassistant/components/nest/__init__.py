@@ -27,6 +27,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -69,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "camera", "climate"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
 

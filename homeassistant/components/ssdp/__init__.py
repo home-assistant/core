@@ -236,24 +236,16 @@ class Scanner:
         """Build the list of ssdp sources."""
         adapters = await network.async_get_adapters(self.hass)
         sources: set[IPv4Address | IPv6Address] = set()
-        if _async_use_default_interface(adapters):
+        if network.async_only_default_interface_enabled(adapters):
             sources.add(IPv4Address("0.0.0.0"))
             return sources
 
-        for adapter in adapters:
-            if not adapter["enabled"]:
-                continue
-            if adapter["ipv4"]:
-                ipv4 = adapter["ipv4"][0]
-                sources.add(IPv4Address(ipv4["address"]))
-            if adapter["ipv6"]:
-                ipv6 = adapter["ipv6"][0]
-                # With python 3.9 add scope_ids can be
-                # added by enumerating adapter["ipv6"]s
-                # IPv6Address(f"::%{ipv6['scope_id']}")
-                sources.add(IPv6Address(ipv6["address"]))
-
-        return sources
+        return {
+            source_ip
+            for source_ip in await network.async_get_enabled_source_ips(self.hass)
+            if not source_ip.is_loopback
+            and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+        }
 
     async def async_scan(self, *_: Any) -> None:
         """Scan for new entries using ssdp listeners."""

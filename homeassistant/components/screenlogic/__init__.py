@@ -16,6 +16,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Screenlogic component."""
     domain_data = hass.data[DOMAIN] = {}
     domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)

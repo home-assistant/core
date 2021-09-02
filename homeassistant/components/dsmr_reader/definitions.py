@@ -6,12 +6,14 @@ from typing import Callable
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
@@ -21,7 +23,6 @@ from homeassistant.const import (
     POWER_KILO_WATT,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.util import dt as dt_util
 
 
 def dsmr_transform(value):
@@ -51,32 +52,28 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Low tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_returned_1",
         name="Low tariff returned",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_delivered_2",
         name="High tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_returned_2",
         name="High tariff returned",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_currently_delivered",
@@ -146,8 +143,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         icon="mdi:fire",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_voltage_l1",
@@ -206,15 +202,14 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/delivered",
         name="Gas usage",
-        icon="mdi:fire",
+        device_class=DEVICE_CLASS_GAS,
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/currently_delivered",
         name="Current gas usage",
-        icon="mdi:fire",
+        device_class=DEVICE_CLASS_GAS,
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -229,48 +224,42 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Low tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2",
         name="High tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1_returned",
         name="Low tariff return",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2_returned",
         name="High tariff return",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_merged",
         name="Power usage total",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_returned_merged",
         name="Power return total",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt_util.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1_cost",
