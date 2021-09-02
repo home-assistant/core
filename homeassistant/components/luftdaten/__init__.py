@@ -7,17 +7,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -27,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_sensors, duplicate_stations
-from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN, SENSOR_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,58 +31,12 @@ DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
 PLATFORMS = ["sensor"]
 
-SENSOR_HUMIDITY = "humidity"
-SENSOR_PM10 = "P1"
-SENSOR_PM2_5 = "P2"
-SENSOR_PRESSURE = "pressure"
-SENSOR_PRESSURE_AT_SEALEVEL = "pressure_at_sealevel"
-SENSOR_TEMPERATURE = "temperature"
-
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
-
-SENSORS = {
-    SENSOR_TEMPERATURE: [
-        "Temperature",
-        "mdi:thermometer",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    SENSOR_HUMIDITY: [
-        "Humidity",
-        "mdi:water-percent",
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-    ],
-    SENSOR_PRESSURE: [
-        "Pressure",
-        "mdi:arrow-down-bold",
-        PRESSURE_HPA,
-        DEVICE_CLASS_PRESSURE,
-    ],
-    SENSOR_PRESSURE_AT_SEALEVEL: [
-        "Pressure at sealevel",
-        "mdi:download",
-        PRESSURE_HPA,
-        DEVICE_CLASS_PRESSURE,
-    ],
-    SENSOR_PM10: [
-        "PM10",
-        "mdi:thought-bubble",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        None,
-    ],
-    SENSOR_PM2_5: [
-        "PM2.5",
-        "mdi:thought-bubble-outline",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        None,
-    ],
-}
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
@@ -174,7 +121,7 @@ async def async_setup_entry(hass, config_entry):
         luftdaten = LuftDatenData(
             Luftdaten(config_entry.data[CONF_SENSOR_ID], hass.loop, session),
             config_entry.data.get(CONF_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(SENSORS)
+                CONF_MONITORED_CONDITIONS, SENSOR_KEYS
             ),
         )
         await luftdaten.async_update()
