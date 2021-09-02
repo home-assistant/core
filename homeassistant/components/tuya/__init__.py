@@ -136,9 +136,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("integration unload")
     unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload:
-        __device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-        __device_manager.mq.stop()
-        __device_manager.remove_device_listener(
+        device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
+        device_manager.mq.stop()
+        device_manager.remove_device_listener(
             hass.data[DOMAIN][entry.entry_id][TUYA_MQTT_LISTENER]
         )
 
