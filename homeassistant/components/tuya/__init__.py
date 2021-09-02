@@ -43,28 +43,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_PROJECT_TYPE): int,
-                    vol.Required(CONF_ENDPOINT): cv.string,
-                    vol.Required(CONF_ACCESS_ID): cv.string,
-                    vol.Required(CONF_ACCESS_SECRET): cv.string,
-                    CONF_USERNAME: cv.string,
-                    CONF_PASSWORD: cv.string,
-                    CONF_COUNTRY_CODE: cv.string,
-                    CONF_APP_TYPE: cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
     _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
