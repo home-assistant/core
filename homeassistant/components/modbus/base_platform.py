@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -73,6 +74,7 @@ class BasePlatform(Entity):
         self._value = None
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._call_active = False
+        self._cancel_timer = None
 
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
@@ -86,13 +88,25 @@ class BasePlatform(Entity):
     async def async_update(self, now=None):
         """Virtual function to be overwritten."""
 
-    async def async_base_added_to_hass(self):
-        """Handle entity which will be added."""
-        if self._scan_interval > 0:
-            cancel_func = async_track_time_interval(
+    @callback
+    async def async_remote_start_stop(self, force_stop):
+        """Remote start/stop entity."""
+        if force_stop:
+            if self._cancel_timer:
+                self._cancel_timer()
+                self._cancel_timer = None
+            self._attr_available = False
+        elif self._scan_interval > 0:
+            self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
-            self._hub.entity_timers.append(cancel_func)
+            self._attr_available = True
+        self.async_write_ha_state()
+
+    async def async_base_added_to_hass(self):
+        """Handle entity which will be added."""
+        await self.async_remote_start_stop(False)
+        self._hub.entity_controls.append(self.async_remote_start_stop)
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
