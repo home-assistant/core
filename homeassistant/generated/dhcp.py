@@ -357,6 +357,10 @@ DHCP = [
         "hostname": "tado*"
     },
     {
+        "domain": "tolosauna",
+        "hostname": "usr-tcp232-ed2"
+    },
+    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"

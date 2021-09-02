@@ -1078,6 +1078,8 @@ omit =
     homeassistant/components/todoist/calendar.py
     homeassistant/components/todoist/const.py
     homeassistant/components/tof/sensor.py
+    homeassistant/components/tolosauna/__init__.py
+    homeassistant/components/tolosauna/climate.py
     homeassistant/components/tomato/device_tracker.py
     homeassistant/components/toon/__init__.py
     homeassistant/components/toon/binary_sensor.py
