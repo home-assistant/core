@@ -43,7 +43,6 @@ async def async_setup_entry(
                 name=f"Freebox {sensor_name}",
                 native_unit_of_measurement=TEMP_CELSIUS,
                 device_class=DEVICE_CLASS_TEMPERATURE,
-                icon="mdi:thermometer",
             ),
         )
         for sensor_name in router.sensors_temperature

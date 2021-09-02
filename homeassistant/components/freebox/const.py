@@ -32,14 +32,12 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="Freebox download speed",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download-network",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="rate_up",
         name="Freebox upload speed",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload-network",
-        device_class=None,
     ),
 )
 CONNECTION_SENSORS_KEYS: list[str] = [desc.key for desc in CONNECTION_SENSORS]
@@ -48,9 +46,7 @@ CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="missed",
         name="Freebox missed calls",
-        native_unit_of_measurement=None,
         icon="mdi:phone-missed",
-        device_class=None,
     ),
 )
 
@@ -60,7 +56,6 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="free space",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
-        device_class=None,
     ),
 )
 
