@@ -83,10 +83,15 @@ async def async_setup_entry(
         for camera in all_cameras
     ]
 
-    for person_id, person_data in data_handler.data[
-        CAMERA_DATA_CLASS_NAME
-    ].persons.items():
-        hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(ATTR_PSEUDO)
+    for home_id in data_class.homes.values():
+        if home.get("id") is None:
+            continue
+        for person_id, person_data in (
+            data_handler.data[CAMERA_DATA_CLASS_NAME].persons[home["id"]].items()
+        ):
+            hass.data[DOMAIN][DATA_PERSONS][home["id"]][person_id] = person_data.get(
+                ATTR_PSEUDO
+            )
 
     _LOGGER.debug("Adding cameras %s", entities)
     async_add_entities(entities, True)
@@ -314,7 +319,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         persons = kwargs.get(ATTR_PERSONS, {})
         person_ids = []
         for person in persons:
-            for pid, data in self._data.persons.items():
+            for pid, data in self._data.persons[self._home_id].items():
                 if data.get("pseudo") == person:
                     person_ids.append(pid)
 
@@ -328,7 +333,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         person = kwargs.get(ATTR_PERSON)
         person_id = None
         if person:
-            for pid, data in self._data.persons.items():
+            for pid, data in self._data.persons[self._home_id].items():
                 if data.get("pseudo") == person:
                     person_id = pid
 
