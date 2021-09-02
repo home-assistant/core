@@ -20,11 +20,11 @@ RUN \
 ARG BUILD_ARCH
 RUN \
     if [[ "${BUILD_ARCH}" == "amd64" ]]; then \
-        export APK_ARCH=x86_64;
+        export APK_ARCH=x86_64; \
     elif [[ "${BUILD_ARCH}" == "i386" ]]; then \
-        export APK_ARCH=x86;
+        export APK_ARCH=x86; \
     else \
-        export APK_ARCH=${BUILD_ARCH};
+        export APK_ARCH=${BUILD_ARCH}; \
     fi \
     && curl -O http://dl-cdn.alpinelinux.org/alpine/v3.13/main/${APK_ARCH}/sqlite-libs-3.34.1-r0.apk \
     && apk add sqlite-libs-3.34.1-r0.apk \
