@@ -21,7 +21,7 @@ ARG BUILD_ARCH
 RUN \
     if [[ "${BUILD_ARCH}" == "amd64" ]]; then \
         export APK_ARCH=x86_64;
-    elsif [[ "${BUILD_ARCH}" == "i386" ]]; then \
+    elif [[ "${BUILD_ARCH}" == "i386" ]]; then \
         export APK_ARCH=x86;
     else \
         export APK_ARCH=${BUILD_ARCH};
