@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "kamereon_no_account": "Unable to find Kamereon account.",
+      "kamereon_no_account": "Unable to find Kamereon account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -15,7 +15,7 @@
         },
         "title": "Select Kamereon account id"
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"

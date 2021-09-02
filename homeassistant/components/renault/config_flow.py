@@ -21,7 +21,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Renault config flow."""
-        self._existing_entry: dict[str, Any] | None = None
+        self._original_data: dict[str, Any] | None = None
         self.renault_config: dict[str, Any] = {}
         self.renault_hub: RenaultHub | None = None
 
@@ -92,50 +92,52 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_reauth(
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._original_data = user_input.copy()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        if not self._existing_entry:
+        """Dialog that informs the user that reauth is required."""
+        if user_input:
             if TYPE_CHECKING:
-                assert user_input
-            await self.async_set_unique_id(user_input[CONF_KAMEREON_ACCOUNT_ID])
-            self._existing_entry = user_input.copy()
-            user_input = None
+                assert self._original_data
 
-        if user_input is None:
-            return self._show_reauth_form()
+            # Check credentials
+            self.renault_hub = RenaultHub(self.hass, self._original_data[CONF_LOCALE])
+            if not await self.renault_hub.attempt_login(
+                self._original_data[CONF_USERNAME], user_input[CONF_PASSWORD]
+            ):
+                return self._show_reauth_confirm_form({"base": "invalid_credentials"})
 
-        self.renault_hub = RenaultHub(self.hass, self._existing_entry[CONF_LOCALE])
-        if not await self.renault_hub.attempt_login(
-            self._existing_entry[CONF_USERNAME], user_input[CONF_PASSWORD]
-        ):
-            return self._show_reauth_form({"base": "invalid_credentials"})
+            # Update existing entry
+            data = self._original_data.copy()
+            data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            existing_entry = await self.async_set_unique_id(
+                self._original_data[CONF_KAMEREON_ACCOUNT_ID]
+            )
+            if TYPE_CHECKING:
+                assert existing_entry
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        return self._show_reauth_confirm_form()
 
-        data = self._existing_entry.copy()
-        data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-        existing_entry = await self.async_set_unique_id(
-            self._existing_entry[CONF_KAMEREON_ACCOUNT_ID]
-        )
-        if TYPE_CHECKING:
-            assert existing_entry
-        self.hass.config_entries.async_update_entry(existing_entry, data=data)
-        await self.hass.config_entries.async_reload(existing_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
-
-    def _show_reauth_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
+    def _show_reauth_confirm_form(
+        self, errors: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Show the API keys form."""
         if TYPE_CHECKING:
-            assert self._existing_entry
+            assert self._original_data
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_USERNAME,
-                        description={
-                            "suggested_value": self._existing_entry[CONF_USERNAME]
-                        },
+                        default=self._original_data[CONF_USERNAME],
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
