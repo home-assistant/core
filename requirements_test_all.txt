@@ -1067,7 +1067,7 @@ python-izone==1.1.6
 python-juicenet==1.0.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.7
+python-miio==0.5.8
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -1109,7 +1109,7 @@ pytradfri[async]==7.0.6
 pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.8.2
+pyuptimerobot==21.9.0
 
 # homeassistant.components.vera
 pyvera==0.3.13
