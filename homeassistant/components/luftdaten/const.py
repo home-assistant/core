@@ -34,7 +34,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         name="Temperature",
-        icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
@@ -64,14 +63,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="PM10",
         icon="mdi:thought-bubble",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        device_class=None,
     ),
     SensorEntityDescription(
         key=SENSOR_PM2_5,
         name="PM2.5",
         icon="mdi:thought-bubble-outline",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        device_class=None,
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
