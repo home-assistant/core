@@ -36,8 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=SENSOR_TYPE_CURRENT_STATUS,
-        name="Status",
+        key=SENSOR_TYPE_CURRENT_STATUS, name="Status", native_unit_of_measurement=None
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -66,16 +65,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     qbit_data = hass.data[DOMAIN][entry.data[CONF_URL]]
     name = qbit_data[DATA_KEY_NAME]
-    variables = SENSOR_TYPES
     sensors = [
         QBittorrentSensor(
-            sensor_name,
             qbit_data[DATA_KEY_CLIENT],
             name,
             LoginRequired,
             entry.entry_id,
+            sensordiscription,
         )
-        for sensor_name in variables
+        for sensordiscription in SENSOR_TYPES
     ]
     async_add_entities(sensors, True)
 
@@ -91,7 +89,6 @@ class QBittorrentSensor(SensorEntity):
 
     def __init__(
         self,
-        sensor_type,
         qbittorrent_client,
         client_name,
         exception,
@@ -109,27 +106,27 @@ class QBittorrentSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
+        return f"{self._attr_name}"
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return f"{self._server_unique_id}/{self._name}"
+        return f"{self._server_unique_id}/{self._attr_name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._attr_native_value
 
     @property
     def available(self):
         """Return true if device is available."""
-        return self._available
+        return self._attr_available
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def icon(self):
@@ -141,9 +138,9 @@ class QBittorrentSensor(SensorEntity):
         """Return the device information of the entity."""
         return {
             "identifiers": {(DOMAIN, self._server_unique_id)},
-            "name": self.client_name,
-            "model": self.client_name,
-            "manufacturer": "QBittorrent",
+            "name": DOMAIN,
+            "model": DOMAIN,
+            "manufacturer": DOMAIN,
         }
 
     async def async_update(self):
@@ -157,9 +154,13 @@ class QBittorrentSensor(SensorEntity):
 
             self._attr_available = True
         except RequestException:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.error("Connection lost")
                 self._attr_available = False
+        except self._exception:
+            _LOGGER.error("Invalid authentication")
+            self._attr_available = False
+            return
 
         if data is None:
             return
