@@ -42,7 +42,6 @@ class LuftdatenSensor(SensorEntity):
         self.entity_description = description
         self._async_unsub_dispatcher_connect = None
         self.luftdaten = luftdaten
-        self._name = description.name
         self._data = None
         self._show_on_map = show
         self._attrs = {}
