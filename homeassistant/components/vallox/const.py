@@ -1,0 +1,22 @@
+"""Constants for the Vallox integration."""
+
+from datetime import timedelta
+
+DOMAIN = "vallox"
+DEFAULT_NAME = "Vallox"
+
+SIGNAL_VALLOX_STATE_UPDATE = "vallox_state_update"
+STATE_PROXY_SCAN_INTERVAL = timedelta(seconds=60)
+
+# Common metric keys and (default) values.
+METRIC_KEY_MODE = "A_CYC_MODE"
+METRIC_KEY_PROFILE_FAN_SPEED_HOME = "A_CYC_HOME_SPEED_SETTING"
+METRIC_KEY_PROFILE_FAN_SPEED_AWAY = "A_CYC_AWAY_SPEED_SETTING"
+METRIC_KEY_PROFILE_FAN_SPEED_BOOST = "A_CYC_BOOST_SPEED_SETTING"
+
+MODE_ON = 0
+MODE_OFF = 5
+
+DEFAULT_FAN_SPEED_HOME = 50
+DEFAULT_FAN_SPEED_AWAY = 25
+DEFAULT_FAN_SPEED_BOOST = 65

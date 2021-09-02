@@ -59,7 +59,10 @@ class SureBattery(SensorEntity):
         surepy_entity: SurepyEntity = self._spc.states[_id]
 
         self._attr_device_class = DEVICE_CLASS_BATTERY
-        self._attr_name = f"{surepy_entity.type.name.capitalize()} {surepy_entity.name.capitalize()} Battery Level"
+        if surepy_entity.name:
+            self._attr_name = f"{surepy_entity.type.name.capitalize()} {surepy_entity.name.capitalize()} Battery Level"
+        else:
+            self._attr_name = f"{surepy_entity.type.name.capitalize()}  Battery Level"
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_unique_id = (
             f"{surepy_entity.household_id}-{surepy_entity.id}-battery"
@@ -88,7 +91,7 @@ class SureBattery(SensorEntity):
                 f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
             }
         else:
-            self._attr_extra_state_attributes = None
+            self._attr_extra_state_attributes = {}
         self.async_write_ha_state()
         _LOGGER.debug("%s -> state: %s", self.name, state)
 

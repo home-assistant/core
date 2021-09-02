@@ -27,7 +27,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
@@ -36,6 +38,7 @@ from .const import (
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STATE_OFF,
@@ -76,6 +79,8 @@ class BasePlatform(Entity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None
+        self._lazy_error_count = entry[CONF_LAZY_ERROR]
+        self._lazy_errors = self._lazy_error_count
 
     @abstractmethod
     async def async_update(self, now=None):
@@ -84,9 +89,10 @@ class BasePlatform(Entity):
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
         if self._scan_interval > 0:
-            async_track_time_interval(
+            cancel_func = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
+            self._hub.entity_timers.append(cancel_func)
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
@@ -169,6 +175,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_WRITE_REGISTER,
             ),
+            CALL_TYPE_DISCRETE: (
+                CALL_TYPE_DISCRETE,
+                None,
+            ),
+            CALL_TYPE_REGISTER_INPUT: (
+                CALL_TYPE_REGISTER_INPUT,
+                None,
+            ),
             CALL_TYPE_COIL: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COIL),
             CALL_TYPE_X_COILS: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COILS),
             CALL_TYPE_X_REGISTER_HOLDINGS: (
@@ -245,10 +259,15 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
+        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type == CALL_TYPE_COIL:
             self._attr_is_on = bool(result.bits[0] & 1)
