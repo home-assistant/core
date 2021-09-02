@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -64,15 +63,12 @@ class TuyaHaEntity(Entity):
         """Call when entity is added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, TUYA_HA_SIGNAL_UPDATE_ENTITY, self._update_callback
+                self.hass,
+                f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{self.tuya_device.id}",
+                self.async_write_ha_state,
             )
         )
 
-    def _send_command(self, commands) -> None:
+    def _send_command(self, commands: list[str]) -> None:
         """Send command to the device."""
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)

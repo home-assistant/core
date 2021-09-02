@@ -10,7 +10,7 @@
         },
         "flow_title": "涂鸦配置",
         "step": {
-            "project_type":{
+            "user":{
                 "title":"Tuya插件",
                 "data":{
                   "tuya_project_type": "涂鸦云项目类型"

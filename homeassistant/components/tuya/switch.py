@@ -64,14 +64,18 @@ async def async_setup_entry(
     """Set up tuya sensors dynamically through tuya discovery."""
     _LOGGER.debug("switch init")
 
-    hass.data[DOMAIN][TUYA_HA_TUYA_MAP][DEVICE_DOMAIN] = TUYA_SUPPORT_TYPE
+    hass.data[DOMAIN][entry.entry_id][TUYA_HA_TUYA_MAP][
+        DEVICE_DOMAIN
+    ] = TUYA_SUPPORT_TYPE
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya sensor."""
         _LOGGER.debug("switch add-> %s", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(_setup_entities, hass, dev_ids)
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, entry, dev_ids
+        )
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -80,7 +84,7 @@ async def async_setup_entry(
         )
     )
 
-    device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
+    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
     device_ids = []
     for (device_id, device) in device_manager.device_map.items():
         if device.category in TUYA_SUPPORT_TYPE:
@@ -88,9 +92,9 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass, device_ids: list):
+def _setup_entities(hass, entry: ConfigEntry, device_ids: list):
     """Set up Tuya Switch device."""
-    device_manager = hass.data[DOMAIN][TUYA_DEVICE_MANAGER]
+    device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
     entities = []
     for device_id in device_ids:
         device = device_manager.device_map[device_id]
@@ -125,9 +129,9 @@ def _setup_entities(hass, device_ids: list):
 
             if tuya_ha_switch is not None:
                 entities.append(tuya_ha_switch)
-                hass.data[DOMAIN][TUYA_HA_DEVICES][
+                hass.data[DOMAIN][entry.entry_id][TUYA_HA_DEVICES].add(
                     tuya_ha_switch.tuya_device.id
-                ] = tuya_ha_switch
+                )
     return entities
 
 
