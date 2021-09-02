@@ -17,10 +17,9 @@
       },
       "reauth_confirm": {
         "data": {
-          "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "The Renault integration needs to re-authenticate your account",
+        "description": "Please update your password for {username}",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {

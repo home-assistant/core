@@ -133,14 +133,9 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert self._original_data
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_USERNAME,
-                        default=self._original_data[CONF_USERNAME],
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors or {},
+            description_placeholders={
+                CONF_USERNAME: self._original_data[CONF_USERNAME]
+            },
         )
