@@ -59,7 +59,9 @@ class QVRProCamera(Camera):
         self._model = model
         self._brand = brand
         self.index = channel_index
-        self.guid = guid
+        if self._attr_unique_id is None:
+            self._attr_unique_id = guid
+            _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
         self._client = client
         self._stream_source = stream_source
 
@@ -85,7 +87,7 @@ class QVRProCamera(Camera):
     @property
     def extra_state_attributes(self):
         """Get the state attributes."""
-        attrs = {"qvr_guid": self.guid}
+        attrs = {"qvr_guid": self._attr_unique_id}
 
         return attrs
 
@@ -94,13 +96,13 @@ class QVRProCamera(Camera):
     ) -> bytes | None:
         """Get image bytes from camera."""
         try:
-            return self._client.get_snapshot(self.guid)
+            return self._client.get_snapshot(self._attr_unique_id)
 
         except QVRResponseError as ex:
             _LOGGER.error("Error getting image: %s", ex)
             self._client.connect()
 
-        return self._client.get_snapshot(self.guid)
+        return self._client.get_snapshot(self._attr_unique_id)
 
     async def stream_source(self):
         """Get stream source."""
