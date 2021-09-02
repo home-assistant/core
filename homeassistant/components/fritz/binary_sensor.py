@@ -1,9 +1,7 @@
 """AVM FRITZ!Box connectivity sensor."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
-from typing import Callable
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -12,8 +10,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PLUG,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,37 +22,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _retrieve_connection_state(status: FritzStatus) -> bool:
-    """Return download line attenuation."""
-    return bool(status.is_connected)
-
-
-def _retrieve_link_state(status: FritzStatus) -> bool:
-    """Return download line attenuation."""
-    return bool(status.is_linked)
-
-
-@dataclass
-class SensorData(SensorEntityDescription):
-    """Fritz sensor data class."""
-
-    state_provider: Callable | None = None
-
-
-SENSOR_DATA = {
-    "is_connected": SensorData(
+SENSOR_TYPES = (
+    BinarySensorEntityDescription(
         key="is_connected",
         name="Connection",
         device_class=DEVICE_CLASS_CONNECTIVITY,
-        state_provider=_retrieve_connection_state,
     ),
-    "is_linked": SensorData(
+    BinarySensorEntityDescription(
         key="is_linked",
         name="Link",
         device_class=DEVICE_CLASS_PLUG,
-        state_provider=_retrieve_link_state,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -72,7 +51,7 @@ async def async_setup_entry(
         return
 
     entities = []
-    for sensor_type in SENSOR_DATA:
+    for sensor_type in SENSOR_TYPES:
         entities.append(FritzBoxBinarySensor(fritzbox_tools, entry.title, sensor_type))
 
     if entities:
@@ -83,20 +62,19 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
     """Define FRITZ!Box connectivity class."""
 
     def __init__(
-        self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, sensor_type: str
+        self,
+        fritzbox_tools: FritzBoxTools,
+        device_friendly_name: str,
+        sensor_type: BinarySensorEntityDescription,
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
-        self._attr_available = True
-        self._attr_device_class = self._sensor_data.device_class
-        self._attr_name = f"{device_friendly_name} {self._sensor_data.name}"
-        self._attr_unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
+        self.entity_description: BinarySensorEntityDescription = sensor_type
+        self._attr_device_class = self.entity_description.device_class
+        self._attr_name = f"{device_friendly_name} {self.entity_description.name}"
+        self._attr_unique_id = (
+            f"{fritzbox_tools.unique_id}-{self.entity_description.key}"
+        )
         super().__init__(fritzbox_tools, device_friendly_name)
-
-    @property
-    def _state_provider(self) -> Callable | None:
-        """Return the state provider for the binary sensor."""
-        return self._sensor_data.state_provider
 
     def update(self) -> None:
         """Update data."""
@@ -110,5 +88,7 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
             self._attr_available = False
             return
 
-        if self._state_provider:
-            self._attr_is_on = self._state_provider(status)
+        if self.entity_description.key == "is_connected":
+            self._attr_is_on = bool(status.is_connected)
+        elif self.entity_description.key == "is_linked":
+            self._attr_is_on = bool(status.is_linked)
