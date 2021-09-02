@@ -332,7 +332,7 @@ def hass_client(hass, aiohttp_client, hass_access_token, socket_enabled):
 
 
 @pytest.fixture
-def hass_client_no_auth(hass, aiohttp_client):
+def hass_client_no_auth(hass, aiohttp_client, socket_enabled):
     """Return an unauthenticated HTTP client."""
 
     async def client():
