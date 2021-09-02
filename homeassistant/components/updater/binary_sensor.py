@@ -33,9 +33,7 @@ class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if there is an update available."""
-        if not self.coordinator.data:
-            return False
-        return self.coordinator.data.update_available
+        return self.coordinator.data and self.coordinator.data.update_available
 
     @property
     def extra_state_attributes(self) -> dict | None:
