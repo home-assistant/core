@@ -406,7 +406,7 @@ class StatisticsRuns(Base):  # type: ignore
     """Representation of statistics run."""
 
     __tablename__ = TABLE_STATISTICS_RUNS
-    run_id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, Identity(), primary_key=True)
     start = Column(DateTime(timezone=True))
 
     def __repr__(self) -> str:
