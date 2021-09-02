@@ -6,6 +6,7 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from typing import Any
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 
@@ -69,6 +70,6 @@ class TuyaHaEntity(Entity):
             )
         )
 
-    def _send_command(self, commands: list[str]) -> None:
+    def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
         self.tuya_device_manager.send_commands(self.tuya_device.id, commands)
