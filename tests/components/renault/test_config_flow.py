@@ -216,12 +216,17 @@ async def test_reauth(hass):
         "homeassistant.components.renault.async_setup_entry",
         return_value=True,
     ):
-        get_mock_config_entry().add_to_hass(hass)
+        original_entry = get_mock_config_entry()
+        original_entry.add_to_hass(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": original_entry.entry_id,
+                "unique_id": original_entry.unique_id,
+            },
             data=MOCK_CONFIG,
         )
 
