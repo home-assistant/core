@@ -83,7 +83,8 @@ def discover_fixture(soco):
             {
                 ssdp.ATTR_UPNP_UDN: soco.uid,
                 ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
-            }
+            },
+            ssdp.SsdpChange.ALIVE,
         )
         return MagicMock()
 
