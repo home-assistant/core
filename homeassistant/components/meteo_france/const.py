@@ -78,7 +78,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="pressure",
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
-        icon=None,
         device_class=DEVICE_CLASS_PRESSURE,
         entity_registry_enabled_default=False,
         data_path="current_forecast:sea_level",
@@ -88,7 +87,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Wind gust",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy-variant",
-        device_class=None,
         entity_registry_enabled_default=False,
         data_path="current_forecast:wind:gust",
     ),
@@ -97,7 +95,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
         icon="mdi:weather-windy",
-        device_class=None,
         entity_registry_enabled_default=False,
         data_path="current_forecast:wind:speed",
     ),
@@ -105,7 +102,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_registry_enabled_default=False,
         data_path="current_forecast:T:value",
@@ -115,8 +111,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="UV",
         native_unit_of_measurement=UV_INDEX,
         icon="mdi:sunglasses",
-        device_class=None,
-        entity_registry_enabled_default=True,
         data_path="today_forecast:uv",
     ),
     MeteoFranceSensorEntityDescription(
@@ -124,8 +118,6 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Daily precipitation",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:cup-water",
-        device_class=None,
-        entity_registry_enabled_default=True,
         data_path="today_forecast:precipitation:24h",
     ),
     MeteoFranceSensorEntityDescription(
@@ -133,25 +125,17 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Cloud cover",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-partly-cloudy",
-        device_class=None,
-        entity_registry_enabled_default=True,
         data_path="current_forecast:clouds",
     ),
     MeteoFranceSensorEntityDescription(
         key="original_condition",
         name="Original condition",
-        native_unit_of_measurement=None,
-        icon=None,
-        device_class=None,
         entity_registry_enabled_default=False,
         data_path="current_forecast:weather:desc",
     ),
     MeteoFranceSensorEntityDescription(
         key="daily_original_condition",
         name="Daily original condition",
-        native_unit_of_measurement=None,
-        icon=None,
-        device_class=None,
         entity_registry_enabled_default=False,
         data_path="today_forecast:weather12H:desc",
     ),
@@ -161,10 +145,7 @@ SENSOR_TYPES_RAIN: tuple[MeteoFranceNoDataPathSensorEntityDescription, ...] = (
     MeteoFranceNoDataPathSensorEntityDescription(
         key="next_rain",
         name="Next rain",
-        native_unit_of_measurement=None,
-        icon=None,
         device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_registry_enabled_default=True,
     ),
 )
 
@@ -172,10 +153,7 @@ SENSOR_TYPES_ALERT: tuple[MeteoFranceNoDataPathSensorEntityDescription, ...] = (
     MeteoFranceNoDataPathSensorEntityDescription(
         key="weather_alert",
         name="Weather alert",
-        native_unit_of_measurement=None,
         icon="mdi:weather-cloudy-alert",
-        device_class=None,
-        entity_registry_enabled_default=True,
     ),
 )
 
@@ -185,8 +163,6 @@ SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Rain chance",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
-        device_class=None,
-        entity_registry_enabled_default=True,
         data_path="probability_forecast:rain:3h",
     ),
     MeteoFranceSensorEntityDescription(
@@ -194,8 +170,6 @@ SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Snow chance",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-snowy",
-        device_class=None,
-        entity_registry_enabled_default=True,
         data_path="probability_forecast:snow:3h",
     ),
     MeteoFranceSensorEntityDescription(
@@ -203,8 +177,6 @@ SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
         name="Freeze chance",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:snowflake",
-        device_class=None,
-        entity_registry_enabled_default=True,
         data_path="probability_forecast:freezing",
     ),
 )
