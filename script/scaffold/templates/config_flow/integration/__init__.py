@@ -1,6 +1,5 @@
 """The NEW_NAME integration."""
 from __future__ import annotations
-from typing import List, Text
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -9,7 +8,7 @@ from .const import DOMAIN
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS: List[Text] = ["light"]
+PLATFORMS: list[str] = ["light"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
