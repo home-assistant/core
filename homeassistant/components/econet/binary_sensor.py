@@ -15,31 +15,25 @@ from homeassistant.components.binary_sensor import (
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
 
-SENSOR_NAME_RUNNING = "running"
-SENSOR_NAME_SHUTOFF_VALVE = "shutoff_valve"
-SENSOR_NAME_RUNNING = "running"
-SENSOR_NAME_SCREEN_LOCKED = "screen_locked"
-SENSOR_NAME_BEEP_ENABLED = "beep_enabled"
-
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="shutoff_valve_open",
-        name=SENSOR_NAME_SHUTOFF_VALVE,
+        name="shutoff_valve",
         device_class=DEVICE_CLASS_OPENING,
     ),
     BinarySensorEntityDescription(
         key="running",
-        name=SENSOR_NAME_RUNNING,
+        name="running",
         device_class=DEVICE_CLASS_POWER,
     ),
     BinarySensorEntityDescription(
         key="screen_locked",
-        name=SENSOR_NAME_SCREEN_LOCKED,
+        name="screen_locked",
         device_class=DEVICE_CLASS_LOCK,
     ),
     BinarySensorEntityDescription(
         key="beep_enabled",
-        name=SENSOR_NAME_BEEP_ENABLED,
+        name="beep_enabled",
         device_class=DEVICE_CLASS_SOUND,
     ),
 )
