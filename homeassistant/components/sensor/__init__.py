@@ -218,7 +218,7 @@ class SensorEntity(Entity):
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
                     "last_reset for entities with state_class other than 'total' is "
-                    "deprecated and will be removed from Home Assistant Core 2021.10. "
+                    "deprecated and will be removed from Home Assistant Core 2021.11. "
                     "Please update your configuration if state_class is manually "
                     "configured, otherwise %s",
                     self.entity_id,
