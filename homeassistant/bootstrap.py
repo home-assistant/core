@@ -342,7 +342,11 @@ def async_enable_logging(
                 err_log_path, backupCount=1
             )
 
-        err_handler.doRollover()
+        try:
+            err_handler.doRollover()
+        except OSError as err:
+            _LOGGER.error("Error rolling over log file: %s", err)
+
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
