@@ -441,7 +441,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.46.0
+hass-nabucasa==0.47.1
 
 # homeassistant.components.tasmota
 hatasmota==0.2.20
@@ -1034,7 +1034,7 @@ pysignalclirestapi==0.3.4
 pysma==0.6.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.25
+pysmappee==0.2.27
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1067,7 +1067,7 @@ python-izone==1.1.6
 python-juicenet==1.0.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.7
+python-miio==0.5.8
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -1109,7 +1109,7 @@ pytradfri[async]==7.0.6
 pyudev==0.22.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==21.8.2
+pyuptimerobot==21.9.0
 
 # homeassistant.components.vera
 pyvera==0.3.13

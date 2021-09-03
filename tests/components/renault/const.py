@@ -14,6 +14,8 @@ from homeassistant.components.renault.const import (
     DOMAIN,
 )
 from homeassistant.components.renault.renault_entities import ATTR_LAST_UPDATE
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -45,6 +47,7 @@ from homeassistant.const import (
 
 FIXED_ATTRIBUTES = (
     ATTR_DEVICE_CLASS,
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
 )
@@ -54,7 +57,7 @@ DYNAMIC_ATTRIBUTES = (
 )
 
 ICON_FOR_EMPTY_VALUES = {
-    "sensor.charge_mode": "mdi:calendar-remove",
+    "select.charge_mode": "mdi:calendar-remove",
     "sensor.charge_state": "mdi:flash-off",
     "sensor.plug_state": "mdi:power-plug-off",
 }
@@ -106,6 +109,16 @@ MOCK_VEHICLES = {
             },
         ],
         DEVICE_TRACKER_DOMAIN: [],
+        SELECT_DOMAIN: [
+            {
+                "entity_id": "select.charge_mode",
+                "unique_id": "vf1aaaaa555777999_charge_mode",
+                "result": "always",
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
+                ATTR_ICON: "mdi:calendar-remove",
+                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+            },
+        ],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
@@ -142,13 +155,6 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-01-12T21:40:16+00:00",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            },
-            {
-                "entity_id": "sensor.charge_mode",
-                "unique_id": "vf1aaaaa555777999_charge_mode",
-                "result": "always",
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
-                ATTR_ICON: "mdi:calendar-remove",
             },
             {
                 "entity_id": "sensor.charge_state",
@@ -248,6 +254,16 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-02-18T16:58:38+00:00",
             }
         ],
+        SELECT_DOMAIN: [
+            {
+                "entity_id": "select.charge_mode",
+                "unique_id": "vf1aaaaa555777999_charge_mode",
+                "result": "schedule_mode",
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
+                ATTR_ICON: "mdi:calendar-clock",
+                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+            },
+        ],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
@@ -284,13 +300,6 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-11-17T08:06:48+00:00",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            },
-            {
-                "entity_id": "sensor.charge_mode",
-                "unique_id": "vf1aaaaa555777999_charge_mode",
-                "result": "schedule_mode",
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
-                ATTR_ICON: "mdi:calendar-clock",
             },
             {
                 "entity_id": "sensor.charge_state",
@@ -382,6 +391,16 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-02-18T16:58:38+00:00",
             }
         ],
+        SELECT_DOMAIN: [
+            {
+                "entity_id": "select.charge_mode",
+                "unique_id": "vf1aaaaa555777123_charge_mode",
+                "result": "always",
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
+                ATTR_ICON: "mdi:calendar-remove",
+                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+            },
+        ],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.battery_autonomy",
@@ -418,13 +437,6 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-01-12T21:40:16+00:00",
                 ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            },
-            {
-                "entity_id": "sensor.charge_mode",
-                "unique_id": "vf1aaaaa555777123_charge_mode",
-                "result": "always",
-                ATTR_DEVICE_CLASS: DEVICE_CLASS_CHARGE_MODE,
-                ATTR_ICON: "mdi:calendar-remove",
             },
             {
                 "entity_id": "sensor.charge_state",
@@ -515,6 +527,7 @@ MOCK_VEHICLES = {
                 ATTR_LAST_UPDATE: "2020-02-18T16:58:38+00:00",
             }
         ],
+        SELECT_DOMAIN: [],
         SENSOR_DOMAIN: [
             {
                 "entity_id": "sensor.fuel_autonomy",
