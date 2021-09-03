@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 from functools import wraps
+import logging
 from types import ModuleType
 from typing import Any
 
@@ -26,7 +27,6 @@ from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 DOMAIN = "device_automation"
-
 
 DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -173,6 +173,13 @@ async def _async_get_device_automations(
             if device_results is None or isinstance(
                 device_results, InvalidDeviceAutomationConfig
             ):
+                continue
+            if isinstance(device_results, Exception):
+                logging.getLogger(__name__).error(
+                    "Unexpected error fetching device %ss",
+                    automation_type,
+                    exc_info=device_results,
+                )
                 continue
             for automation in device_results:
                 combined_results[automation["device_id"]].append(automation)
