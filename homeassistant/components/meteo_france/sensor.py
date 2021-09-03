@@ -80,10 +80,10 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        if hasattr(self.coordinator.data, "position"):
-            city_name = self.coordinator.data.position["name"]
+        if hasattr(coordinator.data, "position"):
+            city_name = coordinator.data.position["name"]
             self._attr_name = f"{city_name} {description.name}"
-            self._attr_unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}_{description.key}"
+            self._attr_unique_id = f"{coordinator.data.position['lat']},{coordinator.data.position['lon']}_{description.key}"
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
