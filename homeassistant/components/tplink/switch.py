@@ -90,7 +90,7 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(self.smartplug.turn_on)
-        # workaround for delayed device state update
+        # Workaround for delayed device state update on HS210: #55190
         if "HS210" in self.device_info["model"]:
             await sleep(0.5)
         await self.coordinator.async_refresh()
@@ -98,7 +98,7 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self.smartplug.turn_off)
-        # workaround for delayed device state update
+        # Workaround for delayed device state update on HS210: #55190
         if "HS210" in self.device_info["model"]:
             await sleep(0.5)
         await self.coordinator.async_refresh()
