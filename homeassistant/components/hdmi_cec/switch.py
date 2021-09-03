@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.const import STATE_ON
 
 from . import ATTR_NEW, CecEntity
 
@@ -29,6 +30,7 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecEntity.__init__(self, device, logical)
+        self._attr_is_on = self._state == STATE_ON
         self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def turn_on(self, **kwargs) -> None:
