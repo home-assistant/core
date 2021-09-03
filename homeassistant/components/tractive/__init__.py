@@ -144,6 +144,8 @@ class TractiveClient:
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
                     RECONNECT_INTERVAL.total_seconds(),
                 )
+                self._last_hw_time = 0
+                self._last_pos_time = 0
                 async_dispatcher_send(
                     self._hass, f"{SERVER_UNAVAILABLE}-{self._user_id}"
                 )
