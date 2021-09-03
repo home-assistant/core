@@ -162,7 +162,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._unit_of_measurement = None
         self._period = meter_type
         if meter_type is not None:
-            """For backwards compatibility reasons we convert the period and offset into a cron pattern"""
+            # For backwards compatibility reasons we convert the period and offset into a cron pattern
             if meter_offset.days >= 31:
                 _LOGGER.error(
                     "Unsupported offset, please use a cron pattern. Continuing without offset"
