@@ -6,7 +6,10 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+)
 from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode

@@ -1599,6 +1599,7 @@ async def test_device_id(hass):
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         model="test",
+        name="test",
     )
     entity_entry = entity_registry.async_get_or_create(
         "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
@@ -1611,13 +1612,11 @@ async def test_device_id(hass):
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ 56 | device_id }}")
-        assert_result_info(info, None)
+    info = render_to_info(hass, "{{ 56 | device_id }}")
+    assert_result_info(info, None)
 
-    with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
-        assert_result_info(info, None)
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | device_id }}")
+    assert_result_info(info, None)
 
     info = render_to_info(
         hass, f"{{{{ device_id('{entity_entry_no_device.entity_id}') }}}}"
@@ -1626,6 +1625,10 @@ async def test_device_id(hass):
     assert info.rate_limit is None
 
     info = render_to_info(hass, f"{{{{ device_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, device_entry.id)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ device_id('test') }}")
     assert_result_info(info, device_entry.id)
     assert info.rate_limit is None
 
@@ -1828,6 +1831,16 @@ async def test_area_id(hass):
     assert_result_info(info, area_entry_entity_id.id)
     assert info.rate_limit is None
 
+    # Make sure that when entity doesn't have an area but its device does, that's what
+    # gets returned
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=area_entry_entity_id.id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, area_entry_entity_id.id)
+    assert info.rate_limit is None
+
 
 async def test_area_name(hass):
     """Test area_name function."""
@@ -1894,6 +1907,16 @@ async def test_area_name(hass):
     assert info.rate_limit is None
 
     info = render_to_info(hass, f"{{{{ area_name('{area_entry.id}') }}}}")
+    assert_result_info(info, area_entry.name)
+    assert info.rate_limit is None
+
+    # Make sure that when entity doesn't have an area but its device does, that's what
+    # gets returned
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id=None
+    )
+
+    info = render_to_info(hass, f"{{{{ area_name('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, area_entry.name)
     assert info.rate_limit is None
 

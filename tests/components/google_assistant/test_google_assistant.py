@@ -36,7 +36,7 @@ def auth_header(hass_access_token):
 
 
 @pytest.fixture
-def assistant_client(loop, hass, aiohttp_client):
+def assistant_client(loop, hass, hass_client_no_auth):
     """Create web client for the Google Assistant API."""
     loop.run_until_complete(
         setup.async_setup_component(
@@ -56,7 +56,7 @@ def assistant_client(loop, hass, aiohttp_client):
         )
     )
 
-    return loop.run_until_complete(aiohttp_client(hass.http.app))
+    return loop.run_until_complete(hass_client_no_auth())
 
 
 @pytest.fixture

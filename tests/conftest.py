@@ -332,6 +332,17 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
+def hass_client_no_auth(hass, aiohttp_client):
+    """Return an unauthenticated HTTP client."""
+
+    async def client():
+        """Return an authenticated client."""
+        return await aiohttp_client(hass.http.app)
+
+    return client
+
+
+@pytest.fixture
 def current_request():
     """Mock current request."""
     with patch("homeassistant.components.http.current_request") as mock_request_context:
@@ -478,10 +489,22 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
+def mock_get_source_ip():
+    """Mock network util's async_get_source_ip."""
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
+    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
+        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+    ):
+        yield
 
 
 @pytest.fixture

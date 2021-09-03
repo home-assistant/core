@@ -131,6 +131,7 @@ FLOWS = [
     "ifttt",
     "insteon",
     "ios",
+    "iotawatt",
     "ipma",
     "ipp",
     "iqvia",
