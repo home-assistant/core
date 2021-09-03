@@ -65,6 +65,14 @@ class ComfoConnectFan(FanEntity):
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
 
+    def _handle_update(self, value):
+        """Handle update callbacks."""
+        _LOGGER.debug(
+            "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
+        )
+        self.current_speed = value
+        self.schedule_update_ha_state()
+
     @property
     def should_poll(self) -> bool:
         """Do not poll."""
@@ -89,14 +97,6 @@ class ComfoConnectFan(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_SET_SPEED
-
-    def _handle_update(self, value):
-        """Handle update callbacks."""
-        _LOGGER.debug(
-            "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
-        )
-        self.current_speed = value
-        self.schedule_update_ha_state()
 
     @property
     def percentage(self) -> int | None:
