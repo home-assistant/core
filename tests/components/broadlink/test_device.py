@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 import broadlink.exceptions as blke
-import pytest
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.device import get_domains
@@ -14,13 +13,6 @@ from . import get_device
 from tests.common import mock_device_registry, mock_registry
 
 DEVICE_FACTORY = "homeassistant.components.broadlink.device.blk.gendevice"
-
-
-@pytest.fixture(autouse=True)
-def mock_heartbeat():
-    """Mock broadlink heartbeat."""
-    with patch("homeassistant.components.broadlink.heartbeat.blk.ping"):
-        yield
 
 
 async def test_device_setup(hass):
