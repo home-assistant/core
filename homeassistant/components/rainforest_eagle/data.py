@@ -11,7 +11,7 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 from uEagle import Eagle as Eagle100Reader
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
@@ -27,7 +27,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_100_ERRORS = (ConnectError, HTTPError, Timeout, ValueError)
+UPDATE_100_ERRORS = (ConnectError, HTTPError, Timeout)
 
 
 class RainforestError(HomeAssistantError):
@@ -42,12 +42,37 @@ class InvalidAuth(RainforestError):
     """Error to indicate bad auth."""
 
 
-async def async_get_type(hass, cloud_id, install_code):
+async def async_get_type(hass, cloud_id, install_code, host):
     """Try API call 'get_network_info' to see if target device is Eagle-100 or Eagle-200."""
-    reader = Eagle100Reader(cloud_id, install_code)
+    # For EAGLE-200, fetch the hardware address of the meter too.
+    hub = aioeagle.EagleHub(
+        aiohttp_client.async_get_clientsession(hass), cloud_id, install_code, host=host
+    )
+
+    try:
+        with async_timeout.timeout(30):
+            meters = await hub.get_device_list()
+    except aioeagle.BadAuth as err:
+        raise InvalidAuth from err
+    except aiohttp.ClientError:
+        # This can happen if it's an eagle-100
+        meters = None
+
+    if meters is not None:
+        if meters:
+            hardware_address = meters[0].hardware_address
+        else:
+            hardware_address = None
+
+        return TYPE_EAGLE_200, hardware_address
+
+    reader = Eagle100Reader(cloud_id, install_code, host)
 
     try:
         response = await hass.async_add_executor_job(reader.get_network_info)
+    except ValueError as err:
+        # This could be invalid auth because it doesn't check 401 and tries to read JSON.
+        raise InvalidAuth from err
     except UPDATE_100_ERRORS as error:
         _LOGGER.error("Failed to connect during setup: %s", error)
         raise CannotConnect from error
@@ -59,32 +84,7 @@ async def async_get_type(hass, cloud_id, install_code):
     ):
         return TYPE_EAGLE_100, None
 
-    # Branch to test if target is not an Eagle-200 Model
-    if (
-        "Response" not in response
-        or response["Response"].get("Command") != "get_network_info"
-    ):
-        # We don't support this
-        return None, None
-
-    # For EAGLE-200, fetch the hardware address of the meter too.
-    hub = aioeagle.EagleHub(
-        aiohttp_client.async_get_clientsession(hass), cloud_id, install_code
-    )
-
-    try:
-        meters = await hub.get_device_list()
-    except aioeagle.BadAuth as err:
-        raise InvalidAuth from err
-    except aiohttp.ClientError as err:
-        raise CannotConnect from err
-
-    if meters:
-        hardware_address = meters[0].hardware_address
-    else:
-        hardware_address = None
-
-    return TYPE_EAGLE_200, hardware_address
+    return None, None
 
 
 class EagleDataCoordinator(DataUpdateCoordinator):
@@ -126,20 +126,39 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         """Return hardware address of meter."""
         return self.entry.data[CONF_HARDWARE_ADDRESS]
 
+    @property
+    def is_connected(self):
+        """Return if the hub is connected to the electric meter."""
+        if self.eagle200_meter:
+            return self.eagle200_meter.is_connected
+
+        return True
+
     async def _async_update_data_200(self):
         """Get the latest data from the Eagle-200 device."""
-        if self.eagle200_meter is None:
+        eagle200_meter = self.eagle200_meter
+
+        if eagle200_meter is None:
             hub = aioeagle.EagleHub(
                 aiohttp_client.async_get_clientsession(self.hass),
                 self.cloud_id,
                 self.entry.data[CONF_INSTALL_CODE],
+                host=self.entry.data[CONF_HOST],
             )
-            self.eagle200_meter = aioeagle.ElectricMeter.create_instance(
+            eagle200_meter = aioeagle.ElectricMeter.create_instance(
                 hub, self.hardware_address
             )
+            is_connected = True
+        else:
+            is_connected = eagle200_meter.is_connected
 
         async with async_timeout.timeout(30):
-            data = await self.eagle200_meter.get_device_query()
+            data = await eagle200_meter.get_device_query()
+
+        if self.eagle200_meter is None:
+            self.eagle200_meter = eagle200_meter
+        elif is_connected and not eagle200_meter.is_connected:
+            _LOGGER.warning("Lost connection with electricity meter")
 
         _LOGGER.debug("API data: %s", data)
         return {var["Name"]: var["Value"] for var in data.values()}
@@ -158,7 +177,9 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         """Fetch and return the four sensor values in a dict."""
         if self.eagle100_reader is None:
             self.eagle100_reader = Eagle100Reader(
-                self.cloud_id, self.entry.data[CONF_INSTALL_CODE]
+                self.cloud_id,
+                self.entry.data[CONF_INSTALL_CODE],
+                self.entry.data[CONF_HOST],
             )
 
         out = {}

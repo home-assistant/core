@@ -26,7 +26,7 @@ from epson_projector.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -36,13 +36,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
+from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,14 +53,6 @@ SUPPORT_EPSON = (
     | SUPPORT_VOLUME_STEP
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PREVIOUS_TRACK
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-    }
 )
 
 
@@ -82,19 +73,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SERVICE_SELECT_CMODE,
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
         SERVICE_SELECT_CMODE,
-    )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Epson projector."""
-    _LOGGER.warning(
-        "Loading Espon projector via platform setup is deprecated; "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
     )
 
 

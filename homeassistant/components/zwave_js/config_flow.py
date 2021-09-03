@@ -12,8 +12,9 @@ import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import usb
 from homeassistant.components.hassio import is_hassio
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
     AbortFlow,
@@ -286,6 +287,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
+        self._title: str | None = None
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -308,6 +310,59 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
+
+    async def async_step_usb(self, discovery_info: dict[str, str]) -> FlowResult:
+        """Handle USB Discovery."""
+        if not is_hassio(self.hass):
+            return self.async_abort(reason="discovery_requires_supervisor")
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+
+        vid = discovery_info["vid"]
+        pid = discovery_info["pid"]
+        serial_number = discovery_info["serial_number"]
+        device = discovery_info["device"]
+        manufacturer = discovery_info["manufacturer"]
+        description = discovery_info["description"]
+        # Zooz uses this vid/pid, but so do 2652 sticks
+        if vid == "10C4" and pid == "EA60" and "2652" in description:
+            return self.async_abort(reason="not_zwave_device")
+
+        addon_info = await self._async_get_addon_info()
+        if addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.NOT_RUNNING):
+            return self.async_abort(reason="already_configured")
+
+        await self.async_set_unique_id(
+            f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        )
+        self._abort_if_unique_id_configured()
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        self.usb_path = dev_path
+        self._title = usb.human_readable_device_name(
+            dev_path,
+            serial_number,
+            manufacturer,
+            description,
+            vid,
+            pid,
+        )
+        self.context["title_placeholders"] = {CONF_NAME: self._title}
+        return await self.async_step_usb_confirm()
+
+    async def async_step_usb_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle USB Discovery confirmation."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="usb_confirm",
+                description_placeholders={CONF_NAME: self._title},
+                data_schema=vol.Schema({}),
+            )
+
+        return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -352,6 +407,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the Z-Wave JS add-on.
         """
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+
         self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
         try:
             version_info = await async_get_version_info(self.hass, self.ws_address)
@@ -422,7 +480,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_start_addon()
 
-        usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        usb_path = self.usb_path or addon_config.get(CONF_ADDON_DEVICE) or ""
         network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
 
         data_schema = vol.Schema(
@@ -446,7 +504,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id:
+        if not self.unique_id or self.context["source"] == config_entries.SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -471,6 +529,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> FlowResult:
         """Return a config entry for the flow."""
+        # Abort any other flows that may be in progress
+        for progress in self._async_in_progress():
+            self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
         return self.async_create_entry(
             title=TITLE,
             data={

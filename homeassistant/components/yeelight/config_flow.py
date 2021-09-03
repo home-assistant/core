@@ -23,6 +23,9 @@ from . import (
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     YeelightScanner,
     _async_unique_name,
+    async_format_id,
+    async_format_model,
+    async_format_model_id,
 )
 
 MODEL_UNKNOWN = "unknown"
@@ -92,12 +95,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{self._discovered_model} {self.unique_id}",
-                data={CONF_ID: self.unique_id, CONF_HOST: self._discovered_ip},
+                title=async_format_model_id(self._discovered_model, self.unique_id),
+                data={
+                    CONF_ID: self.unique_id,
+                    CONF_HOST: self._discovered_ip,
+                    CONF_MODEL: self._discovered_model,
+                },
             )
 
         self._set_confirm_only()
-        placeholders = {"model": self._discovered_model, "host": self._discovered_ip}
+        placeholders = {
+            "id": async_format_id(self.unique_id),
+            "model": async_format_model(self._discovered_model),
+            "host": self._discovered_ip,
+        }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
@@ -118,10 +129,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{model} {self.unique_id}",
+                    title=async_format_model_id(model, self.unique_id),
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_ID: self.unique_id,
+                        CONF_MODEL: model,
                     },
                 )
 
@@ -144,7 +156,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = urlparse(capabilities["location"]).hostname
             return self.async_create_entry(
                 title=_async_unique_name(capabilities),
-                data={CONF_ID: unique_id, CONF_HOST: host},
+                data={
+                    CONF_ID: unique_id,
+                    CONF_HOST: host,
+                    CONF_MODEL: capabilities["model"],
+                },
             )
 
         configured_devices = {
@@ -162,7 +178,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 continue  # ignore configured devices
             model = capabilities["model"]
             host = urlparse(capabilities["location"]).hostname
-            name = f"{host} {model} {unique_id}"
+            model_id = async_format_model_id(model, unique_id)
+            name = f"{model_id} ({host})"
             self._discovered_devices[unique_id] = capabilities
             devices_name[unique_id] = name
 

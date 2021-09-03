@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
@@ -53,6 +55,7 @@ SUPPORTED_STATES = [
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_TRIGGERED,
 ]
@@ -131,6 +134,9 @@ PLATFORM_SCHEMA = vol.Schema(
             ),
             vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): _state_schema(
                 STATE_ALARM_ARMED_NIGHT
+            ),
+            vol.Optional(STATE_ALARM_ARMED_VACATION, default={}): _state_schema(
+                STATE_ALARM_ARMED_VACATION
             ),
             vol.Optional(STATE_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
                 STATE_ALARM_ARMED_CUSTOM_BYPASS
@@ -250,6 +256,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
             SUPPORT_ALARM_ARM_HOME
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_ARM_VACATION
             | SUPPORT_ALARM_TRIGGER
             | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
         )
@@ -326,6 +333,15 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
             return
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
+
+    def alarm_arm_vacation(self, code=None):
+        """Send arm vacation command."""
+        if self._code_arm_required and not self._validate_code(
+            code, STATE_ALARM_ARMED_VACATION
+        ):
+            return
+
+        self._update_state(STATE_ALARM_ARMED_VACATION)
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""

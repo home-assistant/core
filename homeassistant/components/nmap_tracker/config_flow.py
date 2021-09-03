@@ -8,8 +8,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.components.network.const import MDNS_TARGET_IP
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -23,6 +28,8 @@ from .const import (
     TRACKER_SCAN_INTERVAL,
 )
 
+MAX_SCAN_INTERVAL = 3600
+MAX_CONSIDER_HOME = MAX_SCAN_INTERVAL * 6
 DEFAULT_NETWORK_PREFIX = 24
 
 
@@ -40,7 +47,7 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
-def _normalize_ips_and_network(hosts_str):
+def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
 
     normalized_hosts = []
@@ -74,7 +81,7 @@ def _normalize_ips_and_network(hosts_str):
     return normalized_hosts
 
 
-def normalize_input(user_input):
+def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate hosts and exclude are valid."""
     errors = {}
     normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
@@ -92,7 +99,9 @@ def normalize_input(user_input):
     return errors
 
 
-async def _async_build_schema_with_user_input(hass, user_input, include_options):
+async def _async_build_schema_with_user_input(
+    hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
+) -> vol.Schema:
     hosts = user_input.get(CONF_HOSTS, await async_get_network(hass))
     exclude = user_input.get(
         CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
@@ -113,7 +122,12 @@ async def _async_build_schema_with_user_input(hass, user_input, include_options)
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
-                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=MAX_SCAN_INTERVAL)),
+                vol.Optional(
+                    CONF_CONSIDER_HOME,
+                    default=user_input.get(CONF_CONSIDER_HOME)
+                    or DEFAULT_CONSIDER_HOME.total_seconds(),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_CONSIDER_HOME)),
             }
         )
     return vol.Schema(schema)
@@ -126,7 +140,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         errors = {}
         if user_input is not None:
@@ -152,9 +168,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
-        self.options = {}
+        self.options: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -183,14 +199,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _async_is_unique_host_list(self, user_input):
+    def _async_is_unique_host_list(self, user_input: dict[str, Any]) -> bool:
         hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
         for entry in self._async_current_entries():
             if _normalize_ips_and_network(entry.options[CONF_HOSTS]) == hosts:
                 return False
         return True
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle import from yaml."""
         if not self._async_is_unique_host_list(user_input):
             return self.async_abort(reason="already_configured")
@@ -203,6 +219,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)

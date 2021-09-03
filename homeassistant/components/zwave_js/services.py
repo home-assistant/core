@@ -18,15 +18,18 @@ from zwave_js_server.util.node import (
 )
 
 from homeassistant.components.group import expand_entity_ids
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import const
-from .helpers import async_get_node_from_device_id, async_get_node_from_entity_id
+from .helpers import (
+    async_get_node_from_device_id,
+    async_get_node_from_entity_id,
+    async_get_nodes_from_area_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +84,10 @@ class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
     def __init__(
-        self, hass: HomeAssistant, ent_reg: EntityRegistry, dev_reg: DeviceRegistry
+        self,
+        hass: HomeAssistant,
+        ent_reg: er.EntityRegistry,
+        dev_reg: dr.DeviceRegistry,
     ) -> None:
         """Initialize with hass object."""
         self._hass = hass
@@ -96,6 +102,7 @@ class ZWaveServices:
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
             nodes: set[ZwaveNode] = set()
+            # Convert all entity IDs to nodes
             for entity_id in expand_entity_ids(self._hass, val.pop(ATTR_ENTITY_ID, [])):
                 try:
                     nodes.add(
@@ -105,6 +112,16 @@ class ZWaveServices:
                     )
                 except ValueError as err:
                     const.LOGGER.warning(err.args[0])
+
+            # Convert all area IDs to nodes
+            for area_id in val.pop(ATTR_AREA_ID, []):
+                nodes.update(
+                    async_get_nodes_from_area_id(
+                        self._hass, area_id, self._ent_reg, self._dev_reg
+                    )
+                )
+
+            # Convert all device IDs to nodes
             for device_id in val.pop(ATTR_DEVICE_ID, []):
                 try:
                     nodes.add(
@@ -170,6 +187,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -184,7 +204,9 @@ class ZWaveServices:
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     parameter_name_does_not_need_bitmask,
                     get_nodes_from_service_data,
                 ),
@@ -198,6 +220,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -212,7 +237,9 @@ class ZWaveServices:
                             },
                         ),
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     get_nodes_from_service_data,
                 ),
             ),
@@ -242,6 +269,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -258,7 +288,9 @@ class ZWaveServices:
                         vol.Optional(const.ATTR_WAIT_FOR_RESULT): cv.boolean,
                         vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     get_nodes_from_service_data,
                 ),
             ),
@@ -271,6 +303,9 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
@@ -288,7 +323,9 @@ class ZWaveServices:
                         vol.Optional(const.ATTR_OPTIONS): {cv.string: VALUE_SCHEMA},
                     },
                     vol.Any(
-                        cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                        cv.has_at_least_one_key(
+                            ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                        ),
                         broadcast_command,
                     ),
                     get_nodes_from_service_data,
@@ -304,12 +341,17 @@ class ZWaveServices:
             schema=vol.Schema(
                 vol.All(
                     {
+                        vol.Optional(ATTR_AREA_ID): vol.All(
+                            cv.ensure_list, [cv.string]
+                        ),
                         vol.Optional(ATTR_DEVICE_ID): vol.All(
                             cv.ensure_list, [cv.string]
                         ),
                         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
                     },
-                    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                    cv.has_at_least_one_key(
+                        ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
                     get_nodes_from_service_data,
                 ),
             ),

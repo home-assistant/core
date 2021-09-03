@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import timedelta
+from ipaddress import IPv4Address, IPv6Address
 import logging
 from urllib.parse import urlparse
 
@@ -13,6 +14,7 @@ from yeelight import BulbException
 from yeelight.aio import KEY_CONNECTED, AsyncBulb
 
 from homeassistant import config_entries
+from homeassistant.components import network
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_DEVICES,
@@ -161,6 +163,8 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
+BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError)
+
 PLATFORMS = ["binary_sensor", "light"]
 
 
@@ -194,7 +198,6 @@ async def _async_initialize(
     entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
         DATA_PLATFORMS_LOADED: False
     }
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     @callback
     def _async_load_platforms():
@@ -210,6 +213,15 @@ async def _async_initialize(
     await device.async_setup()
     entry_data[DATA_DEVICE] = device
 
+    if (
+        device.capabilities
+        and entry.options.get(CONF_MODEL) != device.capabilities["model"]
+    ):
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_MODEL: device.capabilities["model"]}
+        )
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, DEVICE_INITIALIZED.format(host), _async_load_platforms
@@ -262,27 +274,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.data.get(CONF_HOST):
         try:
             device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             # If CONF_ID is not valid we cannot fallback to discovery
             # so we must retry by raising ConfigEntryNotReady
             if not entry.data.get(CONF_ID):
                 raise ConfigEntryNotReady from ex
             # Otherwise fall through to discovery
         else:
-            # manually added device
-            try:
-                await _async_initialize(
-                    hass, entry, entry.data[CONF_HOST], device=device
-                )
-            except BulbException as ex:
-                raise ConfigEntryNotReady from ex
+            # Since device is passed this cannot throw an exception anymore
+            await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
             return True
 
     async def _async_from_discovery(capabilities: dict[str, str]) -> None:
         host = urlparse(capabilities["location"]).hostname
         try:
             await _async_initialize(hass, entry, host)
-        except BulbException:
+        except BULB_EXCEPTIONS:
             _LOGGER.exception("Failed to connect to bulb at %s", host)
 
     # discovery
@@ -317,11 +324,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
+def async_format_model(model: str) -> str:
+    """Generate a more human readable model."""
+    return model.replace("_", " ").title()
+
+
+@callback
+def async_format_id(id_: str) -> str:
+    """Generate a more human readable id."""
+    return hex(int(id_, 16)) if id_ else "None"
+
+
+@callback
+def async_format_model_id(model: str, id_: str) -> str:
+    """Generate a more human readable name."""
+    return f"{async_format_model(model)} {async_format_id(id_)}"
+
+
+@callback
 def _async_unique_name(capabilities: dict) -> str:
     """Generate name from capabilities."""
-    model = str(capabilities["model"]).replace("_", " ").title()
-    short_id = hex(int(capabilities["id"], 16))
-    return f"Yeelight {model} {short_id}"
+    model_id = async_format_model_id(capabilities["model"], capabilities["id"])
+    return f"Yeelight {model_id}"
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
@@ -350,34 +374,77 @@ class YeelightScanner:
         self._unique_id_capabilities = {}
         self._host_capabilities = {}
         self._track_interval = None
-        self._listener = None
-        self._connected_event = None
+        self._listeners = []
+        self._connected_events = []
 
     async def async_setup(self):
         """Set up the scanner."""
-        if self._connected_event:
-            await self._connected_event.wait()
+        if self._connected_events:
+            await asyncio.gather(*(event.wait() for event in self._connected_events))
             return
-        self._connected_event = asyncio.Event()
 
-        async def _async_connected():
-            self._listener.async_search()
-            self._connected_event.set()
+        for idx, source_ip in enumerate(await self._async_build_source_set()):
+            self._connected_events.append(asyncio.Event())
 
-        self._listener = SSDPListener(
-            async_callback=self._async_process_entry,
-            service_type=SSDP_ST,
-            target=SSDP_TARGET,
-            async_connect_callback=_async_connected,
+            def _wrap_async_connected_idx(idx):
+                """Create a function to capture the idx cell variable."""
+
+                async def _async_connected():
+                    self._connected_events[idx].set()
+
+                return _async_connected
+
+            self._listeners.append(
+                SSDPListener(
+                    async_callback=self._async_process_entry,
+                    service_type=SSDP_ST,
+                    target=SSDP_TARGET,
+                    source_ip=source_ip,
+                    async_connect_callback=_wrap_async_connected_idx(idx),
+                )
+            )
+
+        results = await asyncio.gather(
+            *(listener.async_start() for listener in self._listeners),
+            return_exceptions=True,
         )
-        await self._listener.async_start()
-        await self._connected_event.wait()
+        failed_listeners = []
+        for idx, result in enumerate(results):
+            if not isinstance(result, Exception):
+                continue
+            _LOGGER.warning(
+                "Failed to setup listener for %s: %s",
+                self._listeners[idx].source_ip,
+                result,
+            )
+            failed_listeners.append(self._listeners[idx])
+            self._connected_events[idx].set()
+
+        for listener in failed_listeners:
+            self._listeners.remove(listener)
+
+        await asyncio.gather(*(event.wait() for event in self._connected_events))
+        self.async_scan()
+
+    async def _async_build_source_set(self) -> set[IPv4Address]:
+        """Build the list of ssdp sources."""
+        adapters = await network.async_get_adapters(self._hass)
+        sources: set[IPv4Address] = set()
+        if network.async_only_default_interface_enabled(adapters):
+            sources.add(IPv4Address("0.0.0.0"))
+            return sources
+
+        return {
+            source_ip
+            for source_ip in await network.async_get_enabled_source_ips(self._hass)
+            if not source_ip.is_loopback and not isinstance(source_ip, IPv6Address)
+        }
 
     async def async_discover(self):
         """Discover bulbs."""
         await self.async_setup()
         for _ in range(DISCOVERY_ATTEMPTS):
-            self._listener.async_search()
+            self.async_scan()
             await asyncio.sleep(DISCOVERY_SEARCH_INTERVAL.total_seconds())
         return self._unique_id_capabilities.values()
 
@@ -385,7 +452,8 @@ class YeelightScanner:
     def async_scan(self, *_):
         """Send discovery packets."""
         _LOGGER.debug("Yeelight scanning")
-        self._listener.async_search()
+        for listener in self._listeners:
+            listener.async_search()
 
     async def async_get_capabilities(self, host):
         """Get capabilities via SSDP."""
@@ -396,7 +464,8 @@ class YeelightScanner:
         self._host_discovered_events.setdefault(host, []).append(host_event)
         await self.async_setup()
 
-        self._listener.async_search((host, SSDP_TARGET[1]))
+        for listener in self._listeners:
+            listener.async_search((host, SSDP_TARGET[1]))
 
         with contextlib.suppress(asyncio.TimeoutError):
             await asyncio.wait_for(host_event.wait(), timeout=DISCOVERY_TIMEOUT)
@@ -481,10 +550,11 @@ class YeelightDevice:
         self._config = config
         self._host = host
         self._bulb_device = bulb
-        self._capabilities = {}
+        self.capabilities = {}
         self._device_type = None
         self._available = False
         self._initialized = False
+        self._did_first_update = False
         self._name = None
 
     @property
@@ -515,12 +585,12 @@ class YeelightDevice:
     @property
     def model(self):
         """Return configured/autodetected device model."""
-        return self._bulb_device.model or self._capabilities.get("model")
+        return self._bulb_device.model or self.capabilities.get("model")
 
     @property
     def fw_version(self):
         """Return the firmware version."""
-        return self._capabilities.get("fw_ver")
+        return self.capabilities.get("fw_ver")
 
     @property
     def is_nightlight_supported(self) -> bool:
@@ -580,14 +650,14 @@ class YeelightDevice:
             await self.bulb.async_turn_on(
                 duration=duration, light_type=light_type, power_mode=power_mode
             )
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 
     async def async_turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
         """Turn off device."""
         try:
             await self.bulb.async_turn_off(duration=duration, light_type=light_type)
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             _LOGGER.error(
                 "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex
             )
@@ -603,7 +673,7 @@ class YeelightDevice:
             if not self._initialized:
                 self._initialized = True
                 async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
@@ -615,20 +685,23 @@ class YeelightDevice:
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""
         scanner = YeelightScanner.async_get(self._hass)
-        self._capabilities = await scanner.async_get_capabilities(self._host) or {}
+        self.capabilities = await scanner.async_get_capabilities(self._host) or {}
+        if self.capabilities:
+            self._bulb_device.set_capabilities(self.capabilities)
         if name := self._config.get(CONF_NAME):
             # Override default name when name is set in config
             self._name = name
-        elif self._capabilities:
+        elif self.capabilities:
             # Generate name from model and id when capabilities is available
-            self._name = _async_unique_name(self._capabilities)
+            self._name = _async_unique_name(self.capabilities)
         else:
             self._name = self._host  # Default name is host
 
-    async def async_update(self):
+    async def async_update(self, force=False):
         """Update device properties and send data updated signal."""
-        if self._initialized and self._available:
-            # No need to poll, already connected
+        self._did_first_update = True
+        if not force and self._initialized and self._available:
+            # No need to poll unless force, already connected
             return
         await self._async_update_properties()
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
@@ -636,7 +709,20 @@ class YeelightDevice:
     @callback
     def async_update_callback(self, data):
         """Update push from device."""
+        was_available = self._available
         self._available = data.get(KEY_CONNECTED, True)
+        if self._did_first_update and not was_available and self._available:
+            # On reconnect the properties may be out of sync
+            #
+            # We need to make sure the DEVICE_INITIALIZED dispatcher is setup
+            # before we can update on reconnect by checking self._did_first_update
+            #
+            # If the device drops the connection right away, we do not want to
+            # do a property resync via async_update since its about
+            # to be called when async_setup_entry reaches the end of the
+            # function
+            #
+            asyncio.create_task(self.async_update(True))
         async_dispatcher_send(self._hass, DATA_UPDATED.format(self._host))
 
 

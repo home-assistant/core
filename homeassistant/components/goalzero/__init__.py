@@ -53,8 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:
-        _LOGGER.warning("Failed to connect to device %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
 
     async def async_update_data():
         """Fetch data from API endpoint."""

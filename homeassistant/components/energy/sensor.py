@@ -6,10 +6,12 @@ import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
@@ -188,6 +190,9 @@ class EnergyCostSensor(SensorEntity):
     utility.
     """
 
+    _wrong_state_class_reported = False
+    _wrong_unit_reported = False
+
     def __init__(
         self,
         adapter: SourceAdapter,
@@ -221,6 +226,18 @@ class EnergyCostSensor(SensorEntity):
         )
 
         if energy_state is None:
+            return
+
+        if (
+            state_class := energy_state.attributes.get(ATTR_STATE_CLASS)
+        ) != STATE_CLASS_TOTAL_INCREASING:
+            if not self._wrong_state_class_reported:
+                self._wrong_state_class_reported = True
+                _LOGGER.warning(
+                    "Found unexpected state_class %s for %s",
+                    state_class,
+                    energy_state.entity_id,
+                )
             return
 
         try:
@@ -272,12 +289,21 @@ class EnergyCostSensor(SensorEntity):
                 energy_unit = None
 
         if energy_unit is None:
-            _LOGGER.warning(
-                "Found unexpected unit %s for %s", energy_unit, energy_state.entity_id
-            )
+            if not self._wrong_unit_reported:
+                self._wrong_unit_reported = True
+                _LOGGER.warning(
+                    "Found unexpected unit %s for %s",
+                    energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                    energy_state.entity_id,
+                )
             return
 
-        if energy < float(self._last_energy_sensor_state):
+        if reset_detected(
+            self.hass,
+            cast(str, self._config[self._adapter.entity_energy_key]),
+            energy,
+            float(self._last_energy_sensor_state),
+        ):
             # Energy meter was reset, reset cost sensor too
             self._reset(0)
         # Update with newly incurred cost
