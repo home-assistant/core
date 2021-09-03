@@ -57,6 +57,7 @@ DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
     },
+    STATE_CLASS_TOTAL: {},
     STATE_CLASS_TOTAL_INCREASING: {},
 }
 DEFAULT_STATISTICS = {
@@ -395,7 +396,7 @@ def compile_statistics(  # noqa: C901
 
             for fstate, state in fstates:
 
-                # Deprecated, will be removed in Home Assistant 2021.10
+                # Deprecated, will be removed in Home Assistant 2021.11
                 if (
                     "last_reset" not in state.attributes
                     and state_class == STATE_CLASS_MEASUREMENT
