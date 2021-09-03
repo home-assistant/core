@@ -39,22 +39,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_entities([ComfoConnectFan(ccb.name, ccb)], True)
+    add_entities([ComfoConnectFan(ccb)], True)
 
 
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
-    _attr_icon = "mdi:air-conditioner"
-    _attr_should_poll = False
-    _attr_supported_features = SUPPORT_SET_SPEED
     current_speed = None
 
-    def __init__(self, name, ccb: ComfoConnectBridge) -> None:
+    def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
         self._ccb = ccb
-        self._attr_name = name
-        self._attr_unique_id = ccb.unique_id
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -69,6 +64,31 @@ class ComfoConnectFan(FanEntity):
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
+
+    @property
+    def should_poll(self) -> bool:
+        """Do not poll."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return self._ccb.unique_id
+
+    @property
+    def name(self):
+        """Return the name of the fan."""
+        return self._ccb.name
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:air-conditioner"
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_SET_SPEED
 
     def _handle_update(self, value):
         """Handle update callbacks."""

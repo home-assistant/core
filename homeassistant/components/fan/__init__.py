@@ -25,7 +25,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -125,7 +124,7 @@ def is_on(hass, entity_id: str) -> bool:
     return state.state == STATE_ON
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -608,7 +607,7 @@ class FanEntity(ToggleEntity):
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
         data: dict[str, float | str | None] = {}
-        supported_features = self.supported_features or 0
+        supported_features = self.supported_features
 
         if supported_features & SUPPORT_DIRECTION:
             data[ATTR_DIRECTION] = self.current_direction
@@ -628,6 +627,11 @@ class FanEntity(ToggleEntity):
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return 0
 
     @property
     def preset_mode(self) -> str | None:
