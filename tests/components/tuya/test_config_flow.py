@@ -99,7 +99,7 @@ async def test_industry_user(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "project_type"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_INDUSTRY_PROJECT_DATA
@@ -107,7 +107,7 @@ async def test_industry_user(hass, tuya):
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "login"
 
     tuya().login = MagicMock(return_value={"success": True, "errorCode": 1024})
     result = await hass.config_entries.flow.async_configure(
@@ -131,7 +131,7 @@ async def test_smart_home_user(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "project_type"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=TUYA_SMART_HOME_PROJECT_DATA
@@ -139,7 +139,7 @@ async def test_smart_home_user(hass, tuya):
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "login"
 
     with patch(
         "homeassistant.components.tuya.config_flow.TuyaConfigFlow._try_login",
@@ -151,7 +151,7 @@ async def test_smart_home_user(hass, tuya):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "login"
 
     with patch(
         "homeassistant.components.tuya.config_flow.TuyaConfigFlow._try_login",
@@ -172,43 +172,28 @@ async def test_smart_home_user(hass, tuya):
         assert result["data"][CONF_APP_TYPE] == MOCK_APP_TYPE
         assert not result["result"].unique_id
 
-
-# async def test_input_error_when_setup(hass, tuya):
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
-#     await hass.async_block_till_done()
-
-#     result = await hass.config_entries.flow.async_configure(
-#         result["flow_id"], user_input=TUYA_PROJECT_DATA
-#     )
-#     await hass.async_block_till_done()
-
-
-async def test_abort_if_already_setup(hass, tuya):
-    """Test we abort if Tuya is already setup."""
-    MockConfigEntry(domain=DOMAIN, data=TUYA_IMPORT_SMART_HOME_DATA).add_to_hass(hass)
-
-    # Should fail, config exist (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=TUYA_IMPORT_SMART_HOME_DATA,
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_SINGLE_INSTANCE
-
-
 async def test_abort_on_invalid_credentials(hass, tuya):
     """Test when we have invalid credentials."""
-    tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=TUYA_IMPORT_SMART_HOME_DATA,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == RESULT_AUTH_FAILED
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TUYA_INDUSTRY_PROJECT_DATA
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "login"
+
+    tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TUYA_INPUT_INDUSTRY_DATA
+    )
+    await hass.async_block_till_done()
+
+    assert result["errors"]["base"] == RESULT_AUTH_FAILED
