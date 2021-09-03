@@ -93,8 +93,7 @@ class OpenGarageCover(CoverEntity):
         self._state = None
         self._state_before_move = None
         self._extra_state_attributes = {}
-        self._device_id = device_id
-        self._attr_unique_id = f"{device_id}_{description.key}"
+        self._attr_unique_id = self._device_id = device_id
 
     @property
     def extra_state_attributes(self):
