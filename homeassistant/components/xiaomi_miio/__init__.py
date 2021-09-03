@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import List
+from typing import Dict, List
 
 import async_timeout
 from miio import (
@@ -141,7 +141,9 @@ class VacuumCoordinatorData:
     last_clean_details: CleaningDetails
     consumable_status: ConsumableStatus
     clean_history_status: CleaningSummary
-    timer: List[Timer]
+    timers: List[Timer]
+    fan_speeds: Dict[str, int]
+    fan_speeds_reverse: Dict[int, str]
 
 
 @dataclass(init=False, frozen=True)
@@ -160,6 +162,8 @@ class VacuumCoordinatorDataAttributes:
     consumable_status: str = "consumable_status"
     clean_history_status: str = "clean_history_status"
     timer: str = "timer"
+    fan_speeds: str = "fan_speeds"
+    fan_speeds_reveres: str = "fan_speeds_reverse"
 
 
 def _async_update_data_vacuum(hass, device: Vacuum):
@@ -175,6 +179,8 @@ def _async_update_data_vacuum(hass, device: Vacuum):
                 "Unable to fetch timers, this may happen on some devices: %s", ex
             )
 
+        fan_speeds = device.fan_speed_presets()
+
         data = VacuumCoordinatorData(
             device.status(),
             device.dnd_status(),
@@ -182,6 +188,8 @@ def _async_update_data_vacuum(hass, device: Vacuum):
             device.consumable_status(),
             device.clean_history(),
             timer,
+            fan_speeds,
+            {v: k for k, v in fan_speeds.items()},
         )
 
         return data

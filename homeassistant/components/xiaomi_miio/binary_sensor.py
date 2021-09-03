@@ -24,6 +24,7 @@ from .const import (
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
     MODELS_VACUUM,
+    MODELS_VACUUM_WITH_MOP,
 )
 from .device import XiaomiCoordinatedMiioEntity
 
@@ -93,6 +94,11 @@ HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
 
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
+    """Only vacuums with mop should have binary sensor registered."""
+
+    if config_entry.data[CONF_MODEL] not in MODELS_VACUUM_WITH_MOP:
+        return
+
     device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
     entities = []
 
