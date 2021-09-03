@@ -1,6 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
+import asyncio
 from datetime import timedelta
-import time
 
 import somecomfort
 
@@ -10,7 +10,7 @@ from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 PLATFORMS = ["climate"]
 
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config):
         return False
 
     data = HoneywellData(hass, client, username, password, devices)
-    await data.update()
+    await data.async_update()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config.entry_id] = data
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
@@ -103,19 +103,19 @@ class HoneywellData:
         self.devices = devices
         return True
 
-    def _refresh_devices(self):
+    async def _refresh_devices(self):
         """Refresh each enabled device."""
         for device in self.devices:
-            device.refresh()
-            time.sleep(3)
+            await self._hass.async_add_executor_job(device.refresh)
+            await asyncio.sleep(5)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         retries = 3
         while retries > 0:
             try:
-                await self._hass.async_add_executor_job(self._refresh_devices)
+                await self._refresh_devices()
                 break
             except (
                 somecomfort.client.APIRateLimited,

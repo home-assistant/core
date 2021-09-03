@@ -386,4 +386,4 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_update(self):
         """Get the latest state from the service."""
-        await self._data.update()
+        await self._data.async_update()
