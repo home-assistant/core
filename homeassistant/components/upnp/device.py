@@ -121,7 +121,7 @@ class Device:
         """Get the hostname."""
         url = self._igd_device.device.device_url
         parsed = urlparse(url)
-        return parsed.hostname or ""
+        return parsed.hostname
 
     def __str__(self) -> str:
         """Get string representation."""

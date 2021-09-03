@@ -60,7 +60,6 @@ SENSOR_ENTITY_DESCRIPTIONS: dict[str, tuple[UpnpSensorEntityDescription, ...]] =
             key=ROUTER_IP,
             name="External IP",
             icon="mdi:server-network",
-            format="s",
         ),
         UpnpSensorEntityDescription(
             key=ROUTER_UPTIME,
@@ -74,7 +73,6 @@ SENSOR_ENTITY_DESCRIPTIONS: dict[str, tuple[UpnpSensorEntityDescription, ...]] =
             key=WAN_STATUS,
             name="wan status",
             icon="mdi:server-network",
-            format="s",
         ),
     ),
     DERIVED_SENSOR: (
@@ -161,6 +159,8 @@ class RawUpnpSensor(UpnpSensor):
 class DerivedUpnpSensor(UpnpSensor):
     """Representation of a UNIT Sent/Received per second sensor."""
 
+    entity_description: UpnpSensorEntityDescription
+
     def __init__(
         self,
         coordinator: UpnpDataUpdateCoordinator,
@@ -190,7 +190,6 @@ class DerivedUpnpSensor(UpnpSensor):
 
         # Calculate derivative.
         delta_value = current_value - self._last_value
-        # pyright: reportGeneralTypeIssues=false
         if self.entity_description.native_unit_of_measurement == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
