@@ -172,9 +172,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
                 hour=meter_offset.seconds // 3600,
-                day=meter_offset.days + 1
-                if meter_type in [WEEKLY, YEARLY]
-                else 0,  # required for different reasons for backwards compatibility
+                day=meter_offset.days + 1,
             )
             _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
         else:
