@@ -83,11 +83,6 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             update_method=self.async_update,
         )
 
-    def initialize(self) -> None:
-        """Initialize speedtest api."""
-        self.api = speedtest.Speedtest()
-        self.update_servers()
-
     def update_servers(self):
         """Update list of test servers."""
         test_servers = self.api.get_servers()
@@ -136,7 +131,8 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
     async def async_setup(self) -> None:
         """Set up SpeedTest."""
         try:
-            await self.hass.async_add_executor_job(self.initialize)
+            self.api = await self.hass.async_add_executor_job(speedtest.Speedtest)
+            await self.hass.async_add_executor_job(self.update_servers)
         except speedtest.SpeedtestException as err:
             raise ConfigEntryNotReady from err
 

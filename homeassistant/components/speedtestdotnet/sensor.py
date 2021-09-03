@@ -56,11 +56,6 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = description.key
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, "Speed Test")},
-            "name": DEFAULT_NAME,
-            "entry_type": "service",
-        }
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
