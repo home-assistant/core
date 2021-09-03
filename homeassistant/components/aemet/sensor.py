@@ -89,12 +89,11 @@ class AemetSensor(AbstractAemetSensor):
             coordinator=weather_coordinator,
             description=description,
         )
-        self._weather_coordinator = weather_coordinator
 
     @property
     def native_value(self):
         """Return the state of the device."""
-        return self._weather_coordinator.data.get(self.entity_description.key)
+        return self.coordinator.data.get(self.entity_description.key)
 
 
 class AemetForecastSensor(AbstractAemetSensor):
@@ -115,7 +114,6 @@ class AemetForecastSensor(AbstractAemetSensor):
             coordinator=weather_coordinator,
             description=description,
         )
-        self._weather_coordinator = weather_coordinator
         self._forecast_mode = forecast_mode
         self._attr_entity_registry_enabled_default = (
             self._forecast_mode == FORECAST_MODE_DAILY
@@ -125,7 +123,7 @@ class AemetForecastSensor(AbstractAemetSensor):
     def native_value(self):
         """Return the state of the device."""
         forecast = None
-        forecasts = self._weather_coordinator.data.get(
+        forecasts = self.coordinator.data.get(
             FORECAST_MODE_ATTR_API[self._forecast_mode]
         )
         if forecasts:
