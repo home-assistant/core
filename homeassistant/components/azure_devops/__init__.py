@@ -69,17 +69,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name=f"{DOMAIN}_coordinator",
         update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=300),
     )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator, project
 
-    # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
