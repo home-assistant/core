@@ -991,9 +991,6 @@ async def test_location_change_evicts_prior_location_from_cache(hass, aioclient_
 
         @callback
         def _callback(*_):
-            import pprint
-
-            pprint.pprint(mock_ssdp_response)
             hass.async_create_task(listener.async_callback(mock_ssdp_response))
 
         listener.async_start = _async_callback
@@ -1049,4 +1046,114 @@ async def test_location_change_evicts_prior_location_from_cache(hass, aioclient_
         assert (
             mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
             == mock_good_ip_ssdp_response["location"]
+        )
+
+
+async def test_location_change_with_overlapping_udn_st_combinations(
+    hass, aioclient_mock
+):
+    """Test handling when a UDN and ST broadcast multiple locations."""
+    mock_get_ssdp = {
+        "test_integration": [
+            {"manufacturer": "test_manufacturer", "modelName": "test_model"}
+        ]
+    }
+
+    hue_response = """
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+<device>
+<manufacturer>test_manufacturer</manufacturer>
+<modelName>test_model</modelName>
+</device>
+</root>
+    """
+
+    aioclient_mock.get(
+        "http://192.168.72.1:49154/wps_device.xml",
+        text=hue_response.format(ip_address="192.168.72.1"),
+    )
+    aioclient_mock.get(
+        "http://192.168.72.1:49152/wps_device.xml",
+        text=hue_response.format(ip_address="192.168.72.1"),
+    )
+    ssdp_response_without_location = {
+        "ST": "upnp:rootdevice",
+        "_udn": "uuid:a793d3cc-e802-44fb-84f4-5a30f33115b6",
+        "USN": "uuid:a793d3cc-e802-44fb-84f4-5a30f33115b6::upnp:rootdevice",
+        "EXT": "",
+    }
+
+    port_49154_response = CaseInsensitiveDict(
+        **ssdp_response_without_location,
+        **{"LOCATION": "http://192.168.72.1:49154/wps_device.xml"},
+    )
+    port_49152_response = CaseInsensitiveDict(
+        **ssdp_response_without_location,
+        **{"LOCATION": "http://192.168.72.1:49152/wps_device.xml"},
+    )
+    mock_ssdp_response = port_49154_response
+
+    def _generate_fake_ssdp_listener(*args, **kwargs):
+        listener = SSDPListener(*args, **kwargs)
+
+        async def _async_callback(*_):
+            pass
+
+        @callback
+        def _callback(*_):
+            hass.async_create_task(listener.async_callback(mock_ssdp_response))
+
+        listener.async_start = _async_callback
+        listener.async_search = _callback
+        return listener
+
+    with patch(
+        "homeassistant.components.ssdp.async_get_ssdp",
+        return_value=mock_get_ssdp,
+    ), patch(
+        "homeassistant.components.ssdp.SSDPListener",
+        new=_generate_fake_ssdp_listener,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_init:
+        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+        await hass.async_block_till_done()
+        assert len(mock_init.mock_calls) == 1
+        assert mock_init.mock_calls[0][1][0] == "test_integration"
+        assert mock_init.mock_calls[0][2]["context"] == {
+            "source": config_entries.SOURCE_SSDP
+        }
+        assert (
+            mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
+            == port_49154_response["location"]
+        )
+
+        mock_init.reset_mock()
+        mock_ssdp_response = port_49152_response
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=400))
+        await hass.async_block_till_done()
+        assert mock_init.mock_calls[0][1][0] == "test_integration"
+        assert mock_init.mock_calls[0][2]["context"] == {
+            "source": config_entries.SOURCE_SSDP
+        }
+        assert (
+            mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
+            == port_49152_response["location"]
+        )
+
+        mock_init.reset_mock()
+        mock_ssdp_response = port_49154_response
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=600))
+        await hass.async_block_till_done()
+        assert mock_init.mock_calls[0][1][0] == "test_integration"
+        assert mock_init.mock_calls[0][2]["context"] == {
+            "source": config_entries.SOURCE_SSDP
+        }
+        assert (
+            mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
+            == port_49154_response["location"]
         )
