@@ -289,7 +289,7 @@ class Scanner:
     def _async_unsee(self, header_st: str | None, header_location: str | None) -> None:
         """If we see a device in a new location, unsee the original location."""
         if header_st is not None:
-            self.seen.remove((header_st, header_location))
+            self.seen.discard((header_st, header_location))
 
     async def _async_process_entry(self, headers: Mapping[str, str]) -> None:
         """Process SSDP entries."""
