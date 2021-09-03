@@ -66,9 +66,9 @@ ATTR_EXHAUST_TEMPERATURE = "exhaust_temperature"
 ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
 ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_POWER_CURRENT = "power_usage"
-ATTR_POWER_TOTAL = "power_total"
+ATTR_ENERGY_TOTAL = "energy_total"
 ATTR_PREHEATER_POWER_CURRENT = "preheater_power_usage"
-ATTR_PREHEATER_POWER_TOTAL = "preheater_power_total"
+ATTR_PREHEATER_ENERGY_TOTAL = "preheater_energy_total"
 ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
 ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
 ATTR_SUPPLY_HUMIDITY = "supply_humidity"
@@ -243,7 +243,7 @@ SENSOR_TYPES = (
         sensor_id=SENSOR_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
-        key=ATTR_POWER_TOTAL,
+        key=ATTR_ENERGY_TOTAL,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Energy total",
@@ -259,7 +259,7 @@ SENSOR_TYPES = (
         sensor_id=SENSOR_PREHEATER_POWER_CURRENT,
     ),
     ComfoconnectSensorEntityDescription(
-        key=ATTR_PREHEATER_POWER_TOTAL,
+        key=ATTR_PREHEATER_ENERGY_TOTAL,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Preheater energy total",
