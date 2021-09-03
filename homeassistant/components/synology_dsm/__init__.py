@@ -600,6 +600,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -616,7 +617,6 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self._attr_unique_id: str = (
             f"{api.information.serial}_{description.api_key}:{description.key}"
         )
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def device_info(self) -> DeviceInfo:
