@@ -322,6 +322,12 @@ def _async_register_services(hass, instance):
     )
 
 
+class ClearStatisticsTask(NamedTuple):
+    """Object to store statistics_ids which for which to remove statistics."""
+
+    statistic_ids: list[str]
+
+
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
@@ -570,6 +576,11 @@ class Recorder(threading.Thread):
         self.queue.put(StatisticsTask(start))
 
     @callback
+    def async_clear_statistics(self, statistic_ids):
+        """Clear statistics for a list of statistic_ids."""
+        self.queue.put(ClearStatisticsTask(statistic_ids))
+
+    @callback
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
         if self.hass.is_stopping or not self.get_session:
@@ -761,6 +772,9 @@ class Recorder(threading.Thread):
             return
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
+            return
+        if isinstance(event, ClearStatisticsTask):
+            statistics.clear_statistics(self, event.statistic_ids)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()

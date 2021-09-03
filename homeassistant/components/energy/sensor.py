@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
+from homeassistant.components import recorder
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
@@ -210,6 +211,7 @@ class EnergyCostSensor(SensorEntity):
         self._config = config
         self._last_energy_sensor_state: StateType | None = None
         self._cur_value = 0.0
+        self._currency: str | None = None
 
     def _reset(self, energy_state: StateType) -> None:
         """Reset the cost sensor."""
@@ -246,10 +248,8 @@ class EnergyCostSensor(SensorEntity):
             return
 
         # Determine energy price
-        if self._config["entity_energy_price"] is not None:
-            energy_price_state = self.hass.states.get(
-                self._config["entity_energy_price"]
-            )
+        if (price_entity := self._config["entity_energy_price"]) is not None:
+            energy_price_state = self.hass.states.get(price_entity)
 
             if energy_price_state is None:
                 return
@@ -270,6 +270,19 @@ class EnergyCostSensor(SensorEntity):
         else:
             energy_price_state = None
             energy_price = cast(float, self._config["number_energy_price"])
+
+        if (currency := self._get_currency()) != self._currency:
+            if self._currency is not None:
+                _LOGGER.info(
+                    "currencies changed from %s to %s, clearing statistics for %s",
+                    self._currency,
+                    currency,
+                    self.entity_id,
+                )
+                self.hass.data[recorder.DATA_INSTANCE].async_clear_statistics(
+                    [self.entity_id]
+                )
+            self._currency = currency
 
         if self._last_energy_sensor_state is None:
             # Initialize as it's the first time all required entities are in place.
@@ -360,7 +373,20 @@ class EnergyCostSensor(SensorEntity):
         """Update the config."""
         self._config = config
 
+    def _get_currency(self) -> str | None:
+        if (price_entity := self._config["entity_energy_price"]) is not None:
+            energy_price_state = self.hass.states.get(price_entity)
+
+            if energy_price_state is None:
+                return None
+
+            price_unit = energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "")
+            return price_unit.split("/", 1)[0] or self.hass.config.currency
+
+        else:
+            return self.hass.config.currency
+
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
-        return self.hass.config.currency
+        return self._get_currency()
