@@ -9,6 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AirNowDataUpdateCoordinator
 from .const import (
     ATTR_API_AQI,
     ATTR_API_AQI_DESCRIPTION,
@@ -61,7 +62,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AirNowSensor(CoordinatorEntity, SensorEntity):
     """Define an AirNow sensor."""
 
-    def __init__(self, coordinator, description: SensorEntityDescription):
+    coordinator: AirNowDataUpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: AirNowDataUpdateCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.entity_description = description
