@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "[%key:common::config_flow::data::scan_interval%]"
+          "scan_interval": "Seconds between scans"
         }
       }
     }
