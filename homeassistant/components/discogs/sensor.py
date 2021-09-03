@@ -57,7 +57,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_RANDOM_RECORD_TYPE,
         name="Random Record",
         icon=ICON_PLAYER,
-        native_unit_of_measurement=None,
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
