@@ -24,7 +24,7 @@ from homeassistant.util import slugify
 from .const import (
     API_VERSION,
     APP_DESC,
-    CONNECTION_SENSORS,
+    CONNECTION_SENSORS_KEYS,
     DOMAIN,
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -141,7 +141,7 @@ class FreeboxRouter:
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
-        for sensor_key in CONNECTION_SENSORS:
+        for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
         self._attrs = {
