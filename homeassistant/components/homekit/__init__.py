@@ -103,9 +103,9 @@ from .const import (
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
+    async_port_is_available,
     dismiss_setup_message,
     get_persist_fullpath_for_entry_id,
-    port_is_available,
     remove_state_files_for_entry_id,
     show_setup_message,
     state_needs_accessory_mode,
@@ -330,7 +330,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     logged_shutdown_wait = False
     for _ in range(0, SHUTDOWN_TIMEOUT):
-        if await hass.async_add_executor_job(port_is_available, entry.data[CONF_PORT]):
+        if async_port_is_available(entry.data[CONF_PORT]):
             break
 
         if not logged_shutdown_wait:

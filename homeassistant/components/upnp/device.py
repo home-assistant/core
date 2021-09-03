@@ -14,7 +14,6 @@ from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -26,10 +25,10 @@ from .const import (
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
-    UPTIME,
-    WANIP,
-    WANSTATUS,
+    WAN_STATUS,
 )
 
 
@@ -49,7 +48,6 @@ class Device:
         """Initialize UPnP/IGD device."""
         self._igd_device = igd_device
         self._device_updater = device_updater
-        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
     async def async_create_device(
@@ -168,7 +166,7 @@ class Device:
         )
 
         return {
-            WANSTATUS: values[0][0] if values[0] is not None else None,
-            UPTIME: values[0][2] if values[0] is not None else None,
-            WANIP: values[1],
+            WAN_STATUS: values[0][0] if values[0] is not None else None,
+            ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
+            ROUTER_IP: values[1],
         }
