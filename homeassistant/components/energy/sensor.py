@@ -6,6 +6,7 @@ import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components import recorder
+from homeassistant.components.recorder import statistics
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
@@ -339,6 +340,9 @@ class EnergyCostSensor(SensorEntity):
             ].replace("_", " ")
 
         self._attr_name = f"{name} {self._adapter.name_suffix}"
+
+        if metadata := statistics.get_metadata(self.hass, self.entity_id):
+            self._currency = metadata["unit_of_measurement"]
 
         self._update_cost()
 
