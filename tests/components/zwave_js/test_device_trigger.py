@@ -8,11 +8,10 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
-from homeassistant.components.zwave_js import DOMAIN, device_trigger
-from homeassistant.components.zwave_js.device_trigger import (
-    async_attach_trigger,
-    async_get_trigger_capabilities,
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.zwave_js import DOMAIN, device_trigger
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
 )
@@ -1281,12 +1280,12 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
 async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
     """Test failure scenarios."""
     with pytest.raises(HomeAssistantError):
-        await async_attach_trigger(
+        await device_trigger.async_attach_trigger(
             hass, {"type": "failed.test", "device_id": "invalid_device_id"}, None, {}
         )
 
     with pytest.raises(HomeAssistantError):
-        await async_attach_trigger(
+        await device_trigger.async_attach_trigger(
             hass,
             {"type": "event.failed_type", "device_id": "invalid_device_id"},
             None,
@@ -1297,12 +1296,12 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
     device = async_entries_for_config_entry(dev_reg, integration.entry_id)[0]
 
     with pytest.raises(HomeAssistantError):
-        await async_attach_trigger(
+        await device_trigger.async_attach_trigger(
             hass, {"type": "failed.test", "device_id": device.id}, None, {}
         )
 
     with pytest.raises(HomeAssistantError):
-        await async_attach_trigger(
+        await device_trigger.async_attach_trigger(
             hass,
             {"type": "event.failed_type", "device_id": device.id},
             None,
@@ -1310,25 +1309,9 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         )
 
     with pytest.raises(HomeAssistantError):
-        await async_attach_trigger(
+        await device_trigger.async_attach_trigger(
             hass,
             {"type": "state.failed_type", "device_id": device.id},
-            None,
-            {},
-        )
-
-    with pytest.raises(HomeAssistantError):
-        await async_attach_trigger(
-            hass,
-            {
-                "device_id": device.id,
-                "type": "zwave_js.value_updated.value",
-                "command_class": CommandClass.DOOR_LOCK.value,
-                "property": -1234,
-                "property_key": None,
-                "endpoint": None,
-                "from": "open",
-            },
             None,
             {},
         )
@@ -1341,7 +1324,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         return_value=None,
     ):
         assert (
-            await async_get_trigger_capabilities(
+            await device_trigger.async_get_trigger_capabilities(
                 hass, {"type": "failed.test", "device_id": "invalid_device_id"}
             )
             == {}
@@ -1349,3 +1332,26 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
 
     with pytest.raises(HomeAssistantError):
         async_get_node_status_sensor_entity_id(hass, "invalid_device_id")
+
+    INVALID_CONFIG = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "zwave_js.value_updated.value",
+        "command_class": CommandClass.DOOR_LOCK.value,
+        "property": 9999,
+        "property_key": 9999,
+        "endpoint": 9999,
+    }
+
+    # Test that invalid config raises exception
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(hass, INVALID_CONFIG)
+
+    # Unload entry so we can verify that validation will pass on an invalid config
+    # since we return early
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert (
+        await device_trigger.async_validate_trigger_config(hass, INVALID_CONFIG)
+        == INVALID_CONFIG
+    )

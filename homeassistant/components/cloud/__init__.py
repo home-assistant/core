@@ -228,7 +228,7 @@ async def async_setup(hass, config):
 
     cloud.iot.register_on_connect(_on_connect)
 
-    await cloud.start()
+    await cloud.initialize()
     await http_api.async_setup(hass)
 
     account_link.async_setup(hass)

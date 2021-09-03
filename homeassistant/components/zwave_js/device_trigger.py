@@ -1,11 +1,16 @@
 """Provides device triggers for Z-Wave JS."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
-from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import CommandClass
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.homeassistant.triggers import event, state
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -44,12 +49,20 @@ from .const import (
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
+    async_is_device_config_entry_not_loaded,
+    check_type_schema_map,
+    copy_available_params,
+    get_value_state_schema,
     get_zwave_value_from_config,
+    remove_keys_with_empty_values,
 )
-from .triggers.value_updated import ATTR_FROM, ATTR_TO
+from .triggers.value_updated import (
+    ATTR_FROM,
+    ATTR_TO,
+    PLATFORM_TYPE as VALUE_UPDATED_PLATFORM_TYPE,
+)
 
 CONF_SUBTYPE = "subtype"
-CONF_VALUE_ID = "value_id"
 
 # Trigger types
 ENTRY_CONTROL_NOTIFICATION = "event.notification.entry_control"
@@ -57,8 +70,8 @@ NOTIFICATION_NOTIFICATION = "event.notification.notification"
 BASIC_VALUE_NOTIFICATION = "event.value_notification.basic"
 CENTRAL_SCENE_VALUE_NOTIFICATION = "event.value_notification.central_scene"
 SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation"
-CONFIG_PARAMETER_VALUE_UPDATED = f"{DOMAIN}.value_updated.config_parameter"
-VALUE_VALUE_UPDATED = f"{DOMAIN}.value_updated.value"
+CONFIG_PARAMETER_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.config_parameter"
+VALUE_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.value"
 NODE_STATUS = "state.node_status"
 
 VALUE_SCHEMA = vol.Any(
@@ -68,6 +81,7 @@ VALUE_SCHEMA = vol.Any(
     cv.boolean,
     cv.string,
 )
+
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
     (ENTRY_CONTROL_NOTIFICATION, CommandClass.ENTRY_CONTROL),
@@ -102,7 +116,7 @@ ENTRY_CONTROL_NOTIFICATION_SCHEMA = BASE_EVENT_SCHEMA.extend(
 BASE_VALUE_NOTIFICATION_EVENT_SCHEMA = BASE_EVENT_SCHEMA.extend(
     {
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
-        vol.Required(ATTR_PROPERTY_KEY): vol.Any(None, int, str),
+        vol.Optional(ATTR_PROPERTY_KEY): vol.Any(int, str),
         vol.Required(ATTR_ENDPOINT): vol.Coerce(int),
         vol.Optional(ATTR_VALUE): vol.Coerce(int),
         vol.Required(CONF_SUBTYPE): cv.string,
@@ -172,19 +186,65 @@ VALUE_VALUE_UPDATED_SCHEMA = BASE_VALUE_UPDATED_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = vol.Any(
-    ENTRY_CONTROL_NOTIFICATION_SCHEMA,
-    NOTIFICATION_NOTIFICATION_SCHEMA,
-    BASIC_VALUE_NOTIFICATION_SCHEMA,
-    CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA,
-    SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
-    CONFIG_PARAMETER_VALUE_UPDATED_SCHEMA,
-    VALUE_VALUE_UPDATED_SCHEMA,
-    NODE_STATUS_SCHEMA,
+TYPE_SCHEMA_MAP = {
+    ENTRY_CONTROL_NOTIFICATION: ENTRY_CONTROL_NOTIFICATION_SCHEMA,
+    NOTIFICATION_NOTIFICATION: NOTIFICATION_NOTIFICATION_SCHEMA,
+    BASIC_VALUE_NOTIFICATION: BASIC_VALUE_NOTIFICATION_SCHEMA,
+    CENTRAL_SCENE_VALUE_NOTIFICATION: CENTRAL_SCENE_VALUE_NOTIFICATION_SCHEMA,
+    SCENE_ACTIVATION_VALUE_NOTIFICATION: SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA,
+    CONFIG_PARAMETER_VALUE_UPDATED: CONFIG_PARAMETER_VALUE_UPDATED_SCHEMA,
+    VALUE_VALUE_UPDATED: VALUE_VALUE_UPDATED_SCHEMA,
+    NODE_STATUS: NODE_STATUS_SCHEMA,
+}
+
+
+TRIGGER_TYPE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_TYPE): vol.In(TYPE_SCHEMA_MAP)}, extra=vol.ALLOW_EXTRA
+)
+
+TRIGGER_SCHEMA = vol.All(
+    remove_keys_with_empty_values,
+    TRIGGER_TYPE_SCHEMA,
+    check_type_schema_map(TYPE_SCHEMA_MAP),
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
+    # We return early if the config entry for this device is not ready because we can't
+    # validate the value without knowing the state of the device
+    if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+        return config
+
+    trigger_type = config[CONF_TYPE]
+    if get_trigger_platform_from_type(trigger_type) == VALUE_UPDATED_PLATFORM_TYPE:
+        try:
+            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
+            get_zwave_value_from_config(node, config)
+        except vol.Invalid as err:
+            raise InvalidDeviceAutomationConfig(err.msg) from err
+
+    return config
+
+
+def get_trigger_platform_from_type(trigger_type: str) -> str:
+    """Get trigger platform from Z-Wave JS trigger type."""
+    trigger_split = trigger_type.split(".")
+    # Our convention for trigger types is to have the trigger type at the beginning
+    # delimited by a `.`. For zwave_js triggers, there is a `.` in the name
+    trigger_platform = trigger_split[0]
+    if trigger_platform == DOMAIN:
+        return ".".join(trigger_split[:2])
+    return trigger_platform
+
+
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Z-Wave JS devices."""
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
@@ -294,15 +354,6 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     return triggers
 
 
-def copy_available_params(
-    input_dict: dict, output_dict: dict, params: list[str]
-) -> None:
-    """Copy available params from input into output."""
-    for param in params:
-        if (val := input_dict.get(param)) not in ("", None):
-            output_dict[param] = val
-
-
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
@@ -311,12 +362,7 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     trigger_type = config[CONF_TYPE]
-    trigger_split = trigger_type.split(".")
-    # Our convention for trigger types is to have the trigger type at the beginning
-    # delimited by a `.`. For zwave_js triggers, there is a `.` in the name
-    trigger_platform = trigger_split[0]
-    if trigger_platform == DOMAIN:
-        trigger_platform = ".".join(trigger_split[:2])
+    trigger_platform = get_trigger_platform_from_type(trigger_type)
 
     # Take input data from automation trigger UI and add it to the trigger we are
     # attaching to
@@ -375,14 +421,7 @@ async def async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
-    if trigger_platform == f"{DOMAIN}.value_updated":
-        # Try to get the value to make sure the value ID is valid
-        try:
-            node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-            get_zwave_value_from_config(node, config)
-        except (ValueError, vol.Invalid) as err:
-            raise HomeAssistantError("Invalid value specified") from err
-
+    if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
         zwave_js_config = {
             state.CONF_PLATFORM: trigger_platform,
             CONF_DEVICE_ID: config[CONF_DEVICE_ID],
@@ -416,9 +455,7 @@ async def async_get_trigger_capabilities(
     trigger_type = config[CONF_TYPE]
 
     node = async_get_node_from_device_id(hass, config[CONF_DEVICE_ID])
-    value = (
-        get_zwave_value_from_config(node, config) if ATTR_PROPERTY in config else None
-    )
+
     # Add additional fields to the automation trigger UI
     if trigger_type == NOTIFICATION_NOTIFICATION:
         return {
@@ -458,33 +495,23 @@ async def async_get_trigger_capabilities(
         CENTRAL_SCENE_VALUE_NOTIFICATION,
         SCENE_ACTIVATION_VALUE_NOTIFICATION,
     ):
-        if value.metadata.states:
-            value_schema = vol.In({int(k): v for k, v in value.metadata.states.items()})
-        else:
-            value_schema = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=value.metadata.min, max=value.metadata.max),
-            )
+        value_schema = get_value_state_schema(get_zwave_value_from_config(node, config))
+
+        # We should never get here, but just in case we should add a guard
+        if not value_schema:
+            return {}
 
         return {"extra_fields": vol.Schema({vol.Optional(ATTR_VALUE): value_schema})}
 
     if trigger_type == CONFIG_PARAMETER_VALUE_UPDATED:
-        # We can be more deliberate about the config parameter schema here because
-        # there are a limited number of types
-        if value.configuration_value_type == ConfigurationValueType.UNDEFINED:
+        value_schema = get_value_state_schema(get_zwave_value_from_config(node, config))
+        if not value_schema:
             return {}
-        if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
-            value_schema = vol.In({int(k): v for k, v in value.metadata.states.items()})
-        else:
-            value_schema = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=value.metadata.min, max=value.metadata.max),
-            )
         return {
             "extra_fields": vol.Schema(
                 {
-                    vol.Optional(state.CONF_FROM): value_schema,
-                    vol.Optional(state.CONF_TO): value_schema,
+                    vol.Optional(ATTR_FROM): value_schema,
+                    vol.Optional(ATTR_TO): value_schema,
                 }
             )
         }
@@ -505,8 +532,8 @@ async def async_get_trigger_capabilities(
                     vol.Required(ATTR_PROPERTY): cv.string,
                     vol.Optional(ATTR_PROPERTY_KEY): cv.string,
                     vol.Optional(ATTR_ENDPOINT): cv.string,
-                    vol.Optional(state.CONF_FROM): cv.string,
-                    vol.Optional(state.CONF_TO): cv.string,
+                    vol.Optional(ATTR_FROM): cv.string,
+                    vol.Optional(ATTR_TO): cv.string,
                 }
             )
         }

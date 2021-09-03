@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "Huidige {entity_name} zwaveldioxideconcentratie",
             "is_temperature": "Huidige {entity_name} temperatuur",
             "is_value": "Huidige {entity_name} waarde",
+            "is_volatile_organic_compounds": "Huidig {entity_name} vluchtige-organische-stoffenconcentratieniveau",
             "is_voltage": "Huidige {entity_name} spanning"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "{entity_name} zwaveldioxideconcentratieveranderingen",
             "temperature": "{entity_name} temperatuur gewijzigd",
             "value": "{entity_name} waarde gewijzigd",
+            "volatile_organic_compounds": "{entity_name} vluchtige-organische-stoffenconcentratieveranderingen",
             "voltage": "{entity_name} voltage verandert"
         }
     },

@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "Current {entity_name} sulphur dioxide concentration level",
             "is_temperature": "Current {entity_name} temperature",
             "is_value": "Current {entity_name} value",
+            "is_volatile_organic_compounds": "Current {entity_name} volatile organic compounds concentration level",
             "is_voltage": "Current {entity_name} voltage"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "{entity_name} sulphur dioxide concentration changes",
             "temperature": "{entity_name} temperature changes",
             "value": "{entity_name} value changes",
+            "volatile_organic_compounds": "{entity_name} volatile organic compounds concentration changes",
             "voltage": "{entity_name} voltage changes"
         }
     },

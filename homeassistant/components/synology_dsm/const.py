@@ -26,6 +26,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 
 
@@ -287,7 +288,7 @@ STORAGE_VOL_SENSORS: dict[str, EntityInfo] = {
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_avg": {
         ATTR_NAME: "Average Disk Temp",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
@@ -295,7 +296,7 @@ STORAGE_VOL_SENSORS: dict[str, EntityInfo] = {
     },
     f"{SynoStorage.API_KEY}:volume_disk_temp_max": {
         ATTR_NAME: "Maximum Disk Temp",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: False,
@@ -321,7 +322,7 @@ STORAGE_DISK_SENSORS: dict[str, EntityInfo] = {
     },
     f"{SynoStorage.API_KEY}:disk_temp": {
         ATTR_NAME: "Temperature",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
@@ -332,7 +333,7 @@ STORAGE_DISK_SENSORS: dict[str, EntityInfo] = {
 INFORMATION_SENSORS: dict[str, EntityInfo] = {
     f"{SynoDSMInformation.API_KEY}:temperature": {
         ATTR_NAME: "temperature",
-        ATTR_UNIT_OF_MEASUREMENT: None,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         ATTR_ICON: None,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ENTITY_ENABLE: True,
@@ -359,11 +360,3 @@ SURVEILLANCE_SWITCH: dict[str, EntityInfo] = {
         ATTR_STATE_CLASS: None,
     },
 }
-
-
-TEMP_SENSORS_KEYS = [
-    "volume_disk_temp_avg",
-    "volume_disk_temp_max",
-    "disk_temp",
-    "temperature",
-]

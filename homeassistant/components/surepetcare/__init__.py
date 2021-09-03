@@ -138,7 +138,7 @@ class SurePetcareAPI:
         """Initialize the Sure Petcare object."""
         self.hass = hass
         self.surepy = surepy
-        self.states = {}
+        self.states: dict[int, Any] = {}
 
     async def async_update(self, _: Any = None) -> None:
         """Get the latest data from Sure Petcare."""

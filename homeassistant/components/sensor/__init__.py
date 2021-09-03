@@ -37,6 +37,7 @@ from homeassistant.const import (
     DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -49,6 +50,8 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from .const import CONF_STATE_CLASS  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -85,6 +88,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_POWER,  # power (W/kW)
     DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,  # Amount of VOC (µg/m³)
     DEVICE_CLASS_GAS,  # gas (m³ or ft³)
 ]
 
@@ -165,6 +169,9 @@ class SensorEntity(Entity):
     _attr_native_value: StateType = None
     _attr_state_class: str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
+    _attr_unit_of_measurement: None = (
+        None  # Subclasses of SensorEntity should not set this
+    )
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
@@ -238,11 +245,12 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        # Support for _attr_unit_of_measurement will be removed in Home Assistant 2021.11
         if (
             hasattr(self, "_attr_unit_of_measurement")
             and self._attr_unit_of_measurement is not None
         ):
-            return self._attr_unit_of_measurement
+            return self._attr_unit_of_measurement  # type: ignore
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
@@ -289,7 +297,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 temp = units.temperature(float(value), unit_of_measurement)
-                value = str(round(temp) if prec == 0 else round(temp, prec))
+                value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
 

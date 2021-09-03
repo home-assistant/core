@@ -55,7 +55,7 @@ class RssiSensor(CoordinatorEntity[State], SensorEntity):
         self._attr_name = f"{device_info['name']} Signal Strength"
         self._attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
         self._attr_state_class = STATE_CLASS_MEASUREMENT
-        self._attr_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+        self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
         self._attr_entity_registry_enabled_default = False
 
     @property

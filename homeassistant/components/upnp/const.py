@@ -18,9 +18,9 @@ PACKETS_SENT = "packets_sent"
 TIMESTAMP = "timestamp"
 DATA_PACKETS = "packets"
 DATA_RATE_PACKETS_PER_SECOND = f"{DATA_PACKETS}/{TIME_SECONDS}"
-WANSTATUS = "wan_status"
-WANIP = "wan_ip"
-UPTIME = "uptime"
+WAN_STATUS = "wan_status"
+ROUTER_IP = "ip"
+ROUTER_UPTIME = "uptime"
 KIBIBYTE = 1024
 UPDATE_INTERVAL = timedelta(seconds=30)
 CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"
@@ -31,3 +31,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()
 ST_IGD_V1 = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 ST_IGD_V2 = "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
 SSDP_SEARCH_TIMEOUT = 4
+
+RAW_SENSOR = "raw_sensor"
+DERIVED_SENSOR = "derived_sensor"

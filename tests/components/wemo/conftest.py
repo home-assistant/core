@@ -68,8 +68,14 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
         yield device
 
 
+@pytest.fixture(name="wemo_entity_suffix")
+def wemo_entity_suffix_fixture():
+    """Fixture to select a specific entity for wemo_entity."""
+    return ""
+
+
 @pytest.fixture(name="wemo_entity")
-async def async_wemo_entity_fixture(hass, pywemo_device):
+async def async_wemo_entity_fixture(hass, pywemo_device, wemo_entity_suffix):
     """Fixture for a Wemo entity in hass."""
     assert await async_setup_component(
         hass,
@@ -84,7 +90,8 @@ async def async_wemo_entity_fixture(hass, pywemo_device):
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entity_entries = list(entity_registry.entities.values())
-    assert len(entity_entries) == 1
+    for entry in entity_registry.entities.values():
+        if entry.entity_id.endswith(wemo_entity_suffix):
+            return entry
 
-    yield entity_entries[0]
+    return None

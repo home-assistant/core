@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import fnmatch
 import logging
 import os
 import sys
@@ -15,6 +16,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import system_info
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_usb
@@ -71,6 +73,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _fnmatch_lower(name: str | None, pattern: str) -> bool:
+    """Match a lowercase version of the name."""
+    if name is None:
+        return False
+    return fnmatch.fnmatch(name.lower(), pattern)
+
+
 class USBDiscovery:
     """Manage USB Discovery."""
 
@@ -102,6 +111,10 @@ class USBDiscovery:
         """Start monitoring hardware with pyudev."""
         if not sys.platform.startswith("linux"):
             return
+        info = await system_info.async_get_system_info(self.hass)
+        if info.get("docker"):
+            return
+
         from pyudev import (  # pylint: disable=import-outside-toplevel
             Context,
             Monitor,
@@ -114,7 +127,13 @@ class USBDiscovery:
             return
 
         monitor = Monitor.from_netlink(context)
-        monitor.filter_by(subsystem="tty")
+        try:
+            monitor.filter_by(subsystem="tty")
+        except ValueError as ex:  # this fails on WSL
+            _LOGGER.debug(
+                "Unable to setup pyudev filtering; This is expected on WSL: %s", ex
+            )
+            return
         observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
         )
@@ -146,6 +165,18 @@ class USBDiscovery:
             if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
             if "pid" in matcher and device.pid != matcher["pid"]:
+                continue
+            if "serial_number" in matcher and not _fnmatch_lower(
+                device.serial_number, matcher["serial_number"]
+            ):
+                continue
+            if "manufacturer" in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher["manufacturer"]
+            ):
+                continue
+            if "description" in matcher and not _fnmatch_lower(
+                device.description, matcher["description"]
+            ):
                 continue
             flow: USBFlow = {
                 "domain": matcher["domain"],

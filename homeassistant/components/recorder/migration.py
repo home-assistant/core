@@ -351,7 +351,7 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
             )
 
 
-def _apply_update(engine, session, new_version, old_version):
+def _apply_update(engine, session, new_version, old_version):  # noqa: C901
     """Perform operations to bring schema up to date."""
     connection = session.connection()
     if new_version == 1:
@@ -486,6 +486,21 @@ def _apply_update(engine, session, new_version, old_version):
         start = now.replace(minute=0, second=0, microsecond=0)
         start = start - timedelta(hours=1)
         session.add(StatisticsRuns(start=start))
+    elif new_version == 20:
+        # This changed the precision of statistics from float to double
+        if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
+            _modify_columns(
+                connection,
+                engine,
+                "statistics",
+                [
+                    "mean DOUBLE PRECISION",
+                    "min DOUBLE PRECISION",
+                    "max DOUBLE PRECISION",
+                    "state DOUBLE PRECISION",
+                    "sum DOUBLE PRECISION",
+                ],
+            )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

@@ -44,6 +44,7 @@ QUERY_STATISTICS = [
     Statistics.mean,
     Statistics.min,
     Statistics.max,
+    Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
 ]
@@ -52,6 +53,13 @@ QUERY_STATISTIC_META = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
     StatisticsMeta.unit_of_measurement,
+    StatisticsMeta.has_mean,
+    StatisticsMeta.has_sum,
+]
+
+QUERY_STATISTIC_META_ID = [
+    StatisticsMeta.id,
+    StatisticsMeta.statistic_id,
 ]
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
@@ -123,33 +131,61 @@ def _get_metadata_ids(
 ) -> list[str]:
     """Resolve metadata_id for a list of statistic_ids."""
     baked_query = hass.data[STATISTICS_META_BAKERY](
-        lambda session: session.query(*QUERY_STATISTIC_META)
+        lambda session: session.query(*QUERY_STATISTIC_META_ID)
     )
     baked_query += lambda q: q.filter(
         StatisticsMeta.statistic_id.in_(bindparam("statistic_ids"))
     )
     result = execute(baked_query(session).params(statistic_ids=statistic_ids))
 
-    return [id for id, _, _ in result] if result else []
+    return [id for id, _ in result] if result else []
 
 
-def _get_or_add_metadata_id(
+def _update_or_add_metadata(
     hass: HomeAssistant,
     session: scoped_session,
     statistic_id: str,
-    metadata: StatisticMetaData,
+    new_metadata: StatisticMetaData,
 ) -> str:
     """Get metadata_id for a statistic_id, add if it doesn't exist."""
-    metadata_id = _get_metadata_ids(hass, session, [statistic_id])
-    if not metadata_id:
-        unit = metadata["unit_of_measurement"]
-        has_mean = metadata["has_mean"]
-        has_sum = metadata["has_sum"]
+    old_metadata_dict = _get_metadata(hass, session, [statistic_id], None)
+    if not old_metadata_dict:
+        unit = new_metadata["unit_of_measurement"]
+        has_mean = new_metadata["has_mean"]
+        has_sum = new_metadata["has_sum"]
         session.add(
             StatisticsMeta.from_meta(DOMAIN, statistic_id, unit, has_mean, has_sum)
         )
-        metadata_id = _get_metadata_ids(hass, session, [statistic_id])
-    return metadata_id[0]
+        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
+        _LOGGER.debug(
+            "Added new statistics metadata for %s, new_metadata: %s",
+            statistic_id,
+            new_metadata,
+        )
+        return metadata_ids[0]
+
+    metadata_id, old_metadata = next(iter(old_metadata_dict.items()))
+    if (
+        old_metadata["has_mean"] != new_metadata["has_mean"]
+        or old_metadata["has_sum"] != new_metadata["has_sum"]
+        or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
+    ):
+        session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
+            {
+                StatisticsMeta.has_mean: new_metadata["has_mean"],
+                StatisticsMeta.has_sum: new_metadata["has_sum"],
+                StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
+            },
+            synchronize_session=False,
+        )
+        _LOGGER.debug(
+            "Updated statistics metadata for %s, old_metadata: %s, new_metadata: %s",
+            statistic_id,
+            old_metadata,
+            new_metadata,
+        )
+
+    return metadata_id
 
 
 @retryable_database_job("statistics")
@@ -176,7 +212,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
             for entity_id, stat in stats.items():
-                metadata_id = _get_or_add_metadata_id(
+                metadata_id = _update_or_add_metadata(
                     instance.hass, session, entity_id, stat["meta"]
                 )
                 session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
@@ -190,14 +226,19 @@ def _get_metadata(
     session: scoped_session,
     statistic_ids: list[str] | None,
     statistic_type: str | None,
-) -> dict[str, dict[str, str]]:
+) -> dict[str, StatisticMetaData]:
     """Fetch meta data."""
 
-    def _meta(metas: list, wanted_metadata_id: str) -> dict[str, str] | None:
-        meta = None
-        for metadata_id, statistic_id, unit in metas:
+    def _meta(metas: list, wanted_metadata_id: str) -> StatisticMetaData | None:
+        meta: StatisticMetaData | None = None
+        for metadata_id, statistic_id, unit, has_mean, has_sum in metas:
             if metadata_id == wanted_metadata_id:
-                meta = {"unit_of_measurement": unit, "statistic_id": statistic_id}
+                meta = {
+                    "statistic_id": statistic_id,
+                    "unit_of_measurement": unit,
+                    "has_mean": has_mean,
+                    "has_sum": has_sum,
+                }
         return meta
 
     baked_query = hass.data[STATISTICS_META_BAKERY](
@@ -218,12 +259,25 @@ def _get_metadata(
         return {}
 
     metadata_ids = [metadata[0] for metadata in result]
-    metadata = {}
+    metadata: dict[str, StatisticMetaData] = {}
     for _id in metadata_ids:
         meta = _meta(result, _id)
         if meta:
             metadata[_id] = meta
     return metadata
+
+
+def get_metadata(
+    hass: HomeAssistant,
+    statistic_id: str,
+) -> StatisticMetaData | None:
+    """Return metadata for a statistic_id."""
+    statistic_ids = [statistic_id]
+    with session_scope(hass=hass) as session:
+        metadata_ids = _get_metadata_ids(hass, session, [statistic_id])
+        if not metadata_ids:
+            return None
+        return _get_metadata(hass, session, statistic_ids, None).get(metadata_ids[0])
 
 
 def _configured_unit(unit: str, units: UnitSystem) -> str:
@@ -241,7 +295,7 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
 
 def list_statistic_ids(
     hass: HomeAssistant, statistic_type: str | None = None
-) -> list[dict[str, str] | None]:
+) -> list[StatisticMetaData | None]:
     """Return statistic_ids and meta data."""
     units = hass.config.units
     statistic_ids = {}
@@ -249,7 +303,9 @@ def list_statistic_ids(
         metadata = _get_metadata(hass, session, None, statistic_type)
 
         for meta in metadata.values():
-            unit = _configured_unit(meta["unit_of_measurement"], units)
+            unit = meta["unit_of_measurement"]
+            if unit is not None:
+                unit = _configured_unit(unit, units)
             meta["unit_of_measurement"] = unit
 
         statistic_ids = {
@@ -263,7 +319,8 @@ def list_statistic_ids(
         platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
 
         for statistic_id, unit in platform_statistic_ids.items():
-            unit = _configured_unit(unit, units)
+            if unit is not None:
+                unit = _configured_unit(unit, units)
             platform_statistic_ids[statistic_id] = unit
 
         statistic_ids = {**statistic_ids, **platform_statistic_ids}
@@ -353,7 +410,7 @@ def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     stats: list,
     statistic_ids: list[str] | None,
-    metadata: dict[str, dict[str, str]],
+    metadata: dict[str, StatisticMetaData],
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
@@ -382,6 +439,7 @@ def _sorted_statistics_to_dict(
                 "mean": convert(db_state.mean, units),
                 "min": convert(db_state.min, units),
                 "max": convert(db_state.max, units),
+                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
                 "state": convert(db_state.state, units),
                 "sum": convert(db_state.sum, units),
             }

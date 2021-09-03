@@ -35,13 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    TEST_ENTITY_NAME,
-    TEST_MODBUS_HOST,
-    TEST_PORT_TCP,
-    ReadResult,
-    base_test,
-)
+from .conftest import TEST_ENTITY_NAME, TEST_MODBUS_HOST, TEST_PORT_TCP, ReadResult
 
 ENTITY_ID = f"{FAN_DOMAIN}.{TEST_ENTITY_NAME}"
 
@@ -137,58 +131,69 @@ async def test_config_fan(hass, mock_modbus):
     assert FAN_DOMAIN in hass.config.components
 
 
-@pytest.mark.parametrize("call_type", [CALL_TYPE_COIL, CALL_TYPE_REGISTER_HOLDING])
 @pytest.mark.parametrize(
-    "regs,verify,expected",
+    "do_config",
+    [
+        {
+            CONF_FANS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                },
+            ],
+        },
+        {
+            CONF_FANS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_SLAVE: 1,
+                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "register_words,do_exception,config_addon,expected",
     [
         (
             [0x00],
+            False,
             {CONF_VERIFY: {}},
             STATE_OFF,
         ),
         (
             [0x01],
+            False,
             {CONF_VERIFY: {}},
             STATE_ON,
         ),
         (
             [0xFE],
+            False,
             {CONF_VERIFY: {}},
             STATE_OFF,
         ),
         (
-            None,
+            [0x00],
+            True,
             {CONF_VERIFY: {}},
             STATE_UNAVAILABLE,
         ),
         (
+            [0x00],
+            True,
             None,
-            {},
             STATE_OFF,
         ),
     ],
 )
-async def test_all_fan(hass, call_type, regs, verify, expected):
+async def test_all_fan(hass, mock_do_cycle, expected):
     """Run test for given config."""
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: TEST_ENTITY_NAME,
-            CONF_ADDRESS: 1234,
-            CONF_SLAVE: 1,
-            CONF_WRITE_TYPE: call_type,
-            **verify,
-        },
-        TEST_ENTITY_NAME,
-        FAN_DOMAIN,
-        CONF_FANS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(

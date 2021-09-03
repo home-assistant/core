@@ -1,5 +1,5 @@
 """Test the Network Configuration."""
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import ifaddr
 
@@ -15,6 +15,18 @@ from homeassistant.setup import async_setup_component
 
 _NO_LOOPBACK_IPADDR = "192.168.1.5"
 _LOOPBACK_IPADDR = "127.0.0.1"
+
+
+def _mock_socket(sockname):
+    mock_socket = MagicMock()
+    mock_socket.getsockname = Mock(return_value=sockname)
+    return mock_socket
+
+
+def _mock_socket_exception(exc):
+    mock_socket = MagicMock()
+    mock_socket.getsockname = Mock(side_effect=exc)
+    return mock_socket
 
 
 def _generate_mock_adapters():
@@ -40,8 +52,8 @@ def _generate_mock_adapters():
 async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_storage):
     """Test without default interface config and the route returns a non-loopback address."""
     with patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=[_NO_LOOPBACK_IPADDR],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -102,8 +114,8 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, hass_sto
 async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage):
     """Test without default interface config and the route returns a loopback address."""
     with patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=[_LOOPBACK_IPADDR],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([_LOOPBACK_IPADDR]),
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -163,8 +175,8 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, hass_storage
 async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
     """Test without default interface config and the route returns nothing."""
     with patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=[],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([]),
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -224,8 +236,8 @@ async def test_async_detect_interfaces_setting_empty_route(hass, hass_storage):
 async def test_async_detect_interfaces_setting_exception(hass, hass_storage):
     """Test without default interface config and the route throws an exception."""
     with patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        side_effect=AttributeError,
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket_exception(AttributeError),
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -290,8 +302,8 @@ async def test_interfaces_configured_from_storage(hass, hass_storage):
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
     }
     with patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=[_NO_LOOPBACK_IPADDR],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -359,8 +371,8 @@ async def test_interfaces_configured_from_storage_websocket_update(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
     }
     with patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=[_NO_LOOPBACK_IPADDR],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
     ), patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
@@ -491,8 +503,8 @@ async def test_async_get_source_ip_matching_interface(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ), patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=["192.168.1.5"],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket(["192.168.1.5"]),
     ):
         assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -512,8 +524,8 @@ async def test_async_get_source_ip_interface_not_match(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ), patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=["192.168.1.5"],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket(["192.168.1.5"]),
     ):
         assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -533,8 +545,8 @@ async def test_async_get_source_ip_cannot_determine_target(hass, hass_storage):
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=_generate_mock_adapters(),
     ), patch(
-        "homeassistant.components.network.util.socket.socket.getsockname",
-        return_value=[None],
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([None]),
     ):
         assert await async_setup_component(hass, network.DOMAIN, {network.DOMAIN: {}})
         await hass.async_block_till_done()
