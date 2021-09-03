@@ -39,7 +39,7 @@ async def test_restore_state(hass):
         hass,
         [
             State(
-                "utility_meter.energy_bill",
+                "select.energy_bill",
                 "midpeak",
             ),
         ],
@@ -50,7 +50,7 @@ async def test_restore_state(hass):
     await hass.async_block_till_done()
 
     # restore from cache
-    state = hass.states.get("utility_meter.energy_bill")
+    state = hass.states.get("select.energy_bill")
     assert state.state == "midpeak"
 
 
@@ -94,7 +94,7 @@ async def test_services(hass):
     assert state.state == "0"
 
     # Next tariff
-    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill"}
+    data = {ATTR_ENTITY_ID: "select.energy_bill"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_NEXT_TARIFF, data)
     await hass.async_block_till_done()
 
@@ -115,14 +115,14 @@ async def test_services(hass):
     assert state.state == "1"
 
     # Change tariff
-    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill", ATTR_TARIFF: "wrong_tariff"}
+    data = {ATTR_ENTITY_ID: "select.energy_bill", ATTR_TARIFF: "wrong_tariff"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
-    assert hass.states.get("utility_meter.energy_bill").state != "wrong_tariff"
+    assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
-    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill", ATTR_TARIFF: "peak"}
+    data = {ATTR_ENTITY_ID: "select.energy_bill", ATTR_TARIFF: "peak"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
     await hass.async_block_till_done()
 
@@ -143,7 +143,7 @@ async def test_services(hass):
     assert state.state == "1"
 
     # Reset meters
-    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill"}
+    data = {ATTR_ENTITY_ID: "select.energy_bill"}
     await hass.services.async_call(DOMAIN, SERVICE_RESET, data)
     await hass.async_block_till_done()
 
