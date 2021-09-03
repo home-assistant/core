@@ -365,6 +365,7 @@ homeassistant/components/ondilo_ico/* @JeromeHXP
 homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
 homeassistant/components/openerz/* @misialq
+homeassistant/components/openevse/* @firstof9
 homeassistant/components/opengarage/* @danielhiversen
 homeassistant/components/openhome/* @bazwilliams
 homeassistant/components/opentherm_gw/* @mvn23
