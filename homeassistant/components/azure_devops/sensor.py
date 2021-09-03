@@ -14,6 +14,7 @@ from homeassistant.components.azure_devops.const import CONF_ORG, DOMAIN
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -30,11 +31,10 @@ class AzureDevOpsSensorEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    _, builds = coordinator.data
+    coordinator, project = hass.data[DOMAIN][entry.entry_id]
 
     sensors = [
         AzureDevOpsSensor(
@@ -59,16 +59,17 @@ async def async_setup_entry(
                 },
                 build_key=key,
                 organization=entry.data[CONF_ORG],
+                project=project,
                 value=lambda build: build.build_number,
             ),
         )
-        for key, build in enumerate(builds)
+        for key, build in enumerate(coordinator.data)
     ]
 
     async_add_entities(sensors, True)
 
 
-class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
+class AzureDevOpsSensor(SensorEntity, AzureDevOpsDeviceEntity):
     """Define a Azure DevOps sensor."""
 
     def __init__(
@@ -77,23 +78,20 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
         description: AzureDevOpsSensorEntityDescription,
     ) -> None:
         """Initialize Azure DevOps sensor."""
-        self._attr_unique_id = "_".join([description.organization, description.key])
-        self.entity_description: AzureDevOpsSensorEntityDescription = description
         super().__init__(
             coordinator,
             description,
         )
+        self.entity_description: AzureDevOpsSensorEntityDescription = description
 
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        _, builds = self.coordinator.data
-        build: DevOpsBuild = builds[self.entity_description.build_key]
+        build: DevOpsBuild = self.coordinator.data[self.entity_description.build_key]
         return self.entity_description.value(build)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        _, builds = self.coordinator.data
-        build: DevOpsBuild = builds[self.entity_description.build_key]
+        build: DevOpsBuild = self.coordinator.data[self.entity_description.build_key]
         return self.entity_description.attrs(build)

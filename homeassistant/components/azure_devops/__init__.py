@@ -1,7 +1,6 @@
 """Support for Azure DevOps."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -36,6 +35,7 @@ class AzureDevOpsEntityDescription(EntityDescription):
     """Class describing Azure DevOps entities."""
 
     organization: str = ""
+    project: DevOpsProject = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -49,22 +49,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Could not authorize with Azure DevOps. You will need to update your token"
             )
 
-    async def async_update_data() -> tuple[DevOpsProject, list[DevOpsBuild]]:
+    project = await client.get_project(
+        entry.data[CONF_ORG],
+        entry.data[CONF_PROJECT],
+    )
+
+    async def async_update_data() -> list[DevOpsBuild]:
         """Fetch data from Azure DevOps."""
 
         try:
-            project, builds = await asyncio.gather(
-                client.get_project(
-                    entry.data[CONF_ORG],
-                    entry.data[CONF_PROJECT],
-                ),
-                client.get_builds(
-                    entry.data[CONF_ORG],
-                    entry.data[CONF_PROJECT],
-                    BUILDS_QUERY,
-                ),
+            return await client.get_builds(
+                entry.data[CONF_ORG],
+                entry.data[CONF_PROJECT],
+                BUILDS_QUERY,
             )
-            return project, builds
         except (aiohttp.ClientError, aiohttp.ClientError) as exception:
             raise UpdateFailed from exception
 
@@ -79,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator, project
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
@@ -107,9 +105,11 @@ class AzureDevOpsEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
-        project, _ = coordinator.data
-        self.project = project.name
-        self.organization = description.organization
+        self._attr_unique_id: str = "_".join(
+            [description.organization, description.key]
+        )
+        self._organization: str = description.organization
+        self._project_name: str = description.project.name
 
 
 class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
@@ -122,11 +122,11 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
             "identifiers": {
                 (  # type: ignore
                     DOMAIN,
-                    self.organization,
-                    self.project,
+                    self._organization,
+                    self._project_name,
                 )
             },
-            "manufacturer": self.organization,
-            "name": self.project,
+            "manufacturer": self._organization,
+            "name": self._project_name,
             "entry_type": "service",
         }
