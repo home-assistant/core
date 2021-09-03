@@ -6,7 +6,6 @@ https://home-assistant.io/integrations/zha/
 """
 from __future__ import annotations
 
-import asyncio
 from collections import namedtuple
 from typing import Any
 
@@ -284,71 +283,6 @@ class ThermostatChannel(ZigbeeChannel):
                 )
 
             chunk, attrs = attrs[:4], attrs[4:]
-
-    async def configure_reporting(self):
-        """Configure attribute reporting for a cluster.
-
-        This also swallows DeliveryError exceptions that are thrown when
-        devices are unreachable.
-        """
-        kwargs = {}
-        if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
-            kwargs["manufacturer"] = self._ch_pool.manufacturer_code
-
-        chunk, rest = self._report_config[:4], self._report_config[4:]
-        while chunk:
-            attrs = {record["attr"]: record["config"] for record in chunk}
-            try:
-                res = await self.cluster.configure_reporting_multiple(attrs, **kwargs)
-                self._configure_reporting_status(attrs, res[0])
-            except (ZigbeeException, asyncio.TimeoutError) as ex:
-                self.debug(
-                    "failed to set reporting on '%s' cluster for: %s",
-                    self.cluster.ep_attribute,
-                    str(ex),
-                )
-                break
-            chunk, rest = rest[:4], rest[4:]
-
-    def _configure_reporting_status(
-        self, attrs: dict[int | str, tuple], res: list | tuple
-    ) -> None:
-        """Parse configure reporting result."""
-        if not isinstance(res, list):
-            # assume default response
-            self.debug(
-                "attr reporting for '%s' on '%s': %s",
-                attrs,
-                self.name,
-                res,
-            )
-            return
-        if res[0].status == Status.SUCCESS and len(res) == 1:
-            self.debug(
-                "Successfully configured reporting for '%s' on '%s' cluster: %s",
-                attrs,
-                self.name,
-                res,
-            )
-            return
-
-        failed = [
-            self.cluster.attributes.get(r.attrid, [r.attrid])[0]
-            for r in res
-            if r.status != Status.SUCCESS
-        ]
-        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
-        self.debug(
-            "Successfully configured reporting for '%s' on '%s' cluster",
-            attrs - set(failed),
-            self.name,
-        )
-        self.debug(
-            "Failed to configure reporting for '%s' on '%s' cluster: %s",
-            failed,
-            self.name,
-            res,
-        )
 
     @retryable_req(delays=(1, 1, 3))
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:

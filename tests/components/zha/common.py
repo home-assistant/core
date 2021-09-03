@@ -99,6 +99,9 @@ def patch_cluster(cluster):
             [zcl_f.ConfigureReportingResponseRecord(zcl_f.Status.SUCCESS, 0x00, 0xAABB)]
         ]
     )
+    cluster.configure_reporting_multiple = AsyncMock(
+        return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
+    )
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
     cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
