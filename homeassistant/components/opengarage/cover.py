@@ -93,7 +93,8 @@ class OpenGarageCover(CoverEntity):
         self._state = None
         self._state_before_move = None
         self._extra_state_attributes = {}
-        self._attr_unique_id = device_id
+        self._device_id = device_id
+        self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
     def extra_state_attributes(self):
@@ -185,7 +186,7 @@ class OpenGarageCover(CoverEntity):
     def device_info(self):
         """Return the device_info of the device."""
         device_info = {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._device_id)},
             "name": self.name,
             "manufacturer": "Open Garage",
         }
