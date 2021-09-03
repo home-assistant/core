@@ -28,21 +28,18 @@ PARALLEL_UPDATES = 1
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_AQI,
-        device_class=None,
         icon="mdi:blur",
         name=ATTR_API_AQI,
         native_unit_of_measurement="aqi",
     ),
     SensorEntityDescription(
         key=ATTR_API_PM25,
-        device_class=None,
         icon="mdi:blur",
         name=ATTR_API_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
         key=ATTR_API_O3,
-        device_class=None,
         icon="mdi:blur",
         name=ATTR_API_O3,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
