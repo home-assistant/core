@@ -58,7 +58,6 @@ from .const import (
 )
 
 PERIOD2CRON = {
-    None: None,
     QUARTER_HOURLY: "{minute}/15 * * * *",
     HOURLY: "{minute} * * * *",
     DAILY: "{minute} {hour} * * *",
