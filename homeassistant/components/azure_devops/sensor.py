@@ -69,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AzureDevOpsSensor(SensorEntity, AzureDevOpsDeviceEntity):
+class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     """Define a Azure DevOps sensor."""
 
     def __init__(

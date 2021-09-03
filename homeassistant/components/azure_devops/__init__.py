@@ -98,6 +98,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AzureDevOpsEntity(CoordinatorEntity):
     """Defines a base Azure DevOps entity."""
 
+    entity_description: AzureDevOpsEntityDescription
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -105,6 +107,7 @@ class AzureDevOpsEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._attr_unique_id: str = "_".join(
             [description.organization, description.key]
         )
