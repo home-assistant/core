@@ -1,16 +1,26 @@
 """Support for Luftdaten stations."""
+from __future__ import annotations
+
 import logging
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenError
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -20,7 +30,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .config_flow import configured_sensors, duplicate_stations
-from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN, SENSOR_KEYS
+from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +41,57 @@ DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
 PLATFORMS = ["sensor"]
 
+SENSOR_HUMIDITY = "humidity"
+SENSOR_PM10 = "P1"
+SENSOR_PM2_5 = "P2"
+SENSOR_PRESSURE = "pressure"
+SENSOR_PRESSURE_AT_SEALEVEL = "pressure_at_sealevel"
+SENSOR_TEMPERATURE = "temperature"
+
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_HUMIDITY,
+        name="Humidity",
+        icon="mdi:water-percent",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PRESSURE,
+        name="Pressure",
+        icon="mdi:arrow-down-bold",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PRESSURE_AT_SEALEVEL,
+        name="Pressure at sealevel",
+        icon="mdi:download",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PM10,
+        name="PM10",
+        icon="mdi:thought-bubble",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PM2_5,
+        name="PM2.5",
+        icon="mdi:thought-bubble-outline",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SENSOR_SCHEMA = vol.Schema(
     {

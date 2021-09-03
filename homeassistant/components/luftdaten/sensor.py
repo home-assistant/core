@@ -14,9 +14,10 @@ from . import (
     DATA_LUFTDATEN_CLIENT,
     DEFAULT_ATTRIBUTION,
     DOMAIN,
+    SENSOR_TYPES,
     TOPIC_UPDATE,
 )
-from .const import ATTR_SENSOR_ID, SENSOR_TYPES
+from .const import ATTR_SENSOR_ID
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
