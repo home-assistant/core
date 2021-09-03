@@ -1,6 +1,6 @@
 """TOLO Sauna climate controls (main sauna control)."""
 
-from typing import Any, Callable, List, Optional
+from typing import Any, List, Optional
 
 from tololib.const import Calefaction
 
@@ -24,7 +24,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToloSaunaCoordinatorEntity
 from .const import (
@@ -39,7 +39,7 @@ from .const import (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
@@ -53,7 +53,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID."""
-        return "%s_climate" % self._config_entry.entry_id
+        return f"{self._config_entry.entry_id}_climate"
 
     @property
     def name(self) -> str:

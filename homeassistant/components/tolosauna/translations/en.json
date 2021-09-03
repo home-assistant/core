@@ -1,12 +1,21 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "no_devices_found": "No devices found on the network"
         },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Do you want to start set up?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Enter the hostname or IP address of your TOLO Sauna device."
             }
         }
     }

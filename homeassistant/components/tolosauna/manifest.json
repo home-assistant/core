@@ -6,7 +6,6 @@
   "requirements": [
     "tololib==0.1.0a6"
   ],
-  "dependencies": [],
   "codeowners": [
     "@MatthiasLohr"
   ],
