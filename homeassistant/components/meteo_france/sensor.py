@@ -28,7 +28,6 @@ from .const import (
     SENSOR_TYPES_ALERT,
     SENSOR_TYPES_PROBABILITY,
     SENSOR_TYPES_RAIN,
-    MeteoFranceNoDataPathSensorEntityDescription,
     MeteoFranceSensorEntityDescription,
 )
 
@@ -128,8 +127,6 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
 class MeteoFranceRainSensor(MeteoFranceSensor):
     """Representation of a Meteo-France rain sensor."""
 
-    entity_description: MeteoFranceNoDataPathSensorEntityDescription
-
     @property
     def native_value(self):
         """Return the state."""
@@ -161,12 +158,10 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
 
-    entity_description: MeteoFranceNoDataPathSensorEntityDescription
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        description: MeteoFranceNoDataPathSensorEntityDescription,
+        description: MeteoFranceSensorEntityDescription,
     ) -> None:
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator, description)

@@ -66,13 +66,6 @@ class MeteoFranceSensorEntityDescription(
     """Describes Meteo-France sensor entity."""
 
 
-@dataclass
-class MeteoFranceNoDataPathSensorEntityDescription(MeteoFranceSensorEntityDescription):
-    """Describes Meteo-France sensor entity without api data_path."""
-
-    data_path: None = None
-
-
 SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="pressure",
@@ -141,19 +134,21 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_TYPES_RAIN: tuple[MeteoFranceNoDataPathSensorEntityDescription, ...] = (
-    MeteoFranceNoDataPathSensorEntityDescription(
+SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (
+    MeteoFranceSensorEntityDescription(
         key="next_rain",
         name="Next rain",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        data_path="",
     ),
 )
 
-SENSOR_TYPES_ALERT: tuple[MeteoFranceNoDataPathSensorEntityDescription, ...] = (
-    MeteoFranceNoDataPathSensorEntityDescription(
+SENSOR_TYPES_ALERT: tuple[MeteoFranceSensorEntityDescription, ...] = (
+    MeteoFranceSensorEntityDescription(
         key="weather_alert",
         name="Weather alert",
         icon="mdi:weather-cloudy-alert",
+        data_path="",
     ),
 )
 
