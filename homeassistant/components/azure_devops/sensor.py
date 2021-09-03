@@ -16,17 +16,24 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+
+@dataclass
+class AzureDevOpsSensorEntityDescriptionMixin:
+    """Mixin class for required Azure DevOps sensor description keys."""
+
+    build_key: int
 
 
 @dataclass
 class AzureDevOpsSensorEntityDescription(
-    AzureDevOpsEntityDescription, SensorEntityDescription
+    AzureDevOpsEntityDescription,
+    SensorEntityDescription,
+    AzureDevOpsSensorEntityDescriptionMixin,
 ):
     """Class describing Azure DevOps sensor entities."""
 
     attrs: Callable[[DevOpsBuild], Any] = round
-    build_key: int | None = None
     value: Callable[[DevOpsBuild], StateType] = round
 
 
@@ -72,17 +79,7 @@ async def async_setup_entry(
 class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     """Define a Azure DevOps sensor."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        description: AzureDevOpsSensorEntityDescription,
-    ) -> None:
-        """Initialize Azure DevOps sensor."""
-        super().__init__(
-            coordinator,
-            description,
-        )
-        self.entity_description: AzureDevOpsSensorEntityDescription = description
+    entity_description: AzureDevOpsSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
