@@ -4,14 +4,11 @@ from unittest.mock import MagicMock, patch
 import httpx
 
 from homeassistant import config_entries, setup
-from homeassistant.components.enphase_envoy.const import DOMAIN, DEFAULT_SCAN_INTERVAL
+from homeassistant.components.enphase_envoy.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-from homeassistant.const import (
-    CONF_SCAN_INTERVAL,
-)
 
 
 async def test_form(hass: HomeAssistant) -> None:
