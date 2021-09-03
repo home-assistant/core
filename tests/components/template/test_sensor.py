@@ -1038,6 +1038,7 @@ async def test_trigger_entity(hass):
                             "unique_id": "via_list-id",
                             "device_class": "battery",
                             "unit_of_measurement": "%",
+                            "availability": "{{ True }}",
                             "state": "{{ trigger.event.data.beer + 1 }}",
                             "picture": "{{ '/local/dogs.png' }}",
                             "icon": "{{ 'mdi:pirate' }}",
@@ -1197,3 +1198,44 @@ async def test_config_top_level(hass):
     assert state.state == "5"
     assert state.attributes["device_class"] == "battery"
     assert state.attributes["state_class"] == "measurement"
+
+
+async def test_trigger_entity_available(hass):
+    """Test trigger entity availability works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Maybe Available",
+                            "availability": "{{ trigger and trigger.event.data.beer == 2 }}",
+                            "state": "{{ trigger.event.data.beer }}",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # Sensors are unknown if never triggered
+    state = hass.states.get("sensor.maybe_available")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.maybe_available")
+    assert state.state == "2"
+
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.maybe_available")
+    assert state.state == "unavailable"
