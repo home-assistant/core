@@ -37,9 +37,9 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.coordinator = coordinator
         self._entry_id = entry_id
         self._attrs: dict[str, Any] = {}
-        id = self.coordinator.data.iata
-        self._attr_name = f"{id} {description.name}"
-        self._attr_unique_id = f"{id}_{description.key}"
+        _id = coordinator.data.iata
+        self._attr_name = f"{_id} {description.name}"
+        self._attr_unique_id = f"{_id}_{description.key}"
 
     @property
     def is_on(self):
