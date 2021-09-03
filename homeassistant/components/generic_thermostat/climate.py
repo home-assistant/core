@@ -184,6 +184,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._temp_lock = asyncio.Lock()
         self._min_temp = min_temp
         self._max_temp = max_temp
+        self._attr_preset_mode = PRESET_NONE
         self._target_temp = target_temp
         self._unit = unit
         self._unique_id = unique_id
@@ -191,7 +192,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if away_temp:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
         self._away_temp = away_temp
-        self._is_away = False
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -249,8 +249,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                 else:
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
-            if old_state.attributes.get(ATTR_PRESET_MODE) == PRESET_AWAY:
-                self._is_away = True
+            if old_state.attributes.get(ATTR_PRESET_MODE) in SUPPORTED_PRESETS:
+                self._attr_preset_mode = old_state.attributes.get(ATTR_PRESET_MODE)
             if not self._hvac_mode and old_state.state:
                 self._hvac_mode = old_state.state
 
@@ -346,14 +346,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         return self._hvac_list
 
     @property
-    def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._is_away else PRESET_NONE
-
-    @property
     def preset_modes(self):
         """Return a list of available preset modes or PRESET_NONE if _away_temp is undefined."""
-        return [PRESET_NONE, PRESET_AWAY] if self._away_temp else PRESET_NONE
+        return SUPPORTED_PRESETS if self._away_temp else PRESET_NONE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
@@ -523,16 +518,17 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""
-        preset_mode = preset_mode.lower()
         if preset_mode not in SUPPORTED_PRESETS:
-            raise ValueError(f"Got unsupported preset_mode {preset_mode}")
-        if preset_mode == PRESET_AWAY and not self._is_away:
-            self._is_away = True
+            raise ValueError(
+                f"Got unsupported preset_mode {preset_mode}. Must be one of {SUPPORTED_PRESETS}"
+            )
+        if preset_mode == PRESET_AWAY and preset_mode != self._attr_preset_mode:
+            self._attr_preset_mode = PRESET_AWAY
             self._saved_target_temp = self._target_temp
             self._target_temp = self._away_temp
             await self._async_control_heating(force=True)
-        elif preset_mode == PRESET_NONE and self._is_away:
-            self._is_away = False
+        elif preset_mode == PRESET_NONE and preset_mode != self._attr_preset_mode:
+            self._attr_preset_mode = PRESET_NONE
             self._target_temp = self._saved_target_temp
             await self._async_control_heating(force=True)
 
