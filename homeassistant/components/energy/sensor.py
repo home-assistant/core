@@ -6,7 +6,6 @@ import logging
 from typing import Any, Final, Literal, TypeVar, cast
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import statistics
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
@@ -23,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import DOMAIN
@@ -185,7 +185,7 @@ class SensorManager:
         to_add.append(self.current_entities[key])
 
 
-class EnergyCostSensor(SensorEntity):
+class EnergyCostSensor(RestoreEntity, SensorEntity):
     """Calculate costs incurred by consuming energy.
 
     This is intended as a fallback for when no specific cost sensor is available for the
@@ -341,8 +341,10 @@ class EnergyCostSensor(SensorEntity):
 
         self._attr_name = f"{name} {self._adapter.name_suffix}"
 
-        if metadata := statistics.get_metadata(self.hass, self.entity_id):
-            self._currency = metadata["unit_of_measurement"]
+        last_state = await self.async_get_last_state()
+        if last_state:
+            if ATTR_UNIT_OF_MEASUREMENT in last_state.attributes:
+                self._currency = last_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
 
         self._update_cost()
 
