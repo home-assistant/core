@@ -49,9 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Could not authorize with Azure DevOps. You will need to update your token"
             )
 
-    async def async_update_data() -> tuple[
-        DevOpsClient, DevOpsProject, list[DevOpsBuild]
-    ]:
+    async def async_update_data() -> tuple[DevOpsProject, list[DevOpsBuild]]:
         """Fetch data from Azure DevOps."""
 
         try:
@@ -66,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     BUILDS_QUERY,
                 ),
             )
-            return client, project, builds
+            return project, builds
         except (aiohttp.ClientError, aiohttp.ClientError) as exception:
             raise UpdateFailed from exception
 
@@ -109,7 +107,7 @@ class AzureDevOpsEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Azure DevOps entity."""
         super().__init__(coordinator)
-        _, project, _ = coordinator.data
+        project, _ = coordinator.data
         self.project = project.name
         self.organization = description.organization
 

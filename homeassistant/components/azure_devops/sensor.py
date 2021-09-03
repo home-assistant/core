@@ -34,7 +34,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    _, _, builds = coordinator.data
+    _, builds = coordinator.data
 
     sensors = [
         AzureDevOpsSensor(
@@ -87,13 +87,13 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state."""
-        _, _, builds = self.coordinator.data
+        _, builds = self.coordinator.data
         build: DevOpsBuild = builds[self.entity_description.build_key]
         return self.entity_description.value(build)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
-        _, _, builds = self.coordinator.data
+        _, builds = self.coordinator.data
         build: DevOpsBuild = builds[self.entity_description.build_key]
         return self.entity_description.attrs(build)
