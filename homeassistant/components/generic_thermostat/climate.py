@@ -68,8 +68,6 @@ CONF_AWAY_TEMP = "away_temp"
 CONF_PRECISION = "precision"
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
-SUPPORTED_PRESETS = {PRESET_AWAY, PRESET_NONE}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HEATER): cv.entity_id,
@@ -191,6 +189,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._support_flags = SUPPORT_FLAGS
         if away_temp:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
+            self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY]
+        else:
+            self._attr_preset_modes = [PRESET_NONE]
         self._away_temp = away_temp
 
     async def async_added_to_hass(self):
@@ -249,7 +250,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                 else:
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
-            if old_state.attributes.get(ATTR_PRESET_MODE) in SUPPORTED_PRESETS:
+            if old_state.attributes.get(ATTR_PRESET_MODE) in self._attr_preset_modes:
                 self._attr_preset_mode = old_state.attributes.get(ATTR_PRESET_MODE)
             if not self._hvac_mode and old_state.state:
                 self._hvac_mode = old_state.state
@@ -344,11 +345,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     def hvac_modes(self):
         """List of available operation modes."""
         return self._hvac_list
-
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes or PRESET_NONE if _away_temp is undefined."""
-        return SUPPORTED_PRESETS if self._away_temp else PRESET_NONE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
@@ -518,16 +514,19 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode."""
-        if preset_mode not in SUPPORTED_PRESETS:
+        if preset_mode not in (self._attr_preset_modes or []):
             raise ValueError(
-                f"Got unsupported preset_mode {preset_mode}. Must be one of {SUPPORTED_PRESETS}"
+                f"Got unsupported preset_mode {preset_mode}. Must be one of {self._attr_preset_modes}"
             )
-        if preset_mode == PRESET_AWAY and preset_mode != self._attr_preset_mode:
+        if preset_mode == self._attr_preset_mode:
+            # I don't think we need to call async_write_ha_state if we didn't change the state
+            return
+        if preset_mode == PRESET_AWAY:
             self._attr_preset_mode = PRESET_AWAY
             self._saved_target_temp = self._target_temp
             self._target_temp = self._away_temp
             await self._async_control_heating(force=True)
-        elif preset_mode == PRESET_NONE and preset_mode != self._attr_preset_mode:
+        elif preset_mode == PRESET_NONE:
             self._attr_preset_mode = PRESET_NONE
             self._target_temp = self._saved_target_temp
             await self._async_control_heating(force=True)
