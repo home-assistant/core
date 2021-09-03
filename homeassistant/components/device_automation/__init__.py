@@ -6,7 +6,7 @@ from collections.abc import Iterable, Mapping
 from functools import wraps
 import logging
 from types import ModuleType
-from typing import Any
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -36,19 +36,31 @@ DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+
+class DeviceAutomationDetails(NamedTuple):
+    """Details for device automation."""
+
+    platform_name: str
+    get_automations_func: str
+    get_capabilities_func: str
+
+
 TYPES = {
-    # platform name, get automations function, get capabilities function
-    "trigger": (
+    "trigger": DeviceAutomationDetails(
         "device_trigger",
         "async_get_triggers",
         "async_get_trigger_capabilities",
     ),
-    "condition": (
+    "condition": DeviceAutomationDetails(
         "device_condition",
         "async_get_conditions",
         "async_get_condition_capabilities",
     ),
-    "action": ("device_action", "async_get_actions", "async_get_action_capabilities"),
+    "action": DeviceAutomationDetails(
+        "device_action",
+        "async_get_actions",
+        "async_get_action_capabilities",
+    ),
 }
 
 
@@ -92,7 +104,7 @@ async def async_get_device_automation_platform(
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    platform_name = TYPES[automation_type][0]
+    platform_name = TYPES[automation_type].platform_name
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
         platform = integration.get_platform(platform_name)
@@ -119,7 +131,7 @@ async def _async_get_device_automations_from_domain(
     except InvalidDeviceAutomationConfig:
         return {}
 
-    function_name = TYPES[automation_type][1]
+    function_name = TYPES[automation_type].get_automations_func
 
     return await asyncio.gather(
         *(
@@ -196,7 +208,7 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
     except InvalidDeviceAutomationConfig:
         return {}
 
-    function_name = TYPES[automation_type][2]
+    function_name = TYPES[automation_type].get_capabilities_func
 
     if not hasattr(platform, function_name):
         # The device automation has no capabilities
