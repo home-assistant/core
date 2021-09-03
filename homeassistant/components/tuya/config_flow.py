@@ -65,7 +65,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Init tuya config flow."""
         super().__init__()
         self.conf_project_type = None
-        self.project_type = ProjectType.SMART_HOME
 
     @staticmethod
     def _try_login(user_input):
@@ -105,14 +104,13 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self.conf_project_type = user_input[CONF_PROJECT_TYPE]
-        self.project_type = ProjectType(self.conf_project_type)
 
-        return await self.async_step_login(user_input)
+        return await self.async_step_login()
 
     async def async_step_login(self, user_input=None):
         """Step login."""
         errors = {}
-        if CONF_USERNAME in user_input:
+        if user_input is not None:
             if self.conf_project_type is not None:
                 user_input[CONF_PROJECT_TYPE] = self.conf_project_type
 
@@ -128,7 +126,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 errors["base"] = RESULT_AUTH_FAILED
 
-        if self.project_type == ProjectType.SMART_HOME:
+        if ProjectType(self.conf_project_type) == ProjectType.SMART_HOME:
             return self.async_show_form(
                 step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
             )

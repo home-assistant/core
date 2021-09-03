@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import Entity
 
 from .base import TuyaHaEntity
 from .const import (
@@ -73,9 +74,7 @@ async def async_setup_entry(
         _LOGGER.debug("switch add-> %s", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(
-            _setup_entities, hass, entry, dev_ids
-        )
+        entities = _setup_entities(hass, entry, dev_ids)
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -92,7 +91,7 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass, entry: ConfigEntry, device_ids: list):
+def _setup_entities(hass, entry: ConfigEntry, device_ids: list[str]) -> list[Entity]:
     """Set up Tuya Switch device."""
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
     entities = []
