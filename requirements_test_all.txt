@@ -1460,6 +1460,9 @@ surepy==0.7.2
 # homeassistant.components.system_bridge
 systembridge==2.3.1
 
+# homeassistant.components.ta_cmi
+ta-cmi==0.1.1
+
 # homeassistant.components.tailscale
 tailscale==0.2.0
 

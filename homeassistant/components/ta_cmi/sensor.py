@@ -1,6 +1,6 @@
 """C.M.I sensor platform."""
 import asyncio
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List
 
 from ta_cmi import (
     ApiError,
@@ -12,13 +12,21 @@ from ta_cmi import (
 )
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -40,20 +48,21 @@ from .const import (
     SCAN_INTERVAL,
 )
 
+API_VERSION: str = "api_version"
+DEVICE_TYPE: str = "device_type"
 
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities: Callable,
-    discovery_info: Optional[DiscoveryInfoType] = None,
-) -> None:
-    """Set up the C.M.I sensors."""
 
-    host: str = hass.data[DOMAIN][CONF_HOST]
-    username: str = hass.data[DOMAIN][CONF_USERNAME]
-    password: str = hass.data[DOMAIN][CONF_PASSWORD]
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
+    """Set up entries."""
+    config = hass.data[DOMAIN][config_entry.entry_id]
 
-    devices: Dict = hass.data[DOMAIN][CONF_DEVICES]
+    host: str = config[CONF_HOST]
+    username: str = config[CONF_USERNAME]
+    password: str = config[CONF_PASSWORD]
+
+    devices: Dict = config[CONF_DEVICES]
 
     async def async_update_data():
         """Fetch data from C.M.I."""
@@ -67,7 +76,12 @@ async def async_setup_platform(
 
                 fetchmode: str = dev[CONF_DEVICE_FETCH_MODE]
 
-                data[id] = {"I": {}, "O": {}}
+                data[id] = {
+                    "I": {},
+                    "O": {},
+                    API_VERSION: device.apiVersion,
+                    DEVICE_TYPE: device.getDeviceType(),
+                }
 
                 channelOptions: List = []
 
@@ -155,6 +169,8 @@ async def async_setup_platform(
 
     entities: List[DeviceChannel] = []
 
+    device_registry = dr.async_get(hass)
+
     for idx, ent in enumerate(coordinator.data):
         inputs: Dict = coordinator.data[ent]["I"]
         outputs: Dict = coordinator.data[ent]["O"]
@@ -164,6 +180,15 @@ async def async_setup_platform(
 
         for chID in outputs:
             entities.append(DeviceChannel(coordinator, ent, chID, "O"))
+
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, ent)},
+            manufacturer="Technische Alternative",
+            name=coordinator.data[ent][DEVICE_TYPE],
+            model=coordinator.data[ent][DEVICE_TYPE],
+            sw_version=coordinator.data[ent][API_VERSION],
+        )
 
     async_add_entities(entities)
 
@@ -184,6 +209,9 @@ class DeviceChannel(CoordinatorEntity, SensorEntity):
         self._inputType = inputType
         self._coordinator = coordinator
 
+        self._device_Name = None
+        self._device_Api_type = None
+
         self.parseUpdate()
 
     def parseUpdate(self):
@@ -200,6 +228,9 @@ class DeviceChannel(CoordinatorEntity, SensorEntity):
 
         self._value = ch.value
         self._unit = ch.getUnit()
+
+        self._device_Api_type = self._coordinator.data[self._nodeID][API_VERSION]
+        self._device_Name = self._coordinator.data[self._nodeID][DEVICE_TYPE]
 
         if ch.mode == ChannelMode.INPUT:
             self._mode = "Input"
@@ -248,6 +279,17 @@ class DeviceChannel(CoordinatorEntity, SensorEntity):
     def state_class(self) -> str:
         """Return the state class of the sensor."""
         return "measurement"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return {
+            ATTR_NAME: self._device_Name,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._nodeID)},
+            ATTR_MANUFACTURER: "Technische Alternative",
+            ATTR_MODEL: self._device_Name,
+            ATTR_SW_VERSION: self._device_Api_type,
+        }
 
     @property
     def device_class(self) -> str:
