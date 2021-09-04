@@ -24,6 +24,7 @@ from ..const import (
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
+    REPORT_CONFIG_ATTR_PER_REQ,
     SIGNAL_ATTR_UPDATED,
     ZHA_CHANNEL_MSG,
     ZHA_CHANNEL_MSG_BIND,
@@ -213,7 +214,10 @@ class ZigbeeChannel(LogMixin):
             }
 
         to_configure = [*self.REPORT_CONFIG]
-        chunk, rest = to_configure[:3], to_configure[3:]
+        chunk, rest = (
+            to_configure[:REPORT_CONFIG_ATTR_PER_REQ],
+            to_configure[REPORT_CONFIG_ATTR_PER_REQ:],
+        )
         while chunk:
             reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
@@ -229,7 +233,10 @@ class ZigbeeChannel(LogMixin):
                     str(ex),
                 )
                 break
-            chunk, rest = rest[:4], rest[4:]
+            chunk, rest = (
+                rest[:REPORT_CONFIG_ATTR_PER_REQ],
+                rest[REPORT_CONFIG_ATTR_PER_REQ:],
+            )
 
         async_dispatcher_send(
             self._ch_pool.hass,
