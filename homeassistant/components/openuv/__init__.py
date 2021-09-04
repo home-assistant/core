@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import MutableMapping
 from typing import Any
 
 from pyopenuv import Client
@@ -175,6 +176,8 @@ class OpenUV:
 
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""

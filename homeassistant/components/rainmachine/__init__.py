@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import MutableMapping
 from datetime import timedelta
 from functools import partial
 from typing import Any
@@ -176,6 +177,8 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 class RainMachineEntity(CoordinatorEntity):
     """Define a generic RainMachine entity."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(
         self,

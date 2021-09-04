@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
-from typing import Callable, cast
+from collections.abc import Awaitable, MutableMapping
+from typing import Any, Callable, cast
 from uuid import UUID
 
 from simplipy import get_api
@@ -409,6 +409,8 @@ class SimpliSafe:
 
 class SimpliSafeEntity(CoordinatorEntity):
     """Define a base SimpliSafe entity."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(
         self,

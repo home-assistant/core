@@ -1,7 +1,7 @@
 """The airvisual component."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from datetime import timedelta
 from math import ceil
 from typing import Any
@@ -358,6 +358,8 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, description: EntityDescription

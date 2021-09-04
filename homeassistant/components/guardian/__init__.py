@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
-from typing import cast
+from collections.abc import Awaitable, MutableMapping
+from typing import Any, cast
 
 from aioguardian import Client
 
@@ -212,6 +212,8 @@ class PairedSensorManager:
 
 class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(  # pylint: disable=super-init-not-called
         self, entry: ConfigEntry, description: EntityDescription

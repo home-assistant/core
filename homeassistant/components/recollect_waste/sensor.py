@@ -1,7 +1,9 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from datetime import date, datetime, time
+from typing import Any
 
 from aiorecollect.client import PickupType
 
@@ -65,6 +67,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""

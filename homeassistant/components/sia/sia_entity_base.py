@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import MutableMapping
 import logging
 from typing import Any
 
@@ -23,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class SIABaseEntity(RestoreEntity):
     """Base class for SIA entities."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(
         self,

@@ -1,7 +1,7 @@
 """Support for Tile device trackers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, MutableMapping
 import logging
 from typing import Any, Callable
 
@@ -82,6 +82,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     """Representation of a network infrastructure device."""
 
     _attr_icon = DEFAULT_ICON
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(
         self, entry: ConfigEntry, coordinator: DataUpdateCoordinator, tile: Tile

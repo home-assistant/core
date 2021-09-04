@@ -1,6 +1,9 @@
 """Base class for Netatmo entities."""
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from typing import Any
+
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -18,6 +21,8 @@ from .data_handler import PUBLICDATA_DATA_CLASS_NAME, NetatmoDataHandler
 
 class NetatmoBase(Entity):
     """Netatmo entity base class."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""

@@ -1,9 +1,10 @@
 """Support for Amcrest IP camera sensors."""
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from amcrest import AmcrestError
 
@@ -69,6 +70,8 @@ async def async_setup_platform(
 
 class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
+
+    _attr_extra_state_attributes: MutableMapping[str, Any]
 
     def __init__(
         self, name: str, device: AmcrestDevice, description: SensorEntityDescription
