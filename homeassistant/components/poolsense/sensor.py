@@ -22,19 +22,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         name="Chlorine",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="pH",
-        native_unit_of_measurement=None,
         icon="mdi:pool",
         name="pH",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="Battery",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
     ),
@@ -47,7 +43,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="Last Seen",
-        native_unit_of_measurement=None,
         icon="mdi:clock",
         name="Last Seen",
         device_class=DEVICE_CLASS_TIMESTAMP,
@@ -57,28 +52,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         name="Chlorine High",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="Chlorine Low",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         name="Chlorine Low",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="pH High",
-        native_unit_of_measurement=None,
         icon="mdi:pool",
         name="pH High",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="pH Low",
-        native_unit_of_measurement=None,
         icon="mdi:pool",
         name="pH Low",
-        device_class=None,
     ),
 )
 
