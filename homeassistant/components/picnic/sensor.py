@@ -42,7 +42,6 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
     entity_description: PicnicSensorEntityDescription
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -59,6 +58,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
 
         self._attr_name = self._to_capitalized_name(description.key)
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def native_value(self) -> StateType:

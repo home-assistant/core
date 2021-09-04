@@ -152,7 +152,6 @@ class SenseActiveSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_should_poll = False
     _attr_available = False
     _attr_state_class = STATE_CLASS_MEASUREMENT
@@ -175,6 +174,7 @@ class SenseActiveSensor(SensorEntity):
         self._sensor_type = sensor_type
         self._variant_id = variant_id
         self._variant_name = variant_name
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -205,7 +205,6 @@ class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False
     _attr_available = False
@@ -223,6 +222,7 @@ class SenseVoltageSensor(SensorEntity):
         self._data = data
         self._sense_monitor_id = sense_monitor_id
         self._voltage_index = index
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -251,7 +251,6 @@ class SenseTrendsSensor(SensorEntity):
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
     _attr_should_poll = False
 
@@ -273,6 +272,7 @@ class SenseTrendsSensor(SensorEntity):
         self._coordinator = trends_coordinator
         self._variant_id = variant_id
         self._had_any_update = False
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
         if variant_id in [PRODUCTION_PCT_ID, SOLAR_POWERED_ID]:
             self._attr_native_unit_of_measurement = PERCENTAGE
@@ -314,7 +314,6 @@ class SenseEnergyDevice(SensorEntity):
     _attr_available = False
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_should_poll = False
 
@@ -326,6 +325,7 @@ class SenseEnergyDevice(SensorEntity):
         self._attr_unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_ID}"
         self._attr_icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_added_to_hass(self):
         """Register callbacks."""

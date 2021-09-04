@@ -66,8 +66,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
     def __init__(
         self,
         name,
@@ -86,6 +84,7 @@ class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = self._unique_id
         self._attr_device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
 
 class AemetSensor(AbstractAemetSensor):
