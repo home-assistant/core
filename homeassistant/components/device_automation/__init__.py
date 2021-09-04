@@ -40,7 +40,7 @@ DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class DeviceAutomationDetails(NamedTuple):
     """Details for device automation."""
 
-    platform_name: str
+    section: str
     get_automations_func: str
     get_capabilities_func: str
 
@@ -104,7 +104,7 @@ async def async_get_device_automation_platform(
 
     Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
     """
-    platform_name = TYPES[automation_type].platform_name
+    platform_name = TYPES[automation_type].section
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
         platform = integration.get_platform(platform_name)
