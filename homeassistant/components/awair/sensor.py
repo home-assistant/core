@@ -169,7 +169,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         else:
             state = self._air_data.sensors[sensor_type]
 
-        if sensor_type == API_VOC or sensor_type == API_SCORE:
+        if sensor_type in {API_VOC, API_SCORE}:
             return round(state)
 
         if sensor_type == API_TEMP:
