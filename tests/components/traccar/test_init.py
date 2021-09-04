@@ -28,7 +28,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture(name="client")
-async def traccar_client(loop, hass, aiohttp_client):
+async def traccar_client(loop, hass, hass_client_no_auth):
     """Mock client for Traccar (unauthenticated)."""
     assert await async_setup_component(hass, "persistent_notification", {})
 
@@ -37,7 +37,7 @@ async def traccar_client(loop, hass, aiohttp_client):
     await hass.async_block_till_done()
 
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
-        return await aiohttp_client(hass.http.app)
+        return await hass_client_no_auth()
 
 
 @pytest.fixture(autouse=True)

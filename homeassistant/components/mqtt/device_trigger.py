@@ -7,7 +7,10 @@ from typing import Any, Callable
 import attr
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE,
@@ -86,7 +89,7 @@ class TriggerInstance:
     """Attached trigger settings."""
 
     action: AutomationActionType = attr.ib()
-    automation_info: dict = attr.ib()
+    automation_info: AutomationTriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -316,7 +319,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:
