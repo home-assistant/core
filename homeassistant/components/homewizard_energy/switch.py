@@ -35,7 +35,7 @@ SWITCHES: Final[tuple[SwitchEntityDescription, ...]] = (
     ),
     SwitchEntityDescription(
         key=ATTR_SWITCHLOCK,
-        name="Switch lock",
+        name="Switch Lock",
         device_class=DEVICE_CLASS_SWITCH,
         icon="mdi:lock",
     ),
