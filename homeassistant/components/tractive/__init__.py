@@ -128,15 +128,17 @@ class TractiveClient:
                     if event["message"] == "activity_update":
                         self._send_activity_update(event)
                     else:
-                        if "hardware" in event and self._last_hw_time != event[
-                            "hardware"
-                        ].get("time"):
+                        if (
+                            "hardware" in event
+                            and self._last_hw_time != event["hardware"]["time"]
+                        ):
                             self._last_hw_time = event["hardware"]["time"]
                             self._send_hardware_update(event)
 
-                        if "position" in event and self._last_pos_time != event[
-                            "position"
-                        ].get("time"):
+                        if (
+                            "position" in event
+                            and self._last_pos_time != event["position"]["time"]
+                        ):
                             self._last_pos_time = event["position"]["time"]
                             self._send_position_update(event)
             except aiotractive.exceptions.TractiveError:
