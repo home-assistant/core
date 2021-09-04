@@ -132,7 +132,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
         device_serial_number: str,
         serial_number: str | None,
         coordinator: DataUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize Envoy entity."""
         self.entity_description = description
         self._name = name
