@@ -6,15 +6,36 @@ import logging
 from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
+import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AdGuardHomeDeviceEntity
-from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERSION, DOMAIN
+from .const import (
+    CONF_FORCE,
+    DATA_ADGUARD_CLIENT,
+    DATA_ADGUARD_VERSION,
+    DOMAIN,
+    SERVICE_ADD_URL,
+    SERVICE_DISABLE_URL,
+    SERVICE_ENABLE_URL,
+    SERVICE_REFRESH,
+    SERVICE_REMOVE_URL,
+)
+
+SERVICE_URL_SCHEMA = cv.make_entity_service_schema({vol.Required(CONF_URL): cv.url})
+SERVICE_ADD_URL_SCHEMA = cv.make_entity_service_schema(
+    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_URL): cv.url}
+)
+SERVICE_REFRESH_SCHEMA = cv.make_entity_service_schema(
+    {vol.Optional(CONF_FORCE, default=False): cv.boolean}
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +49,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
+    platform = entity_platform.async_get_current_platform()
+
     adguard = hass.data[DOMAIN][entry.entry_id][DATA_ADGUARD_CLIENT]
 
     try:
@@ -46,6 +69,75 @@ async def async_setup_entry(
         AdGuardHomeQueryLogSwitch(adguard, entry),
     ]
     async_add_entities(switches, True)
+
+    async def async_service_handle(service_call: ServiceCall) -> None:
+        """Handle dispatched services."""
+        assert platform is not None
+        entities = await platform.async_extract_from_service(service_call)
+
+        adguard_instances = []
+        for entity in entities:
+            assert isinstance(entity, AdGuardHomeDeviceEntity)
+            adguard_instances.append(entity.adguard)
+        for adguard_instance in set(adguard_instances):
+            if service_call.service == SERVICE_ADD_URL:
+                await add_url(adguard_instance, service_call)
+            if service_call.service == SERVICE_REMOVE_URL:
+                await remove_url(adguard_instance, service_call)
+            if service_call.service == SERVICE_ENABLE_URL:
+                await enable_url(adguard_instance, service_call)
+            if service_call.service == SERVICE_DISABLE_URL:
+                await disable_url(adguard_instance, service_call)
+            if service_call.service == SERVICE_REFRESH:
+                await refresh(adguard_instance, service_call)
+
+    async def add_url(adguard: AdGuardHome, service_call: ServiceCall) -> None:
+        """Service call to add a new filter subscription to AdGuard Home."""
+        await adguard.filtering.add_url(
+            allowlist=False,
+            name=str(service_call.data.get(CONF_NAME)),
+            url=str(service_call.data.get(CONF_URL)),
+        )
+
+    async def remove_url(adguard: AdGuardHome, service_call: ServiceCall) -> None:
+        """Service call to remove a filter subscription from AdGuard Home."""
+        await adguard.filtering.remove_url(
+            allowlist=False, url=str(service_call.data.get(CONF_URL))
+        )
+
+    async def enable_url(adguard: AdGuardHome, service_call: ServiceCall) -> None:
+        """Service call to enable a filter subscription in AdGuard Home."""
+        await adguard.filtering.enable_url(
+            allowlist=False, url=str(service_call.data.get(CONF_URL))
+        )
+
+    async def disable_url(adguard: AdGuardHome, service_call: ServiceCall) -> None:
+        """Service call to disable a filter subscription in AdGuard Home."""
+        await adguard.filtering.disable_url(
+            allowlist=False, url=str(service_call.data.get(CONF_URL))
+        )
+
+    async def refresh(adguard: AdGuardHome, service_call: ServiceCall) -> None:
+        """Service call to refresh the filter subscriptions in AdGuard Home."""
+        await adguard.filtering.refresh(
+            allowlist=False, force=service_call.data.get(CONF_FORCE, False)
+        )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_URL, async_service_handle, SERVICE_ADD_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REMOVE_URL, async_service_handle, SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_ENABLE_URL, async_service_handle, SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_DISABLE_URL, async_service_handle, SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REFRESH, async_service_handle, SERVICE_REFRESH_SCHEMA
+    )
 
 
 class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
