@@ -13,7 +13,12 @@ from homeassistant.components.kraken.const import (
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 import homeassistant.util.dt as dt_util
 
-from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
+from .const import (
+    MISSING_PAIR_TICKER_INFORMATION_RESPONSE,
+    MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE,
+    TICKER_INFORMATION_RESPONSE,
+    TRADEABLE_ASSET_PAIR_RESPONSE,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -255,13 +260,25 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
             assert sensor.state == "0.0003494"
 
         with patch(
-            "pykrakenapi.KrakenAPI.get_ticker_information",
-            side_effect=KrakenAPIError("EQuery:Unknown asset pair"),
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=MISSING_PAIR_TRADEABLE_ASSET_PAIR_RESPONSE,
         ):
-            async_fire_time_changed(
-                hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
-            )
-            await hass.async_block_till_done()
+            with patch(
+                "pykrakenapi.KrakenAPI.get_ticker_information",
+                side_effect=KrakenAPIError("EQuery:Unknown asset pair"),
+            ):
+                async_fire_time_changed(
+                    hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
+                )
+                await hass.async_block_till_done()
+                with patch(
+                    "pykrakenapi.KrakenAPI.get_ticker_information",
+                    return_value=MISSING_PAIR_TICKER_INFORMATION_RESPONSE,
+                ):
+                    async_fire_time_changed(
+                        hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
+                    )
+                    await hass.async_block_till_done()
 
-            sensor = hass.states.get("sensor.xbt_usd_ask")
-            assert sensor.state == "unavailable"
+                    sensor = hass.states.get("sensor.xbt_usd_ask")
+                    assert sensor.state == "unavailable"
