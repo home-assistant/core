@@ -79,7 +79,7 @@ def add_entities(router, async_add_entities, tracked, entity_class_generator):
         if mac in tracked:
             continue
 
-        new_tracked = new_tracked + entity_class_generator(router, device)
+        new_tracked.extend(entity_class_generator(router, device))
         tracked.add(mac)
 
     if new_tracked:
