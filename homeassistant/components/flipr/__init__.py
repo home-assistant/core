@@ -86,4 +86,3 @@ class FliprEntity(CoordinatorEntity):
             "name": NAME,
             "manufacturer": MANUFACTURER,
         }
-        self.flipr_id = flipr_id

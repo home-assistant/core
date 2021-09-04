@@ -67,7 +67,7 @@ class FliprSensor(FliprEntity, SensorEntity):
     def __init__(self, coordinator, flipr_id, description: SensorEntityDescription):
         """Initialize Flipr sensor."""
         super().__init__(coordinator, flipr_id, description)
-        self._attr_name = f"Flipr {self.flipr_id} {description.name}"
+        self._attr_name = f"Flipr {flipr_id} {description.name}"
 
     @property
     def native_value(self):
