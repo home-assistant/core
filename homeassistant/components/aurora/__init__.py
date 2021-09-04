@@ -1,9 +1,8 @@
 """The aurora component."""
-from collections.abc import Mapping
+
 from datetime import timedelta
 import logging
 from types import MappingProxyType
-from typing import Any
 
 from aiohttp import ClientError
 from auroranoaa import AuroraForecast
@@ -131,9 +130,7 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 class AuroraEntity(CoordinatorEntity):
     """Implementation of the base Aurora Entity."""
 
-    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
-        {ATTR_ATTRIBUTION: ATTRIBUTION}
-    )
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
 
     def __init__(
         self,

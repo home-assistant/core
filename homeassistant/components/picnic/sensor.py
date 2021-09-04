@@ -1,7 +1,6 @@
 """Definition of Picnic sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any
 
@@ -44,9 +43,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
     entity_description: PicnicSensorEntityDescription
-    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
-        {ATTR_ATTRIBUTION: ATTRIBUTION}
-    )
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
 
     def __init__(
         self,
