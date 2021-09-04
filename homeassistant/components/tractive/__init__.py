@@ -20,10 +20,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_DAILY_GOAL,
+    ATTR_HW_INFO,
     ATTR_MINUTES_ACTIVE,
+    ATTR_POS_REPORT,
+    ATTR_TRACKABLE,
+    ATTR_TRACKER_DETAILS,
+    CLIENT,
     DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
+    TRACKABLES,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
@@ -40,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = entry.data
 
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     client = aiotractive.Tractive(
         data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
@@ -56,7 +63,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tractive = TractiveClient(hass, client, creds["user_id"])
     tractive.subscribe()
 
-    hass.data[DOMAIN][entry.entry_id] = tractive
+    trackable_objects = await client.trackable_objects()
+    try:
+        trackables = await asyncio.gather(
+            *(_generate_trackables(client, item) for item in trackable_objects)
+        )
+    except aiotractive.exceptions.TractiveError as error:
+        await tractive.unsubscribe()
+        raise ConfigEntryNotReady from error
+
+    hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
+    hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -70,12 +87,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def _generate_trackables(client, trackable):
+    """Generate trackables."""
+    trackable = await trackable.details()
+    tracker = client.tracker(trackable["device_id"])
+
+    tracker_details, hw_info, pos_report = await asyncio.gather(
+        tracker.details(), tracker.hw_info(), tracker.pos_report()
+    )
+
+    return {
+        ATTR_TRACKABLE: trackable,
+        ATTR_TRACKER_DETAILS: tracker_details,
+        ATTR_HW_INFO: hw_info,
+        ATTR_POS_REPORT: pos_report,
+    }
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        tractive = hass.data[DOMAIN].pop(entry.entry_id)
+        tractive = hass.data[DOMAIN][entry.entry_id].pop(CLIENT)
         await tractive.unsubscribe()
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 
