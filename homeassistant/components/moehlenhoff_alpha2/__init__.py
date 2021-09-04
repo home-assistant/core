@@ -75,6 +75,16 @@ class Alpha2BaseUpdateHandler:
             _LOGGER.debug("Heatarea: %s", heatarea)
             async_dispatcher_send(self._hass, SIGNAL_HEATAREA_DATA_UPDATED, heatarea)
 
+    def get_cooling(self):
+        """Return if cooling mode is enabled."""
+        return self.base.cooling
+
+    async def async_set_cooling(self, enabled: bool):
+        """Enable or disable cooling mode."""
+        await self.base.set_cooling(enabled)
+        for heatarea in self.base.heatareas:
+            async_dispatcher_send(self._hass, SIGNAL_HEATAREA_DATA_UPDATED, heatarea)
+
     async def async_set_target_temperature(self, heatarea_id, target_temperature):
         """Set the target temperature of the given heatarea."""
         _LOGGER.info(
