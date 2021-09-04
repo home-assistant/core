@@ -21,7 +21,8 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Automatikus ind\u00edt\u00e1s (tiltsa le, ha manu\u00e1lisan h\u00edvja a homekit.start szolg\u00e1ltat\u00e1st)"
+                    "auto_start": "Automatikus ind\u00edt\u00e1s (tiltsa le, ha manu\u00e1lisan h\u00edvja a homekit.start szolg\u00e1ltat\u00e1st)",
+                    "devices": "Eszk\u00f6z\u00f6k (triggerek)"
                 },
                 "description": "Ezeket a be\u00e1ll\u00edt\u00e1sokat csak akkor kell m\u00f3dos\u00edtani, ha a HomeKit nem m\u0171k\u00f6dik.",
                 "title": "Halad\u00f3 be\u00e1ll\u00edt\u00e1sok"
