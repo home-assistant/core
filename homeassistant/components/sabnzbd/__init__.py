@@ -71,7 +71,6 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key="current_status",
         name="Status",
-        native_unit_of_measurement=None,
         field_name="status",
     ),
     SabnzbdSensorEntityDescription(
@@ -107,7 +106,6 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     SabnzbdSensorEntityDescription(
         key="queue_count",
         name="Queue Count",
-        native_unit_of_measurement=None,
         field_name="noofslots_total",
     ),
     SabnzbdSensorEntityDescription(
