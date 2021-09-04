@@ -27,17 +27,20 @@ from .conftest import (
     NEW_DEVICE_LOCATION,
     UNCONTACTABLE_DEVICE_LOCATION,
     WRONG_ST_DEVICE_LOCATION,
+    configure_device_requests_mock,
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 WRONG_DEVICE_TYPE = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+
+IMPORTED_DEVICE_NAME = "Imported DMR device"
 
 MOCK_CONFIG_IMPORT_DATA = {
     CONF_PLATFORM: DLNA_DOMAIN,
     CONF_URL: GOOD_DEVICE_LOCATION,
 }
-
 
 MOCK_DISCOVERY = {
     ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
@@ -246,7 +249,7 @@ async def test_import_flow_options(
             data={
                 CONF_PLATFORM: DLNA_DOMAIN,
                 CONF_URL: GOOD_DEVICE_LOCATION,
-                CONF_NAME: "Imported device name",
+                CONF_NAME: IMPORTED_DEVICE_NAME,
                 CONF_LISTEN_PORT: 2222,
                 CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
             },
@@ -254,7 +257,125 @@ async def test_import_flow_options(
         await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Imported device name"
+    assert result["title"] == IMPORTED_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: GOOD_DEVICE_LOCATION,
+        CONF_DEVICE_ID: GOOD_DEVICE_UDN,
+        CONF_TYPE: GOOD_DEVICE_TYPE,
+    }
+    assert result["options"] == {
+        CONF_LISTEN_PORT: 2222,
+        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
+        CONF_POLL_AVAILABILITY: True,
+    }
+
+
+async def test_import_flow_deferred_ssdp(
+    hass: HomeAssistant, mock_ssdp_scanner: Mock, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test YAML import of unavailable device later found via SSDP."""
+    # Attempted import at hass start fails because device is unavailable
+    mock_ssdp_scanner.async_get_discovery_info_by_st.side_effect = [
+        [],
+        [],
+        [],
+    ]
+    aioclient_mock.get(GOOD_DEVICE_LOCATION, exc=asyncio.TimeoutError)
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_PLATFORM: DLNA_DOMAIN,
+            CONF_URL: GOOD_DEVICE_LOCATION,
+            CONF_NAME: IMPORTED_DEVICE_NAME,
+            CONF_LISTEN_PORT: 2222,
+            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "could_not_connect"
+
+    # Device becomes available then discovered via SSDP, import now occurs automatically
+    mock_ssdp_scanner.async_get_discovery_info_by_st.side_effect = [
+        [MOCK_DISCOVERY],
+        [],
+        [],
+    ]
+    aioclient_mock.clear_requests()
+    configure_device_requests_mock(aioclient_mock)
+
+    with patch(
+        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DLNA_DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=MOCK_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == IMPORTED_DEVICE_NAME
+    assert result["data"] == {
+        CONF_URL: GOOD_DEVICE_LOCATION,
+        CONF_DEVICE_ID: GOOD_DEVICE_UDN,
+        CONF_TYPE: GOOD_DEVICE_TYPE,
+    }
+    assert result["options"] == {
+        CONF_LISTEN_PORT: 2222,
+        CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
+        CONF_POLL_AVAILABILITY: False,
+    }
+
+
+async def test_import_flow_deferred_user(
+    hass: HomeAssistant, mock_ssdp_scanner: Mock, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test YAML import of unavailable device later added by user."""
+    # Attempted import at hass start fails because device is unavailable
+    mock_ssdp_scanner.async_get_discovery_info_by_st.return_value = []
+    aioclient_mock.get(GOOD_DEVICE_LOCATION, exc=asyncio.TimeoutError)
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_PLATFORM: DLNA_DOMAIN,
+            CONF_URL: GOOD_DEVICE_LOCATION,
+            CONF_NAME: IMPORTED_DEVICE_NAME,
+            CONF_LISTEN_PORT: 2222,
+            CONF_CALLBACK_URL_OVERRIDE: "http://override/callback",
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "could_not_connect"
+
+    # Device becomes available then added by user, use all imported settings
+    aioclient_mock.clear_requests()
+    configure_device_requests_mock(aioclient_mock)
+
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_URL: GOOD_DEVICE_LOCATION}
+        )
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == IMPORTED_DEVICE_NAME
     assert result["data"] == {
         CONF_URL: GOOD_DEVICE_LOCATION,
         CONF_DEVICE_ID: GOOD_DEVICE_UDN,

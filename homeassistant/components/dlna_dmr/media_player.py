@@ -45,13 +45,13 @@ from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
+    DEFAULT_NAME,
     LOGGER as _LOGGER,
 )
 from .data import EventListenAddr, get_domain_data
 
 # Configuration via YAML is deprecated in favour of config flow
 CONF_LISTEN_IP = "listen_ip"
-DEFAULT_NAME = "DLNA Digital Media Renderer"
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_URL),
     cv.deprecated(CONF_LISTEN_IP),

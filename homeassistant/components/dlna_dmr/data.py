@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import NamedTuple, cast
+from collections.abc import Mapping
+from typing import Any, NamedTuple, cast
 
 from async_upnp_client import UpnpEventHandler, UpnpFactory, UpnpRequester
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
@@ -28,6 +29,7 @@ class DlnaDmrData:
     requester: UpnpRequester
     upnp_factory: UpnpFactory
     event_notifiers: dict[EventListenAddr, AiohttpNotifyServer]
+    unmigrated_config: dict[str, Mapping[str, Any]]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global data."""
@@ -36,6 +38,7 @@ class DlnaDmrData:
         self.requester = AiohttpSessionRequester(session, with_sleep=False)
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
         self.event_notifiers = {}
+        self.unmigrated_config = {}
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
 
