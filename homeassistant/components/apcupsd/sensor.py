@@ -1,10 +1,16 @@
 """Support for APCUPSd sensors."""
+from __future__ import annotations
+
 import logging
 
 from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_RESOURCES,
     DEVICE_CLASS_TEMPERATURE,
@@ -25,74 +31,471 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_PREFIX = "UPS "
-SENSOR_TYPES = {
-    "alarmdel": ["Alarm Delay", None, "mdi:alarm", None],
-    "ambtemp": ["Ambient Temperature", None, "mdi:thermometer", None],
-    "apc": ["Status Data", None, "mdi:information-outline", None],
-    "apcmodel": ["Model", None, "mdi:information-outline", None],
-    "badbatts": ["Bad Batteries", None, "mdi:information-outline", None],
-    "battdate": ["Battery Replaced", None, "mdi:calendar-clock", None],
-    "battstat": ["Battery Status", None, "mdi:information-outline", None],
-    "battv": ["Battery Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "bcharge": ["Battery", PERCENTAGE, "mdi:battery", None],
-    "cable": ["Cable Type", None, "mdi:ethernet-cable", None],
-    "cumonbatt": ["Total Time on Battery", None, "mdi:timer-outline", None],
-    "date": ["Status Date", None, "mdi:calendar-clock", None],
-    "dipsw": ["Dip Switch Settings", None, "mdi:information-outline", None],
-    "dlowbatt": ["Low Battery Signal", None, "mdi:clock-alert", None],
-    "driver": ["Driver", None, "mdi:information-outline", None],
-    "dshutd": ["Shutdown Delay", None, "mdi:timer-outline", None],
-    "dwake": ["Wake Delay", None, "mdi:timer-outline", None],
-    "endapc": ["Date and Time", None, "mdi:calendar-clock", None],
-    "extbatts": ["External Batteries", None, "mdi:information-outline", None],
-    "firmware": ["Firmware Version", None, "mdi:information-outline", None],
-    "hitrans": ["Transfer High", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "hostname": ["Hostname", None, "mdi:information-outline", None],
-    "humidity": ["Ambient Humidity", PERCENTAGE, "mdi:water-percent", None],
-    "itemp": ["Internal Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "lastxfer": ["Last Transfer", None, "mdi:transfer", None],
-    "linefail": ["Input Voltage Status", None, "mdi:information-outline", None],
-    "linefreq": ["Line Frequency", FREQUENCY_HERTZ, "mdi:information-outline", None],
-    "linev": ["Input Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "loadpct": ["Load", PERCENTAGE, "mdi:gauge", None],
-    "loadapnt": ["Load Apparent Power", PERCENTAGE, "mdi:gauge", None],
-    "lotrans": ["Transfer Low", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "mandate": ["Manufacture Date", None, "mdi:calendar", None],
-    "masterupd": ["Master Update", None, "mdi:information-outline", None],
-    "maxlinev": ["Input Voltage High", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "maxtime": ["Battery Timeout", None, "mdi:timer-off-outline", None],
-    "mbattchg": ["Battery Shutdown", PERCENTAGE, "mdi:battery-alert", None],
-    "minlinev": ["Input Voltage Low", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "mintimel": ["Shutdown Time", None, "mdi:timer-outline", None],
-    "model": ["Model", None, "mdi:information-outline", None],
-    "nombattv": ["Battery Nominal Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "nominv": ["Nominal Input Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "nomoutv": ["Nominal Output Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "nompower": ["Nominal Output Power", POWER_WATT, "mdi:flash", None],
-    "nomapnt": ["Nominal Apparent Power", POWER_VOLT_AMPERE, "mdi:flash", None],
-    "numxfers": ["Transfer Count", None, "mdi:counter", None],
-    "outcurnt": ["Output Current", ELECTRIC_CURRENT_AMPERE, "mdi:flash", None],
-    "outputv": ["Output Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
-    "reg1": ["Register 1 Fault", None, "mdi:information-outline", None],
-    "reg2": ["Register 2 Fault", None, "mdi:information-outline", None],
-    "reg3": ["Register 3 Fault", None, "mdi:information-outline", None],
-    "retpct": ["Restore Requirement", PERCENTAGE, "mdi:battery-alert", None],
-    "selftest": ["Last Self Test", None, "mdi:calendar-clock", None],
-    "sense": ["Sensitivity", None, "mdi:information-outline", None],
-    "serialno": ["Serial Number", None, "mdi:information-outline", None],
-    "starttime": ["Startup Time", None, "mdi:calendar-clock", None],
-    "statflag": ["Status Flag", None, "mdi:information-outline", None],
-    "status": ["Status", None, "mdi:information-outline", None],
-    "stesti": ["Self Test Interval", None, "mdi:information-outline", None],
-    "timeleft": ["Time Left", None, "mdi:clock-alert", None],
-    "tonbatt": ["Time on Battery", None, "mdi:timer-outline", None],
-    "upsmode": ["Mode", None, "mdi:information-outline", None],
-    "upsname": ["Name", None, "mdi:information-outline", None],
-    "version": ["Daemon Info", None, "mdi:information-outline", None],
-    "xoffbat": ["Transfer from Battery", None, "mdi:transfer", None],
-    "xoffbatt": ["Transfer from Battery", None, "mdi:transfer", None],
-    "xonbatt": ["Transfer to Battery", None, "mdi:transfer", None],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="alarmdel",
+        name="Alarm Delay",
+        native_unit_of_measurement=None,
+        icon="mdi:alarm",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="ambtemp",
+        name="Ambient Temperature",
+        native_unit_of_measurement=None,
+        icon="mdi:thermometer",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="apc",
+        name="Status Data",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="apcmodel",
+        name="Model",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="badbatts",
+        name="Bad Batteries",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="battdate",
+        name="Battery Replaced",
+        native_unit_of_measurement=None,
+        icon="mdi:calendar-clock",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="battstat",
+        name="Battery Status",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="battv",
+        name="Battery Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="bcharge",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:battery",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="cable",
+        name="Cable Type",
+        native_unit_of_measurement=None,
+        icon="mdi:ethernet-cable",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="cumonbatt",
+        name="Total Time on Battery",
+        native_unit_of_measurement=None,
+        icon="mdi:timer-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="date",
+        name="Status Date",
+        native_unit_of_measurement=None,
+        icon="mdi:calendar-clock",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="dipsw",
+        name="Dip Switch Settings",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="dlowbatt",
+        name="Low Battery Signal",
+        native_unit_of_measurement=None,
+        icon="mdi:clock-alert",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="driver",
+        name="Driver",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="dshutd",
+        name="Shutdown Delay",
+        native_unit_of_measurement=None,
+        icon="mdi:timer-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="dwake",
+        name="Wake Delay",
+        native_unit_of_measurement=None,
+        icon="mdi:timer-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="endapc",
+        name="Date and Time",
+        native_unit_of_measurement=None,
+        icon="mdi:calendar-clock",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="extbatts",
+        name="External Batteries",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="firmware",
+        name="Firmware Version",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="hitrans",
+        name="Transfer High",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="hostname",
+        name="Hostname",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Ambient Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="itemp",
+        name="Internal Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="lastxfer",
+        name="Last Transfer",
+        native_unit_of_measurement=None,
+        icon="mdi:transfer",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="linefail",
+        name="Input Voltage Status",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="linefreq",
+        name="Line Frequency",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="linev",
+        name="Input Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="loadpct",
+        name="Load",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:gauge",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="loadapnt",
+        name="Load Apparent Power",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:gauge",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="lotrans",
+        name="Transfer Low",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="mandate",
+        name="Manufacture Date",
+        native_unit_of_measurement=None,
+        icon="mdi:calendar",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="masterupd",
+        name="Master Update",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="maxlinev",
+        name="Input Voltage High",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="maxtime",
+        name="Battery Timeout",
+        native_unit_of_measurement=None,
+        icon="mdi:timer-off-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="mbattchg",
+        name="Battery Shutdown",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:battery-alert",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="minlinev",
+        name="Input Voltage Low",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="mintimel",
+        name="Shutdown Time",
+        native_unit_of_measurement=None,
+        icon="mdi:timer-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="model",
+        name="Model",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="nombattv",
+        name="Battery Nominal Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="nominv",
+        name="Nominal Input Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="nomoutv",
+        name="Nominal Output Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="nompower",
+        name="Nominal Output Power",
+        native_unit_of_measurement=POWER_WATT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="nomapnt",
+        name="Nominal Apparent Power",
+        native_unit_of_measurement=POWER_VOLT_AMPERE,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="numxfers",
+        name="Transfer Count",
+        native_unit_of_measurement=None,
+        icon="mdi:counter",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="outcurnt",
+        name="Output Current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="outputv",
+        name="Output Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        icon="mdi:flash",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="reg1",
+        name="Register 1 Fault",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="reg2",
+        name="Register 2 Fault",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="reg3",
+        name="Register 3 Fault",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="retpct",
+        name="Restore Requirement",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:battery-alert",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="selftest",
+        name="Last Self Test",
+        native_unit_of_measurement=None,
+        icon="mdi:calendar-clock",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="sense",
+        name="Sensitivity",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="serialno",
+        name="Serial Number",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="starttime",
+        name="Startup Time",
+        native_unit_of_measurement=None,
+        icon="mdi:calendar-clock",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="statflag",
+        name="Status Flag",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="status",
+        name="Status",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="stesti",
+        name="Self Test Interval",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="timeleft",
+        name="Time Left",
+        native_unit_of_measurement=None,
+        icon="mdi:clock-alert",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="tonbatt",
+        name="Time on Battery",
+        native_unit_of_measurement=None,
+        icon="mdi:timer-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="upsmode",
+        name="Mode",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="upsname",
+        name="Name",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="version",
+        name="Daemon Info",
+        native_unit_of_measurement=None,
+        icon="mdi:information-outline",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="xoffbat",
+        name="Transfer from Battery",
+        native_unit_of_measurement=None,
+        icon="mdi:transfer",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="xoffbatt",
+        name="Transfer from Battery",
+        native_unit_of_measurement=None,
+        icon="mdi:transfer",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="xonbatt",
+        name="Transfer to Battery",
+        native_unit_of_measurement=None,
+        icon="mdi:transfer",
+        device_class=None,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
 INFERRED_UNITS = {
@@ -111,7 +514,7 @@ INFERRED_UNITS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
@@ -120,18 +523,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the APCUPSd sensors."""
     apcups_data = hass.data[DOMAIN]
-    entities = []
+    resources = config[CONF_RESOURCES]
 
-    for resource in config[CONF_RESOURCES]:
-        sensor_type = resource.lower()
-
-        if sensor_type.upper() not in apcups_data.status:
+    for resource in resources:
+        if resource.upper() not in apcups_data.status:
             _LOGGER.warning(
                 "Sensor type: %s does not appear in the APCUPSd status output",
-                sensor_type,
+                resource,
             )
 
-        entities.append(APCUPSdSensor(apcups_data, sensor_type))
+    entities = [
+        APCUPSdSensor(apcups_data, description)
+        for description in SENSOR_TYPES
+        if description.key in resources
+    ]
 
     add_entities(entities, True)
 
@@ -152,22 +557,18 @@ def infer_unit(value):
 class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
-    def __init__(self, data, sensor_type):
+    def __init__(self, data, description: SensorEntityDescription):
         """Initialize the sensor."""
+        self.entity_description = description
         self._data = data
-        self.type = sensor_type
-        self._attr_name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
-        self._attr_icon = SENSOR_TYPES[self.type][2]
-        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._attr_device_class = SENSOR_TYPES[sensor_type][3]
+        self._attr_name = f"{SENSOR_PREFIX}{description.name}"
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
-        if self.type.upper() not in self._data.status:
+        key = self.entity_description.key.upper()
+        if key not in self._data.status:
             self._attr_native_value = None
         else:
-            self._attr_native_value, inferred_unit = infer_unit(
-                self._data.status[self.type.upper()]
-            )
-            if not self._attr_native_unit_of_measurement:
+            self._attr_native_value, inferred_unit = infer_unit(self._data.status[key])
+            if not self.native_unit_of_measurement:
                 self._attr_native_unit_of_measurement = inferred_unit
