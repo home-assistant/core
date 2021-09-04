@@ -21,7 +21,7 @@ COMMENT_REQUIREMENTS = (
     "bluepy",
     "bme280spi",
     "bme680",
-    "decora=",  # The = is necessary to prevent matching decora_wifi
+    "decora",
     "envirophat",
     "evdev",
     "face_recognition",
