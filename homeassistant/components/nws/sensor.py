@@ -55,6 +55,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,
@@ -94,11 +95,6 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         if unit_of_measurement == PERCENTAGE:
             return round(value)
         return value
-
-    @property
-    def device_state_attributes(self):
-        """Return the attribution."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def unique_id(self):
