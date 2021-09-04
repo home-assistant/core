@@ -50,18 +50,18 @@ GAS_SENSOR_ATTRIBUTES = {
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
-        (None, "%", "%", 16.440677, 10, 30),
-        ("battery", "%", "%", 16.440677, 10, 30),
-        ("battery", None, None, 16.440677, 10, 30),
-        ("humidity", "%", "%", 16.440677, 10, 30),
-        ("humidity", None, None, 16.440677, 10, 30),
-        ("pressure", "Pa", "Pa", 16.440677, 10, 30),
-        ("pressure", "hPa", "Pa", 1644.0677, 1000, 3000),
-        ("pressure", "mbar", "Pa", 1644.0677, 1000, 3000),
-        ("pressure", "inHg", "Pa", 55674.53, 33863.89, 101591.67),
-        ("pressure", "psi", "Pa", 113354.48, 68947.57, 206842.71),
-        ("temperature", "°C", "°C", 16.440677, 10, 30),
-        ("temperature", "°F", "°C", -8.644068, -12.22222, -1.111111),
+        (None, "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, 13.050847, -10, 30),
+        ("humidity", "%", "%", 13.050847, -10, 30),
+        ("humidity", None, None, 13.050847, -10, 30),
+        ("pressure", "Pa", "Pa", 13.050847, -10, 30),
+        ("pressure", "hPa", "Pa", 1305.0847, -1000, 3000),
+        ("pressure", "mbar", "Pa", 1305.0847, -1000, 3000),
+        ("pressure", "inHg", "Pa", 44195.25, -33863.89, 101591.67),
+        ("pressure", "psi", "Pa", 89982.42, -68947.57, 206842.71),
+        ("temperature", "°C", "°C", 13.050847, -10, 30),
+        ("temperature", "°F", "°C", -10.52731, -23.33333, -1.111111),
     ],
 )
 def test_compile_hourly_statistics(
@@ -155,8 +155,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": approx(16.440677966101696),
-                "min": approx(10.0),
+                "mean": approx(13.050847),
+                "min": approx(-10.0),
                 "max": approx(30.0),
                 "last_reset": None,
                 "state": None,
@@ -167,8 +167,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
             {
                 "statistic_id": "sensor.test6",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": approx(16.440677966101696),
-                "min": approx(10.0),
+                "mean": approx(13.050847),
+                "min": approx(-10.0),
                 "max": approx(30.0),
                 "last_reset": None,
                 "state": None,
@@ -179,8 +179,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
             {
                 "statistic_id": "sensor.test7",
                 "start": process_timestamp_to_utc_isoformat(zero),
-                "mean": approx(16.440677966101696),
-                "min": approx(10.0),
+                "mean": approx(13.050847),
+                "min": approx(-10.0),
                 "max": approx(30.0),
                 "last_reset": None,
                 "state": None,
@@ -988,10 +988,10 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
-        (None, None, None, 16.440677, 10, 30),
-        (None, "%", "%", 16.440677, 10, 30),
-        ("battery", "%", "%", 16.440677, 10, 30),
-        ("battery", None, None, 16.440677, 10, 30),
+        (None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_1(
@@ -1074,10 +1074,10 @@ def test_compile_hourly_statistics_changing_units_1(
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
-        (None, None, None, 16.440677, 10, 30),
-        (None, "%", "%", 16.440677, 10, 30),
-        ("battery", "%", "%", 16.440677, 10, 30),
-        ("battery", None, None, 16.440677, 10, 30),
+        (None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_2(
@@ -1119,10 +1119,10 @@ def test_compile_hourly_statistics_changing_units_2(
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
-        (None, None, None, 16.440677, 10, 30),
-        (None, "%", "%", 16.440677, 10, 30),
-        ("battery", "%", "%", 16.440677, 10, 30),
-        ("battery", None, None, 16.440677, 10, 30),
+        (None, None, None, 13.050847, -10, 30),
+        (None, "%", "%", 13.050847, -10, 30),
+        ("battery", "%", "%", 13.050847, -10, 30),
+        ("battery", None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_3(
@@ -1203,7 +1203,7 @@ def test_compile_hourly_statistics_changing_units_3(
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
-        (None, None, None, 16.440677, 10, 30),
+        (None, None, None, 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_statistics(
@@ -1309,7 +1309,7 @@ def record_states(hass, zero, entity_id, attributes):
 
     states = {entity_id: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
-        states[entity_id].append(set_state(entity_id, "10", attributes=attributes))
+        states[entity_id].append(set_state(entity_id, "-10", attributes=attributes))
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
         states[entity_id].append(set_state(entity_id, "15", attributes=attributes))
