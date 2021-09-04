@@ -1,4 +1,6 @@
 """Support for the AEMET OpenData service."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
