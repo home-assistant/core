@@ -1,9 +1,11 @@
 """Support for Bbox Bouygues Modem Router."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from types import MappingProxyType
+from typing import Any
 
 import pybbox
 import requests
@@ -118,7 +120,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
-    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
+    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
+        {ATTR_ATTRIBUTION: ATTRIBUTION}
+    )
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(self, bbox_data, name, description: SensorEntityDescription):
@@ -139,7 +143,9 @@ class BboxUptimeSensor(SensorEntity):
 class BboxSensor(SensorEntity):
     """Implementation of a Bbox sensor."""
 
-    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
+    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
+        {ATTR_ATTRIBUTION: ATTRIBUTION}
+    )
 
     def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""

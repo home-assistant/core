@@ -1,7 +1,9 @@
 """Support for Blockchain.com sensors."""
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from types import MappingProxyType
+from typing import Any
 
 from pyblockchain import get_balance, validate_address
 import voluptuous as vol
@@ -47,7 +49,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BlockchainSensor(SensorEntity):
     """Representation of a Blockchain.com sensor."""
 
-    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
+    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
+        {ATTR_ATTRIBUTION: ATTRIBUTION}
+    )
     _attr_icon = ICON
     _attr_native_unit_of_measurement = "BTC"
 

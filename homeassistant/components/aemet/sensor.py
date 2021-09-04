@@ -1,5 +1,7 @@
 """Support for the AEMET OpenData service."""
+from collections.abc import Mapping
 from types import MappingProxyType
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -68,7 +70,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
-    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
+    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
+        {ATTR_ATTRIBUTION: ATTRIBUTION}
+    )
 
     def __init__(
         self,

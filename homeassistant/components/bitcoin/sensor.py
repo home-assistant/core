@@ -1,9 +1,11 @@
 """Bitcoin information service that uses blockchain.com."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from types import MappingProxyType
+from typing import Any
 
 from blockchain import exchangerates, statistics
 import voluptuous as vol
@@ -166,7 +168,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
-    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
+    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
+        {ATTR_ATTRIBUTION: ATTRIBUTION}
+    )
     _attr_icon = ICON
 
     def __init__(self, data, currency, description: SensorEntityDescription):

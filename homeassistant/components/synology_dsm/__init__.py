@@ -1,6 +1,7 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from types import MappingProxyType
@@ -601,7 +602,9 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
-    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
+    _attr_extra_state_attributes: Mapping[str, Any] = MappingProxyType(
+        {ATTR_ATTRIBUTION: ATTRIBUTION}
+    )
 
     def __init__(
         self,
