@@ -1,4 +1,6 @@
 """Support for monitoring a Sense energy sensor."""
+from types import MappingProxyType
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -152,7 +154,7 @@ class SenseActiveSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
     _attr_should_poll = False
     _attr_available = False
     _attr_state_class = STATE_CLASS_MEASUREMENT
@@ -205,7 +207,7 @@ class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
     _attr_icon = ICON
     _attr_should_poll = False
     _attr_available = False
@@ -251,7 +253,7 @@ class SenseTrendsSensor(SensorEntity):
     _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
     _attr_icon = ICON
     _attr_should_poll = False
 
@@ -314,7 +316,7 @@ class SenseEnergyDevice(SensorEntity):
     _attr_available = False
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
     _attr_device_class = DEVICE_CLASS_POWER
     _attr_should_poll = False
 

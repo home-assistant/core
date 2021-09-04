@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from types import MappingProxyType
 from typing import Any, Callable
 
 import async_timeout
@@ -600,7 +601,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
 
     def __init__(
         self,

@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 import json
 import logging
+from types import MappingProxyType
 
 import aiohttp
 import async_timeout
@@ -83,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ComedHourlyPricingSensor(SensorEntity):
     """Implementation of a ComEd Hourly Pricing sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_extra_state_attributes = MappingProxyType({ATTR_ATTRIBUTION: ATTRIBUTION})
 
     def __init__(self, websession, offset, name, description: SensorEntityDescription):
         """Initialize the sensor."""
