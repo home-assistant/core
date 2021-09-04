@@ -125,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Configure device
         entry_info["product_name"] = energy_api.device.product_name
         entry_info["product_type"] = energy_api.device.product_type
-        entry_info["serial"] = energy_api.device.product_name
+        entry_info["serial"] = energy_api.device.serial
 
         self.context["host"] = entry_info[CONF_IP_ADDRESS]
         self.context["product_name"] = entry_info["product_name"]
