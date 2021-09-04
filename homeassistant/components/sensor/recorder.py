@@ -129,13 +129,6 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str, str | None]]:
     return entity_ids
 
 
-# Faster than try/except
-# From https://stackoverflow.com/a/23639915
-def _is_number(s: str) -> bool:  # pylint: disable=invalid-name
-    """Return True if string is a number."""
-    return s.replace(".", "", 1).isdigit()
-
-
 def _time_weighted_average(
     fstates: list[tuple[float, State]], start: datetime.datetime, end: datetime.datetime
 ) -> float:
@@ -190,9 +183,13 @@ def _normalize_states(
 
     if device_class not in UNIT_CONVERSIONS:
         # We're not normalizing this device class, return the state as they are
-        fstates = [
-            (float(el.state), el) for el in entity_history if _is_number(el.state)
-        ]
+        fstates = []
+        for state in entity_history:
+            try:
+                fstates.append((float(state.state), state))
+            except ValueError:
+                continue
+
         if fstates:
             all_units = _get_units(fstates)
             if len(all_units) > 1:
@@ -220,22 +217,21 @@ def _normalize_states(
     fstates = []
 
     for state in entity_history:
-        # Exclude non numerical states from statistics
-        if not _is_number(state.state):
-            continue
+        try:
+            fstate = float(state.state)
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            # Exclude unsupported units from statistics
+            if unit not in UNIT_CONVERSIONS[device_class]:
+                if WARN_UNSUPPORTED_UNIT not in hass.data:
+                    hass.data[WARN_UNSUPPORTED_UNIT] = set()
+                if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
+                    hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
+                    _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+                continue
 
-        fstate = float(state.state)
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        # Exclude unsupported units from statistics
-        if unit not in UNIT_CONVERSIONS[device_class]:
-            if WARN_UNSUPPORTED_UNIT not in hass.data:
-                hass.data[WARN_UNSUPPORTED_UNIT] = set()
-            if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
-                hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
-                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+            fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
+        except ValueError:
             continue
-
-        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
 
     return DEVICE_CLASS_UNITS[device_class], fstates
 
