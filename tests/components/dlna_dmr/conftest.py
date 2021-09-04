@@ -47,9 +47,8 @@ def mock_ssdp_scanner() -> Iterable[Mock]:
         yield mock_scanner.return_value
 
 
-@pytest.fixture
-def device_requests_mock(aioclient_mock) -> Iterable[AiohttpClientMocker]:
-    """Mock device responses to HTTP requests."""
+def configure_device_requests_mock(aioclient_mock: AiohttpClientMocker) -> None:
+    """Add mock device responses to existing AiohttpClient mock."""
     description_xml = load_fixture("dlna_dmr/dmr_description.xml")
     aioclient_mock.get(GOOD_DEVICE_LOCATION, text=description_xml)
     rc_desc_xml = load_fixture("dlna_dmr/rc_desc.xml")
@@ -85,6 +84,13 @@ def device_requests_mock(aioclient_mock) -> Iterable[AiohttpClientMocker]:
     igd_desc_xml = load_fixture("dlna_dmr/igd_desc.xml")
     aioclient_mock.get(WRONG_ST_DEVICE_LOCATION, text=igd_desc_xml)
 
+
+@pytest.fixture
+def device_requests_mock(
+    aioclient_mock: AiohttpClientMocker,
+) -> Iterable[AiohttpClientMocker]:
+    """Mock device responses to HTTP requests."""
+    configure_device_requests_mock(aioclient_mock)
     yield aioclient_mock
 
 
