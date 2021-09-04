@@ -29,8 +29,8 @@ async def test_select_entity(hass: HomeAssistant) -> None:
     state = hass.states.get("select.genie_room_size")
     assert state
     assert state.state == str(diffuser.room_size_square_meter)
-    assert state.attributes.get(ATTR_ICON) == "mdi:ruler-square"
-    assert state.attributes.get(ATTR_OPTIONS) == ["15", "30", "60", "100"]
+    assert state.attributes[ATTR_ICON] == "mdi:ruler-square"
+    assert state.attributes[ATTR_OPTIONS] == ["15", "30", "60", "100"]
 
     entry = registry.async_get("select.genie_room_size")
     assert entry

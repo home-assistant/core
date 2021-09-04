@@ -40,9 +40,9 @@ async def test_number_entity(hass: HomeAssistant) -> None:
     state = hass.states.get("number.genie_perfume_amount")
     assert state
     assert state.state == str(diffuser.perfume_amount)
-    assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
-    assert state.attributes.get(ATTR_MIN) == MIN_PERFUME_AMOUNT
-    assert state.attributes.get(ATTR_MAX) == MAX_PERFUME_AMOUNT
+    assert state.attributes[ATTR_ICON] == "mdi:gauge"
+    assert state.attributes[ATTR_MIN] == MIN_PERFUME_AMOUNT
+    assert state.attributes[ATTR_MAX] == MAX_PERFUME_AMOUNT
 
     entry = registry.async_get("number.genie_perfume_amount")
     assert entry

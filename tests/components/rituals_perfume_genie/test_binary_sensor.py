@@ -23,7 +23,7 @@ async def test_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.genie_battery_charging")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_BATTERY_CHARGING
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY_CHARGING
 
     entry = registry.async_get("binary_sensor.genie_battery_charging")
     assert entry
