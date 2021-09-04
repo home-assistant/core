@@ -33,7 +33,6 @@ class IotawattUpdater(DataUpdateCoordinator):
         )
 
         self._last_run = None
-        self._refresh_requested = False
 
     def update_last_run(self, last_run: datetime):
         """Notify coordinator of a sensor last update time."""
@@ -45,9 +44,6 @@ class IotawattUpdater(DataUpdateCoordinator):
 
     async def request_refresh(self):
         """Request a refresh of the iotawatt sensors."""
-        if self._refresh_requested:
-            return
-        self._refresh_requested = True
         await self.async_request_refresh()
 
     async def _async_update_data(self):
@@ -72,5 +68,4 @@ class IotawattUpdater(DataUpdateCoordinator):
 
         await self.api.update(lastUpdate=self._last_run)
         self._last_run = None
-        self._refresh_requested = False
         return self.api.getSensors()

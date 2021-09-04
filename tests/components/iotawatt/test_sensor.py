@@ -144,7 +144,7 @@ async def test_sensor_type_accumulated_output_error_restore(hass, mock_iotawatt)
         (
             State(
                 "sensor.my_watthour_accumulated_sensor_wh_accumulated",
-                "INVALID",
+                "unknown",
             ),
         ),
     )
