@@ -59,7 +59,6 @@ class AwairSensorEntityDescription(SensorEntityDescription, AwairRequiredKeysMix
 
 SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
     key=API_SCORE,
-    device_class=None,
     icon="mdi:blur",
     native_unit_of_measurement=PERCENTAGE,
     name="Awair score",
@@ -70,7 +69,6 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_HUMID,
         device_class=DEVICE_CLASS_HUMIDITY,
-        icon=None,
         native_unit_of_measurement=PERCENTAGE,
         name="Humidity",
         unique_id_tag="HUMID",  # matches legacy format
@@ -78,14 +76,12 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        icon=None,
         native_unit_of_measurement=LIGHT_LUX,
         name="Illuminance",
         unique_id_tag="illuminance",
     ),
     AwairSensorEntityDescription(
         key=API_SPL_A,
-        device_class=None,
         icon="mdi:ear-hearing",
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
         name="Sound level",
@@ -93,7 +89,6 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_VOC,
-        device_class=None,
         icon="mdi:cloud",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="Volatile organic compounds",
@@ -102,7 +97,6 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_TEMP,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        icon=None,
         native_unit_of_measurement=TEMP_CELSIUS,
         name="Temperature",
         unique_id_tag="TEMP",  # matches legacy format
@@ -120,7 +114,6 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
 SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_PM25,
-        device_class=None,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM2.5",
@@ -128,7 +121,6 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
     ),
     AwairSensorEntityDescription(
         key=API_PM10,
-        device_class=None,
         icon="mdi:blur",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM10",
