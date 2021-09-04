@@ -431,13 +431,12 @@ async def test_availability_template(hass, start_ha):
         },
     ],
 )
-async def test_invalid_attribute_template(hass, caplog, start_ha):
+async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
     """Test that errors are logged if rendering template fails."""
     hass.states.async_set("binary_sensor.test_sensor", "true")
     assert len(hass.states.async_all()) == 2
-    text = str([x.getMessage() for x in caplog.get_records("setup")])
-    assert ("test_attribute") in text
-    assert ("TemplateError") in text
+    assert ("test_attribute") in caplog_setup_text
+    assert ("TemplateError") in caplog_setup_text
 
 
 @pytest.mark.parametrize("count,domain", [(1, binary_sensor.DOMAIN)])
@@ -458,13 +457,12 @@ async def test_invalid_attribute_template(hass, caplog, start_ha):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, caplog, start_ha
+    hass, start_ha, caplog_setup_text
 ):
     """Test that an invalid availability keeps the device available."""
 
     assert hass.states.get("binary_sensor.my_sensor").state != STATE_UNAVAILABLE
-    text = str([x.getMessage() for x in caplog.get_records("setup")])
-    assert ("UndefinedError: \\'x\\' is undefined") in text
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
 async def test_no_update_template_match_all(hass, caplog):
