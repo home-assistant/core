@@ -21,26 +21,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         name="Chlorine",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="ph",
-        native_unit_of_measurement=None,
         icon="mdi:pool",
         name="pH",
-        device_class=None,
     ),
     SensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
         name="Water Temp",
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="date_time",
-        native_unit_of_measurement=None,
-        icon=None,
         name="Last Measured",
         device_class=DEVICE_CLASS_TIMESTAMP,
     ),
@@ -49,7 +43,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         name="Red OX",
-        device_class=None,
     ),
 )
 
