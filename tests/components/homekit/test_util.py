@@ -1,5 +1,5 @@
 """Test HomeKit util module."""
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -26,12 +26,12 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
     async_find_next_available_port,
+    async_port_is_available,
     cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
     dismiss_setup_message,
     format_sw_version,
-    port_is_available,
     show_setup_message,
     state_needs_accessory_mode,
     temperature_to_homekit,
@@ -59,6 +59,25 @@ from homeassistant.core import State
 from .util import async_init_integration
 
 from tests.common import MockConfigEntry, async_mock_service
+
+
+def _mock_socket(failure_attempts: int = 0) -> MagicMock:
+    """Mock a socket that fails to bind failure_attempts amount of times."""
+    mock_socket = MagicMock()
+    attempts = 0
+
+    def _simulate_bind(*_):
+        import pprint
+
+        pprint.pprint("Calling bind")
+        nonlocal attempts
+        attempts += 1
+        if attempts <= failure_attempts:
+            raise OSError
+        return
+
+    mock_socket.bind = Mock(side_effect=_simulate_bind)
+    return mock_socket
 
 
 def test_validate_entity_config():
@@ -257,11 +276,35 @@ async def test_dismiss_setup_msg(hass):
 
 async def test_port_is_available(hass):
     """Test we can get an available port and it is actually available."""
-    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
-
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
     assert next_port
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        assert async_port_is_available(next_port)
 
-    assert await hass.async_add_executor_job(port_is_available, next_port)
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(5),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 5
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(1),
+    ):
+        assert not async_port_is_available(next_port)
 
 
 async def test_port_is_available_skips_existing_entries(hass):
@@ -273,12 +316,38 @@ async def test_port_is_available_skips_existing_entries(hass):
     )
     entry.add_to_hass(hass)
 
-    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
 
-    assert next_port
-    assert next_port != DEFAULT_CONFIG_FLOW_PORT
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 1
 
-    assert await hass.async_add_executor_job(port_is_available, next_port)
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(4),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 5
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        assert async_port_is_available(next_port)
+
+    with pytest.raises(OSError), patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(10),
+    ):
+        async_find_next_available_port(hass, 65530)
 
 
 async def test_format_sw_version():
