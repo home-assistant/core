@@ -39,7 +39,6 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         name="Air Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
@@ -64,7 +63,6 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=PERCENTAGE,
         unit_imperial=PERCENTAGE,
         icon="mdi:gauge",
-        device_class=None,
     ),
     AquaLogicSensorEntityDescription(
         key="spa_chlorinator",
@@ -72,7 +70,6 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=PERCENTAGE,
         unit_imperial=PERCENTAGE,
         icon="mdi:gauge",
-        device_class=None,
     ),
     AquaLogicSensorEntityDescription(
         key="salt_level",
@@ -80,7 +77,6 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric="g/L",
         unit_imperial="PPM",
         icon="mdi:gauge",
-        device_class=None,
     ),
     AquaLogicSensorEntityDescription(
         key="pump_speed",
@@ -88,7 +84,6 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=PERCENTAGE,
         unit_imperial=PERCENTAGE,
         icon="mdi:speedometer",
-        device_class=None,
     ),
     AquaLogicSensorEntityDescription(
         key="pump_power",
@@ -96,13 +91,11 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=POWER_WATT,
         unit_imperial=POWER_WATT,
         icon="mdi:gauge",
-        device_class=None,
     ),
     AquaLogicSensorEntityDescription(
         key="status",
         name="Status",
         icon="mdi:alert",
-        device_class=None,
     ),
 )
 
