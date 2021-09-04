@@ -83,6 +83,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ComedHourlyPricingSensor(SensorEntity):
     """Implementation of a ComEd Hourly Pricing sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(self, websession, offset, name, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
@@ -90,7 +92,6 @@ class ComedHourlyPricingSensor(SensorEntity):
         if name:
             self._attr_name = name
         self.offset = offset
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     async def async_update(self):
         """Get the ComEd Hourly Pricing data from the web service."""

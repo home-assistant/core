@@ -117,13 +117,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.bbox_data = bbox_data
 
     def update(self):
@@ -138,11 +138,12 @@ class BboxUptimeSensor(SensorEntity):
 class BboxSensor(SensorEntity):
     """Implementation of a Bbox sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self.bbox_data = bbox_data
 
     def update(self):

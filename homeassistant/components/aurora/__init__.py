@@ -8,7 +8,6 @@ from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -129,6 +128,8 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 class AuroraEntity(CoordinatorEntity):
     """Implementation of the base Aurora Entity."""
 
+    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+
     def __init__(
         self,
         coordinator: AuroraDataUpdateCoordinator,
@@ -142,7 +143,6 @@ class AuroraEntity(CoordinatorEntity):
         self._attr_name = name
         self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
         self._attr_icon = icon
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def device_info(self):

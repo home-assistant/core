@@ -165,6 +165,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
 
     def __init__(self, data, currency, description: SensorEntityDescription):
@@ -172,7 +173,6 @@ class BitcoinSensor(SensorEntity):
         self.entity_description = description
         self.data = data
         self._currency = currency
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data and updates the states."""
