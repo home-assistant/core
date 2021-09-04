@@ -13,7 +13,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+                "description": "Please re-enter the password for {username}.",
                 "title": "Reauthenticate Integration"
             },
             "user": {

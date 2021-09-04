@@ -3,7 +3,7 @@
     "step": {
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Your access has expired or been revoked. Enter your password to re-link your account.",
+        "description": "Please re-enter the password for {username}.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }

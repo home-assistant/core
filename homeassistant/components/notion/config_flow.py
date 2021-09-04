@@ -1,7 +1,7 @@
 """Config flow to configure the Notion integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
@@ -40,8 +40,9 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_verify(self, step_id: str, schema: vol.Schema) -> FlowResult:
         """Attempt to authenticate the provided credentials."""
-        assert self._username
-        assert self._password
+        if TYPE_CHECKING:
+            assert self._username
+            assert self._password
 
         session = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -49,12 +50,18 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await async_get_client(self._username, self._password, session=session)
         except InvalidCredentialsError:
             return self.async_show_form(
-                step_id=step_id, data_schema=schema, errors={"base": "invalid_auth"}
+                step_id=step_id,
+                data_schema=schema,
+                errors={"base": "invalid_auth"},
+                description_placeholders={CONF_USERNAME: self._username},
             )
         except NotionError as err:
             LOGGER.error("Unknown Notion error: %s", err)
             return self.async_show_form(
-                step_id=step_id, data_schema=schema, errors={"base": "unknown"}
+                step_id=step_id,
+                data_schema=schema,
+                errors={"base": "unknown"},
+                description_placeholders={CONF_USERNAME: self._username},
             )
 
         data = {CONF_USERNAME: self._username, CONF_PASSWORD: self._password}
@@ -79,7 +86,9 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle re-auth completion."""
         if not user_input:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=RE_AUTH_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=RE_AUTH_SCHEMA,
+                description_placeholders={CONF_USERNAME: self._username},
             )
 
         self._password = user_input[CONF_PASSWORD]
