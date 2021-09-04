@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import ServiceMethodDetails
 
 from .const import (
     CONF_DEVICE,
@@ -152,16 +153,22 @@ SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_WIFI_LED_ON: {"method": "async_set_wifi_led_on"},
-    SERVICE_SET_WIFI_LED_OFF: {"method": "async_set_wifi_led_off"},
-    SERVICE_SET_POWER_MODE: {
-        "method": "async_set_power_mode",
-        "schema": SERVICE_SCHEMA_POWER_MODE,
-    },
-    SERVICE_SET_POWER_PRICE: {
-        "method": "async_set_power_price",
-        "schema": SERVICE_SCHEMA_POWER_PRICE,
-    },
+    SERVICE_SET_WIFI_LED_ON: ServiceMethodDetails(
+        method="async_set_wifi_led_on",
+        schema=SERVICE_SCHEMA,
+    ),
+    SERVICE_SET_WIFI_LED_OFF: ServiceMethodDetails(
+        method="async_set_wifi_led_off",
+        schema=SERVICE_SCHEMA,
+    ),
+    SERVICE_SET_POWER_MODE: ServiceMethodDetails(
+        method="async_set_power_mode",
+        schema=SERVICE_SCHEMA_POWER_MODE,
+    ),
+    SERVICE_SET_POWER_PRICE: ServiceMethodDetails(
+        method="async_set_power_price",
+        schema=SERVICE_SCHEMA_POWER_PRICE,
+    ),
 }
 
 MODEL_TO_FEATURES_MAP = {
@@ -399,7 +406,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
         async def async_service_handler(service):
             """Map services to methods on XiaomiPlugGenericSwitch."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            service_details = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -417,18 +424,20 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
             update_tasks = []
             for device in devices:
-                if not hasattr(device, method["method"]):
+                if not hasattr(device, service_details.method):
                     continue
-                await getattr(device, method["method"])(**params)
+                await getattr(device, service_details.method)(**params)
                 update_tasks.append(device.async_update_ha_state(True))
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
 
-        for plug_service, method in SERVICE_TO_METHOD.items():
-            schema = method.get("schema", SERVICE_SCHEMA)
+        for plug_service, service_details in SERVICE_TO_METHOD.items():
             hass.services.async_register(
-                DOMAIN, plug_service, async_service_handler, schema=schema
+                DOMAIN,
+                plug_service,
+                async_service_handler,
+                schema=service_details.schema,
             )
 
     async_add_entities(entities)

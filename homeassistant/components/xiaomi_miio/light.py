@@ -26,6 +26,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import ServiceMethodDetails
 from homeassistant.util import color, dt
 
 from .const import (
@@ -91,20 +92,38 @@ SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_DELAYED_TURN_OFF: {
-        "method": "async_set_delayed_turn_off",
-        "schema": SERVICE_SCHEMA_SET_DELAYED_TURN_OFF,
-    },
-    SERVICE_SET_SCENE: {
-        "method": "async_set_scene",
-        "schema": SERVICE_SCHEMA_SET_SCENE,
-    },
-    SERVICE_REMINDER_ON: {"method": "async_reminder_on"},
-    SERVICE_REMINDER_OFF: {"method": "async_reminder_off"},
-    SERVICE_NIGHT_LIGHT_MODE_ON: {"method": "async_night_light_mode_on"},
-    SERVICE_NIGHT_LIGHT_MODE_OFF: {"method": "async_night_light_mode_off"},
-    SERVICE_EYECARE_MODE_ON: {"method": "async_eyecare_mode_on"},
-    SERVICE_EYECARE_MODE_OFF: {"method": "async_eyecare_mode_off"},
+    SERVICE_SET_DELAYED_TURN_OFF: ServiceMethodDetails(
+        method="async_set_delayed_turn_off",
+        schema=SERVICE_SCHEMA_SET_DELAYED_TURN_OFF,
+    ),
+    SERVICE_SET_SCENE: ServiceMethodDetails(
+        method="async_set_scene",
+        schema=SERVICE_SCHEMA_SET_SCENE,
+    ),
+    SERVICE_REMINDER_ON: ServiceMethodDetails(
+        method="async_reminder_on",
+        schema=XIAOMI_MIIO_SERVICE_SCHEMA,
+    ),
+    SERVICE_REMINDER_OFF: ServiceMethodDetails(
+        method="async_reminder_off",
+        schema=XIAOMI_MIIO_SERVICE_SCHEMA,
+    ),
+    SERVICE_NIGHT_LIGHT_MODE_ON: ServiceMethodDetails(
+        method="async_night_light_mode_on",
+        schema=XIAOMI_MIIO_SERVICE_SCHEMA,
+    ),
+    SERVICE_NIGHT_LIGHT_MODE_OFF: ServiceMethodDetails(
+        method="async_night_light_mode_off",
+        schema=XIAOMI_MIIO_SERVICE_SCHEMA,
+    ),
+    SERVICE_EYECARE_MODE_ON: ServiceMethodDetails(
+        method="async_eyecare_mode_on",
+        schema=XIAOMI_MIIO_SERVICE_SCHEMA,
+    ),
+    SERVICE_EYECARE_MODE_OFF: ServiceMethodDetails(
+        method="async_eyecare_mode_off",
+        schema=XIAOMI_MIIO_SERVICE_SCHEMA,
+    ),
 }
 
 
@@ -188,7 +207,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async def async_service_handler(service):
             """Map services to methods on Xiaomi Philips Lights."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            service_details = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -206,18 +225,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             update_tasks = []
             for target_device in target_devices:
-                if not hasattr(target_device, method["method"]):
+                if not hasattr(target_device, service_details.method):
                     continue
-                await getattr(target_device, method["method"])(**params)
+                await getattr(target_device, service_details.method)(**params)
                 update_tasks.append(target_device.async_update_ha_state(True))
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
 
-        for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
-            schema = method.get("schema", XIAOMI_MIIO_SERVICE_SCHEMA)
+        for xiaomi_miio_service, service_details in SERVICE_TO_METHOD.items():
             hass.services.async_register(
-                DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
+                DOMAIN,
+                xiaomi_miio_service,
+                async_service_handler,
+                schema=service_details.schema,
             )
 
     async_add_entities(entities, update_before_add=True)

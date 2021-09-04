@@ -27,6 +27,7 @@ from homeassistant.components.fan import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import ServiceMethodDetails
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -159,11 +160,14 @@ SERVICE_SCHEMA_EXTRA_FEATURES = AIRPURIFIER_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_RESET_FILTER: {"method": "async_reset_filter"},
-    SERVICE_SET_EXTRA_FEATURES: {
-        "method": "async_set_extra_features",
-        "schema": SERVICE_SCHEMA_EXTRA_FEATURES,
-    },
+    SERVICE_RESET_FILTER: ServiceMethodDetails(
+        method="async_reset_filter",
+        schema=AIRPURIFIER_SERVICE_SCHEMA,
+    ),
+    SERVICE_SET_EXTRA_FEATURES: ServiceMethodDetails(
+        method="async_set_extra_features",
+        schema=SERVICE_SCHEMA_EXTRA_FEATURES,
+    ),
 }
 
 FAN_DIRECTIONS_MAP = {
@@ -224,7 +228,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_service_handler(service):
         """Map services to methods on XiaomiAirPurifier."""
-        method = SERVICE_TO_METHOD[service.service]
+        service_details = SERVICE_TO_METHOD[service.service]
         params = {
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
@@ -241,7 +245,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         update_tasks = []
 
         for entity in filtered_entities:
-            entity_method = getattr(entity, method["method"], None)
+            entity_method = getattr(entity, service_details.method, None)
             if not entity_method:
                 continue
             await entity_method(**params)
@@ -252,10 +256,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if update_tasks:
             await asyncio.wait(update_tasks)
 
-    for air_purifier_service, method in SERVICE_TO_METHOD.items():
-        schema = method.get("schema", AIRPURIFIER_SERVICE_SCHEMA)
+    for air_purifier_service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
-            DOMAIN, air_purifier_service, async_service_handler, schema=schema
+            DOMAIN,
+            air_purifier_service,
+            async_service_handler,
+            schema=service_details.schema,
         )
 
     async_add_entities(entities)

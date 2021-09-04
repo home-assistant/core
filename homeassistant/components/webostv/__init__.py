@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service import ServiceMethodDetails
 
 from .const import (
     ATTR_BUTTON,
@@ -71,12 +72,18 @@ COMMAND_SCHEMA = CALL_SCHEMA.extend(
 SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.string})
 
 SERVICE_TO_METHOD = {
-    SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
-    SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
-    SERVICE_SELECT_SOUND_OUTPUT: {
-        "method": "async_select_sound_output",
-        "schema": SOUND_OUTPUT_SCHEMA,
-    },
+    SERVICE_BUTTON: ServiceMethodDetails(
+        method="async_button",
+        schema=BUTTON_SCHEMA,
+    ),
+    SERVICE_COMMAND: ServiceMethodDetails(
+        method="async_command",
+        schema=COMMAND_SCHEMA,
+    ),
+    SERVICE_SELECT_SOUND_OUTPUT: ServiceMethodDetails(
+        method="async_select_sound_output",
+        schema=SOUND_OUTPUT_SCHEMA,
+    ),
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,15 +94,14 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
 
     async def async_service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
+        service_details = SERVICE_TO_METHOD[service.service]
         data = service.data.copy()
-        data["method"] = method["method"]
+        data["method"] = service_details.method
         async_dispatcher_send(hass, DOMAIN, data)
 
-    for service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
+    for service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
+            DOMAIN, service, async_service_handler, schema=service_details.schema
         )
 
     tasks = [async_setup_tv(hass, config, conf) for conf in config[DOMAIN]]

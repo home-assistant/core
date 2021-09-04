@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import ServiceMethodDetails
 from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import (
@@ -81,22 +82,22 @@ SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_PROFILE: {
-        "method": "async_set_profile",
-        "schema": SERVICE_SCHEMA_SET_PROFILE,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_HOME: {
-        "method": "async_set_profile_fan_speed_home",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: {
-        "method": "async_set_profile_fan_speed_away",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
-    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: {
-        "method": "async_set_profile_fan_speed_boost",
-        "schema": SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    },
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile",
+        schema=SERVICE_SCHEMA_SET_PROFILE,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_home",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_away",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
+        method="async_set_profile_fan_speed_boost",
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
 }
 
 
@@ -112,10 +113,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {"client": client, "state_proxy": state_proxy, "name": name}
 
-    for vallox_service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
+    for vallox_service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
-            DOMAIN, vallox_service, service_handler.async_handle, schema=schema
+            DOMAIN,
+            vallox_service,
+            service_handler.async_handle,
+            schema=service_details.schema,
         )
 
     # The vallox hardware expects quite strict timings for websocket requests. Timings that machines
@@ -259,17 +262,17 @@ class ValloxServiceHandler:
 
     async def async_handle(self, call: ServiceCall) -> None:
         """Dispatch a service call."""
-        method = SERVICE_TO_METHOD.get(call.service)
+        service_details = SERVICE_TO_METHOD.get(call.service)
         params = call.data.copy()
 
-        if method is None:
+        if service_details is None:
             return
 
-        if not hasattr(self, method["method"]):
-            _LOGGER.error("Service not implemented: %s", method["method"])
+        if not hasattr(self, service_details.method):
+            _LOGGER.error("Service not implemented: %s", service_details.method)
             return
 
-        result = await getattr(self, method["method"])(**params)
+        result = await getattr(self, service_details.method)(**params)
 
         # Force state_proxy to refresh device state, so that updates are propagated to platforms.
         if result:

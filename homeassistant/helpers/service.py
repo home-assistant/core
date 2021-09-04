@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, Callable, TypedDict
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, TypedDict
 
 import voluptuous as vol
 
@@ -59,6 +59,13 @@ CONF_SERVICE_DATA_TEMPLATE = "data_template"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+class ServiceMethodDetails(NamedTuple):
+    """Details for SERVICE_TO_METHOD mapping."""
+
+    method: str
+    schema: vol.Schema
 
 
 class ServiceParams(TypedDict):

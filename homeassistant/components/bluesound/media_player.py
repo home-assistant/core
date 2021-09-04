@@ -48,6 +48,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import ServiceMethodDetails
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -97,10 +98,22 @@ BS_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 BS_JOIN_SCHEMA = BS_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
 
 SERVICE_TO_METHOD = {
-    SERVICE_JOIN: {"method": "async_join", "schema": BS_JOIN_SCHEMA},
-    SERVICE_UNJOIN: {"method": "async_unjoin", "schema": BS_SCHEMA},
-    SERVICE_SET_TIMER: {"method": "async_increase_timer", "schema": BS_SCHEMA},
-    SERVICE_CLEAR_TIMER: {"method": "async_clear_timer", "schema": BS_SCHEMA},
+    SERVICE_JOIN: ServiceMethodDetails(
+        method="async_join",
+        schema=BS_JOIN_SCHEMA,
+    ),
+    SERVICE_UNJOIN: ServiceMethodDetails(
+        method="async_unjoin",
+        schema=BS_SCHEMA,
+    ),
+    SERVICE_SET_TIMER: ServiceMethodDetails(
+        method="async_increase_timer",
+        schema=BS_SCHEMA,
+    ),
+    SERVICE_CLEAR_TIMER: ServiceMethodDetails(
+        method="async_clear_timer",
+        schema=BS_SCHEMA,
+    ),
 }
 
 
@@ -173,8 +186,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_service_handler(service):
         """Map services to method of Bluesound devices."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
+        if not (service_details := SERVICE_TO_METHOD.get(service.service)):
             return
 
         params = {
@@ -191,12 +203,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             target_players = hass.data[DATA_BLUESOUND]
 
         for player in target_players:
-            await getattr(player, method["method"])(**params)
+            await getattr(player, service_details.method)(**params)
 
-    for service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
+    for service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
+            DOMAIN, service, async_service_handler, schema=service_details.schema
         )
 
 
