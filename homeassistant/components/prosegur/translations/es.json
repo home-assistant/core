@@ -13,14 +13,14 @@
             "reauth_confirm": {
                 "data": {
                     "description": "Vuelva a autenticarse con su cuenta Prosegur.",
-                    "password": "Clave",
+                    "password": "Contrase\u00f1a",
                     "username": "Nombre de Usuario"
                 }
             },
             "user": {
                 "data": {
                     "country": "Pa\u00eds",
-                    "password": "Clave",
+                    "password": "Contrase\u00f1a",
                     "username": "Nombre de Usuario"
                 }
             }
