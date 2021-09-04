@@ -125,13 +125,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for resource in config[CONF_RESOURCES]:
         sensor_type = resource.lower()
 
-        if sensor_type not in SENSOR_TYPES:
-            SENSOR_TYPES[sensor_type] = [
-                sensor_type.title(),
-                "",
-                "mdi:information-outline",
-            ]
-
         if sensor_type.upper() not in apcups_data.status:
             _LOGGER.warning(
                 "Sensor type: %s does not appear in the APCUPSd status output",
