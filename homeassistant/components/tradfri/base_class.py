@@ -32,6 +32,8 @@ class TradfriBaseClass(Entity):
     All devices and groups should ultimately inherit from this class.
     """
 
+    _attr_should_poll = False
+
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
         self._api = handle_error(api)
@@ -39,8 +41,6 @@ class TradfriBaseClass(Entity):
         self._device_control = None
         self._device_data = None
         self._gateway_id = gateway_id
-        self._attr_should_poll = False
-
         self._refresh(device)
 
     @callback
@@ -86,7 +86,6 @@ class TradfriBaseDevice(TradfriBaseClass):
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
         super().__init__(device, api, gateway_id)
-        self._attr_available = True
 
     @property
     def device_info(self):

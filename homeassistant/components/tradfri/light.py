@@ -48,13 +48,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TradfriGroup(TradfriBaseClass, LightEntity):
     """The platform class for light groups required by hass."""
 
+    _attr_supported_features = SUPPORTED_GROUP_FEATURES
+
     def __init__(self, device, api, gateway_id):
         """Initialize a Group."""
         super().__init__(device, api, gateway_id)
 
         self._attr_unique_id = f"group-{gateway_id}-{device.id}"
         self._attr_should_poll = True
-        self._attr_supported_features = SUPPORTED_GROUP_FEATURES
         self._refresh(device)
 
     async def async_update(self):
