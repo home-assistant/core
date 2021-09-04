@@ -83,10 +83,6 @@ class TradfriBaseDevice(TradfriBaseClass):
     All devices should inherit from this class.
     """
 
-    def __init__(self, device, api, gateway_id):
-        """Initialize a device."""
-        super().__init__(device, api, gateway_id)
-
     @property
     def device_info(self):
         """Return the device info."""
