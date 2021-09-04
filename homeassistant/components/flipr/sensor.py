@@ -1,7 +1,9 @@
 """Sensor platform for the Flipr's pool_sensor."""
+from __future__ import annotations
+
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_TEMPERATURE,
@@ -13,33 +15,43 @@ from homeassistant.const import (
 from . import FliprEntity
 from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
 
-SENSORS = {
-    "chlorine": {
-        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
-        "icon": "mdi:pool",
-        "name": "Chlorine",
-        "device_class": None,
-    },
-    "ph": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
-    "temperature": {
-        "unit": TEMP_CELSIUS,
-        "icon": None,
-        "name": "Water Temp",
-        "device_class": DEVICE_CLASS_TEMPERATURE,
-    },
-    "date_time": {
-        "unit": None,
-        "icon": None,
-        "name": "Last Measured",
-        "device_class": DEVICE_CLASS_TIMESTAMP,
-    },
-    "red_ox": {
-        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
-        "icon": "mdi:pool",
-        "name": "Red OX",
-        "device_class": None,
-    },
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="chlorine",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        icon="mdi:pool",
+        name="Chlorine",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="ph",
+        native_unit_of_measurement=None,
+        icon="mdi:pool",
+        name="pH",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        name="Water Temp",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="date_time",
+        native_unit_of_measurement=None,
+        icon=None,
+        name="Last Measured",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="red_ox",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        icon="mdi:pool",
+        name="Red OX",
+        device_class=None,
+    ),
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -47,45 +59,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     flipr_id = config_entry.data[CONF_FLIPR_ID]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    sensors_list = []
-    for sensor in SENSORS:
-        sensors_list.append(FliprSensor(coordinator, flipr_id, sensor))
+    entities = [
+        FliprSensor(coordinator, flipr_id, description) for description in SENSOR_TYPES
+    ]
 
-    async_add_entities(sensors_list, True)
+    async_add_entities(entities, True)
 
 
 class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
 
-    @property
-    def name(self):
-        """Return the name of the particular component."""
-        return f"Flipr {self.flipr_id} {SENSORS[self.info_type]['name']}"
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    def __init__(self, coordinator, flipr_id, description: SensorEntityDescription):
+        """Initialize Flipr sensor."""
+        super().__init__(coordinator, flipr_id, description)
+        self._attr_name = f"Flipr {self.flipr_id} {description.name}"
 
     @property
     def native_value(self):
         """State of the sensor."""
-        state = self.coordinator.data[self.info_type]
+        state = self.coordinator.data[self.entity_description.key]
         if isinstance(state, datetime):
             return state.isoformat()
         return state
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SENSORS[self.info_type]["device_class"]
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSORS[self.info_type]["icon"]
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return unit of measurement."""
-        return SENSORS[self.info_type]["unit"]
-
-    @property
-    def device_state_attributes(self):
-        """Return device attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
