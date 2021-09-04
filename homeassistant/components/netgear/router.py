@@ -92,6 +92,7 @@ class NetgearRouter:
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
         self.hass = hass
+        self.entry = entry
         self.entry_id = entry.entry_id
         self.unique_id = entry.unique_id
         self._host = entry.data.get(CONF_HOST)
@@ -115,8 +116,6 @@ class NetgearRouter:
         self._attrs = {}
 
         self.devices = {}
-
-        self._unsub_dispatcher = None
 
     def _setup(self) -> None:
         """Set up a Netgear router sync portion."""
@@ -162,16 +161,13 @@ class NetgearRouter:
             }
 
         await self.async_update_device_trackers()
-        self._unsub_dispatcher = async_track_time_interval(
-            self.hass, self.async_update_device_trackers, SCAN_INTERVAL
+        self.entry.async_on_unload(
+            async_track_time_interval(
+                self.hass, self.async_update_device_trackers, SCAN_INTERVAL
+            )
         )
 
         async_dispatcher_send(self.hass, self.signal_device_new)
-
-    async def async_unload(self) -> None:
-        """Unload a Netgear router."""
-        self._unsub_dispatcher()
-        self._unsub_dispatcher = None
 
     async def async_get_attached_devices(self) -> None:
         """Get the devices connected to the router."""
