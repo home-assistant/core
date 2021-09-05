@@ -9,9 +9,9 @@ import os
 from typing import Any, Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.loader import bind_hass
+from homeassistant.loader import MAX_LOAD_CONCURRENTLY, bind_hass
 from homeassistant.util import json as json_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
@@ -19,6 +19,8 @@ from homeassistant.util import json as json_util
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
+
+STORAGE_SEMAPHORE = "storage_semaphore"
 
 
 @bind_hass
@@ -75,7 +77,7 @@ class Store:
         private: bool = False,
         *,
         encoder: type[JSONEncoder] | None = None,
-    ):
+    ) -> None:
         """Initialize storage class."""
         self.version = version
         self.key = key
@@ -109,8 +111,12 @@ class Store:
 
     async def _async_load(self):
         """Load the data and ensure the task is removed."""
+        if STORAGE_SEMAPHORE not in self.hass.data:
+            self.hass.data[STORAGE_SEMAPHORE] = asyncio.Semaphore(MAX_LOAD_CONCURRENTLY)
+
         try:
-            return await self._async_load_data()
+            async with self.hass.data[STORAGE_SEMAPHORE]:
+                return await self._async_load_data()
         finally:
             self._load_task = None
 
@@ -169,7 +175,7 @@ class Store:
         )
 
     @callback
-    def _async_ensure_final_write_listener(self):
+    def _async_ensure_final_write_listener(self) -> None:
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
@@ -177,14 +183,14 @@ class Store:
             )
 
     @callback
-    def _async_cleanup_final_write_listener(self):
+    def _async_cleanup_final_write_listener(self) -> None:
         """Clean up a stop listener."""
         if self._unsub_final_write_listener is not None:
             self._unsub_final_write_listener()
             self._unsub_final_write_listener = None
 
     @callback
-    def _async_cleanup_delay_listener(self):
+    def _async_cleanup_delay_listener(self) -> None:
         """Clean up a delay listener."""
         if self._unsub_delay_listener is not None:
             self._unsub_delay_listener()
@@ -198,7 +204,7 @@ class Store:
             return
         await self._async_handle_write_data()
 
-    async def _async_callback_final_write(self, _event):
+    async def _async_callback_final_write(self, _event: Event) -> None:
         """Handle a write because Home Assistant is in final write state."""
         self._unsub_final_write_listener = None
         await self._async_handle_write_data()
@@ -239,7 +245,7 @@ class Store:
         """Migrate to the new version."""
         raise NotImplementedError
 
-    async def async_remove(self):
+    async def async_remove(self) -> None:
         """Remove all data."""
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()

@@ -3,19 +3,22 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, Container, Generator, cast
+from typing import Any, Callable, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
     async_get_device_automation_platform,
 )
+from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -28,6 +31,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
@@ -65,6 +69,8 @@ from .trace import (
     trace_stack_top,
 )
 
+# mypy: disallow-any-generics
+
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
@@ -96,18 +102,37 @@ def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
     node.set_result(result=result, **kwargs)
 
 
+def condition_trace_update_result(**kwargs: Any) -> None:
+    """Update the result of TraceElement at the top of the stack."""
+    node = trace_stack_top(trace_stack_cv)
+
+    # The condition function may be called directly, in which case tracing
+    # is not setup
+    if not node:
+        return
+
+    node.update_result(**kwargs)
+
+
 @contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator:
+def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None, None]:
     """Trace condition evaluation."""
-    trace_element = condition_trace_append(variables, trace_path_get())
-    trace_stack_push(trace_stack_cv, trace_element)
+    should_pop = True
+    trace_element = trace_stack_top(trace_stack_cv)
+    if trace_element and trace_element.reuse_by_child:
+        should_pop = False
+        trace_element.reuse_by_child = False
+    else:
+        trace_element = condition_trace_append(variables, trace_path_get())
+        trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
-        trace_stack_pop(trace_stack_cv)
+        if should_pop:
+            trace_stack_pop(trace_stack_cv)
 
 
 def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
@@ -118,7 +143,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
-            condition_trace_set_result(result)
+            condition_trace_update_result(result=result)
             return result
 
     return wrapper
@@ -288,7 +313,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(
+def async_numeric_state(  # noqa: C901
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,
@@ -594,23 +619,37 @@ def sun(
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
+        condition_trace_set_result(False, message="no sunrise today")
         return False
 
     if sunset is None and SUN_EVENT_SUNSET in (before, after):
         # There is no sunset today
+        condition_trace_set_result(False, message="no sunset today")
         return False
 
-    if before == SUN_EVENT_SUNRISE and utcnow > cast(datetime, sunrise) + before_offset:
-        return False
+    if before == SUN_EVENT_SUNRISE:
+        wanted_time_before = cast(datetime, sunrise) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        if utcnow > wanted_time_before:
+            return False
 
-    if before == SUN_EVENT_SUNSET and utcnow > cast(datetime, sunset) + before_offset:
-        return False
+    if before == SUN_EVENT_SUNSET:
+        wanted_time_before = cast(datetime, sunset) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        if utcnow > wanted_time_before:
+            return False
 
-    if after == SUN_EVENT_SUNRISE and utcnow < cast(datetime, sunrise) + after_offset:
-        return False
+    if after == SUN_EVENT_SUNRISE:
+        wanted_time_after = cast(datetime, sunrise) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        if utcnow < wanted_time_after:
+            return False
 
-    if after == SUN_EVENT_SUNSET and utcnow < cast(datetime, sunset) + after_offset:
-        return False
+    if after == SUN_EVENT_SUNSET:
+        wanted_time_after = cast(datetime, sunset) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        if utcnow < wanted_time_after:
+            return False
 
     return True
 
@@ -644,15 +683,22 @@ def template(
 
 
 def async_template(
-    hass: HomeAssistant, value_template: Template, variables: TemplateVarsType = None
+    hass: HomeAssistant,
+    value_template: Template,
+    variables: TemplateVarsType = None,
+    trace_result: bool = True,
 ) -> bool:
     """Test if template condition matches."""
     try:
-        value: str = value_template.async_render(variables, parse_result=False)
+        info = value_template.async_render_to_info(variables, parse_result=False)
+        value = info.result()
     except TemplateError as ex:
         raise ConditionErrorMessage("template", str(ex)) from ex
 
-    return value.lower() == "true"
+    result = value.lower() == "true"
+    if trace_result:
+        condition_trace_set_result(result, entities=list(info.entities))
+    return result
 
 
 def async_template_from_config(
@@ -695,11 +741,24 @@ def time(
         after_entity = hass.states.get(after)
         if not after_entity:
             raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
-        after = dt_util.dt.time(
-            after_entity.attributes.get("hour", 23),
-            after_entity.attributes.get("minute", 59),
-            after_entity.attributes.get("second", 59),
-        )
+        if after_entity.domain == "input_datetime":
+            after = dt_util.dt.time(
+                after_entity.attributes.get("hour", 23),
+                after_entity.attributes.get("minute", 59),
+                after_entity.attributes.get("second", 59),
+            )
+        elif after_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            after_datetime = dt_util.parse_datetime(after_entity.state)
+            if after_datetime is None:
+                return False
+            after = dt_util.as_local(after_datetime).time()
+        else:
+            return False
 
     if before is None:
         before = dt_util.dt.time(23, 59, 59, 999999)
@@ -707,23 +766,38 @@ def time(
         before_entity = hass.states.get(before)
         if not before_entity:
             raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
-        before = dt_util.dt.time(
-            before_entity.attributes.get("hour", 23),
-            before_entity.attributes.get("minute", 59),
-            before_entity.attributes.get("second", 59),
-            999999,
-        )
+        if before_entity.domain == "input_datetime":
+            before = dt_util.dt.time(
+                before_entity.attributes.get("hour", 23),
+                before_entity.attributes.get("minute", 59),
+                before_entity.attributes.get("second", 59),
+            )
+        elif before_entity.attributes.get(
+            ATTR_DEVICE_CLASS
+        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            before_timedatime = dt_util.parse_datetime(before_entity.state)
+            if before_timedatime is None:
+                return False
+            before = dt_util.as_local(before_timedatime).time()
+        else:
+            return False
 
     if after < before:
+        condition_trace_update_result(after=after, now_time=now_time, before=before)
         if not after <= now_time < before:
             return False
     else:
+        condition_trace_update_result(after=after, now_time=now_time, before=before)
         if before <= now_time < after:
             return False
 
     if weekday is not None:
         now_weekday = WEEKDAYS[now.weekday()]
 
+        condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
             isinstance(weekday, str)
             and weekday != now_weekday
@@ -859,6 +933,26 @@ async def async_device_from_config(
     )
 
 
+async def async_trigger_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Test a trigger condition."""
+    if config_validation:
+        config = cv.TRIGGER_CONDITION_SCHEMA(config)
+    trigger_id = config[CONF_ID]
+
+    @trace_condition_function
+    def trigger_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Validate trigger based if-condition."""
+        return (
+            variables is not None
+            and "trigger" in variables
+            and variables["trigger"].get("id") in trigger_id
+        )
+
+    return trigger_if
+
+
 async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType | Template
 ) -> ConfigType | Template:
@@ -880,6 +974,8 @@ async def async_validate_condition_config(
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "condition"
         )
+        if hasattr(platform, "async_validate_condition_config"):
+            return await platform.async_validate_condition_config(hass, config)  # type: ignore
         return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
 
     return config

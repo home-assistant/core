@@ -3,6 +3,7 @@ import asyncio
 from os import path
 from unittest.mock import patch
 
+import httpx
 import respx
 
 from homeassistant import config as hass_config
@@ -49,9 +50,10 @@ async def test_fetching_url(hass, hass_client):
     assert respx.calls.call_count == 2
 
 
-async def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
+@respx.mock
+async def test_fetching_without_verify_ssl(hass, hass_client):
     """Test that it fetches the given url when ssl verify is off."""
-    aioclient_mock.get("https://example.com", text="hello world")
+    respx.get("https://example.com").respond(text="hello world")
 
     await async_setup_component(
         hass,
@@ -76,9 +78,10 @@ async def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
     assert resp.status == 200
 
 
-async def test_fetching_url_with_verify_ssl(aioclient_mock, hass, hass_client):
+@respx.mock
+async def test_fetching_url_with_verify_ssl(hass, hass_client):
     """Test that it fetches the given url when ssl verify is explicitly on."""
-    aioclient_mock.get("https://example.com", text="hello world")
+    respx.get("https://example.com").respond(text="hello world")
 
     await async_setup_component(
         hass,
@@ -168,7 +171,7 @@ async def test_limit_refetch(hass, hass_client):
     assert body == "hello planet"
 
 
-async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
+async def test_stream_source(hass, hass_client, hass_ws_client):
     """Test that the stream source is rendered."""
     assert await async_setup_component(
         hass,
@@ -208,7 +211,7 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
 
 
-async def test_stream_source_error(aioclient_mock, hass, hass_client, hass_ws_client):
+async def test_stream_source_error(hass, hass_client, hass_ws_client):
     """Test that the stream source has an error."""
     assert await async_setup_component(
         hass,
@@ -272,7 +275,7 @@ async def test_setup_alternative_options(hass, hass_ws_client):
     assert hass.data["camera"].get_entity("camera.config_test")
 
 
-async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
+async def test_no_stream_source(hass, hass_client, hass_ws_client):
     """Test a stream request without stream source option set."""
     assert await async_setup_component(
         hass,
@@ -405,6 +408,57 @@ async def test_reloading(hass, hass_client):
     assert respx.calls.call_count == 2
     body = await resp.text()
     assert body == "hello world"
+
+
+@respx.mock
+async def test_timeout_cancelled(hass, hass_client):
+    """Test that timeouts and cancellations return last image."""
+
+    respx.get("http://example.com").respond(text="hello world")
+
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "http://example.com",
+                "username": "user",
+                "password": "pass",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+
+    assert resp.status == 200
+    assert respx.calls.call_count == 1
+    assert await resp.text() == "hello world"
+
+    respx.get("http://example.com").respond(text="not hello world")
+
+    with patch(
+        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
+        side_effect=asyncio.CancelledError(),
+    ):
+        resp = await client.get("/api/camera_proxy/camera.config_test")
+        assert respx.calls.call_count == 1
+        assert resp.status == 500
+
+    respx.get("http://example.com").side_effect = [
+        httpx.RequestError,
+        httpx.TimeoutException,
+    ]
+
+    for total_calls in range(2, 4):
+        resp = await client.get("/api/camera_proxy/camera.config_test")
+        assert respx.calls.call_count == total_calls
+        assert resp.status == 200
+        assert await resp.text() == "hello world"
 
 
 def _get_fixtures_base_path():

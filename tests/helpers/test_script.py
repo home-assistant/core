@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from types import MappingProxyType
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from async_timeout import timeout
 import pytest
@@ -15,7 +15,12 @@ import voluptuous as vol
 # Otherwise can't test just this file (import order issue)
 from homeassistant import exceptions
 import homeassistant.components.scene as scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
 from homeassistant.exceptions import ConditionError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv, script, trace
@@ -86,9 +91,10 @@ def assert_element(trace_element, expected_element, path):
         assert not trace_element._variables
 
 
-def assert_action_trace(expected):
+def assert_action_trace(expected, expected_script_execution="finished"):
     """Assert a trace condition sequence is as expected."""
     action_trace = trace.trace_get(clear=False)
+    script_execution = trace.script_execution_get()
     trace.trace_clear()
     expected_trace_keys = list(expected.keys())
     assert list(action_trace.keys()) == expected_trace_keys
@@ -97,6 +103,8 @@ def assert_action_trace(expected):
         for index, element in enumerate(expected[key]):
             path = f"[{trace_key_index}][{index}]"
             assert_element(action_trace[key][index], element, path)
+
+    assert script_execution == expected_script_execution
 
 
 def async_watch_for_action(script_obj, message):
@@ -474,7 +482,7 @@ async def test_stop_no_wait(hass, count):
 
     # Can't assert just yet because we haven't verified stopping works yet.
     # If assert fails we can hang test if async_stop doesn't work.
-    script_was_runing = script_obj.is_running
+    script_was_running = script_obj.is_running
     were_no_events = len(events) == 0
 
     # Begin the process of stopping the script (which should stop all runs), and then
@@ -484,7 +492,7 @@ async def test_stop_no_wait(hass, count):
 
     await hass.async_block_till_done()
 
-    assert script_was_runing
+    assert script_was_running
     assert were_no_events
     assert not script_obj.is_running
     assert len(events) == 0
@@ -619,8 +627,9 @@ async def test_delay_template_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
-        }
+            "1": [{"error_type": vol.MultipleInvalid}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -679,8 +688,9 @@ async def test_delay_template_complex_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
-        }
+            "1": [{"error_type": vol.MultipleInvalid}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -717,7 +727,8 @@ async def test_cancel_delay(hass):
     assert_action_trace(
         {
             "0": [{"result": {"delay": 5.0, "done": False}}],
-        }
+        },
+        expected_script_execution="cancelled",
     )
 
 
@@ -969,13 +980,15 @@ async def test_cancel_wait(hass, action_type):
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
     else:
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
 
 
@@ -1130,7 +1143,8 @@ async def test_wait_continue_on_timeout(
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error_type"] = script._StopScript
+        expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
+        expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [
             {
@@ -1138,7 +1152,8 @@ async def test_wait_continue_on_timeout(
                 "variables": variable_wait,
             }
         ]
-    assert_action_trace(expected_trace)
+        expected_script_execution = "finished"
+    assert_action_trace(expected_trace, expected_script_execution)
 
 
 async def test_wait_template_variables_in(hass):
@@ -1179,8 +1194,8 @@ async def test_wait_template_with_utcnow(hass):
     start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
 
     try:
-        non_maching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+        non_matching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
@@ -1211,17 +1226,17 @@ async def test_wait_template_with_utcnow_no_match(hass):
     timed_out = False
 
     try:
-        non_maching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+        non_matching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
-        second_non_maching_time = start_time.replace(hour=4)
+        second_non_matching_time = start_time.replace(hour=4)
         with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_maching_time
+            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
         ):
-            async_fire_time_changed(hass, second_non_maching_time)
+            async_fire_time_changed(hass, second_non_matching_time)
 
         with timeout(0.1):
             await hass.async_block_till_done()
@@ -1402,9 +1417,9 @@ async def test_condition_warning(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"error_type": ConditionError}],
-            "1/condition/entity_id/0": [{"error_type": ConditionError}],
-        }
+            "1/entity_id/0": [{"error_type": ConditionError}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -1437,8 +1452,7 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"result": True}}],
-            "1/condition": [{"result": {"result": True}}],
+            "1": [{"result": {"entities": ["test.entity"], "result": True}}],
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
@@ -1454,9 +1468,14 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"result": {"result": False}}],
-        }
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -1752,9 +1771,9 @@ async def test_repeat_var_in_condition(hass, condition):
                 },
             ],
             "0/repeat/while/0": [
-                {"result": {"result": True}},
-                {"result": {"result": True}},
-                {"result": {"result": False}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": False}},
             ],
             "0/repeat/sequence/0": [
                 {"result": {"event": "test_event", "event_data": {}}}
@@ -1785,8 +1804,8 @@ async def test_repeat_var_in_condition(hass, condition):
                 },
             ],
             "0/repeat/until/0": [
-                {"result": {"result": False}},
-                {"result": {"result": True}},
+                {"result": {"entities": [], "result": False}},
+                {"result": {"entities": [], "result": True}},
             ],
         }
     assert_action_trace(expected_trace)
@@ -2046,10 +2065,14 @@ async def test_choose(hass, caplog, var, result):
     expected_trace = {"0": [{"result": {"choice": expected_choice}}]}
     if var >= 1:
         expected_trace["0/choose/0"] = [{"result": {"result": var == 1}}]
-        expected_trace["0/choose/0/conditions/0"] = [{"result": {"result": var == 1}}]
+        expected_trace["0/choose/0/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 1}}
+        ]
     if var >= 2:
         expected_trace["0/choose/1"] = [{"result": {"result": var == 2}}]
-        expected_trace["0/choose/1/conditions/0"] = [{"result": {"result": var == 2}}]
+        expected_trace["0/choose/1/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 2}}
+        ]
     if var == 1:
         expected_trace["0/choose/0/sequence/0"] = [
             {"result": {"event": "test_event", "event_data": {"choice": "first"}}}
@@ -2141,7 +2164,7 @@ async def test_propagate_error_service_not_found(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace)
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_invalid_service_data(hass):
@@ -2178,7 +2201,7 @@ async def test_propagate_error_invalid_service_data(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace)
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_service_exception(hass):
@@ -2219,7 +2242,7 @@ async def test_propagate_error_service_exception(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace)
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_referenced_entities(hass):
@@ -3112,3 +3135,16 @@ async def test_breakpoints_2(hass):
     assert not script_obj.is_running
     assert script_obj.runs == 0
     assert len(events) == 1
+
+
+async def test_platform_async_validate_action_config(hass):
+    """Test platform.async_validate_action_config will be called if it exists."""
+    config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test"}
+    platform = AsyncMock()
+    with patch(
+        "homeassistant.helpers.script.device_automation.async_get_device_automation_platform",
+        return_value=platform,
+    ):
+        platform.async_validate_action_config.return_value = config
+        await script.async_validate_action_config(hass, config)
+        platform.async_validate_action_config.assert_awaited()

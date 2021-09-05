@@ -29,7 +29,7 @@ import async_timeout
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.components.unifi.switch import BLOCK_SWITCH, POE_SWITCH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -38,7 +38,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
@@ -101,7 +101,6 @@ class UniFiController:
         self.progress = None
         self.wireless_clients = None
 
-        self.listeners = []
         self.site_id: str = ""
         self._site_name = None
         self._site_role = None
@@ -322,15 +321,8 @@ class UniFiController:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    UNIFI_DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=self.config_entry,
-                )
-            )
-            return False
+        except AuthenticationRequired as err:
+            raise ConfigEntryAuthFailed from err
 
         for site in sites.values():
             if self.site == site["name"]:
@@ -347,7 +339,10 @@ class UniFiController:
         ):
             if entry.domain == TRACKER_DOMAIN:
                 mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == SWITCH_DOMAIN:
+            elif entry.domain == SWITCH_DOMAIN and (
+                entry.unique_id.startswith(BLOCK_SWITCH)
+                or entry.unique_id.startswith(POE_SWITCH)
+            ):
                 mac = entry.unique_id.split("-", 1)[1]
             else:
                 continue
@@ -367,12 +362,7 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         self.api.start_websocket()
 
@@ -457,22 +447,12 @@ class UniFiController:
         """
         self.api.stop_websocket()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        self.config_entry, platform
-                    )
-                    for platform in PLATFORMS
-                ]
-            )
+        unload_ok = await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
+
         if not unload_ok:
             return False
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
 
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()

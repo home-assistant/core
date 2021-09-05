@@ -1,5 +1,4 @@
 """The Mullvad VPN integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -15,12 +14,7 @@ from .const import DOMAIN
 PLATFORMS = ["binary_sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Mullvad VPN integration."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: dict):
+async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:
     """Set up Mullvad VPN integration."""
 
     async def async_get_mullvad_api_data():
@@ -39,25 +33,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: dict):
 
     hass.data[DOMAIN] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         del hass.data[DOMAIN]
 

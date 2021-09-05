@@ -222,6 +222,39 @@ CALDAV_CONFIG = {
     "custom_calendars": [],
 }
 
+ORIG_TZ = dt.DEFAULT_TIME_ZONE
+
+
+@pytest.fixture(autouse=True)
+def reset_tz():
+    """Restore the default TZ after test runs."""
+    yield
+    dt.DEFAULT_TIME_ZONE = ORIG_TZ
+
+
+@pytest.fixture
+def set_tz(request):
+    """Set the default TZ to the one requested."""
+    return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def utc():
+    """Set the default TZ to UTC."""
+    dt.set_default_time_zone(dt.get_time_zone("UTC"))
+
+
+@pytest.fixture
+def new_york():
+    """Set the default TZ to America/New_York."""
+    dt.set_default_time_zone(dt.get_time_zone("America/New_York"))
+
+
+@pytest.fixture
+def baghdad():
+    """Set the default TZ to Asia/Baghdad."""
+    dt.set_default_time_zone(dt.get_time_zone("Asia/Baghdad"))
+
 
 @pytest.fixture(autouse=True)
 def mock_http(hass):
@@ -401,8 +434,6 @@ async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
     await hass.async_block_till_done()
 
     state = hass.states.get("calendar.private")
-    print(dt.DEFAULT_TIME_ZONE)
-    print(state)
     assert state.name == calendar.name
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
@@ -526,30 +557,72 @@ async def test_no_result_with_filtering(mock_now, hass, calendar):
     assert state.state == "off"
 
 
-@patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 30))
-async def test_all_day_event_returned(mock_now, hass, calendar):
-    """Test that the event lasting the whole day is returned."""
+async def _day_event_returned(hass, calendar, config, date_time):
+    with patch("homeassistant.util.dt.now", return_value=date_time):
+        assert await async_setup_component(hass, "calendar", {"calendar": config})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("calendar.private_private")
+        assert state.name == calendar.name
+        assert state.state == STATE_ON
+        assert dict(state.attributes) == {
+            "friendly_name": "Private",
+            "message": "This is an all day event",
+            "all_day": True,
+            "offset_reached": False,
+            "start_time": "2017-11-27 00:00:00",
+            "end_time": "2017-11-28 00:00:00",
+            "location": "Hamburg",
+            "description": "What a beautiful day",
+        }
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_all_day_event_returned_early(hass, calendar, set_tz):
+    """Test that the event lasting the whole day is returned, if it's early in the local day."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
         {"name": "Private", "calendar": "Private", "search": ".*"}
     ]
 
-    assert await async_setup_component(hass, "calendar", {"calendar": config})
-    await hass.async_block_till_done()
+    await _day_event_returned(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2017, 11, 27, 0, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
 
-    state = hass.states.get("calendar.private_private")
-    assert state.name == calendar.name
-    assert state.state == STATE_ON
-    assert dict(state.attributes) == {
-        "friendly_name": "Private",
-        "message": "This is an all day event",
-        "all_day": True,
-        "offset_reached": False,
-        "start_time": "2017-11-27 00:00:00",
-        "end_time": "2017-11-28 00:00:00",
-        "location": "Hamburg",
-        "description": "What a beautiful day",
-    }
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_all_day_event_returned_mid(hass, calendar, set_tz):
+    """Test that the event lasting the whole day is returned, if it's in the middle of the local day."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _day_event_returned(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2017, 11, 27, 12, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_all_day_event_returned_late(hass, calendar, set_tz):
+    """Test that the event lasting the whole day is returned, if it's late in the local day."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _day_event_returned(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2017, 11, 27, 23, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
 
 
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(21, 45))
@@ -657,33 +730,72 @@ async def test_event_rrule_endless(mock_now, hass, calendar):
     }
 
 
-@patch(
-    "homeassistant.util.dt.now",
-    return_value=dt.as_local(datetime.datetime(2016, 12, 1, 17, 30)),
-)
-async def test_event_rrule_all_day(mock_now, hass, calendar):
-    """Test that the recurring all day event is returned."""
+async def _event_rrule_all_day(hass, calendar, config, date_time):
+    with patch("homeassistant.util.dt.now", return_value=date_time):
+        assert await async_setup_component(hass, "calendar", {"calendar": config})
+        await hass.async_block_till_done()
+
+        state = hass.states.get("calendar.private_private")
+        assert state.name == calendar.name
+        assert state.state == STATE_ON
+        assert dict(state.attributes) == {
+            "friendly_name": "Private",
+            "message": "This is a recurring all day event",
+            "all_day": True,
+            "offset_reached": False,
+            "start_time": "2016-12-01 00:00:00",
+            "end_time": "2016-12-02 00:00:00",
+            "location": "Hamburg",
+            "description": "Groundhog Day",
+        }
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_event_rrule_all_day_early(hass, calendar, set_tz):
+    """Test that the recurring all day event is returned early in the local day, and not on the first occurrence."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
         {"name": "Private", "calendar": "Private", "search": ".*"}
     ]
 
-    assert await async_setup_component(hass, "calendar", {"calendar": config})
-    await hass.async_block_till_done()
+    await _event_rrule_all_day(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2016, 12, 1, 0, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
 
-    state = hass.states.get("calendar.private_private")
-    assert state.name == calendar.name
-    assert state.state == STATE_ON
-    assert dict(state.attributes) == {
-        "friendly_name": "Private",
-        "message": "This is a recurring all day event",
-        "all_day": True,
-        "offset_reached": False,
-        "start_time": "2016-12-01 00:00:00",
-        "end_time": "2016-12-02 00:00:00",
-        "location": "Hamburg",
-        "description": "Groundhog Day",
-    }
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_event_rrule_all_day_mid(hass, calendar, set_tz):
+    """Test that the recurring all day event is returned in the middle of the local day, and not on the first occurrence."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _event_rrule_all_day(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2016, 12, 1, 17, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
+
+
+@pytest.mark.parametrize("set_tz", ["utc", "new_york", "baghdad"], indirect=True)
+async def test_event_rrule_all_day_late(hass, calendar, set_tz):
+    """Test that the recurring all day event is returned late in the local day, and not on the first occurrence."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    await _event_rrule_all_day(
+        hass,
+        calendar,
+        config,
+        datetime.datetime(2016, 12, 1, 23, 30).replace(tzinfo=dt.DEFAULT_TIME_ZONE),
+    )
 
 
 @patch(

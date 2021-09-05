@@ -18,6 +18,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
 )
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
@@ -122,7 +123,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FEELS_LIKE_TEMPERATURE: current_weather.temperature("celsius").get(
                 "feels_like"
             ),
-            ATTR_API_DEW_POINT: (round(current_weather.dewpoint / 100, 1)),
+            ATTR_API_DEW_POINT: self._fmt_dewpoint(current_weather.dewpoint),
             ATTR_API_PRESSURE: current_weather.pressure.get("press"),
             ATTR_API_HUMIDITY: current_weather.humidity,
             ATTR_API_WIND_BEARING: current_weather.wind().get("deg"),
@@ -167,6 +168,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
+            ATTR_API_CLOUDS: entry.clouds,
         }
 
         temperature_dict = entry.temperature("celsius")
@@ -178,11 +180,19 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return forecast
 
+    def _fmt_dewpoint(self, dewpoint):
+        if dewpoint is not None:
+            dewpoint = dewpoint - 273.15
+            return round(self.hass.config.units.temperature(dewpoint, TEMP_CELSIUS), 1)
+        return None
+
     @staticmethod
     def _get_rain(rain):
         """Get rain data from weather data."""
         if "all" in rain:
             return round(rain["all"], 2)
+        if "3h" in rain:
+            return round(rain["3h"], 2)
         if "1h" in rain:
             return round(rain["1h"], 2)
         return 0
@@ -193,6 +203,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if snow:
             if "all" in snow:
                 return round(snow["all"], 2)
+            if "3h" in snow:
+                return round(snow["3h"], 2)
             if "1h" in snow:
                 return round(snow["1h"], 2)
         return 0

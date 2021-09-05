@@ -1,23 +1,36 @@
 """Models for SQLAlchemy."""
+from __future__ import annotations
+
+from datetime import datetime
 import json
 import logging
+from typing import TypedDict
 
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Float,
     ForeignKey,
+    Identity,
     Index,
     Integer,
     String,
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
+from homeassistant.const import (
+    MAX_LENGTH_EVENT_CONTEXT_ID,
+    MAX_LENGTH_EVENT_EVENT_TYPE,
+    MAX_LENGTH_EVENT_ORIGIN,
+    MAX_LENGTH_STATE_DOMAIN,
+    MAX_LENGTH_STATE_ENTITY_ID,
+    MAX_LENGTH_STATE_STATE,
+)
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
@@ -26,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 20
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,33 +49,50 @@ TABLE_EVENTS = "events"
 TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
+TABLE_STATISTICS = "statistics"
+TABLE_STATISTICS_META = "statistics_meta"
+TABLE_STATISTICS_RUNS = "statistics_runs"
 
-ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+ALL_TABLES = [
+    TABLE_STATES,
+    TABLE_EVENTS,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+    TABLE_STATISTICS,
+    TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
+]
+
+DATETIME_TYPE = DateTime(timezone=True).with_variant(
+    mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
+)
 
 
 class Events(Base):  # type: ignore
     """Event history data."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
-    __tablename__ = TABLE_EVENTS
-    event_id = Column(Integer, primary_key=True)
-    event_type = Column(String(32))
-    event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
-    origin = Column(String(32))
-    time_fired = Column(DateTime(timezone=True), index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    context_id = Column(String(36), index=True)
-    context_user_id = Column(String(36), index=True)
-    context_parent_id = Column(String(36), index=True)
-
     __table_args__ = (
         # Used for fetching events at a specific time
         # see logbook
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
+    __tablename__ = TABLE_EVENTS
+    event_id = Column(Integer, Identity(), primary_key=True)
+    event_type = Column(String(MAX_LENGTH_EVENT_EVENT_TYPE))
+    event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+    origin = Column(String(MAX_LENGTH_EVENT_ORIGIN))
+    time_fired = Column(DATETIME_TYPE, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -78,7 +108,8 @@ class Events(Base):  # type: ignore
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            event_data=event_data
+            or json.dumps(event.data, cls=JSONEncoder, separators=(",", ":")),
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -87,7 +118,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
@@ -110,33 +141,27 @@ class Events(Base):  # type: ignore
 class States(Base):  # type: ignore
     """State change history."""
 
-    __table_args__ = {
-        "mysql_default_charset": "utf8mb4",
-        "mysql_collate": "utf8mb4_unicode_ci",
-    }
-    __tablename__ = TABLE_STATES
-    state_id = Column(Integer, primary_key=True)
-    domain = Column(String(64))
-    entity_id = Column(String(255))
-    state = Column(String(255))
-    attributes = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
-    event_id = Column(
-        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
-    )
-    last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    old_state_id = Column(
-        Integer, ForeignKey("states.state_id", ondelete="NO ACTION"), index=True
-    )
-    event = relationship("Events", uselist=False)
-    old_state = relationship("States", remote_side=[state_id])
-
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
         # (get_states in history.py)
         Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
+    __tablename__ = TABLE_STATES
+    state_id = Column(Integer, Identity(), primary_key=True)
+    domain = Column(String(MAX_LENGTH_STATE_DOMAIN))
+    entity_id = Column(String(MAX_LENGTH_STATE_ENTITY_ID))
+    state = Column(String(MAX_LENGTH_STATE_STATE))
+    attributes = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
+    event_id = Column(
+        Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
+    )
+    last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
+    event = relationship("Events", uselist=False)
+    old_state = relationship("States", remote_side=[state_id])
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -167,7 +192,9 @@ class States(Base):  # type: ignore
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(dict(state.attributes), cls=JSONEncoder)
+            dbstate.attributes = json.dumps(
+                dict(state.attributes), cls=JSONEncoder, separators=(",", ":")
+            )
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
@@ -193,17 +220,98 @@ class States(Base):  # type: ignore
             return None
 
 
+class StatisticData(TypedDict, total=False):
+    """Statistic data class."""
+
+    mean: float
+    min: float
+    max: float
+    last_reset: datetime | None
+    state: float
+    sum: float
+
+
+class Statistics(Base):  # type: ignore
+    """Statistics."""
+
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
+    )
+    __tablename__ = TABLE_STATISTICS
+    id = Column(Integer, primary_key=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    metadata_id = Column(
+        Integer,
+        ForeignKey(f"{TABLE_STATISTICS_META}.id", ondelete="CASCADE"),
+        index=True,
+    )
+    start = Column(DATETIME_TYPE, index=True)
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
+
+    @staticmethod
+    def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
+        """Create object from a statistics."""
+        return Statistics(
+            metadata_id=metadata_id,
+            start=start,
+            **stats,
+        )
+
+
+class StatisticMetaData(TypedDict, total=False):
+    """Statistic meta data class."""
+
+    statistic_id: str
+    unit_of_measurement: str | None
+    has_mean: bool
+    has_sum: bool
+
+
+class StatisticsMeta(Base):  # type: ignore
+    """Statistics meta data."""
+
+    __tablename__ = TABLE_STATISTICS_META
+    id = Column(Integer, primary_key=True)
+    statistic_id = Column(String(255), index=True)
+    source = Column(String(32))
+    unit_of_measurement = Column(String(255))
+    has_mean = Column(Boolean)
+    has_sum = Column(Boolean)
+
+    @staticmethod
+    def from_meta(
+        source: str,
+        statistic_id: str,
+        unit_of_measurement: str | None,
+        has_mean: bool,
+        has_sum: bool,
+    ) -> StatisticsMeta:
+        """Create object from meta data."""
+        return StatisticsMeta(
+            source=source,
+            statistic_id=statistic_id,
+            unit_of_measurement=unit_of_measurement,
+            has_mean=has_mean,
+            has_sum=has_sum,
+        )
+
+
 class RecorderRuns(Base):  # type: ignore
     """Representation of recorder run."""
 
+    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
-    run_id = Column(Integer, primary_key=True)
+    run_id = Column(Integer, Identity(), primary_key=True)
     start = Column(DateTime(timezone=True), default=dt_util.utcnow)
     end = Column(DateTime(timezone=True))
     closed_incorrect = Column(Boolean, default=False)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
-
-    __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -248,7 +356,7 @@ class SchemaChanges(Base):  # type: ignore
     """Representation of schema version changes."""
 
     __tablename__ = TABLE_SCHEMA_CHANGES
-    change_id = Column(Integer, primary_key=True)
+    change_id = Column(Integer, Identity(), primary_key=True)
     schema_version = Column(Integer)
     changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
 
@@ -258,6 +366,22 @@ class SchemaChanges(Base):  # type: ignore
             f"<recorder.SchemaChanges("
             f"id={self.change_id}, schema_version={self.schema_version}, "
             f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
+            f")>"
+        )
+
+
+class StatisticsRuns(Base):  # type: ignore
+    """Representation of statistics run."""
+
+    __tablename__ = TABLE_STATISTICS_RUNS
+    run_id = Column(Integer, primary_key=True)
+    start = Column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StatisticsRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
 
@@ -272,7 +396,7 @@ def process_timestamp(ts):
     return dt_util.as_utc(ts)
 
 
-def process_timestamp_to_utc_isoformat(ts):
+def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     """Process a timestamp into UTC isotime."""
     if ts is None:
         return None
@@ -281,3 +405,116 @@ def process_timestamp_to_utc_isoformat(ts):
     if ts.tzinfo is None:
         return f"{ts.isoformat()}{DB_TIMEZONE}"
     return ts.astimezone(dt_util.UTC).isoformat()
+
+
+class LazyState(State):
+    """A lazy version of core State."""
+
+    __slots__ = [
+        "_row",
+        "entity_id",
+        "state",
+        "_attributes",
+        "_last_changed",
+        "_last_updated",
+        "_context",
+    ]
+
+    def __init__(self, row):  # pylint: disable=super-init-not-called
+        """Init the lazy state."""
+        self._row = row
+        self.entity_id = self._row.entity_id
+        self.state = self._row.state or ""
+        self._attributes = None
+        self._last_changed = None
+        self._last_updated = None
+        self._context = None
+
+    @property  # type: ignore
+    def attributes(self):
+        """State attributes."""
+        if not self._attributes:
+            try:
+                self._attributes = json.loads(self._row.attributes)
+            except ValueError:
+                # When json.loads fails
+                _LOGGER.exception("Error converting row to state: %s", self._row)
+                self._attributes = {}
+        return self._attributes
+
+    @attributes.setter
+    def attributes(self, value):
+        """Set attributes."""
+        self._attributes = value
+
+    @property  # type: ignore
+    def context(self):
+        """State context."""
+        if not self._context:
+            self._context = Context(id=None)
+        return self._context
+
+    @context.setter
+    def context(self, value):
+        """Set context."""
+        self._context = value
+
+    @property  # type: ignore
+    def last_changed(self):
+        """Last changed datetime."""
+        if not self._last_changed:
+            self._last_changed = process_timestamp(self._row.last_changed)
+        return self._last_changed
+
+    @last_changed.setter
+    def last_changed(self, value):
+        """Set last changed datetime."""
+        self._last_changed = value
+
+    @property  # type: ignore
+    def last_updated(self):
+        """Last updated datetime."""
+        if not self._last_updated:
+            self._last_updated = process_timestamp(self._row.last_updated)
+        return self._last_updated
+
+    @last_updated.setter
+    def last_updated(self, value):
+        """Set last updated datetime."""
+        self._last_updated = value
+
+    def as_dict(self):
+        """Return a dict representation of the LazyState.
+
+        Async friendly.
+
+        To be used for JSON serialization.
+        """
+        if self._last_changed:
+            last_changed_isoformat = self._last_changed.isoformat()
+        else:
+            last_changed_isoformat = process_timestamp_to_utc_isoformat(
+                self._row.last_changed
+            )
+        if self._last_updated:
+            last_updated_isoformat = self._last_updated.isoformat()
+        else:
+            last_updated_isoformat = process_timestamp_to_utc_isoformat(
+                self._row.last_updated
+            )
+        return {
+            "entity_id": self.entity_id,
+            "state": self.state,
+            "attributes": self._attributes or self.attributes,
+            "last_changed": last_changed_isoformat,
+            "last_updated": last_updated_isoformat,
+        }
+
+    def __eq__(self, other):
+        """Return the comparison."""
+        return (
+            other.__class__ in [self.__class__, State]
+            and self.entity_id == other.entity_id
+            and self.state == other.state
+            and self.attributes == other.attributes
+        )

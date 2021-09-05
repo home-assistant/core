@@ -1,8 +1,13 @@
 {
     "config": {
+        "error": {
+            "invalid_credentials": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "Clave API",
                     "api_user": "ID de usuario de la API de Habitica",
                     "name": "Anular el nombre de usuario de Habitica. Se utilizar\u00e1 para llamadas de servicio.",
                     "url": "URL"

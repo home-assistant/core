@@ -14,7 +14,7 @@ ENV_LOCAL = "local"
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
-SUPPORTED_LOCAL_DEVICES = ("Smappee1", "Smappee2")
+SUPPORTED_LOCAL_DEVICES = ("Smappee1", "Smappee2", "Smappee50")
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=20)
 

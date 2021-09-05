@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if token:
         token = token.upper()
         if not name:
-            name = "%s Balance" % token
+            name = f"{token} Balance"
     if not name:
         name = "ETH Balance"
 
@@ -59,12 +59,12 @@ class EtherscanSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 

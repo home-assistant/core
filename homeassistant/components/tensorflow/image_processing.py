@@ -218,7 +218,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"TensorFlow {split_entity_id(camera_entity)[1]}"
         self._category_index = category_index
         self._min_confidence = config.get(CONF_CONFIDENCE)
         self._file_out = config.get(CONF_FILE_OUT)

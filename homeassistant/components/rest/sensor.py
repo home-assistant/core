@@ -50,9 +50,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         conf = config
         coordinator = None
         rest = create_rest_data_from_config(hass, conf)
-        await rest.async_update()
+        await rest.async_update(log_errors=False)
 
     if rest.data is None:
+        if rest.last_exception:
+            raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
     name = conf.get(CONF_NAME)
@@ -113,12 +115,12 @@ class RestSensor(RestEntity, SensorEntity):
         self._json_attrs_path = json_attrs_path
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

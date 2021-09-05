@@ -1,4 +1,6 @@
 """Weather data coordinator for the AEMET OpenData service."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -95,7 +97,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-def format_float(value) -> float:
+def format_float(value) -> float | None:
     """Try converting string to float."""
     try:
         return float(value)
@@ -103,7 +105,7 @@ def format_float(value) -> float:
         return None
 
 
-def format_int(value) -> int:
+def format_int(value) -> int | None:
     """Try converting string to int."""
     try:
         return int(value)
@@ -118,7 +120,7 @@ class TownNotFound(UpdateFailed):
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
-    def __init__(self, hass, aemet, latitude, longitude):
+    def __init__(self, hass, aemet, latitude, longitude, station_updates):
         """Initialize coordinator."""
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
@@ -129,6 +131,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._town = None
         self._latitude = latitude
         self._longitude = longitude
+        self._station_updates = station_updates
         self._data = {
             "daily": None,
             "hourly": None,
@@ -210,7 +213,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
 
         station = None
-        if self._get_weather_station():
+        if self._station_updates and self._get_weather_station():
             station = self._aemet.get_conventional_observation_station_data(
                 self._station[AEMET_ATTR_IDEMA]
             )
@@ -239,7 +242,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         elaborated = dt_util.parse_datetime(
-            weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED]
+            weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED] + "Z"
         )
         now = dt_util.now()
         now_utc = dt_util.utcnow()
@@ -283,7 +286,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated)
+        town_timestamp = dt_util.as_utc(elaborated).isoformat()
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None

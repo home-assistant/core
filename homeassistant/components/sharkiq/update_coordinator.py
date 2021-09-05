@@ -14,6 +14,7 @@ from sharkiqpy import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, API_TIMEOUT, DOMAIN, UPDATE_INTERVAL
@@ -68,37 +69,14 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
 
             _LOGGER.debug("Updating sharkiq data")
             online_vacs = (self.shark_vacs[dsn] for dsn in self.online_dsns)
-            await asyncio.gather(*[self._async_update_vacuum(v) for v in online_vacs])
+            await asyncio.gather(*(self._async_update_vacuum(v) for v in online_vacs))
         except (
             SharkIqAuthError,
             SharkIqNotAuthedError,
             SharkIqAuthExpiringError,
         ) as err:
             _LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
-            flow_context = {
-                "source": "reauth",
-                "unique_id": self._config_entry.unique_id,
-            }
-
-            matching_flows = [
-                flow
-                for flow in self.hass.config_entries.flow.async_progress()
-                if flow["context"] == flow_context
-            ]
-
-            if not matching_flows:
-                _LOGGER.debug("Re-initializing flows.  Attempting re-auth")
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context=flow_context,
-                        data=self._config_entry.data,
-                    )
-                )
-            else:
-                _LOGGER.debug("Matching flow found")
-
-            raise UpdateFailed(err) from err
+            raise ConfigEntryAuthFailed from err
         except Exception as err:
             _LOGGER.exception("Unexpected error updating SharkIQ")
             raise UpdateFailed(err) from err

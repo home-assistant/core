@@ -14,14 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by the Swiss Federal Office for the Environment FOEN"
 
-ATTR_DELTA_24H = "delta-24h"
-ATTR_MAX_1H = "max-1h"
 ATTR_MAX_24H = "max-24h"
-ATTR_MEAN_1H = "mean-1h"
 ATTR_MEAN_24H = "mean-24h"
-ATTR_MIN_1H = "min-1h"
 ATTR_MIN_24H = "min-24h"
-ATTR_PREVIOUS_24H = "previous-24h"
 ATTR_STATION = "station"
 ATTR_STATION_UPDATE = "station_update"
 ATTR_WATER_BODY = "water_body"
@@ -42,14 +37,9 @@ CONDITIONS = {
 }
 
 CONDITION_DETAILS = [
-    ATTR_DELTA_24H,
-    ATTR_MAX_1H,
     ATTR_MAX_24H,
-    ATTR_MEAN_1H,
     ATTR_MEAN_24H,
-    ATTR_MIN_1H,
     ATTR_MIN_24H,
-    ATTR_PREVIOUS_24H,
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -104,14 +94,14 @@ class SwissHydrologicalDataSensor(SensorEntity):
         return f"{self._station}_{self._condition}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not None:
             return self.hydro_data.data["parameters"][self._condition]["unit"]
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if isinstance(self._state, (int, float)):
             return round(self._state, 2)

@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
+    PARENT_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_USERNAME): cv.string,
@@ -118,7 +118,7 @@ class CiscoDeviceScanner(DeviceScanner):
             router_hostname = initial_line[len(initial_line) - 1]
             router_hostname += "#"
             # Set the discovered hostname as prompt
-            regex_expression = ("(?i)^%s" % router_hostname).encode()
+            regex_expression = f"(?i)^{router_hostname}".encode()
             cisco_ssh.PROMPT = re.compile(regex_expression, re.MULTILINE)
             # Allow full arp table to print at once
             cisco_ssh.sendline("terminal length 0")

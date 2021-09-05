@@ -18,6 +18,7 @@ from scapy.arch.common import compile_filter
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
+from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import AsyncSniffer
 
@@ -40,8 +41,9 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
-from homeassistant.util.network import is_link_local
+from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 from .const import DOMAIN
 
@@ -57,7 +59,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
 
     async def _initialize(_):
@@ -93,8 +95,14 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
-        if is_link_local(make_ip_address(ip_address)):
-            # Ignore self assigned addresses
+        made_ip_address = make_ip_address(ip_address)
+
+        if (
+            is_link_local(made_ip_address)
+            or is_loopback(made_ip_address)
+            or is_invalid(made_ip_address)
+        ):
+            # Ignore self assigned addresses, loopback, invalid
             return
 
         data = self._address_data.get(ip_address)
@@ -241,10 +249,10 @@ class DeviceTrackerWatcher(WatcherBase):
             return
 
         ip_address = attributes.get(ATTR_IP)
-        hostname = attributes.get(ATTR_HOST_NAME)
+        hostname = attributes.get(ATTR_HOST_NAME, "")
         mac_address = attributes.get(ATTR_MAC)
 
-        if ip_address is None or hostname is None or mac_address is None:
+        if ip_address is None or mac_address is None:
             return
 
         self.process_client(ip_address, hostname, _format_mac(mac_address))
@@ -305,6 +313,8 @@ class DHCPWatcher(WatcherBase):
         )
 
         self._sniffer.start()
+        if self._sniffer.thread:
+            self._sniffer.thread.name = self.__class__.__name__
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
@@ -318,11 +328,11 @@ class DHCPWatcher(WatcherBase):
             # DHCP request
             return
 
-        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
-        hostname = _decode_dhcp_option(options, HOSTNAME)
+        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
+        hostname = _decode_dhcp_option(options, HOSTNAME) or ""
         mac_address = _format_mac(packet[Ether].src)
 
-        if ip_address is None or hostname is None or mac_address is None:
+        if ip_address is None or mac_address is None:
             return
 
         self.process_client(ip_address, hostname, mac_address)

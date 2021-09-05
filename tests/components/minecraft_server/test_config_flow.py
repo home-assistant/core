@@ -13,12 +13,12 @@ from homeassistant.components.minecraft_server.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
@@ -80,7 +80,7 @@ SRV_RECORDS = asyncio.Future()
 SRV_RECORDS.set_result([QueryMock()])
 
 
-async def test_show_config_form(hass: HomeAssistantType) -> None:
+async def test_show_config_form(hass: HomeAssistant) -> None:
     """Test if initial configuration form is shown."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -90,7 +90,7 @@ async def test_show_config_form(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_invalid_ip(hass: HomeAssistantType) -> None:
+async def test_invalid_ip(hass: HomeAssistant) -> None:
     """Test error in case of an invalid IP address."""
     with patch("getmac.get_mac_address", return_value=None):
         result = await hass.config_entries.flow.async_init(
@@ -101,7 +101,7 @@ async def test_invalid_ip(hass: HomeAssistantType) -> None:
         assert result["errors"] == {"base": "invalid_ip"}
 
 
-async def test_same_host(hass: HomeAssistantType) -> None:
+async def test_same_host(hass: HomeAssistant) -> None:
     """Test abort in case of same host name."""
     with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,), patch(
         "mcstatus.server.MinecraftServer.status",
@@ -126,7 +126,7 @@ async def test_same_host(hass: HomeAssistantType) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_port_too_small(hass: HomeAssistantType) -> None:
+async def test_port_too_small(hass: HomeAssistant) -> None:
     """Test error in case of a too small port."""
     with patch(
         "aiodns.DNSResolver.query",
@@ -140,7 +140,7 @@ async def test_port_too_small(hass: HomeAssistantType) -> None:
         assert result["errors"] == {"base": "invalid_port"}
 
 
-async def test_port_too_large(hass: HomeAssistantType) -> None:
+async def test_port_too_large(hass: HomeAssistant) -> None:
     """Test error in case of a too large port."""
     with patch(
         "aiodns.DNSResolver.query",
@@ -154,7 +154,7 @@ async def test_port_too_large(hass: HomeAssistantType) -> None:
         assert result["errors"] == {"base": "invalid_port"}
 
 
-async def test_connection_failed(hass: HomeAssistantType) -> None:
+async def test_connection_failed(hass: HomeAssistant) -> None:
     """Test error in case of a failed connection."""
     with patch(
         "aiodns.DNSResolver.query",
@@ -168,7 +168,7 @@ async def test_connection_failed(hass: HomeAssistantType) -> None:
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_connection_succeeded_with_srv_record(hass: HomeAssistantType) -> None:
+async def test_connection_succeeded_with_srv_record(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with a SRV record."""
     with patch("aiodns.DNSResolver.query", return_value=SRV_RECORDS,), patch(
         "mcstatus.server.MinecraftServer.status",
@@ -184,7 +184,7 @@ async def test_connection_succeeded_with_srv_record(hass: HomeAssistantType) -> 
         assert result["data"][CONF_HOST] == USER_INPUT_SRV[CONF_HOST]
 
 
-async def test_connection_succeeded_with_host(hass: HomeAssistantType) -> None:
+async def test_connection_succeeded_with_host(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with a host name."""
     with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,), patch(
         "mcstatus.server.MinecraftServer.status",
@@ -200,7 +200,7 @@ async def test_connection_succeeded_with_host(hass: HomeAssistantType) -> None:
         assert result["data"][CONF_HOST] == "mc.dummyserver.com"
 
 
-async def test_connection_succeeded_with_ip4(hass: HomeAssistantType) -> None:
+async def test_connection_succeeded_with_ip4(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with an IPv4 address."""
     with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"), patch(
         "aiodns.DNSResolver.query",
@@ -219,7 +219,7 @@ async def test_connection_succeeded_with_ip4(hass: HomeAssistantType) -> None:
         assert result["data"][CONF_HOST] == "1.1.1.1"
 
 
-async def test_connection_succeeded_with_ip6(hass: HomeAssistantType) -> None:
+async def test_connection_succeeded_with_ip6(hass: HomeAssistant) -> None:
     """Test config entry in case of a successful connection with an IPv6 address."""
     with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"), patch(
         "aiodns.DNSResolver.query",

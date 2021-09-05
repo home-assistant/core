@@ -10,7 +10,7 @@
         "error": {
             "discovery_error": "Kunne ikke oppdage en Denon AVR Network Receiver"
         },
-        "flow_title": "Denon AVR nettverksmottaker: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Bekreft at du legger til mottakeren",
@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Vis alle kilder",
+                    "update_audyssey": "Oppdater Audyssey-innstillingene",
                     "zone2": "Sett opp sone 2",
                     "zone3": "Sett opp sone 3"
                 },

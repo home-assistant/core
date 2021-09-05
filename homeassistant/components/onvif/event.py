@@ -29,7 +29,9 @@ SUBSCRIPTION_ERRORS = (
 class EventManager:
     """ONVIF Event Manager."""
 
-    def __init__(self, hass: HomeAssistant, device: ONVIFCamera, unique_id: str):
+    def __init__(
+        self, hass: HomeAssistant, device: ONVIFCamera, unique_id: str
+    ) -> None:
         """Initialize event manager."""
         self.hass: HomeAssistant = hass
         self.device: ONVIFCamera = device

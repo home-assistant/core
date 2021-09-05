@@ -6,16 +6,16 @@ import logging
 from typing import Callable
 
 from homeassistant import const as ha_const
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
+    alarm_control_panel,
     binary_sensor,
     climate,
     cover,
@@ -159,7 +159,7 @@ class ProbeEndpoint:
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)
 
-    def initialize(self, hass: HomeAssistantType) -> None:
+    def initialize(self, hass: HomeAssistant) -> None:
         """Update device overrides config."""
         zha_config = hass.data[zha_const.DATA_ZHA].get(zha_const.DATA_ZHA_CONFIG, {})
         overrides = zha_config.get(zha_const.CONF_DEVICE_CONFIG)
@@ -175,7 +175,7 @@ class GroupProbe:
         self._hass = None
         self._unsubs = []
 
-    def initialize(self, hass: HomeAssistantType) -> None:
+    def initialize(self, hass: HomeAssistant) -> None:
         """Initialize the group probe."""
         self._hass = hass
         self._unsubs.append(
@@ -235,7 +235,7 @@ class GroupProbe:
 
     @staticmethod
     def determine_entity_domains(
-        hass: HomeAssistantType, group: zha_typing.ZhaGroupType
+        hass: HomeAssistant, group: zha_typing.ZhaGroupType
     ) -> list[str]:
         """Determine the entity domains for this group."""
         entity_domains: list[str] = []

@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-# pylint: disable=unused-import
 from .const import (
     CONF_HOUSECODE,
     CONF_HUB_VERSION,

@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from itertools import chain
-from typing import Callable
 
-from gogogate2_api.common import AbstractDoor, get_configured_doors
+from ismartgate.common import AbstractDoor, get_configured_doors
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +13,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import (
     DeviceDataUpdateCoordinator,
@@ -29,7 +28,7 @@ SENSOR_ID_WIRED = "WIRE"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool | None], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)
@@ -73,7 +72,7 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.voltage  # This is a percentage, not an absolute voltage
@@ -111,18 +110,18 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement."""
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         door = self._get_door()
         if door.sensorid is not None:

@@ -17,16 +17,6 @@
                 "description": "Introdueix la contrasenya per a {username}.",
                 "title": "Torna a autenticar compte d'August"
             },
-            "user": {
-                "data": {
-                    "login_method": "M\u00e8tode d'inici de sessi\u00f3",
-                    "password": "Contrasenya",
-                    "timeout": "Temps d'espera (segons)",
-                    "username": "Nom d'usuari"
-                },
-                "description": "Si el m\u00e8tode d'inici de sessi\u00f3 \u00e9s 'email', el nom d'usuari \u00e9s l'adre\u00e7a de correu electr\u00f2nic. Si el m\u00e8tode d'inici de sessi\u00f3 \u00e9s 'phone', el nom d'usuari \u00e9s el n\u00famero de tel\u00e8fon en el format \"+NNNNNNNNN\".",
-                "title": "Configuraci\u00f3 de compte August"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "M\u00e8tode d'inici de sessi\u00f3",

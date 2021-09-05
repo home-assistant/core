@@ -162,6 +162,26 @@ async def test_increment(hass):
     assert float(state.state) == 51
 
 
+async def test_rounding(hass):
+    """Test increment introducing floating point error is rounded."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"test_2": {"initial": 2.4, "min": 0, "max": 51, "step": 1.2}}},
+    )
+    entity_id = "input_number.test_2"
+    assert 2.4 + 1.2 != 3.6
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 2.4
+
+    await increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 3.6
+
+
 async def test_decrement(hass):
     """Test decrement method."""
     assert await async_setup_component(

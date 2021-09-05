@@ -14,14 +14,6 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -32,6 +24,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import (
     CONF_NAME,
     CONF_URL,
@@ -42,11 +36,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import get_local_ip
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,28 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
-    MEDIA_TYPE_MUSIC: "object.item.audioItem",
-    MEDIA_TYPE_TVSHOW: "object.item.videoItem",
-    MEDIA_TYPE_MOVIE: "object.item.videoItem",
-    MEDIA_TYPE_VIDEO: "object.item.videoItem",
-    MEDIA_TYPE_EPISODE: "object.item.videoItem",
-    MEDIA_TYPE_CHANNEL: "object.item.videoItem",
-    MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
-}
-UPNP_CLASS_DEFAULT = "object.item"
-HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
-    MEDIA_TYPE_MUSIC: "audio/*",
-    MEDIA_TYPE_TVSHOW: "video/*",
-    MEDIA_TYPE_MOVIE: "video/*",
-    MEDIA_TYPE_VIDEO: "video/*",
-    MEDIA_TYPE_EPISODE: "video/*",
-    MEDIA_TYPE_CHANNEL: "video/*",
-    MEDIA_TYPE_IMAGE: "image/*",
-    MEDIA_TYPE_PLAYLIST: "playlist/*",
-}
-
 
 def catch_request_errors():
     """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
@@ -113,7 +84,7 @@ def catch_request_errors():
 
 
 async def async_start_event_handler(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     server_host: str,
     server_port: int,
     requester,
@@ -148,7 +119,7 @@ async def async_start_event_handler(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:
@@ -172,7 +143,7 @@ async def async_setup_platform(
     async with hass.data[DLNA_DMR_DATA]["lock"]:
         server_host = config.get(CONF_LISTEN_IP)
         if server_host is None:
-            server_host = get_local_ip()
+            server_host = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
         server_port = config.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
         callback_url_override = config.get(CONF_CALLBACK_URL_OVERRIDE)
         event_handler = await async_start_event_handler(
@@ -180,7 +151,7 @@ async def async_setup_platform(
         )
 
     # create upnp device
-    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    factory = UpnpFactory(requester, non_strict=True)
     try:
         upnp_device = await factory.async_create_device(url)
     except (asyncio.TimeoutError, aiohttp.ClientError) as err:
@@ -342,20 +313,15 @@ class DlnaDmrDevice(MediaPlayerEntity):
     @catch_request_errors()
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
+        _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         title = "Home Assistant"
-        mime_type = HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING.get(media_type, media_type)
-        upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING.get(
-            media_type, UPNP_CLASS_DEFAULT
-        )
 
         # Stop current playing media
         if self._device.can_stop:
             await self.async_media_stop()
 
         # Queue media
-        await self._device.async_set_transport_uri(
-            media_id, title, mime_type, upnp_class
-        )
+        await self._device.async_set_transport_uri(media_id, title)
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play

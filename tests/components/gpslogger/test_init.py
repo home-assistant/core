@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import gpslogger, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
@@ -31,7 +31,7 @@ def mock_dev_track(mock_device_tracker_conf):
 
 
 @pytest.fixture
-async def gpslogger_client(loop, hass, aiohttp_client):
+async def gpslogger_client(loop, hass, hass_client_no_auth):
     """Mock client for GPSLogger (unauthenticated)."""
     assert await async_setup_component(hass, "persistent_notification", {})
 
@@ -40,7 +40,7 @@ async def gpslogger_client(loop, hass, aiohttp_client):
     await hass.async_block_till_done()
 
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
-        return await aiohttp_client(hass.http.app)
+        return await hass_client_no_auth()
 
 
 @pytest.fixture(autouse=True)
@@ -69,7 +69,7 @@ async def webhook_id(hass, gpslogger_client):
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 

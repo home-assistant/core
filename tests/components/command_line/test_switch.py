@@ -1,8 +1,11 @@
 """The tests for the Command line switch platform."""
+from __future__ import annotations
+
 import json
 import os
 import subprocess
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
@@ -14,15 +17,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
-async def setup_test_entity(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
-) -> None:
+async def setup_test_entity(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line switch entity."""
     assert await setup.async_setup_component(
         hass,
@@ -36,7 +37,7 @@ async def setup_test_entity(
     await hass.async_block_till_done()
 
 
-async def test_state_none(hass: HomeAssistantType) -> None:
+async def test_state_none(hass: HomeAssistant) -> None:
     """Test with none state."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -77,7 +78,7 @@ async def test_state_none(hass: HomeAssistantType) -> None:
         assert entity_state.state == STATE_OFF
 
 
-async def test_state_value(hass: HomeAssistantType) -> None:
+async def test_state_value(hass: HomeAssistant) -> None:
     """Test with state value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -120,7 +121,7 @@ async def test_state_value(hass: HomeAssistantType) -> None:
         assert entity_state.state == STATE_OFF
 
 
-async def test_state_json_value(hass: HomeAssistantType) -> None:
+async def test_state_json_value(hass: HomeAssistant) -> None:
     """Test with state JSON value."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -166,7 +167,7 @@ async def test_state_json_value(hass: HomeAssistantType) -> None:
         assert entity_state.state == STATE_OFF
 
 
-async def test_state_code(hass: HomeAssistantType) -> None:
+async def test_state_code(hass: HomeAssistant) -> None:
     """Test with state code."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
@@ -209,7 +210,7 @@ async def test_state_code(hass: HomeAssistantType) -> None:
 
 
 async def test_assumed_state_should_be_true_if_command_state_is_none(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test with state value."""
 
@@ -228,7 +229,7 @@ async def test_assumed_state_should_be_true_if_command_state_is_none(
 
 
 async def test_assumed_state_should_absent_if_command_state_present(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Test with state value."""
 
@@ -247,7 +248,7 @@ async def test_assumed_state_should_absent_if_command_state_present(
     assert "assumed_state" not in entity_state.attributes
 
 
-async def test_name_is_set_correctly(hass: HomeAssistantType) -> None:
+async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
     """Test that name is set correctly."""
     await setup_test_entity(
         hass,
@@ -264,7 +265,7 @@ async def test_name_is_set_correctly(hass: HomeAssistantType) -> None:
     assert entity_state.name == "Test friendly name!"
 
 
-async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistantType) -> None:
+async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistant) -> None:
     """Test that switch failures are handled correctly."""
     await setup_test_entity(
         hass,
@@ -298,7 +299,7 @@ async def test_switch_command_state_fail(caplog: Any, hass: HomeAssistantType) -
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: Any, hass: HomeAssistantType
+    caplog: Any, hass: HomeAssistant
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -331,7 +332,7 @@ async def test_switch_command_state_code_exceptions(
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: Any, hass: HomeAssistantType
+    caplog: Any, hass: HomeAssistant
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -364,7 +365,7 @@ async def test_switch_command_state_value_exceptions(
         assert "Error trying to exec command" in caplog.text
 
 
-async def test_no_switches(caplog: Any, hass: HomeAssistantType) -> None:
+async def test_no_switches(caplog: Any, hass: HomeAssistant) -> None:
     """Test with no switches."""
 
     await setup_test_entity(hass, {})

@@ -2,8 +2,15 @@
 from datetime import timedelta
 
 from bond_api import Action, DeviceType
+import pytest
 
 from homeassistant import core
+from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond.light import (
+    SERVICE_START_DECREASING_BRIGHTNESS,
+    SERVICE_START_INCREASING_BRIGHTNESS,
+    SERVICE_STOP,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
@@ -16,6 +23,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
@@ -94,6 +102,21 @@ def fireplace_with_light(name: str):
             Action.TURN_OFF,
             Action.TURN_LIGHT_ON,
             Action.TURN_LIGHT_OFF,
+        ],
+    }
+
+
+def light_brightness_increase_decrease_only(name: str):
+    """Create a light that can only increase or decrease brightness."""
+    return {
+        "name": name,
+        "type": DeviceType.LIGHT,
+        "actions": [
+            Action.TURN_LIGHT_ON,
+            Action.TURN_LIGHT_OFF,
+            Action.START_INCREASING_BRIGHTNESS,
+            Action.START_DECREASING_BRIGHTNESS,
+            Action.STOP,
         ],
     }
 
@@ -229,6 +252,133 @@ async def test_no_trust_state(hass: core.HomeAssistant):
     )
     device = hass.states.get("light.name_1")
     assert device.attributes.get(ATTR_ASSUMED_STATE) is not True
+
+
+async def test_light_start_increasing_brightness(hass: core.HomeAssistant):
+    """Tests a light that can only increase or decrease brightness delegates to API can start increasing brightness."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_brightness_increase_decrease_only("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_INCREASING_BRIGHTNESS,
+            {ATTR_ENTITY_ID: "light.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action(Action.START_INCREASING_BRIGHTNESS)
+    )
+
+
+async def test_light_start_increasing_brightness_missing_service(
+    hass: core.HomeAssistant,
+):
+    """Tests a light does not have start increasing brightness throws."""
+    await setup_platform(
+        hass, LIGHT_DOMAIN, light("name-1"), bond_device_id="test-device-id"
+    )
+
+    with pytest.raises(HomeAssistantError), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_INCREASING_BRIGHTNESS,
+            {ATTR_ENTITY_ID: "light.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_light_start_decreasing_brightness(hass: core.HomeAssistant):
+    """Tests a light that can only increase or decrease brightness delegates to API can start decreasing brightness."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_brightness_increase_decrease_only("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_DECREASING_BRIGHTNESS,
+            {ATTR_ENTITY_ID: "light.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)
+    )
+
+
+async def test_light_start_decreasing_brightness_missing_service(
+    hass: core.HomeAssistant,
+):
+    """Tests a light does not have start decreasing brightness throws."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(HomeAssistantError), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_START_DECREASING_BRIGHTNESS,
+            {ATTR_ENTITY_ID: "light.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_light_stop(hass: core.HomeAssistant):
+    """Tests a light that can only increase or decrease brightness delegates to API can stop."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_brightness_increase_decrease_only("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_STOP,
+            {ATTR_ENTITY_ID: "light.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with("test-device-id", Action(Action.STOP))
+
+
+async def test_light_stop_missing_service(
+    hass: core.HomeAssistant,
+):
+    """Tests a light does not have stop throws."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(HomeAssistantError), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_STOP,
+            {ATTR_ENTITY_ID: "light.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_turn_on_light(hass: core.HomeAssistant):

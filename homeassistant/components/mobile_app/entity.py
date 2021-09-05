@@ -26,7 +26,7 @@ def unique_id(webhook_id, sensor_unique_id):
 class MobileAppEntity(RestoreEntity):
     """Representation of an mobile app entity."""
 
-    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry):
+    def __init__(self, config: dict, device: DeviceEntry, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         self._config = config
         self._device = device
@@ -34,13 +34,14 @@ class MobileAppEntity(RestoreEntity):
         self._registration = entry.data
         self._unique_id = config[CONF_UNIQUE_ID]
         self._entity_type = config[ATTR_SENSOR_TYPE]
-        self.unsub_dispatcher = None
         self._name = config[CONF_NAME]
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
+            )
         )
         state = await self.async_get_last_state()
 
@@ -48,11 +49,6 @@ class MobileAppEntity(RestoreEntity):
             return
 
         self.async_restore_last_state(state)
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
 
     @callback
     def async_restore_last_state(self, last_state):

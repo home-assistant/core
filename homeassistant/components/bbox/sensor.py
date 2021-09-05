@@ -1,4 +1,6 @@
 """Support for Bbox Bouygues Modem Router."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,7 +8,11 @@ import pybbox
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_VARIABLES,
@@ -26,36 +32,52 @@ DEFAULT_NAME = "Bbox"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-# Sensor types are defined like so: Name, unit, icon
-SENSOR_TYPES = {
-    "down_max_bandwidth": [
-        "Maximum Download Bandwidth",
-        DATA_RATE_MEGABITS_PER_SECOND,
-        "mdi:download",
-    ],
-    "up_max_bandwidth": [
-        "Maximum Upload Bandwidth",
-        DATA_RATE_MEGABITS_PER_SECOND,
-        "mdi:upload",
-    ],
-    "current_down_bandwidth": [
-        "Currently Used Download Bandwidth",
-        DATA_RATE_MEGABITS_PER_SECOND,
-        "mdi:download",
-    ],
-    "current_up_bandwidth": [
-        "Currently Used Upload Bandwidth",
-        DATA_RATE_MEGABITS_PER_SECOND,
-        "mdi:upload",
-    ],
-    "uptime": ["Uptime", None, "mdi:clock"],
-    "number_of_reboots": ["Number of reboot", None, "mdi:restart"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="down_max_bandwidth",
+        name="Maximum Download Bandwidth",
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="up_max_bandwidth",
+        name="Maximum Upload Bandwidth",
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:upload",
+    ),
+    SensorEntityDescription(
+        key="current_down_bandwidth",
+        name="Currently Used Download Bandwidth",
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:download",
+    ),
+    SensorEntityDescription(
+        key="current_up_bandwidth",
+        name="Currently Used Upload Bandwidth",
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:upload",
+    ),
+    SensorEntityDescription(
+        key="number_of_reboots",
+        name="Number of reboot",
+        icon="mdi:restart",
+    ),
+)
+
+SENSOR_TYPES_UPTIME: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="uptime",
+        name="Uptime",
+        icon="mdi:clock",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in (*SENSOR_TYPES, *SENSOR_TYPES_UPTIME)]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MONITORED_VARIABLES): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -75,53 +97,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config[CONF_NAME]
 
-    sensors = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        if variable == "uptime":
-            sensors.append(BboxUptimeSensor(bbox_data, variable, name))
-        else:
-            sensors.append(BboxSensor(bbox_data, variable, name))
+    monitored_variables = config[CONF_MONITORED_VARIABLES]
+    entities: list[BboxSensor | BboxUptimeSensor] = [
+        BboxSensor(bbox_data, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_variables
+    ]
+    entities.extend(
+        [
+            BboxUptimeSensor(bbox_data, name, description)
+            for description in SENSOR_TYPES_UPTIME
+            if description.key in monitored_variables
+        ]
+    )
 
-    add_entities(sensors, True)
+    add_entities(entities, True)
 
 
 class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
-    def __init__(self, bbox_data, sensor_type, name):
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+
+    def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""
-        self.client_name = name
-        self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        self.entity_description = description
+        self._attr_name = f"{name} {description.name}"
         self.bbox_data = bbox_data
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
 
     def update(self):
         """Get the latest data from Bbox and update the state."""
@@ -129,60 +132,44 @@ class BboxUptimeSensor(SensorEntity):
         uptime = utcnow() - timedelta(
             seconds=self.bbox_data.router_infos["device"]["uptime"]
         )
-        self._state = uptime.replace(microsecond=0).isoformat()
+        self._attr_native_value = uptime.replace(microsecond=0).isoformat()
 
 
 class BboxSensor(SensorEntity):
     """Implementation of a Bbox sensor."""
 
-    def __init__(self, bbox_data, sensor_type, name):
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""
-        self.client_name = name
-        self.type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
+        self.entity_description = description
+        self._attr_name = f"{name} {description.name}"
         self.bbox_data = bbox_data
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
-        if self.type == "down_max_bandwidth":
-            self._state = round(self.bbox_data.data["rx"]["maxBandwidth"] / 1000, 2)
-        elif self.type == "up_max_bandwidth":
-            self._state = round(self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2)
-        elif self.type == "current_down_bandwidth":
-            self._state = round(self.bbox_data.data["rx"]["bandwidth"] / 1000, 2)
-        elif self.type == "current_up_bandwidth":
-            self._state = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
-        elif self.type == "number_of_reboots":
-            self._state = self.bbox_data.router_infos["device"]["numberofboots"]
+        sensor_type = self.entity_description.key
+        if sensor_type == "down_max_bandwidth":
+            self._attr_native_value = round(
+                self.bbox_data.data["rx"]["maxBandwidth"] / 1000, 2
+            )
+        elif sensor_type == "up_max_bandwidth":
+            self._attr_native_value = round(
+                self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2
+            )
+        elif sensor_type == "current_down_bandwidth":
+            self._attr_native_value = round(
+                self.bbox_data.data["rx"]["bandwidth"] / 1000, 2
+            )
+        elif sensor_type == "current_up_bandwidth":
+            self._attr_native_value = round(
+                self.bbox_data.data["tx"]["bandwidth"] / 1000, 2
+            )
+        elif sensor_type == "number_of_reboots":
+            self._attr_native_value = self.bbox_data.router_infos["device"][
+                "numberofboots"
+            ]
 
 
 class BboxData:

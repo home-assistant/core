@@ -10,14 +10,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Acmeda config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""

@@ -16,9 +16,9 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername",
-                    "verify_ssl": "Verwenden Sie SSL"
+                    "verify_ssl": "SSL verwenden"
                 },
-                "title": "Richten Sie den Mikrotik Router ein"
+                "title": "Mikrotik Router einrichten"
             }
         }
     },
@@ -27,7 +27,8 @@
             "device_tracker": {
                 "data": {
                     "arp_ping": "ARP-Ping aktivieren",
-                    "force_dhcp": "Erzwingen Sie das Scannen \u00fcber DHCP"
+                    "detection_time": "Heimintervall ber\u00fccksichtigen",
+                    "force_dhcp": "Scannen mit DHCP erzwingen"
                 }
             }
         }

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,20 @@
                 "description": "Pilih port serial untuk radio Zigbee",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Kode diperlukan untuk tindakan pengaktifkan alarm",
+            "alarm_failed_tries": "Jumlah entri kode yang gagal berturut-turut untuk memicu alarm",
+            "alarm_master_code": "Kode master untuk panel kontrol alarm",
+            "title": "Opsi Panel Kontrol Alarm"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "Anggap perangkat bertenaga baterai sebagai tidak tersedia setelah (detik)",
+            "consider_unavailable_mains": "Anggap perangkat bertenaga listrik sebagai tidak tersedia setelah (detik)",
+            "enable_identify_on_join": "Aktifkan efek identifikasi saat perangkat bergabung dengan jaringan",
+            "title": "Opsi Global"
         }
     },
     "device_automation": {

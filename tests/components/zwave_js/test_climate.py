@@ -9,9 +9,12 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
     CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_COOL,
@@ -25,6 +28,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
@@ -348,7 +352,10 @@ async def test_thermostat_different_endpoints(
     """Test an entity with values on a different endpoint from the primary value."""
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.8
+    assert state.attributes[ATTR_FAN_MODE] == "Auto low"
+    assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
 async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
@@ -371,6 +378,30 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         {
             ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
             ATTR_TEMPERATURE: 21.5,
+        },
+        blocking=True,
+    )
+
+    # Test setting illegal mode raises an error
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+                ATTR_HVAC_MODE: HVAC_MODE_COOL,
+            },
+            blocking=True,
+        )
+
+    # Test that setting HVAC_MODE_HEAT works. If the no-op logic didn't work, this would
+    # raise an error
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ATTR_HVAC_MODE: HVAC_MODE_HEAT,
         },
         blocking=True,
     )
@@ -430,8 +461,21 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     client.async_send_command_no_wait.reset_mock()
 
 
-async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integration):
-    """Test a thermostat v2 command class entity."""
+async def test_thermostat_heatit_z_trm3_no_value(
+    hass, client, climate_heatit_z_trm3_no_value, integration
+):
+    """Test a heatit Z-TRM3 entity that is missing a value."""
+    # When the config parameter that specifies what sensor to use has no value, we fall
+    # back to the first temperature sensor found on the device
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+
+
+async def test_thermostat_heatit_z_trm3(
+    hass, client, climate_heatit_z_trm3, integration
+):
+    """Test a heatit Z-TRM3 entity."""
+    node = climate_heatit_z_trm3
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
@@ -444,6 +488,101 @@ async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integratio
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_MIN_TEMP] == 5
+    assert state.attributes[ATTR_MAX_TEMP] == 35
+
+    # Try switching to external sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 24,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 4,
+                "prevValue": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
+
+    # Try switching to floor sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 24,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 0,
+                "prevValue": 4,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.5
+
+
+async def test_thermostat_heatit_z_trm2fx(
+    hass, client, climate_heatit_z_trm2fx, integration
+):
+    """Test a heatit Z-TRM2fx entity."""
+    node = climate_heatit_z_trm2fx
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+
+    assert state
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+    ]
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 28.8
+    assert state.attributes[ATTR_TEMPERATURE] == 29
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+    )
+    assert state.attributes[ATTR_MIN_TEMP] == 7
+    assert state.attributes[ATTR_MAX_TEMP] == 35
+
+    # Try switching to external sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 24,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 4,
+                "prevValue": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
 
 
 async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):

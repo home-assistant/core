@@ -1,4 +1,6 @@
 """Camera that loads a picture from an MQTT topic."""
+from __future__ import annotations
+
 import functools
 
 import voluptuous as vol
@@ -6,10 +8,10 @@ import voluptuous as vol
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import CONF_QOS, DOMAIN, PLATFORMS, subscription
 from .. import mqtt
@@ -18,6 +20,15 @@ from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_hel
 
 CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"
+
+MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        "access_token",
+        "brand",
+        "model_name",
+        "motion_detection",
+    }
+)
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
@@ -28,37 +39,39 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT camera through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(async_add_entities, config)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT camera dynamically through MQTT discovery."""
     setup = functools.partial(
-        _async_setup_entity, async_add_entities, config_entry=config_entry
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, camera.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    async_add_entities, config, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Camera."""
-    async_add_entities([MqttCamera(config, config_entry, discovery_data)])
+    async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])
 
 
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    _attributes_extra_blocked = MQTT_CAMERA_ATTRIBUTES_BLOCKED
+
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
         self._last_image = None
 
         Camera.__init__(self)
-        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema():
@@ -87,6 +100,8 @@ class MqttCamera(MqttEntity, Camera):
             },
         )
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         return self._last_image

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Dict, cast
+from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -54,9 +54,13 @@ from homeassistant.helpers.script import (
     Script,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    ReloadServiceHelper,
+    async_register_admin_service,
+)
 from homeassistant.helpers.trace import (
     TraceElement,
+    script_execution_set,
     trace_append_element,
     trace_get,
     trace_path,
@@ -67,12 +71,10 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
 from .config import AutomationConfig, async_validate_config_item
-
-# Not used except by packages to check config structure
-from .config import PLATFORM_SCHEMA  # noqa: F401
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
+    CONF_TRACE,
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DEFAULT_INITIAL_STATE,
@@ -102,6 +104,23 @@ SERVICE_TRIGGER = "trigger"
 
 _LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
+
+
+class AutomationTriggerData(TypedDict):
+    """Automation trigger data."""
+
+    id: str
+    idx: str
+
+
+class AutomationTriggerInfo(TypedDict):
+    """Information about automation trigger."""
+
+    domain: str
+    name: str
+    home_assistant_start: bool
+    variables: TemplateVarsType
+    trigger_data: AutomationTriggerData
 
 
 @bind_hass
@@ -176,6 +195,37 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(automation_entity.referenced_devices)
 
 
+@callback
+def automations_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
+    """Return all automations that reference the area."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if area_id in automation_entity.referenced_areas
+    ]
+
+
+@callback
+def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all areas in an automation."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    automation_entity = component.get_entity(entity_id)
+
+    if automation_entity is None:
+        return []
+
+    return list(automation_entity.referenced_areas)
+
+
 async def async_setup(hass, config):
     """Set up all automations."""
     # Local import to avoid circular import
@@ -220,8 +270,14 @@ async def async_setup(hass, config):
         await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
+    reload_helper = ReloadServiceHelper(reload_service_handler)
+
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_helper.execute_service,
+        schema=vol.Schema({}),
     )
 
     return True
@@ -229,6 +285,8 @@ async def async_setup(hass, config):
 
 class AutomationEntity(ToggleEntity, RestoreEntity):
     """Entity to show status of entity."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -241,10 +299,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         variables,
         trigger_variables,
         raw_config,
+        blueprint_inputs,
+        trace_config,
     ):
         """Initialize an automation entity."""
-        self._id = automation_id
-        self._name = name
+        self._attr_name = name
         self._trigger_config = trigger_config
         self._async_detach_triggers = None
         self._cond_func = cond_func
@@ -258,21 +317,9 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
         self._raw_config = raw_config
-
-    @property
-    def name(self):
-        """Name of the automation."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        return self._id
-
-    @property
-    def should_poll(self):
-        """No polling needed for automation entities."""
-        return False
+        self._blueprint_inputs = blueprint_inputs
+        self._trace_config = trace_config
+        self._attr_unique_id = automation_id
 
     @property
     def extra_state_attributes(self):
@@ -284,14 +331,19 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
-        if self._id is not None:
-            attrs[CONF_ID] = self._id
+        if self.unique_id is not None:
+            attrs[CONF_ID] = self.unique_id
         return attrs
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
+
+    @property
+    def referenced_areas(self):
+        """Return a set of referenced areas."""
+        return self.action_script.referenced_areas
 
     @property
     def referenced_devices(self):
@@ -400,17 +452,26 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_context = Context(parent_id=parent_id)
 
         with trace_automation(
-            self.hass, self.unique_id, self._raw_config, trigger_context
+            self.hass,
+            self.unique_id,
+            self._raw_config,
+            self._blueprint_inputs,
+            trigger_context,
+            self._trace_config,
         ) as automation_trace:
+            this = None
+            state = self.hass.states.get(self.entity_id)
+            if state:
+                this = state.as_dict()
+            variables = {"this": this, **(run_variables or {})}
             if self._variables:
                 try:
-                    variables = self._variables.async_render(self.hass, run_variables)
+                    variables = self._variables.async_render(self.hass, variables)
                 except template.TemplateError as err:
                     self._logger.error("Error rendering variables: %s", err)
                     automation_trace.set_error(err)
                     return
-            else:
-                variables = run_variables
+
             # Prepare tracing the automation
             automation_trace.set_trace(trace_get())
 
@@ -419,7 +480,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             automation_trace.set_trigger_description(trigger_description)
 
             # Add initial variables as the trigger step
-            trace_element = TraceElement(variables, "trigger")
+            if "trigger" in variables and "idx" in variables["trigger"]:
+                trigger_path = f"trigger/{variables['trigger']['idx']}"
+            else:
+                trigger_path = "trigger"
+            trace_element = TraceElement(variables, trigger_path)
             trace_append_element(trace_element)
 
             if (
@@ -431,11 +496,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     "Conditions not met, aborting automation. Condition summary: %s",
                     trace_get(clear=False),
                 )
+                script_execution_set("failed_conditions")
                 return
 
             self.async_set_context(trigger_context)
             event_data = {
-                ATTR_NAME: self._name,
+                ATTR_NAME: self.name,
                 ATTR_ENTITY_ID: self.entity_id,
             }
             if "trigger" in variables and "description" in variables["trigger"]:
@@ -519,13 +585,20 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         """Set up the triggers."""
 
         def log_cb(level, msg, **kwargs):
-            self._logger.log(level, "%s %s", msg, self._name, **kwargs)
+            self._logger.log(level, "%s %s", msg, self.name, **kwargs)
 
-        variables = None
+        this = None
+        self.async_write_ha_state()
+        state = self.hass.states.get(self.entity_id)
+        if state:
+            this = state.as_dict()
+        variables = {"this": this}
         if self._trigger_variables:
             try:
                 variables = self._trigger_variables.async_render(
-                    self.hass, None, limited=True
+                    self.hass,
+                    variables,
+                    limited=True,
                 )
             except template.TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)
@@ -536,7 +609,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._trigger_config,
             self.async_trigger,
             DOMAIN,
-            self._name,
+            str(self.name),
             log_cb,
             home_assistant_start,
             variables,
@@ -556,15 +629,15 @@ async def _async_process_config(
     blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[  # type: ignore
-            config_key
-        ]
+        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[config_key]
 
         for list_no, config_block in enumerate(conf):
+            raw_blueprint_inputs = None
             raw_config = None
-            if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+            if isinstance(config_block, blueprint.BlueprintInputs):
                 blueprints_used = True
                 blueprint_inputs = config_block
+                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
                 try:
                     raw_config = blueprint_inputs.async_substitute()
@@ -633,6 +706,8 @@ async def _async_process_config(
                 variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
                 raw_config,
+                raw_blueprint_inputs,
+                config_block[CONF_TRACE],
             )
 
             entities.append(entity)

@@ -12,6 +12,7 @@
             "gas": "Gas",
             "heat_pump": "Bomba de calor",
             "high_demand": "Alta demanda",
+            "off": "Apagado",
             "performance": "Rendimiento"
         }
     }

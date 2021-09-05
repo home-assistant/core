@@ -15,8 +15,15 @@ PLATFORMS = [
     "fan",
     "light",
     "lock",
+    "number",
+    "select",
     "sensor",
     "switch",
     "vacuum",
     "weather",
 ]
+
+CONF_AVAILABILITY = "availability"
+CONF_ATTRIBUTES = "attributes"
+CONF_PICTURE = "picture"
+CONF_OBJECT_ID = "object_id"

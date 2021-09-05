@@ -8,6 +8,11 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN k\u00f3d"
+                }
+            },
             "user": {
                 "data": {
                     "api_version": "Verze API",

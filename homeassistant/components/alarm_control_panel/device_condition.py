@@ -1,6 +1,8 @@
 """Provide the device automations for Alarm control panel."""
 from __future__ import annotations
 
+from typing import Final
+
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel.const import (
@@ -8,10 +10,10 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -21,12 +23,14 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
@@ -35,20 +39,22 @@ from .const import (
     CONDITION_ARMED_CUSTOM_BYPASS,
     CONDITION_ARMED_HOME,
     CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
 )
 
-CONDITION_TYPES = {
+CONDITION_TYPES: Final[set[str]] = {
     CONDITION_TRIGGERED,
     CONDITION_DISARMED,
     CONDITION_ARMED_HOME,
     CONDITION_ARMED_AWAY,
     CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_VACATION,
     CONDITION_ARMED_CUSTOM_BYPASS,
 }
 
-CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+CONDITION_SCHEMA: Final = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
@@ -68,70 +74,31 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-
-        # We need a state or else we can't populate the different armed conditions
-        if state is None:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add conditions for each entity that belongs to this integration
+        base_condition = {
+            CONF_CONDITION: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         conditions += [
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: CONDITION_DISARMED,
-            },
-            {
-                CONF_CONDITION: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: CONDITION_TRIGGERED,
-            },
+            {**base_condition, CONF_TYPE: CONDITION_DISARMED},
+            {**base_condition, CONF_TYPE: CONDITION_TRIGGERED},
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_HOME,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_HOME})
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_AWAY,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
-            conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_NIGHT,
-                }
-            )
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
+        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_VACATION})
         if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
             conditions.append(
-                {
-                    CONF_CONDITION: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS,
-                }
+                {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
             )
 
     return conditions
@@ -153,6 +120,8 @@ def async_condition_from_config(
         state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == CONDITION_ARMED_NIGHT:
         state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == CONDITION_ARMED_VACATION:
+        state = STATE_ALARM_ARMED_VACATION
     elif config[CONF_TYPE] == CONDITION_ARMED_CUSTOM_BYPASS:
         state = STATE_ALARM_ARMED_CUSTOM_BYPASS
 

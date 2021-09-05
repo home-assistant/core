@@ -18,5 +18,14 @@
                 "title": "AEMET OpenData"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "\u81ea AEMET \u6c23\u8c61\u7ad9\u7372\u5f97\u8cc7\u6599"
+                }
+            }
+        }
     }
 }

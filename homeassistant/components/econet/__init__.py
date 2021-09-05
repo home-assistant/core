@@ -1,5 +1,4 @@
 """Support for EcoNet products."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -62,10 +61,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     api.subscribe()
 
@@ -88,25 +84,21 @@ async def async_setup_entry(hass, config_entry):
         """Fetch the latest changes from the API."""
         await api.refresh_equipment()
 
-    async_track_time_interval(hass, resubscribe, INTERVAL)
-    async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
+    config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
+    config_entry.async_on_unload(
+        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
+    )
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a EcoNet config entry."""
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-
-    await asyncio.gather(*tasks)
-
-    hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
-    hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
-
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
+        hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
+    return unload_ok
 
 
 class EcoNetEntity(Entity):

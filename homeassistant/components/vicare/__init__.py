@@ -3,11 +3,13 @@ import enum
 import logging
 
 from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareFuelCell import FuelCell
 from PyViCare.PyViCareGazBoiler import GazBoiler
 from PyViCare.PyViCareHeatPump import HeatPump
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -22,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
 
 DOMAIN = "vicare"
-PYVICARE_ERROR = "error"
 VICARE_API = "api"
 VICARE_NAME = "name"
 VICARE_HEATING_TYPE = "heating_type"
@@ -33,12 +34,12 @@ DEFAULT_HEATING_TYPE = "generic"
 
 
 class HeatingType(enum.Enum):
-    # pylint: disable=invalid-name
     """Possible options for heating type."""
 
     generic = "generic"
     gas = "gas"
     heatpump = "heatpump"
+    fuelcell = "fuelcell"
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -47,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=60): vol.All(
                     cv.time_period, lambda value: value.total_seconds()
                 ),
@@ -70,7 +72,7 @@ def setup(hass, config):
         params["circuit"] = conf[CONF_CIRCUIT]
 
     params["cacheDuration"] = conf.get(CONF_SCAN_INTERVAL)
-
+    params["client_id"] = conf.get(CONF_CLIENT_ID)
     heating_type = conf[CONF_HEATING_TYPE]
 
     try:
@@ -78,6 +80,8 @@ def setup(hass, config):
             vicare_api = GazBoiler(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
         elif heating_type == HeatingType.heatpump:
             vicare_api = HeatPump(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
+        elif heating_type == HeatingType.fuelcell:
+            vicare_api = FuelCell(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
         else:
             vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
     except AttributeError:

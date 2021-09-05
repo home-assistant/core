@@ -1,5 +1,8 @@
 """Config flow for Tuya."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import (
@@ -82,15 +85,13 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a tuya config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._country_code = None
         self._password = None
         self._platform = None
         self._username = None
-        self._is_import = False
 
     def _save_entry(self):
         return self.async_create_entry(
@@ -117,11 +118,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return RESULT_SUCCESS
 
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        self._is_import = True
-        return await self.async_step_user(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
@@ -140,12 +136,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._save_entry()
-            if result != RESULT_AUTH_FAILED or self._is_import:
-                if self._is_import:
-                    _LOGGER.error(
-                        "Error importing from configuration.yaml: %s",
-                        RESULT_LOG_MESSAGE.get(result, "Generic Error"),
-                    )
+            if result != RESULT_AUTH_FAILED:
                 return self.async_abort(reason=result)
             errors["base"] = result
 
@@ -163,11 +154,11 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Tuya."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._conf_devs_id = None
-        self._conf_devs_option = {}
+        self._conf_devs_option: dict[str, Any] = {}
         self._form_error = None
 
     def _get_form_error(self):
@@ -257,7 +248,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
 
-        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+        if self.config_entry.state is not config_entries.ConfigEntryState.LOADED:
             _LOGGER.error("Tuya integration not yet loaded")
             return self.async_abort(reason=RESULT_CONN_ERROR)
 

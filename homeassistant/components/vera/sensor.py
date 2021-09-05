@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Callable, cast
+from typing import cast
 
 import pyvera as veraApi
 
@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
 from . import VeraDevice
@@ -26,7 +26,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -44,7 +44,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraSensor, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None
@@ -53,12 +53,12 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the name of the sensor."""
         return self.current_value
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
 
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:

@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.maxcube import DOMAIN
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import now
 
 
 @pytest.fixture
@@ -105,5 +106,5 @@ async def cube(hass, hass_config, room, thermostat, wallthermostat, windowshutte
         assert await async_setup_component(hass, DOMAIN, hass_config)
         await hass.async_block_till_done()
         gateway = hass_config[DOMAIN]["gateways"][0]
-        mock.assert_called_with(gateway["host"], gateway.get("port", 62910))
+        mock.assert_called_with(gateway["host"], gateway.get("port", 62910), now=now)
         return cube

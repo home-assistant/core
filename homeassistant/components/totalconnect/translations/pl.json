@@ -11,9 +11,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Lokalizacja"
+                    "location": "Lokalizacja",
+                    "usercode": "Kod u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a kod u\u017cytkownika dla u\u017cytkownika w tej lokalizacji",
+                "description": "Wprowad\u017a kod u\u017cytkownika dla u\u017cytkownika w lokalizacji {location_id}",
                 "title": "Kody lokalizacji u\u017cytkownika"
             },
             "reauth_confirm": {

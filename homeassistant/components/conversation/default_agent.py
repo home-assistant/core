@@ -53,7 +53,7 @@ def async_register(hass, intent_type, utterances):
 class DefaultAgent(AbstractConversationAgent):
     """Default agent for conversation agent."""
 
-    def __init__(self, hass: core.HomeAssistant):
+    def __init__(self, hass: core.HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
 

@@ -112,7 +112,6 @@ class DiscordNotificationService(BaseNotificationService):
                         await channel.send(message, files=files)
             except (discord.errors.HTTPException, discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
-            await discord_bot.logout()
             await discord_bot.close()
 
         # Using reconnect=False prevents multiple ready events to be fired.

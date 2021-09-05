@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
-            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen"
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "create_entry": {
             "default": "Vellykket godkjenning"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Lyric-integrasjonen m\u00e5 godkjenne kontoen din p\u00e5 nytt.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
             }
         }
     }

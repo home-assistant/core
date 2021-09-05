@@ -26,7 +26,9 @@ async def async_setup_entry(hass, config_entry):
 
     await device.async_update_device_registry()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+    )
 
     return True
 

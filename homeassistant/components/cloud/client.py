@@ -35,7 +35,7 @@ class CloudClient(Interface):
         websession: aiohttp.ClientSession,
         alexa_user_config: dict[str, Any],
         google_user_config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs
@@ -90,6 +90,7 @@ class CloudClient(Interface):
             self._alexa_config = alexa_config.AlexaConfig(
                 self._hass, self.alexa_user_config, cloud_user, self._prefs, self.cloud
             )
+            await self._alexa_config.async_initialize()
 
         return self._alexa_config
 
@@ -107,8 +108,8 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def logged_in(self) -> None:
-        """When user logs in."""
+    async def cloud_started(self) -> None:
+        """When cloud is started."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
@@ -147,9 +148,12 @@ class CloudClient(Interface):
             tasks.append(enable_google)
 
         if tasks:
-            await asyncio.gather(*[task(None) for task in tasks])
+            await asyncio.gather(*(task(None) for task in tasks))
 
-    async def cleanups(self) -> None:
+    async def cloud_stopped(self) -> None:
+        """When the cloud is stopped."""
+
+    async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 

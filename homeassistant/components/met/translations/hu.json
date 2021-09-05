@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_home": "A Home Assistant konfigur\u00e1ci\u00f3j\u00e1ban nincsenek megadva otthoni koordin\u00e1t\u00e1k"
+        },
         "error": {
             "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
         },

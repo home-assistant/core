@@ -5,6 +5,9 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "connection_error": "Verbindung fehlgeschlagen"
         },
+        "error": {
+            "discovery_error": "Motion-Gateway konnte nicht gefunden werden"
+        },
         "flow_title": "Jalousien",
         "step": {
             "connect": {

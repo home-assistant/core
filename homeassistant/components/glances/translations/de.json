@@ -14,9 +14,9 @@
                     "name": "Name",
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "Verwende SSL / TLS, um eine Verbindung zum Glances-System herzustellen",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "\u00dcberpr\u00fcfe die Zertifizierung des Systems",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen",
                     "version": "Glances API-Version (2 oder 3)"
                 },
                 "title": "Glances einrichten"

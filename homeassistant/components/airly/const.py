@@ -1,28 +1,34 @@
 """Constants for Airly integration."""
+from __future__ import annotations
 
-ATTR_API_ADVICE = "ADVICE"
-ATTR_API_CAQI = "CAQI"
-ATTR_API_CAQI_DESCRIPTION = "DESCRIPTION"
-ATTR_API_CAQI_LEVEL = "LEVEL"
-ATTR_API_HUMIDITY = "HUMIDITY"
-ATTR_API_PM1 = "PM1"
-ATTR_API_PM10 = "PM10"
-ATTR_API_PM10_LIMIT = "PM10_LIMIT"
-ATTR_API_PM10_PERCENT = "PM10_PERCENT"
-ATTR_API_PM25 = "PM25"
-ATTR_API_PM25_LIMIT = "PM25_LIMIT"
-ATTR_API_PM25_PERCENT = "PM25_PERCENT"
-ATTR_API_PRESSURE = "PRESSURE"
-ATTR_API_TEMPERATURE = "TEMPERATURE"
+from typing import Final
 
-ATTR_LABEL = "label"
-ATTR_UNIT = "unit"
+ATTR_API_ADVICE: Final = "ADVICE"
+ATTR_API_CAQI: Final = "CAQI"
+ATTR_API_CAQI_DESCRIPTION: Final = "DESCRIPTION"
+ATTR_API_CAQI_LEVEL: Final = "LEVEL"
+ATTR_API_HUMIDITY: Final = "HUMIDITY"
+ATTR_API_PM10: Final = "PM10"
+ATTR_API_PM1: Final = "PM1"
+ATTR_API_PM25: Final = "PM25"
+ATTR_API_PRESSURE: Final = "PRESSURE"
+ATTR_API_TEMPERATURE: Final = "TEMPERATURE"
 
-ATTRIBUTION = "Data provided by Airly"
-CONF_USE_NEAREST = "use_nearest"
-DEFAULT_NAME = "Airly"
-DOMAIN = "airly"
-LABEL_ADVICE = "advice"
-MANUFACTURER = "Airly sp. z o.o."
-MAX_REQUESTS_PER_DAY = 100
-NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."
+ATTR_ADVICE: Final = "advice"
+ATTR_DESCRIPTION: Final = "description"
+ATTR_LEVEL: Final = "level"
+ATTR_LIMIT: Final = "limit"
+ATTR_PERCENT: Final = "percent"
+
+SUFFIX_PERCENT: Final = "PERCENT"
+SUFFIX_LIMIT: Final = "LIMIT"
+
+ATTRIBUTION: Final = "Data provided by Airly"
+CONF_USE_NEAREST: Final = "use_nearest"
+DEFAULT_NAME: Final = "Airly"
+DOMAIN: Final = "airly"
+LABEL_ADVICE: Final = "advice"
+MANUFACTURER: Final = "Airly sp. z o.o."
+MAX_UPDATE_INTERVAL: Final = 90
+MIN_UPDATE_INTERVAL: Final = 5
+NO_AIRLY_SENSORS: Final = "There are no Airly sensors in this area yet."

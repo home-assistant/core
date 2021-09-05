@@ -11,6 +11,12 @@ ZEROCONF = {
             "domain": "volumio"
         }
     ],
+    "_airplay._tcp.local.": [
+        {
+            "domain": "samsungtv",
+            "manufacturer": "samsung*"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -49,14 +55,34 @@ ZEROCONF = {
             "domain": "daikin"
         }
     ],
+    "_dvl-deviceapi._tcp.local.": [
+        {
+            "domain": "devolo_home_control"
+        }
+    ],
+    "_easylink._tcp.local.": [
+        {
+            "domain": "modern_forms",
+            "name": "wac*"
+        }
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato"
         }
     ],
+    "_enphase-envoy._tcp.local.": [
+        {
+            "domain": "enphase_envoy"
+        }
+    ],
     "_esphomelib._tcp.local.": [
         {
             "domain": "esphome"
+        },
+        {
+            "domain": "zha",
+            "name": "tube*"
         }
     ],
     "_fbx-api._tcp.local.": [
@@ -80,6 +106,26 @@ ZEROCONF = {
         }
     ],
     "_http._tcp.local.": [
+        {
+            "domain": "bosch_shc",
+            "name": "bosch shc*"
+        },
+        {
+            "domain": "nam",
+            "name": "nam-*"
+        },
+        {
+            "domain": "nam",
+            "manufacturer": "nettigo"
+        },
+        {
+            "domain": "rachio",
+            "name": "rachio*"
+        },
+        {
+            "domain": "rainmachine",
+            "name": "rainmachine*"
+        },
         {
             "domain": "shelly",
             "name": "shelly*"
@@ -119,6 +165,16 @@ ZEROCONF = {
             "domain": "xiaomi_miio"
         }
     ],
+    "_nanoleafapi._tcp.local.": [
+        {
+            "domain": "nanoleaf"
+        }
+    ],
+    "_nanoleafms._tcp.local.": [
+        {
+            "domain": "nanoleaf"
+        }
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut"
@@ -129,10 +185,20 @@ ZEROCONF = {
             "domain": "plugwise"
         }
     ],
+    "_powerview._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview"
+        }
+    ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
             "name": "brother*"
+        }
+    ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
         }
     ],
     "_spotify-connect._tcp.local.": [
@@ -148,6 +214,15 @@ ZEROCONF = {
         {
             "domain": "smappee",
             "name": "smappee2*"
+        },
+        {
+            "domain": "smappee",
+            "name": "smappee50*"
+        }
+    ],
+    "_system-bridge._udp.local.": [
+        {
+            "domain": "system_bridge"
         }
     ],
     "_touch-able._tcp.local.": [
@@ -185,15 +260,20 @@ HOMEKIT = {
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
+    "MYQ": "myq",
+    "NL*": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "SPK5": "rainmachine",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
+    "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "YL*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

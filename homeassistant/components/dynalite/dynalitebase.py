@@ -7,7 +7,8 @@ from homeassistant.components.dynalite.bridge import DynaliteBridge
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
 
@@ -15,7 +16,7 @@ from .const import DOMAIN, LOGGER
 def async_setup_entry_base(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     platform: str,
     entity_from_device: Callable,
 ) -> None:
@@ -42,7 +43,7 @@ class DynaliteBase(Entity):
         """Initialize the base class."""
         self._device = device
         self._bridge = bridge
-        self._unsub_dispatchers = []
+        self._unsub_dispatchers: list[Callable[[], None]] = []
 
     @property
     def name(self) -> str:
@@ -60,7 +61,7 @@ class DynaliteBase(Entity):
         return self._device.available
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Device info for this entity."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},

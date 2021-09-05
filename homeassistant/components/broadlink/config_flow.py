@@ -14,15 +14,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    DOMAINS_AND_TYPES,
-)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, DOMAINS_AND_TYPES
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Broadlink config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     VERSION = 1
 
     def __init__(self):
@@ -60,24 +55,27 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "host": device.host[0],
         }
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        host = dhcp_discovery[IP_ADDRESS]
-        unique_id = dhcp_discovery[MAC_ADDRESS].lower().replace(":", "")
+        host = discovery_info[IP_ADDRESS]
+        unique_id = discovery_info[MAC_ADDRESS].lower().replace(":", "")
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
         try:
-            hello = partial(blk.discover, discover_ip_address=host)
-            device = (await self.hass.async_add_executor_job(hello))[0]
-        except IndexError:
+            device = await self.hass.async_add_executor_job(blk.hello, host)
+
+        except NetworkTimeoutError:
             return self.async_abort(reason="cannot_connect")
+
         except OSError as err:
             if err.errno == errno.ENETUNREACH:
                 return self.async_abort(reason="cannot_connect")
-            return self.async_abort(reason="invalid_host")
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to connect to the device at %s", host, exc_info=ex)
             return self.async_abort(reason="unknown")
+
+        supported_types = set.union(*DOMAINS_AND_TYPES.values())
+        if device.type not in supported_types:
+            return self.async_abort(reason="not_supported")
 
         await self.async_set_device(device)
         return await self.async_step_auth()
@@ -91,10 +89,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
             try:
-                hello = partial(blk.discover, discover_ip_address=host, timeout=timeout)
-                device = (await self.hass.async_add_executor_job(hello))[0]
+                hello = partial(blk.hello, host, timeout=timeout)
+                device = await self.hass.async_add_executor_job(hello)
 
-            except IndexError:
+            except NetworkTimeoutError:
                 errors["base"] = "cannot_connect"
                 err_msg = "Device not found"
 
@@ -112,7 +110,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device.timeout = timeout
 
-                if self.source != "reauth":
+                if self.source != SOURCE_REAUTH:
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
@@ -300,11 +298,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Import a device."""
-        if any(
-            import_info[CONF_HOST] == entry.data[CONF_HOST]
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
         return await self.async_step_user(import_info)
 
     async def async_step_reauth(self, data):

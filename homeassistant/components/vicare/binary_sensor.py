@@ -1,6 +1,8 @@
 """Viessmann ViCare sensor device."""
+from contextlib import suppress
 import logging
 
+from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
 import requests
 
 from homeassistant.components.binary_sensor import (
@@ -11,7 +13,6 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
-    PYVICARE_ERROR,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
@@ -29,10 +30,6 @@ SENSOR_BURNER_ACTIVE = "burner_active"
 
 # heatpump sensors
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
-SENSOR_HEATINGROD_OVERALL = "heatingrod_overall"
-SENSOR_HEATINGROD_LEVEL1 = "heatingrod_level1"
-SENSOR_HEATINGROD_LEVEL2 = "heatingrod_level2"
-SENSOR_HEATINGROD_LEVEL3 = "heatingrod_level3"
 
 SENSOR_TYPES = {
     SENSOR_CIRCULATION_PUMP_ACTIVE: {
@@ -52,26 +49,6 @@ SENSOR_TYPES = {
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_GETTER: lambda api: api.getCompressorActive(),
     },
-    SENSOR_HEATINGROD_OVERALL: {
-        CONF_NAME: "Heating rod overall",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_GETTER: lambda api: api.getHeatingRodStatusOverall(),
-    },
-    SENSOR_HEATINGROD_LEVEL1: {
-        CONF_NAME: "Heating rod level 1",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_GETTER: lambda api: api.getHeatingRodStatusLevel1(),
-    },
-    SENSOR_HEATINGROD_LEVEL2: {
-        CONF_NAME: "Heating rod level 2",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_GETTER: lambda api: api.getHeatingRodStatusLevel2(),
-    },
-    SENSOR_HEATINGROD_LEVEL3: {
-        CONF_NAME: "Heating rod level 3",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_GETTER: lambda api: api.getHeatingRodStatusLevel3(),
-    },
 }
 
 SENSORS_GENERIC = [SENSOR_CIRCULATION_PUMP_ACTIVE]
@@ -80,11 +57,8 @@ SENSORS_BY_HEATINGTYPE = {
     HeatingType.gas: [SENSOR_BURNER_ACTIVE],
     HeatingType.heatpump: [
         SENSOR_COMPRESSOR_ACTIVE,
-        SENSOR_HEATINGROD_OVERALL,
-        SENSOR_HEATINGROD_LEVEL1,
-        SENSOR_HEATINGROD_LEVEL2,
-        SENSOR_HEATINGROD_LEVEL3,
     ],
+    HeatingType.fuelcell: [SENSOR_BURNER_ACTIVE],
 }
 
 
@@ -125,7 +99,7 @@ class ViCareBinarySensor(BinarySensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None and self._state != PYVICARE_ERROR
+        return self._state is not None
 
     @property
     def unique_id(self):
@@ -150,8 +124,11 @@ class ViCareBinarySensor(BinarySensorEntity):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self._sensor[CONF_GETTER](self._api)
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._state = self._sensor[CONF_GETTER](self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)

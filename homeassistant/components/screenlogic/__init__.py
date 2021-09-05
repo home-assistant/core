@@ -1,6 +1,5 @@
 """The Screenlogic integration."""
 import asyncio
-from collections import defaultdict
 from datetime import timedelta
 import logging
 
@@ -17,6 +16,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,21 +25,66 @@ from homeassistant.helpers.update_coordinator import (
 
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
 from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
+from .services import async_load_screenlogic_services, async_unload_screenlogic_services
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Screenlogic component."""
     domain_data = hass.data[DOMAIN] = {}
     domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Screenlogic from a config entry."""
+
+    gateway = await hass.async_add_executor_job(get_new_gateway, hass, entry)
+
+    # The api library uses a shared socket connection and does not handle concurrent
+    # requests very well.
+    api_lock = asyncio.Lock()
+
+    coordinator = ScreenlogicDataUpdateCoordinator(
+        hass, config_entry=entry, gateway=gateway, api_lock=api_lock
+    )
+
+    async_load_screenlogic_services(hass)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "listener": entry.add_update_listener(async_update_listener),
+    }
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    hass.data[DOMAIN][entry.entry_id]["listener"]()
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    async_unload_screenlogic_services(hass)
+
+    return unload_ok
+
+
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+def get_connect_info(hass: HomeAssistant, entry: ConfigEntry):
+    """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to re-discover named gateway to follow IP changes
     discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
@@ -54,78 +99,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             SL_GATEWAY_PORT: entry.data[CONF_PORT],
         }
 
+    return connect_info
+
+
+def get_new_gateway(hass: HomeAssistant, entry: ConfigEntry):
+    """Instantiate a new ScreenLogicGateway, connect to it and return it to caller."""
+
+    connect_info = get_connect_info(hass, entry)
+
     try:
         gateway = ScreenLogicGateway(**connect_info)
     except ScreenLogicError as ex:
         _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
         raise ConfigEntryNotReady from ex
 
-    # The api library uses a shared socket connection and does not handle concurrent
-    # requests very well.
-    api_lock = asyncio.Lock()
-
-    coordinator = ScreenlogicDataUpdateCoordinator(
-        hass, config_entry=entry, gateway=gateway, api_lock=api_lock
-    )
-
-    device_data = defaultdict(list)
-
-    await coordinator.async_config_entry_first_refresh()
-
-    for circuit in coordinator.data["circuits"]:
-        device_data["switch"].append(circuit)
-
-    for sensor in coordinator.data["sensors"]:
-        if sensor == "chem_alarm":
-            device_data["binary_sensor"].append(sensor)
-        else:
-            if coordinator.data["sensors"][sensor]["value"] != 0:
-                device_data["sensor"].append(sensor)
-
-    for pump in coordinator.data["pumps"]:
-        if (
-            coordinator.data["pumps"][pump]["data"] != 0
-            and "currentWatts" in coordinator.data["pumps"][pump]
-        ):
-            device_data["pump"].append(pump)
-
-    for body in coordinator.data["bodies"]:
-        device_data["body"].append(body)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "devices": device_data,
-        "listener": entry.add_update_listener(async_update_listener),
-    }
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    hass.data[DOMAIN][entry.entry_id]["listener"]()
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
-
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    return gateway
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
@@ -137,6 +125,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         self.gateway = gateway
         self.api_lock = api_lock
         self.screenlogic_data = {}
+
         interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
@@ -147,23 +136,48 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=interval,
         )
 
+    def reconnect_gateway(self):
+        """Instantiate a new ScreenLogicGateway, connect to it and update. Return new gateway to caller."""
+
+        connect_info = get_connect_info(self.hass, self.config_entry)
+
+        try:
+            gateway = ScreenLogicGateway(**connect_info)
+            gateway.update()
+        except ScreenLogicError as error:
+            raise UpdateFailed(error) from error
+
+        return gateway
+
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
             async with self.api_lock:
                 await self.hass.async_add_executor_job(self.gateway.update)
         except ScreenLogicError as error:
-            raise UpdateFailed(error) from error
+            _LOGGER.warning("ScreenLogicError - attempting reconnect: %s", error)
+
+            async with self.api_lock:
+                self.gateway = await self.hass.async_add_executor_job(
+                    self.reconnect_gateway
+                )
+
         return self.gateway.get_data()
 
 
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
-    def __init__(self, coordinator, data_key):
+    def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self._data_key = data_key
+        self._enabled_default = enabled
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Entity enabled by default."""
+        return self._enabled_default
 
     @property
     def mac(self):
@@ -195,9 +209,15 @@ class ScreenlogicEntity(CoordinatorEntity):
         """Return device information for the controller."""
         controller_type = self.config_data["controller_type"]
         hardware_type = self.config_data["hardware_type"]
+        try:
+            equipment_model = EQUIPMENT.CONTROLLER_HARDWARE[controller_type][
+                hardware_type
+            ]
+        except KeyError:
+            equipment_model = f"Unknown Model C:{controller_type} H:{hardware_type}"
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "name": self.gateway_name,
             "manufacturer": "Pentair",
-            "model": EQUIPMENT.CONTROLLER_HARDWARE[controller_type][hardware_type],
+            "model": equipment_model,
         }

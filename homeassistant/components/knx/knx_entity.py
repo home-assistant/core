@@ -1,7 +1,9 @@
 """Base class for KNX devices."""
+from __future__ import annotations
+
 from typing import cast
 
-from xknx.devices import Climate as XknxClimate, Device as XknxDevice
+from xknx.devices import Device as XknxDevice
 
 from homeassistant.helpers.entity import Entity
 
@@ -11,6 +13,8 @@ from .const import DOMAIN
 
 class KnxEntity(Entity):
     """Representation of a KNX entity."""
+
+    _attr_should_poll = False
 
     def __init__(self, device: XknxDevice) -> None:
         """Set up device."""
@@ -27,11 +31,6 @@ class KnxEntity(Entity):
         knx_module = cast(KNXModule, self.hass.data[DOMAIN])
         return knx_module.connected
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed within KNX."""
-        return False
-
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
         await self._device.sync()
@@ -44,12 +43,6 @@ class KnxEntity(Entity):
         """Store register state change callback."""
         self._device.register_device_updated_cb(self.after_update_callback)
 
-        if isinstance(self._device, XknxClimate) and self._device.mode is not None:
-            self._device.mode.register_device_updated_cb(self.after_update_callback)
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.unregister_device_updated_cb(self.after_update_callback)
-
-        if isinstance(self._device, XknxClimate) and self._device.mode is not None:
-            self._device.mode.unregister_device_updated_cb(self.after_update_callback)

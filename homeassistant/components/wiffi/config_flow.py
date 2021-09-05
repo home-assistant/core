@@ -11,18 +11,13 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 
 class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Wiffi server setup config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "one": "",
+                    "other": "Otros"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalo de actualizaci\u00f3n",
+                    "tracked_asset_pairs": "Pares de activos rastreados"
+                }
+            }
+        }
+    }
+}

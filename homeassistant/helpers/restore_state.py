@@ -100,6 +100,12 @@ class RestoreStateData:
 
         return cast(RestoreStateData, await load_instance(hass))
 
+    @classmethod
+    async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
+        """Dump states now."""
+        data = await cls.async_get_instance(hass)
+        await data.async_dump_states()
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
         self.hass: HomeAssistant = hass
@@ -177,10 +183,18 @@ class RestoreStateData:
         self.hass.async_create_task(_async_dump_states())
 
         # Dump states periodically
-        async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)
+        cancel_interval = async_track_time_interval(
+            self.hass, _async_dump_states, STATE_DUMP_INTERVAL
+        )
+
+        async def _async_dump_states_at_stop(*_: Any) -> None:
+            cancel_interval()
+            await self.async_dump_states()
 
         # Dump states when stopping hass
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_dump_states)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_dump_states_at_stop
+        )
 
     @callback
     def async_restore_entity_added(self, entity_id: str) -> None:

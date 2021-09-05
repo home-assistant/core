@@ -8,8 +8,7 @@
             "bad_pin_format": "PIN \u78bc\u61c9\u8a72\u70ba 4 \u4f4d\u6578\u5b57",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "incorrect_pin": "PIN \u78bc\u932f\u8aa4",
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "step": {
             "pin": {

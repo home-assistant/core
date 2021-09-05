@@ -116,12 +116,9 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
     def send_message(self, message, **kwargs):
         """Send a message."""
-        token = self.token
         data = kwargs.get(ATTR_DATA) or {}
+        token = data.get(ATTR_TOKEN, self.token)
 
         msg = self.prepare_message(message, data)
-
-        if data.get(ATTR_TOKEN, "").trim():
-            token = data[ATTR_TOKEN]
 
         msg.send(token)

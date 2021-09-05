@@ -12,7 +12,6 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import aiohttp_client
 
-# pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
 
 
@@ -20,7 +19,6 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Samsung SyncThru config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     url: str
     name: str

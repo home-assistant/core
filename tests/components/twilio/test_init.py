@@ -1,18 +1,18 @@
 """Test the init file of Twilio."""
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import twilio
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
 
 
-async def test_config_flow_registers_webhook(hass, aiohttp_client):
+async def test_config_flow_registers_webhook(hass, hass_client_no_auth):
     """Test setting up Twilio and sending webhook."""
     await async_process_ha_core_config(
         hass,
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "twilio", context={"source": "user"}
+        "twilio", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
@@ -29,7 +29,7 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
 
     hass.bus.async_listen(twilio.RECEIVED_DATA, handle_event)
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     await client.post(f"/api/webhook/{webhook_id}", data={"hello": "twilio"})
 
     assert len(twilio_events) == 1

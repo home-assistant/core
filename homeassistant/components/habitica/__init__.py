@@ -1,5 +1,4 @@
 """The habitica integration."""
-import asyncio
 import logging
 
 from habitipy.aio import HabitipyAsync
@@ -17,9 +16,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ARGS,
+    ATTR_DATA,
     ATTR_PATH,
     CONF_API_USER,
     DEFAULT_URL,
@@ -83,7 +84,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Habitica service."""
     configs = config.get(DOMAIN, [])
 
@@ -100,7 +101,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up habitica from a config entry."""
 
     class HAHabitipyAsync(HabitipyAsync):
@@ -112,7 +113,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def handle_api_call(call):
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
-        api = hass.data[DOMAIN].get(name)
+        entries = hass.config_entries.async_entries(DOMAIN)
+        api = None
+        for entry in entries:
+            if entry.data[CONF_NAME] == name:
+                api = hass.data[DOMAIN].get(entry.entry_id)
+                break
         if api is None:
             _LOGGER.error("API_CALL: User '%s' not configured", name)
             return
@@ -127,11 +133,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         kwargs = call.data.get(ATTR_ARGS, {})
         data = await api(**kwargs)
         hass.bus.async_fire(
-            EVENT_API_CALL_SUCCESS, {"name": name, "path": path, "data": data}
+            EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
 
     data = hass.data.setdefault(DOMAIN, {})
-    config = config_entry.data
+    config = entry.data
     websession = async_get_clientsession(hass)
     url = config[CONF_URL]
     username = config[CONF_API_USER]
@@ -143,15 +149,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if name is None:
         name = user["profile"]["name"]
         hass.config_entries.async_update_entry(
-            config_entry,
-            data={**config_entry.data, CONF_NAME: name},
+            entry,
+            data={**entry.data, CONF_NAME: name},
         )
-    data[config_entry.entry_id] = api
+    data[entry.entry_id] = api
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
         hass.services.async_register(
@@ -163,14 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

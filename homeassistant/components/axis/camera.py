@@ -51,6 +51,8 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         }
         MjpegCamera.__init__(self, config)
 
+        self._attr_unique_id = f"{device.unique_id}-camera"
+
     async def async_added_to_hass(self):
         """Subscribe camera events."""
         self.async_on_remove(
@@ -70,11 +72,6 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         """Set new device address for video stream."""
         self._mjpeg_url = self.mjpeg_source
         self._still_image_url = self.image_source
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return f"{self.device.unique_id}-camera"
 
     @property
     def image_source(self) -> str:

@@ -4,13 +4,12 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
-from functools import partial
 import logging
 import re
 import sys
 from typing import Any
 
-from icmplib import SocketPermissionError, ping as icmp_ping
+from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -18,12 +17,11 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, PLATFORMS, async_get_next_ping_id
-from .const import PING_TIMEOUT
+from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,32 +61,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the Ping Binary sensor."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
-
-    try:
-        # Verify we can create a raw socket, or
-        # fallback to using a subprocess
-        icmp_ping("127.0.0.1", count=0, timeout=0)
-        ping_cls = PingDataICMPLib
-    except SocketPermissionError:
+    privileged = hass.data[DOMAIN][PING_PRIVS]
+    if privileged is None:
         ping_cls = PingDataSubProcess
+    else:
+        ping_cls = PingDataICMPLib
 
-    ping_data = ping_cls(hass, host, count)
+    async_add_entities(
+        [PingBinarySensor(name, ping_cls(hass, host, count, privileged))]
+    )
 
-    add_entities([PingBinarySensor(name, ping_data)], True)
 
-
-class PingBinarySensor(BinarySensorEntity):
+class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
     def __init__(self, name: str, ping) -> None:
         """Initialize the Ping Binary sensor."""
+        self._available = False
         self._name = name
         self._ping = ping
 
@@ -98,6 +94,11 @@ class PingBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
+    def available(self) -> str:
+        """Return if we have done the first ping."""
+        return self._available
+
+    @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
         return DEVICE_CLASS_CONNECTIVITY
@@ -105,7 +106,7 @@ class PingBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._ping.available
+        return self._ping.is_alive
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -121,6 +122,28 @@ class PingBinarySensor(BinarySensorEntity):
     async def async_update(self) -> None:
         """Get the latest data."""
         await self._ping.async_update()
+        self._available = True
+
+    async def async_added_to_hass(self):
+        """Restore previous state on restart to avoid blocking startup."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if last_state is not None:
+            self._available = True
+
+        if last_state is None or last_state.state != STATE_ON:
+            self._ping.data = False
+            return
+
+        attributes = last_state.attributes
+        self._ping.is_alive = True
+        self._ping.data = {
+            "min": attributes[ATTR_ROUND_TRIP_TIME_MIN],
+            "max": attributes[ATTR_ROUND_TRIP_TIME_MAX],
+            "avg": attributes[ATTR_ROUND_TRIP_TIME_AVG],
+            "mdev": attributes[ATTR_ROUND_TRIP_TIME_MDEV],
+        }
 
 
 class PingData:
@@ -132,26 +155,33 @@ class PingData:
         self._ip_address = host
         self._count = count
         self.data = {}
-        self.available = False
+        self.is_alive = False
 
 
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
 
+    def __init__(self, hass, host, count, privileged) -> None:
+        """Initialize the data object."""
+        super().__init__(hass, host, count)
+        self._privileged = privileged
+
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         _LOGGER.debug("ping address: %s", self._ip_address)
-        data = await self.hass.async_add_executor_job(
-            partial(
-                icmp_ping,
+        try:
+            data = await async_ping(
                 self._ip_address,
                 count=self._count,
-                timeout=1,
-                id=async_get_next_ping_id(self.hass),
+                timeout=ICMP_TIMEOUT,
+                privileged=self._privileged,
             )
-        )
-        self.available = data.is_alive
-        if not self.available:
+        except NameLookupError:
+            self.is_alive = False
+            return
+
+        self.is_alive = data.is_alive
+        if not self.is_alive:
             self.data = False
             return
 
@@ -166,7 +196,7 @@ class PingDataICMPLib(PingData):
 class PingDataSubProcess(PingData):
     """The Class for handling the data retrieval using the ping binary."""
 
-    def __init__(self, hass, host, count) -> None:
+    def __init__(self, hass, host, count, privileged) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
         if sys.platform == "win32":
@@ -226,14 +256,18 @@ class PingDataSubProcess(PingData):
                 )
 
             if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(str(out_data).split("\n")[-1])
+                match = WIN32_PING_MATCHER.search(
+                    str(out_data).rsplit("\n", maxsplit=1)[-1]
+                )
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
-                match = PING_MATCHER_BUSYBOX.search(str(out_data).split("\n")[-1])
+                match = PING_MATCHER_BUSYBOX.search(
+                    str(out_data).rsplit("\n", maxsplit=1)[-1]
+                )
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out_data).split("\n")[-1])
+            match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except asyncio.TimeoutError:
@@ -254,4 +288,4 @@ class PingDataSubProcess(PingData):
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         self.data = await self.async_ping()
-        self.available = bool(self.data)
+        self.is_alive = bool(self.data)

@@ -1,8 +1,8 @@
 """Shark IQ Wrapper."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Iterable
 
 from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
@@ -23,6 +23,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SHARK
@@ -82,7 +83,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     """Shark IQ vacuum entity."""
 
-    def __init__(self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator):
+    def __init__(
+        self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
+    ) -> None:
         """Create a new SharkVacuumEntity."""
         super().__init__(coordinator)
         self.sharkiq = sharkiq
@@ -118,7 +121,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return self.sharkiq.oem_model_number
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Device info dictionary."""
         return {
             "identifiers": {(DOMAIN, self.serial_number)},

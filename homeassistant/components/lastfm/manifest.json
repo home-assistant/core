@@ -3,5 +3,6 @@
   "name": "Last.fm",
   "documentation": "https://www.home-assistant.io/integrations/lastfm",
   "requirements": ["pylast==4.2.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

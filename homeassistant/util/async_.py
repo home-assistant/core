@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
 from asyncio.events import AbstractEventLoop
+from collections.abc import Awaitable, Coroutine
 import concurrent.futures
 import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, Awaitable, Callable, Coroutine, TypeVar
+from typing import Any, Callable, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
         raise RuntimeError("Cannot be called from within the event loop")
 
     if not coroutines.iscoroutine(coro):
-        raise TypeError("A coroutine object is required: %s" % coro)
+        raise TypeError(f"A coroutine object is required: {coro}")
 
     def callback() -> None:
         """Handle the firing of a coroutine."""

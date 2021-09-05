@@ -17,7 +17,7 @@
                     "platform": "De app waar uw account is geregistreerd",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Voer uw Tuya-referentie in.",
+                "description": "Voer uw Tuya-inloggegevens in.",
                 "title": "Tuya"
             }
         }
@@ -36,7 +36,7 @@
                 "data": {
                     "brightness_range_mode": "Helderheidsbereik gebruikt door apparaat",
                     "curr_temp_divider": "Huidige temperatuurwaarde deler (0 = standaardwaarde)",
-                    "max_kelvin": "Max ondersteunde kleurtemperatuur in kelvin",
+                    "max_kelvin": "Max kleurtemperatuur in kelvin",
                     "max_temp": "Maximale doeltemperatuur (gebruik min en max = 0 voor standaardwaarde)",
                     "min_kelvin": "Minimaal ondersteunde kleurtemperatuur in kelvin",
                     "min_temp": "Min. gewenste temperatuur (gebruik min en max = 0 voor standaard)",
@@ -44,7 +44,7 @@
                     "support_color": "Forceer kleurenondersteuning",
                     "temp_divider": "Temperatuurwaarde deler (0 = standaardwaarde)",
                     "temp_step_override": "Doeltemperatuur stap",
-                    "tuya_max_coltemp": "Max. Kleurtemperatuur gerapporteerd door apparaat",
+                    "tuya_max_coltemp": "Max. kleurtemperatuur gerapporteerd door apparaat",
                     "unit_of_measurement": "Temperatuureenheid gebruikt door apparaat"
                 },
                 "description": "Configureer opties om weergegeven informatie aan te passen voor {device_type} apparaat `{device_name}`",
@@ -52,7 +52,7 @@
             },
             "init": {
                 "data": {
-                    "discovery_interval": "Polling-interval van ontdekt apparaat in seconden",
+                    "discovery_interval": "Polling-interval van nieuwe apparaten in seconden",
                     "list_devices": "Selecteer de te configureren apparaten of laat leeg om de configuratie op te slaan",
                     "query_device": "Selecteer apparaat dat query-methode zal gebruiken voor snellere statusupdate",
                     "query_interval": "Peilinginterval van het apparaat in seconden"

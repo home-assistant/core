@@ -1,6 +1,9 @@
 """Config flow for Shelly integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from typing import Any, Dict, Final, cast
 
 import aiohttp
 import aioshelly
@@ -14,20 +17,23 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
 from .utils import get_coap_context, get_device_sleep_period
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
-HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
+HTTP_CONNECT_ERRORS: Final = (asyncio.TimeoutError, aiohttp.ClientError)
 
 
-async def validate_input(hass: core.HomeAssistant, host, data):
+async def validate_input(
+    hass: core.HomeAssistant, host: str, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -60,16 +66,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-    host = None
-    info = None
-    device_info = None
 
-    async def async_step_user(self, user_input=None):
+    host: str = ""
+    info: dict[str, Any] = {}
+    device_info: dict[str, Any] = {}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            host: str = user_input[CONF_HOST]
             try:
                 info = await self._async_get_info(host)
             except HTTP_CONNECT_ERRORS:
@@ -107,9 +115,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=HOST_SCHEMA, errors=errors
         )
 
-    async def async_step_credentials(self, user_input=None):
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the credentials step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 device_info = await validate_input(self.hass, self.host, user_input)
@@ -147,21 +157,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, zeroconf_info):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         try:
-            self.info = info = await self._async_get_info(zeroconf_info["host"])
+            self.info = info = await self._async_get_info(discovery_info["host"])
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except aioshelly.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
-        self.host = zeroconf_info["host"]
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        self.host = discovery_info["host"]
 
         self.context["title_placeholders"] = {
-            "name": zeroconf_info.get("name", "").split(".")[0]
+            "name": discovery_info.get("name", "").split(".")[0]
         }
 
         if info["auth"]:
@@ -174,9 +186,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm_discovery()
 
-    async def async_step_confirm_discovery(self, user_input=None):
+    async def async_step_confirm_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle discovery confirm."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             return self.async_create_entry(
                 title=self.device_info["title"] or self.device_info["hostname"],
@@ -200,10 +214,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_get_info(self, host):
+    async def _async_get_info(self, host: str) -> dict[str, Any]:
         """Get info from shelly device."""
         async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-            return await aioshelly.get_info(
-                aiohttp_client.async_get_clientsession(self.hass),
-                host,
+            return cast(
+                Dict[str, Any],
+                await aioshelly.get_info(
+                    aiohttp_client.async_get_clientsession(self.hass),
+                    host,
+                ),
             )

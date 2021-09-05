@@ -17,16 +17,6 @@
                 "description": "\u8f38\u5165{username} \u5bc6\u78bc",
                 "title": "\u91cd\u65b0\u8a8d\u8b49 August \u5e33\u865f"
             },
-            "user": {
-                "data": {
-                    "login_method": "\u767b\u5165\u65b9\u5f0f",
-                    "password": "\u5bc6\u78bc",
-                    "timeout": "\u903e\u6642\uff08\u79d2\uff09",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
-                },
-                "description": "\u5047\u5982\u767b\u5165\u65b9\u5f0f\u70ba\u90f5\u4ef6\u300cemail\u300d\u3001\u4f7f\u7528\u8005\u540d\u7a31\u70ba\u96fb\u5b50\u90f5\u4ef6\u4f4d\u5740\u3002\u5047\u5982\u767b\u5165\u65b9\u5f0f\u70ba\u96fb\u8a71\u300cphone\u300d\u3001\u5247\u4f7f\u7528\u8005\u540d\u7a31\u70ba\u5305\u542b\u570b\u78bc\u4e4b\u96fb\u8a71\u865f\u78bc\uff0c\u5982\u300c+NNNNNNNNN\u300d\u3002",
-                "title": "\u8a2d\u5b9a August \u5e33\u865f"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "\u767b\u5165\u65b9\u5f0f",

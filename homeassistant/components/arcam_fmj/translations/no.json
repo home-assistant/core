@@ -5,7 +5,7 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "Arcam FMJ p\u00e5 {host}",
+        "flow_title": "{host}",
         "step": {
             "confirm": {
                 "description": "Vil du legge Arcam FMJ p\u00e5 `{host}` til Home Assistant?"

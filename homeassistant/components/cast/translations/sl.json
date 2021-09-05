@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "V omre\u017eju niso najdene naprave Google Cast.",
             "single_instance_allowed": "Potrebna je samo ena konfiguracija Google Cast-a."
         },
         "step": {

@@ -1,32 +1,65 @@
 configure:
-  description: Set attribute of device in deCONZ. See https://home-assistant.io/integrations/deconz/#device-services for details.
+  name: Configure
+  description: >-
+    Configure attributes of either a device endpoint in deCONZ
+    or the deCONZ service itself.
   fields:
     entity:
-      description: Entity id representing a specific device in deCONZ.
-      example: "light.rgb_light"
+      name: Entity
+      description: Represents a specific device endpoint in deCONZ.
+      selector:
+        entity:
+          integration: deconz
     field:
+      name: Path
       description: >-
-        Field is a string representing a full path to deCONZ endpoint (when
+        String representing a full path to deCONZ endpoint (when
         entity is not specified) or a subpath of the device path for the
         entity (when entity is specified).
       example: '"/lights/1/state" or "/state"'
+      selector:
+        text:
     data:
-      description: Data is a JSON object with what data you want to alter.
+      name: Configuration payload
+      description: JSON object with what data you want to alter.
+      required: true
       example: '{"on": true}'
+      selector:
+        object:
     bridgeid:
-      description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
+      name: Bridge identifier
+      description: >-
+        Unique string for each deCONZ hardware.
+        It can be found as part of the integration name.
+        Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
+      selector:
+        text:
 
 device_refresh:
-  description: Refresh device lists from deCONZ.
+  name: Device refresh
+  description: Refresh available devices from deCONZ.
   fields:
     bridgeid:
-      description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
+      name: Bridge identifier
+      description: >-
+        Unique string for each deCONZ hardware.
+        It can be found as part of the integration name.
+        Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
+      selector:
+        text:
 
 remove_orphaned_entries:
+  name: Remove orphaned entries
   description: Clean up device and entity registry entries orphaned by deCONZ.
   fields:
     bridgeid:
-      description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
+      name: Bridge identifier
+      description: >-
+        Unique string for each deCONZ hardware.
+        It can be found as part of the integration name.
+        Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
+      selector:
+        text:

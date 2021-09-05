@@ -1,20 +1,22 @@
 """Support for iCloud sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for iCloud component."""
     account = hass.data[DOMAIN][entry.unique_id]
@@ -51,7 +53,10 @@ def add_entities(account, async_add_entities, tracked):
 class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
-    def __init__(self, account: IcloudAccount, device: IcloudDevice):
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
         self._account = account
         self._device = device
@@ -68,19 +73,9 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return f"{self._device.name} battery state"
 
     @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Battery state percentage."""
         return self._device.battery_level
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Battery state measured in percentage."""
-        return PERCENTAGE
 
     @property
     def icon(self) -> str:
@@ -91,12 +86,12 @@ class IcloudDeviceBatterySensor(SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the iCloud device entity."""
-        return self._device.state_attributes
+        return self._device.extra_state_attributes
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},

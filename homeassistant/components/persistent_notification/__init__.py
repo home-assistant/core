@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Mapping, MutableMapping
 import logging
-from typing import Any, Mapping, MutableMapping
+from typing import Any
 
 import voluptuous as vol
 
@@ -14,6 +15,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -81,12 +83,12 @@ def async_create(
     """Generate a notification."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_TITLE, title),
             (ATTR_MESSAGE, message),
             (ATTR_NOTIFICATION_ID, notification_id),
             (ATTR_CREATED_AT, created_at),
-        ]
+        )
         if value is not None
     }
 
@@ -102,7 +104,7 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the persistent notification component."""
     persistent_notifications: MutableMapping[str, MutableMapping] = OrderedDict()
     hass.data[DOMAIN] = {"notifications": persistent_notifications}

@@ -14,7 +14,7 @@ from homeassistant.components.remote import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
+from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -48,9 +48,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Harmony Hub."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Harmony config flow."""
         self.harmony_config = {}
 
@@ -86,8 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
-        if self._host_already_configured(parsed_url.hostname):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
 
         self.context["title_placeholders"] = {"name": friendly_name}
 
@@ -148,16 +146,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=validated[CONF_NAME], data=data)
 
-    def _host_already_configured(self, host):
-        """See if we already have a harmony entry matching the host."""
-        for entry in self._async_current_entries():
-            if CONF_HOST not in entry.data:
-                continue
-
-            if entry.data[CONF_HOST] == host:
-                return True
-        return False
-
 
 def _options_from_user_input(user_input):
     options = {}
@@ -171,7 +159,7 @@ def _options_from_user_input(user_input):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Harmony."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -180,7 +168,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        remote = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        remote = self.hass.data[DOMAIN][self.config_entry.entry_id][HARMONY_DATA]
 
         data_schema = vol.Schema(
             {

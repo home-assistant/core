@@ -27,7 +27,7 @@ async def test_setup_with_no_config(hass):
     assert len(hass.config_entries.flow.async_progress()) == 0
 
     # No configs stored
-    assert hass.data[hue.DOMAIN] == {}
+    assert hue.DOMAIN not in hass.data
 
 
 async def test_unload_entry(hass, mock_bridge_setup):
@@ -38,10 +38,15 @@ async def test_unload_entry(hass, mock_bridge_setup):
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     assert len(mock_bridge_setup.mock_calls) == 1
 
-    mock_bridge_setup.async_reset = AsyncMock(return_value=True)
+    hass.data[hue.DOMAIN] = {entry.entry_id: mock_bridge_setup}
+
+    async def mock_reset():
+        hass.data[hue.DOMAIN].pop(entry.entry_id)
+        return True
+
+    mock_bridge_setup.async_reset = mock_reset
     assert await hue.async_unload_entry(hass, entry)
-    assert len(mock_bridge_setup.async_reset.mock_calls) == 1
-    assert hass.data[hue.DOMAIN] == {}
+    assert hue.DOMAIN not in hass.data
 
 
 async def test_setting_unique_id(hass, mock_bridge_setup):

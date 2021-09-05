@@ -17,14 +17,13 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _create_entry(self, username: str, token: str):
         """Register new entry."""

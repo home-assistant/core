@@ -44,7 +44,7 @@ def validate_above_below(value):
 
 
 TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
+    cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,
@@ -78,9 +78,8 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
-    _variables = {}
-    if automation_info:
-        _variables = automation_info.get("variables") or {}
+    trigger_data = automation_info["trigger_data"]
+    _variables = automation_info["variables"] or {}
 
     if value_template is not None:
         value_template.hass = hass
@@ -131,6 +130,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": platform_type,
                         "entity_id": entity_id,
                         "below": below,

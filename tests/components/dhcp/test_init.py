@@ -7,6 +7,7 @@ from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
@@ -50,6 +51,77 @@ RAW_DHCP_REQUEST = (
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 )
 
+# iRobot-AE9EC12DD3B04885BCBFA36AFB01E1CC 50:14:79:03:85:2c 192.168.1.120
+RAW_DHCP_RENEWAL = (
+    b"\x00\x15\x5d\x8e\xed\x02\x50\x14\x79\x03\x85\x2c\x08\x00\x45\x00"
+    b"\x01\x8e\x51\xd2\x40\x00\x40\x11\x63\xa1\xc0\xa8\x01\x78\xc0\xa8"
+    b"\x01\x23\x00\x44\x00\x43\x01\x7a\x12\x09\x01\x01\x06\x00\xd4\xea"
+    b"\xb2\xfd\xff\xff\x00\x00\xc0\xa8\x01\x78\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x50\x14\x79\x03\x85\x2c\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x63\x82\x53\x63\x35\x01\x03\x39\x02\x05"
+    b"\xdc\x3c\x45\x64\x68\x63\x70\x63\x64\x2d\x35\x2e\x32\x2e\x31\x30"
+    b"\x3a\x4c\x69\x6e\x75\x78\x2d\x33\x2e\x31\x38\x2e\x37\x31\x3a\x61"
+    b"\x72\x6d\x76\x37\x6c\x3a\x51\x75\x61\x6c\x63\x6f\x6d\x6d\x20\x54"
+    b"\x65\x63\x68\x6e\x6f\x6c\x6f\x67\x69\x65\x73\x2c\x20\x49\x6e\x63"
+    b"\x20\x41\x50\x51\x38\x30\x30\x39\x0c\x27\x69\x52\x6f\x62\x6f\x74"
+    b"\x2d\x41\x45\x39\x45\x43\x31\x32\x44\x44\x33\x42\x30\x34\x38\x38"
+    b"\x35\x42\x43\x42\x46\x41\x33\x36\x41\x46\x42\x30\x31\x45\x31\x43"
+    b"\x43\x37\x08\x01\x21\x03\x06\x1c\x33\x3a\x3b\xff"
+)
+
+# <no hostname> 60:6b:bd:59:e4:b4 192.168.107.151
+RAW_DHCP_REQUEST_WITHOUT_HOSTNAME = (
+    b"\xff\xff\xff\xff\xff\xff\x60\x6b\xbd\x59\xe4\xb4\x08\x00\x45\x00"
+    b"\x02\x40\x00\x00\x00\x00\x40\x11\x78\xae\x00\x00\x00\x00\xff\xff"
+    b"\xff\xff\x00\x44\x00\x43\x02\x2c\x02\x04\x01\x01\x06\x00\xff\x92"
+    b"\x7e\x31\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x60\x6b\xbd\x59\xe4\xb4\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x63\x82\x53\x63\x35\x01\x03\x3d\x07\x01"
+    b"\x60\x6b\xbd\x59\xe4\xb4\x3c\x25\x75\x64\x68\x63\x70\x20\x31\x2e"
+    b"\x31\x34\x2e\x33\x2d\x56\x44\x20\x4c\x69\x6e\x75\x78\x20\x56\x44"
+    b"\x4c\x69\x6e\x75\x78\x2e\x31\x2e\x32\x2e\x31\x2e\x78\x32\x04\xc0"
+    b"\xa8\x6b\x97\x36\x04\xc0\xa8\x6b\x01\x37\x07\x01\x03\x06\x0c\x0f"
+    b"\x1c\x2a\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+)
+
 
 async def test_dhcp_match_hostname_and_macaddress(hass):
     """Test matching based on hostname and macaddress."""
@@ -68,11 +140,40 @@ async def test_dhcp_match_hostname_and_macaddress(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",
         dhcp.MAC_ADDRESS: "b8b7f16db533",
+    }
+
+
+async def test_dhcp_renewal_match_hostname_and_macaddress(hass):
+    """Test renewal matching based on hostname and macaddress."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass,
+        {},
+        [{"domain": "mock-domain", "hostname": "irobot-*", "macaddress": "501479*"}],
+    )
+
+    packet = Ether(RAW_DHCP_RENEWAL)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+        # Ensure no change is ignored
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == {
+        dhcp.IP_ADDRESS: "192.168.1.120",
+        dhcp.HOSTNAME: "irobot-ae9ec12dd3b04885bcbfa36afb01e1cc",
+        dhcp.MAC_ADDRESS: "50147903852c",
     }
 
 
@@ -89,7 +190,9 @@ async def test_dhcp_match_hostname(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",
@@ -110,11 +213,36 @@ async def test_dhcp_match_macaddress(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",
         dhcp.MAC_ADDRESS: "b8b7f16db533",
+    }
+
+
+async def test_dhcp_match_macaddress_without_hostname(hass):
+    """Test matching based on macaddress only."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass, {}, [{"domain": "mock-domain", "macaddress": "606BBD*"}]
+    )
+
+    packet = Ether(RAW_DHCP_REQUEST_WITHOUT_HOSTNAME)
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == {
+        dhcp.IP_ADDRESS: "192.168.107.151",
+        dhcp.HOSTNAME: "",
+        dhcp.MAC_ADDRESS: "606bbd59e4b4",
     }
 
 
@@ -380,7 +508,9 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",
@@ -415,7 +545,9 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",
@@ -559,7 +691,9 @@ async def test_aiodiscover_finds_new_hosts(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",
@@ -612,14 +746,18 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(hass):
 
     assert len(mock_init.mock_calls) == 2
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "irobot-abc",
         dhcp.MAC_ADDRESS: "b8b7f16db533",
     }
     assert mock_init.mock_calls[1][1][0] == "mock-domain"
-    assert mock_init.mock_calls[1][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[1][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[1][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "irobot-abcdef",
@@ -660,7 +798,9 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         dhcp.IP_ADDRESS: "192.168.210.56",
         dhcp.HOSTNAME: "connect",

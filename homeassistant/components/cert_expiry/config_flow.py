@@ -1,4 +1,6 @@
 """Config flow for the Cert Expiry platform."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -6,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
@@ -22,11 +24,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
     async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certificate."""

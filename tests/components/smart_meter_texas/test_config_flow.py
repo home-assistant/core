@@ -28,8 +28,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("smart_meter_texas.Client.authenticate", return_value=True), patch(
-        "homeassistant.components.smart_meter_texas.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.smart_meter_texas.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -41,7 +39,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_LOGIN[CONF_USERNAME]
     assert result2["data"] == TEST_LOGIN
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

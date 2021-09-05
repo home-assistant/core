@@ -1,18 +1,15 @@
 """Support for DoorBird devices."""
-import asyncio
 import logging
-import urllib
-from urllib.error import HTTPError
 
 from aiohttp import web
 from doorbirdpy import DoorBird
+import requests
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DEVICES,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -25,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
@@ -58,36 +56,15 @@ DEVICE_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])}
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
 
     # Provide an endpoint for the doorstations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
-
-    if DOMAIN in config and CONF_DEVICES in config[DOMAIN]:
-        for index, doorstation_config in enumerate(config[DOMAIN][CONF_DEVICES]):
-            if CONF_NAME not in doorstation_config:
-                doorstation_config[CONF_NAME] = f"DoorBird {index + 1}"
-
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=doorstation_config
-                )
-            )
 
     def _reset_device_favorites_handler(event):
         """Handle clearing favorites on device."""
@@ -114,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DoorBird from a config entry."""
 
     _async_import_options_from_data_if_missing(hass, entry)
@@ -130,8 +107,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = DoorBird(device_ip, username, password)
     try:
         status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
-    except urllib.error.HTTPError as err:
-        if err.code == HTTP_UNAUTHORIZED:
+    except requests.exceptions.HTTPError as err:
+        if err.response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
@@ -168,10 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -185,14 +159,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -202,7 +169,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def _async_register_events(hass, doorstation):
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
-    except HTTPError:
+    except requests.exceptions.HTTPError:
         hass.components.persistent_notification.async_create(
             "Doorbird configuration failed.  Please verify that API "
             "Operator permission is enabled for the Doorbird user. "
@@ -229,7 +196,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     modified = False
-    for importable_option in [CONF_EVENTS]:
+    for importable_option in (CONF_EVENTS,):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = True

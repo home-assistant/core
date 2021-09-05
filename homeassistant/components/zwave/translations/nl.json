@@ -13,8 +13,7 @@
                     "network_key": "Netwerksleutel (laat leeg om automatisch te genereren)",
                     "usb_path": "USB-apparaatpad"
                 },
-                "description": "Deze integratie wordt niet langer onderhouden. Voor nieuwe installaties, gebruik Z-Wave JS in plaats daarvan.\n\nZie https://www.home-assistant.io/docs/z-wave/installation/ voor informatie over de configuratievariabelen",
-                "title": "Stel Z-Wave in"
+                "description": "Deze integratie wordt niet langer onderhouden. Voor nieuwe installaties, gebruik Z-Wave JS in plaats daarvan.\n\nZie https://www.home-assistant.io/docs/z-wave/installation/ voor informatie over de configuratievariabelen"
             }
         }
     },

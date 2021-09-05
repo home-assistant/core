@@ -236,15 +236,15 @@ async def test_user_adds_existing_device(hass, mrp_device):
     assert result2["errors"] == {"base": "already_configured"}
 
 
-async def test_user_adds_unusable_device(hass, airplay_device):
-    """Test that it is not possible to add pure AirPlay device."""
+async def test_user_adds_unusable_device(hass, device_with_no_services):
+    """Test that it is not possible to add device with no services."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"device_input": "AirPlay Device"},
+        {"device_input": "Invalid Device"},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "no_usable_service"}
@@ -519,7 +519,7 @@ async def test_reconfigure_update_credentials(hass, mrp_device, pairing):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "reauth"},
+        context={"source": config_entries.SOURCE_REAUTH},
         data={"identifier": "mrpid", "name": "apple tv"},
     )
 
@@ -552,11 +552,11 @@ async def test_reconfigure_ongoing_aborts(hass, mrp_device):
     }
 
     await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"

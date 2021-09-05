@@ -7,7 +7,7 @@ from typing import Any
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     CONF_BASE_PATH,
@@ -29,13 +29,13 @@ from .const import (
     DEFAULT_UPCOMING_DAYS,
     DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -54,20 +54,15 @@ async def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
 
     await sonarr.update()
 
-    return True
-
 
 class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sonarr."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the flow."""
-        self._reauth = False
-        self._entry_id = None
-        self._entry_data = {}
+        self.entry = None
 
     @staticmethod
     @callback
@@ -75,22 +70,20 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, data: ConfigType | None = None) -> dict[str, Any]:
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth = True
-        self._entry_data = dict(data)
-        self._entry_id = self._entry_data.pop("config_entry_id")
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"host": self._entry_data[CONF_HOST]},
+                description_placeholders={"host": self.entry.data[CONF_HOST]},
                 data_schema=vol.Schema({}),
                 errors={},
             )
@@ -98,14 +91,14 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
         if user_input is not None:
-            if self._reauth:
-                user_input = {**self._entry_data, **user_input}
+            if self.entry:
+                user_input = {**self.entry.data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
@@ -120,10 +113,8 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                if self._reauth:
-                    return await self._async_reauth_update_entry(
-                        self._entry_id, user_input
-                    )
+                if self.entry:
+                    return await self._async_reauth_update_entry(user_input)
 
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
@@ -136,19 +127,16 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_reauth_update_entry(
-        self, entry_id: str, data: dict
-    ) -> dict[str, Any]:
+    async def _async_reauth_update_entry(self, data: dict) -> FlowResult:
         """Update existing config entry."""
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        self.hass.config_entries.async_update_entry(entry, data=data)
-        await self.hass.config_entries.async_reload(entry.entry_id)
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
+        await self.hass.config_entries.async_reload(self.entry.entry_id)
 
         return self.async_abort(reason="reauth_successful")
 
     def _get_user_data_schema(self) -> dict[str, Any]:
         """Get the data schema to display user form."""
-        if self._reauth:
+        if self.entry:
             return {vol.Required(CONF_API_KEY): str}
 
         data_schema = {
@@ -174,7 +162,7 @@ class SonarrOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: ConfigType | None = None):
+    async def async_step_init(self, user_input: dict[str, int] | None = None):
         """Manage Sonarr options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_PORT,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import (
     ACCESS_TOKEN,
@@ -56,7 +56,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_minimum_fields(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -80,7 +80,7 @@ async def test_user_flow_minimum_fields(
 
 
 async def test_user_flow_all_fields(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -107,7 +107,7 @@ async def test_user_flow_all_fields(
 
 
 async def test_speaker_options_flow(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -135,7 +135,7 @@ async def test_speaker_options_flow(
 
 
 async def test_tv_options_flow_no_apps(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -166,7 +166,7 @@ async def test_tv_options_flow_no_apps(
 
 
 async def test_tv_options_flow_with_apps(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -198,7 +198,7 @@ async def test_tv_options_flow_with_apps(
 
 
 async def test_tv_options_flow_start_with_volume(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -240,7 +240,7 @@ async def test_tv_options_flow_start_with_volume(
 
 
 async def test_user_host_already_configured(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -264,7 +264,7 @@ async def test_user_host_already_configured(
 
 
 async def test_user_serial_number_already_exists(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -288,7 +288,7 @@ async def test_user_serial_number_already_exists(
 
 
 async def test_user_error_on_could_not_connect(
-    hass: HomeAssistantType, vizio_no_unique_id: pytest.fixture
+    hass: HomeAssistant, vizio_no_unique_id: pytest.fixture
 ) -> None:
     """Test with could_not_connect during user setup due to no connectivity."""
     result = await hass.config_entries.flow.async_init(
@@ -300,7 +300,7 @@ async def test_user_error_on_could_not_connect(
 
 
 async def test_user_error_on_could_not_connect_invalid_token(
-    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
+    hass: HomeAssistant, vizio_cant_connect: pytest.fixture
 ) -> None:
     """Test with could_not_connect during user setup due to invalid token."""
     result = await hass.config_entries.flow.async_init(
@@ -312,7 +312,7 @@ async def test_user_error_on_could_not_connect_invalid_token(
 
 
 async def test_user_tv_pairing_no_apps(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_complete_pairing: pytest.fixture,
@@ -343,7 +343,7 @@ async def test_user_tv_pairing_no_apps(
 
 
 async def test_user_start_pairing_failure(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_start_pairing_failure: pytest.fixture,
@@ -359,7 +359,7 @@ async def test_user_start_pairing_failure(
 
 
 async def test_user_invalid_pin(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_invalid_pin_failure: pytest.fixture,
@@ -382,7 +382,7 @@ async def test_user_invalid_pin(
 
 
 async def test_user_ignore(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -402,7 +402,7 @@ async def test_user_ignore(
 
 
 async def test_import_flow_minimum_fields(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -424,7 +424,7 @@ async def test_import_flow_minimum_fields(
 
 
 async def test_import_flow_all_fields(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -445,7 +445,7 @@ async def test_import_flow_all_fields(
 
 
 async def test_import_entity_already_configured(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -467,7 +467,7 @@ async def test_import_entity_already_configured(
 
 
 async def test_import_flow_update_options(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -498,7 +498,7 @@ async def test_import_flow_update_options(
 
 
 async def test_import_flow_update_name_and_apps(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -532,7 +532,7 @@ async def test_import_flow_update_name_and_apps(
 
 
 async def test_import_flow_update_remove_apps(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -565,7 +565,7 @@ async def test_import_flow_update_remove_apps(
 
 
 async def test_import_needs_pairing(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_complete_pairing: pytest.fixture,
@@ -602,7 +602,7 @@ async def test_import_needs_pairing(
 
 
 async def test_import_with_apps_needs_pairing(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_complete_pairing: pytest.fixture,
@@ -645,7 +645,7 @@ async def test_import_with_apps_needs_pairing(
 
 
 async def test_import_flow_additional_configs(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
@@ -665,7 +665,7 @@ async def test_import_flow_additional_configs(
 
 
 async def test_import_error(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     caplog: pytest.fixture,
@@ -699,7 +699,7 @@ async def test_import_error(
 
 
 async def test_import_ignore(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
@@ -722,7 +722,7 @@ async def test_import_ignore(
 
 
 async def test_zeroconf_flow(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
@@ -753,7 +753,7 @@ async def test_zeroconf_flow(
 
 
 async def test_zeroconf_flow_already_configured(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
@@ -779,7 +779,7 @@ async def test_zeroconf_flow_already_configured(
 
 
 async def test_zeroconf_flow_with_port_in_host(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
@@ -808,7 +808,7 @@ async def test_zeroconf_flow_with_port_in_host(
 
 
 async def test_zeroconf_dupe_fail(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
@@ -834,7 +834,7 @@ async def test_zeroconf_dupe_fail(
 
 
 async def test_zeroconf_ignore(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
@@ -857,7 +857,7 @@ async def test_zeroconf_ignore(
 
 
 async def test_zeroconf_no_unique_id(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_guess_device_type: pytest.fixture,
     vizio_no_unique_id: pytest.fixture,
 ) -> None:
@@ -873,7 +873,7 @@ async def test_zeroconf_no_unique_id(
 
 
 async def test_zeroconf_abort_when_ignored(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
@@ -898,7 +898,7 @@ async def test_zeroconf_abort_when_ignored(
 
 
 async def test_zeroconf_flow_already_configured_hostname(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_hostname_check: pytest.fixture,
@@ -927,7 +927,7 @@ async def test_zeroconf_flow_already_configured_hostname(
 
 
 async def test_import_flow_already_configured_hostname(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_hostname_check: pytest.fixture,

@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
@@ -18,7 +18,6 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Atag."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

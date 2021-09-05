@@ -1,6 +1,8 @@
 """Viessmann ViCare sensor device."""
+from contextlib import suppress
 import logging
 
+from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
 import requests
 
 from homeassistant.components.sensor import SensorEntity
@@ -9,16 +11,18 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
     TIME_HOURS,
 )
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
-    PYVICARE_ERROR,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
@@ -58,6 +62,13 @@ SENSOR_COMPRESSOR_HOURS_LOADCLASS2 = "compressor_hours_loadclass2"
 SENSOR_COMPRESSOR_HOURS_LOADCLASS3 = "compressor_hours_loadclass3"
 SENSOR_COMPRESSOR_HOURS_LOADCLASS4 = "compressor_hours_loadclass4"
 SENSOR_COMPRESSOR_HOURS_LOADCLASS5 = "compressor_hours_loadclass5"
+
+# fuelcell sensors
+SENSOR_POWER_PRODUCTION_CURRENT = "power_production_current"
+SENSOR_POWER_PRODUCTION_TODAY = "power_production_today"
+SENSOR_POWER_PRODUCTION_THIS_WEEK = "power_production_this_week"
+SENSOR_POWER_PRODUCTION_THIS_MONTH = "power_production_this_month"
+SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
 
 SENSOR_TYPES = {
     SENSOR_OUTSIDE_TEMPERATURE: {
@@ -216,6 +227,42 @@ SENSOR_TYPES = {
         CONF_GETTER: lambda api: api.getReturnTemperature(),
         CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
     },
+    # fuelcell sensors
+    SENSOR_POWER_PRODUCTION_CURRENT: {
+        CONF_NAME: "Power production current",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: POWER_WATT,
+        CONF_GETTER: lambda api: api.getPowerProductionCurrent(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+    },
+    SENSOR_POWER_PRODUCTION_TODAY: {
+        CONF_NAME: "Power production today",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionToday(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_THIS_WEEK: {
+        CONF_NAME: "Power production this week",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionThisWeek(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_THIS_MONTH: {
+        CONF_NAME: "Power production this month",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionThisMonth(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
+    SENSOR_POWER_PRODUCTION_THIS_YEAR: {
+        CONF_NAME: "Power production this year",
+        CONF_ICON: None,
+        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+        CONF_GETTER: lambda api: api.getPowerProductionThisYear(),
+        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+    },
 }
 
 SENSORS_GENERIC = [SENSOR_OUTSIDE_TEMPERATURE, SENSOR_SUPPLY_TEMPERATURE]
@@ -244,6 +291,27 @@ SENSORS_BY_HEATINGTYPE = {
         SENSOR_COMPRESSOR_HOURS_LOADCLASS4,
         SENSOR_COMPRESSOR_HOURS_LOADCLASS5,
         SENSOR_RETURN_TEMPERATURE,
+    ],
+    HeatingType.fuelcell: [
+        # gas
+        SENSOR_BOILER_TEMPERATURE,
+        SENSOR_BURNER_HOURS,
+        SENSOR_BURNER_MODULATION,
+        SENSOR_BURNER_STARTS,
+        SENSOR_DHW_GAS_CONSUMPTION_TODAY,
+        SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK,
+        SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH,
+        SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR,
+        SENSOR_GAS_CONSUMPTION_TODAY,
+        SENSOR_GAS_CONSUMPTION_THIS_WEEK,
+        SENSOR_GAS_CONSUMPTION_THIS_MONTH,
+        SENSOR_GAS_CONSUMPTION_THIS_YEAR,
+        # fuel cell
+        SENSOR_POWER_PRODUCTION_CURRENT,
+        SENSOR_POWER_PRODUCTION_TODAY,
+        SENSOR_POWER_PRODUCTION_THIS_WEEK,
+        SENSOR_POWER_PRODUCTION_THIS_MONTH,
+        SENSOR_POWER_PRODUCTION_THIS_YEAR,
     ],
 }
 
@@ -283,7 +351,7 @@ class ViCareSensor(SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state is not None and self._state != PYVICARE_ERROR
+        return self._state is not None
 
     @property
     def unique_id(self):
@@ -301,12 +369,12 @@ class ViCareSensor(SensorEntity):
         return self._sensor[CONF_ICON]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor[CONF_UNIT_OF_MEASUREMENT]
 
@@ -318,8 +386,11 @@ class ViCareSensor(SensorEntity):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self._sensor[CONF_GETTER](self._api)
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._state = self._sensor[CONF_GETTER](self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)

@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+from datetime import timedelta
 from ipaddress import ip_network
 import logging
 from unittest.mock import Mock, patch
@@ -7,7 +8,10 @@ import pytest
 
 import homeassistant.components.http as http
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -60,10 +64,10 @@ async def test_registering_view_while_running(
     hass.http.register_view(TestView)
 
 
-async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
+async def test_not_log_password(hass, hass_client_no_auth, caplog, legacy_auth):
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, "api", {"http": {}})
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     logging.getLogger("aiohttp.access").setLevel(logging.INFO)
 
     resp = await client.get("/api/", params={"api_password": "test-password"})
@@ -189,6 +193,10 @@ async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):
     assert await async_setup_component(hass, http.DOMAIN, {http.DOMAIN: config})
 
     await hass.async_start()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
+
     restored = await hass.components.http.async_get_last_config()
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 

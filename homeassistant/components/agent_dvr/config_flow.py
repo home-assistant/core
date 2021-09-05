@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, SERVER_URL  # pylint:disable=unused-import
+from .const import DOMAIN, SERVER_URL
 from .helpers import generate_url
 
 DEFAULT_PORT = 8090

@@ -6,6 +6,9 @@
             "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Wil je dit Guardian apparaat instellen?"
+            },
             "user": {
                 "data": {
                     "ip_address": "IP-adres",

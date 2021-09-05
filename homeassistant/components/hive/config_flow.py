@@ -13,18 +13,13 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
-    CONF_CODE,
-    CONFIG_ENTRY_VERSION,
-    DOMAIN,
-)
+from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
 
 
 class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hive config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the config flow."""

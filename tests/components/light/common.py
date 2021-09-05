@@ -14,7 +14,10 @@ from homeassistant.components.light import (
     ATTR_KELVIN,
     ATTR_PROFILE,
     ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     DOMAIN,
@@ -37,6 +40,8 @@ def turn_on(
     brightness=None,
     brightness_pct=None,
     rgb_color=None,
+    rgbw_color=None,
+    rgbww_color=None,
     xy_color=None,
     hs_color=None,
     color_temp=None,
@@ -46,6 +51,7 @@ def turn_on(
     flash=None,
     effect=None,
     color_name=None,
+    white=None,
 ):
     """Turn all or specified light on."""
     hass.add_job(
@@ -56,6 +62,8 @@ def turn_on(
         brightness,
         brightness_pct,
         rgb_color,
+        rgbw_color,
+        rgbww_color,
         xy_color,
         hs_color,
         color_temp,
@@ -65,6 +73,7 @@ def turn_on(
         flash,
         effect,
         color_name,
+        white,
     )
 
 
@@ -75,6 +84,8 @@ async def async_turn_on(
     brightness=None,
     brightness_pct=None,
     rgb_color=None,
+    rgbw_color=None,
+    rgbww_color=None,
     xy_color=None,
     hs_color=None,
     color_temp=None,
@@ -84,6 +95,7 @@ async def async_turn_on(
     flash=None,
     effect=None,
     color_name=None,
+    white=None,
 ):
     """Turn all or specified light on."""
     data = {
@@ -95,6 +107,8 @@ async def async_turn_on(
             (ATTR_BRIGHTNESS, brightness),
             (ATTR_BRIGHTNESS_PCT, brightness_pct),
             (ATTR_RGB_COLOR, rgb_color),
+            (ATTR_RGBW_COLOR, rgbw_color),
+            (ATTR_RGBWW_COLOR, rgbww_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_HS_COLOR, hs_color),
             (ATTR_COLOR_TEMP, color_temp),
@@ -103,6 +117,7 @@ async def async_turn_on(
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_WHITE, white),
         ]
         if value is not None
     }

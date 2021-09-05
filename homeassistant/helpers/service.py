@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterable, TypedDict
+from typing import TYPE_CHECKING, Any, Callable, TypedDict
 
 import voluptuous as vol
 
@@ -72,7 +73,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    def __init__(self, service_call: ServiceCall):
+    def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
         entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
         device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
@@ -204,10 +205,15 @@ def async_prepare_call_from_config(
 
     target = {}
     if CONF_TARGET in config:
-        conf = config.get(CONF_TARGET)
+        conf = config[CONF_TARGET]
         try:
-            template.attach(hass, conf)
-            target.update(template.render_complex(conf, variables))
+            if isinstance(conf, template.Template):
+                conf.hass = hass
+                target.update(conf.async_render(variables))
+            else:
+                template.attach(hass, conf)
+                target.update(template.render_complex(conf, variables))
+
             if CONF_ENTITY_ID in target:
                 target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
         except TemplateError as ex:
@@ -221,7 +227,7 @@ def async_prepare_call_from_config(
 
     service_data = {}
 
-    for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
+    for conf in (CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE):
         if conf not in config:
             continue
         try:
@@ -357,8 +363,16 @@ async def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        if ent_entry.area_id in selector.area_ids or (
-            not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices
+        if (
+            # when area matches the target area
+            ent_entry.area_id in selector.area_ids
+            # when device matches a referenced devices with no explicitly set area
+            or (
+                not ent_entry.area_id
+                and ent_entry.device_id in selected.referenced_devices
+            )
+            # when device matches target device
+            or ent_entry.device_id in selector.device_ids
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 
@@ -769,3 +783,43 @@ def verify_domain_control(
         return check_permissions
 
     return decorator
+
+
+class ReloadServiceHelper:
+    """Helper for reload services to minimize unnecessary reloads."""
+
+    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]) -> None:
+        """Initialize ReloadServiceHelper."""
+        self._service_func = service_func
+        self._service_running = False
+        self._service_condition = asyncio.Condition()
+
+    async def execute_service(self, service_call: ServiceCall) -> None:
+        """Execute the service.
+
+        If a previous reload task if currently in progress, wait for it to finish first.
+        Once the previous reload task has finished, one of the waiting tasks will be
+        assigned to execute the reload, the others will wait for the reload to finish.
+        """
+
+        do_reload = False
+        async with self._service_condition:
+            if self._service_running:
+                # A previous reload task is already in progress, wait for it to finish
+                await self._service_condition.wait()
+
+        async with self._service_condition:
+            if not self._service_running:
+                # This task will do the reload
+                self._service_running = True
+                do_reload = True
+            else:
+                # Another task will perform the reload, wait for it to finish
+                await self._service_condition.wait()
+
+        if do_reload:
+            # Reload, then notify other tasks
+            await self._service_func(service_call)
+            async with self._service_condition:
+                self._service_running = False
+                self._service_condition.notify_all()

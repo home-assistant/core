@@ -14,7 +14,7 @@ SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Risco alarm control panel."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_BYPASS_ZONE, {}, "async_bypass_zone")
     platform.async_register_entity_service(
         SERVICE_UNBYPASS_ZONE, {}, "async_unbypass_zone"

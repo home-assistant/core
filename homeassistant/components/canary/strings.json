@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Canary: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Connect to Canary",

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -30,6 +30,7 @@ from homeassistant.helpers import (
     service,
     storage,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
@@ -163,7 +164,7 @@ class ZoneStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return cast(Dict, self.CREATE_SCHEMA(data))
+        return cast(dict, self.CREATE_SCHEMA(data))
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -176,7 +177,7 @@ class ZoneStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
     component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -279,7 +280,7 @@ async def async_unload_entry(
 class Zone(entity.Entity):
     """Representation of a Zone."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize the zone."""
         self._config = config
         self.editable = True
@@ -291,7 +292,7 @@ class Zone(entity.Entity):
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()  # pylint:disable=protected-access
+        zone._generate_attrs()
         return zone
 
     @property

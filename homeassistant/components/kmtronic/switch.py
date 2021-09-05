@@ -45,21 +45,26 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     def is_on(self):
         """Return entity state."""
         if self._reverse:
-            return not self._relay.is_on
-        return self._relay.is_on
+            return not self._relay.is_energised
+        return self._relay.is_energised
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         if self._reverse:
-            await self._relay.turn_off()
+            await self._relay.de_energise()
         else:
-            await self._relay.turn_on()
+            await self._relay.energise()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         if self._reverse:
-            await self._relay.turn_on()
+            await self._relay.energise()
         else:
-            await self._relay.turn_off()
+            await self._relay.de_energise()
+        self.async_write_ha_state()
+
+    async def async_toggle(self, **kwargs) -> None:
+        """Toggle the switch."""
+        await self._relay.toggle()
         self.async_write_ha_state()

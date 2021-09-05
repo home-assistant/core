@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Reddit sensor platform."""
     subreddits = config[CONF_SUBREDDITS]
-    user_agent = "{}_home_assistant_sensor".format(config[CONF_USERNAME])
+    user_agent = f"{config[CONF_USERNAME]}_home_assistant_sensor"
     limit = config[CONF_MAXIMUM]
     sort_by = config[CONF_SORT_BY]
 
@@ -91,7 +91,7 @@ class RedditSensor(SensorEntity):
         self._limit = limit
         self._sort_by = sort_by
 
-        self._subreddit_data = []
+        self._subreddit_data: list = []
 
     @property
     def name(self):
@@ -99,7 +99,7 @@ class RedditSensor(SensorEntity):
         return f"reddit_{self._subreddit}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return len(self._subreddit_data)
 

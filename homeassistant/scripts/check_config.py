@@ -14,13 +14,14 @@ from unittest.mock import patch
 from homeassistant import core
 from homeassistant.config import get_default_config_dir
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.check_config import async_check_ha_config_file
 from homeassistant.util.yaml import Secrets
 import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.8.0",)
+REQUIREMENTS = ("colorlog==5.0.1",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -229,6 +230,9 @@ async def async_check_config(config_dir):
     """Check the HA config."""
     hass = core.HomeAssistant()
     hass.config.config_dir = config_dir
+    await area_registry.async_load(hass)
+    await device_registry.async_load(hass)
+    await entity_registry.async_load(hass)
     components = await async_check_ha_config_file(hass)
     await hass.async_stop(force=True)
     return components

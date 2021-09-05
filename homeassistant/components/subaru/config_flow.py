@@ -16,7 +16,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_US
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-# pylint: disable=unused-import
 from .const import CONF_COUNTRY, CONF_UPDATE_ENABLED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +26,6 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Subaru."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize config flow."""
@@ -39,10 +37,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         error = None
 
         if user_input:
-            if user_input[CONF_USERNAME] in [
-                entry.data[CONF_USERNAME] for entry in self._async_current_entries()
-            ]:
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             try:
                 await self.validate_login_creds(user_input)
@@ -138,7 +133,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Subaru."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

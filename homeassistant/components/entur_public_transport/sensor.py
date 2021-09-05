@@ -150,7 +150,9 @@ class EnturProxy:
 class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
-    def __init__(self, api: EnturProxy, name: str, stop: str, show_on_map: bool):
+    def __init__(
+        self, api: EnturProxy, name: str, stop: str, show_on_map: bool
+    ) -> None:
         """Initialize the sensor."""
         self.api = api
         self._stop = stop
@@ -166,7 +168,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._state
 
@@ -178,7 +180,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._attributes
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 

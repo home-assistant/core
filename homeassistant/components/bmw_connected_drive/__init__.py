@@ -1,7 +1,6 @@
 """Reads vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from bimmer_connected.account import ConnectedDriveAccount
@@ -12,6 +11,7 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_REGION,
@@ -19,10 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -52,7 +53,12 @@ ACCOUNT_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
-SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
+SERVICE_SCHEMA = vol.Schema(
+    vol.Any(
+        {vol.Required(ATTR_VIN): cv.string},
+        {vol.Required(CONF_DEVICE_ID): cv.string},
+    )
+)
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
@@ -74,7 +80,7 @@ _SERVICE_MAP = {
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BMW Connected Drive component from configuration.yaml."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config
@@ -102,7 +108,7 @@ def _async_migrate_options_from_data_if_missing(hass, entry):
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BMW Connected Drive from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(DATA_ENTRIES, {})
@@ -138,11 +144,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await _async_update_all()
 
-    for platform in PLATFORMS:
-        if platform != NOTIFY_DOMAIN:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+    hass.config_entries.async_setup_platforms(
+        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
+    )
 
     # set up notify platform, no entry support for notify platform yet,
     # have to use discovery to load platform.
@@ -161,14 +165,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-                if platform != NOTIFY_DOMAIN
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
     )
 
     # Only remove services if it is the last account and not read only
@@ -216,8 +214,15 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccou
 
     def execute_service(call):
         """Execute a service for a vehicle."""
-        vin = call.data[ATTR_VIN]
+        vin = call.data.get(ATTR_VIN)
+        device_id = call.data.get(CONF_DEVICE_ID)
+
         vehicle = None
+
+        if not vin and device_id:
+            device = device_registry.async_get(hass).async_get(device_id)
+            vin = next(iter(device.identifiers))[1]
+
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
             e
@@ -313,6 +318,8 @@ class BMWConnectedDriveAccount:
 class BMWConnectedDriveBaseEntity(Entity):
     """Common base for BMW entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, account, vehicle):
         """Initialize sensor."""
         self._account = account
@@ -322,29 +329,12 @@ class BMWConnectedDriveBaseEntity(Entity):
             "vin": self._vehicle.vin,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
-
-    @property
-    def device_info(self) -> dict:
-        """Return info for device registry."""
-        return {
-            "identifiers": {(DOMAIN, self._vehicle.vin)},
-            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
-            "model": self._vehicle.name,
-            "manufacturer": self._vehicle.attributes.get("brand"),
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, vehicle.vin)},
+            "name": f'{vehicle.attributes.get("brand")} {vehicle.name}',
+            "model": vehicle.name,
+            "manufacturer": vehicle.attributes.get("brand"),
         }
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return self._attrs
-
-    @property
-    def should_poll(self):
-        """Do not poll this class.
-
-        Updates are triggered from BMWConnectedDriveAccount.
-        """
-        return False
 
     def update_callback(self):
         """Schedule a state update."""

@@ -43,9 +43,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
@@ -104,7 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
@@ -124,12 +123,14 @@ async def async_setup_entry(
 class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_device_class = DEVICE_CLASS_TV
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
         system: dict[str, Any],
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
         self._coordinator = coordinator
@@ -315,11 +316,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         app = self._tv.applications.get(self._tv.application_id)
         if app:
             return app.get("label")
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TV
 
     @property
     def unique_id(self):

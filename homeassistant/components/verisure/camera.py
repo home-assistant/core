@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import errno
 import os
-from typing import Any, Callable, Iterable
 
 from verisure import Error as VerisureError
 
@@ -11,8 +10,11 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import current_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
@@ -22,12 +24,12 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    platform = current_platform.get()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CAPTURE_SMARTCAM,
         {},
@@ -36,7 +38,7 @@ async def async_setup_entry(
 
     assert hass.config.config_dir
     async_add_entities(
-        VerisureSmartcam(hass, coordinator, serial_number, hass.config.config_dir)
+        VerisureSmartcam(coordinator, serial_number, hass.config.config_dir)
         for serial_number in coordinator.data["cameras"]
     )
 
@@ -48,32 +50,24 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: VerisureDataUpdateCoordinator,
         serial_number: str,
         directory_path: str,
-    ):
+    ) -> None:
         """Initialize Verisure File Camera component."""
         super().__init__(coordinator)
+        Camera.__init__(self)
+
+        self._attr_name = coordinator.data["cameras"][serial_number]["area"]
+        self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
         self._directory_path = directory_path
         self._image = None
         self._image_id = None
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.delete_image)
 
     @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["cameras"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.serial_number
-
-    @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["cameras"][self.serial_number]["area"]
         return {
@@ -85,7 +79,9 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
             "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
         }
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.check_imagelist()
         if not self._image:
@@ -126,7 +122,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         self._image_id = new_image_id
         self._image = new_image_path
 
-    def delete_image(self) -> None:
+    def delete_image(self, _=None) -> None:
         """Delete an old image."""
         remove_image = os.path.join(
             self._directory_path, "{}{}".format(self._image_id, ".jpg")
@@ -145,3 +141,8 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
             LOGGER.debug("Capturing new image from %s", self.serial_number)
         except VerisureError as ex:
             LOGGER.error("Could not capture image, %s", ex)
+
+    async def async_added_to_hass(self) -> None:
+        """Entity added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.delete_image)

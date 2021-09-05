@@ -1,14 +1,13 @@
 """Support for ISY994 sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.sensor import DOMAIN as SENSOR, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -26,9 +25,9 @@ from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 sensor platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
@@ -62,13 +61,13 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         if isy_states:
             return isy_states
 
-        if uom in [UOM_ON_OFF, UOM_INDEX]:
+        if uom in (UOM_ON_OFF, UOM_INDEX):
             return uom
 
         return UOM_FRIENDLY_NAME.get(uom)
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Get the state of the ISY994 sensor device."""
         value = self._node.status
         if value == ISY_VALUE_UNKNOWN:
@@ -81,7 +80,11 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         if isinstance(uom, dict):
             return uom.get(value, value)
 
-        if uom in [UOM_INDEX, UOM_ON_OFF]:
+        if uom in (UOM_INDEX, UOM_ON_OFF):
+            return self._node.formatted
+
+        # Check if this is an index type and get formatted value
+        if uom == UOM_INDEX and hasattr(self._node, "formatted"):
             return self._node.formatted
 
         # Handle ISY precision and rounding
@@ -94,11 +97,11 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
         return value
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Get the Home Assistant unit of measurement for the device."""
         raw_units = self.raw_unit_of_measurement
         # Check if this is a known index pair UOM
-        if isinstance(raw_units, dict) or raw_units in [UOM_ON_OFF, UOM_INDEX]:
+        if isinstance(raw_units, dict) or raw_units in (UOM_ON_OFF, UOM_INDEX):
             return None
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
             return self.hass.config.units.temperature_unit
@@ -114,7 +117,7 @@ class ISYSensorVariableEntity(ISYEntity, SensorEntity):
         self._name = vname
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the variable."""
         return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
 
@@ -124,7 +127,8 @@ class ISYSensorVariableEntity(ISYEntity, SensorEntity):
         return {
             "init_value": convert_isy_value_to_hass(
                 self._node.init, "", self._node.prec
-            )
+            ),
+            "last_edited": self._node.last_edited,
         }
 
     @property

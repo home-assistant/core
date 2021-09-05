@@ -232,7 +232,7 @@ class MinioListener:
         prefix: str,
         suffix: str,
         events: list[str],
-    ):
+    ) -> None:
         """Create Listener."""
         self._queue = queue
         self._endpoint = endpoint

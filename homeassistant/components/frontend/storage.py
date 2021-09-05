@@ -1,28 +1,34 @@
 """API for persistent storage for the frontend."""
+from __future__ import annotations
+
 from functools import wraps
+from typing import Any, Callable
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-
-# mypy: allow-untyped-calls, allow-untyped-defs
+from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
 DATA_STORAGE = "frontend_storage"
 STORAGE_VERSION_USER_DATA = 1
 
 
-async def async_setup_frontend_storage(hass):
+async def async_setup_frontend_storage(hass: HomeAssistant) -> None:
     """Set up frontend storage."""
     hass.data[DATA_STORAGE] = ({}, {})
     hass.components.websocket_api.async_register_command(websocket_set_user_data)
     hass.components.websocket_api.async_register_command(websocket_get_user_data)
 
 
-def with_store(orig_func):
+def with_store(orig_func: Callable) -> Callable:
     """Decorate function to provide data."""
 
     @wraps(orig_func)
-    async def with_store_func(hass, connection, msg):
+    async def with_store_func(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    ) -> None:
         """Provide user specific data and store to function."""
         stores, data = hass.data[DATA_STORAGE]
         user_id = connection.user.id
@@ -50,7 +56,13 @@ def with_store(orig_func):
 )
 @websocket_api.async_response
 @with_store
-async def websocket_set_user_data(hass, connection, msg, store, data):
+async def websocket_set_user_data(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    store: Store,
+    data: dict[str, Any],
+) -> None:
     """Handle set global data command.
 
     Async friendly.
@@ -65,7 +77,13 @@ async def websocket_set_user_data(hass, connection, msg, store, data):
 )
 @websocket_api.async_response
 @with_store
-async def websocket_get_user_data(hass, connection, msg, store, data):
+async def websocket_get_user_data(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    store: Store,
+    data: dict[str, Any],
+) -> None:
     """Handle get global data command.
 
     Async friendly.

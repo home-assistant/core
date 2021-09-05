@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -20,16 +21,17 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_COMMAND_TOPIC,
@@ -52,11 +54,21 @@ CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
+CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
 CONF_COMMAND_TEMPLATE = "command_template"
 
+MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        alarm.ATTR_CHANGED_BY,
+        alarm.ATTR_CODE_ARM_REQUIRED,
+        alarm.ATTR_CODE_FORMAT,
+    }
+)
+
 DEFAULT_COMMAND_TEMPLATE = "{{action}}"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
+DEFAULT_ARM_VACATION = "ARM_VACATION"
 DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
@@ -76,6 +88,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT): cv.string,
         vol.Optional(
+            CONF_PAYLOAD_ARM_VACATION, default=DEFAULT_ARM_VACATION
+        ): cv.string,
+        vol.Optional(
             CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_ARM_CUSTOM_BYPASS
         ): cv.string,
         vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
@@ -87,7 +102,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT alarm control panel through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -111,6 +126,8 @@ async def _async_setup_entity(
 
 class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     """Representation of a MQTT alarm status."""
+
+    _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""
@@ -148,6 +165,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 STATE_ALARM_ARMED_HOME,
                 STATE_ALARM_ARMED_AWAY,
                 STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_ARMED_VACATION,
                 STATE_ALARM_ARMED_CUSTOM_BYPASS,
                 STATE_ALARM_PENDING,
                 STATE_ALARM_ARMING,
@@ -183,6 +201,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             SUPPORT_ALARM_ARM_HOME
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_ARM_VACATION
             | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
         )
 
@@ -244,6 +263,17 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming night"):
             return
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
+        self._publish(code, action)
+
+    async def async_alarm_arm_vacation(self, code=None):
+        """Send arm vacation command.
+
+        This method is a coroutine.
+        """
+        code_required = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming vacation"):
+            return
+        action = self._config[CONF_PAYLOAD_ARM_VACATION]
         self._publish(code, action)
 
     async def async_alarm_arm_custom_bypass(self, code=None):

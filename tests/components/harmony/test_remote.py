@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.util import utcnow
 
 from .conftest import ACTIVITIES_TO_IDS, TV_DEVICE_ID, TV_DEVICE_NAME
-from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
+from .const import ENTITY_REMOTE, HUB_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -91,10 +91,10 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # mocks start with current activity == Watch TV
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    # mocks start remote with Watch TV default activity
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Watch TV"
 
     # turn off remote
     await hass.services.async_call(
@@ -105,9 +105,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_OFF)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_OFF
+    assert state.attributes.get("current_activity") == "PowerOff"
 
     # turn on remote, restoring the last activity
     await hass.services.async_call(
@@ -118,9 +118,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Watch TV"
 
     # send new activity command, with activity name
     await hass.services.async_call(
@@ -131,9 +131,9 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_OFF)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_ON)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Play Music"
 
     # send new activity command, with activity id
     await hass.services.async_call(
@@ -144,12 +144,12 @@ async def test_remote_toggles(mock_hc, hass, mock_write_config):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
-    assert hass.states.is_state(ENTITY_WATCH_TV, STATE_ON)
-    assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
+    state = hass.states.get(ENTITY_REMOTE)
+    assert state.state == STATE_ON
+    assert state.attributes.get("current_activity") == "Watch TV"
 
 
-async def test_async_send_command(mock_hc, hass, mock_write_config):
+async def test_async_send_command(mock_hc, harmony_client, hass, mock_write_config):
     """Ensure calls to send remote commands properly propagate to devices."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -159,8 +159,7 @@ async def test_async_send_command(mock_hc, hass, mock_write_config):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    send_commands_mock = data._client.send_commands
+    send_commands_mock = harmony_client.send_commands
 
     # No device provided
     await _send_commands_and_wait(
@@ -282,7 +281,9 @@ async def test_async_send_command(mock_hc, hass, mock_write_config):
     send_commands_mock.reset_mock()
 
 
-async def test_async_send_command_custom_delay(mock_hc, hass, mock_write_config):
+async def test_async_send_command_custom_delay(
+    mock_hc, harmony_client, hass, mock_write_config
+):
     """Ensure calls to send remote commands properly propagate to devices with custom delays."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -297,8 +298,7 @@ async def test_async_send_command_custom_delay(mock_hc, hass, mock_write_config)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    send_commands_mock = data._client.send_commands
+    send_commands_mock = harmony_client.send_commands
 
     # Tell the TV to play by id
     await _send_commands_and_wait(
@@ -323,7 +323,7 @@ async def test_async_send_command_custom_delay(mock_hc, hass, mock_write_config)
     send_commands_mock.reset_mock()
 
 
-async def test_change_channel(mock_hc, hass, mock_write_config):
+async def test_change_channel(mock_hc, harmony_client, hass, mock_write_config):
     """Test change channel commands."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -333,8 +333,7 @@ async def test_change_channel(mock_hc, hass, mock_write_config):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    change_channel_mock = data._client.change_channel
+    change_channel_mock = harmony_client.change_channel
 
     # Tell the remote to change channels
     await hass.services.async_call(
@@ -348,7 +347,7 @@ async def test_change_channel(mock_hc, hass, mock_write_config):
     change_channel_mock.assert_awaited_once_with(100)
 
 
-async def test_sync(mock_hc, mock_write_config, hass):
+async def test_sync(mock_hc, harmony_client, mock_write_config, hass):
     """Test the sync command."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -358,8 +357,7 @@ async def test_sync(mock_hc, mock_write_config, hass):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    sync_mock = data._client.sync
+    sync_mock = harmony_client.sync
 
     # Tell the remote to change channels
     await hass.services.async_call(

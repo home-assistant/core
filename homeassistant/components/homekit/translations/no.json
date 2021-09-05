@@ -4,31 +4,15 @@
             "port_name_in_use": "Et tilbeh\u00f8r eller bro med samme navn eller port er allerede konfigurert."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Enhet"
-                },
-                "description": "Velg enheten som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert.",
-                "title": "Velg enhet som skal inkluderes"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Domener \u00e5 inkludere"
-                },
-                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert.",
-                "title": "Velg domener som skal inkluderes"
-            },
             "pairing": {
                 "description": "For \u00e5 fullf\u00f8re sammenkoblingen ved \u00e5 f\u00f8lge instruksjonene i \"Varsler\" under \"Sammenkobling av HomeKit\".",
                 "title": "Koble sammen HomeKit"
             },
             "user": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
-                    "include_domains": "Domener \u00e5 inkludere",
-                    "mode": "Modus"
+                    "include_domains": "Domener \u00e5 inkludere"
                 },
-                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert. Det opprettes en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
+                "description": "Velg domenene som skal inkluderes. Alle enheter som st\u00f8ttes p\u00e5 domenet vil bli inkludert. En egen HomeKit -forekomst i tilbeh\u00f8rsmodus vil bli opprettet for hver tv -mediespiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
                 "title": "Velg domener som skal inkluderes"
             }
         }
@@ -38,9 +22,9 @@
             "advanced": {
                 "data": {
                     "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
-                    "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)"
+                    "devices": "Enheter (utl\u00f8sere)"
                 },
-                "description": "Disse innstillingene m\u00e5 bare justeres hvis HomeKit ikke fungerer.",
+                "description": "Programmerbare brytere opprettes for hver valgt enhet. N\u00e5r en enhetstrigger utl\u00f8ses, kan HomeKit konfigureres til \u00e5 kj\u00f8re en automatisering eller scene.",
                 "title": "Avansert konfigurasjon"
             },
             "cameras": {
@@ -55,7 +39,7 @@
                     "entities": "Entiteter",
                     "mode": "Modus"
                 },
-                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert. I bridge-inkluderingsmodus vil alle enheter i domenet bli inkludert, med mindre spesifikke enheter er valgt. I bridge-ekskluderingsmodus vil alle enheter i domenet bli inkludert, bortsett fra de ekskluderte enhetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller og kamera.",
+                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert. I bridge-inkluderingsmodus vil alle enheter i domenet bli inkludert, med mindre spesifikke enheter er valgt. I bridge-ekskluderingsmodus vil alle enheter i domenet bli inkludert, bortsett fra de ekskluderte enhetene. For best ytelse opprettes et eget HomeKit-tilbeh\u00f8r for hver tv-mediaspiller, aktivitetsbasert fjernkontroll, l\u00e5s og kamera.",
                 "title": "Velg enheter som skal inkluderes"
             },
             "init": {

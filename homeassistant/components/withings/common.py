@@ -28,7 +28,7 @@ from withings_api.common import (
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     HTTP_UNAUTHORIZED,
@@ -480,7 +480,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         implementation: AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize object."""
         self._hass = hass
         self._config_entry = config_entry
@@ -564,7 +564,7 @@ class DataManager:
         api: ConfigEntryWithingsApi,
         user_id: int,
         webhook_config: WebhookConfig,
-    ):
+    ) -> None:
         """Initialize the data manager."""
         self._hass = hass
         self._api = api
@@ -673,21 +673,17 @@ class DataManager:
         response = await self._hass.async_add_executor_job(self._api.notify_list)
 
         subscribed_applis = frozenset(
-            [
-                profile.appli
-                for profile in response.profiles
-                if profile.callbackurl == self._webhook_config.url
-            ]
+            profile.appli
+            for profile in response.profiles
+            if profile.callbackurl == self._webhook_config.url
         )
 
         # Determine what subscriptions need to be created.
         ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
         to_add_applis = frozenset(
-            [
-                appli
-                for appli in NotifyAppli
-                if appli not in subscribed_applis and appli not in ignored_applis
-            ]
+            appli
+            for appli in NotifyAppli
+            if appli not in subscribed_applis and appli not in ignored_applis
         )
 
         # Subscribe to each one.
@@ -740,7 +736,7 @@ class DataManager:
                 context = {
                     const.PROFILE: self._profile,
                     "userid": self._user_id,
-                    "source": "reauth",
+                    "source": SOURCE_REAUTH,
                 }
 
                 # Check if reauth flow already exists.
@@ -774,8 +770,12 @@ class DataManager:
     async def async_get_measures(self) -> dict[MeasureType, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
+        now = dt.utcnow()
+        startdate = now - datetime.timedelta(days=7)
 
-        response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
+        response = await self._hass.async_add_executor_job(
+            self._api.measure_get_meas, None, None, startdate, now, None, startdate
+        )
 
         # Sort from oldest to newest.
         groups = sorted(
@@ -792,6 +792,7 @@ class DataManager:
             )
             for group in groups
             for measure in group.measures
+            if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
     async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:

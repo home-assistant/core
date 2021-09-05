@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Callable
+from dataclasses import dataclass, field
+from typing import Any, Callable, cast
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
+    APIClient,
+    APIVersion,
     BinarySensorInfo,
     CameraInfo,
     ClimateInfo,
@@ -15,65 +18,66 @@ from aioesphomeapi import (
     EntityState,
     FanInfo,
     LightInfo,
+    NumberInfo,
+    SelectInfo,
     SensorInfo,
     SwitchInfo,
     TextSensorInfo,
     UserService,
 )
-import attr
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
-
-if TYPE_CHECKING:
-    from . import APIClient
 
 SAVE_DELAY = 120
 
 # Mapping from ESPHome info type to HA platform
-INFO_TYPE_TO_PLATFORM = {
+INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     BinarySensorInfo: "binary_sensor",
     CameraInfo: "camera",
     ClimateInfo: "climate",
     CoverInfo: "cover",
     FanInfo: "fan",
     LightInfo: "light",
+    NumberInfo: "number",
+    SelectInfo: "select",
     SensorInfo: "sensor",
     SwitchInfo: "switch",
     TextSensorInfo: "sensor",
 }
 
 
-@attr.s
+@dataclass
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
-    entry_id: str = attr.ib()
-    client: APIClient = attr.ib()
-    store: Store = attr.ib()
-    state: dict[str, dict[str, Any]] = attr.ib(factory=dict)
-    info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
+    entry_id: str
+    client: APIClient
+    store: Store
+    state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
+    info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
     # some static info to be accessible during removal (unique_id, maybe others)
     # If an entity can't find anything in the info array, it will look for info here.
-    old_info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
+    old_info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
-    services: dict[int, UserService] = attr.ib(factory=dict)
-    available: bool = attr.ib(default=False)
-    device_info: DeviceInfo | None = attr.ib(default=None)
-    cleanup_callbacks: list[Callable[[], None]] = attr.ib(factory=list)
-    disconnect_callbacks: list[Callable[[], None]] = attr.ib(factory=list)
-    loaded_platforms: set[str] = attr.ib(factory=set)
-    platform_load_lock: asyncio.Lock = attr.ib(factory=asyncio.Lock)
+    services: dict[int, UserService] = field(default_factory=dict)
+    available: bool = False
+    device_info: DeviceInfo | None = None
+    api_version: APIVersion = field(default_factory=APIVersion)
+    cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    loaded_platforms: set[str] = field(default_factory=set)
+    platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    _storage_contents: dict[str, Any] | None = None
 
     @callback
     def async_update_entity(
-        self, hass: HomeAssistantType, component_key: str, key: int
+        self, hass: HomeAssistant, component_key: str, key: int
     ) -> None:
         """Schedule the update of an entity."""
         signal = f"esphome_{self.entry_id}_update_{component_key}_{key}"
@@ -81,15 +85,15 @@ class RuntimeEntryData:
 
     @callback
     def async_remove_entity(
-        self, hass: HomeAssistantType, component_key: str, key: int
+        self, hass: HomeAssistant, component_key: str, key: int
     ) -> None:
         """Schedule the removal of an entity."""
         signal = f"esphome_{self.entry_id}_remove_{component_key}_{key}"
         async_dispatcher_send(hass, signal)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistantType, entry: ConfigEntry, platforms: set[str]
-    ):
+        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[str]
+    ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
             tasks = []
@@ -102,7 +106,7 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistantType, entry: ConfigEntry, infos: list[EntityInfo]
+        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo]
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -119,13 +123,13 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
-    def async_update_state(self, hass: HomeAssistantType, state: EntityState) -> None:
+    def async_update_state(self, hass: HomeAssistant, state: EntityState) -> None:
         """Distribute an update of state information to all platforms."""
         signal = f"esphome_{self.entry_id}_on_state"
         async_dispatcher_send(hass, signal, state)
 
     @callback
-    def async_update_device_state(self, hass: HomeAssistantType) -> None:
+    def async_update_device_state(self, hass: HomeAssistant) -> None:
         """Distribute an update of a core device state like availability."""
         signal = f"esphome_{self.entry_id}_on_device_update"
         async_dispatcher_send(hass, signal)
@@ -135,17 +139,18 @@ class RuntimeEntryData:
         restored = await self.store.async_load()
         if restored is None:
             return [], []
+        restored = cast("dict[str, Any]", restored)
+        self._storage_contents = restored.copy()
 
-        self.device_info = _attr_obj_from_dict(
-            DeviceInfo, **restored.pop("device_info")
-        )
+        self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
+        self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
         infos = []
         for comp_type, restored_infos in restored.items():
             if comp_type not in COMPONENT_TYPE_TO_INFO:
                 continue
             for info in restored_infos:
                 cls = COMPONENT_TYPE_TO_INFO[comp_type]
-                infos.append(_attr_obj_from_dict(cls, **info))
+                infos.append(cls.from_dict(info))
         services = []
         for service in restored.get("services", []):
             services.append(UserService.from_dict(service))
@@ -153,15 +158,24 @@ class RuntimeEntryData:
 
     async def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
-        store_data = {"device_info": attr.asdict(self.device_info), "services": []}
+        if self.device_info is None:
+            raise ValueError("device_info is not set yet")
+        store_data: dict[str, Any] = {
+            "device_info": self.device_info.to_dict(),
+            "services": [],
+            "api_version": self.api_version.to_dict(),
+        }
 
         for comp_type, infos in self.info.items():
-            store_data[comp_type] = [attr.asdict(info) for info in infos.values()]
+            store_data[comp_type] = [info.to_dict() for info in infos.values()]
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
-        self.store.async_delay_save(lambda: store_data, SAVE_DELAY)
+        if store_data == self._storage_contents:
+            return
 
+        def _memorized_storage() -> dict[str, Any]:
+            self._storage_contents = store_data
+            return store_data
 
-def _attr_obj_from_dict(cls, **kwargs):
-    return cls(**{key: kwargs[key] for key in attr.fields_dict(cls) if key in kwargs})
+        self.store.async_delay_save(_memorized_storage, SAVE_DELAY)

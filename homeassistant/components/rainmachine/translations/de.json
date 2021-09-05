@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -20,6 +21,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "zone_run_time": "Standard-Zonenlaufzeit (in Sekunden)"
+                },
                 "title": "RainMachine konfigurieren"
             }
         }

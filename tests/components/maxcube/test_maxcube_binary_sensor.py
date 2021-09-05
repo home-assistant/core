@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
@@ -20,6 +21,11 @@ ENTITY_ID = "binary_sensor.testroom_testshutter"
 
 async def test_window_shuttler(hass, cube: MaxCube, windowshutter: MaxWindowShutter):
     """Test a successful setup with a shuttler device."""
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_is_registered(ENTITY_ID)
+    entity = entity_registry.async_get(ENTITY_ID)
+    assert entity.unique_id == "AABBCCDD03"
+
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON

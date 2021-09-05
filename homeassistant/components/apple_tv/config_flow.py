@@ -21,8 +21,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ async def device_scan(identifier, loop, cache=None):
         if matches:
             return cache, matches[0]
 
-    for hosts in [_host_filter(), None]:
+    for hosts in (_host_filter(), None):
         scan_result = await scan(loop, timeout=3, hosts=hosts)
         matches = [atv for atv in scan_result if _filter_device(atv)]
 
@@ -79,7 +78,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback

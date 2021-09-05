@@ -5,7 +5,7 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.components import history
+from homeassistant.components.recorder import history
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -20,7 +20,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, PLATFORMS
@@ -74,9 +74,9 @@ PLATFORM_SCHEMA = vol.All(
 
 
 # noinspection PyUnusedLocal
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     entity_id = config.get(CONF_ENTITY_ID)
     entity_states = config.get(CONF_STATE)
@@ -86,11 +86,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
 
-    for template in [start, end]:
+    for template in (start, end):
         if template is not None:
             template.hass = hass
 
-    add_entities(
+    async_add_entities(
         [
             HistoryStatsSensor(
                 hass, entity_id, entity_states, start, end, duration, sensor_type, name
@@ -153,7 +153,7 @@ class HistoryStatsSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.value is None or self.count is None:
             return None
@@ -168,7 +168,7 @@ class HistoryStatsSensor(SensorEntity):
             return self.count
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -186,7 +186,7 @@ class HistoryStatsSensor(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and updates the states."""
         # Get previous values of start and end
         p_start, p_end = self._period
@@ -218,6 +218,11 @@ class HistoryStatsSensor(SensorEntity):
             # Don't compute anything as the value cannot have changed
             return
 
+        await self.hass.async_add_executor_job(
+            self._update, start, end, now_timestamp, start_timestamp, end_timestamp
+        )
+
+    def _update(self, start, end, now_timestamp, start_timestamp, end_timestamp):
         # Get history between start and end
         history_list = history.state_changes_during_period(
             self.hass, start, end, str(self._entity_id)
@@ -265,7 +270,7 @@ class HistoryStatsSensor(SensorEntity):
         # Parse start
         if self._start is not None:
             try:
-                start_rendered = self._start.render()
+                start_rendered = self._start.async_render()
             except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, "start")
                 return
@@ -285,7 +290,7 @@ class HistoryStatsSensor(SensorEntity):
         # Parse end
         if self._end is not None:
             try:
-                end_rendered = self._end.render()
+                end_rendered = self._end.async_render()
             except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, "end")
                 return
@@ -350,5 +355,4 @@ class HistoryStatsHelper:
             # Common during HA startup - so just a warning
             _LOGGER.warning(ex)
             return
-        _LOGGER.error("Error parsing template for field %s", field)
-        _LOGGER.error(ex)
+        _LOGGER.error("Error parsing template for field %s", field, exc_info=ex)

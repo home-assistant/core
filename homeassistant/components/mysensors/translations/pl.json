@@ -33,6 +33,7 @@
             "invalid_serial": "Nieprawid\u0142owy port szeregowy",
             "invalid_subscribe_topic": "Nieprawid\u0142owy temat \"subscribe\"",
             "invalid_version": "Nieprawid\u0142owa wersja MySensors",
+            "mqtt_required": "Integracja MQTT nie jest skonfigurowana",
             "not_a_number": "Prosz\u0119 wpisa\u0107 numer",
             "port_out_of_range": "Numer portu musi by\u0107 pomi\u0119dzy 1 a 65535",
             "same_topic": "Tematy \"subscribe\" i \"publish\" s\u0105 takie same",

@@ -55,7 +55,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
             "type": t_type,
             "subtype": t_subtype,
         }
-        for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE.keys()
+        for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE
     ]
     assert_lists_same(triggers, expected_triggers)
 
@@ -74,7 +74,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
     }
     expected_triggers = [
         trigger_batt,
-        *[
+        *(
             {
                 "platform": "device",
                 "domain": hue.DOMAIN,
@@ -82,8 +82,8 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
                 "type": t_type,
                 "subtype": t_subtype,
             }
-            for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE.keys()
-        ],
+            for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE
+        ),
     ]
     assert_lists_same(triggers, expected_triggers)
 
@@ -140,6 +140,7 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
 
     # Fake that the remote is being pressed.
     new_sensor_response = dict(REMOTES_RESPONSE)
+    new_sensor_response["7"] = dict(new_sensor_response["7"])
     new_sensor_response["7"]["state"] = {
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",
@@ -156,7 +157,7 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
     assert calls[0].data["some"] == "B4 - 18"
 
     # Fake another button press.
-    new_sensor_response = dict(REMOTES_RESPONSE)
+    new_sensor_response["7"] = dict(new_sensor_response["7"])
     new_sensor_response["7"]["state"] = {
         "buttonevent": 34,
         "lastupdated": "2019-12-28T22:58:05",

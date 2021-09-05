@@ -17,6 +17,10 @@ async def test_relay_on_off(hass, aioclient_mock):
         "http://1.1.1.1/status.xml",
         text="<response><relay0>0</relay0><relay1>0</relay1></response>",
     )
+    aioclient_mock.get(
+        "http://1.1.1.1/relays.cgi?relay=1",
+        text="OK",
+    )
 
     MockConfigEntry(
         domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
@@ -54,6 +58,20 @@ async def test_relay_on_off(hass, aioclient_mock):
     await hass.async_block_till_done()
     state = hass.states.get("switch.relay1")
     assert state.state == "off"
+
+    # Mocks the response for turning a relay1 on
+    aioclient_mock.get(
+        "http://1.1.1.1/FF0101",
+        text="",
+    )
+
+    await hass.services.async_call(
+        "switch", "toggle", {"entity_id": "switch.relay1"}, blocking=True
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == "on"
 
 
 async def test_update(hass, aioclient_mock):

@@ -21,7 +21,7 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "Bereik GIO\u015a server"
+            "can_reach_server": "GIO\u015a server bereikbaar"
         }
     }
 }

@@ -3,5 +3,6 @@
   "name": "Zodiac",
   "documentation": "https://www.home-assistant.io/integrations/zodiac",
   "codeowners": ["@JulienTant"],
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "iot_class": "local_polling"
 }

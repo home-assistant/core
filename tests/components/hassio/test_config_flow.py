@@ -18,7 +18,7 @@ async def test_config_flow(hass):
             DOMAIN, context={"source": "system"}
         )
         assert result["type"] == "create_entry"
-        assert result["title"] == DOMAIN.title()
+        assert result["title"] == "Supervisor"
         assert result["data"] == {}
         await hass.async_block_till_done()
 

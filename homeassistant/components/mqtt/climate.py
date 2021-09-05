@@ -46,10 +46,10 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_QOS,
@@ -118,6 +118,31 @@ CONF_TEMP_INITIAL = "initial"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
+
+MQTT_CLIMATE_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        climate.ATTR_AUX_HEAT,
+        climate.ATTR_CURRENT_HUMIDITY,
+        climate.ATTR_CURRENT_TEMPERATURE,
+        climate.ATTR_FAN_MODE,
+        climate.ATTR_FAN_MODES,
+        climate.ATTR_HUMIDITY,
+        climate.ATTR_HVAC_ACTION,
+        climate.ATTR_HVAC_MODES,
+        climate.ATTR_MAX_HUMIDITY,
+        climate.ATTR_MAX_TEMP,
+        climate.ATTR_MIN_HUMIDITY,
+        climate.ATTR_MIN_TEMP,
+        climate.ATTR_PRESET_MODE,
+        climate.ATTR_PRESET_MODES,
+        climate.ATTR_SWING_MODE,
+        climate.ATTR_SWING_MODES,
+        climate.ATTR_TARGET_TEMP_HIGH,
+        climate.ATTR_TARGET_TEMP_LOW,
+        climate.ATTR_TARGET_TEMP_STEP,
+        climate.ATTR_TEMPERATURE,
+    }
+)
 
 VALUE_TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
@@ -251,7 +276,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, async_add_entities, config: ConfigType, discovery_info=None
+    hass: HomeAssistant, async_add_entities, config: ConfigType, discovery_info=None
 ):
     """Set up MQTT climate device through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -275,6 +300,8 @@ async def _async_setup_entity(
 
 class MqttClimate(MqttEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
+
+    _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the climate device."""
@@ -359,7 +386,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             tpl.hass = self.hass
         self._command_templates = command_templates
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
         qos = self._config[CONF_QOS]

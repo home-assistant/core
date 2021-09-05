@@ -1,6 +1,9 @@
 """Constants for the deCONZ component."""
 import logging
 
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -29,6 +32,7 @@ CONF_ALLOW_NEW_DEVICES = "allow_new_devices"
 CONF_MASTER_GATEWAY = "master"
 
 PLATFORMS = [
+    ALARM_CONTROL_PANEL_DOMAIN,
     BINARY_SENSOR_DOMAIN,
     CLIMATE_DOMAIN,
     COVER_DOMAIN,
@@ -52,16 +56,18 @@ ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
 # Covers
-DAMPERS = ["Level controllable output"]
-WINDOW_COVERS = ["Window covering device", "Window covering controller"]
+LEVEL_CONTROLLABLE_OUTPUT = "Level controllable output"
+DAMPERS = [LEVEL_CONTROLLABLE_OUTPUT]
+WINDOW_COVERING_CONTROLLER = "Window covering controller"
+WINDOW_COVERING_DEVICE = "Window covering device"
+WINDOW_COVERS = [WINDOW_COVERING_CONTROLLER, WINDOW_COVERING_DEVICE]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
 # Fans
 FANS = ["Fan"]
 
 # Locks
-LOCKS = ["Door Lock"]
-LOCK_TYPES = LOCKS
+LOCK_TYPES = ["Door Lock", "ZHADoorLock"]
 
 # Switches
 POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
@@ -70,4 +76,3 @@ SWITCH_TYPES = POWER_PLUGS + SIRENS
 
 CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"
-CONF_XY = "xy"
