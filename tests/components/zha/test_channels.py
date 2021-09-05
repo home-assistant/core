@@ -1,5 +1,6 @@
 """Test ZHA Core channels."""
 import asyncio
+import math
 from unittest import mock
 from unittest.mock import AsyncMock, patch
 
@@ -123,6 +124,23 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
         (0x0020, 1, {}),
         (0x0021, 0, {}),
         (0x0101, 1, {"lock_state"}),
+        (
+            0x0201,
+            1,
+            {
+                "local_temp",
+                "occupied_cooling_setpoint",
+                "occupied_heating_setpoint",
+                "unoccupied_cooling_setpoint",
+                "unoccupied_heating_setpoint",
+                "running_mode",
+                "running_state",
+                "system_mode",
+                "occupancy",
+                "pi_cooling_demand",
+                "pi_heating_demand",
+            },
+        ),
         (0x0202, 1, {"fan_mode"}),
         (0x0300, 1, {"current_x", "current_y", "color_temperature"}),
         (0x0400, 1, {"measured_value"}),
@@ -156,8 +174,14 @@ async def test_in_channel_config(
     await channel.async_configure()
 
     assert cluster.bind.call_count == bind_count
-    assert cluster.configure_reporting.call_count == len(attrs)
-    reported_attrs = {attr[0][0] for attr in cluster.configure_reporting.call_args_list}
+    assert cluster.configure_reporting.call_count == 0
+    assert cluster.configure_reporting_multiple.call_count == math.ceil(len(attrs) / 3)
+    reported_attrs = {
+        a
+        for a in attrs
+        for attr in cluster.configure_reporting_multiple.call_args_list
+        for attrs in attr[0][0]
+    }
     assert set(attrs) == reported_attrs
 
 
