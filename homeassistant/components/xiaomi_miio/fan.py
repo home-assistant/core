@@ -538,6 +538,13 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         "Fan": AirpurifierMiotOperationMode.Fan,
     }
 
+    SPEED_MODE_MAPPING = {
+        0: AirpurifierMiotOperationMode.Auto,
+        1: AirpurifierMiotOperationMode.Silent,
+        2: AirpurifierMiotOperationMode.Favorite,
+        3: AirpurifierMiotOperationMode.Fan,
+    }
+
     @property
     def percentage(self):
         """Return the current percentage based speed."""
@@ -575,6 +582,24 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
             fan_level,
         ):
             self._fan_level = fan_level
+            self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan.
+
+        This method is a coroutine.
+        """
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
+        if await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            self.PRESET_MODE_MAPPING[preset_mode],
+        ):
+            self._mode = self.SPEED_MODE_MAPPING[
+                self.PRESET_MODE_MAPPING[preset_mode].value
+            ]
             self.async_write_ha_state()
 
 
