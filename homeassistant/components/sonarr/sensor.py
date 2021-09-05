@@ -3,22 +3,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
-from sonarr.models import (
-    CommandItem,
-    Disk,
-    Episode,
-    QueueItem,
-    SeriesItem,
-    WantedResults,
-)
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
@@ -77,10 +71,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
-    sonarr = hass.data[DOMAIN][entry.entry_id][DATA_SONARR]
+    sonarr: Sonarr = hass.data[DOMAIN][entry.entry_id][DATA_SONARR]
+    options: dict[str, Any] = dict(entry.options)
 
     entities = [
-        SonarrSensor(sonarr, entry.entry_id, description, entry.options)
+        SonarrSensor(sonarr, entry.entry_id, description, options)
         for description in SENSOR_TYPES
     ]
 
@@ -115,7 +110,6 @@ class SonarrSensor(SonarrEntity, SensorEntity):
 
     def __init__(
         self,
-        *,
         sonarr: Sonarr,
         entry_id: str,
         description: SensorEntityDescription,
@@ -125,7 +119,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
-        self.data = {};
+        self.data: dict[str, Any] = {}
         self.last_update_success: bool = False
         self.upcoming_days: int = options[CONF_UPCOMING_DAYS]
         self.wanted_max_items: int = options[CONF_WANTED_MAX_ITEMS]
@@ -159,7 +153,9 @@ class SonarrSensor(SonarrEntity, SensorEntity):
             start = dt_util.as_utc(local)
             end = start + timedelta(days=self.upcoming_days)
 
-            self.data[key] = await self.sonarr.calendar(start=start.isoformat(), end=end.isoformat())
+            self.data[key] = await self.sonarr.calendar(
+                start=start.isoformat(), end=end.isoformat()
+            )
         elif key == "wanted":
             self.data[key] = await self.sonarr.wanted(page_size=self.wanted_max_items)
 
@@ -201,7 +197,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         return attrs
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         key = self.entity_description.key
 
@@ -217,7 +213,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
             return len(self.data["queue"])
 
         if key == "series" and self.data.get("series") is not None:
-            return len(self.coordinator.data["series"])
+            return len(self.data["series"])
 
         if key == "upcoming" and self.data.get("upcoming") is not None:
             return len(self.data["upcoming"])
@@ -226,4 +222,3 @@ class SonarrSensor(SonarrEntity, SensorEntity):
             return self.data["wanted"].total
 
         return None
-
