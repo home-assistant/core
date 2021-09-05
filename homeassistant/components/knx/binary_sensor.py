@@ -6,7 +6,7 @@ from typing import Any
 from xknx import XKNX
 from xknx.devices import BinarySensor as XknxBinarySensor
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,19 +31,18 @@ async def async_setup_platform(
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
-    entities = []
-    for entity_config in platform_config:
-        entities.append(KNXBinarySensor(xknx, entity_config))
-
-    async_add_entities(entities)
+    async_add_entities(
+        KNXBinarySensor(xknx, entity_config) for entity_config in platform_config
+    )
 
 
 class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     """Representation of a KNX binary sensor."""
 
+    _device: XknxBinarySensor
+
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of KNX binary sensor."""
-        self._device: XknxBinarySensor
         super().__init__(
             device=XknxBinarySensor(
                 xknx,
@@ -58,15 +57,9 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
                 reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
             )
         )
-        self._device_class: str | None = config.get(CONF_DEVICE_CLASS)
-        self._unique_id = f"{self._device.remote_value.group_address_state}"
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this sensor."""
-        if self._device_class in DEVICE_CLASSES:
-            return self._device_class
-        return None
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_force_update = self._device.ignore_internal_state
+        self._attr_unique_id = str(self._device.remote_value.group_address_state)
 
     @property
     def is_on(self) -> bool:
@@ -86,13 +79,3 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
                 dt.as_utc(self._device.last_telegram.timestamp)
             )
         return attr
-
-    @property
-    def force_update(self) -> bool:
-        """
-        Return True if state updates should be forced.
-
-        If True, a state change will be triggered anytime the state property is
-        updated, not just when the value changes.
-        """
-        return self._device.ignore_internal_state

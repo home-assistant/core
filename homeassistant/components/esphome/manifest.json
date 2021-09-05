@@ -3,9 +3,9 @@
   "name": "ESPHome",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/esphome",
-  "requirements": ["aioesphomeapi==2.7.0"],
+  "requirements": ["aioesphomeapi==8.0.0"],
   "zeroconf": ["_esphomelib._tcp.local."],
-  "codeowners": ["@OttoWinter"],
+  "codeowners": ["@OttoWinter", "@jesserockz"],
   "after_dependencies": ["zeroconf", "tag"],
   "iot_class": "local_push"
 }

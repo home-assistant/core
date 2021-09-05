@@ -51,5 +51,14 @@
                 "title": "Seadista FRITZ! Box Tools"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)"
+                }
+            }
+        }
     }
 }

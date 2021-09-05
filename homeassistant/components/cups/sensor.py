@@ -111,7 +111,7 @@ class CupsSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._printer is None:
             return None
@@ -183,7 +183,7 @@ class IPPSensor(SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._attributes is None:
             return None
@@ -257,7 +257,7 @@ class MarkerSensor(SensorEntity):
         return ICON_MARKER
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._attributes is None:
             return None
@@ -265,7 +265,7 @@ class MarkerSensor(SensorEntity):
         return self._attributes[self._printer]["marker-levels"][self._index]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 

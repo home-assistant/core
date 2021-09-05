@@ -9,8 +9,6 @@ POWERWALL_API_CHANGED = "api_changed"
 UPDATE_INTERVAL = 30
 
 ATTR_FREQUENCY = "frequency"
-ATTR_ENERGY_EXPORTED = "energy_exported_(in_kW)"
-ATTR_ENERGY_IMPORTED = "energy_imported_(in_kW)"
 ATTR_INSTANT_AVERAGE_VOLTAGE = "instant_average_voltage"
 ATTR_INSTANT_TOTAL_CURRENT = "instant_total_current"
 ATTR_IS_ACTIVE = "is_active"
@@ -32,5 +30,3 @@ POWERWALL_HTTP_SESSION = "http_session"
 
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"
-
-ENERGY_KILO_WATT = "kW"

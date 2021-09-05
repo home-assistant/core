@@ -27,23 +27,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
     """Representation of a BleBox cover feature."""
 
+    def __init__(self, feature):
+        """Initialize a BleBox cover feature."""
+        super().__init__(feature)
+        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
+        position = SUPPORT_SET_POSITION if feature.is_slider else 0
+        stop = SUPPORT_STOP if feature.has_stop else 0
+        self._attr_supported_features = position | stop | SUPPORT_OPEN | SUPPORT_CLOSE
+
     @property
     def state(self):
         """Return the equivalent HA cover state."""
         return BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return BLEBOX_TO_HASS_DEVICE_CLASSES[self._feature.device_class]
-
-    @property
-    def supported_features(self):
-        """Return the supported cover features."""
-        position = SUPPORT_SET_POSITION if self._feature.is_slider else 0
-        stop = SUPPORT_STOP if self._feature.has_stop else 0
-
-        return position | stop | SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
     def current_cover_position(self):

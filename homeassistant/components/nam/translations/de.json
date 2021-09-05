@@ -16,7 +16,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Einrichten der Nettigo Air Monitor Integration."
             }
         }
     }

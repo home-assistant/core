@@ -10,7 +10,6 @@ set_scan_interval:
     scan_interval:
       name: Scan interval
       description: Update frequency.
-      example: 180
       selector:
         number:
           min: 10
@@ -25,7 +24,6 @@ set_scan_obd_interval:
     scan_interval:
       name: Scan interval
       description: Update frequency.
-      example: 10800
       selector:
         number:
           min: 180

@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -134,12 +135,12 @@ class Sensor(ZhaEntity, SensorEntity):
         return self._state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         return self._unit
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the entity."""
         assert self.SENSOR_ATTR is not None
         raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
@@ -179,6 +180,7 @@ class Battery(Sensor):
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
     @staticmethod
@@ -212,6 +214,7 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = POWER_WATT
 
     @property
@@ -241,6 +244,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -270,7 +274,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.formatter_function(value)
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return Unit of measurement."""
         return self._channel.unit_of_measurement
 
@@ -282,6 +286,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
+    _state_class = STATE_CLASS_MEASUREMENT
     _unit = PRESSURE_HPA
 
 
@@ -313,6 +318,27 @@ class CarbonMonoxideConcentration(Sensor):
 
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_CO
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_PARTS_PER_MILLION
+
+
+@STRICT_MATCH(generic_ids="channel_0x042e")
+@STRICT_MATCH(channel_names="voc_level")
+class VOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
+@STRICT_MATCH(channel_names="formaldehyde_concentration")
+class FormaldehydeConcentration(Sensor):
+    """Formaldehyde Concentration sensor."""
+
+    SENSOR_ATTR = "measured_value"
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION

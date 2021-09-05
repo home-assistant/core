@@ -36,6 +36,8 @@ async def async_setup_entry(
 class FlickPricingSensor(SensorEntity):
     """Entity object for Flick Electric sensor."""
 
+    _attr_native_unit_of_measurement = UNIT_NAME
+
     def __init__(self, api: FlickAPI) -> None:
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
@@ -51,14 +53,9 @@ class FlickPricingSensor(SensorEntity):
         return FRIENDLY_NAME
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._price.price
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return UNIT_NAME
 
     @property
     def extra_state_attributes(self):

@@ -40,7 +40,9 @@
     "system_health": {
         "info": {
             "device_connected": "ISY connectat",
-            "host_reachable": "Amfitri\u00f3 accessible"
+            "host_reachable": "Amfitri\u00f3 accessible",
+            "last_heartbeat": "Hora de l'\u00faltim senyal",
+            "websocket_status": "Estat del Socket d'esdeveniments"
         }
     }
 }

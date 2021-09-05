@@ -5,7 +5,6 @@ send_ir_code:
     entity_id:
       name: Entity
       description: Name of entity that should have the IR code set and be turned on. Platform dependent.
-      example: "switch.living_room_1_1"
       selector:
         entity:
           integration: mysensors

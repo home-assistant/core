@@ -2,7 +2,8 @@
   "domain": "switcher_kis",
   "name": "Switcher",
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis/",
-  "codeowners": ["@tomerfi"],
-  "requirements": ["aioswitcher==1.2.1"],
-  "iot_class": "local_push"
+  "codeowners": ["@tomerfi","@thecode"],
+  "requirements": ["aioswitcher==2.0.4"],
+  "iot_class": "local_push",
+  "config_flow": true
 }

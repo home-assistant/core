@@ -9,6 +9,7 @@ import logging
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
 from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings.device import DeviceEntity
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -56,13 +57,13 @@ from .smartapp import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the SmartThings platform."""
     await setup_smartapp_endpoint(hass)
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle migration of a previous version config entry.
 
     A config entry created under a previous version must go through the
@@ -84,7 +85,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
     return False
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initialize config entry which represents an installed SmartApp."""
     # For backwards compat
     if entry.unique_id is None:
@@ -412,7 +413,7 @@ class DeviceBroker:
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
-    def __init__(self, device):
+    def __init__(self, device: DeviceEntity) -> None:
         """Initialize the instance."""
         self._device = device
         self._dispatcher_remove = None

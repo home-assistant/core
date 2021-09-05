@@ -1,0 +1,14 @@
+{
+    "device_automation": {
+        "action_type": {
+            "select_option": "\u8b8a\u66f4{entity_name}\u9078\u9805"
+        },
+        "condition_type": {
+            "selected_option": "\u76ee\u524d{entity_name}\u5df2\u9078\u9078\u9805"
+        },
+        "trigger_type": {
+            "current_option_changed": "{entity_name} \u9078\u9805\u5df2\u8b8a\u66f4"
+        }
+    },
+    "title": "\u9078\u64c7"
+}

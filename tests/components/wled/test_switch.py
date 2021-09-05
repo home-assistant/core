@@ -1,7 +1,8 @@
 """Tests for the WLED switch platform."""
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from wled import WLEDConnectionError
+import pytest
+from wled import WLEDConnectionError, WLEDError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wled.const import (
@@ -22,16 +23,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.wled import init_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
 async def test_switch_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test the creation and values of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
-
     entity_registry = er.async_get(hass)
 
     state = hass.states.get("switch.wled_rgb_light_nightlight")
@@ -68,112 +66,115 @@ async def test_switch_state(
 
 
 async def test_switch_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
     """Test the change of state of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
 
     # Nightlight
-    with patch("wled.WLED.nightlight") as nightlight_mock:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        nightlight_mock.assert_called_once_with(on=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.nightlight.call_count == 1
+    mock_wled.nightlight.assert_called_with(on=True)
 
-    with patch("wled.WLED.nightlight") as nightlight_mock:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        nightlight_mock.assert_called_once_with(on=False)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.nightlight.call_count == 2
+    mock_wled.nightlight.assert_called_with(on=False)
 
     # Sync send
-    with patch("wled.WLED.sync") as sync_mock:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        sync_mock.assert_called_once_with(send=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.sync.call_count == 1
+    mock_wled.sync.assert_called_with(send=True)
 
-    with patch("wled.WLED.sync") as sync_mock:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        sync_mock.assert_called_once_with(send=False)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.sync.call_count == 2
+    mock_wled.sync.assert_called_with(send=False)
 
     # Sync receive
-    with patch("wled.WLED.sync") as sync_mock:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        sync_mock.assert_called_once_with(receive=False)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.sync.call_count == 3
+    mock_wled.sync.assert_called_with(receive=False)
 
-    with patch("wled.WLED.sync") as sync_mock:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        sync_mock.assert_called_once_with(receive=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert mock_wled.sync.call_count == 4
+    mock_wled.sync.assert_called_with(receive=True)
 
 
 async def test_switch_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
-    await init_integration(hass, aioclient_mock)
+    mock_wled.nightlight.side_effect = WLEDError
 
-    with patch("homeassistant.components.wled.WLED.update"):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-        state = hass.states.get("switch.wled_rgb_light_nightlight")
-        assert state.state == STATE_OFF
-        assert "Invalid response from API" in caplog.text
+    state = hass.states.get("switch.wled_rgb_light_nightlight")
+    assert state
+    assert state.state == STATE_OFF
+    assert "Invalid response from API" in caplog.text
 
 
 async def test_switch_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED switches."""
-    await init_integration(hass, aioclient_mock)
+    mock_wled.nightlight.side_effect = WLEDConnectionError
 
-    with patch("homeassistant.components.wled.WLED.update"), patch(
-        "homeassistant.components.wled.WLED.nightlight", side_effect=WLEDConnectionError
-    ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-        state = hass.states.get("switch.wled_rgb_light_nightlight")
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("switch.wled_rgb_light_nightlight")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert "Error communicating with API" in caplog.text

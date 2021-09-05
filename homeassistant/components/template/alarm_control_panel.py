@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
     FORMAT_NUMBER,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
@@ -68,7 +68,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
             ALARM_CONTROL_PANEL_SCHEMA

@@ -7,7 +7,6 @@ clear_usercode:
     node_id:
       name: Node ID
       description: Node id of the lock.
-      example: 18
       selector:
         number:
           min: 1
@@ -15,7 +14,6 @@ clear_usercode:
     code_slot:
       name: Code slot
       description: Code slot to clear code from.
-      example: 1
       selector:
         number:
           min: 1
@@ -28,7 +26,6 @@ get_usercode:
     node_id:
       name: Node ID
       description: Node id of the lock.
-      example: 18
       selector:
         number:
           min: 1
@@ -36,7 +33,6 @@ get_usercode:
     code_slot:
       name: Code slot
       description: Code slot to retrieve a code from.
-      example: 1
       selector:
         number:
           min: 1
@@ -76,14 +72,12 @@ set_usercode:
   fields:
     node_id:
       description: Node id of the lock.
-      example: 18
       selector:
         number:
           min: 1
           max: 255
     code_slot:
       description: Code slot to set the code.
-      example: 1
       selector:
         number:
           min: 1

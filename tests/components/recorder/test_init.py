@@ -17,6 +17,7 @@ from homeassistant.components.recorder import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
+    SERVICE_PURGE_ENTITIES,
     SQLITE_URL_PREFIX,
     Recorder,
     run_information,
@@ -24,7 +25,13 @@ from homeassistant.components.recorder import (
     run_information_with_session,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import Events, RecorderRuns, States
+from homeassistant.components.recorder.models import (
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -734,6 +741,69 @@ def test_auto_statistics(hass_recorder):
     dt_util.set_default_time_zone(original_tz)
 
 
+def test_statistics_runs_initiated(hass_recorder):
+    """Test statistics_runs is initiated when DB is created."""
+    now = dt_util.utcnow()
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+        hass = hass_recorder()
+
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 1
+            last_run = process_timestamp(statistics_runs[0].start)
+            assert process_timestamp(last_run) == now.replace(
+                minute=0, second=0, microsecond=0
+            ) - timedelta(hours=1)
+
+
+def test_compile_missing_statistics(tmpdir):
+    """Test missing statistics are compiled on startup."""
+    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+
+        hass = get_test_home_assistant()
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 1
+            last_run = process_timestamp(statistics_runs[0].start)
+            assert last_run == now - timedelta(hours=1)
+
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
+
+    with patch(
+        "homeassistant.components.recorder.dt_util.utcnow",
+        return_value=now + timedelta(hours=1),
+    ):
+
+        hass = get_test_home_assistant()
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 2
+            last_run = process_timestamp(statistics_runs[1].start)
+            assert last_run == now
+
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
+
+
 def test_saving_sets_old_state(hass_recorder):
     """Test saving sets old state."""
     hass = hass_recorder()
@@ -822,6 +892,7 @@ def test_has_services(hass_recorder):
     assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
     assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
     assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
+    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
 
 
 def test_service_disable_events_not_recording(hass, hass_recorder):

@@ -6,7 +6,6 @@ join:
       name: Master
       description: Entity ID of the player that should become the master of the group.
       required: true
-      example: "media_player.bluesound_livingroom"
       selector:
         entity:
           integration: bluesound
@@ -14,7 +13,6 @@ join:
     entity_id:
       name: Entity
       description: Name of entity that will coordinate the grouping. Platform dependent.
-      example: "media_player.bluesound_livingroom"
       selector:
         entity:
           integration: bluesound
@@ -27,7 +25,6 @@ unjoin:
     entity_id:
       name: Entity
       description: Name of entity that will be unjoined from their group. Platform dependent.
-      example: "media_player.bluesound_livingroom"
       selector:
         entity:
           integration: bluesound
@@ -40,7 +37,6 @@ set_sleep_timer:
     entity_id:
       name: Entity
       description: Name(s) of entities that will have a timer set.
-      example: "media_player.bluesound_livingroom"
       selector:
         entity:
           integration: bluesound
@@ -53,7 +49,6 @@ clear_sleep_timer:
     entity_id:
       name: Entity
       description: Name(s) of entities that will have the timer cleared.
-      example: "media_player.bluesound_livingroom"
       selector:
         entity:
           integration: bluesound

@@ -8,7 +8,6 @@ alarm_keypress:
       name: Entity
       description: Name of the alarm control panel to trigger.
       required: true
-      example: "alarm_control_panel.downstairs"
       selector:
         entity:
           integration: envisalink
@@ -40,7 +39,6 @@ invoke_custom_function:
       name: PGM
       description: The PGM number to trigger on the alarm panel.
       required: true
-      example: "2"
       selector:
         number:
           min: 1

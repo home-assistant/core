@@ -11,9 +11,13 @@ from aiohttp import web
 from sqlalchemy import not_, or_
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder import history, models as history_models
+from homeassistant.components.recorder.statistics import (
+    list_statistic_ids,
+    statistics_during_period,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     CONF_DOMAINS,
@@ -24,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_function
+from homeassistant.helpers.deprecation import deprecated_class, deprecated_function
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -101,8 +105,79 @@ async def async_setup(hass, config):
     hass.components.frontend.async_register_built_in_panel(
         "history", "history", "hass:poll-box"
     )
+    hass.components.websocket_api.async_register_command(
+        ws_get_statistics_during_period
+    )
+    hass.components.websocket_api.async_register_command(ws_get_list_statistic_ids)
 
     return True
+
+
+@deprecated_class("homeassistant.components.recorder.models.LazyState")
+class LazyState(history_models.LazyState):
+    """A lazy version of core State."""
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/statistics_during_period",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Optional("statistic_ids"): [str],
+    }
+)
+@websocket_api.async_response
+async def ws_get_statistics_during_period(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Handle statistics websocket command."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+
+    start_time = dt_util.parse_datetime(start_time_str)
+    if start_time:
+        start_time = dt_util.as_utc(start_time)
+    else:
+        connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+        return
+
+    if end_time_str:
+        end_time = dt_util.parse_datetime(end_time_str)
+        if end_time:
+            end_time = dt_util.as_utc(end_time)
+        else:
+            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+            return
+    else:
+        end_time = None
+
+    statistics = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        start_time,
+        end_time,
+        msg.get("statistic_ids"),
+    )
+    connection.send_result(msg["id"], statistics)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "history/list_statistic_ids",
+        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
+    }
+)
+@websocket_api.async_response
+async def ws_get_list_statistic_ids(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Fetch a list of available statistic_id."""
+    statistic_ids = await hass.async_add_executor_job(
+        list_statistic_ids,
+        hass,
+        msg.get("statistic_type"),
+    )
+    connection.send_result(msg["id"], statistic_ids)
 
 
 class HistoryPeriodView(HomeAssistantView):
@@ -297,17 +372,17 @@ class Filters:
         """Generate the entity filter query."""
         includes = []
         if self.included_domains:
-            includes.append(States.domain.in_(self.included_domains))
+            includes.append(history_models.States.domain.in_(self.included_domains))
         if self.included_entities:
-            includes.append(States.entity_id.in_(self.included_entities))
+            includes.append(history_models.States.entity_id.in_(self.included_entities))
         for glob in self.included_entity_globs:
             includes.append(_glob_to_like(glob))
 
         excludes = []
         if self.excluded_domains:
-            excludes.append(States.domain.in_(self.excluded_domains))
+            excludes.append(history_models.States.domain.in_(self.excluded_domains))
         if self.excluded_entities:
-            excludes.append(States.entity_id.in_(self.excluded_entities))
+            excludes.append(history_models.States.entity_id.in_(self.excluded_entities))
         for glob in self.excluded_entity_globs:
             excludes.append(_glob_to_like(glob))
 
@@ -317,7 +392,7 @@ class Filters:
         if includes and not excludes:
             return or_(*includes)
 
-        if not excludes and includes:
+        if not includes and excludes:
             return not_(or_(*excludes))
 
         return or_(*includes) & not_(or_(*excludes))
@@ -325,7 +400,7 @@ class Filters:
 
 def _glob_to_like(glob_str):
     """Translate glob to sql."""
-    return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+    return history_models.States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
 
 
 def _entities_may_have_state_changes_after(

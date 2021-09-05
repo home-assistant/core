@@ -7,7 +7,15 @@ from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
@@ -18,9 +26,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTR_ENTRY_TYPE,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTRIBUTION,
     AURORA_API,
     CONF_THRESHOLD,
@@ -35,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aurora from a config entry."""
 
     conf = entry.data
@@ -123,6 +128,8 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 class AuroraEntity(CoordinatorEntity):
     """Implementation of the base Aurora Entity."""
 
+    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+
     def __init__(
         self,
         coordinator: AuroraDataUpdateCoordinator,
@@ -133,35 +140,15 @@ class AuroraEntity(CoordinatorEntity):
 
         super().__init__(coordinator=coordinator)
 
-        self._name = name
-        self._unique_id = f"{self.coordinator.latitude}_{self.coordinator.longitude}"
-        self._icon = icon
-
-    @property
-    def unique_id(self):
-        """Define the unique id based on the latitude and longitude."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {"attribution": ATTRIBUTION}
-
-    @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        return self._icon
+        self._attr_name = name
+        self._attr_unique_id = f"{coordinator.latitude}_{coordinator.longitude}"
+        self._attr_icon = icon
 
     @property
     def device_info(self):
         """Define the device based on name."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
             ATTR_NAME: self.coordinator.name,
             ATTR_MANUFACTURER: "NOAA",
             ATTR_MODEL: "Aurora Visibility Sensor",

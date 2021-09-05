@@ -9,7 +9,6 @@ ptz:
     movement:
       description: "Direction of the movement."
       required: true
-      example: "up"
       selector:
         select:
           options:
@@ -23,7 +22,6 @@ ptz:
             - 'up'
     travel_time:
       description: "Travel time in seconds."
-      example: 0.125
       default: 0.125
       selector:
         number:

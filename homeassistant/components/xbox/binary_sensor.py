@@ -4,6 +4,7 @@ from __future__ import annotations
 from functools import partial
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
@@ -16,16 +17,18 @@ from .const import DOMAIN
 PRESENCE_ATTRIBUTES = ["online", "in_party", "in_game", "in_multiplayer"]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up Xbox Live friends."""
-    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         "coordinator"
     ]
 
     update_friends = partial(async_update_friends, coordinator, {}, async_add_entities)
 
     unsub = coordinator.async_add_listener(update_friends)
-    hass.data[DOMAIN][config_entry.entry_id]["binary_sensor_unsub"] = unsub
+    hass.data[DOMAIN][entry.entry_id]["binary_sensor_unsub"] = unsub
     update_friends()
 
 

@@ -25,7 +25,6 @@ submit_tv_request:
     season:
       name: Season
       description: Which season(s) to request.
-      example: "latest"
       default: latest
       selector:
         select:

@@ -36,7 +36,7 @@
                 "title": "Kies een authenticatie methode"
             },
             "reauth_confirm": {
-                "description": "De Nest-integratie moet je account opnieuw verifi\u00ebren",
+                "description": "De Nest-integratie moet uw account opnieuw verifi\u00ebren",
                 "title": "Verifieer de integratie opnieuw"
             }
         }

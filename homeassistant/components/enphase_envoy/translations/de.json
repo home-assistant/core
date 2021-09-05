@@ -9,7 +9,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Envoy {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {

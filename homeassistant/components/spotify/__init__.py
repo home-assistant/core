@@ -5,7 +5,6 @@ from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.spotify import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CREDENTIALS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
@@ -17,6 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
+from . import config_flow
 from .const import (
     DATA_SPOTIFY_CLIENT,
     DATA_SPOTIFY_ME,

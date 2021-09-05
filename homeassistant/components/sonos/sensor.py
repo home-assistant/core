@@ -1,7 +1,6 @@
 """Entity representing a Sonos battery level."""
 from __future__ import annotations
 
-import datetime
 import logging
 
 from homeassistant.components.sensor import SensorEntity
@@ -46,15 +45,20 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
         return PERCENTAGE
 
-    async def async_update(self, now: datetime.datetime | None = None) -> None:
+    async def async_update(self) -> None:
         """Poll the device for the current state."""
         await self.speaker.async_poll_battery()
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.speaker.battery_info.get("Level")
+
+    @property
+    def available(self) -> bool:
+        """Return whether this device is available."""
+        return self.speaker.available and self.speaker.power_source

@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
 
-DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
+DEFAULT_URL = "https://api.us-south.text-to-speech.watson.cloud.ibm.com"
 
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"
@@ -191,7 +191,7 @@ class WatsonTTSProvider(Provider):
     def get_tts_audio(self, message, language=None, options=None):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
-            message, accept=self.output_format, voice=self.default_voice
+            text=message, accept=self.output_format, voice=self.default_voice
         ).get_result()
 
         return (CONTENT_TYPE_EXTENSIONS[self.output_format], response.content)

@@ -1,6 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 import asyncio
 import copy
+import io
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -9,8 +10,6 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
-
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -61,9 +60,14 @@ def mock_addon_options(addon_info):
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
-def set_addon_options_side_effect_fixture():
+def set_addon_options_side_effect_fixture(addon_options):
     """Return the set add-on options side effect."""
-    return None
+
+    async def set_addon_options(hass, slug, options):
+        """Mock set add-on options."""
+        addon_options.update(options["options"])
+
+    return set_addon_options
 
 
 @pytest.fixture(name="set_addon_options")
@@ -76,11 +80,24 @@ def mock_set_addon_options(set_addon_options_side_effect):
         yield set_options
 
 
+@pytest.fixture(name="install_addon_side_effect")
+def install_addon_side_effect_fixture(addon_info):
+    """Return the install add-on side effect."""
+
+    async def install_addon(hass, slug):
+        """Mock install add-on."""
+        addon_info.return_value["state"] = "stopped"
+        addon_info.return_value["version"] = "1.0"
+
+    return install_addon
+
+
 @pytest.fixture(name="install_addon")
-def mock_install_addon():
+def mock_install_addon(install_addon_side_effect):
     """Mock install add-on."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_install_addon"
+        "homeassistant.components.zwave_js.addon.async_install_addon",
+        side_effect=install_addon_side_effect,
     ) as install_addon:
         yield install_addon
 
@@ -95,9 +112,14 @@ def mock_update_addon():
 
 
 @pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture():
-    """Return the set add-on options side effect."""
-    return None
+def start_addon_side_effect_fixture(addon_info):
+    """Return the start add-on options side effect."""
+
+    async def start_addon(hass, slug):
+        """Mock start add-on."""
+        addon_info.return_value["state"] = "started"
+
+    return start_addon
 
 
 @pytest.fixture(name="start_addon")
@@ -119,6 +141,22 @@ def stop_addon_fixture():
         yield stop_addon
 
 
+@pytest.fixture(name="restart_addon_side_effect")
+def restart_addon_side_effect_fixture():
+    """Return the restart add-on options side effect."""
+    return None
+
+
+@pytest.fixture(name="restart_addon")
+def mock_restart_addon(restart_addon_side_effect):
+    """Mock restart add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_restart_addon",
+        side_effect=restart_addon_side_effect,
+    ) as restart_addon:
+        yield restart_addon
+
+
 @pytest.fixture(name="uninstall_addon")
 def uninstall_addon_fixture():
     """Mock uninstall add-on."""
@@ -128,19 +166,13 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
-@pytest.fixture(name="create_shapshot")
-def create_snapshot_fixture():
-    """Mock create snapshot."""
+@pytest.fixture(name="create_backup")
+def create_backup_fixture():
+    """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_snapshot"
-    ) as create_shapshot:
-        yield create_shapshot
-
-
-@pytest.fixture(name="device_registry")
-async def device_registry_fixture(hass):
-    """Return the device registry."""
-    return async_get_device_registry(hass)
+        "homeassistant.components.zwave_js.addon.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -157,6 +189,18 @@ def version_state_fixture():
         "driverVersion": "6.0.0-beta.0",
         "serverVersion": "1.0.0",
         "homeId": 1234567890,
+    }
+
+
+@pytest.fixture(name="log_config_state")
+def log_config_state_fixture():
+    """Return log config state fixture data."""
+    return {
+        "enabled": True,
+        "level": "info",
+        "logToFile": False,
+        "filename": "",
+        "forceConsole": False,
     }
 
 
@@ -182,6 +226,12 @@ def binary_switch_state_fixture():
 def bulb_6_multi_color_state_fixture():
     """Load the bulb 6 multi-color node state fixture data."""
     return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
+
+
+@pytest.fixture(name="light_color_null_values_state", scope="session")
+def light_color_null_values_state_fixture():
+    """Load the light color null values node state fixture data."""
+    return json.loads(load_fixture("zwave_js/light_color_null_values_state.json"))
 
 
 @pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
@@ -250,6 +300,14 @@ def climate_heatit_z_trm2fx_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm2fx_state.json"))
 
 
+@pytest.fixture(name="climate_heatit_z_trm3_no_value_state", scope="session")
+def climate_heatit_z_trm3_no_value_state_fixture():
+    """Load the climate HEATIT Z-TRM3 thermostat node w/no value state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/climate_heatit_z_trm3_no_value_state.json")
+    )
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -290,6 +348,12 @@ def iblinds_v2_state_fixture():
 def qubino_shutter_state_fixture():
     """Load the Qubino Shutter node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_qubino_shutter_state.json"))
+
+
+@pytest.fixture(name="aeotec_nano_shutter_state", scope="session")
+def aeotec_nano_shutter_state_fixture():
+    """Load the Aeotec Nano Shutter node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_aeotec_nano_shutter_state.json"))
 
 
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
@@ -365,8 +429,34 @@ def zem_31_state_fixture():
     return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
+@pytest.fixture(name="wallmote_central_scene_state", scope="session")
+def wallmote_central_scene_state_fixture():
+    """Load the wallmote central scene node state fixture data."""
+    return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="session")
+def ge_in_wall_dimmer_switch_state_fixture():
+    """Load the ge in-wall dimmer switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
+
+
+@pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
+def aeotec_zw164_siren_state_fixture():
+    """Load the aeotec zw164 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
+
+
+@pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="session")
+def lock_popp_electric_strike_lock_control_state_fixture():
+    """Load the popp electric strike lock control node state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/lock_popp_electric_strike_lock_control_state.json")
+    )
+
+
 @pytest.fixture(name="client")
-def mock_client_fixture(controller_state, version_state):
+def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
 
     with patch(
@@ -389,7 +479,7 @@ def mock_client_fixture(controller_state, version_state):
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
-        client.driver = Driver(client, controller_state)
+        client.driver = Driver(client, controller_state, log_config_state)
 
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
@@ -425,6 +515,14 @@ def hank_binary_switch_fixture(client, hank_binary_switch_state):
 def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, copy.deepcopy(bulb_6_multi_color_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="light_color_null_values")
+def light_color_null_values_fixture(client, light_color_null_values_state):
+    """Mock a node with current color value item being null."""
+    node = Node(client, copy.deepcopy(light_color_null_values_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -488,6 +586,16 @@ def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
 def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
     """Mock a climate radio danfoss LC-13 node."""
     node = Node(client, climate_eurotronic_spirit_z_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm3_no_value")
+def climate_heatit_z_trm3_no_value_fixture(
+    client, climate_heatit_z_trm3_no_value_state
+):
+    """Mock a climate radio HEATIT Z-TRM3 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm3_no_value_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -621,6 +729,14 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state):
     return node
 
 
+@pytest.fixture(name="aeotec_nano_shutter")
+def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state):
+    """Mock a Aeotec Nano Shutter node."""
+    node = Node(client, copy.deepcopy(aeotec_nano_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeon_smart_switch_6")
 def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
     """Mock an AEON Labs (ZW096) Smart Switch 6 node."""
@@ -649,6 +765,16 @@ def inovelli_lzw36_fixture(client, inovelli_lzw36_state):
 def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
     """Mock an id lock id-150 lock node."""
     node = Node(client, copy.deepcopy(lock_id_lock_as_id150_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_id_lock_as_id150_not_ready")
+def node_not_ready(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node that's not ready."""
+    state = copy.deepcopy(lock_id_lock_as_id150_state)
+    state["ready"] = False
+    node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -697,3 +823,43 @@ def zen_31_fixture(client, zen_31_state):
     node = Node(client, copy.deepcopy(zen_31_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="wallmote_central_scene")
+def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
+    """Mock a wallmote central scene node."""
+    node = Node(client, copy.deepcopy(wallmote_central_scene_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch")
+def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
+    """Mock a ge in-wall dimmer switch scene node."""
+    node = Node(client, copy.deepcopy(ge_in_wall_dimmer_switch_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_zw164_siren")
+def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
+    """Mock a aeotec zw164 siren node."""
+    node = Node(client, copy.deepcopy(aeotec_zw164_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_popp_electric_strike_lock_control")
+def lock_popp_electric_strike_lock_control_fixture(
+    client, lock_popp_electric_strike_lock_control_state
+):
+    """Mock a popp electric strike lock control node."""
+    node = Node(client, copy.deepcopy(lock_popp_electric_strike_lock_control_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="firmware_file")
+def firmware_file_fixture():
+    """Return mock firmware file stream."""
+    return io.BytesIO(bytes(10))

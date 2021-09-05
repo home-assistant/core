@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domeny do uwzgl\u0119dnienia"
                 },
-                "description": "Wybierz domeny do uwzgl\u0119dnienia. Wszystkie wspierane encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione. W trybie akcesorium, oddzielna instancja HomeKit zostanie utworzona dla ka\u017cdego tv media playera oraz kamery.",
+                "description": "Wybierz domeny do uwzgl\u0119dnienia. Wszystkie wspierane encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione. W trybie akcesorium, oddzielna instancja HomeKit zostanie utworzona dla ka\u017cdego tv media playera, pilota na bazie aktywno\u015bci, zamka oraz kamery.",
                 "title": "Wybierz uwzgl\u0119dniane domeny"
             }
         }
@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)"
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)",
+                    "devices": "Urz\u0105dzenia (Wyzwalacze)"
                 },
-                "description": "Te ustawienia nale\u017cy dostosowa\u0107 tylko wtedy, gdy HomeKit nie dzia\u0142a.",
+                "description": "Dla ka\u017cdego wybranego urz\u0105dzenia stworzony zostanie programowalny prze\u0142\u0105cznik. Po uruchomieniu wyzwalacza urz\u0105dzenia, HomeKit mo\u017cna skonfigurowa\u0107 do uruchamiania automatyzacji lub sceny.",
                 "title": "Konfiguracja zaawansowana"
             },
             "cameras": {

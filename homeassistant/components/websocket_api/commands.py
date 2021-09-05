@@ -268,7 +268,7 @@ async def handle_manifest_list(
     """Handle integrations command."""
     loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *[async_get_integration(hass, domain) for domain in loaded_integrations]
+        *(async_get_integration(hass, domain) for domain in loaded_integrations)
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]

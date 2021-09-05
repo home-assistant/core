@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} is not detecting problem",
             "is_no_smoke": "{entity_name} is not detecting smoke",
             "is_no_sound": "{entity_name} is not detecting sound",
+            "is_no_update": "{entity_name} is up-to-date",
             "is_no_vibration": "{entity_name} is not detecting vibration",
             "is_not_bat_low": "{entity_name} battery is normal",
             "is_not_cold": "{entity_name} is not cold",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
             "is_unsafe": "{entity_name} is unsafe",
+            "is_update": "{entity_name} has an update available",
             "is_vibration": "{entity_name} is detecting vibration"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} stopped detecting problem",
             "no_smoke": "{entity_name} stopped detecting smoke",
             "no_sound": "{entity_name} stopped detecting sound",
+            "no_update": "{entity_name} became up-to-date",
             "no_vibration": "{entity_name} stopped detecting vibration",
             "not_bat_low": "{entity_name} battery normal",
             "not_cold": "{entity_name} became not cold",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on",
             "unsafe": "{entity_name} became unsafe",
+            "update": "{entity_name} got an update available",
             "vibration": "{entity_name} started detecting vibration"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Clear",
             "on": "Detected"
+        },
+        "update": {
+            "off": "Up-to-date",
+            "on": "Update available"
         },
         "vibration": {
             "off": "Clear",

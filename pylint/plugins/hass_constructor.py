@@ -1,5 +1,5 @@
 """Plugin for constructor definitions."""
-from astroid import ClassDef, Const, FunctionDef
+from astroid import Const, FunctionDef
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -43,7 +43,7 @@ class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
             return
 
         # Check that return type is specified and it is "None".
-        if not isinstance(node.returns, Const) or node.returns.value != None:
+        if not isinstance(node.returns, Const) or node.returns.value is not None:
             self.add_message("hass-constructor-return", node=node)
 
 

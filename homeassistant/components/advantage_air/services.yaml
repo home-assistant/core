@@ -10,7 +10,6 @@ set_time_to:
       name: Minutes
       description: Minutes until action
       required: true
-      example: "60"
       selector:
         number:
           min: 0

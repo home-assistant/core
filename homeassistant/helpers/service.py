@@ -227,7 +227,7 @@ def async_prepare_call_from_config(
 
     service_data = {}
 
-    for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
+    for conf in (CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE):
         if conf not in config:
             continue
         try:
@@ -783,3 +783,43 @@ def verify_domain_control(
         return check_permissions
 
     return decorator
+
+
+class ReloadServiceHelper:
+    """Helper for reload services to minimize unnecessary reloads."""
+
+    def __init__(self, service_func: Callable[[ServiceCall], Awaitable]) -> None:
+        """Initialize ReloadServiceHelper."""
+        self._service_func = service_func
+        self._service_running = False
+        self._service_condition = asyncio.Condition()
+
+    async def execute_service(self, service_call: ServiceCall) -> None:
+        """Execute the service.
+
+        If a previous reload task if currently in progress, wait for it to finish first.
+        Once the previous reload task has finished, one of the waiting tasks will be
+        assigned to execute the reload, the others will wait for the reload to finish.
+        """
+
+        do_reload = False
+        async with self._service_condition:
+            if self._service_running:
+                # A previous reload task is already in progress, wait for it to finish
+                await self._service_condition.wait()
+
+        async with self._service_condition:
+            if not self._service_running:
+                # This task will do the reload
+                self._service_running = True
+                do_reload = True
+            else:
+                # Another task will perform the reload, wait for it to finish
+                await self._service_condition.wait()
+
+        if do_reload:
+            # Reload, then notify other tasks
+            await self._service_func(service_call)
+            async with self._service_condition:
+                self._service_running = False
+                self._service_condition.notify_all()

@@ -127,37 +127,30 @@ async def test_log_warning_custom_component(hass, caplog, enable_custom_integrat
     """Test that we log a warning when loading a custom component."""
 
     await loader.async_get_integration(hass, "test_package")
-    assert "You are using a custom integration test_package" in caplog.text
+    assert "We found a custom integration test_package" in caplog.text
 
     await loader.async_get_integration(hass, "test")
-    assert "You are using a custom integration test " in caplog.text
+    assert "We found a custom integration test " in caplog.text
 
 
-async def test_custom_integration_version_not_valid(hass, caplog):
+async def test_custom_integration_version_not_valid(
+    hass, caplog, enable_custom_integrations
+):
     """Test that we log a warning when custom integrations have a invalid version."""
-    test_integration1 = loader.Integration(
-        hass, "custom_components.test", None, {"domain": "test1", "version": "test"}
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_no_version")
+
+    assert (
+        "The custom integration 'test_no_version' does not have a valid version key (None) in the manifest file and was blocked from loading."
+        in caplog.text
     )
-    test_integration2 = loader.Integration(
-        hass, "custom_components.test", None, {"domain": "test2"}
+
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test2")
+    assert (
+        "The custom integration 'test_bad_version' does not have a valid version key (bad) in the manifest file and was blocked from loading."
+        in caplog.text
     )
-
-    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
-        mock_get.return_value = {"test1": test_integration1, "test2": test_integration2}
-
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test1")
-        assert (
-            "The custom integration 'test1' does not have a valid version key (test) in the manifest file and was blocked from loading."
-            in caplog.text
-        )
-
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test2")
-        assert (
-            "The custom integration 'test2' does not have a valid version key (None) in the manifest file and was blocked from loading."
-            in caplog.text
-        )
 
 
 async def test_get_integration(hass):
@@ -199,6 +192,12 @@ def test_integration_properties(hass):
                 {"hostname": "tesla_*", "macaddress": "044EAF*"},
                 {"hostname": "tesla_*", "macaddress": "98ED5C*"},
             ],
+            "usb": [
+                {"vid": "10C4", "pid": "EA60"},
+                {"vid": "1CF1", "pid": "0030"},
+                {"vid": "1A86", "pid": "7523"},
+                {"vid": "10C4", "pid": "8A2A"},
+            ],
             "ssdp": [
                 {
                     "manufacturer": "Royal Philips Electronics",
@@ -222,6 +221,12 @@ def test_integration_properties(hass):
         {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
         {"hostname": "tesla_*", "macaddress": "044EAF*"},
         {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+    ]
+    assert integration.usb == [
+        {"vid": "10C4", "pid": "EA60"},
+        {"vid": "1CF1", "pid": "0030"},
+        {"vid": "1A86", "pid": "7523"},
+        {"vid": "10C4", "pid": "8A2A"},
     ]
     assert integration.ssdp == [
         {
@@ -255,6 +260,7 @@ def test_integration_properties(hass):
     assert integration.homekit is None
     assert integration.zeroconf is None
     assert integration.dhcp is None
+    assert integration.usb is None
     assert integration.ssdp is None
     assert integration.mqtt is None
     assert integration.version is None
@@ -275,6 +281,7 @@ def test_integration_properties(hass):
     assert integration.homekit is None
     assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
     assert integration.dhcp is None
+    assert integration.usb is None
     assert integration.ssdp is None
 
 
@@ -349,6 +356,36 @@ def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
     )
 
 
+def _get_test_integration_with_usb_matcher(hass, name, config_flow):
+    """Return a generated test integration with a usb matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "dependencies": [],
+            "requirements": [],
+            "usb": [
+                {
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "known_devices": ["slae.sh cc2652rb stick"],
+                },
+                {"vid": "1CF1", "pid": "0030", "known_devices": ["Conbee II"]},
+                {
+                    "vid": "1A86",
+                    "pid": "7523",
+                    "known_devices": ["Electrolama zig-a-zig-ah"],
+                },
+                {"vid": "10C4", "pid": "8A2A", "known_devices": ["Nortek HUSBZB-1"]},
+            ],
+        },
+    )
+
+
 async def test_get_custom_components(hass, enable_custom_integrations):
     """Verify that custom components are cached."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
@@ -418,6 +455,24 @@ async def test_get_dhcp(hass):
         ]
 
 
+async def test_get_usb(hass):
+    """Verify that custom components with usb matchers are found."""
+    test_1_integration = _get_test_integration_with_usb_matcher(hass, "test_1", True)
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+        }
+        usb = await loader.async_get_usb(hass)
+        usb_for_domain = [entry for entry in usb if entry["domain"] == "test_1"]
+        assert usb_for_domain == [
+            {"domain": "test_1", "vid": "10C4", "pid": "EA60"},
+            {"domain": "test_1", "vid": "1CF1", "pid": "0030"},
+            {"domain": "test_1", "vid": "1A86", "pid": "7523"},
+            {"domain": "test_1", "vid": "10C4", "pid": "8A2A"},
+        ]
+
+
 async def test_get_homekit(hass):
     """Verify that custom components with homekit are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
@@ -471,19 +526,11 @@ async def test_get_custom_components_safe_mode(hass):
 
 async def test_custom_integration_missing_version(hass, caplog):
     """Test trying to load a custom integration without a version twice does not deadlock."""
-    test_integration_1 = loader.Integration(
-        hass, "custom_components.test1", None, {"domain": "test1"}
-    )
-    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
-        mock_get.return_value = {
-            "test1": test_integration_1,
-        }
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_no_version")
 
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test1")
-
-        with pytest.raises(loader.IntegrationNotFound):
-            await loader.async_get_integration(hass, "test1")
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_no_version")
 
 
 async def test_custom_integration_missing(hass, caplog):

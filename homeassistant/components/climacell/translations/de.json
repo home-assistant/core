@@ -25,7 +25,7 @@
                 "data": {
                     "timestep": "Minuten zwischen den Kurzvorhersagen"
                 },
-                "description": "Wenn du die Vorhersage-Entitit\u00e4t \"Kurzvorhersage\" aktivierst, kannst  du die Anzahl der Minuten zwischen den einzelnen Vorhersagen konfigurieren. Die Anzahl der bereitgestellten Vorhersagen h\u00e4ngt von der Anzahl der zwischen den Vorhersagen gew\u00e4hlten Minuten ab.",
+                "description": "Wenn du die Vorhersage-Entitit\u00e4t \"Kurzvorhersage\" aktivierst, kannst du die Anzahl der Minuten zwischen den einzelnen Vorhersagen konfigurieren. Die Anzahl der bereitgestellten Vorhersagen h\u00e4ngt von der Anzahl der zwischen den Vorhersagen gew\u00e4hlten Minuten ab.",
                 "title": "Aktualisiere ClimaCell-Optionen"
             }
         }

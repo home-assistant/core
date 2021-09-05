@@ -19,7 +19,7 @@ from .const import (
     DOMAIN,
     SURVEILLANCE_SWITCH,
     SYNO_API,
-    EntityInfo,
+    SynologyDSMSwitchEntityDescription,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,12 +42,14 @@ async def async_setup_entry(
         # initial data fetch
         coordinator: DataUpdateCoordinator = data[COORDINATOR_SWITCHES]
         await coordinator.async_refresh()
-        entities += [
-            SynoDSMSurveillanceHomeModeToggle(
-                api, sensor_type, SURVEILLANCE_SWITCH[sensor_type], version, coordinator
-            )
-            for sensor_type in SURVEILLANCE_SWITCH
-        ]
+        entities.extend(
+            [
+                SynoDSMSurveillanceHomeModeToggle(
+                    api, version, coordinator, description
+                )
+                for description in SURVEILLANCE_SWITCH
+            ]
+        )
 
     async_add_entities(entities, True)
 
@@ -56,28 +58,23 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
     coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]
+    entity_description: SynologyDSMSwitchEntityDescription
 
     def __init__(
         self,
         api: SynoApi,
-        entity_type: str,
-        entity_info: EntityInfo,
         version: str,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]],
+        description: SynologyDSMSwitchEntityDescription,
     ) -> None:
         """Initialize a Synology Surveillance Station Home Mode."""
-        super().__init__(
-            api,
-            entity_type,
-            entity_info,
-            coordinator,
-        )
+        super().__init__(api, coordinator, description)
         self._version = version
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return self.coordinator.data["switches"][self.entity_type]
+        return self.coordinator.data["switches"][self.entity_description.key]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Home mode."""

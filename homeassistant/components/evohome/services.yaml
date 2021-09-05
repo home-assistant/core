@@ -66,7 +66,6 @@ set_zone_override:
       name: Setpoint
       description: The temperature to be used instead of the scheduled setpoint.
       required: true
-      example: 5.0
       selector:
         number:
           min: 4.0
@@ -89,7 +88,6 @@ clear_zone_override:
       name: Entity
       description: The entity_id of the zone.
       required: true
-      example: climate.bathroom
       selector:
         entity:
           integration: evohome

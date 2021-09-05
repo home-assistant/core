@@ -12,7 +12,6 @@ bypass_zone:
       name: Zone
       description: The number of the zone to be bypassed.
       required: true
-      example: "1"
       selector:
         number:
           min: 1
@@ -30,7 +29,6 @@ unbypass_zone:
       name: Zone
       description: The number of the zone to be un-bypassed.
       required: true
-      example: "1"
       selector:
         number:
           min: 1

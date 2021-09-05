@@ -9,8 +9,7 @@ set_camera_light:
   fields:
     camera_light_mode:
       name: Camera light mode
-      description: Outdoor camera light mode (on/off/auto)
-      example: auto
+      description: Outdoor camera light mode.
       required: true
       selector:
         select:
@@ -65,7 +64,7 @@ set_person_away:
       domain: camera
   fields:
     person:
-      description: Person's name (optional)
+      description: Person's name.
       example: Bob
       selector:
         text:

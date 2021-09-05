@@ -40,14 +40,11 @@ set_percentage:
       name: Percentage
       description: Percentage speed setting.
       required: true
-      example: 25
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
 
 turn_on:
   name: Turn on
@@ -60,17 +57,16 @@ turn_on:
       name: Speed
       description: Speed setting.
       example: "high"
+      selector:
+        text:
     percentage:
       name: Percentage
       description: Percentage speed setting.
-      example: 75
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
     preset_mode:
       name: Preset mode
       description: Preset mode setting.
@@ -96,7 +92,6 @@ oscillate:
       name: Oscillating
       description: Flag to turn on/off oscillation.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -118,7 +113,6 @@ set_direction:
       name: Direction
       description: The direction to rotate.
       required: true
-      example: "forward"
       selector:
         select:
           options:
@@ -136,14 +130,11 @@ increase_speed:
       advanced: true
       required: false
       description: Increase speed by a percentage.
-      example: 50
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
 
 decrease_speed:
   name: Decrease speed
@@ -156,11 +147,8 @@ decrease_speed:
       advanced: true
       required: false
       description: Decrease speed by a percentage.
-      example: 50
       selector:
         number:
           min: 0
           max: 100
-          step: 1
           unit_of_measurement: "%"
-          mode: slider

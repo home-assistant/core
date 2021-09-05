@@ -1,14 +1,12 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
-
-import homeassistant.util.dt as dt_util
 
 from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
@@ -23,13 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @retryable_database_job("purge")
 def purge_old_data(
-    instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
+    instance: Recorder, purge_before: datetime, repack: bool, apply_filter: bool = False
 ) -> bool:
-    """Purge events and states older than purge_days ago.
+    """Purge events and states older than purge_before.
 
     Cleans up an timeframe of an hour, based on the oldest record.
     """
-    purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug(
         "Purging states and events before target %s",
         purge_before.isoformat(sep=" ", timespec="seconds"),
@@ -195,3 +192,22 @@ def _purge_filtered_events(session: Session, excluded_event_types: list[str]) ->
     state_ids: list[int] = [state.state_id for state in states]
     _purge_state_ids(session, state_ids)
     _purge_event_ids(session, event_ids)
+
+
+@retryable_database_job("purge")
+def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
+    """Purge states and events of specified entities."""
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        selected_entity_ids: list[str] = [
+            entity_id
+            for (entity_id,) in session.query(distinct(States.entity_id)).all()
+            if entity_filter(entity_id)
+        ]
+        _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
+        if len(selected_entity_ids) > 0:
+            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
+            _purge_filtered_states(session, selected_entity_ids)
+            _LOGGER.debug("Purging entity data hasn't fully completed yet")
+            return False
+
+    return True

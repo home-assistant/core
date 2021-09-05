@@ -67,31 +67,26 @@ class ElgatoLight(LightEntity):
         self._state: State | None = None
         self.elgato = elgato
 
-        self._min_mired = 143
-        self._max_mired = 344
-        self._supported_color_modes = {COLOR_MODE_COLOR_TEMP}
+        min_mired = 143
+        max_mired = 344
+        supported_color_modes = {COLOR_MODE_COLOR_TEMP}
 
         # Elgato Light supporting color, have a different temperature range
         if settings.power_on_hue is not None:
-            self._supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-            self._min_mired = 153
-            self._max_mired = 285
+            supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+            min_mired = 153
+            max_mired = 285
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        # Return the product name, if display name is not set
-        return self._info.display_name or self._info.product_name
+        self._attr_max_mireds = max_mired
+        self._attr_min_mireds = min_mired
+        self._attr_name = info.display_name or info.product_name
+        self._attr_supported_color_modes = supported_color_modes
+        self._attr_unique_id = info.serial_number
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._state is not None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._info.serial_number
 
     @property
     def brightness(self) -> int | None:
@@ -104,22 +99,6 @@ class ElgatoLight(LightEntity):
         """Return the CT color value in mireds."""
         assert self._state is not None
         return self._state.temperature
-
-    @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self._min_mired
-
-    @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        # Elgato lights with color capabilities have a different highest value
-        return self._max_mired
-
-    @property
-    def supported_color_modes(self) -> set[str]:
-        """Flag supported color modes."""
-        return self._supported_color_modes
 
     @property
     def color_mode(self) -> str | None:
@@ -175,6 +154,7 @@ class ElgatoLight(LightEntity):
             brightness
             and ATTR_HS_COLOR not in kwargs
             and ATTR_COLOR_TEMP not in kwargs
+            and self.supported_color_modes
             and COLOR_MODE_HS in self.supported_color_modes
             and self.color_mode == COLOR_MODE_COLOR_TEMP
         ):

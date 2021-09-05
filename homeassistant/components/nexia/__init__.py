@@ -24,7 +24,7 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 DEFAULT_UPDATE_RATE = 120
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure the base Nexia device for Home Assistant."""
 
     conf = entry.data

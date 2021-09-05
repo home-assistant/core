@@ -17,12 +17,14 @@ from pydeconz.sensor import (
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -51,6 +53,7 @@ ATTR_DAYLIGHT = "daylight"
 ATTR_EVENT_ID = "event_id"
 
 DEVICE_CLASS = {
+    Consumption: DEVICE_CLASS_ENERGY,
     Humidity: DEVICE_CLASS_HUMIDITY,
     LightLevel: DEVICE_CLASS_ILLUMINANCE,
     Power: DEVICE_CLASS_POWER,
@@ -65,6 +68,9 @@ ICON = {
 }
 
 STATE_CLASS = {
+    Consumption: STATE_CLASS_TOTAL_INCREASING,
+    Humidity: STATE_CLASS_MEASUREMENT,
+    Pressure: STATE_CLASS_MEASUREMENT,
     Temperature: STATE_CLASS_MEASUREMENT,
 }
 
@@ -147,6 +153,17 @@ class DeconzSensor(DeconzDevice, SensorEntity):
 
     TYPE = DOMAIN
 
+    def __init__(self, device, gateway):
+        """Initialize deCONZ binary sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_device_class = DEVICE_CLASS.get(type(self._device))
+        self._attr_icon = ICON.get(type(self._device))
+        self._attr_state_class = STATE_CLASS.get(type(self._device))
+        self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT.get(
+            type(self._device)
+        )
+
     @callback
     def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
@@ -155,29 +172,9 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.state
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS.get(type(self._device))
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return ICON.get(type(self._device))
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return STATE_CLASS.get(type(self._device))
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this sensor."""
-        return UNIT_OF_MEASUREMENT.get(type(self._device))
 
     @property
     def extra_state_attributes(self):
@@ -217,7 +214,17 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
     Extra temperature sensor on certain Xiaomi devices.
     """
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+
     TYPE = DOMAIN
+
+    def __init__(self, device, gateway):
+        """Initialize deCONZ temperature sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Temperature"
 
     @property
     def unique_id(self):
@@ -232,35 +239,25 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._device.secondary_temperature
-
-    @property
-    def name(self):
-        """Return the name of the temperature sensor."""
-        return f"{self._device.name} Temperature"
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return STATE_CLASS_MEASUREMENT
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this sensor."""
-        return TEMP_CELSIUS
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):
     """Battery class for when a device is only represented as an event."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     TYPE = DOMAIN
+
+    def __init__(self, device, gateway):
+        """Initialize deCONZ battery level sensor."""
+        super().__init__(device, gateway)
+
+        self._attr_name = f"{self._device.name} Battery Level"
 
     @callback
     def async_update_callback(self, force_update=False):
@@ -286,24 +283,9 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         return f"{self.serial}-battery"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the battery."""
         return self._device.battery
-
-    @property
-    def name(self):
-        """Return the name of the battery."""
-        return f"{self._device.name} Battery Level"
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return PERCENTAGE
 
     @property
     def extra_state_attributes(self):

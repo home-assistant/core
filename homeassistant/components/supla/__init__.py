@@ -104,7 +104,7 @@ async def discover_devices(hass, hass_config):
             async with async_timeout.timeout(SCAN_INTERVAL.total_seconds()):
                 channels = {
                     channel["id"]: channel
-                    for channel in await server.get_channels(
+                    for channel in await server.get_channels(  # pylint: disable=cell-var-from-loop
                         include=["iodevice", "state", "connected"]
                     )
                 }

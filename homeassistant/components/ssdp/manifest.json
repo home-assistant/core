@@ -4,9 +4,9 @@
   "documentation": "https://www.home-assistant.io/integrations/ssdp",
   "requirements": [
     "defusedxml==0.7.1",
-    "netdisco==2.8.3",
-    "async-upnp-client==0.17.0"
+    "async-upnp-client==0.20.0"
   ],
+  "dependencies": ["network"],
   "after_dependencies": ["zeroconf"],
   "codeowners": [],
   "quality_scale": "internal",

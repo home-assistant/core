@@ -1,15 +1,16 @@
-"""The tests for MQTT device triggers."""
+"""The tests for Tasmota device triggers."""
 import copy
 import json
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from hatasmota.switch import TasmotaSwitchTriggerConfig
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.tasmota import _LOGGER
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
-from homeassistant.components.tasmota.device_trigger import async_attach_trigger
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG
@@ -812,18 +813,22 @@ async def test_attach_remove(hass, device_reg, mqtt_mock, setup_tasmota):
     def callback(trigger, context):
         calls.append(trigger["trigger"]["description"])
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
-            "type": "button_short_press",
-            "subtype": "switch_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+                "type": "button_short_press",
+                "subtype": "switch_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Fake short press.
@@ -869,18 +874,22 @@ async def test_attach_remove_late(hass, device_reg, mqtt_mock, setup_tasmota):
     def callback(trigger, context):
         calls.append(trigger["trigger"]["description"])
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
-            "type": "button_short_press",
-            "subtype": "switch_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+                "type": "button_short_press",
+                "subtype": "switch_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Fake short press.
@@ -936,18 +945,22 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock, setup_tasmota):
     def callback(trigger, context):
         calls.append(trigger["trigger"]["description"])
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
-            "type": "button_short_press",
-            "subtype": "switch_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+                "type": "button_short_press",
+                "subtype": "switch_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Remove the trigger
@@ -979,18 +992,22 @@ async def test_attach_remove_unknown1(hass, device_reg, mqtt_mock, setup_tasmota
         set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
-    remove = await async_attach_trigger(
+    remove = await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
-            "type": "button_short_press",
-            "subtype": "switch_1",
-        },
-        None,
-        None,
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+                "type": "button_short_press",
+                "subtype": "switch_1",
+            },
+        ],
+        Mock(),
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Remove the trigger
@@ -1023,18 +1040,22 @@ async def test_attach_unknown_remove_device_from_registry(
         set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
     )
 
-    await async_attach_trigger(
+    await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
-            "type": "button_short_press",
-            "subtype": "switch_1",
-        },
-        None,
-        None,
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+                "type": "button_short_press",
+                "subtype": "switch_1",
+            },
+        ],
+        Mock(),
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Remove the device
@@ -1063,18 +1084,22 @@ async def test_attach_remove_config_entry(hass, device_reg, mqtt_mock, setup_tas
     def callback(trigger, context):
         calls.append(trigger["trigger"]["description"])
 
-    await async_attach_trigger(
+    await async_initialize_triggers(
         hass,
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "discovery_id": "00000049A3BC_switch_1_TOGGLE",
-            "type": "button_short_press",
-            "subtype": "switch_1",
-        },
+        [
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "discovery_id": "00000049A3BC_switch_1_TOGGLE",
+                "type": "button_short_press",
+                "subtype": "switch_1",
+            },
+        ],
         callback,
-        None,
+        DOMAIN,
+        "mock-name",
+        _LOGGER.log,
     )
 
     # Fake short press.

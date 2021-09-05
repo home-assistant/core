@@ -1,9 +1,12 @@
 """Support for Canary devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Final
 
 from canary.api import Api
-from requests import ConnectTimeout, HTTPError
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
@@ -12,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -23,11 +27,11 @@ from .const import (
 )
 from .coordinator import CanaryDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=30)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA: Final = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
         {
@@ -45,10 +49,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["alarm_control_panel", "camera", "sensor"]
+PLATFORMS: Final[list[str]] = ["alarm_control_panel", "camera", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Canary integration."""
     hass.data.setdefault(DOMAIN, {})
 

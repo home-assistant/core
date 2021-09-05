@@ -7,7 +7,7 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "SiteSage {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}({host})-t?",

@@ -6,7 +6,6 @@ heat_set:
       name: Duration
       description: Duration to heat/cool at the target level in seconds.
       required: true
-      example: 3600
       selector:
         number:
           min: 0
@@ -16,7 +15,6 @@ heat_set:
       name: Entity
       description: Entity id of the bed state to adjust.
       required: true
-      example: sensor.eight_left_bed_state
       selector:
         entity:
           integration: eight_sleep
@@ -25,7 +23,6 @@ heat_set:
       name: Target
       description: Target cooling/heating level from -100 to 100.
       required: true
-      example: 35
       selector:
         number:
           min: -100

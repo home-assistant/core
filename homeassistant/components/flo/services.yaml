@@ -12,7 +12,6 @@ set_sleep_mode:
       name: Sleep minutes
       description: The time to sleep in minutes.
       default: true
-      example: 120
       selector:
         select:
           options:
@@ -23,7 +22,6 @@ set_sleep_mode:
       name: Revert to mode
       description: The mode to revert to after sleep_minutes has elapsed.
       default: true
-      example: "home"
       selector:
         select:
           options:

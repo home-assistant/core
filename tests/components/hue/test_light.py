@@ -179,7 +179,6 @@ async def setup_bridge(hass, mock_bridge):
         "Mock Title",
         {"host": "mock-host"},
         "test",
-        system_options={},
     )
     mock_bridge.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
@@ -261,7 +260,7 @@ async def test_lights_color_mode(hass, mock_bridge):
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["color_temp"] == 467
-    assert "hs_color" not in lamp_1.attributes
+    assert "hs_color" in lamp_1.attributes
 
 
 async def test_groups(hass, mock_bridge):

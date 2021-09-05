@@ -13,6 +13,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.loader import async_get_zeroconf
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "discovery"
@@ -54,7 +55,6 @@ SERVICE_HANDLERS = {
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
-    "nanoleaf_aurora": ("light", "nanoleaf"),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
@@ -86,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    "nanoleaf_aurora",
 ]
 
 DEFAULT_ENABLED = (
@@ -139,6 +140,10 @@ async def async_setup(hass, config):
             )
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
+    # Do not scan for types that have already been converted
+    # as it will generate excess network traffic for questions
+    # the zeroconf instance already knows the answers
+    zeroconf_types = list(await async_get_zeroconf(hass))
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
@@ -187,7 +192,7 @@ async def async_setup(hass, config):
         """Scan for devices."""
         try:
             results = await hass.async_add_executor_job(
-                _discover, netdisco, zeroconf_instance
+                _discover, netdisco, zeroconf_instance, zeroconf_types
             )
 
             for result in results:
@@ -209,11 +214,13 @@ async def async_setup(hass, config):
     return True
 
 
-def _discover(netdisco, zeroconf_instance):
+def _discover(netdisco, zeroconf_instance, zeroconf_types):
     """Discover devices."""
     results = []
     try:
-        netdisco.scan(zeroconf_instance=zeroconf_instance)
+        netdisco.scan(
+            zeroconf_instance=zeroconf_instance, suppress_mdns_types=zeroconf_types
+        )
 
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):

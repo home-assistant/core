@@ -38,7 +38,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tado from a config entry."""
 
     _async_import_options_from_data_if_missing(hass, entry)
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except RuntimeError as exc:
         _LOGGER.error("Failed to setup tado: %s", exc)
-        return ConfigEntryNotReady
+        return False
     except requests.exceptions.Timeout as ex:
         raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:

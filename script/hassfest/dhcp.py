@@ -24,7 +24,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
+        if not integration.manifest or not integration.config_flow:
             continue
 
         match_types = integration.manifest.get("dhcp", [])

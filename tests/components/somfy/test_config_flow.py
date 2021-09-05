@@ -34,7 +34,7 @@ async def test_abort_if_existing_entry(hass):
 
 
 async def test_full_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
+    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
 ):
     """Check full flow."""
     assert await setup.async_setup_component(
@@ -67,7 +67,7 @@ async def test_full_flow(
         f"&state={state}"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
@@ -82,7 +82,9 @@ async def test_full_flow(
         },
     )
 
-    with patch("homeassistant.components.somfy.api.ConfigEntrySomfyApi"):
+    with patch(
+        "homeassistant.components.somfy.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["auth_implementation"] == DOMAIN
@@ -95,12 +97,7 @@ async def test_full_flow(
         "expires_in": 60,
     }
 
-    assert DOMAIN in hass.config.components
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is config_entries.ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_abort_if_authorization_timeout(hass, current_request_with_host):

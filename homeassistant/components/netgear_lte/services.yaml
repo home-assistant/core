@@ -29,7 +29,6 @@ set_option:
     failover:
       name: Failover
       description: Failover mode.
-      example: auto
       selector:
         select:
           options:
@@ -39,7 +38,6 @@ set_option:
     autoconnect:
       name: Auto-connect
       description: Auto-connect mode.
-      example: home
       selector:
         select:
           options:

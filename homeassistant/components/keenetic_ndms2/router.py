@@ -48,6 +48,7 @@ class KeeneticRouter:
         self._cancel_periodic_update: Callable | None = None
         self._available = False
         self._progress = None
+        self._tracked_interfaces = set(config_entry.options[CONF_INTERFACES])
 
     @property
     def client(self):
@@ -104,6 +105,11 @@ class KeeneticRouter:
     def consider_home_interval(self):
         """Config entry option defining number of seconds from last seen to away."""
         return timedelta(seconds=self.config_entry.options[CONF_CONSIDER_HOME])
+
+    @property
+    def tracked_interfaces(self):
+        """Tracked interfaces."""
+        return self._tracked_interfaces
 
     @property
     def signal_update(self):
@@ -178,7 +184,7 @@ class KeeneticRouter:
             self._last_devices = {
                 dev.mac: dev
                 for dev in _response
-                if dev.interface in self.config_entry.options[CONF_INTERFACES]
+                if dev.interface in self._tracked_interfaces
             }
             _LOGGER.debug("Successfully fetched data from router: %s", str(_response))
             self._router_info = self._client.get_router_info()

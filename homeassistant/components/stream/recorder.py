@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
+from io import BytesIO
 import logging
 import os
 import threading
@@ -11,18 +12,22 @@ from av.container import OutputContainer
 
 from homeassistant.core import HomeAssistant, callback
 
-from .const import RECORDER_CONTAINER_FORMAT, SEGMENT_CONTAINER_FORMAT
+from .const import (
+    RECORDER_CONTAINER_FORMAT,
+    RECORDER_PROVIDER,
+    SEGMENT_CONTAINER_FORMAT,
+)
 from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_recorder(hass):
+def async_setup_recorder(hass: HomeAssistant) -> None:
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: deque[Segment]):
+def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
     """Handle saving stream."""
 
     if not segments:
@@ -51,7 +56,11 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         last_sequence = segment.sequence
 
         # Open segment
-        source = av.open(segment.segment, "r", format=SEGMENT_CONTAINER_FORMAT)
+        source = av.open(
+            BytesIO(segment.init + segment.get_data()),
+            "r",
+            format=SEGMENT_CONTAINER_FORMAT,
+        )
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 
@@ -105,25 +114,25 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]):
         output.close()
 
 
-@PROVIDERS.register("recorder")
+@PROVIDERS.register(RECORDER_PROVIDER)
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
     def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
         """Initialize recorder output."""
         super().__init__(hass, idle_timer)
-        self.video_path = None
+        self.video_path: str
 
     @property
     def name(self) -> str:
         """Return provider name."""
-        return "recorder"
+        return RECORDER_PROVIDER
 
     def prepend(self, segments: list[Segment]) -> None:
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Write recording and clean up."""
         _LOGGER.debug("Starting recorder worker thread")
         thread = threading.Thread(

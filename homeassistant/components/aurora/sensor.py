@@ -22,12 +22,9 @@ async def async_setup_entry(hass, entry, async_add_entries):
 class AuroraSensor(AuroraEntity, SensorEntity):
     """Implementation of an aurora sensor."""
 
-    @property
-    def state(self):
-        """Return % chance the aurora is visible."""
-        return self.coordinator.data
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measure."""
-        return PERCENTAGE
+    def native_value(self):
+        """Return % chance the aurora is visible."""
+        return self.coordinator.data

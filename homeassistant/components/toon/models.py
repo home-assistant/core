@@ -11,35 +11,7 @@ from .coordinator import ToonDataUpdateCoordinator
 class ToonEntity(CoordinatorEntity):
     """Defines a base Toon entity."""
 
-    def __init__(
-        self,
-        coordinator: ToonDataUpdateCoordinator,
-        *,
-        name: str,
-        icon: str,
-        enabled_default: bool = True,
-    ) -> None:
-        """Initialize the Toon entity."""
-        super().__init__(coordinator)
-        self._enabled_default = enabled_default
-        self._icon = icon
-        self._name = name
-        self._state = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
+    coordinator: ToonDataUpdateCoordinator
 
 
 class ToonDisplayDeviceEntity(ToonEntity):

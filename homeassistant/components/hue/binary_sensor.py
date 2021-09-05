@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HuePresence(GenericZLLSensor, BinarySensorEntity):
     """The presence sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_MOTION
+    _attr_device_class = DEVICE_CLASS_MOTION
 
     @property
     def is_on(self):

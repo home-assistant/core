@@ -12,6 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -64,6 +65,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SkybeaconHumid(SensorEntity):
     """Representation of a Skybeacon humidity sensor."""
 
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     def __init__(self, name, mon):
         """Initialize a sensor."""
         self.mon = mon
@@ -75,14 +78,9 @@ class SkybeaconHumid(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.mon.data["humid"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return PERCENTAGE
 
     @property
     def extra_state_attributes(self):
@@ -93,6 +91,9 @@ class SkybeaconHumid(SensorEntity):
 class SkybeaconTemp(SensorEntity):
     """Representation of a Skybeacon temperature sensor."""
 
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
+
     def __init__(self, name, mon):
         """Initialize a sensor."""
         self.mon = mon
@@ -104,14 +105,9 @@ class SkybeaconTemp(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.mon.data["temp"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return TEMP_CELSIUS
 
     @property
     def extra_state_attributes(self):

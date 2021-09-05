@@ -1,5 +1,8 @@
 """Tests for the Sonos Media Player platform."""
+from unittest.mock import PropertyMock
+
 import pytest
+from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sonos import DATA_SONOS, DOMAIN, media_player
 from homeassistant.const import STATE_IDLE
@@ -40,6 +43,16 @@ async def test_async_setup_entry_discover(hass, config_entry, discover):
     assert media_player.state == STATE_IDLE
 
 
+async def test_discovery_ignore_unsupported_device(hass, config_entry, soco, caplog):
+    """Test discovery setup."""
+    message = f"GetVolume not supported on {soco.ip_address}"
+    type(soco).volume = PropertyMock(side_effect=NotSupportedException(message))
+    await setup_platform(hass, config_entry, {})
+
+    assert message in caplog.text
+    assert not hass.data[DATA_SONOS].discovered
+
+
 async def test_services(hass, config_entry, config, hass_read_only_user):
     """Test join/unjoin requires control access."""
     await setup_platform(hass, config_entry, config)
@@ -63,7 +76,7 @@ async def test_device_registry(hass, config_entry, config, soco):
         identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device.model == "Model Name"
-    assert reg_device.sw_version == "49.2-64250"
+    assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")}
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.suggested_area == "Zone A"

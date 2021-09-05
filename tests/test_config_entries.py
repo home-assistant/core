@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -336,6 +337,30 @@ async def test_remove_entry(hass, manager):
     assert not entity_entry_list
 
 
+async def test_remove_entry_cancels_reauth(hass, manager):
+    """Tests that removing a config entry, also aborts existing reauth flows."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryAuthFailed())
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    entry.add_to_hass(hass)
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+    await manager.async_remove(entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
 async def test_remove_entry_handles_callback_error(hass, manager):
     """Test that exceptions in the remove callback are handled."""
     mock_setup_entry = AsyncMock(return_value=True)
@@ -574,6 +599,13 @@ async def test_saving_and_loading(hass):
         )
 
     assert len(hass.config_entries.async_entries()) == 2
+    entry_1 = hass.config_entries.async_entries()[0]
+
+    hass.config_entries.async_update_entry(
+        entry_1,
+        pref_disable_polling=True,
+        pref_disable_new_entities=True,
+    )
 
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
@@ -596,6 +628,8 @@ async def test_saving_and_loading(hass):
         assert orig.data == loaded.data
         assert orig.source == loaded.source
         assert orig.unique_id == loaded.unique_id
+        assert orig.pref_disable_new_entities == loaded.pref_disable_new_entities
+        assert orig.pref_disable_polling == loaded.pref_disable_polling
 
 
 async def test_forward_entry_sets_up_component(hass):
@@ -813,14 +847,19 @@ async def test_updating_entry_system_options(manager):
         domain="test",
         data={"first": True},
         state=config_entries.ConfigEntryState.SETUP_ERROR,
-        system_options={"disable_new_entities": True},
+        pref_disable_new_entities=True,
     )
     entry.add_to_manager(manager)
 
-    assert entry.system_options.disable_new_entities
+    assert entry.pref_disable_new_entities is True
+    assert entry.pref_disable_polling is False
 
-    entry.system_options.update(disable_new_entities=False)
-    assert not entry.system_options.disable_new_entities
+    manager.async_update_entry(
+        entry, pref_disable_new_entities=False, pref_disable_polling=True
+    )
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is True
 
 
 async def test_update_entry_options_and_trigger_listener(hass, manager):
@@ -1612,7 +1651,7 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1657,7 +1696,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1674,7 +1713,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "2.2.2.2"
     assert entry.data["additional"] == "data"
@@ -1717,7 +1756,7 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
@@ -1956,7 +1995,7 @@ async def test__async_current_entries_does_not_skip_ignore_non_user(hass, manage
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test__async_current_entries_explict_skip_ignore(hass, manager):
+async def test__async_current_entries_explicit_skip_ignore(hass, manager):
     """Test that _async_current_entries can explicitly include ignore."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -1995,7 +2034,7 @@ async def test__async_current_entries_explict_skip_ignore(hass, manager):
     assert p_entry.data == {"token": "supersecret"}
 
 
-async def test__async_current_entries_explict_include_ignore(hass, manager):
+async def test__async_current_entries_explicit_include_ignore(hass, manager):
     """Test that _async_current_entries can explicitly include ignore."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
@@ -2320,7 +2359,9 @@ async def test_async_setup_update_entry(hass):
     (
         config_entries.SOURCE_DISCOVERY,
         config_entries.SOURCE_SSDP,
+        config_entries.SOURCE_USB,
         config_entries.SOURCE_HOMEKIT,
+        config_entries.SOURCE_DHCP,
         config_entries.SOURCE_ZEROCONF,
         config_entries.SOURCE_HASSIO,
     ),
@@ -2495,6 +2536,123 @@ async def test_default_discovery_abort_on_new_unique_flow(hass, manager):
     assert flows[0]["context"]["unique_id"] == "mock-unique-id"
 
 
+async def test_default_discovery_abort_on_user_flow_complete(hass, manager):
+    """Test that a flow using default discovery is aborted when a second flow completes."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+        async def async_step_discovery(self, discovery_info=None):
+            """Test discovery step."""
+            await self._async_handle_discovery_without_unique_id()
+            return self.async_show_form(step_id="mock")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # First discovery with default, no unique ID
+        flow1 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+        )
+        assert flow1["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+
+        # User sets up a manual flow
+        flow2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert flow2["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 2
+
+        # Complete the manual flow
+        result = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # Ensure the first flow is gone now
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
+async def test_flow_same_device_multiple_sources(hass, manager):
+    """Test discovery of the same devices from multiple discovery sources."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_zeroconf(self, discovery_info=None):
+            """Test zeroconf step."""
+            return await self._async_discovery_handler(discovery_info)
+
+        async def async_step_homekit(self, discovery_info=None):
+            """Test homekit step."""
+            return await self._async_discovery_handler(discovery_info)
+
+        async def _async_discovery_handler(self, discovery_info=None):
+            """Test any discovery handler."""
+            await self.async_set_unique_id("thisid")
+            self._abort_if_unique_id_configured()
+            await asyncio.sleep(0.1)
+            return await self.async_step_link()
+
+        async def async_step_link(self, user_input=None):
+            """Test a link step."""
+            if user_input is None:
+                return self.async_show_form(step_id="link")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        flow1 = manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        flow2 = manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+        flow3 = manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_HOMEKIT}
+        )
+        result1, result2, result3 = await asyncio.gather(flow1, flow2, flow3)
+
+        flows = hass.config_entries.flow.async_progress()
+        assert len(flows) == 1
+        assert flows[0]["context"]["unique_id"] == "thisid"
+
+        # Finish flow
+        result2 = await manager.flow.async_configure(
+            flows[0]["flow_id"], user_input={"fake": "data"}
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+    entry = hass.config_entries.async_entries("comp")[0]
+    assert entry.title == "title"
+    assert entry.source in {
+        config_entries.SOURCE_ZEROCONF,
+        config_entries.SOURCE_HOMEKIT,
+    }
+    assert entry.unique_id == "thisid"
+
+
 async def test_updating_entry_with_and_without_changes(manager):
     """Test that we can update an entry data."""
     entry = MockConfigEntry(
@@ -2508,48 +2666,18 @@ async def test_updating_entry_with_and_without_changes(manager):
     entry.add_to_manager(manager)
 
     assert manager.async_update_entry(entry) is False
-    assert manager.async_update_entry(entry, data={"second": True}) is True
-    assert manager.async_update_entry(entry, data={"second": True}) is False
-    assert (
-        manager.async_update_entry(entry, data={"second": True, "third": 456}) is True
-    )
-    assert (
-        manager.async_update_entry(entry, data={"second": True, "third": 456}) is False
-    )
-    assert manager.async_update_entry(entry, options={"second": True}) is True
-    assert manager.async_update_entry(entry, options={"second": True}) is False
-    assert (
-        manager.async_update_entry(entry, options={"second": True, "third": "123"})
-        is True
-    )
-    assert (
-        manager.async_update_entry(entry, options={"second": True, "third": "123"})
-        is False
-    )
-    assert (
-        manager.async_update_entry(entry, system_options={"disable_new_entities": True})
-        is True
-    )
-    assert (
-        manager.async_update_entry(entry, system_options={"disable_new_entities": True})
-        is False
-    )
-    assert (
-        manager.async_update_entry(
-            entry, system_options={"disable_new_entities": False}
-        )
-        is True
-    )
-    assert (
-        manager.async_update_entry(
-            entry, system_options={"disable_new_entities": False}
-        )
-        is False
-    )
-    assert manager.async_update_entry(entry, title="thetitle") is False
-    assert manager.async_update_entry(entry, title="newtitle") is True
-    assert manager.async_update_entry(entry, unique_id="abc123") is False
-    assert manager.async_update_entry(entry, unique_id="abc1234") is True
+
+    for change in (
+        {"data": {"second": True, "third": 456}},
+        {"data": {"second": True}},
+        {"options": {"hello": True}},
+        {"pref_disable_new_entities": True},
+        {"pref_disable_polling": True},
+        {"title": "sometitle"},
+        {"unique_id": "abcd1234"},
+    ):
+        assert manager.async_update_entry(entry, **change) is True
+        assert manager.async_update_entry(entry, **change) is False
 
 
 async def test_entry_reload_calls_on_unload_listeners(hass, manager):
@@ -2812,5 +2940,37 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == reason
+
+
+async def test_loading_old_data(hass, hass_storage):
+    """Test automatically migrating old data."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "entries": [
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title",
+                    "system_options": {"disable_new_entities": True},
+                }
+            ]
+        },
+    }
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    entries = manager.async_entries()
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 5
+    assert entry.domain == "my_domain"
+    assert entry.entry_id == "mock-id"
+    assert entry.title == "Mock title"
+    assert entry.data == {"my": "data"}
+    assert entry.pref_disable_new_entities is True
