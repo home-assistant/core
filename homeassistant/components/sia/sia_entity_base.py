@@ -43,7 +43,7 @@ class SIABaseEntity(RestoreEntity):
 
         self._cancel_availability_cb: CALLBACK_TYPE | None = None
 
-        self._attr_extra_state_attributes: dict[str, Any] = {}
+        self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
         self._attr_name = SIA_NAME_FORMAT.format(
             self._port, self._account, self._zone, self._attr_device_class

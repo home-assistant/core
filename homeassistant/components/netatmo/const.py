@@ -2,6 +2,7 @@
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 API = "api"
@@ -10,7 +11,7 @@ DOMAIN = "netatmo"
 MANUFACTURER = "Netatmo"
 DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
-PLATFORMS = [CAMERA_DOMAIN, CLIMATE_DOMAIN, LIGHT_DOMAIN, SENSOR_DOMAIN]
+PLATFORMS = [CAMERA_DOMAIN, CLIMATE_DOMAIN, LIGHT_DOMAIN, SELECT_DOMAIN, SENSOR_DOMAIN]
 
 MODEL_NAPLUG = "Relay"
 MODEL_NATHERM1 = "Smart Thermostat"
@@ -75,7 +76,7 @@ DATA_SCHEDULES = "netatmo_schedules"
 NETATMO_WEBHOOK_URL = None
 NETATMO_EVENT = "netatmo_event"
 
-DEFAULT_PERSON = "Unknown"
+DEFAULT_PERSON = "unknown"
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 

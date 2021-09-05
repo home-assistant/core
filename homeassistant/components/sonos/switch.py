@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 import logging
 
-from pysonos.exceptions import SoCoException, SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import ATTR_TIME

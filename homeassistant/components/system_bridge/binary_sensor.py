@@ -1,72 +1,90 @@
 """Support for System Bridge binary sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable
+
 from systembridge import Bridge
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_UPDATE,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import BridgeDeviceEntity
+from . import SystemBridgeDeviceEntity
 from .const import DOMAIN
+from .coordinator import SystemBridgeDataUpdateCoordinator
+
+
+@dataclass
+class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing System Bridge binary sensor entities."""
+
+    value: Callable = round
+
+
+BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
+    SystemBridgeBinarySensorEntityDescription(
+        key="version_available",
+        name="New Version Available",
+        device_class=DEVICE_CLASS_UPDATE,
+        value=lambda bridge: bridge.information.updates.available,
+    ),
+)
+
+BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
+    SystemBridgeBinarySensorEntityDescription(
+        key="battery_is_charging",
+        name="Battery Is Charging",
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        value=lambda bridge: bridge.information.updates.available,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up System Bridge binary sensor based on a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     bridge: Bridge = coordinator.data
 
-    if bridge.battery.hasBattery:
-        async_add_entities([BridgeBatteryIsChargingBinarySensor(coordinator, bridge)])
+    entities = []
+    for description in BASE_BINARY_SENSOR_TYPES:
+        entities.append(SystemBridgeBinarySensor(coordinator, description))
+
+    if bridge.battery and bridge.battery.hasBattery:
+        for description in BATTERY_BINARY_SENSOR_TYPES:
+            entities.append(SystemBridgeBinarySensor(coordinator, description))
+
+    async_add_entities(entities)
 
 
-class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
-    """Defines a System Bridge binary sensor."""
+class SystemBridgeBinarySensor(SystemBridgeDeviceEntity, BinarySensorEntity):
+    """Define a System Bridge binary sensor."""
+
+    coordinator: SystemBridgeDataUpdateCoordinator
+    entity_description: SystemBridgeBinarySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        bridge: Bridge,
-        key: str,
-        name: str,
-        icon: str | None,
-        device_class: str | None,
-        enabled_by_default: bool,
+        coordinator: SystemBridgeDataUpdateCoordinator,
+        description: SystemBridgeBinarySensorEntityDescription,
     ) -> None:
-        """Initialize System Bridge binary sensor."""
-        self._device_class = device_class
-
-        super().__init__(coordinator, bridge, key, name, icon, enabled_by_default)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this binary sensor."""
-        return self._device_class
-
-
-class BridgeBatteryIsChargingBinarySensor(BridgeBinarySensor):
-    """Defines a Battery is charging binary sensor."""
-
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
-        """Initialize System Bridge binary sensor."""
+        """Initialize."""
         super().__init__(
             coordinator,
-            bridge,
-            "battery_is_charging",
-            "Battery Is Charging",
-            None,
-            DEVICE_CLASS_BATTERY_CHARGING,
-            True,
+            description.key,
+            description.name,
         )
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool:
-        """Return if the state is on."""
+        """Return the boolean state of the binary sensor."""
         bridge: Bridge = self.coordinator.data
-        return bridge.battery.isCharging
+        return self.entity_description.value(bridge)

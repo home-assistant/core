@@ -91,14 +91,14 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         yield
 
 
-async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
+async def test_onboarding_progress(hass, hass_storage, hass_client_no_auth):
     """Test fetching progress."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     with patch.object(views, "STEPS", ["hello", "world"]):
         resp = await client.get("/api/onboarding")
@@ -110,7 +110,7 @@ async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
     assert data[1] == {"step": "world", "done": False}
 
 
-async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_already_done(hass, hass_storage, hass_client_no_auth):
     """Test creating a new user when user step already done."""
     mock_storage(hass_storage, {"done": [views.STEP_USER]})
 
@@ -118,7 +118,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
         assert await async_setup_component(hass, "onboarding", {})
         await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/users",
@@ -134,13 +134,13 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
     assert resp.status == HTTP_FORBIDDEN
 
 
-async def test_onboarding_user(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user(hass, hass_storage, hass_client_no_auth):
     """Test creating a new user."""
     assert await async_setup_component(hass, "person", {})
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/users",
@@ -187,21 +187,21 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     # Validate created areas
     area_registry = ar.async_get(hass)
     assert len(area_registry.areas) == 3
-    assert sorted([area.name for area in area_registry.async_list_areas()]) == [
+    assert sorted(area.name for area in area_registry.async_list_areas()) == [
         "Bedroom",
         "Kitchen",
         "Living Room",
     ]
 
 
-async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_invalid_name(hass, hass_storage, hass_client_no_auth):
     """Test not providing name."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/users",
@@ -216,14 +216,14 @@ async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
     assert resp.status == 400
 
 
-async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_race(hass, hass_storage, hass_client_no_auth):
     """Test race condition on creating new user."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp1 = client.post(
         "/api/onboarding/users",
@@ -340,14 +340,16 @@ async def test_onboarding_integration_invalid_redirect_uri(
         assert len(user.refresh_tokens) == 1, user
 
 
-async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_client):
+async def test_onboarding_integration_requires_auth(
+    hass, hass_storage, hass_client_no_auth
+):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.post(
         "/api/onboarding/integration", json={"client_id": CLIENT_ID}

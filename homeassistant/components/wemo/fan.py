@@ -7,6 +7,7 @@ import math
 import voluptuous as vol
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
@@ -20,7 +21,7 @@ from .const import (
     SERVICE_RESET_FILTER_LIFE,
     SERVICE_SET_HUMIDITY,
 )
-from .entity import WemoSubscriptionEntity
+from .entity import WemoEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -68,17 +69,17 @@ SET_HUMIDITY_SCHEMA = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator):
         """Handle a discovered Wemo device."""
-        async_add_entities([WemoHumidifier(device)])
+        async_add_entities([WemoHumidifier(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
     await asyncio.gather(
-        *[
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        ]
+        *(
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
+        )
     )
 
     platform = entity_platform.async_get_current_platform()
@@ -94,20 +95,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
+class WemoHumidifier(WemoEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    def __init__(self, device):
+    def __init__(self, coordinator):
         """Initialize the WeMo switch."""
-        super().__init__(device)
-        self._fan_mode = WEMO_FAN_OFF
-        self._fan_mode_string = None
-        self._target_humidity = None
-        self._current_humidity = None
-        self._water_level = None
-        self._filter_life = None
-        self._filter_expired = None
-        self._last_fan_on_mode = WEMO_FAN_MEDIUM
+        super().__init__(coordinator)
+        if self.wemo.fan_mode != WEMO_FAN_OFF:
+            self._last_fan_on_mode = self.wemo.fan_mode
+        else:
+            self._last_fan_on_mode = WEMO_FAN_MEDIUM
 
     @property
     def icon(self):
@@ -118,18 +115,18 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            ATTR_CURRENT_HUMIDITY: self._current_humidity,
-            ATTR_TARGET_HUMIDITY: self._target_humidity,
-            ATTR_FAN_MODE: self._fan_mode_string,
-            ATTR_WATER_LEVEL: self._water_level,
-            ATTR_FILTER_LIFE: self._filter_life,
-            ATTR_FILTER_EXPIRED: self._filter_expired,
+            ATTR_CURRENT_HUMIDITY: self.wemo.current_humidity_percent,
+            ATTR_TARGET_HUMIDITY: self.wemo.desired_humidity_percent,
+            ATTR_FAN_MODE: self.wemo.fan_mode_string,
+            ATTR_WATER_LEVEL: self.wemo.water_level_string,
+            ATTR_FILTER_LIFE: self.wemo.filter_life_percent,
+            ATTR_FILTER_EXPIRED: self.wemo.filter_expired,
         }
 
     @property
     def percentage(self) -> int:
         """Return the current speed percentage."""
-        return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
+        return ranged_value_to_percentage(SPEED_RANGE, self.wemo.fan_mode)
 
     @property
     def speed_count(self) -> int:
@@ -141,21 +138,17 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         """Flag supported features."""
         return SUPPORTED_FEATURES
 
-    def _update(self, force_update=True):
-        """Update the device state."""
-        with self._wemo_exception_handler("update status"):
-            self._state = self.wemo.get_state(force_update)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.wemo.fan_mode != WEMO_FAN_OFF:
+            self._last_fan_on_mode = self.wemo.fan_mode
+        super()._handle_coordinator_update()
 
-            self._fan_mode = self.wemo.fan_mode
-            self._fan_mode_string = self.wemo.fan_mode_string
-            self._target_humidity = self.wemo.desired_humidity_percent
-            self._current_humidity = self.wemo.current_humidity_percent
-            self._water_level = self.wemo.water_level_string
-            self._filter_life = self.wemo.filter_life_percent
-            self._filter_expired = self.wemo.filter_expired
-
-            if self.wemo.fan_mode != WEMO_FAN_OFF:
-                self._last_fan_on_mode = self.wemo.fan_mode
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on."""
+        return self.wemo.get_state()
 
     def turn_on(
         self,

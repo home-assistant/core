@@ -63,12 +63,12 @@ async def _async_reproduce_states(
         # entities that are off have no other attributes to restore
         return
 
-    if state.state in [
+    if state.state in (
         STATE_ON,
         STATE_PLAYING,
         STATE_IDLE,
         STATE_PAUSED,
-    ]:
+    ):
         await call_service(SERVICE_TURN_ON, [])
 
     if ATTR_MEDIA_VOLUME_LEVEL in state.attributes:

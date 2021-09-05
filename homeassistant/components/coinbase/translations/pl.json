@@ -31,6 +31,7 @@
             "init": {
                 "data": {
                     "account_balance_currencies": "Salda portfela do zg\u0142oszenia.",
+                    "exchange_base": "Waluta bazowa dla czujnik\u00f3w kurs\u00f3w walut.",
                     "exchange_rate_currencies": "Kursy walut do zg\u0142oszenia."
                 },
                 "description": "Dostosuj opcje Coinbase"

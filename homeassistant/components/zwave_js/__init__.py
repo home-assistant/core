@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from typing import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -29,6 +28,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
 from .api import async_register_api
@@ -61,7 +61,6 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DATA_PLATFORM_SETUP,
-    DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
@@ -81,7 +80,7 @@ DATA_CONNECT_FAILED_LOGGED = "connect_failed_logged"
 DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
     return True
@@ -126,9 +125,7 @@ async def async_setup_entry(  # noqa: C901
     ent_reg = entity_registry.async_get(hass)
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
-    unsubscribe_callbacks: list[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
-    entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
@@ -145,10 +142,10 @@ async def async_setup_entry(  # noqa: C901
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
 
-        value_updates_disc_info = []
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_values(node):
+        for disc_info in async_discover_values(node, device):
             platform = disc_info.platform
 
             # This migration logic was added in 2021.3 to handle a breaking change to
@@ -177,11 +174,11 @@ async def async_setup_entry(  # noqa: C901
 
             # Capture discovery info for values we want to watch for updates
             if disc_info.assumed_state:
-                value_updates_disc_info.append(disc_info)
+                value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
 
         # add listener for value updated events if necessary
         if value_updates_disc_info:
-            unsubscribe_callbacks.append(
+            entry.async_on_unload(
                 node.on(
                     "value updated",
                     lambda event: async_on_value_updated(
@@ -191,14 +188,14 @@ async def async_setup_entry(  # noqa: C901
             )
 
         # add listener for stateless node value notification events
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             node.on(
                 "value notification",
                 lambda event: async_on_value_notification(event["value_notification"]),
             )
         )
         # add listener for stateless node notification events
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             node.on(
                 "notification",
                 lambda event: async_on_notification(event["notification"]),
@@ -317,19 +314,14 @@ async def async_setup_entry(  # noqa: C901
 
     @callback
     def async_on_value_updated(
-        value_updates_disc_info: list[ZwaveDiscoveryInfo], value: Value
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
     ) -> None:
         """Fire value updated event."""
-        # Get the discovery info for the value that was updated. If we can't
-        # find the discovery info, we don't need to fire an event
-        try:
-            disc_info = next(
-                disc_info
-                for disc_info in value_updates_disc_info
-                if disc_info.primary_value.value_id == value.value_id
-            )
-        except StopIteration:
+        # Get the discovery info for the value that was updated. If there is
+        # no discovery info for this value, we don't need to fire an event
+        if value.value_id not in value_updates_disc_info:
             return
+        disc_info = value_updates_disc_info[value.value_id]
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
 
@@ -400,7 +392,7 @@ async def async_setup_entry(  # noqa: C901
             client_listen(hass, entry, client, driver_ready)
         )
         entry_hass_data[DATA_CLIENT_LISTEN_TASK] = listen_task
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
 
@@ -435,14 +427,14 @@ async def async_setup_entry(  # noqa: C901
 
         # run discovery on all ready nodes
         await asyncio.gather(
-            *[
+            *(
                 async_on_node_added(node)
                 for node in client.driver.controller.nodes.values()
-            ]
+            )
         )
 
         # listen for new nodes being added to the mesh
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             client.driver.controller.on(
                 "node added",
                 lambda event: hass.async_create_task(
@@ -452,7 +444,7 @@ async def async_setup_entry(  # noqa: C901
         )
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
-        unsubscribe_callbacks.append(
+        entry.async_on_unload(
             client.driver.controller.on(
                 "node removed", lambda event: async_on_node_removed(event["node"])
             )
@@ -515,9 +507,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     info = hass.data[DOMAIN][entry.entry_id]
 
-    for unsub in info[DATA_UNSUBSCRIBE]:
-        unsub()
-
     tasks = []
     for platform, task in info[DATA_PLATFORM_SETUP].items():
         if task.done():
@@ -559,7 +548,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
         return
     try:
-        await addon_manager.async_create_snapshot()
+        await addon_manager.async_create_backup()
     except AddonError as err:
         LOGGER.error(err)
         return

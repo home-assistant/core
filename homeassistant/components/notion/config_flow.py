@@ -44,7 +44,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await async_get_client(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session=session
             )
         except NotionError:
             return await self._show_form({"base": "invalid_auth"})

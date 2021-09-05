@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED
+import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -134,19 +135,29 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
 
-async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
+@pytest.mark.parametrize(
+    "initial_uptime,event_uptime,new_uptime",
+    [
+        # Uptime listed in epoch time should never change
+        (1609462800, 1609462800, 1612141200),
+        # Uptime counted in seconds increases with every event
+        (60, 64, 60),
+    ],
+)
+async def test_uptime_sensors(
+    hass,
+    aioclient_mock,
+    mock_unifi_websocket,
+    initial_uptime,
+    event_uptime,
+    new_uptime,
+):
     """Verify that uptime sensors are working as expected."""
-    client1 = {
+    uptime_client = {
         "mac": "00:00:00:00:00:01",
         "name": "client1",
         "oui": "Producer",
-        "uptime": 1609506061,
-    }
-    client2 = {
-        "hostname": "Client2",
-        "mac": "00:00:00:00:00:02",
-        "oui": "Producer",
-        "uptime": 60,
+        "uptime": initial_uptime,
     }
     options = {
         CONF_ALLOW_BANDWIDTH_SENSORS: False,
@@ -155,32 +166,50 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
         CONF_TRACK_DEVICES: False,
     }
 
-    now = datetime(2021, 1, 1, 1, tzinfo=dt_util.UTC)
+    now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
         config_entry = await setup_unifi_integration(
             hass,
             aioclient_mock,
             options=options,
-            clients_response=[client1, client2],
+            clients_response=[uptime_client],
         )
 
-    assert len(hass.states.async_all()) == 3
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
-    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T13:01:01+00:00"
-    assert hass.states.get("sensor.client2_uptime").state == "2021-01-01T00:59:00+00:00"
+    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
 
-    # Verify state update
+    # Verify normal new event doesn't change uptime
+    # 4 seconds has passed
 
-    client1["uptime"] = 1609506062
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_CLIENT},
-            "data": [client1],
-        }
-    )
-    await hass.async_block_till_done()
+    uptime_client["uptime"] = event_uptime
+    now = datetime(2021, 1, 1, 1, 1, 4, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_unifi_websocket(
+            data={
+                "meta": {"message": MESSAGE_CLIENT},
+                "data": [uptime_client],
+            }
+        )
+        await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T13:01:02+00:00"
+    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
+
+    # Verify new event change uptime
+    # 1 month has passed
+
+    uptime_client["uptime"] = new_uptime
+    now = datetime(2021, 2, 1, 1, 1, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_unifi_websocket(
+            data={
+                "meta": {"message": MESSAGE_CLIENT},
+                "data": [uptime_client],
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.client1_uptime").state == "2021-02-01T01:00:00+00:00"
 
     # Disable option
 
@@ -191,7 +220,6 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert len(hass.states.async_all()) == 1
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.client1_uptime") is None
-    assert hass.states.get("sensor.client2_uptime") is None
 
     # Enable option
 
@@ -200,14 +228,13 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
         hass.config_entries.async_update_entry(config_entry, options=options.copy())
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert hass.states.get("sensor.client1_uptime")
-    assert hass.states.get("sensor.client2_uptime")
 
     # Try to add the sensors again, using a signal
 
-    clients_connected = {client1["mac"], client2["mac"]}
+    clients_connected = {uptime_client["mac"]}
     devices_connected = set()
 
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
@@ -220,8 +247,8 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
 
 async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):

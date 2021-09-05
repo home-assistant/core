@@ -4,6 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -38,7 +39,6 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
     CONF_PICTURE,
-    CONF_STATE_CLASS,
     CONF_TRIGGER,
 )
 from .template_entity import TemplateEntity
@@ -255,7 +255,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             except template.TemplateError:
                 pass
 
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._attr_device_class = device_class
         self._attr_state_class = state_class
@@ -264,7 +264,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute(
-            "_attr_state", self._template, None, self._update_state
+            "_attr_native_value", self._template, None, self._update_state
         )
         if self._friendly_name_template and not self._friendly_name_template.is_static:
             self.add_template_attribute("_attr_name", self._friendly_name_template)
@@ -274,7 +274,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        self._attr_state = None if isinstance(result, TemplateError) else result
+        self._attr_native_value = None if isinstance(result, TemplateError) else result
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -284,7 +284,7 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     extra_template_keys = (CONF_STATE,)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return state of the sensor."""
         return self._rendered.get(CONF_STATE)
 

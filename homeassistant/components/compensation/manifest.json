@@ -2,7 +2,7 @@
   "domain": "compensation",
   "name": "Compensation",
   "documentation": "https://www.home-assistant.io/integrations/compensation",
-  "requirements": ["numpy==1.21.0"],
+  "requirements": ["numpy==1.21.1"],
   "codeowners": ["@Petro31"],
   "iot_class": "calculated"
 }

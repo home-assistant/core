@@ -74,6 +74,7 @@ def test_slugify():
     assert util.slugify("$$$") == "unknown"
     assert util.slugify("$something") == "something"
     assert util.slugify("") == ""
+    assert util.slugify(None) == ""
 
 
 def test_repr_helper():

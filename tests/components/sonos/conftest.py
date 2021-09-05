@@ -49,8 +49,8 @@ def config_entry_fixture():
 
 @pytest.fixture(name="soco")
 def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
-    """Create a mock pysonos SoCo fixture."""
-    with patch("pysonos.SoCo", autospec=True) as mock, patch(
+    """Create a mock soco SoCo fixture."""
+    with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
@@ -76,7 +76,7 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
 
 @pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
-    """Create a mock pysonos discover fixture."""
+    """Create a mock soco discover fixture."""
 
     def do_callback(hass, callback, *args, **kwargs):
         callback(

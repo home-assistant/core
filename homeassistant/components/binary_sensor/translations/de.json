@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} erkennt kein Problem",
             "is_no_smoke": "{entity_name} erkennt keinen Rauch",
             "is_no_sound": "{entity_name} erkennt keine Ger\u00e4usche",
+            "is_no_update": "{entity_name} ist aktuell",
             "is_no_vibration": "{entity_name} erkennt keine Vibrationen",
             "is_not_bat_low": "{entity_name} Batterie ist normal",
             "is_not_cold": "{entity_name} ist nicht kalt",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} hat Rauch detektiert",
             "is_sound": "{entity_name} hat Ger\u00e4usche detektiert",
             "is_unsafe": "{entity_name} ist unsicher",
+            "is_update": "{entity_name} hat ein Update verf\u00fcgbar",
             "is_vibration": "{entity_name} erkennt Vibrationen."
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} hat kein Problem mehr erkannt",
             "no_smoke": "{entity_name} hat keinen Rauch mehr erkannt",
             "no_sound": "{entity_name} hat keine Ger\u00e4usche mehr erkannt",
+            "no_update": "{entity_name} wurde auf den neuesten Stand gebracht",
             "no_vibration": "{entity_name}hat keine Vibrationen mehr erkannt",
             "not_bat_low": "{entity_name} Batterie normal",
             "not_cold": "{entity_name} w\u00e4rmte auf",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} ausgeschaltet",
             "turned_on": "{entity_name} eingeschaltet",
             "unsafe": "{entity_name} ist unsicher",
+            "update": "{entity_name} hat ein Update verf\u00fcgbar",
             "vibration": "{entity_name} detektiert Vibrationen"
         }
     },
@@ -139,8 +143,8 @@
             "on": "Nass"
         },
         "motion": {
-            "off": "Ruhig",
-            "on": "Bewegung erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "moving": {
             "off": "Bewegt sich nicht",
@@ -171,16 +175,20 @@
             "on": "Unsicher"
         },
         "smoke": {
-            "off": "OK",
-            "on": "Rauch erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
         },
         "sound": {
-            "off": "Stille",
-            "on": "Ger\u00e4usch erkannt"
+            "off": "Normal",
+            "on": "Erkannt"
+        },
+        "update": {
+            "off": "Aktuell",
+            "on": "Update verf\u00fcgbar"
         },
         "vibration": {
             "off": "Normal",
-            "on": "Vibration"
+            "on": "Erkannt"
         },
         "window": {
             "off": "Geschlossen",

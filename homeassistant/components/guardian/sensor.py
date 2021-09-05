@@ -1,7 +1,7 @@
 """Sensors for the Elexa Guardian integration."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -13,15 +13,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PairedSensorEntity, ValveControllerEntity
 from .const import (
-    API_SENSOR_PAIRED_SENSOR_STATUS,
     API_SYSTEM_DIAGNOSTICS,
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     CONF_UID,
     DATA_COORDINATOR,
+    DATA_COORDINATOR_PAIRED_SENSOR,
     DATA_UNSUB_DISPATCHER_CONNECT,
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
@@ -31,19 +30,33 @@ SENSOR_KIND_BATTERY = "battery"
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_UPTIME = "uptime"
 
-SENSOR_ATTRS_MAP = {
-    SENSOR_KIND_BATTERY: ("Battery", DEVICE_CLASS_BATTERY, None, PERCENTAGE),
-    SENSOR_KIND_TEMPERATURE: (
-        "Temperature",
-        DEVICE_CLASS_TEMPERATURE,
-        None,
-        TEMP_FAHRENHEIT,
-    ),
-    SENSOR_KIND_UPTIME: ("Uptime", None, "mdi:timer", TIME_MINUTES),
-}
+SENSOR_DESCRIPTION_BATTERY = SensorEntityDescription(
+    key=SENSOR_KIND_BATTERY,
+    name="Battery",
+    device_class=DEVICE_CLASS_BATTERY,
+    native_unit_of_measurement=PERCENTAGE,
+)
+SENSOR_DESCRIPTION_TEMPERATURE = SensorEntityDescription(
+    key=SENSOR_KIND_TEMPERATURE,
+    name="Temperature",
+    device_class=DEVICE_CLASS_TEMPERATURE,
+    native_unit_of_measurement=TEMP_FAHRENHEIT,
+)
+SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
+    key=SENSOR_KIND_UPTIME,
+    name="Uptime",
+    icon="mdi:timer",
+    native_unit_of_measurement=TIME_MINUTES,
+)
 
-PAIRED_SENSOR_SENSORS = [SENSOR_KIND_BATTERY, SENSOR_KIND_TEMPERATURE]
-VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_TEMPERATURE, SENSOR_KIND_UPTIME]
+PAIRED_SENSOR_DESCRIPTIONS = (
+    SENSOR_DESCRIPTION_BATTERY,
+    SENSOR_DESCRIPTION_TEMPERATURE,
+)
+VALVE_CONTROLLER_DESCRIPTIONS = (
+    SENSOR_DESCRIPTION_TEMPERATURE,
+    SENSOR_DESCRIPTION_UPTIME,
+)
 
 
 async def async_setup_entry(
@@ -54,20 +67,16 @@ async def async_setup_entry(
     @callback
     def add_new_paired_sensor(uid: str) -> None:
         """Add a new paired sensor."""
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            API_SENSOR_PAIRED_SENSOR_STATUS
-        ][uid]
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][entry.entry_id][
+            uid
+        ]
 
-        entities = []
-        for kind in PAIRED_SENSOR_SENSORS:
-            name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
-            entities.append(
-                PairedSensorSensor(
-                    entry, coordinator, kind, name, device_class, icon, unit
-                )
-            )
-
-        async_add_entities(entities, True)
+        async_add_entities(
+            [
+                PairedSensorSensor(entry, coordinator, description)
+                for description in PAIRED_SENSOR_DESCRIPTIONS
+            ]
+        )
 
     # Handle adding paired sensors after HASS startup:
     hass.data[DOMAIN][DATA_UNSUB_DISPATCHER_CONNECT][entry.entry_id].append(
@@ -78,34 +87,24 @@ async def async_setup_entry(
         )
     )
 
-    sensors = []
-
     # Add all valve controller-specific binary sensors:
-    for kind in VALVE_CONTROLLER_SENSORS:
-        name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
-        sensors.append(
-            ValveControllerSensor(
-                entry,
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id],
-                kind,
-                name,
-                device_class,
-                icon,
-                unit,
-            )
+    sensors: list[PairedSensorSensor | ValveControllerSensor] = [
+        ValveControllerSensor(
+            entry, hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id], description
         )
+        for description in VALVE_CONTROLLER_DESCRIPTIONS
+    ]
 
     # Add all paired sensor-specific binary sensors:
-    for coordinator in hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-        API_SENSOR_PAIRED_SENSOR_STATUS
-    ].values():
-        for kind in PAIRED_SENSOR_SENSORS:
-            name, device_class, icon, unit = SENSOR_ATTRS_MAP[kind]
-            sensors.append(
-                PairedSensorSensor(
-                    entry, coordinator, kind, name, device_class, icon, unit
-                )
-            )
+    sensors.extend(
+        [
+            PairedSensorSensor(entry, coordinator, description)
+            for coordinator in hass.data[DOMAIN][DATA_COORDINATOR_PAIRED_SENSOR][
+                entry.entry_id
+            ].values()
+            for description in PAIRED_SENSOR_DESCRIPTIONS
+        ]
+    )
 
     async_add_entities(sensors)
 
@@ -113,65 +112,37 @@ async def async_setup_entry(
 class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator,
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
-        unit: str | None,
-    ) -> None:
-        """Initialize."""
-        super().__init__(entry, coordinator, kind, name, device_class, icon)
-
-        self._attr_unit_of_measurement = unit
-
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._kind == SENSOR_KIND_BATTERY:
-            self._attr_state = self.coordinator.data["battery"]
-        elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._attr_state = self.coordinator.data["temperature"]
+        if self.entity_description.key == SENSOR_KIND_BATTERY:
+            self._attr_native_value = self.coordinator.data["battery"]
+        elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
+            self._attr_native_value = self.coordinator.data["temperature"]
 
 
 class ValveControllerSensor(ValveControllerEntity, SensorEntity):
     """Define a generic Guardian sensor."""
 
-    def __init__(
-        self,
-        entry: ConfigEntry,
-        coordinators: dict[str, DataUpdateCoordinator],
-        kind: str,
-        name: str,
-        device_class: str | None,
-        icon: str | None,
-        unit: str | None,
-    ) -> None:
-        """Initialize."""
-        super().__init__(entry, coordinators, kind, name, device_class, icon)
-
-        self._attr_unit_of_measurement = unit
-
     async def _async_continue_entity_setup(self) -> None:
         """Register API interest (and related tasks) when the entity is added."""
-        if self._kind == SENSOR_KIND_TEMPERATURE:
+        if self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self.async_add_coordinator_update_listener(API_SYSTEM_ONBOARD_SENSOR_STATUS)
 
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self._kind == SENSOR_KIND_TEMPERATURE:
+        if self.entity_description.key == SENSOR_KIND_TEMPERATURE:
             self._attr_available = self.coordinators[
                 API_SYSTEM_ONBOARD_SENSOR_STATUS
             ].last_update_success
-            self._attr_state = self.coordinators[API_SYSTEM_ONBOARD_SENSOR_STATUS].data[
-                "temperature"
-            ]
-        elif self._kind == SENSOR_KIND_UPTIME:
+            self._attr_native_value = self.coordinators[
+                API_SYSTEM_ONBOARD_SENSOR_STATUS
+            ].data["temperature"]
+        elif self.entity_description.key == SENSOR_KIND_UPTIME:
             self._attr_available = self.coordinators[
                 API_SYSTEM_DIAGNOSTICS
             ].last_update_success
-            self._attr_state = self.coordinators[API_SYSTEM_DIAGNOSTICS].data["uptime"]
+            self._attr_native_value = self.coordinators[API_SYSTEM_DIAGNOSTICS].data[
+                "uptime"
+            ]

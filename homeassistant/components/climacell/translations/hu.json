@@ -3,6 +3,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "rate_limited": "Jelenleg korl\u00e1tozott sebess\u00e9g\u0171, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
@@ -21,6 +22,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "timestep": "Min. A NowCast el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt"
+                },
+                "description": "Ha a `nowcast` el\u0151rejelz\u00e9si entit\u00e1s enged\u00e9lyez\u00e9s\u00e9t v\u00e1lasztja, be\u00e1ll\u00edthatja az egyes el\u0151rejelz\u00e9sek k\u00f6z\u00f6tti percek sz\u00e1m\u00e1t. A megadott el\u0151rejelz\u00e9sek sz\u00e1ma az el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt kiv\u00e1lasztott percek sz\u00e1m\u00e1t\u00f3l f\u00fcgg.",
                 "title": "Friss\u00edtse a ClimaCell be\u00e1ll\u00edt\u00e1sokat"
             }
         }

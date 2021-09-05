@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Meteoclimatic sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -51,7 +51,9 @@ class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
             f"{station.name} {SENSOR_TYPES[sensor_type][SENSOR_TYPE_NAME]}"
         )
         self._attr_unique_id = f"{station.code}_{sensor_type}"
-        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type].get(SENSOR_TYPE_UNIT)
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type].get(
+            SENSOR_TYPE_UNIT
+        )
 
     @property
     def device_info(self):
@@ -65,7 +67,7 @@ class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return (
             getattr(self.coordinator.data["weather"], self._type)

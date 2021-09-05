@@ -97,7 +97,5 @@ class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        payload = self._option_payloads.get(option)
-        if payload is None:
-            raise ValueError(f"Invalid option for {self.entity_id}: {option}")
+        payload = self._option_payloads[option]
         await self._device.set(payload)

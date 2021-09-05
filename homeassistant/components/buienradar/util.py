@@ -99,7 +99,7 @@ class BrData:
 
                 return result
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            result[MESSAGE] = "%s" % err
+            result[MESSAGE] = str(err)
             return result
         finally:
             if resp is not None:

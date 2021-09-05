@@ -1,5 +1,5 @@
 {
-   "count" : 4,
+   "count" : 6,
    "href" : "http://api.myqdevice.com/api/v5/accounts/account_id/devices",
    "items" : [
       {
@@ -128,6 +128,36 @@
          "href" : "http://api.myqdevice.com/api/v5/accounts/account_id/devices/small_garage_serial",
          "device_type" : "wifigaragedooropener",
          "created_date" : "2020-02-10T23:11:47.487"
-      }
+      },
+      {
+         "serial_number" : "garage_light_off",
+         "state" : {
+            "last_status" : "2020-03-30T02:48:45.7501595Z",
+            "online" : true,
+            "lamp_state" : "off",
+            "last_update" : "2020-03-26T15:45:31.4713796Z"
+         },
+         "parent_device_id" : "gateway_serial",
+         "device_platform" : "myq",
+         "name" : "Garage Door Light Off",
+         "device_family" : "lamp",
+         "device_type" : "lamp",
+         "created_date" : "2020-02-10T23:11:47.487"
+      },
+      {
+         "serial_number" : "garage_light_on",
+         "state" : {
+            "last_status" : "2020-03-30T02:48:45.7501595Z",
+            "online" : true,
+            "lamp_state" : "on",
+            "last_update" : "2020-03-26T15:45:31.4713796Z"
+         },
+         "parent_device_id" : "gateway_serial",
+         "device_platform" : "myq",
+         "name" : "Garage Door Light On",
+         "device_family" : "lamp",
+         "device_type" : "lamp",
+         "created_date" : "2020-02-10T23:11:47.487"
+      }            
    ]
 }

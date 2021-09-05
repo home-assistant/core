@@ -93,6 +93,7 @@ NO_IOT_CLASS = [
     "search",
     "select",
     "sensor",
+    "siren",
     "stt",
     "switch",
     "system_health",
@@ -201,6 +202,18 @@ MANIFEST_SCHEMA = vol.Schema(
                         str, verify_uppercase, verify_wildcard
                     ),
                     vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                }
+            )
+        ],
+        vol.Optional("usb"): [
+            vol.Schema(
+                {
+                    vol.Optional("vid"): vol.All(str, verify_uppercase),
+                    vol.Optional("pid"): vol.All(str, verify_uppercase),
+                    vol.Optional("serial_number"): vol.All(str, verify_lowercase),
+                    vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
+                    vol.Optional("description"): vol.All(str, verify_lowercase),
+                    vol.Optional("known_devices"): [str],
                 }
             )
         ],

@@ -52,7 +52,7 @@
             },
             "init": {
                 "data": {
-                    "discovery_interval": "Polling-interval van ontdekt apparaat in seconden",
+                    "discovery_interval": "Polling-interval van nieuwe apparaten in seconden",
                     "list_devices": "Selecteer de te configureren apparaten of laat leeg om de configuratie op te slaan",
                     "query_device": "Selecteer apparaat dat query-methode zal gebruiken voor snellere statusupdate",
                     "query_interval": "Peilinginterval van het apparaat in seconden"

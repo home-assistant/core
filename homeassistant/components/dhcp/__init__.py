@@ -41,6 +41,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_dhcp
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
@@ -58,7 +59,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the dhcp component."""
 
     async def _initialize(_):
@@ -248,10 +249,10 @@ class DeviceTrackerWatcher(WatcherBase):
             return
 
         ip_address = attributes.get(ATTR_IP)
-        hostname = attributes.get(ATTR_HOST_NAME)
+        hostname = attributes.get(ATTR_HOST_NAME, "")
         mac_address = attributes.get(ATTR_MAC)
 
-        if ip_address is None or hostname is None or mac_address is None:
+        if ip_address is None or mac_address is None:
             return
 
         self.process_client(ip_address, hostname, _format_mac(mac_address))
@@ -328,10 +329,10 @@ class DHCPWatcher(WatcherBase):
             return
 
         ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
-        hostname = _decode_dhcp_option(options, HOSTNAME)
+        hostname = _decode_dhcp_option(options, HOSTNAME) or ""
         mac_address = _format_mac(packet[Ether].src)
 
-        if ip_address is None or hostname is None or mac_address is None:
+        if ip_address is None or mac_address is None:
             return
 
         self.process_client(ip_address, hostname, mac_address)

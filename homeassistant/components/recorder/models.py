@@ -1,6 +1,10 @@
 """Models for SQLAlchemy."""
+from __future__ import annotations
+
+from datetime import datetime
 import json
 import logging
+from typing import TypedDict
 
 from sqlalchemy import (
     Boolean,
@@ -15,9 +19,8 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.dialects import mysql, oracle, postgresql
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
@@ -36,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 18
+SCHEMA_VERSION = 20
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +51,7 @@ TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 TABLE_STATISTICS = "statistics"
 TABLE_STATISTICS_META = "statistics_meta"
+TABLE_STATISTICS_RUNS = "statistics_runs"
 
 ALL_TABLES = [
     TABLE_STATES,
@@ -56,10 +60,17 @@ ALL_TABLES = [
     TABLE_SCHEMA_CHANGES,
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
+    TABLE_STATISTICS_RUNS,
 ]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
@@ -97,7 +108,8 @@ class Events(Base):  # type: ignore
         """Create an event database object from a native event."""
         return Events(
             event_type=event.event_type,
-            event_data=event_data or json.dumps(event.data, cls=JSONEncoder),
+            event_data=event_data
+            or json.dumps(event.data, cls=JSONEncoder, separators=(",", ":")),
             origin=str(event.origin.value),
             time_fired=event.time_fired,
             context_id=event.context.id,
@@ -106,7 +118,7 @@ class Events(Base):  # type: ignore
         )
 
     def to_native(self, validate_entity_id=True):
-        """Convert to a natve HA Event."""
+        """Convert to a native HA Event."""
         context = Context(
             id=self.context_id,
             user_id=self.context_user_id,
@@ -180,7 +192,9 @@ class States(Base):  # type: ignore
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(dict(state.attributes), cls=JSONEncoder)
+            dbstate.attributes = json.dumps(
+                dict(state.attributes), cls=JSONEncoder, separators=(",", ":")
+            )
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
@@ -206,6 +220,17 @@ class States(Base):  # type: ignore
             return None
 
 
+class StatisticData(TypedDict, total=False):
+    """Statistic data class."""
+
+    mean: float
+    min: float
+    max: float
+    last_reset: datetime | None
+    state: float
+    sum: float
+
+
 class Statistics(Base):  # type: ignore
     """Statistics."""
 
@@ -222,21 +247,30 @@ class Statistics(Base):  # type: ignore
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
     last_reset = Column(DATETIME_TYPE)
-    state = Column(Float())
-    sum = Column(Float())
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
 
     @staticmethod
-    def from_stats(metadata_id, start, stats):
+    def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
         """Create object from a statistics."""
         return Statistics(
             metadata_id=metadata_id,
             start=start,
             **stats,
         )
+
+
+class StatisticMetaData(TypedDict, total=False):
+    """Statistic meta data class."""
+
+    statistic_id: str
+    unit_of_measurement: str | None
+    has_mean: bool
+    has_sum: bool
 
 
 class StatisticsMeta(Base):  # type: ignore
@@ -251,7 +285,13 @@ class StatisticsMeta(Base):  # type: ignore
     has_sum = Column(Boolean)
 
     @staticmethod
-    def from_meta(source, statistic_id, unit_of_measurement, has_mean, has_sum):
+    def from_meta(
+        source: str,
+        statistic_id: str,
+        unit_of_measurement: str | None,
+        has_mean: bool,
+        has_sum: bool,
+    ) -> StatisticsMeta:
         """Create object from meta data."""
         return StatisticsMeta(
             source=source,
@@ -330,6 +370,22 @@ class SchemaChanges(Base):  # type: ignore
         )
 
 
+class StatisticsRuns(Base):  # type: ignore
+    """Representation of statistics run."""
+
+    __tablename__ = TABLE_STATISTICS_RUNS
+    run_id = Column(Integer, primary_key=True)
+    start = Column(DateTime(timezone=True))
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.StatisticsRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f")>"
+        )
+
+
 def process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
@@ -340,7 +396,7 @@ def process_timestamp(ts):
     return dt_util.as_utc(ts)
 
 
-def process_timestamp_to_utc_isoformat(ts):
+def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
     """Process a timestamp into UTC isotime."""
     if ts is None:
         return None

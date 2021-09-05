@@ -13,7 +13,8 @@
       "user": {
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "mfa": "MFA Code (Optional)"
         },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"

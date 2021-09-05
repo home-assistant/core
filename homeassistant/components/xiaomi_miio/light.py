@@ -19,14 +19,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
@@ -37,7 +35,6 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
-    MODELS_LIGHT,
     MODELS_LIGHT_BULB,
     MODELS_LIGHT_CEILING,
     MODELS_LIGHT_EYECARE,
@@ -59,15 +56,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Philips Light"
 DATA_KEY = "light.xiaomi_miio"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(MODELS_LIGHT),
-    }
-)
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -118,21 +106,6 @@ SERVICE_TO_METHOD = {
     SERVICE_EYECARE_MODE_ON: {"method": "async_eyecare_mode_on"},
     SERVICE_EYECARE_MODE_OFF: {"method": "async_eyecare_mode_off"},
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Miio configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Xiaomi Miio Light via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -241,10 +214,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if update_tasks:
                 await asyncio.wait(update_tasks)
 
-        for xiaomi_miio_service in SERVICE_TO_METHOD:
-            schema = SERVICE_TO_METHOD[xiaomi_miio_service].get(
-                "schema", XIAOMI_MIIO_SERVICE_SCHEMA
-            )
+        for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
+            schema = method.get("schema", XIAOMI_MIIO_SERVICE_SCHEMA)
             hass.services.async_register(
                 DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
             )

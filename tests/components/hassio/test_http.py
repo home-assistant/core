@@ -1,7 +1,7 @@
 """The tests for the hassio component."""
 import asyncio
-from unittest.mock import patch
 
+from aiohttp import StreamReader
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
@@ -106,13 +106,11 @@ async def test_forward_log_request(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
 
-async def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
+async def test_bad_gateway_when_cannot_find_supervisor(hassio_client, aioclient_mock):
     """Test we get a bad gateway error if we can't find supervisor."""
-    with patch(
-        "homeassistant.components.hassio.http.async_timeout.timeout",
-        side_effect=asyncio.TimeoutError,
-    ):
-        resp = await hassio_client.get("/api/hassio/addons/test/info")
+    aioclient_mock.get("http://127.0.0.1/addons/test/info", exc=asyncio.TimeoutError)
+
+    resp = await hassio_client.get("/api/hassio/addons/test/info")
     assert resp.status == 502
 
 
@@ -132,13 +130,13 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
     assert req_headers["X-Hass-Is-Admin"] == "1"
 
 
-async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
-    """Test that we forward the full header for snapshot upload."""
+async def test_backup_upload_headers(hassio_client, aioclient_mock, caplog):
+    """Test that we forward the full header for backup upload."""
     content_type = "multipart/form-data; boundary='--webkit'"
-    aioclient_mock.get("http://127.0.0.1/snapshots/new/upload")
+    aioclient_mock.get("http://127.0.0.1/backups/new/upload")
 
     resp = await hassio_client.get(
-        "/api/hassio/snapshots/new/upload", headers={"Content-Type": content_type}
+        "/api/hassio/backups/new/upload", headers={"Content-Type": content_type}
     )
 
     # Check we got right response
@@ -150,18 +148,18 @@ async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
     assert req_headers["Content-Type"] == content_type
 
 
-async def test_snapshot_download_headers(hassio_client, aioclient_mock):
-    """Test that we forward the full header for snapshot download."""
+async def test_backup_download_headers(hassio_client, aioclient_mock):
+    """Test that we forward the full header for backup download."""
     content_disposition = "attachment; filename=test.tar"
     aioclient_mock.get(
-        "http://127.0.0.1/snapshots/slug/download",
+        "http://127.0.0.1/backups/slug/download",
         headers={
             "Content-Length": "50000000",
             "Content-Disposition": content_disposition,
         },
     )
 
-    resp = await hassio_client.get("/api/hassio/snapshots/slug/download")
+    resp = await hassio_client.get("/api/hassio/backups/slug/download")
 
     # Check we got right response
     assert resp.status == 200
@@ -174,9 +172,34 @@ async def test_snapshot_download_headers(hassio_client, aioclient_mock):
 def test_need_auth(hass):
     """Test if the requested path needs authentication."""
     assert not _need_auth(hass, "addons/test/logo")
-    assert _need_auth(hass, "snapshots/new/upload")
+    assert _need_auth(hass, "backups/new/upload")
     assert _need_auth(hass, "supervisor/logs")
 
     hass.data["onboarding"] = False
-    assert not _need_auth(hass, "snapshots/new/upload")
+    assert not _need_auth(hass, "backups/new/upload")
     assert not _need_auth(hass, "supervisor/logs")
+
+
+async def test_stream(hassio_client, aioclient_mock):
+    """Verify that the request is a stream."""
+    aioclient_mock.get("http://127.0.0.1/test")
+    await hassio_client.get("/api/hassio/test", data="test")
+    assert isinstance(aioclient_mock.mock_calls[-1][2], StreamReader)
+
+
+async def test_entrypoint_cache_control(hassio_client, aioclient_mock):
+    """Test that we return cache control for requests to the entrypoint only."""
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
+    aioclient_mock.get("http://127.0.0.1/app/entrypoint.fdhkusd8y43r.js")
+
+    resp1 = await hassio_client.get("/api/hassio/app/entrypoint.js")
+    resp2 = await hassio_client.get("/api/hassio/app/entrypoint.fdhkusd8y43r.js")
+
+    # Check we got right response
+    assert resp1.status == 200
+    assert resp2.status == 200
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert resp1.headers["Cache-Control"] == "no-store, max-age=0"
+
+    assert "Cache-Control" not in resp2.headers

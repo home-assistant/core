@@ -292,11 +292,9 @@ def get_config_entries_for_user_id(
 ) -> tuple[ConfigEntry]:
     """Get a list of config entries that apply to a specific withings user."""
     return tuple(
-        [
-            config_entry
-            for config_entry in hass.config_entries.async_entries(const.DOMAIN)
-            if config_entry.data.get("token", {}).get("userid") == user_id
-        ]
+        config_entry
+        for config_entry in hass.config_entries.async_entries(const.DOMAIN)
+        if config_entry.data.get("token", {}).get("userid") == user_id
     )
 
 

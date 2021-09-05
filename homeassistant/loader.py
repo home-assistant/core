@@ -26,6 +26,7 @@ from awesomeversion import (
 from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
+from homeassistant.generated.usb import USB
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 from homeassistant.util.async_ import gather_with_concurrency
 
@@ -81,6 +82,7 @@ class Manifest(TypedDict, total=False):
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
     dhcp: list[dict[str, str]]
+    usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
     version: str
@@ -217,6 +219,25 @@ async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str]]:
             dhcp.append({"domain": integration.domain, **entry})
 
     return dhcp
+
+
+async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
+    """Return cached list of usb types."""
+    usb: list[dict[str, str]] = USB.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.usb:
+            continue
+        for entry in integration.usb:
+            usb.append(
+                {
+                    "domain": integration.domain,
+                    **{k: v for k, v in entry.items() if k != "known_devices"},
+                }
+            )
+
+    return usb
 
 
 async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
@@ -424,6 +445,11 @@ class Integration:
         return self.manifest.get("dhcp")
 
     @property
+    def usb(self) -> list[dict[str, str]] | None:
+        """Return Integration usb entries."""
+        return self.manifest.get("usb")
+
+    @property
     def homekit(self) -> dict[str, list[str]] | None:
         """Return Integration homekit entries."""
         return self.manifest.get("homekit")
@@ -534,7 +560,7 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     try:
         integration = await _async_get_integration(hass, domain)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         # Remove event from cache.
         cache.pop(domain)
         event.set()

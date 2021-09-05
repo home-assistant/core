@@ -203,7 +203,10 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     def set_humidity(self, humidity):
         """Dehumidify target."""
-        self._thermostat.set_dehumidify_setpoint(humidity / 100.0)
+        if self._thermostat.has_dehumidify_support():
+            self._thermostat.set_dehumidify_setpoint(humidity / 100.0)
+        else:
+            self._thermostat.set_humidify_setpoint(humidity / 100.0)
         self._signal_thermostat_update()
 
     @property

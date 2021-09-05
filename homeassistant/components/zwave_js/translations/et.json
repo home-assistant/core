@@ -8,7 +8,9 @@
             "addon_start_failed": "Z-Wave JS-i lisandmooduli k\u00e4ivitamine nurjus.",
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "discovery_requires_supervisor": "Avastamine n\u00f5uab supervisorit.",
+            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade."
         },
         "error": {
             "addon_start_failed": "Z-Wave JS lisandmooduli k\u00e4ivitamine nurjus. Kontrolli seadistusi.",
@@ -16,6 +18,7 @@
             "invalid_ws_url": "Vale sihtkoha aadress",
             "unknown": "Ootamatu t\u00f5rge"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Palun oota kuni Z-Wave JS lisandmoodul on paigaldatud. See v\u00f5ib v\u00f5tta mitu minutit.",
             "start_addon": "Palun oota kuni Z-Wave JS lisandmooduli ak\u00e4ivitumine l\u00f5ppeb. See v\u00f5ib v\u00f5tta m\u00f5ned sekundid."
@@ -48,7 +51,27 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS lisandmoodul k\u00e4ivitub."
+            },
+            "usb_confirm": {
+                "description": "Kas seadistada Z-Wave JS lisandmoodul {name}?"
             }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "Seadeparameeteri {subtype} v\u00e4\u00e4rtus",
+            "node_status": "S\u00f5lme olek",
+            "value": "Z-Wave Value praegune v\u00e4\u00e4rtus"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "L\u00e4bip\u00e4\u00e4su kontrolli teavitus on saadetud",
+            "event.notification.notification": "Teavitus on saadetud",
+            "event.value_notification.basic": "CC p\u00f5his\u00fcndmus {subtype}",
+            "event.value_notification.central_scene": "Keskse stseeni tegevus {subtype}",
+            "event.value_notification.scene_activation": "Stseeni aktiveerimine saidil {subtype}",
+            "state.node_status": "S\u00f5lme olek muutus",
+            "zwave_js.value_updated.config_parameter": "Seadeparameetri {subtype} v\u00e4\u00e4rtuse muutmine",
+            "zwave_js.value_updated.value": "Z-Wave JS v\u00e4\u00e4rtuse muutus"
         }
     },
     "options": {

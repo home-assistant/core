@@ -21,6 +21,7 @@ from homeassistant.const import CONF_SOURCE, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import create_motioneye_client
 from .const import (
@@ -114,6 +115,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             admin_password=user_input.get(CONF_ADMIN_PASSWORD),
             surveillance_username=user_input.get(CONF_SURVEILLANCE_USERNAME),
             surveillance_password=user_input.get(CONF_SURVEILLANCE_PASSWORD),
+            session=async_get_clientsession(self.hass),
         )
 
         errors = {}

@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.node import NodeStatus
+from zwave_js_server.const import NodeStatus
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -45,6 +45,9 @@ class ZWaveBaseEntity(Entity):
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(
             self.client.driver.controller.home_id, self.info.primary_value.value_id
+        )
+        self._attr_entity_registry_enabled_default = (
+            self.info.entity_registry_enabled_default
         )
         self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
@@ -213,13 +216,13 @@ class ZWaveBaseEntity(Entity):
         # If we haven't found a value and check_all_endpoints is True, we should
         # return the first value we can find on any other endpoint
         if return_value is None and check_all_endpoints:
-            for endpoint_ in self.info.node.endpoints:
-                if endpoint_.index != self.info.primary_value.endpoint:
+            for endpoint_idx in self.info.node.endpoints:
+                if endpoint_idx != self.info.primary_value.endpoint:
                     value_id = get_value_id(
                         self.info.node,
                         command_class,
                         value_property,
-                        endpoint=endpoint_.index,
+                        endpoint=endpoint_idx,
                         property_key=value_property_key,
                     )
                     return_value = self.info.node.values.get(value_id)

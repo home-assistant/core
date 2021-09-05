@@ -1,4 +1,6 @@
 """Support for HDMI CEC devices as switches."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
@@ -55,8 +57,3 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._state == STATE_ON
-
-    @property
-    def state(self) -> str:
-        """Return the cached state of device."""
-        return self._state

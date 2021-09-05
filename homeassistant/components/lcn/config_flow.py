@@ -13,8 +13,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
 
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_config_entry(
-    hass: HomeAssistantType, data: ConfigType
+    hass: HomeAssistant, data: ConfigType
 ) -> config_entries.ConfigEntry | None:
     """Check config entries for already configured entries based on the ip address/port."""
     return next(

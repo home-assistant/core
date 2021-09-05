@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +53,7 @@ async def async_setup_entry(
         for device in gateway.devices.values():
             if hasattr(device, "consumption_property"):
                 for consumption in device.consumption_property:
-                    for consumption_type in ["current", "total"]:
+                    for consumption_type in ("current", "total"):
                         entities.append(
                             DevoloConsumptionEntity(
                                 homecontrol=gateway,
@@ -77,19 +78,9 @@ class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
-    def device_class(self) -> str | None:
-        """Return device class."""
-        return self._device_class
-
-    @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return self._value
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return self._unit
 
 
 class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
@@ -112,18 +103,18 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
             element_uid=element_uid,
         )
 
-        self._device_class = DEVICE_CLASS_MAPPING.get(
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
+        self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
 
         self._value = self._multi_level_sensor_property.value
-        self._unit = self._multi_level_sensor_property.unit
 
-        if self._device_class is None:
-            self._name += f" {self._multi_level_sensor_property.sensor_type}"
+        if self._attr_device_class is None:
+            self._attr_name += f" {self._multi_level_sensor_property.sensor_type}"
 
         if element_uid.startswith("devolo.VoltageMultiLevelSensor:"):
-            self._enabled_default = False
+            self._attr_entity_registry_enabled_default = False
 
 
 class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
@@ -140,10 +131,10 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
             element_uid=element_uid,
         )
 
-        self._device_class = DEVICE_CLASS_MAPPING.get("battery")
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
         self._value = device_instance.battery_level
-        self._unit = PERCENTAGE
 
 
 class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
@@ -165,27 +156,30 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._sensor_type = consumption
-        self._device_class = DEVICE_CLASS_MAPPING.get(consumption)
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(consumption)
+        self._attr_native_unit_of_measurement = getattr(
+            device_instance.consumption_property[element_uid], f"{consumption}_unit"
+        )
+
+        if consumption == "total":
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
         self._value = getattr(
             device_instance.consumption_property[element_uid], consumption
         )
-        self._unit = getattr(
-            device_instance.consumption_property[element_uid], f"{consumption}_unit"
-        )
 
-        self._name += f" {consumption}"
+        self._attr_name += f" {consumption}"
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
-        return f"{self._unique_id}_{self._sensor_type}"
+        return f"{self._attr_unique_id}_{self._sensor_type}"
 
     def _sync(self, message: tuple) -> None:
         """Update the consumption sensor state."""
-        if message[0] == self._unique_id:
+        if message[0] == self._attr_unique_id:
             self._value = getattr(
-                self._device_instance.consumption_property[self._unique_id],
+                self._device_instance.consumption_property[self._attr_unique_id],
                 self._sensor_type,
             )
         else:

@@ -527,10 +527,10 @@ class HyperionLight(HyperionBaseLight):
         # color, effect), but this is not possible due to:
         # https://github.com/hyperion-project/hyperion.ng/issues/967
         if not bool(self._client.is_on()):
-            for component in [
+            for component in (
                 const.KEY_COMPONENTID_ALL,
                 const.KEY_COMPONENTID_LEDDEVICE,
-            ]:
+            ):
                 if not await self._client.async_send_set_component(
                     **{
                         const.KEY_COMPONENTSTATE: {

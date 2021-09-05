@@ -79,7 +79,7 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".")[0],
+        str(resetsAtTime).split(".", maxsplit=1)[0],
     )
 
 
@@ -153,7 +153,7 @@ class MobileAppNotificationService(BaseNotificationService):
                     )
                     result = await response.json()
 
-                if response.status in [HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED]:
+                if response.status in (HTTP_OK, HTTP_CREATED, HTTP_ACCEPTED):
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
                     continue
 

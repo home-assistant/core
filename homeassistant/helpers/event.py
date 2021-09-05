@@ -71,8 +71,8 @@ class TrackStates:
     """
 
     all_states: bool
-    entities: set
-    domains: set
+    entities: set[str]
+    domains: set[str]
 
 
 @dataclass
@@ -394,7 +394,7 @@ def async_track_entity_registry_updated_event(
 
 @callback
 def _async_dispatch_domain_event(
-    hass: HomeAssistant, event: Event, callbacks: dict[str, list]
+    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob]]
 ) -> None:
     domain = split_entity_id(event.data["entity_id"])[0]
 
@@ -620,7 +620,7 @@ class _TrackStateChangeFiltered:
         self._listeners.pop(listener_name)()
 
     @callback
-    def _setup_entities_listener(self, domains: set, entities: set) -> None:
+    def _setup_entities_listener(self, domains: set[str], entities: set[str]) -> None:
         if domains:
             entities = entities.copy()
             entities.update(self.hass.states.async_entity_ids(domains))
@@ -634,7 +634,7 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
-    def _setup_domains_listener(self, domains: set) -> None:
+    def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
@@ -977,10 +977,10 @@ class _TrackTemplateResultInfo:
             self._track_state_changes.async_update_listeners(
                 _render_infos_to_track_states(
                     [
-                        _suppress_domain_all_in_render_info(self._info[template])
+                        _suppress_domain_all_in_render_info(info)
                         if self._rate_limit.async_has_timer(template)
-                        else self._info[template]
-                        for template in self._info
+                        else info
+                        for template, info in self._info.items()
                     ]
                 )
             )

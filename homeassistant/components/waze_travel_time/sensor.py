@@ -22,16 +22,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
-    ATTR_DESTINATION,
-    ATTR_DISTANCE,
-    ATTR_DURATION,
-    ATTR_ORIGIN,
-    ATTR_ROUTE,
-    ATTRIBUTION,
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
@@ -50,7 +44,6 @@ from .const import (
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     ENTITY_ID_PATTERN,
-    ICON,
     REGIONS,
     UNITS,
     VEHICLE_TYPES,
@@ -90,8 +83,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: Config, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistant,
+    config: Config,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Waze travel time sensor platform."""
 
     hass.async_create_task(
@@ -127,7 +123,7 @@ async def async_setup_entry(
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = {}
-        for key in [
+        for key in (
             CONF_INCL_FILTER,
             CONF_EXCL_FILTER,
             CONF_REALTIME,
@@ -136,7 +132,7 @@ async def async_setup_entry(
             CONF_AVOID_SUBSCRIPTION_ROADS,
             CONF_AVOID_FERRIES,
             CONF_UNITS,
-        ]:
+        ):
             if key in new_data:
                 options[key] = new_data.pop(key)
             elif key in defaults:
@@ -166,14 +162,23 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
+    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_device_info = {
+        "name": "Waze",
+        "identifiers": {(DOMAIN, DOMAIN)},
+        "entry_type": "service",
+    }
+
     def __init__(self, unique_id, name, origin, destination, waze_data):
         """Initialize the Waze travel time sensor."""
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._waze_data = waze_data
-        self._name = name
+        self._attr_name = name
+        self._attr_icon = "mdi:car"
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
+
         cmpl_re = re.compile(ENTITY_ID_PATTERN)
         if cmpl_re.fullmatch(origin):
             _LOGGER.debug("Found origin source entity %s", origin)
@@ -197,12 +202,7 @@ class WazeTravelTime(SensorEntity):
             await self.first_update()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
@@ -210,28 +210,19 @@ class WazeTravelTime(SensorEntity):
         return None
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TIME_MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict | None:
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None
 
-        res = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        res[ATTR_DURATION] = self._waze_data.duration
-        res[ATTR_DISTANCE] = self._waze_data.distance
-        res[ATTR_ROUTE] = self._waze_data.route
-        res[ATTR_ORIGIN] = self._waze_data.origin
-        res[ATTR_DESTINATION] = self._waze_data.destination
-        return res
+        return {
+            ATTR_ATTRIBUTION: "Powered by Waze",
+            "duration": self._waze_data.duration,
+            "distance": self._waze_data.distance,
+            "route": self._waze_data.route,
+            "origin": self._waze_data.origin,
+            "destination": self._waze_data.destination,
+        }
 
     async def first_update(self, _=None):
         """Run first update and write state."""
@@ -240,7 +231,7 @@ class WazeTravelTime(SensorEntity):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        _LOGGER.debug("Fetching Route for %s", self._name)
+        _LOGGER.debug("Fetching Route for %s", self._attr_name)
         # Get origin latitude and longitude from entity_id.
         if self._origin_entity_id is not None:
             self._waze_data.origin = get_location_from_entity(
@@ -262,20 +253,6 @@ class WazeTravelTime(SensorEntity):
         )
 
         self._waze_data.update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device specific attributes."""
-        return {
-            "name": "Waze",
-            "identifiers": {(DOMAIN, DOMAIN)},
-            "entry_type": "service",
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return self._unique_id
 
 
 class WazeTravelTimeData:

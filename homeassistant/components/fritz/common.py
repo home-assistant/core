@@ -15,7 +15,6 @@ from fritzconnection.core.exceptions import (
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
-from fritzprofiles import FritzProfileSwitch, get_all_profiles
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
@@ -24,12 +23,13 @@ from homeassistant.components.device_tracker.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
@@ -81,12 +81,11 @@ class FritzBoxTools:
     ) -> None:
         """Initialize FritzboxTools class."""
         self._cancel_scan: CALLBACK_TYPE | None = None
-        self._devices: dict[str, Any] = {}
+        self._devices: dict[str, FritzDevice] = {}
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
         self.fritz_hosts: FritzHosts = None
-        self.fritz_profiles: dict[str, FritzProfileSwitch] = {}
         self.fritz_status: FritzStatus = None
         self.hass = hass
         self.host = host
@@ -109,6 +108,7 @@ class FritzBoxTools:
             user=self.username,
             password=self.password,
             timeout=60.0,
+            pool_maxsize=30,
         )
 
         if not self.connection:
@@ -122,13 +122,6 @@ class FritzBoxTools:
 
         self._model = info.get("NewModelName")
         self._sw_version = info.get("NewSoftwareVersion")
-
-        self.fritz_profiles = {
-            profile: FritzProfileSwitch(
-                "http://" + self.host, self.username, self.password, profile
-            )
-            for profile in get_all_profiles(self.host, self.username, self.password)
-        }
 
     async def async_start(self, options: MappingProxyType[str, Any]) -> None:
         """Start FritzHosts connection."""
@@ -260,10 +253,92 @@ class FritzData:
     """Storage class for platform global data."""
 
     tracked: dict = field(default_factory=dict)
+    profile_switches: dict = field(default_factory=dict)
+
+
+class FritzDeviceBase(Entity):
+    """Entity base class for a device connected to a FRITZ!Box router."""
+
+    def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
+        """Initialize a FRITZ!Box device."""
+        self._router = router
+        self._mac: str = device.mac_address
+        self._name: str = device.hostname or DEFAULT_DEVICE_NAME
+
+    @property
+    def name(self) -> str:
+        """Return device name."""
+        return self._name
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the primary ip address of the device."""
+        if self._mac:
+            device: FritzDevice = self._router.devices[self._mac]
+            return device.ip_address
+        return None
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._mac
+
+    @property
+    def hostname(self) -> str | None:
+        """Return hostname of the device."""
+        if self._mac:
+            device: FritzDevice = self._router.devices[self._mac]
+            return device.hostname
+        return None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
+            "identifiers": {(DOMAIN, self._mac)},
+            "default_name": self.name,
+            "default_manufacturer": "AVM",
+            "default_model": "FRITZ!Box Tracked device",
+            "via_device": (
+                DOMAIN,
+                self._router.unique_id,
+            ),
+        }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
+    async def async_process_update(self) -> None:
+        """Update device."""
+        raise NotImplementedError()
+
+    async def async_on_demand_update(self) -> None:
+        """Update state."""
+        await self.async_process_update()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        await self.async_process_update()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_device_update,
+                self.async_on_demand_update,
+            )
+        )
 
 
 class FritzDevice:
-    """FritzScanner device."""
+    """Representation of a device connected to the FRITZ!Box."""
 
     def __init__(self, mac: str, name: str) -> None:
         """Initialize device info."""
@@ -292,7 +367,7 @@ class FritzDevice:
         if dev_home:
             self._last_activity = utc_point_in_time
 
-        self._ip_address = dev_info.ip_address if self._connected else None
+        self._ip_address = dev_info.ip_address
 
     @property
     def is_connected(self) -> bool:

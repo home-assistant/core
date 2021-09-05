@@ -1,6 +1,9 @@
 """Support for Notion."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
+from typing import Any
 
 from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
@@ -14,6 +17,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -46,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         client = await async_get_client(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session
+            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
         )
     except InvalidCredentialsError:
         LOGGER.error("Invalid username and/or password")
@@ -55,9 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
-    async def async_update():
+    async def async_update() -> dict[str, dict[str, Any]]:
         """Get the latest data from the Notion API."""
-        data = {"bridges": {}, "sensors": {}, "tasks": {}}
+        data: dict[str, dict[str, Any]] = {"bridges": {}, "sensors": {}, "tasks": {}}
         tasks = {
             "bridges": client.bridge.async_all(),
             "sensors": client.sensor.async_all(),
@@ -111,7 +115,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
-):
+) -> None:
     """Register a new bridge."""
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -134,13 +138,10 @@ class NotionEntity(CoordinatorEntity):
         sensor_id: str,
         bridge_id: str,
         system_id: str,
-        name: str,
-        device_class: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-
-        self._attr_device_class = device_class
 
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
@@ -154,7 +155,7 @@ class NotionEntity(CoordinatorEntity):
         }
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_name = f'{sensor["name"]}: {name}'
+        self._attr_name = f'{sensor["name"]}: {description.name}'
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
         )
@@ -162,6 +163,7 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._system_id = system_id
         self._task_id = task_id
+        self.entity_description = description
 
     @property
     def available(self) -> bool:
@@ -190,13 +192,16 @@ class NotionEntity(CoordinatorEntity):
         self._bridge_id = sensor["bridge"]["id"]
 
         device_registry = await dr.async_get_registry(self.hass)
+        this_device = device_registry.async_get_device(
+            {(DOMAIN, sensor["hardware_id"])}
+        )
         bridge = self.coordinator.data["bridges"][self._bridge_id]
         bridge_device = device_registry.async_get_device(
             {(DOMAIN, bridge["hardware_id"])}
         )
-        this_device = device_registry.async_get_device(
-            {(DOMAIN, sensor["hardware_id"])}
-        )
+
+        if not bridge_device or not this_device:
+            return
 
         device_registry.async_update_device(
             this_device.id, via_device_id=bridge_device.id
