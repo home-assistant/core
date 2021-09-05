@@ -201,7 +201,7 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.6.10
+aiolifx==0.7.0
 
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
@@ -997,7 +997,7 @@ minio==4.0.9
 mitemp_bt==0.0.3
 
 # homeassistant.components.motion_blinds
-motionblinds==0.4.10
+motionblinds==0.5.5
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.11
@@ -1784,7 +1784,7 @@ pyskyqhub==0.1.3
 pysma==0.6.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.25
+pysmappee==0.2.27
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3

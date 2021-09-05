@@ -355,6 +355,7 @@ class Scanner:
 
         for domain in self._async_matching_domains(info_with_desc):
             _LOGGER.debug("Discovered %s at %s", domain, location)
+
             flow: SSDPFlow = {
                 "domain": domain,
                 "context": {"source": config_entries.SOURCE_SSDP},

@@ -25,3 +25,9 @@ async def start_ha(hass, count, domain, config, caplog):
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def caplog_setup_text(caplog):
+    """Return setup log of integration."""
+    yield caplog.text

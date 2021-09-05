@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -10,6 +11,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.ssdp import SsdpChange
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -179,6 +182,20 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
+@dataclass
+class UpnpBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """A class that describes UPnP entities."""
+
+    format: str = "s"
+
+
+@dataclass
+class UpnpSensorEntityDescription(SensorEntityDescription):
+    """A class that describes a sensor UPnP entities."""
+
+    format: str = "s"
+
+
 class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to update data from UPNP device."""
 
@@ -209,14 +226,30 @@ class UpnpEntity(CoordinatorEntity):
     """Base class for UPnP/IGD entities."""
 
     coordinator: UpnpDataUpdateCoordinator
+    entity_description: UpnpSensorEntityDescription | UpnpBinarySensorEntityDescription
 
-    def __init__(self, coordinator: UpnpDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: UpnpDataUpdateCoordinator,
+        entity_description: UpnpSensorEntityDescription
+        | UpnpBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the base entities."""
         super().__init__(coordinator)
         self._device = coordinator.device
+        self.entity_description = entity_description
+        self._attr_name = f"{coordinator.device.name} {entity_description.name}"
+        self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.key}"
         self._attr_device_info = {
             "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
             "name": coordinator.device.name,
             "manufacturer": coordinator.device.manufacturer,
             "model": coordinator.device.model_name,
         }
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and (
+            self.coordinator.data.get(self.entity_description.key) or False
+        )
