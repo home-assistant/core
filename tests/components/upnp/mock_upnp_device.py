@@ -10,7 +10,10 @@ from homeassistant.components.upnp.const import (
     BYTES_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
+    WAN_STATUS,
 )
 from homeassistant.components.upnp.device import Device
 from homeassistant.util import dt
@@ -27,7 +30,8 @@ class MockDevice(Device):
         mock_device_updater = AsyncMock()
         super().__init__(igd_device, mock_device_updater)
         self._udn = udn
-        self.times_polled = 0
+        self.traffic_times_polled = 0
+        self.status_times_polled = 0
 
     @classmethod
     async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
@@ -66,13 +70,22 @@ class MockDevice(Device):
 
     async def async_get_traffic_data(self) -> Mapping[str, Any]:
         """Get traffic data."""
-        self.times_polled += 1
+        self.traffic_times_polled += 1
         return {
             TIMESTAMP: dt.utcnow(),
             BYTES_RECEIVED: 0,
             BYTES_SENT: 0,
             PACKETS_RECEIVED: 0,
             PACKETS_SENT: 0,
+        }
+
+    async def async_get_status(self) -> Mapping[str, Any]:
+        """Get connection status, uptime, and external IP."""
+        self.status_times_polled += 1
+        return {
+            WAN_STATUS: "Connected",
+            ROUTER_UPTIME: 0,
+            ROUTER_IP: "192.168.0.1",
         }
 
     async def async_start(self) -> None:

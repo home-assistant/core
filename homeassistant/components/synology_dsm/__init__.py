@@ -26,14 +26,9 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -68,7 +63,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    ENTITY_ENABLE,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     PLATFORMS,
@@ -82,7 +76,7 @@ from .const import (
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
-    EntityInfo,
+    SynologyDSMEntityDescription,
 )
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
@@ -109,12 +103,12 @@ async def async_setup_entry(  # noqa: C901
         if "SYNO." in entity_entry.unique_id:
             return None
 
-        entries = {
-            **STORAGE_DISK_BINARY_SENSORS,
-            **STORAGE_DISK_SENSORS,
-            **STORAGE_VOL_SENSORS,
-            **UTILISATION_SENSORS,
-        }
+        entries = (
+            *STORAGE_DISK_BINARY_SENSORS,
+            *STORAGE_DISK_SENSORS,
+            *STORAGE_VOL_SENSORS,
+            *UTILISATION_SENSORS,
+        )
         infos = entity_entry.unique_id.split("_")
         serial = infos.pop(0)
         label = infos.pop(0)
@@ -129,22 +123,22 @@ async def async_setup_entry(  # noqa: C901
             return None
 
         entity_type: str | None = None
-        for entity_key, entity_attrs in entries.items():
+        for description in entries:
             if (
                 device_id
-                and entity_attrs[ATTR_NAME] == "Status"
+                and description.name == "Status"
                 and "Status" in entity_entry.unique_id
                 and "(Smart)" not in entity_entry.unique_id
             ):
-                if "sd" in device_id and "disk" in entity_key:
-                    entity_type = entity_key
+                if "sd" in device_id and "disk" in description.key:
+                    entity_type = description.key
                     continue
-                if "volume" in device_id and "volume" in entity_key:
-                    entity_type = entity_key
+                if "volume" in device_id and "volume" in description.key:
+                    entity_type = description.key
                     continue
 
-            if entity_attrs[ATTR_NAME] == label:
-                entity_type = entity_key
+            if description.name == label:
+                entity_type = description.key
 
         if entity_type is None:
             return None
@@ -604,51 +598,25 @@ class SynoApi:
 class SynologyDSMBaseEntity(CoordinatorEntity):
     """Representation of a Synology NAS entry."""
 
+    entity_description: SynologyDSMEntityDescription
+    unique_id: str
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(
         self,
         api: SynoApi,
-        entity_type: str,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMEntityDescription,
     ) -> None:
         """Initialize the Synology DSM entity."""
         super().__init__(coordinator)
+        self.entity_description = description
 
         self._api = api
-        self._api_key = entity_type.split(":")[0]
-        self.entity_type = entity_type.split(":")[-1]
-        self._name = f"{api.network.hostname} {entity_info[ATTR_NAME]}"
-        self._class = entity_info[ATTR_DEVICE_CLASS]
-        self._enable_default = entity_info[ENTITY_ENABLE]
-        self._icon = entity_info[ATTR_ICON]
-        self._unit = entity_info[ATTR_UNIT_OF_MEASUREMENT]
-        self._unique_id = f"{self._api.information.serial}_{entity_type}"
-        self._attr_state_class = entity_info[ATTR_STATE_CLASS]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device."""
-        return self._class
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_name = f"{api.network.hostname} {description.name}"
+        self._attr_unique_id: str = (
+            f"{api.information.serial}_{description.api_key}:{description.key}"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -661,14 +629,11 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
             "sw_version": self._api.information.version_string,
         }
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enable_default
-
     async def async_added_to_hass(self) -> None:
         """Register entity for updates from API."""
-        self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
+        self.async_on_remove(
+            self._api.subscribe(self.entity_description.api_key, self.unique_id)
+        )
         await super().async_added_to_hass()
 
 
@@ -678,13 +643,12 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     def __init__(
         self,
         api: SynoApi,
-        entity_type: str,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMEntityDescription,
         device_id: str | None = None,
     ) -> None:
         """Initialize the Synology DSM disk or volume entity."""
-        super().__init__(api, entity_type, entity_info, coordinator)
+        super().__init__(api, coordinator, description)
         self._device_id = device_id
         self._device_name: str | None = None
         self._device_manufacturer: str | None = None
@@ -692,7 +656,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self._device_firmware: str | None = None
         self._device_type = None
 
-        if "volume" in entity_type:
+        if "volume" in description.key:
             volume = self._api.storage.get_volume(self._device_id)
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
@@ -705,7 +669,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
                 .replace("raid", "RAID")
                 .replace("shr", "SHR")
             )
-        elif "disk" in entity_type:
+        elif "disk" in description.key:
             disk = self._api.storage.get_disk(self._device_id)
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
@@ -713,9 +677,9 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
         self._name = (
-            f"{self._api.network.hostname} {self._device_name} {entity_info[ATTR_NAME]}"
+            f"{self._api.network.hostname} {self._device_name} {description.name}"
         )
-        self._unique_id += f"_{self._device_id}"
+        self._attr_unique_id += f"_{self._device_id}"
 
     @property
     def available(self) -> bool:

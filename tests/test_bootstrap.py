@@ -1,6 +1,7 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
 import asyncio
+import glob
 import os
 from unittest.mock import Mock, patch
 
@@ -55,13 +56,29 @@ async def test_home_assistant_core_config_validation(hass):
     assert result is None
 
 
-async def test_async_enable_logging(hass):
+async def test_async_enable_logging(hass, caplog):
     """Test to ensure logging is migrated to the queue handlers."""
     with patch("logging.getLogger"), patch(
         "homeassistant.bootstrap.async_activate_log_queue_handler"
-    ) as mock_async_activate_log_queue_handler:
+    ) as mock_async_activate_log_queue_handler, patch(
+        "homeassistant.bootstrap.logging.handlers.RotatingFileHandler.doRollover",
+        side_effect=OSError,
+    ):
         bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
+        mock_async_activate_log_queue_handler.reset_mock()
+        bootstrap.async_enable_logging(
+            hass,
+            log_rotate_days=5,
+            log_file="test.log",
+        )
+        mock_async_activate_log_queue_handler.assert_called_once()
+        for f in glob.glob("test.log*"):
+            os.remove(f)
+        for f in glob.glob("testing_config/home-assistant.log*"):
+            os.remove(f)
+
+    assert "Error rolling over log file" in caplog.text
 
 
 async def test_load_hassio(hass):

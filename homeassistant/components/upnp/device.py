@@ -14,7 +14,6 @@ from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -26,7 +25,10 @@ from .const import (
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
+    WAN_STATUS,
 )
 
 
@@ -46,7 +48,6 @@ class Device:
         """Initialize UPnP/IGD device."""
         self._igd_device = igd_device
         self._device_updater = device_updater
-        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
     async def async_create_device(
@@ -153,4 +154,19 @@ class Device:
             BYTES_SENT: values[1],
             PACKETS_RECEIVED: values[2],
             PACKETS_SENT: values[3],
+        }
+
+    async def async_get_status(self) -> Mapping[str, Any]:
+        """Get connection status, uptime, and external IP."""
+        _LOGGER.debug("Getting status for device: %s", self)
+
+        values = await asyncio.gather(
+            self._igd_device.async_get_status_info(),
+            self._igd_device.async_get_external_ip_address(),
+        )
+
+        return {
+            WAN_STATUS: values[0][0] if values[0] is not None else None,
+            ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
+            ROUTER_IP: values[1],
         }

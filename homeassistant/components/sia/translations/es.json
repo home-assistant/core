@@ -18,6 +18,7 @@
                     "additional_account": "Cuentas adicionales",
                     "encryption_key": "Clave de encriptaci\u00f3n",
                     "ping_interval": "Intervalo de ping (min)",
+                    "port": "Puerto",
                     "protocol": "Protocolo",
                     "zones": "N\u00famero de zonas de la cuenta"
                 },

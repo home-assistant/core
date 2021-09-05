@@ -1,11 +1,7 @@
 """Support for Toon sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
-    ATTR_STATE_CLASS,
-    SensorEntity,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -127,7 +123,6 @@ class ToonSensor(ToonEntity, SensorEntity):
             ATTR_DEFAULT_ENABLED, True
         )
         self._attr_icon = sensor.get(ATTR_ICON)
-        self._attr_last_reset = sensor.get(ATTR_LAST_RESET)
         self._attr_name = sensor[ATTR_NAME]
         self._attr_state_class = sensor.get(ATTR_STATE_CLASS)
         self._attr_native_unit_of_measurement = sensor[ATTR_UNIT_OF_MEASUREMENT]

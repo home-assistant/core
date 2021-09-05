@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)"
+                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
+                    "devices": "Dispositivi (Attivatori)"
                 },
-                "description": "Queste impostazioni devono essere regolate solo se HomeKit non funziona.",
+                "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",
                 "title": "Configurazione Avanzata"
             },
             "cameras": {
