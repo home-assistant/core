@@ -1,0 +1,5 @@
+{
+  "name": "Remko Heat Pump",
+  "render_readme": true,
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,11 @@
+{
+  "codeowners": ["@Xelaph"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/user/my_component/",
+  "domain": "remko_heat_pump",
+  "iot_class": "local_polling",
+  "name": "Remko Heat Pump",
+  "requirements": [],
+  "version": "0.0.1"
+}
