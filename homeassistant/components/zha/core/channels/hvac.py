@@ -149,110 +149,114 @@ class ThermostatChannel(ZigbeeChannel):
     @property
     def abs_max_cool_setpoint_limit(self) -> int:
         """Absolute maximum cooling setpoint."""
-        return self._abs_max_cool_setpoint_limit
+        return self.cluster.get("abs_max_cool_setpoint_limit", 3200)
 
     @property
     def abs_min_cool_setpoint_limit(self) -> int:
         """Absolute minimum cooling setpoint."""
-        return self._abs_min_cool_setpoint_limit
+        return self.cluster.get("abs_min_cool_setpoint_limit", 1600)
 
     @property
     def abs_max_heat_setpoint_limit(self) -> int:
         """Absolute maximum heating setpoint."""
-        return self._abs_max_heat_setpoint_limit
+        return self.cluster.get("abs_max_heat_setpoint_limit", 3000)
 
     @property
     def abs_min_heat_setpoint_limit(self) -> int:
         """Absolute minimum heating setpoint."""
-        return self._abs_min_heat_setpoint_limit
+        return self.cluster.get("abs_min_heat_setpoint_limit", 700)
 
     @property
     def ctrl_seqe_of_oper(self) -> int:
         """Control Sequence of operations attribute."""
-        return self._ctrl_seqe_of_oper
+        return self.cluster.get("ctrl_seqe_of_oper", 0xFF)
 
     @property
     def max_cool_setpoint_limit(self) -> int:
         """Maximum cooling setpoint."""
-        if self._max_cool_setpoint_limit is None:
+        sp_limit = self.cluster.get("max_cool_setpoint_limit")
+        if sp_limit is None:
             return self.abs_max_cool_setpoint_limit
-        return self._max_cool_setpoint_limit
+        return sp_limit
 
     @property
     def min_cool_setpoint_limit(self) -> int:
         """Minimum cooling setpoint."""
-        if self._min_cool_setpoint_limit is None:
+        sp_limit = self.cluster.get("min_cool_setpoint_limit")
+        if sp_limit is None:
             return self.abs_min_cool_setpoint_limit
-        return self._min_cool_setpoint_limit
+        return sp_limit
 
     @property
     def max_heat_setpoint_limit(self) -> int:
         """Maximum heating setpoint."""
-        if self._max_heat_setpoint_limit is None:
+        sp_limit = self.cluster.get("max_heat_setpoint_limit")
+        if sp_limit is None:
             return self.abs_max_heat_setpoint_limit
-        return self._max_heat_setpoint_limit
+        return sp_limit
 
     @property
     def min_heat_setpoint_limit(self) -> int:
         """Minimum heating setpoint."""
-        if self._min_heat_setpoint_limit is None:
+        sp_limit = self.cluster.get("min_heat_setpoint_limit")
+        if sp_limit is None:
             return self.abs_min_heat_setpoint_limit
-        return self._min_heat_setpoint_limit
+        return sp_limit
 
     @property
     def local_temp(self) -> int | None:
         """Thermostat temperature."""
-        return self._local_temp
+        return self.cluster.get("local_temp")
 
     @property
     def occupancy(self) -> int | None:
         """Is occupancy detected."""
-        return self._occupancy
+        return self.cluster.get("occupancy")
 
     @property
     def occupied_cooling_setpoint(self) -> int | None:
         """Temperature when room is occupied."""
-        return self._occupied_cooling_setpoint
+        return self.cluster.get("occupied_cooling_setpoint")
 
     @property
     def occupied_heating_setpoint(self) -> int | None:
         """Temperature when room is occupied."""
-        return self._occupied_heating_setpoint
+        return self.cluster.get("occupied_heating_setpoint")
 
     @property
     def pi_cooling_demand(self) -> int:
         """Cooling demand."""
-        return self._pi_cooling_demand
+        return self.cluster.get("pi_cooling_demand")
 
     @property
     def pi_heating_demand(self) -> int:
         """Heating demand."""
-        return self._pi_heating_demand
+        return self.cluster.get("pi_heating_demand")
 
     @property
     def running_mode(self) -> int | None:
         """Thermostat running mode."""
-        return self._running_mode
+        return self.cluster.get("running_mode")
 
     @property
     def running_state(self) -> int | None:
         """Thermostat running state, state of heat, cool, fan relays."""
-        return self._running_state
+        return self.cluster.get("running_state")
 
     @property
     def system_mode(self) -> int | None:
         """System mode."""
-        return self._system_mode
+        return self.cluster.get("system_mode")
 
     @property
     def unoccupied_cooling_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
-        return self._unoccupied_cooling_setpoint
+        return self.cluster.get("unoccupied_cooling_setpoint")
 
     @property
     def unoccupied_heating_setpoint(self) -> int | None:
         """Temperature when room is not occupied."""
-        return self._unoccupied_heating_setpoint
+        return self.cluster.get("unoccupied_heating_setpoint")
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -261,7 +265,6 @@ class ThermostatChannel(ZigbeeChannel):
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        setattr(self, f"_{attr_name}", value)
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
             AttributeUpdateRecord(attrid, attr_name, value),
