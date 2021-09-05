@@ -447,6 +447,11 @@ omit =
     homeassistant/components/home_connect/sensor.py
     homeassistant/components/home_connect/switch.py
     homeassistant/components/homematic/*
+    homeassistant/components/homewizard_energy/__init__.py
+    homeassistant/components/homewizard_energy/coordinator.py
+    homeassistant/components/homewizard_energy/errors.py
+    homeassistant/components/homewizard_energy/sensor.py
+    homeassistant/components/homewizard_energy/switch.py
     homeassistant/components/home_plus_control/api.py
     homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
