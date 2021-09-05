@@ -64,7 +64,7 @@ async def async_setup_netgear_entry(
         async_add_new_entities(router, async_add_entities, tracked, entity_class_generator)
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, router.signal_device_new, update_router)
+        async_dispatcher_connect(hass, router.signal_device_new, _async_router_updated)
     )
 
     update_router()
