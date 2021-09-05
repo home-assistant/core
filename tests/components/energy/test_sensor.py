@@ -220,7 +220,7 @@ async def test_cost_sensor_price_entity(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14",
-        {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+        energy_attributes,
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)

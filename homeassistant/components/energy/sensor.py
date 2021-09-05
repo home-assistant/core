@@ -298,7 +298,12 @@ class EnergyCostSensor(SensorEntity):
                 )
             return
 
-        if reset_detected(energy, float(self._last_energy_sensor_state)):
+        if reset_detected(
+            self.hass,
+            cast(str, self._config[self._adapter.entity_energy_key]),
+            energy,
+            float(self._last_energy_sensor_state),
+        ):
             # Energy meter was reset, reset cost sensor too
             self._reset(0)
         # Update with newly incurred cost

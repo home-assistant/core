@@ -1,13 +1,13 @@
 """Tests for ZHA config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch, sentinel
 
 import pytest
 import serial.tools.list_ports
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import setup
+from homeassistant import config_entries, setup
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER_URL,
@@ -164,27 +164,17 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_zha_device"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
 
+    with patch("homeassistant.components.zha.async_setup_entry"):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
 
-@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
-async def test_discovery_via_usb_rejects_nortek_zwave(detect_mock, hass):
-    """Test usb flow -- reject the nortek zwave radio."""
-    discovery_info = {
-        "device": "/dev/null",
-        "vid": "10C4",
-        "pid": "8A2A",
-        "serial_number": "612020FD",
-        "description": "HubZ Smart Home Controller - HubZ Z-Wave Com Port",
-        "manufacturer": "Silicon Labs",
-    }
-    result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_zha_device"
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "usb_probe_failed"
 
 
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
@@ -279,6 +269,52 @@ async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_deconz_already_setup(detect_mock, hass):
+    """Test usb flow -- deconz setup."""
+    MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_zha_device"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
+    """Test usb flow -- deconz ignored."""
+    MockConfigEntry(
+        domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
+    ).add_to_hass(hass)
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -444,6 +480,39 @@ async def test_probe_radios(xbee_probe, zigate_probe, deconz_probe, cc_probe, ha
         assert zigate_probe.await_count == 1
         assert deconz_probe.await_count == 1
         assert cc_probe.await_count == 1
+
+
+@patch("zigpy_cc.zigbee.application.ControllerApplication.probe", return_value=False)
+@patch(
+    "zigpy_deconz.zigbee.application.ControllerApplication.probe", return_value=False
+)
+@patch(
+    "zigpy_zigate.zigbee.application.ControllerApplication.probe", return_value=False
+)
+@patch("zigpy_xbee.zigbee.application.ControllerApplication.probe", return_value=False)
+async def test_probe_new_ezsp(xbee_probe, zigate_probe, deconz_probe, cc_probe, hass):
+    """Test detect radios."""
+    app_ctrl_cls = MagicMock()
+    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
+    app_ctrl_cls.probe = AsyncMock(side_efferct=(True, False))
+
+    p1 = patch(
+        "bellows.zigbee.application.ControllerApplication.probe",
+        return_value={
+            zigpy.config.CONF_DEVICE_PATH: sentinel.usb_port,
+            "baudrate": 33840,
+        },
+    )
+    with p1 as probe_mock:
+        res = await config_flow.detect_radios("/dev/null")
+        assert probe_mock.await_count == 1
+        assert res[CONF_RADIO_TYPE] == "ezsp"
+        assert zigpy.config.CONF_DEVICE in res
+        assert (
+            res[zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
+            is sentinel.usb_port
+        )
+        assert res[zigpy.config.CONF_DEVICE]["baudrate"] == 33840
 
 
 @patch("bellows.zigbee.application.ControllerApplication.probe", return_value=False)

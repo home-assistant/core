@@ -19,7 +19,7 @@ from .mock_upnp_device import mock_upnp_device  # noqa: F401
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device")
+@pytest.mark.usefixtures("mock_ssdp_scanner", "mock_upnp_device", "mock_get_source_ip")
 async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
     entry = MockConfigEntry(

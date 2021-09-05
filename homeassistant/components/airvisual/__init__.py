@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry,
 )
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -358,11 +359,14 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

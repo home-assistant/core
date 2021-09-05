@@ -3,15 +3,22 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, Callable
 
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
+
+if TYPE_CHECKING:
+    from . import AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +44,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a sensor for an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -58,21 +70,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AmcrestSensor(SensorEntity):
     """A sensor implementation for Amcrest IP camera."""
 
-    def __init__(self, name, device, description: SensorEntityDescription):
+    def __init__(
+        self, name: str, device: AmcrestDevice, description: SensorEntityDescription
+    ) -> None:
         """Initialize a sensor for Amcrest camera."""
         self.entity_description = description
         self._signal_name = name
         self._api = device.api
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: Callable[[], None] | None = None
 
         self._attr_name = f"{name} {description.name}"
+        self._attr_extra_state_attributes = {}
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         if not self.available:
             return
@@ -108,11 +123,11 @@ class AmcrestSensor(SensorEntity):
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
-    async def async_on_demand_update(self):
+    async def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to update signal."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass,
@@ -120,6 +135,7 @@ class AmcrestSensor(SensorEntity):
             self.async_on_demand_update,
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect from update signal."""
+        assert self._unsub_dispatcher is not None
         self._unsub_dispatcher()
