@@ -23,25 +23,25 @@ OUTPUT_SENSOR = Sensor(
     fromStart=True,
 )
 
-OUTPUT_ACCUMULATED_SENSOR = Sensor(
+INPUT_ACCUMULATED_SENSOR = Sensor(
     channel="N/A",
-    base_name="My WattHour Accumulated Sensor",
+    base_name="My WattHour Accumulated Input Sensor",
     suffix=".wh",
-    io_type="Output",
+    io_type="Input",
     unit="WattHours",
-    value=200,
+    value=500,
     begin="",
     mac_addr="mock-mac",
     fromStart=False,
 )
 
-OUTPUT_ACCUMULATED_SENSOR2 = Sensor(
+OUTPUT_ACCUMULATED_SENSOR = Sensor(
     channel="N/A",
-    base_name="My WattHour Accumulated Sensor2",
+    base_name="My WattHour Accumulated Output Sensor",
     suffix=".wh",
     io_type="Output",
     unit="WattHours",
-    value=500,
+    value=200,
     begin="",
     mac_addr="mock-mac",
     fromStart=False,

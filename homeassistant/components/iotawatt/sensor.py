@@ -288,7 +288,7 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
     @property
     def name(self) -> str | None:
         """Return name of the entity."""
-        return f"{self._sensor_data.getSourceName()} Accumulating"
+        return f"{self._sensor_data.getSourceName()} Accumulated"
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
