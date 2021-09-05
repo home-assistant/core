@@ -68,12 +68,12 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     @property
     def min_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return 80.0
+        return 30.0
 
     @property
     def max_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return 30.0
+        return 80.0
 
     @property
     def temperature_unit(self) -> str:
