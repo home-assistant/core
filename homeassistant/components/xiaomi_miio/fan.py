@@ -456,7 +456,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     def preset_mode(self):
         """Get the active preset mode."""
         if self._state:
-            preset_mode = self._mode.capitalize()
+            preset_mode = AirpurifierOperationMode(self._mode).name
             return preset_mode if preset_mode in self._preset_modes else None
 
         return None
