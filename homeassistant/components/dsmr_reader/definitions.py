@@ -21,6 +21,8 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
+    PRICE_EUR_KWH,
+    PRICE_EUR_M3,
     VOLUME_CUBIC_METERS,
 )
 
@@ -301,31 +303,31 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/day-consumption/energy_supplier_price_electricity_delivered_1",
         name="Low tariff delivered price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_delivered_2",
         name="High tariff delivered price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_returned_1",
         name="Low tariff returned price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_returned_2",
         name="High tariff returned price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_gas",
         name="Gas price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_M3,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/fixed_cost",

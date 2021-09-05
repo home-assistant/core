@@ -474,6 +474,11 @@ PRESSURE_MBAR: Final = "mbar"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
+# Price units
+PRICE_EUR_KWH: Final = "EUR/kWh"
+PRICE_EUR_WH: Final = "EUR/Wh"
+PRICE_EUR_M3: Final = "EUR/m³"
+
 # Sound pressure units
 SOUND_PRESSURE_DB: Final = "dB"
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
