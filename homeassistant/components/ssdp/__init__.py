@@ -131,14 +131,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@core_callback
-def _async_use_default_interface(adapters: list[network.Adapter]) -> bool:
-    for adapter in adapters:
-        if adapter["enabled"] and not adapter["default"]:
-            return False
-    return True
-
-
 async def _async_process_callbacks(
     callbacks: list[SsdpCallback],
     discovery_info: dict[str, str],
@@ -298,7 +290,6 @@ class Scanner:
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
                     source_ip=source_ip,
-                    # XXX TODO: target ip?
                 )
             )
         results = await asyncio.gather(

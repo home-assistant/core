@@ -263,8 +263,7 @@ class SonosDiscoveryManager:
             else:
                 async_dispatcher_send(self.hass, f"{SONOS_SEEN}-{uid}")
 
-    @callback
-    def _async_ssdp_discovered_player(self, info, change):
+    async def _async_ssdp_discovered_player(self, info, change):
         if change == ssdp.SsdpChange.BYEBYE:
             return
 
