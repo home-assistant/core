@@ -3,8 +3,7 @@ from datetime import timedelta
 import logging
 from socket import timeout
 
-from motionblinds import MotionMulticast
-from motionblinds.motion_blinds import ParseException
+from motionblinds import AsyncMotionMulticast, ParseException
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -99,10 +98,10 @@ async def async_setup_entry(
 
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        multicast = MotionMulticast()
+        multicast = AsyncMotionMulticast()
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
         # start listening for local pushes (only once)
-        await hass.async_add_executor_job(multicast.Start_listen)
+        await multicast.Start_listen()
 
         # register stop callback to shutdown listening for local pushes
         def stop_motion_multicast(event):
@@ -168,6 +167,6 @@ async def async_unload_entry(
         # No motion gateways left, stop Motion multicast
         _LOGGER.debug("Shutting down Motion Listener")
         multicast = hass.data[DOMAIN].pop(KEY_MULTICAST_LISTENER)
-        await hass.async_add_executor_job(multicast.Stop_listen)
+        multicast.Stop_listen()
 
     return unload_ok

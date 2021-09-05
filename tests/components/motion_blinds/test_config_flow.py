@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.motion_blinds import const
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
-from homeassistant.components.motion_blinds.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 TEST_HOST = "1.2.3.4"
@@ -73,6 +73,12 @@ def motion_blinds_connect_fixture():
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
+        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Stop_listen",
+        return_value=True,
+    ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
         yield
@@ -81,7 +87,7 @@ def motion_blinds_connect_fixture():
 async def test_config_flow_manual_host_success(hass):
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -113,7 +119,7 @@ async def test_config_flow_manual_host_success(hass):
 async def test_config_flow_discovery_1_success(hass):
     """Successful flow with 1 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -145,7 +151,7 @@ async def test_config_flow_discovery_1_success(hass):
 async def test_config_flow_discovery_2_success(hass):
     """Successful flow with 2 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -194,7 +200,7 @@ async def test_config_flow_discovery_2_success(hass):
 async def test_config_flow_connection_error(hass):
     """Failed flow manually initialized by the user with connection timeout."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -226,7 +232,7 @@ async def test_config_flow_connection_error(hass):
 async def test_config_flow_discovery_fail(hass):
     """Failed flow with no gateways discovered."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
