@@ -16,8 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
-    ATTR_TRACKABLE,
-    ATTR_TRACKER_DETAILS,
     CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
@@ -150,9 +148,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.append(
                 description.entity_class(
                     client.user_id,
-                    item[ATTR_TRACKABLE],
-                    item[ATTR_TRACKER_DETAILS],
-                    f"{item[ATTR_TRACKABLE]['_id']}_{description.key}",
+                    item.trackable,
+                    item.tracker_details,
+                    f"{item.trackable['_id']}_{description.key}",
                     description,
                 )
             )

@@ -8,10 +8,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    ATTR_HW_INFO,
-    ATTR_POS_REPORT,
-    ATTR_TRACKABLE,
-    ATTR_TRACKER_DETAILS,
     CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
@@ -35,10 +31,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(
             TractiveDeviceTracker(
                 client.user_id,
-                item[ATTR_TRACKABLE],
-                item[ATTR_TRACKER_DETAILS],
-                item[ATTR_HW_INFO],
-                item[ATTR_POS_REPORT],
+                item.trackable,
+                item.tracker_details,
+                item.hw_info,
+                item.pos_report,
             )
         )
 

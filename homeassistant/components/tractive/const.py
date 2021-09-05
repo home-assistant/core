@@ -7,11 +7,7 @@ DOMAIN = "tractive"
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
 ATTR_DAILY_GOAL = "daily_goal"
-ATTR_HW_INFO = "hw_info"
 ATTR_MINUTES_ACTIVE = "minutes_active"
-ATTR_POS_REPORT = "pos_report"
-ATTR_TRACKABLE = "trackable"
-ATTR_TRACKER_DETAILS = "tracker_details"
 
 CLIENT = "client"
 TRACKABLES = "trackables"

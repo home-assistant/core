@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
 import aiotractive
@@ -20,11 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_DAILY_GOAL,
-    ATTR_HW_INFO,
     ATTR_MINUTES_ACTIVE,
-    ATTR_POS_REPORT,
-    ATTR_TRACKABLE,
-    ATTR_TRACKER_DETAILS,
     CLIENT,
     DOMAIN,
     RECONNECT_INTERVAL,
@@ -39,6 +36,16 @@ PLATFORMS = ["device_tracker", "sensor"]
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class Trackables:
+    """A class that describes trackables."""
+
+    trackable: dict | None = None
+    tracker_details: dict | None = None
+    hw_info: dict | None = None
+    pos_report: dict | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -95,12 +102,7 @@ async def _generate_trackables(client, trackable):
         tracker.details(), tracker.hw_info(), tracker.pos_report()
     )
 
-    return {
-        ATTR_TRACKABLE: trackable,
-        ATTR_TRACKER_DETAILS: tracker_details,
-        ATTR_HW_INFO: hw_info,
-        ATTR_POS_REPORT: pos_report,
-    }
+    return Trackables(trackable, tracker_details, hw_info, pos_report)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
