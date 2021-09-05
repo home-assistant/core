@@ -1,13 +1,8 @@
 """Support for Smart Meter Texas sensors."""
 from smart_meter_texas import Meter
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    CONF_ADDRESS,
-    DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
+from homeassistant.const import CONF_ADDRESS, DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
