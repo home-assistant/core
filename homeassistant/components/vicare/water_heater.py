@@ -7,6 +7,7 @@ import requests
 
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE,
     WaterHeaterEntity,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
@@ -20,14 +21,16 @@ VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
+VICARE_MODE_ONETIMECHARGE =  "onetimecharge"
 
 VICARE_TEMP_WATER_MIN = 10
 VICARE_TEMP_WATER_MAX = 60
 
 OPERATION_MODE_ON = "on"
 OPERATION_MODE_OFF = "off"
+OPERATION_MODE_ONETIMECHARGE = "onetimecharge"
 
-SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE
+SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 VICARE_TO_HA_HVAC_DHW = {
     VICARE_MODE_DHW: OPERATION_MODE_ON,
@@ -38,6 +41,7 @@ VICARE_TO_HA_HVAC_DHW = {
 }
 
 HA_TO_VICARE_HVAC_DHW = {
+    OPERATION_MODE_ONETIMECHARGE: VICARE_MODE_ONETIMECHARGE,
     OPERATION_MODE_OFF: VICARE_MODE_OFF,
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
@@ -153,3 +157,9 @@ class ViCareWater(WaterHeaterEntity):
     def operation_list(self):
         """Return the list of available operation modes."""
         return list(HA_TO_VICARE_HVAC_DHW)
+
+    def set_operation_mode(self, operations_mode):
+        """Set operations mode, including ability to do a one time charge"""
+        operation_request = operations_mode
+        if operations_mode == "onetimecharge":
+           self._api.activateOneTimeCharge()
