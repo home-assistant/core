@@ -1,4 +1,6 @@
 """Support for Xiaomi Miio."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -147,9 +149,9 @@ class VacuumCoordinatorData:
     last_clean_details: CleaningDetails
     consumable_status: ConsumableStatus
     clean_history_status: CleaningSummary
-    timers: List[Timer]
-    fan_speeds: Dict[str, int]
-    fan_speeds_reverse: Dict[int, str]
+    timers: list[Timer]
+    fan_speeds: dict[str, int]
+    fan_speeds_reverse: dict[int, str]
 
 
 @dataclass(init=False, frozen=True)
