@@ -63,6 +63,29 @@ async def test_import_old_config_sensor(hass: HomeAssistant):
             assert len(confflow_entries) == 1
 
 
+async def test_import_faulty_config_sensor(hass: HomeAssistant):
+    """Test import of old sensor platform config."""
+    config = {
+        "sensor": [
+            {
+                CONF_PLATFORM: qbittorrent.DATA_KEY_NAME,
+            }
+        ],
+    }
+    mocked_client = _create_mocked_client(False, False)
+    with patch(
+        "homeassistant.components.qbittorrent.client.Client",
+        return_value=mocked_client,
+    ):
+        with patch("homeassistant.core.ServiceRegistry.async_call", return_value=True):
+            assert await setup.async_setup_component(hass, "sensor", config)
+            await hass.async_block_till_done()
+
+            confflow_entries = hass.config_entries.flow.async_progress(True)
+
+            assert len(confflow_entries) == 1
+
+
 async def test_unload_entry(hass: HomeAssistant):
     """Test removing Qbittorrent client."""
     mocked_client = _create_mocked_client(False, False)
