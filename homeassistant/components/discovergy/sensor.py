@@ -2,7 +2,7 @@
 import logging
 
 from pydiscovergy import Discovergy
-from pydiscovergy.error import HTTPError
+from pydiscovergy.error import AccessTokenExpired, HTTPError
 from pydiscovergy.models import Meter
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -14,9 +14,11 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
+    ConfigEntryAuthFailed,
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
@@ -37,8 +39,16 @@ def get_coordinator_for_meter(
         """Fetch data from API endpoint."""
         try:
             return await discovergy_instance.get_last_reading(meter.get_meter_id())
+        except AccessTokenExpired as err:
+            raise ConfigEntryAuthFailed(
+                "Got token expired while communicating with API"
+            ) from err
         except HTTPError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+        except Exception as err:  # pylint: disable=broad-except
+            raise UpdateFailed(
+                f"Unexpected error while communicating with API: {err}"
+            ) from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -54,24 +64,38 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Discovergy sensors."""
-    discovergy_instance = hass.data[DOMAIN][entry.entry_id]
-    meters = await discovergy_instance.get_meters()
+    try:
+        discovergy_instance = hass.data[DOMAIN][entry.entry_id]
+        meters = await discovergy_instance.get_meters()
+    except AccessTokenExpired as err:
+        _LOGGER.debug("Token expired while communicating with API: %s", err)
+        entry.async_start_reauth(hass)
+    except HTTPError as err:
+        raise ConfigEntryNotReady(f"Error communicating with API: {err}") from err
+    except Exception as err:  # pylint: disable=broad-except
+        raise ConfigEntryNotReady(
+            f"Unexpected error while communicating with API: {err}"
+        ) from err
+    else:
+        entities = []
+        for meter in meters:
+            if meter.measurement_type == "ELECTRICITY":
+                # Get coordinator for meter, set config entry and fetch initial data
+                # so we have data when entities are added
+                coordinator = get_coordinator_for_meter(
+                    hass, meter, discovergy_instance
+                )
+                coordinator.config_entry = entry
+                await coordinator.async_config_entry_first_refresh()
 
-    entities = []
-    for meter in meters:
-        if meter.measurement_type == "ELECTRICITY":
-            # Get coordinator for meter and fetch initial data so we have data when entities are added
-            coordinator = get_coordinator_for_meter(hass, meter, discovergy_instance)
-            await coordinator.async_config_entry_first_refresh()
+                for description in ELECTRICITY_SENSORS:
+                    # check if this meter has this data, then add this sensor
+                    if coordinator.data.values[description.key]:
+                        entities.append(
+                            DiscovergyElectricitySensor(description, meter, coordinator)
+                        )
 
-            for description in ELECTRICITY_SENSORS:
-                # check if this meter has this data, then add this sensor
-                if coordinator.data.values[description.key]:
-                    entities.append(
-                        DiscovergyElectricitySensor(description, meter, coordinator)
-                    )
-
-    async_add_entities(entities, False)
+        async_add_entities(entities, False)
 
 
 class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):

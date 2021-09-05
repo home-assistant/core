@@ -5,10 +5,9 @@ import logging
 
 import pydiscovergy
 import pydiscovergy.error as discovergyError
-from pydiscovergy.models import ConsumerToken, RequestToken
+from pydiscovergy.models import AccessToken, ConsumerToken
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -30,47 +29,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    if not entry.data[CONF_CONSUMER_KEY] or not entry.data[CONF_CONSUMER_SECRET]:
-        _LOGGER.debug("No consumer token found. Init without consumer token")
-        hass.data[DOMAIN][entry.entry_id] = pydiscovergy.Discovergy(
-            APP_NAME, entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
-        )
-    else:
-        # uses stored consumer token pair from config
-        _LOGGER.debug("Reusing consumer token from config")
-        hass.data[DOMAIN][entry.entry_id] = pydiscovergy.Discovergy(
-            APP_NAME,
-            entry.data[CONF_EMAIL],
-            entry.data[CONF_PASSWORD],
-            consumer_token=ConsumerToken(
-                entry.data[CONF_CONSUMER_KEY], entry.data[CONF_CONSUMER_SECRET]
-            ),
-        )
+    # check if we've the necessary data in config if not do a re-auth
+    if (
+        CONF_CONSUMER_KEY not in entry.data
+        or CONF_CONSUMER_SECRET not in entry.data
+        or CONF_ACCESS_TOKEN not in entry.data
+        or CONF_ACCESS_TOKEN_SECRET not in entry.data
+    ):
+        entry.async_start_reauth(hass)
+        return False
+
+    # init Discovergy class with tokens from config
+    hass.data[DOMAIN][entry.entry_id] = pydiscovergy.Discovergy(
+        app_name=APP_NAME,
+        consumer_token=ConsumerToken(
+            entry.data[CONF_CONSUMER_KEY], entry.data[CONF_CONSUMER_SECRET]
+        ),
+        access_token=AccessToken(
+            entry.data[CONF_ACCESS_TOKEN], entry.data[CONF_ACCESS_TOKEN_SECRET]
+        ),
+    )
 
     try:
-        conf_access_token = None
-        if CONF_ACCESS_TOKEN in entry.data and CONF_ACCESS_TOKEN_SECRET in entry.data:
-            _LOGGER.debug("Reusing access token from config")
-            conf_access_token = RequestToken(
-                entry.data[CONF_ACCESS_TOKEN], entry.data[CONF_ACCESS_TOKEN_SECRET]
-            )
-
-        access_token = await hass.data[DOMAIN][entry.entry_id].login(
-            access_token=conf_access_token
-        )
-
-        # now update the config entry with the access token if we haven't got it from config
-        if conf_access_token is None:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    CONF_ACCESS_TOKEN: access_token.token,
-                    CONF_ACCESS_TOKEN_SECRET: access_token.token_secret,
-                },
-            )
-    except discovergyError.InvalidLogin as err:
-        _LOGGER.error("Error authenticate to Discovergy: %s", err)
+        # try to get data from api to check if access token is still valid
+        # if no exception is raised everything is fine to go
+        await hass.data[DOMAIN][entry.entry_id].get_meters()
+    except discovergyError.AccessTokenExpired as err:
+        _LOGGER.debug("Token expired while connecting to Discovergy: %s", err)
+        entry.async_start_reauth(hass)
         return False
     except discovergyError.HTTPError as err:
         _LOGGER.error("Error connecting to Discovergy: %s", err)
