@@ -19,7 +19,7 @@ from homeassistant.components.crownstone.const import (
     DONT_USE_USB,
     MANUAL_PATH,
 )
-from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD, CONF_UNIQUE_ID
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -53,12 +53,9 @@ def get_mocked_com_port():
     return port
 
 
-def create_mocked_entry_conf(
-    unique_id: str, email: str, password: str, usb_path: str | None
-):
+def create_mocked_entry_conf(email: str, password: str, usb_path: str | None):
     """Set a result for the entry for comparison."""
     MOCK_CONF: dict[str, str | None] = {}
-    MOCK_CONF[CONF_ID] = unique_id
     MOCK_CONF[CONF_EMAIL] = email
     MOCK_CONF[CONF_PASSWORD] = password
     MOCK_CONF[CONF_USB_PATH] = usb_path
@@ -100,7 +97,6 @@ async def test_abort_if_configured(hass: HomeAssistant):
     """Test flow with correct login input and abort if sphere already configured."""
     # create mock entry conf
     configured_entry = create_mocked_entry_conf(
-        unique_id="example@homeassistant.com",
         email="example@homeassistant.com",
         password="homeassistantisawesome",
         usb_path="/dev/serial/by-id/crownstone-usb",
@@ -110,7 +106,7 @@ async def test_abort_if_configured(hass: HomeAssistant):
     MockConfigEntry(
         domain=DOMAIN,
         data=configured_entry,
-        unique_id=configured_entry[CONF_ID],
+        unique_id=configured_entry[CONF_EMAIL],
     ).add_to_hass(hass)
 
     result = await start_user_flow(hass, get_mocked_crownstone_cloud())
@@ -159,7 +155,6 @@ async def test_unknown_error(hass: HomeAssistant):
 async def test_successful_login_no_usb(hass: HomeAssistant):
     """Test a successful login without configuring a USB."""
     entry_without_usb = create_mocked_entry_conf(
-        unique_id="example@homeassistant.com",
         email="example@homeassistant.com",
         password="homeassistantisawesome",
         usb_path=None,
@@ -187,7 +182,6 @@ async def test_successful_login_no_usb(hass: HomeAssistant):
 async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
     entry_with_usb = create_mocked_entry_conf(
-        unique_id="example@homeassistant.com",
         email="example@homeassistant.com",
         password="homeassistantisawesome",
         usb_path="/dev/serial/by-id/crownstone-usb",
@@ -226,7 +220,6 @@ async def test_update_usb_config(serial_mock: MagicMock, hass: HomeAssistant):
     """Tests the update to the USB config triggered by options flow."""
     # create mock entry conf
     configured_entry = create_mocked_entry_conf(
-        unique_id="example@homeassistant.com",
         email="example@homeassistant.com",
         password="homeassistantisawesome",
         usb_path=None,
@@ -236,7 +229,7 @@ async def test_update_usb_config(serial_mock: MagicMock, hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=configured_entry,
-        unique_id=configured_entry[CONF_ID],
+        unique_id=configured_entry[CONF_EMAIL],
     )
     entry.add_to_hass(hass)
 
@@ -294,7 +287,6 @@ async def test_update_usb_config(serial_mock: MagicMock, hass: HomeAssistant):
 async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
     entry_with_manual_usb = create_mocked_entry_conf(
-        unique_id="example@homeassistant.com",
         email="example@homeassistant.com",
         password="homeassistantisawesome",
         usb_path="/dev/crownstone-usb",
@@ -348,7 +340,6 @@ async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
 async def test_options_flow(hass: HomeAssistant):
     """Test options flow."""
     configured_entry = create_mocked_entry_conf(
-        unique_id="example@homeassistant.com",
         email="example@homeassistant.com",
         password="homeassistantisawesome",
         usb_path=None,
@@ -358,7 +349,7 @@ async def test_options_flow(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=configured_entry,
-        unique_id=configured_entry[CONF_ID],
+        unique_id=configured_entry[CONF_EMAIL],
     )
     entry.add_to_hass(hass)
 

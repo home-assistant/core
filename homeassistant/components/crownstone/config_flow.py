@@ -13,7 +13,7 @@ from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD, CONF_UNIQUE_ID
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
@@ -195,7 +195,6 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=f"Account: {self.unique_id}",
             data={
-                CONF_ID: self.unique_id,
                 CONF_EMAIL: self.login_info[CONF_EMAIL],
                 CONF_PASSWORD: self.login_info[CONF_PASSWORD],
                 CONF_USB_PATH: self.usb_path,
