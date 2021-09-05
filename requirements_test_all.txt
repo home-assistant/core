@@ -131,7 +131,7 @@ aiohttp_cors==0.7.0
 aiohue==2.6.3
 
 # homeassistant.components.homewizard_energy
-aiohwenergy==0.3.2
+aiohwenergy==0.4.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
