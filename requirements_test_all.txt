@@ -260,7 +260,7 @@ bsblan==0.4.0
 buienradar==1.0.4
 
 # homeassistant.components.caldav
-caldav==0.7.1
+caldav==0.8.0
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
