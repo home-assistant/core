@@ -2,7 +2,12 @@
 from smart_meter_texas import Meter
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR, DEVICE_CLASS_ENERGY, STATE_CLASS_TOTAL_INCREASING
+from homeassistant.const import (
+    CONF_ADDRESS,
+    ENERGY_KILO_WATT_HOUR,
+    DEVICE_CLASS_ENERGY,
+    STATE_CLASS_TOTAL_INCREASING,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
