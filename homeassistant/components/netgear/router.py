@@ -221,7 +221,7 @@ class NetgearRouter:
 class NetgearDeviceEntity(Entity):
     """Base class for a device connected to a Netgear router."""
 
-    def __init__(self, router: NetgearRouter, device) -> None:
+    def __init__(self, router: NetgearRouter, device: dict) -> None:
         """Initialize a Netgear device."""
         self._router = router
         self._device = device

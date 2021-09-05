@@ -64,10 +64,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Netgear component."""
 
-    def generate_classes(router: NetgearRouter, device):
-        classes = []
-        classes.append(NetgearScannerEntity(router, device))
-        return classes
+    def generate_classes(router: NetgearRouter, device: dict):
+        return [NetgearScannerEntity(router, device)]
 
     await async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
 
@@ -75,7 +73,7 @@ async def async_setup_entry(
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     """Representation of a device connected to a Netgear router."""
 
-    def __init__(self, router: NetgearRouter, device) -> None:
+    def __init__(self, router: NetgearRouter, device: dict) -> None:
         """Initialize a Netgear device."""
         super().__init__(router, device)
         self._hostname = self.get_hostname()

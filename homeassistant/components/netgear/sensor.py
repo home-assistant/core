@@ -51,7 +51,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Netgear component."""
 
-    def generate_sensor_classes(router: NetgearRouter, device):
+    def generate_sensor_classes(router: NetgearRouter, device: dict):
         return [
            NetgearSensorEntity(router, device, attribute)
            for attribute in ("type", "link_rate", "signal")
@@ -67,7 +67,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
 
     _attr_entity_registry_enabled_default = False
 
-    def __init__(self, router: NetgearRouter, device, attribute) -> None:
+    def __init__(self, router: NetgearRouter, device: dict, attribute: str) -> None:
         """Initialize a Netgear device."""
         super().__init__(router, device)
         self._attribute = attribute
