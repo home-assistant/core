@@ -1110,6 +1110,17 @@ def test_regex_replace(hass):
     assert tpl.async_render() == ["Home Assistant test"]
 
 
+def test_regex_findall(hass):
+    """Test regex_findall method."""
+    tpl = template.Template(
+        """
+{{ 'Flight from JFK to LHR' | regex_findall('([A-Z]{3})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == ["JFK", "LHR"]
+
+
 def test_regex_findall_index(hass):
     """Test regex_findall_index method."""
     tpl = template.Template(
