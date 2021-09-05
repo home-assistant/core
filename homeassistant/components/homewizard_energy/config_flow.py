@@ -9,10 +9,11 @@ from voluptuous import All, Length, Required, Schema
 from voluptuous.util import Lower
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_IP_ADDRESS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=None,
             )
 
-        entry_info = {CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+        entry_info = {
+            CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+            CONF_PORT: 80,
+        }
 
         return await self.async_step_check(entry_info)
 
@@ -54,11 +58,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("config_flow async_step_zeroconf")
 
         # Validate doscovery entry
-        if discovery_info["host"] is None:
-            return self.async_abort(reason="invalid_discovery_parameters")
-
         if (
-            "api_enabled" not in discovery_info["properties"]
+            "host" not in discovery_info
+            or "api_enabled" not in discovery_info["properties"]
             or "path" not in discovery_info["properties"]
             or "product_name" not in discovery_info["properties"]
             or "product_type" not in discovery_info["properties"]
@@ -75,6 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Pass parameters
         entry_info = {
             CONF_IP_ADDRESS: discovery_info["host"],
+            CONF_PORT: discovery_info["port"],
         }
 
         return await self.async_step_check(entry_info)
@@ -118,7 +121,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if energy_api.device.product_type not in SUPPORTED_DEVICES:
             _LOGGER.error(
-                "Device (%s) not supported by integration", entry_info["product_type"]
+                "Device (%s) not supported by integration",
+                energy_api.device.product_type,
             )
             return self.async_abort(reason="device_not_supported")
 
@@ -127,7 +131,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry_info["product_type"] = energy_api.device.product_type
         entry_info["serial"] = energy_api.device.serial
 
-        self.context["host"] = entry_info[CONF_IP_ADDRESS]
+        self.context[CONF_HOST] = entry_info[CONF_IP_ADDRESS]
+        self.context[CONF_PORT] = entry_info[CONF_PORT]
         self.context["product_name"] = entry_info["product_name"]
         self.context["product_type"] = entry_info["product_type"]
         self.context["serial"] = entry_info["serial"]

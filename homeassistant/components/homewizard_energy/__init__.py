@@ -8,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_VERSION, CONF_ID, CONF_STATE
+from homeassistant.const import CONF_API_VERSION, CONF_ID, CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,7 +20,6 @@ from .const import (
     CONF_API,
     CONF_DATA,
     CONF_MODEL,
-    CONF_NAME,
     CONF_SW_VERSION,
     CONF_UNLOAD_CB,
     COORDINATOR,
