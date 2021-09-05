@@ -1,0 +1,15 @@
+{
+  "domain": "alex_test",
+  "name": "My first Hass Integration",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/alex_test",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Xelaph"
+  ],
+  "iot_class": "local_polling"
+}

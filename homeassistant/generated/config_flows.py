@@ -19,6 +19,7 @@ FLOWS = [
     "airtouch4",
     "airvisual",
     "alarmdecoder",
+    "alex_test",
     "almond",
     "ambee",
     "ambiclimate",

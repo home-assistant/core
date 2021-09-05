@@ -32,6 +32,7 @@ homeassistant/components/airnow/* @asymworks
 homeassistant/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
+homeassistant/components/alex_test/* @Xelaph
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
