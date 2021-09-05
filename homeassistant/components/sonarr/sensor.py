@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
 from .coordinator import SonarrDataUpdateCoordinator
@@ -151,7 +152,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         return attrs
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         key = self.entity_description.key
         app = self.coordinator.sonarr.app
