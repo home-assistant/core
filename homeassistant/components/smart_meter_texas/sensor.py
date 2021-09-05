@@ -4,8 +4,8 @@ from smart_meter_texas import Meter
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_ADDRESS,
-    ENERGY_KILO_WATT_HOUR,
     DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
     STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.core import callback
