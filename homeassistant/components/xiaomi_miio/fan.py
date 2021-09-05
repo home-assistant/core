@@ -505,7 +505,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device.set_mode,
             self.PRESET_MODE_MAPPING[preset_mode],
         ):
-            self._mode = preset_mode.lower()
+            self._mode = AirpurifierOperationMode[preset_mode].value
             self.async_write_ha_state()
 
     async def async_set_extra_features(self, features: int = 1):
@@ -538,13 +538,6 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         "Silent": AirpurifierMiotOperationMode.Silent,
         "Favorite": AirpurifierMiotOperationMode.Favorite,
         "Fan": AirpurifierMiotOperationMode.Fan,
-    }
-
-    SPEED_MODE_MAPPING = {
-        0: AirpurifierMiotOperationMode.Auto,
-        1: AirpurifierMiotOperationMode.Silent,
-        2: AirpurifierMiotOperationMode.Favorite,
-        3: AirpurifierMiotOperationMode.Fan,
     }
 
     @property
@@ -599,9 +592,8 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
             self._device.set_mode,
             self.PRESET_MODE_MAPPING[preset_mode],
         ):
-            self._mode = self.SPEED_MODE_MAPPING[
-                self.PRESET_MODE_MAPPING[preset_mode].value
-            ]
+            self._mode = AirpurifierMiotOperationMode[preset_mode].value
+            _LOGGER.warning(self._mode)
             self.async_write_ha_state()
 
 
