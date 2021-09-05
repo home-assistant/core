@@ -91,10 +91,6 @@ class ZigbeeChannel(LogMixin):
 
     REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
     BIND: bool = True
-    # ZCL_ATTRIBUTES dict contains attributes this channel should query
-    # and whether attributes could be cached or not. During channel configuration
-    # all attribute reads are uncached
-    ZCL_ATTRIBUTES: dict[int | str, bool] = {}
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
