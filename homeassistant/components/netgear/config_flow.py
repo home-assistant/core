@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (  # pylint: disable=unused-import
     CONF_CONSIDER_HOME,

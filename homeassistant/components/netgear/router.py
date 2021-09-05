@@ -61,13 +61,15 @@ async def async_setup_netgear_entry(
     @callback
     def _async_router_updated():
         """Update the values of the router."""
-        async_add_new_entities(router, async_add_entities, tracked, entity_class_generator)
+        async_add_new_entities(
+            router, async_add_entities, tracked, entity_class_generator
+        )
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, router.signal_device_new, _async_router_updated)
     )
 
-    update_router()
+    _async_router_updated()
 
 
 @callback
