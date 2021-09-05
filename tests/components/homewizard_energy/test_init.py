@@ -1,45 +1,15 @@
 """Tests for the homewizard energy component."""
 from asyncio import TimeoutError
-from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from aiohwenergy import AiohwenergyException, DisabledError
 
-from homeassistant.components.homewizard_energy.__init__ import (
-    HWEnergyDeviceUpdateCoordinator as Coordinator,
-)
-from homeassistant.components.homewizard_energy.const import (
-    DOMAIN,
-    MODEL_KWH_1,
-    MODEL_KWH_3,
-    MODEL_P1,
-    MODEL_SOCKET,
-)
+from homeassistant.components.homewizard_energy.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
+from .generator import get_mock_device
+
 from tests.common import MockConfigEntry
-
-
-def get_mock_device(
-    serial="aabbccddeeff",
-    host="1.2.3.4",
-    product_name="P1 meter",
-    product_type="HWE-P1",
-):
-    """Return a mock bridge."""
-    mock_device = AsyncMock()
-    mock_device._host = host
-
-    mock_device.device.product_name = product_name
-    mock_device.device.product_type = product_type
-    mock_device.device.serial = serial
-    mock_device.device.api_version = "v1"
-    mock_device.device.firmware_version = "1.00"
-
-    mock_device.initialize = AsyncMock()
-    mock_device.close = AsyncMock()
-
-    return mock_device
 
 
 async def test_load_unload(aioclient_mock, hass):
@@ -200,48 +170,3 @@ async def test_load_handles_initialization_error(aioclient_mock, hass):
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY or ConfigEntryState.SETUP_ERROR
-
-
-async def test_coordinator_calculates_update_interval(aioclient_mock, hass):
-    """Test coordinator calculates correct update interval."""
-
-    # P1 meter
-    meter = get_mock_device(product_type=MODEL_P1)
-    meter.data.smr_version = 50
-
-    coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=1)
-
-    # KWH 1 phase
-    meter = get_mock_device(product_type=MODEL_KWH_1)
-
-    coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=5)
-
-    # KWH 3 phase
-    meter = get_mock_device(product_type=MODEL_KWH_3)
-
-    coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=5)
-
-    # Socket
-    meter = get_mock_device(product_type=MODEL_SOCKET)
-
-    coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=5)
-
-    # Missing config data
-    # P1 meter
-    meter = get_mock_device(product_type=MODEL_P1)
-    meter.data = None
-
-    coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=5)
-
-    # Not an 5.0 meter config data
-    # P1 meter
-    meter = get_mock_device(product_type=MODEL_P1)
-    meter.data.smr_version = 40
-
-    coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=5)

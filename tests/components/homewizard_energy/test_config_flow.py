@@ -1,5 +1,5 @@
 """Test the homewizard energy config flow."""
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 from aiohwenergy import DisabledError
 
@@ -8,27 +8,7 @@ from homeassistant.components.homewizard_energy.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
 
-
-def get_mock_device(
-    serial="aabbccddeeff",
-    host="1.2.3.4",
-    product_name="P1 meter",
-    product_type="HWE-P1",
-):
-    """Return a mock bridge."""
-    mock_device = Mock()
-    mock_device._host = host
-
-    mock_device.device.product_name = product_name
-    mock_device.device.product_type = product_type
-    mock_device.device.serial = serial
-    mock_device.device.api_version = "v1"
-    mock_device.device.firmware_version = "1.00"
-
-    mock_device.initialize = AsyncMock()
-    mock_device.close = AsyncMock()
-
-    return mock_device
+from .generator import get_mock_device
 
 
 async def test_manual_flow_works(hass, aioclient_mock):
