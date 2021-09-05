@@ -16,6 +16,8 @@ from .coordinator import SonarrDataUpdateCoordinator
 
 class SonarrEntity(CoordinatorEntity):
     """Defines a base Sonarr entity."""
+    
+    coordinator: SonarrDataUpdateCoordinator
 
     def __init__(
         self,
