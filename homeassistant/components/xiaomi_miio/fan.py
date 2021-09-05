@@ -456,7 +456,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     def preset_mode(self):
         """Get the active preset mode."""
         if self._state:
-            preset_mode = AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            preset_mode = self._mode.capitalize()
             return preset_mode if preset_mode in self._preset_modes else None
 
         return None
@@ -500,11 +500,13 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if preset_mode not in self.preset_modes:
             _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
             return
-        await self._try_command(
+        if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
             self.PRESET_MODE_MAPPING[preset_mode],
-        )
+        ):
+            self._mode = preset_mode.lower()
+            self.async_write_ha_state()
 
     async def async_set_extra_features(self, features: int = 1):
         """Set the extra features."""
