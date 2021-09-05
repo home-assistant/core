@@ -7,7 +7,8 @@
     "iotawattpy==0.1.0"
   ],
   "codeowners": [
-    "@gtdiehl"
+    "@gtdiehl",
+    "@jyavenard"
   ],
   "iot_class": "local_polling"
 }

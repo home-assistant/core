@@ -160,20 +160,23 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     """Defines a IoTaWatt Energy Sensor."""
 
     entity_description: IotaWattSensorEntityDescription
+    coordinator: IotawattUpdater
 
     def __init__(
         self,
-        coordinator,
-        key,
+        coordinator: IotawattUpdater,
+        key: str,
         entity_description: IotaWattSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator)
 
         self._key = key
         data = self._sensor_data
         if data.getType() == "Input":
-            self._attr_unique_id = f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}{self._name_suffix}"
+            self._attr_unique_id = (
+                f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
+            )
         self.entity_description = entity_description
 
     @property
@@ -182,13 +185,9 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         return self.coordinator.data["sensors"][self._key]
 
     @property
-    def _name_suffix(self) -> str:
-        return ""
-
-    @property
     def name(self) -> str | None:
         """Return name of the entity."""
-        return f"{self._sensor_data.getSourceName()}{self._name_suffix}"
+        return self._sensor_data.getName()
 
     @property
     def device_info(self) -> entity.DeviceInfo | None:
@@ -213,7 +212,7 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         super()._handle_coordinator_update()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the extra state attributes of the entity."""
         data = self._sensor_data
         attrs = {"type": data.getType()}
@@ -235,16 +234,19 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
 
     def __init__(
         self,
-        coordinator,
-        key,
+        coordinator: IotawattUpdater,
+        key: str,
         entity_description: IotaWattSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
 
         super().__init__(coordinator, key, entity_description)
 
         self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-        self._accumulated_value = None
+        if self._attr_unique_id is not None:
+            self._attr_unique_id += self._name_suffix
+
+        self._accumulated_value: float | None = None
 
     @property
     def _name_suffix(self) -> str:
@@ -267,7 +269,7 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
             return None
         return round(self._accumulated_value, 1)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Load the last known state value of the entity if the accumulated type."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
@@ -281,16 +283,26 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:
                 if ATTR_LAST_UPDATE in state.attributes:
-                    self.coordinator.update_last_run(
-                        dt.parse_datetime(state.attributes[ATTR_LAST_UPDATE])
-                    )
+                    last_run = dt.parse_datetime(state.attributes[ATTR_LAST_UPDATE])
+                    if last_run is not None:
+                        self.coordinator.update_last_run(last_run)
         # Force a second update from the iotawatt to ensure that sensors are up to date.
-        await self.coordinator.request_refresh()
+        await self.coordinator.async_request_refresh()
 
     @property
-    def extra_state_attributes(self):
+    def name(self) -> str | None:
+        """Return name of the entity."""
+        return f"{self._sensor_data.getSourceName()}{self._name_suffix}"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the extra state attributes of the entity."""
         attrs = super().extra_state_attributes
+
+        assert (
+            self.coordinator.api is not None
+            and self.coordinator.api.getLastUpdateTime() is not None
+        )
         attrs[ATTR_LAST_UPDATE] = self.coordinator.api.getLastUpdateTime().isoformat()
 
         return attrs
