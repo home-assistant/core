@@ -43,27 +43,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             await energy_api.initialize()
             initialized = True
 
-    except (asyncio.TimeoutError, aiohwenergy.RequestError):
+    except (asyncio.TimeoutError, aiohwenergy.RequestError) as ex:
         _LOGGER.error(
             "Error connecting to the Energy device at %s",
-            energy_api._host,
+            energy_api.host,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
-    except aiohwenergy.DisabledError:
+    except aiohwenergy.DisabledError as ex:
         _LOGGER.error("API disabled, API must be enabled in the app")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
-    except aiohwenergy.AiohwenergyException:
+    except aiohwenergy.AiohwenergyException as ex:
         _LOGGER.error("Unknown Energy API error occurred")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
-    except Exception:  # pylint: disable=broad-except
+    except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error(
             "Unknown error connecting with Energy Device at %s",
-            energy_api._host["host"],
+            energy_api.host,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     finally:
         if not initialized:

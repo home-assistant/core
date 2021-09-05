@@ -1,6 +1,8 @@
 """Config flow for Homewizard Energy."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
+from typing import Any
 
 import aiohwenergy
 from aiohwenergy.hwenergy import SUPPORTED_DEVICES
@@ -11,7 +13,6 @@ from voluptuous.util import Lower
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -28,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("config_flow __init__")
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
 
