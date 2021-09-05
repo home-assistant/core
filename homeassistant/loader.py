@@ -322,18 +322,22 @@ class Integration:
                 return integration
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
-            try:
-                AwesomeVersion(
-                    integration.version,
-                    [
-                        AwesomeVersionStrategy.CALVER,
-                        AwesomeVersionStrategy.SEMVER,
-                        AwesomeVersionStrategy.SIMPLEVER,
-                        AwesomeVersionStrategy.BUILDVER,
-                        AwesomeVersionStrategy.PEP440,
-                    ],
-                )
-            except AwesomeVersionException:
+            valid_version = True
+            if integration.version is not None:
+                try:
+                    AwesomeVersion(
+                        integration.version,
+                        [
+                            AwesomeVersionStrategy.CALVER,
+                            AwesomeVersionStrategy.SEMVER,
+                            AwesomeVersionStrategy.SIMPLEVER,
+                            AwesomeVersionStrategy.BUILDVER,
+                            AwesomeVersionStrategy.PEP440,
+                        ],
+                    )
+                except AwesomeVersionException:
+                    valid_version = False
+            if integration.version is None or not valid_version:
                 _LOGGER.error(
                     "The custom integration '%s' does not have a "
                     "valid version key (%s) in the manifest file and was blocked from loading. "
