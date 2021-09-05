@@ -59,7 +59,7 @@ async def async_setup_netgear_entry(
     tracked = set()
 
     @callback
-    def update_router():
+    def _async_router_updated():
         """Update the values of the router."""
         async_add_new_entities(router, async_add_entities, tracked, entity_class_generator)
 
