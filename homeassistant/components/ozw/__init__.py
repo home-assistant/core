@@ -370,7 +370,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
         return
     # update device in device registry with (updated) info
     for item in dev_registry.devices.values():
-        if item.id != device.id and item.via_device_id != device.id:
+        if device.id not in (item.id, item.via_device_id):
             continue
         dev_name = create_device_name(node)
         dev_registry.async_update_device(

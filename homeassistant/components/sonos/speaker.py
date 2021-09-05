@@ -903,10 +903,7 @@ class SonosSpeaker:
             for speaker in (s for s in speakers if s.snapshot_group):
                 assert speaker.snapshot_group is not None
                 if speaker.snapshot_group[0] == speaker:
-                    if (
-                        speaker.snapshot_group != speaker.sonos_group
-                        and speaker.snapshot_group != [speaker]
-                    ):
+                    if speaker.snapshot_group not in (speaker.sonos_group, [speaker]):
                         speaker.join(speaker.snapshot_group)
                     groups.append(speaker.snapshot_group.copy())
 
