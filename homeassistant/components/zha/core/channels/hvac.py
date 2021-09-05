@@ -84,6 +84,20 @@ class Pump(ZigbeeChannel):
 class ThermostatChannel(ZigbeeChannel):
     """Thermostat channel."""
 
+    REPORT_CONFIG = (
+        {"attr": "local_temp", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "occupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "occupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "unoccupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "running_mode", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "running_state", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+        {"attr": "system_mode", "config": REPORT_CONFIG_CLIMATE},
+        {"attr": "occupancy", "config": REPORT_CONFIG_CLIMATE_DISCRETE},
+        {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+        {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+    )
+
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
@@ -131,19 +145,6 @@ class ThermostatChannel(ZigbeeChannel):
         self._system_mode = None
         self._unoccupied_cooling_setpoint = None
         self._unoccupied_heating_setpoint = None
-        self._report_config = [
-            {"attr": "local_temp", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "occupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "occupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "unoccupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "running_mode", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "running_state", "config": REPORT_CONFIG_CLIMATE_DEMAND},
-            {"attr": "system_mode", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "occupancy", "config": REPORT_CONFIG_CLIMATE_DISCRETE},
-            {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
-            {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
-        ]
 
     @property
     def abs_max_cool_setpoint_limit(self) -> int:

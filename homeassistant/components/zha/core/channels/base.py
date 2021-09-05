@@ -107,9 +107,8 @@ class ZigbeeChannel(LogMixin):
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
-        self._report_config = self.REPORT_CONFIG
-        if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
-            attr = self._report_config[0].get("attr")
+        if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
+            attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
                 self.value_attribute = self.cluster.attridx.get(attr)
             else:
@@ -222,7 +221,7 @@ class ZigbeeChannel(LogMixin):
             reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
                 res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
-                self._configure_reporting_status(chunk, res[0])
+                self._configure_reporting_status(reports, res[0])
                 # if we get a response, then it's a success
                 for attr_stat in event_data.values():
                     attr_stat["success"] = True
@@ -313,7 +312,7 @@ class ZigbeeChannel(LogMixin):
             return
 
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = [cfg["attr"] for cfg in self._report_config]
+        attributes = [cfg["attr"] for cfg in self.REPORT_CONFIG]
         if attributes:
             await self.get_attributes(attributes, from_cache=from_cache)
 
