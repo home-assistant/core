@@ -24,10 +24,7 @@ from .const import (
     CONF_UNLOAD_CB,
     COORDINATOR,
     DOMAIN,
-    MODEL_KWH_1,
-    MODEL_KWH_3,
     MODEL_P1,
-    MODEL_SOCKET,
     PLATFORMS,
 )
 
@@ -50,11 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("__init__ async_setup_entry")
 
     hass.data[DOMAIN][entry.data["unique_id"]] = {}
-
-    # Add listener for config updates
-    hass.data[DOMAIN][entry.data["unique_id"]][
-        CONF_UNLOAD_CB
-    ] = entry.add_update_listener(async_entry_updated)
 
     # Get api and do a initialization
     energy_api = aiohwenergy.HomeWizardEnergy(entry.data.get("host"))
@@ -86,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Unknown error connecting with Energy Device at %s",
             energy_api._host["host"],
         )
-        return False
+        raise ConfigEntryNotReady
 
     finally:
         if not initialized:
@@ -105,12 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
-
-
-async def async_entry_updated(hass, config_entry):
-    """Handle entry updates."""
-    _LOGGER.info("Configuration changed, reloading...")
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -167,14 +153,10 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                 if smr_version == 50:
                     return timedelta(seconds=1)
 
-                return timedelta(seconds=5)
             except AttributeError:
                 pass
 
-        elif product_type in [MODEL_KWH_1, MODEL_KWH_3, MODEL_SOCKET]:
-            return timedelta(seconds=5)
-
-        return timedelta(seconds=10)
+        return timedelta(seconds=5)
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
