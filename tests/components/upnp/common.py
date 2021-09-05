@@ -1,7 +1,7 @@
 """Common for upnp."""
 
 from typing import Any, Mapping
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
 import pytest
@@ -13,8 +13,10 @@ from homeassistant.components.upnp.const import (
     PACKETS_RECEIVED,
     PACKETS_SENT,
     TIMESTAMP,
+    UPTIME,
+    WANIP,
+    WANSTATUS,
 )
-from homeassistant.components.upnp.device import Device
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -38,21 +40,26 @@ TEST_DISCOVERY = {
 }
 
 
-class MockDevice(Device):
+class MockDevice:
     """Mock device for Device."""
 
-    def __init__(self, udn: str) -> None:
+    def __init__(self, hass: HomeAssistant, udn: str) -> None:
         """Initialize mock device."""
-        igd_device = object()
-        mock_device_updater = AsyncMock()
-        super().__init__(igd_device, mock_device_updater)
+        self.hass = hass
         self._udn = udn
-        self.times_polled = 0
+        self.traffic_times_polled = 0
+        self.status_times_polled = 0
 
     @classmethod
     async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
         """Return self."""
-        return cls(TEST_UDN)
+        return cls(hass, TEST_UDN)
+
+    async def async_ssdp_callback(
+        self, headers: Mapping[str, Any], change: ssdp.SsdpChange
+    ) -> None:
+        """SSDP callback, update if needed."""
+        pass
 
     @property
     def udn(self) -> str:
@@ -80,13 +87,23 @@ class MockDevice(Device):
         return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
     @property
+    def usn(self) -> str:
+        """Get the USN."""
+        return f"{self.udn}::{self.device_type}"
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id."""
+        return self.usn
+
+    @property
     def hostname(self) -> str:
         """Get the hostname."""
         return "mock-hostname"
 
     async def async_get_traffic_data(self) -> Mapping[str, Any]:
         """Get traffic data."""
-        self.times_polled += 1
+        self.traffic_times_polled += 1
         return {
             TIMESTAMP: dt.utcnow(),
             BYTES_RECEIVED: 0,
@@ -95,11 +112,14 @@ class MockDevice(Device):
             PACKETS_SENT: 0,
         }
 
-    async def async_start(self) -> None:
-        """Start the device updater."""
-
-    async def async_stop(self) -> None:
-        """Stop the device updater."""
+    async def async_get_status(self) -> Mapping[str, Any]:
+        """Get connection status, uptime, and external IP."""
+        self.status_times_polled += 1
+        return {
+            WANSTATUS: "Connected",
+            UPTIME: 0,
+            WANIP: "192.168.0.1",
+        }
 
 
 @pytest.fixture

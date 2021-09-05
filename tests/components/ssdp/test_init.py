@@ -8,6 +8,7 @@ from async_upnp_client.ssdp_listener import SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 import pytest
 
+import homeassistant
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import (
@@ -28,14 +29,21 @@ def _ssdp_headers(headers):
 
 
 @pytest.fixture
-async def ssdp_listener(hass):
-    """Start component and get SsdpListener."""
+async def silent_ssdp_listener(hass):
+    """Patch SsdpListener class, preventing any actual SSDP traffic."""
     with patch("homeassistant.components.ssdp.SsdpListener.async_start"), patch(
         "homeassistant.components.ssdp.SsdpListener.async_stop"
     ), patch("homeassistant.components.ssdp.SsdpListener.async_search"):
-        await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-        await hass.async_block_till_done()
-        yield hass.data[ssdp.DOMAIN]._ssdp_listeners[0]
+        # Fixtures are initialized before patches. When the component is started here,
+        # certain functions/methods might not be patched in time.
+        yield SsdpListener
+
+
+async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
+    """Initialize ssdp component and get SsdpListener."""
+    await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
+    await hass.async_block_till_done()
+    return hass.data[ssdp.DOMAIN]._ssdp_listeners[0]
 
 
 @pytest.fixture
@@ -51,9 +59,8 @@ def mock_flow_init(hass):
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
-async def test_ssdp_flow_dispatched_on_st(
-    mock_get_ssdp, hass, caplog, mock_flow_init, ssdp_listener
-):
+@pytest.mark.usefixtures("silent_ssdp_listener")
+async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow_init):
     """Test matching based on ST."""
     mock_ssdp_search_response = _ssdp_headers(
         {
@@ -64,6 +71,7 @@ async def test_ssdp_flow_dispatched_on_st(
             "ext": "",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -87,12 +95,13 @@ async def test_ssdp_flow_dispatched_on_st(
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"manufacturer": "Paulus"}]},
 )
 async def test_scan_match_upnp_devicedesc_manufacturer(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init, ssdp_listener
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
 ):
     """Test matching based on UPnP device description data."""
     aioclient_mock.get(
@@ -112,6 +121,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -126,12 +136,13 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
     }
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"deviceType": "Paulus"}]},
 )
 async def test_scan_match_upnp_devicedesc_devicetype(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init, ssdp_listener
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
 ):
     """Test matching based on UPnP device description data."""
     aioclient_mock.get(
@@ -151,8 +162,10 @@ async def test_scan_match_upnp_devicedesc_devicetype(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
+
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -165,6 +178,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     }
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -177,7 +191,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     },
 )
 async def test_scan_not_all_present(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init, ssdp_listener
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
 ):
     """Test match fails if some specified attributes are not present."""
     aioclient_mock.get(
@@ -196,6 +210,7 @@ async def test_scan_not_all_present(
             "location": "http://1.1.1.1",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -204,6 +219,7 @@ async def test_scan_not_all_present(
     assert not mock_flow_init.mock_calls
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -215,9 +231,7 @@ async def test_scan_not_all_present(
         ]
     },
 )
-async def test_scan_not_all_match(
-    mock_get_ssdp, hass, aioclient_mock, mock_flow_init, ssdp_listener
-):
+async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow_init):
     """Test match fails if some specified attribute values differ."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -237,6 +251,7 @@ async def test_scan_not_all_match(
             "usn": "uuid:mock-udn::mock-st",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -249,8 +264,10 @@ async def test_scan_not_all_match(
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
-async def test_start_stop_scanner(mock_source_set, hass, ssdp_listener):
+@pytest.mark.usefixtures("silent_ssdp_listener")
+async def test_start_stop_scanner(mock_source_set, hass):
     """Test we start and stop the scanner."""
+    ssdp_listener = await init_ssdp_component(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -269,9 +286,10 @@ async def test_start_stop_scanner(mock_source_set, hass, ssdp_listener):
     assert ssdp_listener.async_stop.call_count == 1
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
-    mock_get_ssdp, hass, aioclient_mock, caplog, ssdp_listener
+    mock_get_ssdp, hass, aioclient_mock, caplog
 ):
     """Test matching based on callback."""
     aioclient_mock.get(
@@ -294,6 +312,7 @@ async def test_scan_with_registered_callback(
             "ext": "",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
 
     async_exception_callback = AsyncMock(side_effect=ValueError)
     await ssdp.async_register_callback(hass, async_exception_callback, {})
@@ -356,13 +375,12 @@ async def test_scan_with_registered_callback(
     assert async_integration_callback_from_cache.call_count == 1
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
-async def test_getting_existing_headers(
-    mock_get_ssdp, hass, aioclient_mock, ssdp_listener
-):
+async def test_getting_existing_headers(mock_get_ssdp, hass, aioclient_mock):
     """Test getting existing/previously scanned headers."""
     aioclient_mock.get(
         "http://1.1.1.1",
@@ -383,6 +401,7 @@ async def test_getting_existing_headers(
             "EXT": "",
         }
     )
+    ssdp_listener = await init_ssdp_component(hass)
     await ssdp_listener._on_search(mock_ssdp_search_response)
 
     discovery_info_by_st = await ssdp.async_get_discovery_info_by_st(hass, "mock-st")
@@ -472,6 +491,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -487,38 +507,17 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_async_detect_interfaces_setting_empty_route(
-    mock_get_ssdp, mock_get_adapters, hass
+    mock_get_adapters, mock_get_ssdp, hass
 ):
     """Test without default interface config and the route returns nothing."""
-    create_args = []
+    await init_ssdp_component(hass)
 
-    def _generate_fake_ssdp_listener(*args, **kwargs):
-        create_args.append([args, kwargs])
-        listener = SsdpListener(*args, **kwargs)
-
-        listener.async_start = AsyncMock()
-        listener.async_search = AsyncMock()
-        return listener
-
-    with patch(
-        "homeassistant.components.ssdp.SsdpListener",
-        new=_generate_fake_ssdp_listener,
-    ):
-        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-        await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    argset = set()
-    for argmap in create_args:
-        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
-
-    assert argset == {
-        (IPv6Address("2001:db8::"), None),
-        (IPv4Address("192.168.1.5"), None),
-    }
+    ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
+    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
+    assert source_ips == {IPv6Address("2001:db8::"), IPv4Address("192.168.1.5")}
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -534,60 +533,27 @@ async def test_async_detect_interfaces_setting_empty_route(
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_bind_failure_skips_adapter(
-    mock_get_ssdp, mock_get_adapters, hass, caplog
+    mock_get_adapters, mock_get_ssdp, hass, caplog
 ):
     """Test that an adapter with a bind failure is skipped."""
-    create_args = []
-    search_args = []
 
-    async def _async_search(*args):
-        nonlocal search_args
-        search_args.append(args)
+    async def _async_start(self):
+        if self.source_ip == IPv6Address("2001:db8::"):
+            raise OSError
 
-    def _generate_failing_ssdp_listener(*args, **kwargs):
-        create_args.append([args, kwargs])
-        listener = SsdpListener(*args, **kwargs)
+    SsdpListener.async_start = _async_start
+    await init_ssdp_component(hass)
 
-        async def _async_start(*_):
-            if kwargs["source_ip"] == IPv6Address("2001:db8::"):
-                raise OSError
-
-        listener.async_start = _async_start
-        listener.async_search = _async_search
-        return listener
-
-    with patch(
-        "homeassistant.components.ssdp.SsdpListener",
-        new=_generate_failing_ssdp_listener,
-    ):
-        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-        await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    argset = set()
-    for argmap in create_args:
-        argset.add((argmap[1].get("source_ip"), argmap[1].get("target_ip")))
-
-    assert argset == {
-        (IPv6Address("2001:db8::"), None),
-        (IPv4Address("192.168.1.5"), None),
-    }
     assert "Failed to setup listener for" in caplog.text
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
-    await hass.async_block_till_done()
-    assert set(search_args) == {
-        (),
-        (
-            (
-                "255.255.255.255",
-                1900,
-            ),
-        ),
-    }
+    ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
+    source_ips = {ssdp_listener.source_ip for ssdp_listener in ssdp_listeners}
+    assert source_ips == {
+        IPv4Address("192.168.1.5")
+    }  # Note no SsdpListener for IPv6 address.
 
 
+@pytest.mark.usefixtures("silent_ssdp_listener")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -603,163 +569,21 @@ async def test_bind_failure_skips_adapter(
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
 )
 async def test_ipv4_does_additional_search_for_sonos(
-    mock_get_ssdp, mock_get_adapters, hass
+    mock_get_adapters, mock_get_ssdp, hass
 ):
     """Test that only ipv4 does an additional search for Sonos."""
-    search_args = []
+    ssdp_listener = await init_ssdp_component(hass)
 
-    def _generate_fake_ssdp_listener(*args, **kwargs):
-        listener = SsdpListener(*args, **kwargs)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
+    await hass.async_block_till_done()
 
-        async def _async_search(*args):
-            nonlocal search_args
-            search_args.append(args)
-
-        listener.async_start = AsyncMock()
-        listener.async_search = _async_search
-        return listener
-
-    with patch(
-        "homeassistant.components.ssdp.SsdpListener",
-        new=_generate_fake_ssdp_listener,
-    ):
-        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-        await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
-        await hass.async_block_till_done()
-
-    assert set(search_args) == {
-        (),
+    assert ssdp_listener.async_search.call_count == 6
+    assert ssdp_listener.async_search.call_args[0] == (
         (
-            (
-                "255.255.255.255",
-                1900,
-            ),
+            "255.255.255.255",
+            1900,
         ),
-    }
-
-
-async def test_location_change_evicts_prior_location_from_cache(hass, aioclient_mock):
-    """Test that a location change for a UDN will evict the prior location from the cache."""
-    mock_get_ssdp = {
-        "hue": [{"manufacturer": "Signify", "modelName": "Philips hue bridge 2015"}]
-    }
-
-    hue_response = """
-<root xmlns="urn:schemas-upnp-org:device-1-0">
-<specVersion>
-<major>1</major>
-<minor>0</minor>
-</specVersion>
-<URLBase>http://{ip_address}:80/</URLBase>
-<device>
-<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-<friendlyName>Philips hue ({ip_address})</friendlyName>
-<manufacturer>Signify</manufacturer>
-<manufacturerURL>http://www.philips-hue.com</manufacturerURL>
-<modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
-<modelName>Philips hue bridge 2015</modelName>
-<modelNumber>BSB002</modelNumber>
-<modelURL>http://www.philips-hue.com</modelURL>
-<serialNumber>001788a36abf</serialNumber>
-<UDN>uuid:2f402f80-da50-11e1-9b23-001788a36abf</UDN>
-</device>
-</root>
-    """
-
-    aioclient_mock.get(
-        "http://192.168.212.23/description.xml",
-        text=hue_response.format(ip_address="192.168.212.23"),
     )
-    aioclient_mock.get(
-        "http://169.254.8.155/description.xml",
-        text=hue_response.format(ip_address="169.254.8.155"),
-    )
-    ssdp_response_without_location = {
-        "ST": "uuid:2f402f80-da50-11e1-9b23-001788a36abf",
-        "_udn": "uuid:2f402f80-da50-11e1-9b23-001788a36abf",
-        "USN": "uuid:2f402f80-da50-11e1-9b23-001788a36abf",
-        "SERVER": "Hue/1.0 UPnP/1.0 IpBridge/1.44.0",
-        "hue-bridgeid": "001788FFFEA36ABF",
-        "EXT": "",
-    }
-
-    mock_good_ip_ssdp_response = CaseInsensitiveDict(
-        **ssdp_response_without_location,
-        **{"LOCATION": "http://192.168.212.23/description.xml"},
-    )
-    mock_link_local_ip_ssdp_response = CaseInsensitiveDict(
-        **ssdp_response_without_location,
-        **{"LOCATION": "http://169.254.8.155/description.xml"},
-    )
-    mock_ssdp_response = mock_good_ip_ssdp_response
-
-    def _generate_fake_ssdp_listener(*args, **kwargs):
-        listener = SsdpListener(*args, **kwargs)
-
-        async def _async_callback(*_):
-            pass
-
-        async def _callback(*_):
-            import pprint
-
-            pprint.pprint(mock_ssdp_response)
-            hass.async_create_task(listener.async_callback(mock_ssdp_response))
-
-        listener.async_start = _async_callback
-        listener.async_search = _callback
-        return listener
-
-    with patch(
-        "homeassistant.components.ssdp.async_get_ssdp",
-        return_value=mock_get_ssdp,
-    ), patch(
-        "homeassistant.components.ssdp.SSDPListener",
-        new=_generate_fake_ssdp_listener,
-    ), patch.object(
-        hass.config_entries.flow, "async_init"
-    ) as mock_init:
-        assert await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-        await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
-        await hass.async_block_till_done()
-        assert len(mock_init.mock_calls) == 1
-        assert mock_init.mock_calls[0][1][0] == "hue"
-        assert mock_init.mock_calls[0][2]["context"] == {
-            "source": config_entries.SOURCE_SSDP
-        }
-        assert (
-            mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
-            == mock_good_ip_ssdp_response["location"]
-        )
-
-        mock_init.reset_mock()
-        mock_ssdp_response = mock_link_local_ip_ssdp_response
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=400))
-        await hass.async_block_till_done()
-        assert mock_init.mock_calls[0][1][0] == "hue"
-        assert mock_init.mock_calls[0][2]["context"] == {
-            "source": config_entries.SOURCE_SSDP
-        }
-        assert (
-            mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
-            == mock_link_local_ip_ssdp_response["location"]
-        )
-
-        mock_init.reset_mock()
-        mock_ssdp_response = mock_good_ip_ssdp_response
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=600))
-        await hass.async_block_till_done()
-        assert mock_init.mock_calls[0][1][0] == "hue"
-        assert mock_init.mock_calls[0][2]["context"] == {
-            "source": config_entries.SOURCE_SSDP
-        }
-        assert (
-            mock_init.mock_calls[0][2]["data"][ssdp.ATTR_SSDP_LOCATION]
-            == mock_good_ip_ssdp_response["location"]
-        )
+    assert ssdp_listener.async_search.call_args[1] == {}

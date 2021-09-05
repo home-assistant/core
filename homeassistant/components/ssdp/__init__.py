@@ -175,6 +175,7 @@ class Scanner:
         self._callbacks: list[tuple[SsdpCallback, dict[str, str]]] = []
         self._flow_dispatcher: FlowDispatcher | None = None
         self._description_cache: DescriptionCache | None = None
+        self._integration_matchers: dict[str, list[dict[str, str]]] | None = None
 
     @property
     def _ssdp_devices(self) -> set[SsdpDevice]:
@@ -275,6 +276,7 @@ class Scanner:
         requester = AiohttpSessionRequester(session, True, 10)
         self._description_cache = DescriptionCache(requester)
         self._flow_dispatcher = FlowDispatcher(self.hass)
+        self._integration_matchers = await async_get_ssdp(self.hass)
 
         await self._async_start_ssdp_listeners()
 
@@ -296,6 +298,7 @@ class Scanner:
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
                     source_ip=source_ip,
+                    # XXX TODO: target ip?
                 )
             )
         results = await asyncio.gather(
@@ -327,12 +330,11 @@ class Scanner:
             if _async_headers_match(ssdp_device.combined_headers(type), match_dict)
         ]
 
-    async def _async_matching_domains(
-        self, info_with_desc: CaseInsensitiveDict
-    ) -> set[str]:
+    @core_callback
+    def _async_matching_domains(self, info_with_desc: CaseInsensitiveDict) -> set[str]:
+        assert self._integration_matchers is not None
         domains = set()
-        integration_matchers = await async_get_ssdp(self.hass)
-        for domain, matchers in integration_matchers.items():
+        for domain, matchers in self._integration_matchers.items():
             for matcher in matchers:
                 if all(info_with_desc.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
@@ -360,7 +362,7 @@ class Scanner:
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
-        for domain in await self._async_matching_domains(info_with_desc):
+        for domain in self._async_matching_domains(info_with_desc):
             _LOGGER.debug("Discovered %s at %s", domain, location)
             flow: SSDPFlow = {
                 "domain": domain,

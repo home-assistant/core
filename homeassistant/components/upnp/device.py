@@ -79,8 +79,12 @@ class Device:
             return
 
         location = headers[ssdp.ATTR_SSDP_LOCATION]
+        device = self._igd_device.device
+        if location == device.device_url:
+            return
+
         new_upnp_device = Device.async_create_upnp_device(self.hass, location)
-        self._igd_device.device.reinit(new_upnp_device)
+        device.reinit(new_upnp_device)
 
     @property
     def udn(self) -> str:

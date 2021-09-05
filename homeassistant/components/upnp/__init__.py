@@ -202,10 +202,10 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             self.device.async_get_status(),
         )
 
-        data = dict(update_values[0])
-        data.update(update_values[1])
-
-        return data
+        return {
+            **update_values[0],
+            **update_values[1],
+        }
 
 
 class UpnpEntity(CoordinatorEntity):
