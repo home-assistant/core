@@ -71,7 +71,7 @@ async def async_setup_netgear_entry(
 
 
 @callback
-def add_entities(router, async_add_entities, tracked, entity_class_generator):
+def async_add_new_entities(router, async_add_entities, tracked, entity_class_generator):
     """Add new tracker entities from the router."""
     new_tracked = []
 
