@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 
-async def test_form(hass):
+async def test_form(hass) -> None:
     """Tests the normal config flow."""
 
     async def validateFlowResult(flow_result):
@@ -20,7 +20,7 @@ async def test_form(hass):
     await _run_config_scenario(hass, validateFlowResult, True, None)
 
 
-async def test_form_cant_connect(hass):
+async def test_form_cant_connect(hass) -> None:
     """Test connection issue with the controllers."""
 
     async def validateFlowResult(flow_result):
@@ -30,7 +30,7 @@ async def test_form_cant_connect(hass):
     await _run_config_scenario(hass, validateFlowResult, False, None)
 
 
-async def test_form_unexpected_error(hass):
+async def test_form_unexpected_error(hass) -> None:
     """Test unexpected issue."""
 
     async def validateFlowResult(flow_result):
@@ -45,7 +45,7 @@ async def _run_config_scenario(
     result_validator: Callable[[FlowResult], Coroutine],
     is_connected_return_value: bool,
     is_connected_side_effect: any,
-):
+) -> None:
     initial_flow_result: FlowResult = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -73,7 +73,7 @@ async def _run_config_scenario(
         await result_validator(flow_result)
 
 
-def _flow_data():
+def _flow_data() -> dict[str, str]:
     return {"ip": "1.1.1.1", "port": 1234, "numberOfControllers": 2}
 
 
