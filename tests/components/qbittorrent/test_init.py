@@ -83,7 +83,7 @@ async def test_import_faulty_config_sensor(hass: HomeAssistant):
 
             confflow_entries = hass.config_entries.flow.async_progress(True)
 
-            assert len(confflow_entries) == 1
+            assert len(confflow_entries) == 0
 
 
 async def test_unload_entry(hass: HomeAssistant):
