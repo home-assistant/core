@@ -2245,7 +2245,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.7.0
+surepy==0.7.1
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
