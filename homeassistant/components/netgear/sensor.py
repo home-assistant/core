@@ -52,11 +52,10 @@ async def async_setup_entry(
     """Set up device tracker for Netgear component."""
 
     def generate_sensor_classes(router: NetgearRouter, device):
-        sensor_classes = []
-        sensor_classes.append(NetgearSensorEntity(router, device, "type"))
-        sensor_classes.append(NetgearSensorEntity(router, device, "link_rate"))
-        sensor_classes.append(NetgearSensorEntity(router, device, "signal"))
-        return sensor_classes
+        return [
+           NetgearSensorEntity(router, device, attribute)
+           for attribute in ("type", "link_rate", "signal")
+        ]
 
     await async_setup_netgear_entry(
         hass, entry, async_add_entities, generate_sensor_classes
