@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Dict, List
 
 import async_timeout
 from miio import (
@@ -73,7 +72,7 @@ HUMIDIFIER_PLATFORMS = [
     "switch",
 ]
 LIGHT_PLATFORMS = ["light"]
-VACUUM_PLATFORMS = ["vacuum", "sensor", "binary_sensor"]
+VACUUM_PLATFORMS = ["binary_sensor", "sensor", "vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 
@@ -159,8 +158,10 @@ class VacuumCoordinatorDataAttributes:
     """
     A class that holds attribute names for VacuumCoordinatorData.
 
-    These attributes can be used in methods like `getattr` when a generic solutions is needed.
-    See homeassistant.components.xiaomi_miio.device.XiaomiCoordinatedMiioEntity._extract_value_from_attribute for
+    These attributes can be used in methods like `getattr` when a generic solutions is
+    needed.
+    See homeassistant.components.xiaomi_miio.device.XiaomiCoordinatedMiioEntity
+    ._extract_value_from_attribute for
     an example.
     """
 
@@ -171,7 +172,7 @@ class VacuumCoordinatorDataAttributes:
     clean_history_status: str = "clean_history_status"
     timer: str = "timer"
     fan_speeds: str = "fan_speeds"
-    fan_speeds_reveres: str = "fan_speeds_reverse"
+    fan_speeds_reverse: str = "fan_speeds_reverse"
 
 
 def _async_update_data_vacuum(hass, device: Vacuum):

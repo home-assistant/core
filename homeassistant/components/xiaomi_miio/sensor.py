@@ -592,19 +592,8 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     ):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
-        self._attr_device_class = description.device_class
-        self._attr_state_class = description.state_class
-        self._attr_icon = description.icon
-        self._attr_name = name
         self._attr_unique_id = unique_id
         self.entity_description: XiaomiMiioSensorDescription = description
-
-        if description.entity_registry_enabled_default is not None:
-            self._attr_entity_registry_enabled_default = (
-                description.entity_registry_enabled_default
-            )
-        else:
-            self._attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self):
