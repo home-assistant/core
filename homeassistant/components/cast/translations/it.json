@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nessun dispositivo trovato sulla rete",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
@@ -39,14 +38,6 @@
                 },
                 "description": "Host conosciuti: un elenco separato da virgole di nomi host o indirizzi IP di dispositivi di trasmissione, da utilizzare se l'individuazione di mDNS non funziona.",
                 "title": "Configurazione di Google Cast"
-            },
-            "options": {
-                "data": {
-                    "ignore_cec": "Elenco opzionale che sar\u00e0 passato a pychromecast.IGNORE_CEC.",
-                    "known_hosts": "Elenco facoltativo di host noti se l'individuazione di mDNS non funziona.",
-                    "uuid": "Elenco opzionale di UUID. I cast non elencati non saranno aggiunti."
-                },
-                "description": "Inserisci la configurazione di Google Cast."
             }
         }
     }

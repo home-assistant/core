@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pyrituals import Diffuser
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -13,24 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
+from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
-
-TITLE = "title"
-ICON = "icon"
-WIFI = "wific"
-PERFUME = "rfidc"
-FILL = "fillc"
-
-PERFUME_NO_CARTRIDGE_ID = 19
-FILL_NO_CARTRIDGE_ID = 12
 
 BATTERY_SUFFIX = " Battery"
 PERFUME_SUFFIX = " Perfume"
 FILL_SUFFIX = " Fill"
 WIFI_SUFFIX = " Wifi"
-
-ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 
 async def async_setup_entry(
@@ -53,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DiffuserPerfumeSensor(DiffuserEntity):
+class DiffuserPerfumeSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser perfume sensor."""
 
     def __init__(
@@ -65,17 +55,17 @@ class DiffuserPerfumeSensor(DiffuserEntity):
     @property
     def icon(self) -> str:
         """Return the perfume sensor icon."""
-        if self._diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
-            return "mdi:tag-remove"
-        return "mdi:tag-text"
+        if self._diffuser.has_cartridge:
+            return "mdi:tag-text"
+        return "mdi:tag-remove"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the perfume sensor."""
-        return self._diffuser.hub_data[SENSORS][PERFUME][TITLE]
+        return self._diffuser.perfume
 
 
-class DiffuserFillSensor(DiffuserEntity):
+class DiffuserFillSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser fill sensor."""
 
     def __init__(
@@ -87,18 +77,21 @@ class DiffuserFillSensor(DiffuserEntity):
     @property
     def icon(self) -> str:
         """Return the fill sensor icon."""
-        if self._diffuser.hub_data[SENSORS][FILL][ID] == FILL_NO_CARTRIDGE_ID:
-            return "mdi:beaker-question"
-        return "mdi:beaker"
+        if self._diffuser.has_cartridge:
+            return "mdi:beaker"
+        return "mdi:beaker-question"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the fill sensor."""
-        return self._diffuser.hub_data[SENSORS][FILL][TITLE]
+        return self._diffuser.fill
 
 
-class DiffuserBatterySensor(DiffuserEntity):
+class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser battery sensor."""
+
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -107,23 +100,16 @@ class DiffuserBatterySensor(DiffuserEntity):
         super().__init__(diffuser, coordinator, BATTERY_SUFFIX)
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the battery sensor."""
         return self._diffuser.battery_percentage
 
-    @property
-    def device_class(self) -> str:
-        """Return the class of the battery sensor."""
-        return DEVICE_CLASS_BATTERY
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the battery unit of measurement."""
-        return PERCENTAGE
-
-
-class DiffuserWifiSensor(DiffuserEntity):
+class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
     """Representation of a diffuser wifi sensor."""
+
+    _attr_device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -132,16 +118,6 @@ class DiffuserWifiSensor(DiffuserEntity):
         super().__init__(diffuser, coordinator, WIFI_SUFFIX)
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the wifi sensor."""
         return self._diffuser.wifi_percentage
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of the wifi sensor."""
-        return DEVICE_CLASS_SIGNAL_STRENGTH
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the wifi unit of measurement."""
-        return PERCENTAGE

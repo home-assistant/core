@@ -1,16 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_configured": "Konto wurde bereits konfiguriert",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "unknown": "Unerwarteter Fehler"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "reauth_confirm": {
-                "description": "Die SmartTub-Integration muss Ihr Konto neu authentifizieren",
+                "description": "Die SmartTub-Integration muss dein Konto neu authentifizieren",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {

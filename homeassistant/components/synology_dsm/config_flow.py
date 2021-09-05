@@ -17,12 +17,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import ssdp
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -51,6 +46,7 @@ from .const import (
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    EXCEPTION_DETAILS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +56,15 @@ CONF_OTP_CODE = "otp_code"
 
 def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Schema:
     return vol.Schema(_ordered_shared_schema(discovery_info))
+
+
+def _reauth_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
+            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")): str,
+        }
+    )
 
 
 def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
@@ -92,7 +97,6 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -106,6 +110,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the synology_dsm config flow."""
         self.saved_user_input: dict[str, Any] = {}
         self.discovered_conf: dict[str, Any] = {}
+        self.reauth_conf: dict[str, Any] = {}
+        self.reauth_reason: str | None = None
 
     async def _show_setup_form(
         self,
@@ -116,10 +122,18 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if not user_input:
             user_input = {}
 
+        description_placeholders = {}
+
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
             step_id = "link"
             data_schema = _discovery_schema_with_defaults(user_input)
+            description_placeholders = self.discovered_conf
+        elif self.reauth_conf:
+            user_input.update(self.reauth_conf)
+            step_id = "reauth"
+            data_schema = _reauth_schema_with_defaults(user_input)
+            description_placeholders = {EXCEPTION_DETAILS: self.reauth_reason}
         else:
             step_id = "user"
             data_schema = _user_schema_with_defaults(user_input)
@@ -128,7 +142,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=data_schema,
             errors=errors or {},
-            description_placeholders=self.discovered_conf or {},
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_user(
@@ -142,6 +156,15 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
+
+        if self.reauth_conf:
+            self.reauth_conf.update(
+                {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
+            )
+            user_input.update(self.reauth_conf)
 
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT)
@@ -187,10 +210,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         # unique_id should be serial for services purpose
-        await self.async_set_unique_id(serial, raise_on_progress=False)
-
-        # Check if already configured
-        self._abort_if_unique_id_configured()
+        existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
 
         config_data = {
             CONF_HOST: host,
@@ -208,6 +228,15 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input.get(CONF_VOLUMES):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(
+                existing_entry, data=config_data
+            )
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            if self.reauth_conf:
+                return self.async_abort(reason="reauth_successful")
+            return self.async_abort(reason="reconfigure_successful")
+
         return self.async_create_entry(title=host, data=config_data)
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
@@ -217,14 +246,26 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
         )
 
-        mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
+        discovered_mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
-        if self._mac_already_configured(mac):
-            return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured()
+        existing_entry = self._async_get_existing_entry(discovered_mac)
+
+        if existing_entry and existing_entry.data[CONF_HOST] != parsed_url.hostname:
+            _LOGGER.debug(
+                "Update host from '%s' to '%s' for NAS '%s' via SSDP discovery",
+                existing_entry.data[CONF_HOST],
+                parsed_url.hostname,
+                existing_entry.unique_id,
+            )
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={**existing_entry.data, CONF_HOST: parsed_url.hostname},
+            )
+            return self.async_abort(reason="reconfigure_successful")
+        if existing_entry:
+            return self.async_abort(reason="already_configured")
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
@@ -233,10 +274,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_import(
+    async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Import a config entry."""
+        """Perform reauth upon an API authentication error."""
+        self.reauth_conf = self.context.get("data", {})
+        self.reauth_reason = self.context.get(EXCEPTION_DETAILS)
+        if user_input is None:
+            return await self.async_step_user()
         return await self.async_step_user(user_input)
 
     async def async_step_link(self, user_input: dict[str, Any]) -> FlowResult:
@@ -262,20 +307,20 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
-    def _mac_already_configured(self, mac: str) -> bool:
-        """See if we already have configured a NAS with this MAC address."""
-        existing_macs = [
-            mac.replace("-", "")
-            for entry in self._async_current_entries()
-            for mac in entry.data.get(CONF_MAC, [])
-        ]
-        return mac in existing_macs
+    def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
+        """See if we already have a configured NAS with this MAC address."""
+        for entry in self._async_current_entries():
+            if discovered_mac in [
+                mac.replace("-", "") for mac in entry.data.get(CONF_MAC, [])
+            ]:
+                return entry
+        return None
 
 
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

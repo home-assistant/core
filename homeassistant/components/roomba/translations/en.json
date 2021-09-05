@@ -34,8 +34,19 @@
                     "blid": "BLID",
                     "host": "Host"
                 },
-                "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-` or `Roomba-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "description": "No Roomba or Braava have been discovered on your network.",
                 "title": "Manually connect to the device"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Continuous",
+                    "delay": "Delay",
+                    "host": "Host",
+                    "password": "Password"
+                },
+                "description": "Select a Roomba or Braava.",
+                "title": "Automatically connect to the device"
             }
         }
     },

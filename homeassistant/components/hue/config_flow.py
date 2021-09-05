@@ -125,12 +125,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             )
 
-        if any(
-            user_input["host"] == entry.data.get("host")
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({"host": user_input["host"]})
         self.bridge = self._async_get_bridge(user_input[CONF_HOST])
         return await self.async_step_link()
 
@@ -233,11 +228,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is also triggered by `async_step_discovery`.
         """
         # Check if host exists, abort if so.
-        if any(
-            import_info["host"] == entry.data.get("host")
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({"host": import_info["host"]})
 
         self.bridge = self._async_get_bridge(import_info["host"])
         return await self.async_step_link()

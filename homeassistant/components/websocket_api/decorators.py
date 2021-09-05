@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 from functools import wraps
-from typing import Callable
+from typing import Any, Callable
+
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -12,10 +13,13 @@ from homeassistant.exceptions import Unauthorized
 from . import const, messages
 from .connection import ActiveConnection
 
-# mypy: allow-untyped-calls, allow-untyped-defs
 
-
-async def _handle_async_response(func, hass, connection, msg):
+async def _handle_async_response(
+    func: const.AsyncWebSocketCommandHandler,
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Create a response and handle exception."""
     try:
         await func(hass, connection, msg)
@@ -24,13 +28,15 @@ async def _handle_async_response(func, hass, connection, msg):
 
 
 def async_response(
-    func: Callable[[HomeAssistant, ActiveConnection, dict], Awaitable[None]]
+    func: const.AsyncWebSocketCommandHandler,
 ) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
 
     @callback
     @wraps(func)
-    def schedule_handler(hass, connection, msg):
+    def schedule_handler(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
         """Schedule the handler."""
         # As the webserver is now started before the start
         # event we do not want to block for websocket responders
@@ -43,7 +49,9 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
     """Websocket decorator to require user to be an admin."""
 
     @wraps(func)
-    def with_admin(hass, connection, msg):
+    def with_admin(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
         """Check admin and call function."""
         user = connection.user
 
@@ -56,33 +64,31 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
 
 
 def ws_require_user(
-    only_owner=False,
-    only_system_user=False,
-    allow_system_user=True,
-    only_active_user=True,
-    only_inactive_user=False,
-):
+    only_owner: bool = False,
+    only_system_user: bool = False,
+    allow_system_user: bool = True,
+    only_active_user: bool = True,
+    only_inactive_user: bool = False,
+) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Decorate function validating login user exist in current WS connection.
 
     Will write out error message if not authenticated.
     """
 
-    def validator(func):
+    def validator(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate func."""
 
         @wraps(func)
-        def check_current_user(hass, connection, msg):
+        def check_current_user(
+            hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+        ) -> None:
             """Check current user."""
 
-            def output_error(message_id, message):
+            def output_error(message_id: str, message: str) -> None:
                 """Output error message."""
                 connection.send_message(
                     messages.error_message(msg["id"], message_id, message)
                 )
-
-            if connection.user is None:
-                output_error("no_user", "Not authenticated as a user")
-                return
 
             if only_owner and not connection.user.is_owner:
                 output_error("only_owner", "Only allowed as owner")
@@ -112,16 +118,16 @@ def ws_require_user(
 
 
 def websocket_command(
-    schema: dict,
+    schema: dict[vol.Marker, Any],
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Tag a function as a websocket command."""
     command = schema["type"]
 
-    def decorate(func):
+    def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
         # pylint: disable=protected-access
-        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)
-        func._ws_command = command
+        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        func._ws_command = command  # type: ignore[attr-defined]
         return func
 
     return decorate

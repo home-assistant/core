@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow
@@ -50,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["media_player", "remote", "binary_sensor", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the xbox component."""
     hass.data[DOMAIN] = {}
 
@@ -72,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up xbox from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(

@@ -45,6 +45,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_ID,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -119,7 +120,7 @@ def path(value: Any) -> str:
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -130,12 +131,13 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -144,7 +146,8 @@ def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -648,6 +651,16 @@ def url(value: Any) -> str:
     raise vol.Invalid("invalid url")
 
 
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
+
+
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
@@ -770,25 +783,25 @@ def deprecated(
 
 
 def key_value_schemas(
-    key: str, value_schemas: dict[str, vol.Schema]
-) -> Callable[[Any], dict[str, Any]]:
+    key: str, value_schemas: dict[Hashable, vol.Schema]
+) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
     """
 
-    def key_value_validator(value: Any) -> dict[str, Any]:
+    def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
             raise vol.Invalid("Expected a dictionary")
 
         key_value = value.get(key)
 
-        if key_value not in value_schemas:
-            raise vol.Invalid(
-                f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
-            )
+        if isinstance(key_value, Hashable) and key_value in value_schemas:
+            return cast(Dict[Hashable, Any], value_schemas[key_value](value))
 
-        return cast(Dict[str, Any], value_schemas[key_value](value))
+        raise vol.Invalid(
+            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
+        )
 
     return key_value_validator
 
@@ -926,7 +939,7 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
 CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
@@ -1014,12 +1027,24 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
-            "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
+            "before": vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            "after": vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
             "weekday": weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
+)
+
+TRIGGER_CONDITION_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): "trigger",
+        vol.Required(CONF_ID): vol.All(ensure_list, [string]),
+    }
 )
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
@@ -1086,24 +1111,29 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
         key_value_schemas(
             CONF_CONDITION,
             {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
                 "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
                 "state": STATE_CONDITION_SCHEMA,
                 "sun": SUN_CONDITION_SCHEMA,
                 "template": TEMPLATE_CONDITION_SCHEMA,
                 "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
                 "zone": ZONE_CONDITION_SCHEMA,
-                "and": AND_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
             },
         ),
         dynamic_template,
     )
 )
 
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+)
+
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
+    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
@@ -1251,3 +1281,168 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
 }
+
+
+# Validate currencies adopted by countries
+currency = vol.In(
+    {
+        "AED",
+        "AFN",
+        "ALL",
+        "AMD",
+        "ANG",
+        "AOA",
+        "ARS",
+        "AUD",
+        "AWG",
+        "AZN",
+        "BAM",
+        "BBD",
+        "BDT",
+        "BGN",
+        "BHD",
+        "BIF",
+        "BMD",
+        "BND",
+        "BOB",
+        "BRL",
+        "BSD",
+        "BTN",
+        "BWP",
+        "BYN",
+        "BYR",
+        "BZD",
+        "CAD",
+        "CDF",
+        "CHF",
+        "CLP",
+        "CNY",
+        "COP",
+        "CRC",
+        "CUP",
+        "CVE",
+        "CZK",
+        "DJF",
+        "DKK",
+        "DOP",
+        "DZD",
+        "EGP",
+        "ERN",
+        "ETB",
+        "EUR",
+        "FJD",
+        "FKP",
+        "GBP",
+        "GEL",
+        "GHS",
+        "GIP",
+        "GMD",
+        "GNF",
+        "GTQ",
+        "GYD",
+        "HKD",
+        "HNL",
+        "HRK",
+        "HTG",
+        "HUF",
+        "IDR",
+        "ILS",
+        "INR",
+        "IQD",
+        "IRR",
+        "ISK",
+        "JMD",
+        "JOD",
+        "JPY",
+        "KES",
+        "KGS",
+        "KHR",
+        "KMF",
+        "KPW",
+        "KRW",
+        "KWD",
+        "KYD",
+        "KZT",
+        "LAK",
+        "LBP",
+        "LKR",
+        "LRD",
+        "LSL",
+        "LTL",
+        "LYD",
+        "MAD",
+        "MDL",
+        "MGA",
+        "MKD",
+        "MMK",
+        "MNT",
+        "MOP",
+        "MRO",
+        "MUR",
+        "MVR",
+        "MWK",
+        "MXN",
+        "MYR",
+        "MZN",
+        "NAD",
+        "NGN",
+        "NIO",
+        "NOK",
+        "NPR",
+        "NZD",
+        "OMR",
+        "PAB",
+        "PEN",
+        "PGK",
+        "PHP",
+        "PKR",
+        "PLN",
+        "PYG",
+        "QAR",
+        "RON",
+        "RSD",
+        "RUB",
+        "RWF",
+        "SAR",
+        "SBD",
+        "SCR",
+        "SDG",
+        "SEK",
+        "SGD",
+        "SHP",
+        "SLL",
+        "SOS",
+        "SRD",
+        "SSP",
+        "STD",
+        "SYP",
+        "SZL",
+        "THB",
+        "TJS",
+        "TMT",
+        "TND",
+        "TOP",
+        "TRY",
+        "TTD",
+        "TWD",
+        "TZS",
+        "UAH",
+        "UGX",
+        "USD",
+        "UYU",
+        "UZS",
+        "VEF",
+        "VND",
+        "VUV",
+        "WST",
+        "XAF",
+        "XCD",
+        "XOF",
+        "XPF",
+        "YER",
+        "ZAR",
+        "ZMK",
+        "ZWL",
+    },
+    msg="invalid ISO 4217 formatted currency",
+)

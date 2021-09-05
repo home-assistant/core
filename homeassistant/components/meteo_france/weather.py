@@ -68,7 +68,7 @@ async def async_setup_entry(
 class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, mode: str):
+    def __init__(self, coordinator: DataUpdateCoordinator, mode: str) -> None:
         """Initialise the platform with a data instance and station name."""
         super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]

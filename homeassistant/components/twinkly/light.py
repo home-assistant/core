@@ -47,7 +47,7 @@ class TwinklyLight(LightEntity):
         self,
         conf: ConfigEntry,
         hass: HomeAssistant,
-    ):
+    ) -> None:
         """Initialize a TwinklyLight entity."""
         self._id = conf.data[CONF_ENTRY_ID]
         self._hass = hass

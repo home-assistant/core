@@ -400,6 +400,26 @@ async def test_seek(hass, mock_media_seek):
     assert mock_media_seek.called
 
 
+async def test_stop(hass):
+    """Test stop."""
+    assert await async_setup_component(
+        hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_MEDIA_STOP,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
 async def test_media_image_proxy(hass, hass_client):
     """Test the media server image proxy server ."""
     assert await async_setup_component(

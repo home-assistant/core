@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.config_entries import ENTRY_STATE_LOADED
+from homeassistant.config_entries import ConfigEntryState
 
 from .common import MQTTMessage
 
@@ -275,6 +275,6 @@ def mock_get_addon_discovery_info():
 @pytest.fixture(name="mqtt")
 async def mock_mqtt_fixture(hass):
     """Mock the MQTT integration."""
-    mqtt_entry = MockConfigEntry(domain="mqtt", state=ENTRY_STATE_LOADED)
+    mqtt_entry = MockConfigEntry(domain="mqtt", state=ConfigEntryState.LOADED)
     mqtt_entry.add_to_hass(hass)
     return mqtt_entry

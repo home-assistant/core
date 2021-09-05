@@ -79,8 +79,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._async_host_already_configured(discovery_info[IP_ADDRESS]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
 
         if not discovery_info[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
@@ -176,21 +175,20 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="manual",
                 description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
                 data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=self.host): str,
-                        vol.Required(CONF_BLID, default=self.blid): str,
-                    }
+                    {vol.Required(CONF_HOST, default=self.host): str}
                 ),
             )
 
-        if any(
-            user_input["host"] == entry.data.get("host")
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: user_input["host"]})
 
         self.host = user_input[CONF_HOST]
-        self.blid = user_input[CONF_BLID].upper()
+
+        devices = await _async_discover_roombas(self.hass, self.host)
+        if not devices:
+            return self.async_abort(reason="cannot_connect")
+        self.blid = devices[0].blid
+        self.name = devices[0].robot_name
+
         await self.async_set_unique_id(self.blid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return await self.async_step_link()
@@ -211,7 +209,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             password = await self.hass.async_add_executor_job(roomba_pw.get_password)
-        except (OSError, ConnectionRefusedError):
+        except OSError:
             return await self.async_step_link_manual()
 
         if not password:
@@ -259,14 +257,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
-
-    @callback
-    def _async_host_already_configured(self, host):
-        """See if we already have an entry matching the host."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                return True
-        return False
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

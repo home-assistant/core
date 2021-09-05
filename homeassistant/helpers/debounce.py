@@ -20,7 +20,7 @@ class Debouncer:
         cooldown: float,
         immediate: bool,
         function: Callable[..., Awaitable[Any]] | None = None,
-    ):
+    ) -> None:
         """Initialize debounce.
 
         immediate: indicate if the function needs to be called right away and

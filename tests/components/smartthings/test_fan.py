@@ -17,6 +17,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -186,6 +187,7 @@ async def test_unload_config_entry(hass, device_factory):
         status={Attribute.switch: "off", Attribute.fan_speed: 0},
     )
     config_entry = await setup_platform(hass, FAN_DOMAIN, devices=[device])
+    config_entry.state = ConfigEntryState.LOADED
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "fan")
     # Assert

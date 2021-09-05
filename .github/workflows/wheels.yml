@@ -21,7 +21,7 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Get information
         id: info
@@ -41,16 +41,17 @@ jobs:
             echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
+            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -60,14 +61,14 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
-          - "3.8-alpine3.12"
-          - "3.9-alpine3.13"
+          - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -80,11 +81,11 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@master
+        uses: home-assistant/wheels@2021.07.0
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
-          wheels-host: ${{ secrets.WHEELS_HOST }}
+          wheels-host: wheels.hass.io
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
@@ -100,14 +101,14 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
-          - "3.8-alpine3.12"
-          - "3.9-alpine3.13"
+          - "3.9-alpine3.14"
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download env_file
         uses: actions/download-artifact@v2
@@ -144,17 +145,16 @@ jobs:
             sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
             sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
-            sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
             sed -i "s|# bme680|bme680|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@master
+        uses: home-assistant/wheels@2021.07.0
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
-          wheels-host: ${{ secrets.WHEELS_HOST }}
+          wheels-host: wheels.hass.io
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true

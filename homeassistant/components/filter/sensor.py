@@ -209,7 +209,7 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
-        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._state = new_state.state
             self.async_write_ha_state()
             return
@@ -332,7 +332,7 @@ class SensorFilter(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -342,7 +342,7 @@ class SensorFilter(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
 
@@ -405,7 +405,7 @@ class Filter:
         :param entity: used for debugging only
         """
         if isinstance(window_size, int):
-            self.states = deque(maxlen=window_size)
+            self.states: deque = deque(maxlen=window_size)
             self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
         else:
             self.states = deque(maxlen=0)
@@ -476,7 +476,7 @@ class RangeFilter(Filter, SensorEntity):
         super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
@@ -522,7 +522,7 @@ class OutlierFilter(Filter, SensorEntity):
         """
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
-        self._stats_internal = Counter()
+        self._stats_internal: Counter = Counter()
         self._store_raw = True
 
     def _filter_state(self, new_state):

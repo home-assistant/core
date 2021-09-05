@@ -11,15 +11,6 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "E-posti aadress",
-                    "password": "Salas\u00f5na",
-                    "region": "Piirkond"
-                },
-                "description": "Mazda Connected Services tuvastamine nurjus. Sisesta oma kehtivad andmed.",
-                "title": "Mazda Connected Services - tuvastamine nurjus"
-            },
             "user": {
                 "data": {
                     "email": "E-posti aadress",

@@ -1,6 +1,9 @@
 """Support for the Philips Hue sensors as a platform."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
@@ -16,7 +19,7 @@ from .helpers import remove_devices
 from .hue_event import EVENT_CONFIG_MAP
 from .sensor_device import GenericHueDevice
 
-SENSOR_CONFIG_MAP = {}
+SENSOR_CONFIG_MAP: dict[str, Any] = {}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -157,17 +160,14 @@ class SensorManager:
             )
         )
 
-        for platform in to_add:
-            self._component_add_entities[platform](to_add[platform])
+        for platform, value in to_add.items():
+            self._component_add_entities[platform](value)
 
 
 class GenericHueSensor(GenericHueDevice, entity.Entity):
     """Representation of a Hue sensor."""
 
     should_poll = False
-
-    async def _async_update_ha_state(self, *args, **kwargs):
-        raise NotImplementedError
 
     @property
     def available(self):
@@ -185,6 +185,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.bridge.sensor_manager.coordinator.async_add_listener(
                 self.async_write_ha_state

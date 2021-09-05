@@ -296,7 +296,7 @@ async def test_error_on_connection_failure(hass, conn_error):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_error_on_unknwon_error(hass, unknown_error):
+async def test_error_on_unknown_error(hass, unknown_error):
     """Test when connection to host fails."""
     flow = init_config_flow(hass)
 

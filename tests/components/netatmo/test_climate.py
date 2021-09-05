@@ -26,12 +26,17 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 
-from .common import simulate_webhook
+from .common import selected_platforms, simulate_webhook
 
 
-async def test_webhook_event_handling_thermostats(hass, climate_entry):
+async def test_webhook_event_handling_thermostats(hass, config_entry, netatmo_auth):
     """Test service and webhook event handling with thermostats."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -199,9 +204,16 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     )
 
 
-async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
+async def test_service_preset_mode_frost_guard_thermostat(
+    hass, config_entry, netatmo_auth
+):
     """Test service with frost guard preset for thermostats."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -267,9 +279,14 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     )
 
 
-async def test_service_preset_modes_thermostat(hass, climate_entry):
+async def test_service_preset_modes_thermostat(hass, config_entry, netatmo_auth):
     """Test service with preset modes for thermostats."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -341,10 +358,15 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
 
 
-async def test_webhook_event_handling_no_data(hass, climate_entry):
+async def test_webhook_event_handling_no_data(hass, config_entry, netatmo_auth):
     """Test service and webhook event handling with erroneous data."""
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
     # Test webhook without home entry
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
     response = {
         "push_type": "home_event_changed",
@@ -385,14 +407,19 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
     await simulate_webhook(hass, webhook_id, response)
 
 
-async def test_service_schedule_thermostats(hass, climate_entry, caplog):
+async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_auth):
     """Test service for selecting Netatmo schedule with thermostats."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     # Test setting a valid schedule
     with patch(
-        "pyatmo.thermostat.HomeData.switch_home_schedule"
+        "pyatmo.thermostat.AsyncHomeData.async_switch_home_schedule"
     ) as mock_switch_home_schedule:
         await hass.services.async_call(
             "netatmo",
@@ -421,7 +448,7 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
 
     # Test setting an invalid schedule
     with patch(
-        "pyatmo.thermostat.HomeData.switch_home_schedule"
+        "pyatmo.thermostat.AsyncHomeData.async_switch_home_schedule"
     ) as mock_switch_home_schedule:
         await hass.services.async_call(
             "netatmo",
@@ -432,12 +459,19 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
         await hass.async_block_till_done()
         mock_switch_home_schedule.assert_not_called()
 
-    assert "summer is not a invalid schedule" in caplog.text
+    assert "summer is not a valid schedule" in caplog.text
 
 
-async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
+async def test_service_preset_mode_already_boost_valves(
+    hass, config_entry, netatmo_auth
+):
     """Test service with boost preset for valves when already in boost mode."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
@@ -508,9 +542,14 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 30
 
 
-async def test_service_preset_mode_boost_valves(hass, climate_entry):
+async def test_service_preset_mode_boost_valves(hass, config_entry, netatmo_auth):
     """Test service with boost preset for valves."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test service setting the preset mode to "boost"
@@ -553,8 +592,13 @@ async def test_service_preset_mode_boost_valves(hass, climate_entry):
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 30
 
 
-async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
+async def test_service_preset_mode_invalid(hass, config_entry, caplog, netatmo_auth):
     """Test service with invalid preset."""
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -566,9 +610,14 @@ async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
     assert "Preset mode 'invalid' not available" in caplog.text
 
 
-async def test_valves_service_turn_off(hass, climate_entry):
+async def test_valves_service_turn_off(hass, config_entry, netatmo_auth):
     """Test service turn off for valves."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve off
@@ -606,9 +655,14 @@ async def test_valves_service_turn_off(hass, climate_entry):
     assert hass.states.get(climate_entity_entrada).state == "off"
 
 
-async def test_valves_service_turn_on(hass, climate_entry):
+async def test_valves_service_turn_on(hass, config_entry, netatmo_auth):
     """Test service turn on for valves."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve on
@@ -661,9 +715,14 @@ async def test_get_all_home_ids():
     assert climate.get_all_home_ids(home_data) == expected
 
 
-async def test_webhook_home_id_mismatch(hass, climate_entry):
+async def test_webhook_home_id_mismatch(hass, config_entry, netatmo_auth):
     """Test service turn on for valves."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
@@ -694,9 +753,14 @@ async def test_webhook_home_id_mismatch(hass, climate_entry):
     assert hass.states.get(climate_entity_entrada).state == "auto"
 
 
-async def test_webhook_set_point(hass, climate_entry):
+async def test_webhook_set_point(hass, config_entry, netatmo_auth):
     """Test service turn on for valves."""
-    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    with selected_platforms(["climate"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Fake backend response for valve being turned on

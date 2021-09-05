@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -20,7 +21,7 @@ SCAN_INTERVAL = timedelta(hours=12)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -44,7 +45,7 @@ async def async_unload_entry(hass, entry):
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
+class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[Optional[datetime]]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
     def __init__(self, hass, host, port):

@@ -11,11 +11,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .common import FritzBoxTools, FritzData
 from .const import DATA_FRITZ, DOMAIN, PLATFORMS
+from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await fritz_tools.async_setup()
-        await fritz_tools.async_start()
+        await fritz_tools.async_start(entry.options)
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
     except FritzConnectionException as ex:
@@ -46,14 +47,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_FRITZ] = FritzData()
 
     @callback
-    def _async_unload(event):
+    def _async_unload(event: Event) -> None:
         fritz_tools.async_unload()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    await async_setup_services(hass)
 
     return True
 
@@ -73,4 +78,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
+    await async_unload_services(hass)
+
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update when config_entry options update."""
+    if entry.options:
+        await hass.config_entries.async_reload(entry.entry_id)

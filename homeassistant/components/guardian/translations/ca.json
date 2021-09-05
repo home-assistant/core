@@ -6,6 +6,9 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar aquest dispositiu Guardian?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Adre\u00e7a IP",

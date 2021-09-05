@@ -1,20 +1,30 @@
 # Describes the format for available services for nissan_leaf
 
 start_charge:
+  name: Start charge
   description: >
     Start the vehicle charging. It must be plugged in first!
   fields:
     vin:
+      name: VIN
       description: >
         The vehicle identification number (VIN) of the vehicle, 17 characters
+      required: true
       example: WBANXXXXXX1234567
+      selector:
+        text:
 
 update:
+  name: Update
   description: >
     Fetch the last state of the vehicle of all your accounts, requesting
     an update from of the state from the car if possible.
   fields:
     vin:
+      name: VIN
       description: >
         The vehicle identification number (VIN) of the vehicle, 17 characters
+      required: true
       example: WBANXXXXXX1234567
+      selector:
+        text:

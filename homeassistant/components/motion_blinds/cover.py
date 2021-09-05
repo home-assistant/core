@@ -132,31 +132,18 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         super().__init__(coordinator)
 
         self._blind = blind
-        self._device_class = device_class
         self._config_entry = config_entry
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return self._blind.mac
-
-    @property
-    def device_info(self):
-        """Return the device info of the blind."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._blind.mac)},
+        self._attr_device_class = device_class
+        self._attr_name = f"{blind.blind_type}-{blind.mac[12:]}"
+        self._attr_unique_id = blind.mac
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, blind.mac)},
             "manufacturer": MANUFACTURER,
-            "name": f"{self._blind.blind_type}-{self._blind.mac[12:]}",
-            "model": self._blind.blind_type,
-            "via_device": (DOMAIN, self._config_entry.unique_id),
+            "name": f"{blind.blind_type}-{blind.mac[12:]}",
+            "model": blind.blind_type,
+            "via_device": (DOMAIN, config_entry.unique_id),
         }
-
-        return device_info
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.blind_type}-{self._blind.mac[12:]}"
 
     @property
     def available(self):
@@ -179,11 +166,6 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         if self._blind.position is None:
             return None
         return 100 - self._blind.position
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
 
     @property
     def is_closed(self):
@@ -263,19 +245,11 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class, config_entry)
         self._motor = motor
         self._motor_key = motor[0]
+        self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
+        self._attr_unique_id = f"{blind.mac}-{motor}"
 
         if self._motor not in ["Bottom", "Top", "Combined"]:
             _LOGGER.error("Unknown motor '%s'", self._motor)
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the blind."""
-        return f"{self._blind.mac}-{self._motor}"
-
-    @property
-    def name(self):
-        """Return the name of the blind."""
-        return f"{self._blind.blind_type}-{self._motor}-{self._blind.mac[12:]}"
 
     @property
     def current_cover_position(self):

@@ -8,11 +8,8 @@ import pykulersky
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_WHITE_VALUE,
+    ATTR_RGBW_COLOR,
+    COLOR_MODE_RGBW,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -20,13 +17,10 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.color as color_util
 
 from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_KULERSKY = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
@@ -68,13 +62,12 @@ async def async_setup_entry(
 class KulerskyLight(LightEntity):
     """Representation of an Kuler Sky Light."""
 
-    def __init__(self, light: pykulersky.Light):
+    def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
-        self._hs_color = None
-        self._brightness = None
-        self._white_value = None
         self._available = None
+        self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+        self._attr_color_mode = COLOR_MODE_RGBW
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -113,29 +106,9 @@ class KulerskyLight(LightEntity):
         }
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_KULERSKY
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
-        """Return the hs color."""
-        return self._hs_color
-
-    @property
-    def white_value(self):
-        """Return the white value of this light between 0..255."""
-        return self._white_value
-
-    @property
     def is_on(self):
         """Return true if light is on."""
-        return self._brightness > 0 or self._white_value > 0
+        return self.brightness > 0
 
     @property
     def available(self) -> bool:
@@ -144,24 +117,21 @@ class KulerskyLight(LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        default_hs = (0, 0) if self._hs_color is None else self._hs_color
-        hue_sat = kwargs.get(ATTR_HS_COLOR, default_hs)
+        default_rgbw = (255,) * 4 if self.rgbw_color is None else self.rgbw_color
+        rgbw = kwargs.get(ATTR_RGBW_COLOR, default_rgbw)
 
-        default_brightness = 0 if self._brightness is None else self._brightness
+        default_brightness = 0 if self.brightness is None else self.brightness
         brightness = kwargs.get(ATTR_BRIGHTNESS, default_brightness)
 
-        default_white_value = 255 if self._white_value is None else self._white_value
-        white_value = kwargs.get(ATTR_WHITE_VALUE, default_white_value)
-
-        if brightness == 0 and white_value == 0 and not kwargs:
+        if brightness == 0 and not kwargs:
             # If the light would be off, and no additional parameters were
             # passed, just turn the light on full brightness.
             brightness = 255
-            white_value = 255
+            rgbw = (255,) * 4
 
-        rgb = color_util.color_hsv_to_RGB(*hue_sat, brightness / 255 * 100)
+        rgbw_scaled = [round(x * brightness / 255) for x in rgbw]
 
-        await self._light.set_color(*rgb, white_value)
+        await self._light.set_color(*rgbw_scaled)
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -172,8 +142,7 @@ class KulerskyLight(LightEntity):
         try:
             if not self._available:
                 await self._light.connect()
-            # pylint: disable=invalid-name
-            r, g, b, w = await self._light.get_color()
+            rgbw = await self._light.get_color()
         except pykulersky.PykulerskyException as exc:
             if self._available:
                 _LOGGER.warning("Unable to connect to %s: %s", self._light.address, exc)
@@ -183,7 +152,10 @@ class KulerskyLight(LightEntity):
             _LOGGER.info("Reconnected to %s", self._light.address)
 
         self._available = True
-        hsv = color_util.color_RGB_to_hsv(r, g, b)
-        self._hs_color = hsv[:2]
-        self._brightness = int(round((hsv[2] / 100) * 255))
-        self._white_value = w
+        brightness = max(rgbw)
+        if not brightness:
+            rgbw_normalized = [0, 0, 0, 0]
+        else:
+            rgbw_normalized = [round(x * 255 / brightness) for x in rgbw]
+        self._attr_brightness = brightness
+        self._attr_rgbw_color = tuple(rgbw_normalized)

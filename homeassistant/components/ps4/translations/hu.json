@@ -2,14 +2,20 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+            "credential_error": "Hiba t\u00f6rt\u00e9nt a hiteles\u00edt\u0151 adatok beolvas\u00e1sa sor\u00e1n.",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "port_987_bind_error": "Nem siker\u00fclt a 987. porthoz kapcsol\u00f3dni. Tov\u00e1bbi inform\u00e1ci\u00f3 a [dokument\u00e1ci\u00f3ban] tal\u00e1lhat\u00f3 (https://www.home-assistant.io/components/ps4/).",
+            "port_997_bind_error": "Nem siker\u00fclt a 997-es porthoz kapcsol\u00f3dni. Tov\u00e1bbi inform\u00e1ci\u00f3 a [dokument\u00e1ci\u00f3ban] tal\u00e1lhat\u00f3 (https://www.home-assistant.io/components/ps4/)."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "login_failed": "Nem siker\u00fclt p\u00e1ros\u00edtani a PlayStation 4-gyel. Ellen\u0151rizze, hogy a PIN-k\u00f3d helyes-e."
+            "credential_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s. Az \u00fajraind\u00edt\u00e1shoz nyomja meg a bek\u00fcld\u00e9s gombot.",
+            "login_failed": "Nem siker\u00fclt p\u00e1ros\u00edtani a PlayStation 4-gyel. Ellen\u0151rizze, hogy a PIN-k\u00f3d helyes-e.",
+            "no_ipaddress": "\u00cdrja be a konfigur\u00e1lni k\u00edv\u00e1nt PlayStation 4 IP c\u00edm\u00e9t"
         },
         "step": {
             "creds": {
+                "description": "Hiteles\u00edt\u0151 adatok sz\u00fcks\u00e9gesek. Nyomja meg a \u201eK\u00fcld\u00e9s\u201d gombot, majd a PS4 2. k\u00e9perny\u0151 alkalmaz\u00e1sban friss\u00edtse az eszk\u00f6z\u00f6ket, \u00e9s a folytat\u00e1shoz v\u00e1lassza a \u201eHome-Assistant\u201d eszk\u00f6zt.",
                 "title": "PlayStation 4"
             },
             "link": {
@@ -18,13 +24,16 @@
                     "ip_address": "IP c\u00edm",
                     "name": "N\u00e9v",
                     "region": "R\u00e9gi\u00f3"
-                }
+                },
+                "description": "Adja meg a PlayStation 4 adatait. A PIN-k\u00f3d eset\u00e9ben keresse meg a PlayStation 4 konzol \u201eBe\u00e1ll\u00edt\u00e1sok\u201d elem\u00e9t. Ezut\u00e1n keresse meg a \u201eMobilalkalmaz\u00e1s-kapcsolat be\u00e1ll\u00edt\u00e1sai\u201d elemet, \u00e9s v\u00e1lassza az \u201eEszk\u00f6z hozz\u00e1ad\u00e1sa\u201d lehet\u0151s\u00e9get. \u00cdrja be a megjelen\u0151 PIN-k\u00f3d . Tov\u00e1bbi inform\u00e1ci\u00f3k a [dokument\u00e1ci\u00f3ban] tal\u00e1lhat\u00f3k (https://www.home-assistant.io/components/ps4/).",
+                "title": "PlayStation 4"
             },
             "mode": {
                 "data": {
                     "ip_address": "IP c\u00edm (Hagyd \u00fcresen az Automatikus Felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz).",
                     "mode": "Konfigur\u00e1ci\u00f3s m\u00f3d"
                 },
+                "description": "V\u00e1lassza ki a m\u00f3dot a konfigur\u00e1l\u00e1shoz. Az IP c\u00edm mez\u0151 \u00fcresen maradhat, ha az Automatikus felder\u00edt\u00e9s lehet\u0151s\u00e9get v\u00e1lasztja, mivel az eszk\u00f6z\u00f6k automatikusan felfedez\u0151dnek.",
                 "title": "PlayStation 4"
             }
         }

@@ -11,9 +11,10 @@ import threading
 import time
 from typing import Any, Callable, NamedTuple
 
-from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.orm.session import Session
 from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
@@ -34,20 +35,36 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
+    generate_filter,
 )
-from homeassistant.helpers.event import async_track_time_interval, track_time_change
+from homeassistant.helpers.event import (
+    async_track_time_change,
+    async_track_time_interval,
+)
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
+from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from . import history, migration, purge
+from . import history, migration, purge, statistics
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
-from .models import Base, Events, RecorderRuns, States
+from .models import (
+    Base,
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    process_timestamp,
+)
 from .pool import RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
     move_away_broken_database,
+    perodic_db_cleanups,
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
@@ -56,6 +73,7 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
+SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
@@ -72,6 +90,18 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
+
+ATTR_DOMAINS = "domains"
+ATTR_ENTITY_GLOBS = "entity_globs"
+
+SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+    }
+).extend(cv.ENTITY_SERVICE_FIELDS)
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
 
@@ -152,6 +182,17 @@ async def async_migration_in_progress(hass: HomeAssistant) -> bool:
     return hass.data[DATA_INSTANCE].migration_in_progress
 
 
+@bind_hass
+def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
+    """Check if an entity is being recorded.
+
+    Async friendly.
+    """
+    if DATA_INSTANCE not in hass.data:
+        return False
+    return hass.data[DATA_INSTANCE].entity_filter(entity_id)
+
+
 def run_information(hass, point_in_time: datetime | None = None):
     """Return information about current run.
 
@@ -194,6 +235,7 @@ def run_information_with_session(session, point_in_time: datetime | None = None)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
+    hass.data[DOMAIN] = {}
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
@@ -221,8 +263,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
+    statistics.async_setup(hass)
+    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
 
     return await instance.async_db_ready
+
+
+async def _process_recorder_platform(hass, domain, platform):
+    """Process a recorder platform."""
+    hass.data[DOMAIN][domain] = platform
 
 
 @callback
@@ -237,11 +286,29 @@ def _async_register_services(hass, instance):
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
-    async def async_handle_enable_sevice(service):
+    async def async_handle_purge_entities_service(service):
+        """Handle calls to the purge entities service."""
+        entity_ids = await async_extract_entity_ids(hass, service)
+        domains = service.data.get(ATTR_DOMAINS, [])
+        entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
+
+        instance.do_adhoc_purge_entities(entity_ids, domains, entity_globs)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        async_handle_purge_entities_service,
+        schema=SERVICE_PURGE_ENTITIES_SCHEMA,
+    )
+
+    async def async_handle_enable_service(service):
         instance.set_enable(True)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE, async_handle_enable_sevice, schema=SERVICE_ENABLE_SCHEMA
+        DOMAIN,
+        SERVICE_ENABLE,
+        async_handle_enable_service,
+        schema=SERVICE_ENABLE_SCHEMA,
     )
 
     async def async_handle_disable_service(service):
@@ -258,9 +325,25 @@ def _async_register_services(hass, instance):
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
-    keep_days: int
+    purge_before: datetime
     repack: bool
     apply_filter: bool
+
+
+class PurgeEntitiesTask(NamedTuple):
+    """Object to store entity information about purge task."""
+
+    entity_filter: Callable[[str], bool]
+
+
+class PerodicCleanupTask:
+    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+
+
+class StatisticsTask(NamedTuple):
+    """An object to insert into the recorder queue to run a statistics task."""
+
+    start: datetime
 
 
 class WaitTask:
@@ -294,7 +377,7 @@ class Recorder(threading.Thread):
         self.db_url = uri
         self.db_max_retries = db_max_retries
         self.db_retry_wait = db_retry_wait
-        self.async_db_ready = asyncio.Future()
+        self.async_db_ready: asyncio.Future = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Any = None
@@ -306,11 +389,11 @@ class Recorder(threading.Thread):
         self._timechanges_seen = 0
         self._commits_without_expire = 0
         self._keepalive_count = 0
-        self._old_states = {}
-        self._pending_expunge = []
+        self._old_states: dict[str, States] = {}
+        self._pending_expunge: list[States] = []
         self.event_session = None
         self.get_session = None
-        self._completed_database_setup = None
+        self._completed_first_database_setup = None
         self._event_listener = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
@@ -387,7 +470,20 @@ class Recorder(threading.Thread):
         repack = kwargs.get(ATTR_REPACK)
         apply_filter = kwargs.get(ATTR_APPLY_FILTER)
 
-        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
+        purge_before = dt_util.utcnow() - timedelta(days=keep_days)
+        self.queue.put(PurgeTask(purge_before, repack, apply_filter))
+
+    def do_adhoc_purge_entities(self, entity_ids, domains, entity_globs):
+        """Trigger an adhoc purge of requested entities."""
+        entity_filter = generate_filter(domains, entity_ids, [], [], entity_globs)
+        self.queue.put(PurgeEntitiesTask(entity_filter))
+
+    def do_adhoc_statistics(self, **kwargs):
+        """Trigger an adhoc statistics run."""
+        start = kwargs.get("start")
+        if not start:
+            start = statistics.get_start_time()
+        self.queue.put(StatisticsTask(start))
 
     @callback
     def async_register(self, shutdown_task, hass_started):
@@ -451,13 +547,44 @@ class Recorder(threading.Thread):
 
     @callback
     def _async_recorder_ready(self):
-        """Mark recorder ready."""
+        """Finish start and mark recorder ready."""
+        self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
     @callback
-    def async_purge(self, now):
+    def async_nightly_tasks(self, now):
         """Trigger the purge."""
-        self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
+        if self.auto_purge:
+            # Purge will schedule the perodic cleanups
+            # after it completes to ensure it does not happen
+            # until after the database is vacuumed
+            purge_before = dt_util.utcnow() - timedelta(days=self.keep_days)
+            self.queue.put(PurgeTask(purge_before, repack=False, apply_filter=False))
+        else:
+            self.queue.put(PerodicCleanupTask())
+
+    @callback
+    def async_hourly_statistics(self, now):
+        """Trigger the hourly statistics run."""
+        start = statistics.get_start_time()
+        self.queue.put(StatisticsTask(start))
+
+    @callback
+    def _async_setup_periodic_tasks(self):
+        """Prepare periodic tasks."""
+        if self.hass.is_stopping or not self.get_session:
+            # Home Assistant is shutting down
+            return
+
+        # Run nightly tasks at 4:12am
+        async_track_time_change(
+            self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
+        )
+
+        # Compile hourly statistics every hour at *:12
+        async_track_time_change(
+            self.hass, self.async_hourly_statistics, minute=12, second=0
+        )
 
     def run(self):
         """Start processing events to save."""
@@ -493,7 +620,7 @@ class Recorder(threading.Thread):
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 if not self._event_listener:
-                    # If the schema migration takes so longer that the end
+                    # If the schema migration takes so long that the end
                     # queue watcher safety kicks in because MAX_QUEUE_BACKLOG
                     # is reached, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
@@ -506,11 +633,6 @@ class Recorder(threading.Thread):
                 )
                 self._shutdown()
                 return
-
-        # Start periodic purge
-        if self.auto_purge:
-            # Purge every night at 4:12am
-            track_time_change(self.hass, self.async_purge, hour=4, minute=12, second=0)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
@@ -601,17 +723,44 @@ class Recorder(threading.Thread):
             self.migration_in_progress = False
             persistent_notification.dismiss(self.hass, "recorder_database_migration")
 
-    def _run_purge(self, keep_days, repack, apply_filter):
+    def _run_purge(self, purge_before, repack, apply_filter):
         """Purge the database."""
-        if purge.purge_old_data(self, keep_days, repack, apply_filter):
+        if purge.purge_old_data(self, purge_before, repack, apply_filter):
+            # We always need to do the db cleanups after a purge
+            # is finished to ensure the WAL checkpoint and other
+            # tasks happen after a vacuum.
+            perodic_db_cleanups(self)
             return
         # Schedule a new purge task if this one didn't finish
-        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
+        self.queue.put(PurgeTask(purge_before, repack, apply_filter))
+
+    def _run_purge_entities(self, entity_filter):
+        """Purge entities from the database."""
+        if purge.purge_entity_data(self, entity_filter):
+            return
+        # Schedule a new purge task if this one didn't finish
+        self.queue.put(PurgeEntitiesTask(entity_filter))
+
+    def _run_statistics(self, start):
+        """Run statistics task."""
+        if statistics.compile_statistics(self, start):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        self.queue.put(StatisticsTask(start))
 
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
-            self._run_purge(event.keep_days, event.repack, event.apply_filter)
+            self._run_purge(event.purge_before, event.repack, event.apply_filter)
+            return
+        if isinstance(event, PurgeEntitiesTask):
+            self._run_purge_entities(event.entity_filter)
+            return
+        if isinstance(event, PerodicCleanupTask):
+            perodic_db_cleanups(self)
+            return
+        if isinstance(event, StatisticsTask):
+            self._run_statistics(event.start)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
@@ -785,15 +934,16 @@ class Recorder(threading.Thread):
     def _setup_connection(self):
         """Ensure database is ready to fly."""
         kwargs = {}
-        self._completed_database_setup = False
+        self._completed_first_database_setup = False
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
-            if self._completed_database_setup:
-                return
-            self._completed_database_setup = setup_connection_for_dialect(
-                self.engine.dialect.name, dbapi_connection
+            setup_connection_for_dialect(
+                self.engine.dialect.name,
+                dbapi_connection,
+                not self._completed_first_database_setup,
             )
+            self._completed_first_database_setup = True
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
@@ -829,7 +979,7 @@ class Recorder(threading.Thread):
         self.get_session = None
 
     def _setup_run(self):
-        """Log the start of the current run."""
+        """Log the start of the current run and schedule any needed jobs."""
         with session_scope(session=self.get_session()) as session:
             start = self.recording_start
             end_incomplete_runs(session, start)
@@ -837,8 +987,27 @@ class Recorder(threading.Thread):
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
+            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
+
+    def _schedule_compile_missing_statistics(self, session: Session) -> None:
+        """Add tasks for missing statistics runs."""
+        now = dt_util.utcnow()
+        last_hour = now.replace(minute=0, second=0, microsecond=0)
+        start = now - timedelta(days=self.keep_days)
+        start = start.replace(minute=0, second=0, microsecond=0)
+
+        # Find the newest statistics run, if any
+        if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
+            start = max(start, process_timestamp(last_run) + timedelta(hours=1))
+
+        # Add tasks
+        while start < last_hour:
+            end = start + timedelta(hours=1)
+            _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
+            self.queue.put(StatisticsTask(start))
+            start = start + timedelta(hours=1)
 
     def _end_session(self):
         """End the recorder session."""

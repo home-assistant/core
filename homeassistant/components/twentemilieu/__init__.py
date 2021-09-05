@@ -7,13 +7,6 @@ from datetime import timedelta
 from twentemilieu import TwenteMilieu
 import voluptuous as vol
 
-from homeassistant.components.twentemilieu.const import (
-    CONF_HOUSE_LETTER,
-    CONF_HOUSE_NUMBER,
-    CONF_POST_CODE,
-    DATA_UPDATE,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
@@ -22,6 +15,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    CONF_HOUSE_LETTER,
+    CONF_HOUSE_NUMBER,
+    CONF_POST_CODE,
+    DATA_UPDATE,
+    DOMAIN,
+)
 
 SCAN_INTERVAL = timedelta(seconds=3600)
 

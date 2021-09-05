@@ -74,45 +74,17 @@ class Bmp280Sensor(SensorEntity):
         name: str,
         unit_of_measurement: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._bmp280 = bmp280
-        self._name = name
-        self._unit_of_measurement = unit_of_measurement
-        self._device_class = device_class
-        self._state = None
-        self._errored = False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is currently available."""
-        return not self._errored
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
 
 class Bmp280TemperatureSensor(Bmp280Sensor):
     """Representation of a Bosch BMP280 Temperature Sensor."""
 
-    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str):
+    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
             bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
@@ -122,22 +94,22 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._state = round(self._bmp280.temperature, 1)
-            if self._errored:
+            self._attr_native_value = round(self._bmp280.temperature, 1)
+            if not self.available:
                 _LOGGER.warning("Communication restored with temperature sensor")
-                self._errored = False
+                self._attr_available = True
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read temperature data due to a communication problem"
             )
-            self._errored = True
+            self._attr_available = False
 
 
 class Bmp280PressureSensor(Bmp280Sensor):
     """Representation of a Bosch BMP280 Barometric Pressure Sensor."""
 
-    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str):
+    def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
             bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE
@@ -147,13 +119,13 @@ class Bmp280PressureSensor(Bmp280Sensor):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._state = round(self._bmp280.pressure)
-            if self._errored:
+            self._attr_native_value = round(self._bmp280.pressure)
+            if not self.available:
                 _LOGGER.warning("Communication restored with pressure sensor")
-                self._errored = False
+                self._attr_available = True
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read pressure data due to a communication problem"
             )
-            self._errored = True
+            self._attr_available = False

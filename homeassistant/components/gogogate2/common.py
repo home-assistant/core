@@ -1,10 +1,10 @@
 """Common code for GogoGate2 component."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Mapping
 from datetime import timedelta
 import logging
-from typing import Callable, NamedTuple
+from typing import Any, Callable, NamedTuple
 
 from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
 from ismartgate.common import AbstractDoor, get_door_by_id
@@ -51,7 +51,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         update_interval: timedelta,
         update_method: Callable[[], Awaitable] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
-    ):
+    ) -> None:
         """Initialize the data update coordinator."""
         DataUpdateCoordinator.__init__(
             self,
@@ -149,7 +149,7 @@ def sensor_unique_id(
     return f"{config_entry.unique_id}_{door.door_id}_{sensor_type}"
 
 
-def get_api(hass: HomeAssistant, config_data: dict) -> AbstractGateApi:
+def get_api(hass: HomeAssistant, config_data: Mapping[str, Any]) -> AbstractGateApi:
     """Get an api object for config data."""
     gate_class = GogoGate2Api
 

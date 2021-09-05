@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No s'han trobat dispositius a la xarxa",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
@@ -39,14 +38,6 @@
                 },
                 "description": "Amfitrions coneguts - Llista, separada per comes, dels noms d'amfitri\u00f3 o adreces IP dels dispositius Cast. Utilitza-ho si el descobriment mDNS no funciona.",
                 "title": "Configuraci\u00f3 de Google Cast"
-            },
-            "options": {
-                "data": {
-                    "ignore_cec": "Llista opcional que es passar\u00e0 a pychromecast.IGNORE_CEC.",
-                    "known_hosts": "Llista opcional d'amfitrions coneguts per si el descobriment mDNS deixa de funcionar.",
-                    "uuid": "Llista opcional d'UUIDs. No s'afegiran 'casts' que no siguin a la llista."
-                },
-                "description": "Introdueix la configuraci\u00f3 de Google Cast."
             }
         }
     }

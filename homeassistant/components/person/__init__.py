@@ -168,7 +168,7 @@ class PersonStorageCollection(collection.StorageCollection):
         logger: logging.Logger,
         id_manager: collection.IDManager,
         yaml_collection: collection.YamlCollection,
-    ):
+    ) -> None:
         """Initialize a person storage collection."""
         super().__init__(store, logger, id_manager)
         self.yaml_collection = yaml_collection
@@ -293,7 +293,7 @@ The following persons point at invalid users:
     return filtered
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
     entity_component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()

@@ -29,7 +29,7 @@ class BrowseMediaSource(BrowseMedia):
 
     children: list[BrowseMediaSource] | None
 
-    def __init__(self, *, domain: str | None, identifier: str | None, **kwargs):
+    def __init__(self, *, domain: str | None, identifier: str | None, **kwargs) -> None:
         """Initialize media source browse media."""
         media_content_id = f"{URI_SCHEME}{domain or ''}"
         if identifier:
@@ -106,7 +106,7 @@ class MediaSource(ABC):
 
     name: str = None
 
-    def __init__(self, domain: str):
+    def __init__(self, domain: str) -> None:
         """Initialize a media source."""
         self.domain = domain
         if not self.name:

@@ -62,7 +62,7 @@ class TransmissionSensor(SensorEntity):
         return f"{self._tm_client.api.host}-{self.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -95,7 +95,7 @@ class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return DATA_RATE_MEGABYTES_PER_SECOND
 
@@ -145,7 +145,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return "Torrents"
 

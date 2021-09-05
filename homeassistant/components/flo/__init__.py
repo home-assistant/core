@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up flo from a config entry."""
     session = async_get_clientsession(hass)
     hass.data.setdefault(DOMAIN, {})

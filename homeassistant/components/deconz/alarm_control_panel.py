@@ -5,13 +5,19 @@ from pydeconz.sensor import (
     ANCILLARY_CONTROL_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
+    ANCILLARY_CONTROL_ARMING_AWAY,
+    ANCILLARY_CONTROL_ARMING_NIGHT,
+    ANCILLARY_CONTROL_ARMING_STAY,
     ANCILLARY_CONTROL_DISARMED,
+    ANCILLARY_CONTROL_ENTRY_DELAY,
+    ANCILLARY_CONTROL_EXIT_DELAY,
+    ANCILLARY_CONTROL_IN_ALARM,
     AncillaryControl,
 )
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
+    FORMAT_NUMBER,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
@@ -21,38 +27,37 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-PANEL_ENTRY_DELAY = "entry_delay"
-PANEL_EXIT_DELAY = "exit_delay"
-PANEL_NOT_READY_TO_ARM = "not_ready_to_arm"
-
-SERVICE_ALARM_PANEL_STATE = "alarm_panel_state"
-CONF_ALARM_PANEL_STATE = "panel_state"
-SERVICE_ALARM_PANEL_STATE_SCHEMA = {
-    vol.Required(CONF_ALARM_PANEL_STATE): vol.In(
-        [
-            PANEL_ENTRY_DELAY,
-            PANEL_EXIT_DELAY,
-            PANEL_NOT_READY_TO_ARM,
-        ]
-    )
-}
-
 DECONZ_TO_ALARM_STATE = {
     ANCILLARY_CONTROL_ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
     ANCILLARY_CONTROL_ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY: STATE_ALARM_ARMED_HOME,
+    ANCILLARY_CONTROL_ARMING_AWAY: STATE_ALARM_ARMING,
+    ANCILLARY_CONTROL_ARMING_NIGHT: STATE_ALARM_ARMING,
+    ANCILLARY_CONTROL_ARMING_STAY: STATE_ALARM_ARMING,
     ANCILLARY_CONTROL_DISARMED: STATE_ALARM_DISARMED,
+    ANCILLARY_CONTROL_ENTRY_DELAY: STATE_ALARM_PENDING,
+    ANCILLARY_CONTROL_EXIT_DELAY: STATE_ALARM_PENDING,
+    ANCILLARY_CONTROL_IN_ALARM: STATE_ALARM_TRIGGERED,
 }
+
+
+def get_alarm_system_for_unique_id(gateway, unique_id: str):
+    """Retrieve alarm system unique ID is registered to."""
+    for alarm_system in gateway.api.alarm_systems.values():
+        if unique_id in alarm_system.devices:
+            return alarm_system
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
@@ -62,8 +67,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
-
-    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_add_alarm_control_panel(sensors=gateway.api.sensors.values()) -> None:
@@ -75,15 +78,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
             if (
                 sensor.type in AncillaryControl.ZHATYPE
                 and sensor.uniqueid not in gateway.entities[DOMAIN]
+                and get_alarm_system_for_unique_id(gateway, sensor.uniqueid)
             ):
+
                 entities.append(DeconzAlarmControlPanel(sensor, gateway))
 
         if entities:
-            platform.async_register_entity_service(
-                SERVICE_ALARM_PANEL_STATE,
-                SERVICE_ALARM_PANEL_STATE_SCHEMA,
-                "async_set_panel_state",
-            )
             async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -102,39 +102,20 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
 
     TYPE = DOMAIN
 
+    _attr_code_format = FORMAT_NUMBER
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+    )
+
     def __init__(self, device, gateway) -> None:
         """Set up alarm control panel device."""
         super().__init__(device, gateway)
-
-        self._features = SUPPORT_ALARM_ARM_AWAY
-        self._features |= SUPPORT_ALARM_ARM_HOME
-        self._features |= SUPPORT_ALARM_ARM_NIGHT
-
-        self._service_to_device_panel_command = {
-            PANEL_ENTRY_DELAY: self._device.entry_delay,
-            PANEL_EXIT_DELAY: self._device.exit_delay,
-            PANEL_NOT_READY_TO_ARM: self._device.not_ready_to_arm,
-        }
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._features
-
-    @property
-    def code_arm_required(self) -> bool:
-        """Code is not required for arm actions."""
-        return False
-
-    @property
-    def code_format(self) -> None:
-        """Code is not supported."""
-        return None
+        self.alarm_system = get_alarm_system_for_unique_id(gateway, device.uniqueid)
 
     @callback
     def async_update_callback(self, force_update: bool = False) -> None:
         """Update the control panels state."""
-        keys = {"armed", "reachable"}
+        keys = {"panel", "reachable"}
         if force_update or (
             self._device.changed_keys.intersection(keys)
             and self._device.state in DECONZ_TO_ALARM_STATE
@@ -142,26 +123,22 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
             super().async_update_callback(force_update=force_update)
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the control panel."""
         return DECONZ_TO_ALARM_STATE.get(self._device.state)
 
     async def async_alarm_arm_away(self, code: None = None) -> None:
         """Send arm away command."""
-        await self._device.arm_away()
+        await self.alarm_system.arm_away(code)
 
     async def async_alarm_arm_home(self, code: None = None) -> None:
         """Send arm home command."""
-        await self._device.arm_stay()
+        await self.alarm_system.arm_stay(code)
 
     async def async_alarm_arm_night(self, code: None = None) -> None:
         """Send arm night command."""
-        await self._device.arm_night()
+        await self.alarm_system.arm_night(code)
 
     async def async_alarm_disarm(self, code: None = None) -> None:
         """Send disarm command."""
-        await self._device.disarm()
-
-    async def async_set_panel_state(self, panel_state: str) -> None:
-        """Send panel_state command."""
-        await self._service_to_device_panel_command[panel_state]()
+        await self.alarm_system.disarm(code)

@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
 
 from .const import CONF_ENDPOINT, DOMAIN
 
@@ -75,9 +74,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         # Check if already configured
-        if self._async_endpoint_already_configured():
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({CONF_ENDPOINT: self.conf.endpoint})
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
@@ -144,11 +141,3 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(user_input)
-
-    @callback
-    def _async_endpoint_already_configured(self):
-        """See if we already have an endpoint matching user input configured."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_ENDPOINT) == self.conf.endpoint:
-                return True
-        return False

@@ -47,13 +47,13 @@ def _setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         flume_devices = FlumeDeviceList(flume_auth, http_session=http_session)
     except RequestException as ex:
         raise ConfigEntryNotReady from ex
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         raise ConfigEntryAuthFailed from ex
 
     return flume_auth, flume_devices, http_session
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up flume from a config entry."""
 
     flume_auth, flume_devices, http_session = await hass.async_add_executor_job(

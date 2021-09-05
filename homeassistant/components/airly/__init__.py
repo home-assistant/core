@@ -11,9 +11,11 @@ from airly import Airly
 from airly.exceptions import AirlyError
 import async_timeout
 
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,7 +33,7 @@ from .const import (
     NO_AIRLY_SENSORS,
 )
 
-PLATFORMS = ["air_quality", "sensor"]
+PLATFORMS = ["sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +113,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    # Remove air_quality entities from registry if they exist
+    ent_reg = entity_registry.async_get(hass)
+    unique_id = f"{coordinator.latitude}-{coordinator.longitude}"
+    if entity_id := ent_reg.async_get_entity_id(
+        AIR_QUALITY_PLATFORM, DOMAIN, unique_id
+    ):
+        _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
+        ent_reg.async_remove(entity_id)
+
     return True
 
 
@@ -136,7 +147,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
         longitude: float,
         update_interval: timedelta,
         use_nearest: bool,
-    ):
+    ) -> None:
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude

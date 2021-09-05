@@ -2,7 +2,7 @@
   "domain": "august",
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
-  "requirements": ["yalexs==1.1.11"],
+  "requirements": ["yalexs==1.1.13"],
   "codeowners": ["@bdraco"],
   "dhcp": [
     {
@@ -12,6 +12,10 @@
     {
       "hostname": "connect",
       "macaddress": "B8B7F1*"
+    },
+    {
+      "hostname": "connect",
+      "macaddress": "2C9FFB*"
     },
     {
       "hostname": "august*",

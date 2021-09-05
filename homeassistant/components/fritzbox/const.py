@@ -1,26 +1,24 @@
 """Constants for the AVM FRITZ!SmartHome integration."""
+from __future__ import annotations
+
 import logging
+from typing import Final
 
-ATTR_STATE_BATTERY_LOW = "battery_low"
-ATTR_STATE_DEVICE_LOCKED = "device_locked"
-ATTR_STATE_HOLIDAY_MODE = "holiday_mode"
-ATTR_STATE_LOCKED = "locked"
-ATTR_STATE_SUMMER_MODE = "summer_mode"
-ATTR_STATE_WINDOW_OPEN = "window_open"
+ATTR_STATE_BATTERY_LOW: Final = "battery_low"
+ATTR_STATE_DEVICE_LOCKED: Final = "device_locked"
+ATTR_STATE_HOLIDAY_MODE: Final = "holiday_mode"
+ATTR_STATE_LOCKED: Final = "locked"
+ATTR_STATE_SUMMER_MODE: Final = "summer_mode"
+ATTR_STATE_WINDOW_OPEN: Final = "window_open"
 
-ATTR_TEMPERATURE_UNIT = "temperature_unit"
+CONF_CONNECTIONS: Final = "connections"
+CONF_COORDINATOR: Final = "coordinator"
 
-ATTR_TOTAL_CONSUMPTION = "total_consumption"
-ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
+DEFAULT_HOST: Final = "fritz.box"
+DEFAULT_USERNAME: Final = "admin"
 
-CONF_CONNECTIONS = "connections"
-CONF_COORDINATOR = "coordinator"
+DOMAIN: Final = "fritzbox"
 
-DEFAULT_HOST = "fritz.box"
-DEFAULT_USERNAME = "admin"
+LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
 
-DOMAIN = "fritzbox"
-
-LOGGER: logging.Logger = logging.getLogger(__package__)
-
-PLATFORMS = ["binary_sensor", "climate", "switch", "sensor"]
+PLATFORMS: Final[list[str]] = ["binary_sensor", "climate", "switch", "sensor"]

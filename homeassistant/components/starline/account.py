@@ -26,7 +26,7 @@ from .const import (
 class StarlineAccount:
     """StarLine Account class."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry

@@ -15,5 +15,15 @@
                 "title": "\u9023\u7dda\u81f3 LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "\u9810\u8a2d\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09"
+                },
+                "title": "\u8a2d\u5b9a LiteJet"
+            }
+        }
     }
 }

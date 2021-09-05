@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Zwei-Faktor Authentifizierungscode"
                 },
-                "description": "Gib die an deine E-Mail gesendete Pin ein. Wenn die E-Mail keine PIN enth\u00e4lt, lass das Feld leer.",
+                "description": "Gib die an deine E-Mail gesendete Pin ein",
                 "title": "Zwei-Faktor-Authentifizierung"
             },
             "user": {

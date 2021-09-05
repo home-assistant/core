@@ -8,8 +8,7 @@
             "bad_pin_format": "PIN-koden skal best\u00e5 av fire sifre",
             "cannot_connect": "Tilkobling mislyktes",
             "incorrect_pin": "Feil PIN",
-            "invalid_auth": "Ugyldig godkjenning",
-            "unknown": "Uventet feil"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "pin": {

@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
@@ -58,7 +59,7 @@ DEVICE_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the DoorBird component."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -90,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DoorBird from a config entry."""
 
     _async_import_options_from_data_if_missing(hass, entry)
@@ -195,7 +196,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     modified = False
-    for importable_option in [CONF_EVENTS]:
+    for importable_option in (CONF_EVENTS,):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = True

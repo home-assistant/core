@@ -121,7 +121,7 @@ async def test_show_form(manager):
             )
 
     form = await manager.async_init("test")
-    assert form["type"] == "form"
+    assert form["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert form["data_schema"] is schema
     assert form["errors"] == {"username": "Should be unique."}
 
@@ -369,7 +369,7 @@ async def test_abort_flow_exception(manager):
             raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
 
     form = await manager.async_init("test")
-    assert form["type"] == "abort"
+    assert form["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert form["reason"] == "mock-reason"
     assert form["description_placeholders"] == {"placeholder": "yo"}
 

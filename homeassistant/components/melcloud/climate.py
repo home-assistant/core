@@ -100,11 +100,12 @@ async def async_setup_entry(
 class MelCloudClimate(ClimateEntity):
     """Base climate device."""
 
-    def __init__(self, device: MelCloudDevice):
+    _attr_temperature_unit = TEMP_CELSIUS
+
+    def __init__(self, device: MelCloudDevice) -> None:
         """Initialize the climate."""
         self.api = device
         self._base_device = self.api.device
-        self._name = device.name
 
     async def async_update(self):
         """Update state from MELCloud."""
@@ -124,20 +125,17 @@ class MelCloudClimate(ClimateEntity):
 class AtaDeviceClimate(MelCloudClimate):
     """Air-to-Air climate device."""
 
+    _attr_supported_features = (
+        SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_SWING_MODE
+    )
+
     def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
         """Initialize the climate."""
         super().__init__(device)
         self._device = ata_device
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self.api.device.serial}-{self.api.device.mac}"
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._name
+        self._attr_name = device.name
+        self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -162,11 +160,6 @@ class AtaDeviceClimate(MelCloudClimate):
                 }
             )
         return attr
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> str:
@@ -258,11 +251,6 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_SWING_MODE
-
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self._device.set({"power": True})
@@ -293,6 +281,10 @@ class AtaDeviceClimate(MelCloudClimate):
 class AtwDeviceZoneClimate(MelCloudClimate):
     """Air-to-Water zone climate device."""
 
+    _attr_max_temp = 30
+    _attr_min_temp = 10
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+
     def __init__(
         self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone
     ) -> None:
@@ -301,15 +293,8 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         self._device = atw_device
         self._zone = atw_zone
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self.api.device.serial}-{self._zone.zone_index}"
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this entity."""
-        return f"{self._name} {self._zone.name}"
+        self._attr_name = f"{device.name} {self._zone.name}"
+        self._attr_unique_id = f"{self.api.device.serial}-{atw_zone.zone_index}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -320,11 +305,6 @@ class AtwDeviceZoneClimate(MelCloudClimate):
             )
         }
         return data
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
 
     @property
     def hvac_mode(self) -> str:
@@ -372,24 +352,3 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         await self._zone.set_target_temperature(
             kwargs.get("temperature", self.target_temperature)
         )
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature.
-
-        MELCloud API does not expose radiator zone temperature limits.
-        """
-        return 10
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature.
-
-        MELCloud API does not expose radiator zone temperature limits.
-        """
-        return 30

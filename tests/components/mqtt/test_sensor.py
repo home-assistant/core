@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
@@ -42,6 +43,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -204,6 +206,148 @@ async def test_setting_sensor_value_via_mqtt_json_message(hass, mqtt_mock):
     state = hass.states.get("sensor.test")
 
     assert state.state == "100"
+
+
+async def test_setting_sensor_last_reset_via_mqtt_message(hass, mqtt_mock, caplog):
+    """Test the setting of the last_reset property via MQTT."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "last_reset_topic": "last-reset-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "last-reset-topic", "2020-01-02 08:11:00")
+    state = hass.states.get("sensor.test")
+    assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
+    assert "'last_reset_topic' must be same as 'state_topic'" in caplog.text
+    assert (
+        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize("datestring", ["2020-21-02 08:11:00", "Hello there!"])
+async def test_setting_sensor_bad_last_reset_via_mqtt_message(
+    hass, caplog, datestring, mqtt_mock
+):
+    """Test the setting of the last_reset property via MQTT."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "last_reset_topic": "last-reset-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "last-reset-topic", datestring)
+    state = hass.states.get("sensor.test")
+    assert state.attributes.get("last_reset") is None
+    assert "Invalid last_reset message" in caplog.text
+
+
+async def test_setting_sensor_empty_last_reset_via_mqtt_message(
+    hass, caplog, mqtt_mock
+):
+    """Test the setting of the last_reset property via MQTT."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "last_reset_topic": "last-reset-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "last-reset-topic", "")
+    state = hass.states.get("sensor.test")
+    assert state.attributes.get("last_reset") is None
+    assert "Ignoring empty last_reset message" in caplog.text
+
+
+async def test_setting_sensor_last_reset_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of the value via MQTT with JSON payload."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "last_reset_topic": "last-reset-topic",
+                "last_reset_value_template": "{{ value_json.last_reset }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass, "last-reset-topic", '{ "last_reset": "2020-01-02 08:11:00" }'
+    )
+    state = hass.states.get("sensor.test")
+    assert state.attributes.get("last_reset") == "2020-01-02T08:11:00"
+
+
+@pytest.mark.parametrize("extra", [{}, {"last_reset_topic": "test-topic"}])
+async def test_setting_sensor_last_reset_via_mqtt_json_message_2(
+    hass, mqtt_mock, caplog, extra
+):
+    """Test the setting of the value via MQTT with JSON payload."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                **{
+                    "platform": "mqtt",
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "kWh",
+                    "value_template": "{{ value_json.value | float / 60000 }}",
+                    "last_reset_value_template": "{{ utcnow().fromtimestamp(value_json.time / 1000, tz=utcnow().tzinfo) }}",
+                },
+                **extra,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(
+        hass,
+        "test-topic",
+        '{"type":"minute","time":1629385500000,"value":947.7706166666667}',
+    )
+    state = hass.states.get("sensor.test")
+    assert float(state.state) == pytest.approx(0.015796176944444445)
+    assert state.attributes.get("last_reset") == "2021-08-19T15:05:00+00:00"
+    assert "'last_reset_topic' must be same as 'state_topic'" not in caplog.text
+    assert (
+        "'last_reset_value_template' must be set if 'last_reset_topic' is set"
+        not in caplog.text
+    )
 
 
 async def test_force_update_disabled(hass, mqtt_mock):
@@ -381,10 +525,62 @@ async def test_valid_device_class(hass, mqtt_mock):
     assert "device_class" not in state.attributes
 
 
+async def test_invalid_state_class(hass, mqtt_mock):
+    """Test state_class option with invalid value."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "state_class": "foobarnotreal",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is None
+
+
+async def test_valid_state_class(hass, mqtt_mock):
+    """Test state_class option with valid values."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "mqtt",
+                    "name": "Test 1",
+                    "state_topic": "test-topic",
+                    "state_class": "measurement",
+                },
+                {"platform": "mqtt", "name": "Test 2", "state_topic": "test-topic"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_1")
+    assert state.attributes["state_class"] == "measurement"
+    state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+
+
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG, MQTT_SENSOR_ATTRIBUTES_BLOCKED
     )
 
 
@@ -640,3 +836,31 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
     await help_test_entity_disabled_by_default(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_value_template_with_entity_id(hass, mqtt_mock):
+    """Test the access to attributes in value_template via the entity_id."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "value_template": '\
+                {% if state_attr(entity_id, "friendly_name") == "test" %} \
+                    {{ value | int + 1 }} \
+                {% else %} \
+                    {{ value }} \
+                {% endif %}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "101"

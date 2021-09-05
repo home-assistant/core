@@ -5,7 +5,7 @@ from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.freebox.const import DOMAIN as DOMAIN, SERVICE_REBOOT
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -85,7 +85,7 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock):
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
     state_dt = hass.states.get(entity_id_dt)
     assert state_dt
     state_sensor = hass.states.get(entity_id_sensor)
@@ -95,7 +95,7 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock):
 
     await hass.config_entries.async_unload(entry.entry_id)
 
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     state_dt = hass.states.get(entity_id_dt)
     assert state_dt.state == STATE_UNAVAILABLE
     state_sensor = hass.states.get(entity_id_sensor)
@@ -110,7 +110,7 @@ async def test_unload_remove(hass: HomeAssistant, router: Mock):
     await hass.async_block_till_done()
 
     assert router().close.call_count == 1
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     state_dt = hass.states.get(entity_id_dt)
     assert state_dt is None
     state_sensor = hass.states.get(entity_id_sensor)

@@ -14,26 +14,21 @@ from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     CONF_LOCAL_IP,
-    DISCOVERY_HOSTNAME,
-    DISCOVERY_LOCATION,
-    DISCOVERY_NAME,
-    DISCOVERY_ST,
-    DISCOVERY_UDN,
-    DISCOVERY_UNIQUE_ID,
-    DISCOVERY_USN,
     DOMAIN,
     DOMAIN_CONFIG,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
+    WAN_STATUS,
 )
 
 
@@ -53,37 +48,6 @@ class Device:
         """Initialize UPnP/IGD device."""
         self._igd_device = igd_device
         self._device_updater = device_updater
-        self.coordinator: DataUpdateCoordinator = None
-
-    @classmethod
-    async def async_discover(cls, hass: HomeAssistant) -> list[Mapping]:
-        """Discover UPnP/IGD devices."""
-        _LOGGER.debug("Discovering UPnP/IGD devices")
-        local_ip = _get_local_ip(hass)
-        discoveries = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
-
-        # Supplement/standardize discovery.
-        for discovery in discoveries:
-            discovery[DISCOVERY_UDN] = discovery["_udn"]
-            discovery[DISCOVERY_ST] = discovery["st"]
-            discovery[DISCOVERY_LOCATION] = discovery["location"]
-            discovery[DISCOVERY_USN] = discovery["usn"]
-            _LOGGER.debug("Discovered device: %s", discovery)
-
-        return discoveries
-
-    @classmethod
-    async def async_supplement_discovery(
-        cls, hass: HomeAssistant, discovery: Mapping
-    ) -> Mapping:
-        """Get additional data from device and supplement discovery."""
-        location = discovery[DISCOVERY_LOCATION]
-        device = await Device.async_create_device(hass, location)
-        discovery[DISCOVERY_NAME] = device.name
-        discovery[DISCOVERY_HOSTNAME] = device.hostname
-        discovery[DISCOVERY_UNIQUE_ID] = discovery[DISCOVERY_USN]
-
-        return discovery
 
     @classmethod
     async def async_create_device(
@@ -190,4 +154,19 @@ class Device:
             BYTES_SENT: values[1],
             PACKETS_RECEIVED: values[2],
             PACKETS_SENT: values[3],
+        }
+
+    async def async_get_status(self) -> Mapping[str, Any]:
+        """Get connection status, uptime, and external IP."""
+        _LOGGER.debug("Getting status for device: %s", self)
+
+        values = await asyncio.gather(
+            self._igd_device.async_get_status_info(),
+            self._igd_device.async_get_external_ip_address(),
+        )
+
+        return {
+            WAN_STATUS: values[0][0] if values[0] is not None else None,
+            ROUTER_UPTIME: values[0][2] if values[0] is not None else None,
+            ROUTER_IP: values[1],
         }

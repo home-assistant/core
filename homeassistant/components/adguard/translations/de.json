@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Der Dienst ist bereits konfiguriert",
-            "existing_instance_updated": "Bestehende Konfiguration wurde aktualisiert.",
-            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+            "existing_instance_updated": "Bestehende Konfiguration wurde aktualisiert."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -18,7 +17,7 @@
                     "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "AdGuard Home verwendet ein SSL-Zertifikat",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },

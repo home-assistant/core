@@ -5,16 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "invalid_auth": "\u9a8c\u8bc1\u5931\u8d25",
             "unknown": "\u9884\u671f\u5916\u7684\u9519\u8bef"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "\u5bc6\u7801",
-                    "username": "\u7528\u6237\u540d"
-                }
-            }
         }
     }
 }

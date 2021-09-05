@@ -201,7 +201,7 @@ class InputSelectStorageCollection(collection.StorageCollection):
 class InputSelect(RestoreEntity):
     """Representation of a select input."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize a select input."""
         self._config = config
         self.editable = True

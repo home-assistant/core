@@ -158,13 +158,3 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         return await self._async_abode_login(step_id="reauth_confirm")
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        if self._async_current_entries():
-            LOGGER.warning("Already configured; Only a single configuration possible")
-            return self.async_abort(reason="single_instance_allowed")
-
-        self._polling = import_config.get(CONF_POLLING, False)
-
-        return await self.async_step_user(import_config)

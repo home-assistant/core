@@ -33,17 +33,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
-    def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator):
+    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+
+    def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.meter = meter
         self._state = None
         self._available = False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
@@ -61,7 +58,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the latest reading."""
         return self._state
 

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Onbekende fout bij het genereren van een autoriseer-URL.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
@@ -37,7 +36,7 @@
                 "title": "Kies een authenticatie methode"
             },
             "reauth_confirm": {
-                "description": "De Nest-integratie moet je account opnieuw verifi\u00ebren",
+                "description": "De Nest-integratie moet uw account opnieuw verifi\u00ebren",
                 "title": "Verifieer de integratie opnieuw"
             }
         }

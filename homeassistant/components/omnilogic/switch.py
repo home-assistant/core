@@ -57,7 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
-    """Define an Omnilogic Base Switch entity which will be instantiated through specific switch type entities."""
+    """Define an Omnilogic Base Switch entity to be extended."""
 
     def __init__(
         self,
@@ -67,7 +67,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         icon: str,
         item_id: tuple,
         state_key: str,
-    ):
+    ) -> None:
         """Initialize Entities."""
         super().__init__(
             coordinator=coordinator,
@@ -108,7 +108,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
         """Turn on the relay."""
         self._state = True
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
@@ -121,7 +121,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
         """Turn off the relay."""
         self._state = False
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
@@ -142,7 +142,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
         icon: str,
         item_id: tuple,
         state_key: str,
-    ):
+    ) -> None:
         """Initialize entities."""
         super().__init__(
             coordinator=coordinator,
@@ -153,8 +153,8 @@ class OmniLogicPumpControl(OmniLogicSwitch):
             state_key=state_key,
         )
 
-        self._max_speed = int(coordinator.data[item_id]["Max-Pump-Speed"])
-        self._min_speed = int(coordinator.data[item_id]["Min-Pump-Speed"])
+        self._max_speed = int(coordinator.data[item_id].get("Max-Pump-Speed", 100))
+        self._min_speed = int(coordinator.data[item_id].get("Min-Pump-Speed", 0))
 
         if "Filter-Type" in coordinator.data[item_id]:
             self._pump_type = PUMP_TYPES[coordinator.data[item_id]["Filter-Type"]]
@@ -167,7 +167,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
         """Turn on the pump."""
         self._state = True
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         on_value = 100
 
@@ -185,7 +185,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
         """Turn off the pump."""
         self._state = False
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         if self._pump_type != "SINGLE":
             if "filterSpeed" in self.coordinator.data[self._item_id]:
@@ -213,7 +213,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
                 )
 
                 if success:
-                    self.async_schedule_update_ha_state()
+                    self.async_write_ha_state()
 
             else:
                 raise OmniLogicException(

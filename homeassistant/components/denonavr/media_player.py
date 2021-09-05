@@ -142,7 +142,7 @@ class DenonDevice(MediaPlayerEntity):
         unique_id: str,
         config_entry: config_entries.ConfigEntry,
         update_audyssey: bool,
-    ):
+    ) -> None:
         """Initialize the device."""
         self._receiver = receiver
         self._unique_id = unique_id

@@ -10,7 +10,7 @@
         "error": {
             "invalid_auth": "Tuvastamise viga"
         },
-        "flow_title": "AVM FRITZ! SmartHome: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

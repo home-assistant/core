@@ -9,7 +9,7 @@ from homeassistant.components.google_assistant.const import DOMAIN as GOOGLE_DOM
 from homeassistant.components.google_assistant.helpers import AbstractConfig
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
 from homeassistant.core import CoreState, split_entity_id
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry, start
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -62,7 +62,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._cloud.is_logged_in and self._prefs.google_report_state
+        return self.enabled and self._prefs.google_report_state
 
     @property
     def local_sdk_webhook_id(self):
@@ -86,8 +86,11 @@ class CloudGoogleConfig(AbstractConfig):
         """Perform async initialization of config."""
         await super().async_initialize()
 
-        if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
-            await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
+        async def hass_started(hass):
+            if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
+                await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
+
+        start.async_at_start(self.hass, hass_started)
 
         # Remove old/wrong user agent ids
         remove_agent_user_ids = []

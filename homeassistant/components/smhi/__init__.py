@@ -2,12 +2,6 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-# Have to import for config_flow to work even if they are not used here
-from .config_flow import smhi_locations  # noqa: F401
-from .const import DOMAIN  # noqa: F401
-
-DEFAULT_NAME = "smhi"
-
 PLATFORMS = ["weather"]
 
 

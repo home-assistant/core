@@ -69,7 +69,8 @@ class LitterRobotControlEntity(LitterRobotEntity):
 
         try:
             await action(*args, **kwargs)
-        except InvalidCommandException as ex:
+        except InvalidCommandException as ex:  # pragma: no cover
+            # this exception should only occur if the underlying API for commands changes
             _LOGGER.error(ex)
             return False
 

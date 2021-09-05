@@ -30,7 +30,9 @@ async def async_setup_entry(
 class VeraScene(Scene):
     """Representation of a Vera scene entity."""
 
-    def __init__(self, vera_scene: veraApi.VeraScene, controller_data: ControllerData):
+    def __init__(
+        self, vera_scene: veraApi.VeraScene, controller_data: ControllerData
+    ) -> None:
         """Initialize the scene."""
         self.vera_scene = vera_scene
         self.controller = controller_data.controller

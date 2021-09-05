@@ -18,6 +18,11 @@ DHCP = [
     },
     {
         "domain": "august",
+        "hostname": "connect",
+        "macaddress": "2C9FFB*"
+    },
+    {
+        "domain": "august",
         "hostname": "august*",
         "macaddress": "E076D0*"
     },
@@ -67,6 +72,14 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "goalzero",
+        "hostname": "yeti*"
+    },
+    {
+        "domain": "gogogate2",
+        "hostname": "ismartgate*"
+    },
+    {
         "domain": "guardian",
         "hostname": "gvc*",
         "macaddress": "30AEA4*"
@@ -80,6 +93,11 @@ DHCP = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*"
+    },
+    {
+        "domain": "isy994",
+        "hostname": "isy*",
+        "macaddress": "0021B9*"
     },
     {
         "domain": "lyric",
@@ -144,6 +162,10 @@ DHCP = [
         "macaddress": "74C63B*"
     },
     {
+        "domain": "rainforest_eagle",
+        "macaddress": "D8D5B9*"
+    },
+    {
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*"
@@ -159,6 +181,26 @@ DHCP = [
         "macaddress": "80A589*"
     },
     {
+        "domain": "samsungtv",
+        "hostname": "tizen*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "8CC8CD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "606BBD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "F47B5E*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "4844F7*"
+    },
+    {
         "domain": "screenlogic",
         "hostname": "pentair: *",
         "macaddress": "00C033*"
@@ -172,6 +214,31 @@ DHCP = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "DCEFCA*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "st*",
+        "macaddress": "24FD5B*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "smartthings*",
+        "macaddress": "24FD5B*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "24FD5B*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "D052A8*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "286D97*"
     },
     {
         "domain": "solaredge",
@@ -314,5 +381,9 @@ DHCP = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*"
+    },
+    {
+        "domain": "yeelight",
+        "hostname": "yeelink-*"
     }
 ]

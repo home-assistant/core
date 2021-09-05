@@ -125,7 +125,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
-async def test_heater_switch(hass, setup_comp_1):
+async def test_heater_switch(hass, setup_comp_1, enable_custom_integrations):
     """Test heater switching test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
@@ -322,6 +322,21 @@ async def test_set_away_mode_twice_and_restore_prev_temp(hass, setup_comp_2):
     await common.async_set_preset_mode(hass, PRESET_NONE)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 23
+
+
+async def test_set_preset_mode_invalid(hass, setup_comp_2):
+    """Test an invalid mode raises an error and ignore case when checking modes."""
+    await common.async_set_temperature(hass, 23)
+    await common.async_set_preset_mode(hass, "away")
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == "away"
+    await common.async_set_preset_mode(hass, "none")
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == "none"
+    with pytest.raises(ValueError):
+        await common.async_set_preset_mode(hass, "Sleep")
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == "none"
 
 
 async def test_sensor_bad_value(hass, setup_comp_2):

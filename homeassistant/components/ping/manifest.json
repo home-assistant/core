@@ -3,7 +3,7 @@
   "name": "Ping (ICMP)",
   "documentation": "https://www.home-assistant.io/integrations/ping",
   "codeowners": [],
-  "requirements": ["icmplib==2.1.1"],
+  "requirements": ["icmplib==3.0"],
   "quality_scale": "internal",
   "iot_class": "local_polling"
 }

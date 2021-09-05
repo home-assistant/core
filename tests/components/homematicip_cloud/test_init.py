@@ -13,12 +13,7 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_ERROR,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 
@@ -116,7 +111,7 @@ async def test_load_entry_fails_due_to_connection_error(
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
     assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]
-    assert hmip_config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert hmip_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry):
@@ -132,7 +127,7 @@ async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
     assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]
-    assert hmip_config_entry.state == ENTRY_STATE_SETUP_ERROR
+    assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(hass):
@@ -157,9 +152,9 @@ async def test_unload_entry(hass):
     assert hass.data[HMIPC_DOMAIN]["ABC123"]
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == ENTRY_STATE_LOADED
+    assert config_entries[0].state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entries[0].entry_id)
-    assert config_entries[0].state == ENTRY_STATE_NOT_LOADED
+    assert config_entries[0].state is ConfigEntryState.NOT_LOADED
     assert mock_hap.return_value.mock_calls[2][0] == "async_reset"
     # entry is unloaded
     assert hass.data[HMIPC_DOMAIN] == {}

@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 
 from . import LOGGER
-from .const import CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
 
 async def validate_input(
@@ -49,9 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict) -> dict:
         """Import a configuration from config.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == conf[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: conf[CONF_HOST]})
 
         return await self.async_step_user(
             {
@@ -156,3 +154,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    @staticmethod
+    @core.callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for AEMET."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ALLOW_NOTIFY,
+                    default=self.config_entry.options.get(CONF_ALLOW_NOTIFY),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

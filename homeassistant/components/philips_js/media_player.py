@@ -123,12 +123,14 @@ async def async_setup_entry(
 class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_device_class = DEVICE_CLASS_TV
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
         system: dict[str, Any],
         unique_id: str,
-    ):
+    ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
         self._coordinator = coordinator
@@ -314,11 +316,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         app = self._tv.applications.get(self._tv.application_id)
         if app:
             return app.get("label")
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TV
 
     @property
     def unique_id(self):

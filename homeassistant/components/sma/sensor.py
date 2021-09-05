@@ -7,7 +7,12 @@ from typing import Any
 import pysma
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -16,6 +21,10 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -33,10 +42,10 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
-    DEVICE_INFO,
     DOMAIN,
     GROUPS,
     PYSMA_COORDINATOR,
+    PYSMA_DEVICE_INFO,
     PYSMA_SENSORS,
 )
 
@@ -46,8 +55,8 @@ _LOGGER = logging.getLogger(__name__)
 def _check_sensor_schema(conf: dict[str, Any]) -> dict[str, Any]:
     """Check sensors and attributes are valid."""
     try:
-        valid = [s.name for s in pysma.Sensors()]
-        valid += pysma.LEGACY_MAP.keys()
+        valid = [s.name for s in pysma.sensor.Sensors()]
+        valid += pysma.const.LEGACY_MAP.keys()
     except (ImportError, AttributeError):
         return conf
 
@@ -124,6 +133,7 @@ async def async_setup_entry(
 
     coordinator = sma_data[PYSMA_COORDINATOR]
     used_sensors = sma_data[PYSMA_SENSORS]
+    device_info = sma_data[PYSMA_DEVICE_INFO]
 
     entities = []
     for sensor in used_sensors:
@@ -131,7 +141,7 @@ async def async_setup_entry(
             SMAsensor(
                 coordinator,
                 config_entry.unique_id,
-                config_entry.data[DEVICE_INFO],
+                device_info,
                 sensor,
             )
         )
@@ -147,7 +157,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator,
         config_entry_unique_id: str,
         device_info: dict[str, Any],
-        pysma_sensor: pysma.Sensor,
+        pysma_sensor: pysma.sensor.Sensor,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -155,6 +165,13 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._enabled_default = self._sensor.enabled
         self._config_entry_unique_id = config_entry_unique_id
         self._device_info = device_info
+
+        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+        if self.unit_of_measurement == POWER_WATT:
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_POWER
 
         # Set sensor enabled to False.
         # Will be enabled by async_added_to_hass if actually used.
@@ -166,12 +183,12 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         return self._sensor.name
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._sensor.unit
 
@@ -185,11 +202,15 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
+        if not self._device_info:
+            return None
+
         return {
             "identifiers": {(DOMAIN, self._config_entry_unique_id)},
             "name": self._device_info["name"],
             "manufacturer": self._device_info["manufacturer"],
             "model": self._device_info["type"],
+            "sw_version": self._device_info["sw_version"],
         }
 
     @property

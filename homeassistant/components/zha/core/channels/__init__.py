@@ -176,7 +176,7 @@ class Channels:
 class ChannelPool:
     """All channels of an endpoint."""
 
-    def __init__(self, channels: Channels, ep_id: int):
+    def __init__(self, channels: Channels, ep_id: int) -> None:
         """Initialize instance."""
         self._all_channels: ChannelsDict = {}
         self._channels: Channels = channels

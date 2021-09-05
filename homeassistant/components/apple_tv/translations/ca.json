@@ -16,7 +16,7 @@
             "no_usable_service": "S'ha trobat un dispositiu per\u00f2 no ha pogut identificar cap manera d'establir-hi una connexi\u00f3. Si continues veient aquest missatge, prova d'especificar-ne l'adre\u00e7a IP o reinicia l'Apple TV.",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Est\u00e0s a punt d'afegir l'Apple TV amb nom \"{name}\" a Home Assistant.\n\n **Per completar el proc\u00e9s, \u00e9s possible que hagis d'introduir alguns codis PIN.** \n\n Tingues en compte que *no* pots apagar la teva Apple TV a trav\u00e9s d'aquesta integraci\u00f3. Nom\u00e9s es desactivar\u00e0 el reproductor de Home Assistant.",

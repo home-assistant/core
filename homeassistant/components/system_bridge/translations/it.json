@@ -10,7 +10,7 @@
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Bridge di sistema: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

@@ -12,7 +12,7 @@
                     "password": "Wachtwoord",
                     "username": "E-mail"
                 },
-                "title": "Tegel configureren"
+                "title": "Configureer Tile"
             }
         }
     },
@@ -22,7 +22,7 @@
                 "data": {
                     "show_inactive": "Toon inactieve tegels"
                 },
-                "title": "Tegel configureren"
+                "title": "Configureer Tile"
             }
         }
     }

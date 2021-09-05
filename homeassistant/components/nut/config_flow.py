@@ -25,17 +25,10 @@ from .const import (
     DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
-    SENSOR_NAME,
     SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-SENSOR_DICT = {
-    sensor_id: sensor_spec[SENSOR_NAME]
-    for sensor_id, sensor_spec in SENSOR_TYPES.items()
-}
 
 
 def _base_schema(discovery_info):
@@ -59,15 +52,15 @@ def _resource_schema_base(available_resources, selected_resources):
     """Resource selection schema."""
 
     known_available_resources = {
-        sensor_id: sensor[SENSOR_NAME]
-        for sensor_id, sensor in SENSOR_TYPES.items()
+        sensor_id: sensor_desc.name
+        for sensor_id, sensor_desc in SENSOR_TYPES.items()
         if sensor_id in available_resources
     }
 
     if KEY_STATUS in known_available_resources:
         known_available_resources[KEY_STATUS_DISPLAY] = SENSOR_TYPES[
             KEY_STATUS_DISPLAY
-        ][SENSOR_NAME]
+        ].name
 
     return {
         vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(
@@ -227,7 +220,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for nut."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

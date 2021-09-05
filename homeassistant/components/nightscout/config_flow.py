@@ -66,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class InputValidationError(exceptions.HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
-    def __init__(self, base: str):
+    def __init__(self, base: str) -> None:
         """Initialize with error base."""
         super().__init__()
         self.base = base

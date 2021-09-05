@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Diese Kombination aus Host und Port ist bereits konfiguriert.",
+            "already_configured": "Der Dienst ist bereits konfiguriert",
             "import_failed": "Import aus Konfiguration fehlgeschlagen"
         },
         "error": {

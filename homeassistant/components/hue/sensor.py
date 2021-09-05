@@ -6,7 +6,7 @@ from aiohue.sensors import (
     TYPE_ZLL_TEMPERATURE,
 )
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -37,18 +37,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
     """Parent class for all 'gauge' Hue device sensors."""
 
-    async def _async_update_ha_state(self, *args, **kwargs):
-        await self.async_update_ha_state(self, *args, **kwargs)
-
 
 class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_ILLUMINANCE
-    unit_of_measurement = LIGHT_LUX
+    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_native_unit_of_measurement = LIGHT_LUX
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.sensor.lightlevel is None:
             return None
@@ -79,11 +76,12 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
 class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
-    device_class = DEVICE_CLASS_TEMPERATURE
-    unit_of_measurement = TEMP_CELSIUS
+    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.sensor.temperature is None:
             return None
@@ -94,25 +92,19 @@ class HueTemperature(GenericHueGaugeSensorEntity):
 class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
+
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
         return f"{self.sensor.uniqueid}-battery"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the battery."""
         return self.sensor.battery
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return PERCENTAGE
 
 
 SENSOR_CONFIG_MAP.update(

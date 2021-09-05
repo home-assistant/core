@@ -25,8 +25,17 @@
             "cannot_connect": "Failed to connect"
         },
         "step": {
+            "entity_config": {
+                "data": {
+                    "reverse": "Cover is reversed"
+                },
+                "description": "Configure options for `{entity_id}`",
+                "title": "Configure Entity"
+            },
             "init": {
                 "data": {
+                    "default_reverse": "Default reversal status for unconfigured covers",
+                    "entity_id": "Configure a specific entity.",
                     "target_id": "Configure options for a cover."
                 },
                 "title": "Configure MyLink Options"
@@ -39,5 +48,6 @@
                 "title": "Configure MyLink Cover"
             }
         }
-    }
+    },
+    "title": "Somfy MyLink"
 }

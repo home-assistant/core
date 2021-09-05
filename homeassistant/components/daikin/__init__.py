@@ -27,7 +27,7 @@ PLATFORMS = ["climate", "sensor", "switch"]
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID
@@ -86,7 +86,7 @@ async def daikin_api_setup(hass, host, key, uuid, password):
 class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
-    def __init__(self, device: Appliance):
+    def __init__(self, device: Appliance) -> None:
         """Initialize the Daikin Handle."""
         self.device = device
         self.name = device.values.get("name", "Daikin AC")

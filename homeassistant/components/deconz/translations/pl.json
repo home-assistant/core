@@ -11,7 +11,7 @@
         "error": {
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
-        "flow_title": "Bramka deCONZ Zigbee ({host})",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z bramk\u0105 deCONZ dostarczon\u0105 przez dodatek {addon}?",

@@ -44,7 +44,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraDimmer, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the light."""
         self._state = False
         self._color = None

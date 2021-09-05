@@ -9,9 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host (oder IP-Adresse) Ihres twinkly-Ger\u00e4ts"
+                    "host": "Host (oder IP-Adresse) deines twinkly-Ger\u00e4ts"
                 },
-                "description": "Einrichten Ihrer Twinkly-Led-Kette",
+                "description": "Einrichten deiner Twinkly-Led-Kette",
                 "title": "Twinkly"
             }
         }

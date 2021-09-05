@@ -1,5 +1,5 @@
 set_zone_moisture_percent:
-  name: Set Zone Moisture Percent
+  name: Set zone moisture percent
   description: Set the moisture percentage of a zone or list of zones.
   target:
     entity:
@@ -8,18 +8,15 @@ set_zone_moisture_percent:
   fields:
     percent:
       name: Percent
-      description: Set the desired zone moisture percentage from 0 to 100.
+      description: Set the desired zone moisture percentage.
       required: true
-      example: 50
       selector:
         number:
           min: 0
           max: 100
-          mode: slider
           unit_of_measurement: "%"
-          step: 1
 start_multiple_zone_schedule:
-  name: Start Multiple Zones
+  name: Start multiple zones
   description: Create a custom schedule of zones and runtimes. Note that all zones should be on the same controller to avoid issues.
   target:
     entity:
@@ -34,7 +31,7 @@ start_multiple_zone_schedule:
       selector:
         object:
 pause_watering:
-  name: Pause Watering
+  name: Pause watering
   description: Pause any currently running zones or schedules.
   fields:
     devices:
@@ -45,23 +42,30 @@ pause_watering:
         text:
     duration:
       name: Duration
-      description: The number of minutes to pause running schedules. Accepts 1-60. Default is 60 minutes if not provided.
-      example: 60
+      description: The time to pause running schedules.
       default: 60
       selector:
         number:
           min: 1
           max: 60
-          mode: slider
           unit_of_measurement: "minutes"
-          step: 1
 resume_watering:
-  name: Resume Watering
+  name: Resume watering
   description: Resume any paused zone runs or schedules.
   fields:
     devices:
       name: Devices
       description: Name of controllers to resume. Defaults to all controllers on the account if not provided.
+      example: "Main House"
+      selector:
+        text:
+stop_watering:
+  name: Stop watering
+  description: Stop any currently running zones or schedules.
+  fields:
+    devices:
+      name: Devices
+      description: Name of controllers to stop. Defaults to all controllers on the account if not provided.
       example: "Main House"
       selector:
         text:

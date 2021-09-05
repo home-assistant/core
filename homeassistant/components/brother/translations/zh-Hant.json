@@ -9,7 +9,7 @@
             "snmp_error": "SNMP \u4f3a\u670d\u5668\u70ba\u95dc\u9589\u72c0\u614b\u6216\u5370\u8868\u6a5f\u4e0d\u652f\u63f4\u3002",
             "wrong_host": "\u7121\u6548\u4e3b\u6a5f\u540d\u6216 IP \u4f4d\u5740"
         },
-        "flow_title": "Brother \u5370\u8868\u6a5f\uff1a{model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

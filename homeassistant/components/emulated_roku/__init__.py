@@ -1,7 +1,9 @@
 """Support for Roku API emulation."""
 import voluptuous as vol
 
-from homeassistant import config_entries, util
+from homeassistant import config_entries
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -71,7 +73,9 @@ async def async_setup_entry(hass, config_entry):
 
     name = config[CONF_NAME]
     listen_port = config[CONF_LISTEN_PORT]
-    host_ip = config.get(CONF_HOST_IP) or util.get_local_ip()
+    host_ip = config.get(CONF_HOST_IP) or await async_get_source_ip(
+        hass, PUBLIC_TARGET_IP
+    )
     advertise_ip = config.get(CONF_ADVERTISE_IP)
     advertise_port = config.get(CONF_ADVERTISE_PORT)
     upnp_bind_multicast = config.get(CONF_UPNP_BIND_MULTICAST)

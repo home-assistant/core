@@ -1,15 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto wurde bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "reauth_failed": "Bitte verwende denselben mydevolo-Benutzer wie zuvor."
         },
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "Passwort",
                     "username": "E-Mail / devolo ID"

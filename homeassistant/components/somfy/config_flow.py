@@ -20,7 +20,7 @@ class SomfyFlowHandler(
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)

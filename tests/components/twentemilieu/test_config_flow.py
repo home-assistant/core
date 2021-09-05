@@ -1,7 +1,8 @@
 """Tests for the Twente Milieu config flow."""
 import aiohttp
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.twentemilieu import config_flow
 from homeassistant.components.twentemilieu.const import (
     CONF_HOUSE_LETTER,
     CONF_HOUSE_NUMBER,
@@ -83,7 +84,9 @@ async def test_address_already_set_up(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=FIXTURE_USER_INPUT
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=FIXTURE_USER_INPUT,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

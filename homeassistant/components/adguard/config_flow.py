@@ -51,6 +51,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str] | None = None
     ) -> FlowResult:
         """Show the Hass.io confirmation form to the user."""
+        assert self._hassio_discovery
         return self.async_show_form(
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery["addon"]},
@@ -65,23 +66,21 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
-        entries = self._async_current_entries()
-        for entry in entries:
-            if (
-                entry.data[CONF_HOST] == user_input[CONF_HOST]
-                and entry.data[CONF_PORT] == user_input[CONF_PORT]
-            ):
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match(
+            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+        )
 
         errors = {}
 
         session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
 
+        username: str | None = user_input.get(CONF_USERNAME)
+        password: str | None = user_input.get(CONF_PASSWORD)
         adguard = AdGuardHome(
             user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            username=user_input.get(CONF_USERNAME),
-            password=user_input.get(CONF_PASSWORD),
+            username=username,  # type:ignore[arg-type]
+            password=password,  # type:ignore[arg-type]
             tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
             session=session,
@@ -126,6 +125,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass, False)
 
+        assert self._hassio_discovery
         adguard = AdGuardHome(
             self._hassio_discovery[CONF_HOST],
             port=self._hassio_discovery[CONF_PORT],
