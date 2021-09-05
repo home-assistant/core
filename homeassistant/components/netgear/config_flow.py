@@ -118,7 +118,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info: dict):
+    async def async_step_ssdp(self, discovery_info: dict) -> FlowResult:
         """Initialize flow from ssdp."""
         updated_data = {}
 
