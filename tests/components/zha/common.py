@@ -1,5 +1,6 @@
 """Common test objects."""
 import asyncio
+import math
 import time
 from unittest.mock import AsyncMock, Mock
 
@@ -98,6 +99,9 @@ def patch_cluster(cluster):
         return_value=[
             [zcl_f.ConfigureReportingResponseRecord(zcl_f.Status.SUCCESS, 0x00, 0xAABB)]
         ]
+    )
+    cluster.configure_reporting_multiple = AsyncMock(
+        return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
     )
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
@@ -227,6 +231,7 @@ def reset_clusters(clusters):
     for cluster in clusters:
         cluster.bind.reset_mock()
         cluster.configure_reporting.reset_mock()
+        cluster.configure_reporting_multiple.reset_mock()
         cluster.write_attributes.reset_mock()
 
 
@@ -240,8 +245,21 @@ async def async_test_rejoin(hass, zigpy_device, clusters, report_counts, ep_id=1
     for cluster, reports in zip(clusters, report_counts):
         assert cluster.bind.call_count == 1
         assert cluster.bind.await_count == 1
-        assert cluster.configure_reporting.call_count == reports
-        assert cluster.configure_reporting.await_count == reports
+        if reports:
+            assert cluster.configure_reporting.call_count == 0
+            assert cluster.configure_reporting.await_count == 0
+            assert cluster.configure_reporting_multiple.call_count == math.ceil(
+                reports / zha_const.REPORT_CONFIG_ATTR_PER_REQ
+            )
+            assert cluster.configure_reporting_multiple.await_count == math.ceil(
+                reports / zha_const.REPORT_CONFIG_ATTR_PER_REQ
+            )
+        else:
+            # no reports at all
+            assert cluster.configure_reporting.call_count == reports
+            assert cluster.configure_reporting.await_count == reports
+            assert cluster.configure_reporting_multiple.call_count == reports
+            assert cluster.configure_reporting_multiple.await_count == reports
 
 
 async def async_wait_for_updates(hass):
