@@ -1,7 +1,5 @@
 """Constants for the Homewizard Energy integration."""
 
-from homeassistant import const
-
 # Set up.
 DOMAIN = "homewizard_energy"
 COORDINATOR = "coordinator"
@@ -9,18 +7,12 @@ MANUFACTURER_NAME = "HomeWizard"
 PLATFORMS = ["sensor", "switch"]
 
 # Platform config.
-CONF_ENTITY_ID = const.CONF_ENTITY_ID
-CONF_IP_ADDRESS = const.CONF_IP_ADDRESS
-CONF_NAME = const.CONF_NAME
-
+CONF_SERIAL = "serial"
 CONF_API = "api"
 CONF_UNLOAD_CB = "unload_unsub"
 CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_ver"
 CONF_DATA = "data"
-
-# Services.
-SERVICE_UPDATE = "update"
 
 # Service attributes.
 ATTR_ACTIVE_POWER_L1_W = "active_power_l1_w"
