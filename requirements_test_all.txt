@@ -1206,6 +1206,9 @@ pydexcom==0.2.3
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
 
+# homeassistant.components.discovergy
+pydiscovergy==1.1.0
+
 # homeassistant.components.econet
 pyeconet==0.1.20
 
