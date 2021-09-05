@@ -4,7 +4,6 @@ import math
 import time
 from unittest.mock import AsyncMock, Mock
 
-import zigpy.device as zigpy_dev
 import zigpy.endpoint as zigpy_ep
 import zigpy.profiles.zha
 import zigpy.types
@@ -113,35 +112,6 @@ def patch_cluster(cluster):
     )
     if cluster.cluster_id == 4:
         cluster.add = AsyncMock(return_value=[0])
-
-
-class FakeDevice:
-    """Fake device for mocking zigpy."""
-
-    def __init__(self, app, ieee, manufacturer, model, node_desc=None, nwk=0xB79C):
-        """Init fake device."""
-        self._application = app
-        self.application = app
-        self.ieee = zigpy.types.EUI64.convert(ieee)
-        self.nwk = nwk
-        self.zdo = Mock()
-        self.endpoints = {0: self.zdo}
-        self.lqi = 255
-        self.rssi = 8
-        self.last_seen = time.time()
-        self.status = zigpy_dev.Status.ENDPOINTS_INIT
-        self.initializing = False
-        self.skip_configuration = False
-        self.manufacturer = manufacturer
-        self.model = model
-        self.remove_from_group = AsyncMock()
-        if node_desc is None:
-            node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
-        self.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_desc)[0]
-        self.neighbors = []
-
-
-FakeDevice.add_to_group = zigpy_dev.Device.add_to_group
 
 
 def get_zha_gateway(hass):

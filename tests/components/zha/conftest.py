@@ -1,10 +1,12 @@
 """Test configuration for the ZHA component."""
+import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.config
+import zigpy.device
 import zigpy.group
 import zigpy.types
 
@@ -13,7 +15,7 @@ import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
 
-from .common import FakeDevice, FakeEndpoint, get_zha_gateway
+from .common import FakeEndpoint, get_zha_gateway
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -114,9 +116,15 @@ def zigpy_device_mock(zigpy_app_controller):
         patch_cluster=True,
     ):
         """Make a fake device using the specified cluster classes."""
-        device = FakeDevice(
-            zigpy_app_controller, ieee, manufacturer, model, node_descriptor, nwk=nwk
+        device = zigpy.device.Device(
+            zigpy_app_controller, zigpy.types.EUI64.convert(ieee), nwk
         )
+        device.manufacturer = manufacturer
+        device.model = model
+        device.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_descriptor)[
+            0
+        ]
+        device.last_seen = time.time()
         for epid, ep in endpoints.items():
             endpoint = FakeEndpoint(manufacturer, model, epid)
             endpoint.device = device
