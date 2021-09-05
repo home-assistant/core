@@ -244,13 +244,9 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
 
         self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         if self._attr_unique_id is not None:
-            self._attr_unique_id += self._name_suffix
+            self._attr_unique_id += ".accumulated"
 
         self._accumulated_value: float | None = None
-
-    @property
-    def _name_suffix(self) -> str:
-        return ".accumulated"
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -292,7 +288,7 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
     @property
     def name(self) -> str | None:
         """Return name of the entity."""
-        return f"{self._sensor_data.getSourceName()}{self._name_suffix}"
+        return f"{self._sensor_data.getSourceName()} Accumulating"
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
