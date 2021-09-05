@@ -1,13 +1,24 @@
+# Service ID
 manual_level:
+  # Service name as shown in UI
   name: Set Manual Level
+  # Description of the service
   description: Sets manual level
+  # Different fields that your service accepts
   fields:
+    # Key of the field
     manual_level:
+      # Field name as shown in UI
       name: Manual level
+      # Description of the field
       description: Manual level setting
+      # Whether or not field is required (default = false)
       required: true
+      # Advanced fields are only shown when the advanced mode is enabled for the user (default = false)
       advanced: false
+      # The default field value
       default: "Off"
+      # Selector (https://www.home-assistant.io/docs/blueprint/selectors/) to control the input UI for this field
       selector:
         select:
           options:
