@@ -1,5 +1,4 @@
 """Test the homewizard energy config flow."""
-import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohwenergy import DisabledError
@@ -8,8 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components.homewizard_energy.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_mock_device(
