@@ -96,11 +96,14 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a total amount, e.g. net energy consumption
+STATE_CLASS_TOTAL: Final = "total"
 # The state represents a monotonically increasing total, e.g. an amount of consumed gas
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
 STATE_CLASSES: Final[list[str]] = [
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
 
@@ -214,9 +217,10 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset is deprecated and will be unsupported from Home "
-                    "Assistant Core 2021.11. Please update your configuration if "
-                    "state_class is manually configured, otherwise %s",
+                    "last_reset for entities with state_class other than 'total' is "
+                    "deprecated and will be removed from Home Assistant Core 2021.11. "
+                    "Please update your configuration if state_class is manually "
+                    "configured, otherwise %s",
                     self.entity_id,
                     type(self),
                     self.state_class,
