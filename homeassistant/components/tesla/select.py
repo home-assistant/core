@@ -29,7 +29,7 @@ class HeatedSeatSelect(TeslaDevice, SelectEntity):
     """Representation of a Tesla Heated Seat Select."""
 
     async def async_select_option(self, option: str, **kwargs):
-        """Send the on command."""
+        """Change the selected option."""
         level: int = OPTIONS.index(option)
 
         _LOGGER.debug(f"Setting {self.name} to {level}")
@@ -38,7 +38,7 @@ class HeatedSeatSelect(TeslaDevice, SelectEntity):
 
     @property
     def current_option(self):
-        """Get whether the switch is in on state."""
+        """Return the selected entity option to represent the entity state."""
         current_value = self.tesla_device.get_seat_heat_level()
 
         if current_value is None:
@@ -47,5 +47,5 @@ class HeatedSeatSelect(TeslaDevice, SelectEntity):
 
     @property
     def options(self):
-        """Get whether the switch is in on state."""
+        """Return a set of selectable options."""
         return OPTIONS
