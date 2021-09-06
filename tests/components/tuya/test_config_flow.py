@@ -6,7 +6,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tuya.config_flow import (
     RESULT_AUTH_FAILED,
-    RESULT_SINGLE_INSTANCE,
 )
 from homeassistant.components.tuya.const import (
     CONF_ACCESS_ID,
@@ -19,8 +18,6 @@ from homeassistant.components.tuya.const import (
     CONF_USERNAME,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_SMART_HOME_PROJECT_TYPE = 0
 MOCK_INDUSTRY_PROJECT_TYPE = 1
@@ -172,7 +169,8 @@ async def test_smart_home_user(hass, tuya):
         assert result["data"][CONF_APP_TYPE] == MOCK_APP_TYPE
         assert not result["result"].unique_id
 
-async def test_abort_on_invalid_credentials(hass, tuya):
+
+async def test_error_on_invalid_credentials(hass, tuya):
     """Test when we have invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(

@@ -22,11 +22,6 @@
         }
       }
     },
-    "abort": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
