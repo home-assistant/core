@@ -25,8 +25,8 @@ from .const import (
     BPUP_SUBS,
     DOMAIN,
     HUB,
-    SERVICE_SET_LIGHT_BRIGHTNESS_STATE_BELIEF,
-    SERVICE_SET_LIGHT_POWER_STATE_BELIEF,
+    SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+    SERVICE_SET_LIGHT_POWER_BELIEF,
 )
 from .entity import BondEntity
 from .utils import BondDevice
@@ -102,19 +102,19 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_BRIGHTNESS_STATE_BELIEF,
+        SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
         {
             vol.Required(ATTR_BRIGHTNESS): vol.All(
                 vol.Number(scale=0), vol.Range(0, 100)
             )
         },
-        "async_set_brightness_state_belief",
+        "async_set_brightness_belief",
     )
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_POWER_STATE_BELIEF,
+        SERVICE_SET_LIGHT_POWER_BELIEF,
         {vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
-        "async_set_power_state_belief",
+        "async_set_power_belief",
     )
 
     async_add_entities(
@@ -128,7 +128,7 @@ class BondBaseLight(BondEntity, LightEntity):
 
     _attr_supported_features = 0
 
-    async def async_set_brightness_state_belief(self, brightness: int) -> None:
+    async def async_set_brightness_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
         if not self._device.supports_set_brightness():
             raise HomeAssistantError("This device does not support setting brightness")
@@ -142,7 +142,7 @@ class BondBaseLight(BondEntity, LightEntity):
                 Action.set_brightness_belief(round((brightness * 100) / 255)),
             )
 
-    async def async_set_power_state_belief(self, power_state: bool) -> None:
+    async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the belief state of the light."""
         await self._hub.bond.action(
             self._device.device_id, Action.set_light_state_belief(power_state)
@@ -277,7 +277,7 @@ class BondFireplace(BondEntity, LightEntity):
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
-    async def async_set_brightness_state_belief(self, brightness: int) -> None:
+    async def async_set_brightness_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
         if not self._device.supports_set_brightness():
             raise HomeAssistantError("This device does not support setting brightness")
@@ -291,7 +291,7 @@ class BondFireplace(BondEntity, LightEntity):
                 Action.set_brightness_belief(round((brightness * 100) / 255)),
             )
 
-    async def async_set_power_state_belief(self, power_state: bool) -> None:
+    async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the belief state of the light."""
         await self._hub.bond.action(
             self._device.device_id, Action.set_power_state_belief(power_state)

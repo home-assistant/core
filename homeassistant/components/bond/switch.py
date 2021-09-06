@@ -13,13 +13,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_POWER_STATE,
-    BPUP_SUBS,
-    DOMAIN,
-    HUB,
-    SERVICE_SET_POWER_STATE_BELIEF,
-)
+from .const import ATTR_POWER_STATE, BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_POWER_BELIEF
 from .entity import BondEntity
 from .utils import BondHub
 
@@ -42,9 +36,9 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_POWER_STATE_BELIEF,
+        SERVICE_SET_POWER_BELIEF,
         {vol.Required(ATTR_POWER_STATE): cv.boolean},
-        "async_set_power_state_belief",
+        "async_set_power_belief",
     )
 
     async_add_entities(switches, True)
@@ -64,8 +58,8 @@ class BondSwitch(BondEntity, SwitchEntity):
         """Turn the device off."""
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
-    async def async_set_power_state_belief(self, power_state: bool) -> None:
-        """Set device belief state."""
+    async def async_set_power_belief(self, power_state: bool) -> None:
+        """Set switch power belief."""
         await self._hub.bond.action(
             self._device.device_id, Action.set_power_state_belief(power_state)
         )

@@ -137,7 +137,7 @@ class BondFan(BondEntity, FanEntity):
             self._device.device_id, Action.set_speed(bond_speed)
         )
 
-    async def async_set_power_state_belief(self, power_state: bool) -> None:
+    async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the believed state to on or off."""
         await self._hub.bond.action(
             self._device.device_id, Action.set_power_state_belief(power_state)
@@ -148,10 +148,10 @@ class BondFan(BondEntity, FanEntity):
         _LOGGER.debug("async_set_speed_belief called with percentage %s", fan_speed)
 
         if fan_speed == 0:
-            await self.async_set_power_state_belief(False)
+            await self.async_set_power_belief(False)
             return
 
-        await self.async_set_power_state_belief(True)
+        await self.async_set_power_belief(True)
 
         bond_speed = math.ceil(percentage_to_ranged_value(self._speed_range, fan_speed))
         _LOGGER.debug(
