@@ -77,11 +77,6 @@ class DecoraWifiPlatform(BinarySensorEntity):
         return self._name
 
     @property
-    def session(self) -> DecoraWiFiSession:
-        """Get the API Session."""
-        return self._session
-
-    @property
     def should_poll(self) -> bool:
         """Get whether entity should be polled."""
         return False
@@ -94,10 +89,10 @@ class DecoraWifiPlatform(BinarySensorEntity):
     def _api_login(self):
         """Log in to decora_wifi session."""
         try:
-            success = self._session.login(self._email, self._password)
+            user = self._session.login(self._email, self._password)
 
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
-            if success is None:
+            if user is None:
                 self._loggedin = False
                 raise LoginFailed
         except ValueError as exc:
@@ -106,7 +101,7 @@ class DecoraWifiPlatform(BinarySensorEntity):
         self._loggedin = True
         if self.platform:
             self.schedule_update_ha_state()
-        self._user_id = self._session.user._id
+        self._user_id = user._id
 
     def _api_logout(self):
         """Log out of decora_wifi session."""

@@ -10,6 +10,10 @@ from decora_wifi.models.residential_permission import ResidentialPermission
 from homeassistant.components.decora_wifi.common import DecoraWifiPlatform
 from homeassistant.core import HomeAssistant
 
+# Test Inputs
+SWITCH_NAME = "Fake Switch"
+USER_ID = "coo1d00d"
+
 
 class MockDecoraWifiPlatform(DecoraWifiPlatform):
     """Class to simulate decora_wifi platform sessions and related methods for unit testing."""
@@ -22,6 +26,11 @@ class MockDecoraWifiPlatform(DecoraWifiPlatform):
     def __del__(self):
         """Clean up the session on object deletion."""
         pass
+
+    @property
+    def unique_id(self):
+        """Return unique id for simulated session."""
+        return USER_ID
 
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
@@ -38,7 +47,7 @@ class FakeDecoraWiFiSession(DecoraWiFiSession):
 
     def __init__(self):
         """Initialize the stub session."""
-        super().__init__()
+        self.data = {}
         self._email = None
         self._password = None
         self.user = None
@@ -55,7 +64,7 @@ class FakeDecoraWiFiSession(DecoraWiFiSession):
         self._email = email
         self._password = password
         self.user = FakeDecoraWiFiPerson(self)
-        return True
+        return self.user
 
     def call_api(self, api=None, payload=None, method="get"):
         """Try to prevent accidental calling of the real api."""
@@ -67,11 +76,17 @@ class FakeDecoraWiFiPerson(Person):
 
     def __init__(self, session, model_id=None):
         """Initialize the fake Person class."""
-        super().__init__(session, model_id=model_id)
+        self.data = {}
         self._perms = [
             FakeDecoraWiFiResidentialPermission(session, "fake_raID"),
             FakeDecoraWiFiResidentialPermission(session, "fake_rID"),
         ]
+        self._model_id = model_id
+        self._session = session
+
+    @property
+    def _id(self):
+        return USER_ID
 
     def get_residential_permissions(self, attribs=None):
         """Return a list of permissions for testing the getdevices code."""
@@ -83,7 +98,9 @@ class FakeDecoraWiFiResidentialPermission(ResidentialPermission):
 
     def __init__(self, session, model_id=None):
         """Initialize the fake permission class."""
-        super().__init__(session, model_id=model_id)
+        self.data = {}
+        self._session = session
+        self._model_id = model_id
         self._account = model_id == "fake_raID"
 
     @property
@@ -108,7 +125,7 @@ class FakeDecoraWiFiResidence(Residence):
 
     def __init__(self, session, model_id=None):
         """Initialize the fake Residence class."""
-        super().__init__(session, model_id=model_id)
+        self.data = {}
         self._session = session
         self._model_id = model_id
         self._number = self.nextID()
@@ -133,7 +150,7 @@ class FakeDecoraWiFiResidentialAccount(ResidentialAccount):
 
     def __init__(self, session, model_id=None):
         """Initialize the fake ResidentialAccount class."""
-        super().__init__(session, model_id=model_id)
+        self.data = {}
         self._session = session
         self._model_id = model_id
         self._residences = [
@@ -153,8 +170,11 @@ class FakeDecoraWiFiIotSwitch(IotSwitch):
 
     def __init__(self, session, model_id=None):
         """Initialize the fake IotSwitch class."""
-        super().__init__(session, model_id=model_id)
+        self.data = {}
+        self._session = session
+        self._model_id = model_id
         self._number = self.nextID()
+        self.name = SWITCH_NAME
 
     @property
     def mac(self):
