@@ -43,7 +43,7 @@ class PushChannel:
             # Remove this handler from the pending dict
             # If it didn't exist we hit a race condition between call_later and another
             # push failing and tearing down the connection.
-            if self.pending_confirms.pop(confirm_id, None) is not None:
+            if self.pending_confirms.pop(confirm_id, None) is None:
                 return
 
             # Drop local channel if it's still open
