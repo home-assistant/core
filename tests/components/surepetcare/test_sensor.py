@@ -12,7 +12,7 @@ EXPECTED_ENTITY_IDS = {
 }
 
 
-async def test_binary_sensors(hass, surepetcare) -> None:
+async def test_sensors(hass, surepetcare) -> None:
     """Test the generation of unique ids."""
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
