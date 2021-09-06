@@ -5,7 +5,6 @@ from datetime import datetime
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_POTENTIAL_MILLIVOLT,
@@ -13,7 +12,7 @@ from homeassistant.const import (
 )
 
 from . import FliprEntity
-from .const import ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -57,13 +56,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
-
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def name(self):
-        """Return the name of the particular component."""
-        return f"Flipr {self.flipr_id} {self.entity_description.name}"
 
     @property
     def native_value(self):

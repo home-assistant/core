@@ -29,10 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        FliprBinarySensor(
-            coordinator,
-            description,
-        )
+        FliprBinarySensor(coordinator, description)
         for description in BINARY_SENSORS_TYPES
     )
 
@@ -47,8 +44,3 @@ class FliprBinarySensor(FliprEntity, BinarySensorEntity):
             self.coordinator.data[self.entity_description.key] == "TooLow"
             or self.coordinator.data[self.entity_description.key] == "TooHigh"
         )
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return f"Flipr {self.flipr_id} {self.entity_description.name}"

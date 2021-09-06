@@ -5,7 +5,7 @@ import logging
 from flipr_api import FliprAPIRestClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
+from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,4 +91,7 @@ class FliprEntity(CoordinatorEntity):
                 "name": NAME,
                 "manufacturer": MANUFACTURER,
             }
-            self.flipr_id = flipr_id
+
+            self._attr_name = f"Flipr {flipr_id} {description.name}"
+
+            self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}

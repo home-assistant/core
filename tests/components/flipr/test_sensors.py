@@ -51,10 +51,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Retrieves the created entities (cf entity_registry.py)
-    for entry in registry.entities.values():
-        print(f"entity : {entry}")
-
     # Check entity unique_id value that is generated in FliprEntity base class.
     entity = registry.async_get("sensor.flipr_myfliprid_red_ox")
     assert entity.unique_id == "myfliprid-red_ox"
