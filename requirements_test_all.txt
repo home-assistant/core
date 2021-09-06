@@ -301,7 +301,7 @@ debugpy==1.4.1
 defusedxml==0.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.10.8
+denonavr==0.10.9
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.4
@@ -334,7 +334,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.19.0
+envoy_reader==0.20.0
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -921,7 +921,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.0
+pymazda==0.2.1
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.3
@@ -1380,9 +1380,6 @@ zeroconf==0.36.2
 
 # homeassistant.components.zha
 zha-quirks==0.0.60
-
-# homeassistant.components.zha
-zigpy-cc==0.5.2
 
 # homeassistant.components.zha
 zigpy-deconz==0.13.0
