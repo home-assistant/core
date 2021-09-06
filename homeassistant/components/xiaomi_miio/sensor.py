@@ -66,6 +66,7 @@ from .const import (
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
+    MODELS_AIR_QUALITY_MONITOR,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -371,23 +372,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         model = config_entry.data[CONF_MODEL]
-        device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
-        sensors = []
+
         if model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4, MODEL_FAN_P5):
             return
-        if model in MODEL_TO_SENSORS_MAP:
-            sensors = MODEL_TO_SENSORS_MAP[model]
-        elif model in MODELS_HUMIDIFIER_MIOT:
-            sensors = HUMIDIFIER_MIOT_SENSORS
-        elif model in MODELS_HUMIDIFIER_MJJSQ:
-            sensors = HUMIDIFIER_MJJSQ_SENSORS
-        elif model in MODELS_HUMIDIFIER_MIIO:
-            sensors = HUMIDIFIER_MIIO_SENSORS
-        elif model in MODELS_PURIFIER_MIIO:
-            sensors = PURIFIER_MIIO_SENSORS
-        elif model in MODELS_PURIFIER_MIOT:
-            sensors = PURIFIER_MIOT_SENSORS
-        else:
+
+        if model in MODELS_AIR_QUALITY_MONITOR:
             unique_id = config_entry.unique_id
             name = config_entry.title
             _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
@@ -399,19 +388,35 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     name, device, config_entry, unique_id, description
                 )
             )
-        for sensor, description in SENSOR_TYPES.items():
-            if sensor not in sensors:
-                continue
-            entities.append(
-                XiaomiGenericSensor(
-                    f"{config_entry.title} {description.name}",
-                    device,
-                    config_entry,
-                    f"{sensor}_{config_entry.unique_id}",
-                    hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
-                    description,
+        else:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+            sensors = []
+            if model in MODEL_TO_SENSORS_MAP:
+                sensors = MODEL_TO_SENSORS_MAP[model]
+            elif model in MODELS_HUMIDIFIER_MIOT:
+                sensors = HUMIDIFIER_MIOT_SENSORS
+            elif model in MODELS_HUMIDIFIER_MJJSQ:
+                sensors = HUMIDIFIER_MJJSQ_SENSORS
+            elif model in MODELS_HUMIDIFIER_MIIO:
+                sensors = HUMIDIFIER_MIIO_SENSORS
+            elif model in MODELS_PURIFIER_MIIO:
+                sensors = PURIFIER_MIIO_SENSORS
+            elif model in MODELS_PURIFIER_MIOT:
+                sensors = PURIFIER_MIOT_SENSORS
+
+            for sensor, description in SENSOR_TYPES.items():
+                if sensor not in sensors:
+                    continue
+                entities.append(
+                    XiaomiGenericSensor(
+                        f"{config_entry.title} {description.name}",
+                        device,
+                        config_entry,
+                        f"{sensor}_{config_entry.unique_id}",
+                        hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                        description,
+                    )
                 )
-            )
 
     async_add_entities(entities)
 

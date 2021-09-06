@@ -108,7 +108,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: dev_path,
                     },
                 }
@@ -172,7 +172,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: device_path,
                     },
                 }
