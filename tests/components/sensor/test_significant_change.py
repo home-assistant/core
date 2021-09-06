@@ -43,6 +43,8 @@ TEMP_FREEDOM_ATTRS = {
     [
         ("0", "1", AQI_ATTRS, True),
         ("1", "0", AQI_ATTRS, True),
+        ("0.1", "0.5", AQI_ATTRS, False),
+        ("0.5", "0.1", AQI_ATTRS, False),
         ("99", "100", AQI_ATTRS, False),
         ("100", "99", AQI_ATTRS, False),
         ("101", "99", AQI_ATTRS, False),
