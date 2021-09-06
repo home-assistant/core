@@ -3,22 +3,17 @@ import json
 import unittest
 
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE
 import defusedxml.ElementTree as ET
 import pytest
 
-from homeassistant import const, setup
+from homeassistant import setup
 from homeassistant.components import emulated_hue
 from homeassistant.components.emulated_hue import upnp
 from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
 
 from tests.common import get_test_instance_port
 
-HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
-
-BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
-JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
 class MockTransport:
