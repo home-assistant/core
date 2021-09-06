@@ -13,7 +13,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.components.zha import async_migrate_entry, config_flow
+from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
@@ -574,8 +574,6 @@ async def test_user_port_config(probe_mock, hass):
 )
 async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
     """Test zigpy-cc to zigpy-znp config migration."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=old_type + new_type,
@@ -592,7 +590,9 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
     config_entry.version = 2
     config_entry.add_to_hass(hass)
 
-    await async_migrate_entry(hass, config_entry)
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.version > 2
     assert config_entry.data[CONF_RADIO_TYPE] == new_type
