@@ -292,11 +292,11 @@ async def test_set_speed_belief_speed_100(hass: core.HomeAssistant):
             blocking=True,
         )
         await hass.async_block_till_done()
-
-    mock_action.assert_called_with(
-        "test-device-id", Action.set_power_state_belief(True)
-    )
-    mock_action.assert_called_with("test-device-id", Action.set_speed_belief(3))
+    calls = [
+        mock_action("test-device-id", Action.set_power_state_belief(True)),
+        mock_action("test-device-id", Action.set_speed_belief(3)),
+    ]
+    mock_action.assert_has_calls(calls=calls)
 
 
 async def test_update_reports_fan_on(hass: core.HomeAssistant):
