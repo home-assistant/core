@@ -1,0 +1,79 @@
+# Describes the format for available bond services
+
+set_fan_speed_belief:
+  name: Set believed fan speed
+  description: Sets the believed fan speed for a bond fan
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed fan speed.
+      example: "fan.living_room_fan"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: fan
+    fan_speed:
+      required: true
+      name: Fan Speed
+      description: Fan Speed as int.
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
+
+set_switch_power_state_belief:
+  name: Set believed switch power state
+  description: Sets the believed power state of a bond switch
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed power state of.
+      example: "switch.whatever"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: switch
+    power_state:
+      required: true
+      name: Power state
+      description: Power state
+      example: true
+      selector:
+        boolean:
+
+set_light_state_belief:
+  name: Set believed light state
+  description: Sets the believed light state of a bond device
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed power state of.
+      example: "light.living_room_lights"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: light
+    power_state:
+      required: false
+      name: Power state
+      description: Power state
+      example: true
+      selector:
+        boolean:
+    brightness:
+      required: false
+      name: Brightness
+      description: Brightness as a percentage
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider

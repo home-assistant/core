@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from bond_api import Action, BPUPSubscriptions, DeviceType
+import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,11 +14,19 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BondHub
-from .const import BPUP_SUBS, DOMAIN, HUB
+from .const import (
+    ATTR_POWER_STATE,
+    BPUP_SUBS,
+    DOMAIN,
+    HUB,
+    SERVICE_SET_LIGHT_STATE_BELIEF,
+)
 from .entity import BondEntity
 from .utils import BondDevice
 
@@ -33,17 +42,10 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    platform = entity_platform.async_get_current_platform()
 
     fan_lights: list[Entity] = [
         BondLight(hub, device, bpup_subs)
-        for device in hub.devices
-        if DeviceType.is_fan(device.type)
-        and device.supports_light()
-        and not (device.supports_up_light() and device.supports_down_light())
-    ]
-
-    fan_lights_state_belief: list[Entity] = [
-        BondLightBeliefState(hub, device, bpup_subs, "state_belief")
         for device in hub.devices
         if DeviceType.is_fan(device.type)
         and device.supports_light()
@@ -56,20 +58,8 @@ async def async_setup_entry(
         if DeviceType.is_fan(device.type) and device.supports_up_light()
     ]
 
-    fan_up_lights_belief_state: list[Entity] = [
-        BondUpLightBeliefState(hub, device, bpup_subs, "up_light_state_belief")
-        for device in hub.devices
-        if DeviceType.is_fan(device.type) and device.supports_up_light()
-    ]
-
     fan_down_lights: list[Entity] = [
         BondDownLight(hub, device, bpup_subs, "down_light")
-        for device in hub.devices
-        if DeviceType.is_fan(device.type) and device.supports_down_light()
-    ]
-
-    fan_down_lights_belief_state: list[Entity] = [
-        BondDownLightBeliefState(hub, device, bpup_subs, "down_light_state_belief")
         for device in hub.devices
         if DeviceType.is_fan(device.type) and device.supports_down_light()
     ]
@@ -86,36 +76,25 @@ async def async_setup_entry(
         if DeviceType.is_fireplace(device.type) and device.supports_light()
     ]
 
-    fp_lights_belief: list[Entity] = [
-        BondLightBeliefState(hub, device, bpup_subs, "light_state_belief")
-        for device in hub.devices
-        if DeviceType.is_fireplace(device.type) and device.supports_light()
-    ]
-
     lights: list[Entity] = [
         BondLight(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_light(device.type)
     ]
 
-    light_belief_state: list[Entity] = [
-        BondLightBeliefState(hub, device, bpup_subs, "state_belief")
-        for device in hub.devices
-        if DeviceType.is_light(device.type)
-    ]
+    platform.async_register_entity_service(
+        SERVICE_SET_LIGHT_STATE_BELIEF,
+        {
+            vol.Optional(ATTR_BRIGHTNESS): vol.All(
+                vol.Number(scale=0), vol.Range(0, 100)
+            ),
+            vol.Optional(ATTR_POWER_STATE): vol.All(cv.boolean),
+        },
+        "async_set_state_belief",
+    )
 
     async_add_entities(
-        fan_lights_state_belief
-        + fan_lights
-        + fan_up_lights_belief_state
-        + fan_up_lights
-        + fan_down_lights_belief_state
-        + fan_down_lights
-        + fp_lights_belief
-        + fp_lights
-        + fireplaces
-        + light_belief_state
-        + lights,
+        fan_lights + fan_up_lights + fan_down_lights + fp_lights + fireplaces + lights,
         True,
     )
 
@@ -124,6 +103,29 @@ class BondBaseLight(BondEntity, LightEntity):
     """Representation of a Bond light."""
 
     _attr_supported_features = 0
+
+    async def async_set_state_belief(self, **kwargs: Any) -> None:
+        """Set the belief state of the light."""
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if brightness is not None:
+            if not self._device.supports_set_brightness():
+                raise TemplateError(
+                    Exception("This device does not support brightness")
+                )
+            if brightness == 0:
+                await self._hub.bond.action(
+                    self._device.device_id, Action.set_light_state_belief(False)
+                )
+            else:
+                await self._hub.bond.action(
+                    self._device.device_id,
+                    Action.set_brightness_belief(round((brightness * 100) / 255)),
+                )
+        else:
+            state = kwargs.get(ATTR_POWER_STATE)
+            await self._hub.bond.action(
+                self._device.device_id, Action.set_light_state_belief(state)
+            )
 
 
 class BondLight(BondBaseLight, BondEntity, LightEntity):
@@ -162,46 +164,6 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         await self._hub.bond.action(self._device.device_id, Action.turn_light_off())
 
 
-class BondLightBeliefState(BondBaseLight, BondEntity, LightEntity):
-    """Representation of a Bond light."""
-
-    def __init__(
-        self,
-        hub: BondHub,
-        device: BondDevice,
-        bpup_subs: BPUPSubscriptions,
-        sub_device: str | None = None,
-    ) -> None:
-        """Create HA entity representing Bond light."""
-        super().__init__(hub, device, bpup_subs, sub_device)
-        if device.supports_set_brightness():
-            self._attr_supported_features = SUPPORT_BRIGHTNESS
-
-    def _apply_state(self, state: dict) -> None:
-        self._attr_is_on = state.get("light") == 1
-        brightness = state.get("brightness")
-        self._attr_brightness = round(brightness * 255 / 100) if brightness else None
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness:
-            await self._hub.bond.action(
-                self._device.device_id,
-                Action.set_brightness_belief(round((brightness * 100) / 255)),
-            )
-        else:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_light_state_belief(True)
-            )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_light_state_belief(False)
-        )
-
-
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
@@ -221,25 +183,6 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
         )
 
 
-class BondDownLightBeliefState(BondBaseLight, BondEntity, LightEntity):
-    """Representation of a Bond light."""
-
-    def _apply_state(self, state: dict) -> None:
-        self._attr_is_on = bool(state.get("down_light") and state.get("light"))
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_light_state_belief(True)
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_light_state_belief(False)
-        )
-
-
 class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
@@ -256,25 +199,6 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
         """Turn off the light."""
         await self._hub.bond.action(
             self._device.device_id, Action(Action.TURN_UP_LIGHT_OFF)
-        )
-
-
-class BondUpLightBeliefState(BondBaseLight, BondEntity, LightEntity):
-    """Representation of a Bond light."""
-
-    def _apply_state(self, state: dict) -> None:
-        self._attr_is_on = bool(state.get("up_light") and state.get("light"))
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_light_state_belief(True)
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_light_state_belief(False)
         )
 
 
@@ -306,3 +230,26 @@ class BondFireplace(BondEntity, LightEntity):
         _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
+
+    async def async_set_state_belief(self, **kwargs: Any) -> None:
+        """Set the belief state of the fireplace."""
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if brightness is not None:
+            if not self._device.supports_set_brightness():
+                raise TemplateError(
+                    Exception("This device does not support brightness")
+                )
+            if brightness == 0:
+                await self._hub.bond.action(
+                    self._device.device_id, Action.set_power_state_belief(False)
+                )
+            else:
+                await self._hub.bond.action(
+                    self._device.device_id,
+                    Action.set_brightness_belief(round((brightness * 100) / 255)),
+                )
+        else:
+            state = kwargs.get(ATTR_POWER_STATE)
+            await self._hub.bond.action(
+                self._device.device_id, Action.set_power_state_belief(state)
+            )

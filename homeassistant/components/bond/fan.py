@@ -6,6 +6,7 @@ import math
 from typing import Any
 
 from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
+import voluptuous as vol
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -16,6 +17,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -24,7 +26,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import BPUP_SUBS, DOMAIN, HUB
+from .const import ATTR_FANSPEED, BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_BELIEF
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
 
@@ -40,6 +42,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    platform = entity_platform.async_get_current_platform()
 
     fans: list[Entity] = [
         BondFan(hub, device, bpup_subs)
@@ -47,13 +50,13 @@ async def async_setup_entry(
         if DeviceType.is_fan(device.type)
     ]
 
-    fan_belief_state: list[Entity] = [
-        BondFanBeliefState(hub, device, bpup_subs)
-        for device in hub.devices
-        if DeviceType.is_fan(device.type)
-    ]
+    platform.async_register_entity_service(
+        SERVICE_SET_FAN_SPEED_BELIEF,
+        {vol.Required(ATTR_FANSPEED): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
+        "async_set_speed_belief",
+    )
 
-    async_add_entities(fan_belief_state + fans, True)
+    async_add_entities(fans, True)
 
 
 class BondFan(BondEntity, FanEntity):
@@ -134,6 +137,33 @@ class BondFan(BondEntity, FanEntity):
             self._device.device_id, Action.set_speed(bond_speed)
         )
 
+    async def async_set_power_state_belief(self, power_state: bool) -> None:
+        """Set the believed state to on or off."""
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_power_state_belief(power_state)
+        )
+
+    async def async_set_speed_belief(self, fan_speed: int) -> None:
+        """Set the believed speed for the fan."""
+        _LOGGER.debug("async_set_speed_belief called with percentage %s", fan_speed)
+
+        if fan_speed == 0:
+            await self.async_set_power_state_belief(False)
+            return
+        else:
+            await self.async_set_power_state_belief(True)
+
+        bond_speed = math.ceil(percentage_to_ranged_value(self._speed_range, fan_speed))
+        _LOGGER.debug(
+            "async_set_percentage converted percentage %s to bond speed %s",
+            fan_speed,
+            bond_speed,
+        )
+
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_speed_belief(bond_speed)
+        )
+
     async def async_turn_on(
         self,
         speed: str | None = None,
@@ -160,92 +190,4 @@ class BondFan(BondEntity, FanEntity):
         )
         await self._hub.bond.action(
             self._device.device_id, Action.set_direction(bond_direction)
-        )
-
-
-class BondFanBeliefState(BondEntity, FanEntity):
-    """Representation of a Bond fan."""
-
-    def __init__(
-        self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
-    ) -> None:
-        """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, bpup_subs, "state_belief")
-
-        self._power: bool | None = None
-        self._speed: int | None = None
-        self._direction: int | None = None
-
-    def _apply_state(self, state: dict) -> None:
-        self._power = state.get("power")
-        self._speed = state.get("speed")
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        features = 0
-        if self._device.supports_speed():
-            features |= SUPPORT_SET_SPEED
-
-        return features
-
-    @property
-    def _speed_range(self) -> tuple[int, int]:
-        """Return the range of speeds."""
-        return (1, self._device.props.get("max_speed", 3))
-
-    @property
-    def percentage(self) -> int:
-        """Return the current speed percentage for the fan."""
-        if not self._speed or not self._power:
-            return 0
-        return ranged_value_to_percentage(self._speed_range, self._speed)
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return int_states_in_range(self._speed_range)
-
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Set the desired speed for the fan."""
-        _LOGGER.debug("async_set_percentage called with percentage %s", percentage)
-
-        if percentage == 0:
-            await self.async_turn_off()
-            return
-
-        bond_speed = math.ceil(
-            percentage_to_ranged_value(self._speed_range, percentage)
-        )
-        _LOGGER.debug(
-            "async_set_percentage converted percentage %s to bond speed %s",
-            percentage,
-            bond_speed,
-        )
-
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_speed_belief(bond_speed)
-        )
-
-    async def async_turn_on(
-        self,
-        speed: str | None = None,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Turn on the fan."""
-        _LOGGER.debug("Fan async_turn_on called with percentage %s", percentage)
-
-        if percentage is not None:
-            await self.async_set_percentage(percentage)
-        else:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_power_state_belief(True)
-            )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the fan off."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_power_state_belief(False)
         )
