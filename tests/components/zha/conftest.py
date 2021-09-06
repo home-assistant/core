@@ -8,17 +8,18 @@ from zigpy.application import ControllerApplication
 import zigpy.config
 import zigpy.device
 import zigpy.group
+import zigpy.profiles
 import zigpy.types
+import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.zha import DOMAIN
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.setup import async_setup_component
 
-from .common import FakeEndpoint, get_zha_gateway
-
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+from tests.components.zha import common
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
@@ -121,24 +122,24 @@ def zigpy_device_mock(zigpy_app_controller):
         )
         device.manufacturer = manufacturer
         device.model = model
-        device.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_descriptor)[
-            0
-        ]
+        device.node_desc = zdo_t.NodeDescriptor.deserialize(node_descriptor)[0]
         device.last_seen = time.time()
+
         for epid, ep in endpoints.items():
-            endpoint = FakeEndpoint(manufacturer, model, epid)
-            endpoint.device = device
-            device.endpoints[epid] = endpoint
+            endpoint = device.add_endpoint(epid)
             endpoint.device_type = ep["device_type"]
-            profile_id = ep.get("profile_id")
-            if profile_id:
-                endpoint.profile_id = profile_id
+            endpoint.profile_id = ep.get("profile_id")
+            endpoint.request = AsyncMock(return_value=[0])
 
             for cluster_id in ep.get("in_clusters", []):
-                endpoint.add_input_cluster(cluster_id, _patch_cluster=patch_cluster)
+                cluster = endpoint.add_input_cluster(cluster_id)
+                if patch_cluster:
+                    common.patch_cluster(cluster)
 
             for cluster_id in ep.get("out_clusters", []):
-                endpoint.add_output_cluster(cluster_id, _patch_cluster=patch_cluster)
+                cluster = endpoint.add_output_cluster(cluster_id)
+                if patch_cluster:
+                    common.patch_cluster(cluster)
 
         return device
 
@@ -151,7 +152,7 @@ def zha_device_joined(hass, setup_zha):
 
     async def _zha_device(zigpy_dev):
         await setup_zha()
-        zha_gateway = get_zha_gateway(hass)
+        zha_gateway = common.get_zha_gateway(hass)
         await zha_gateway.async_device_initialized(zigpy_dev)
         await hass.async_block_till_done()
         return zha_gateway.get_device(zigpy_dev.ieee)

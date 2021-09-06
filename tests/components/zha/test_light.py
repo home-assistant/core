@@ -1,6 +1,6 @@
 """Test zha light."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, call, patch, sentinel
+from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -171,14 +171,14 @@ async def device_light_3(hass, zigpy_device_mock, zha_device_joined):
     return zha_device
 
 
-@patch("zigpy.zcl.clusters.general.OnOff.read_attributes", new=MagicMock())
 async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
     """Test zha light platform refresh."""
 
     # create zigpy devices
     zigpy_device = zigpy_device_mock(LIGHT_ON_OFF)
-    zha_device = await zha_device_joined_restored(zigpy_device)
     on_off_cluster = zigpy_device.endpoints[1].on_off
+    on_off_cluster.PLUGGED_ATTR_READS = {"on_off": 0}
+    zha_device = await zha_device_joined_restored(zigpy_device)
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
 
     # allow traffic to flow through the gateway and device
@@ -193,7 +193,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # 1 interval - 1 call
-    on_off_cluster.read_attributes.return_value = [{"on_off": 1}, {}]
+    on_off_cluster.PLUGGED_ATTR_READS = {"on_off": 1}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 1
@@ -201,7 +201,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     assert hass.states.get(entity_id).state == STATE_ON
 
     # 2 intervals - 2 calls
-    on_off_cluster.read_attributes.return_value = [{"on_off": 0}, {}]
+    on_off_cluster.PLUGGED_ATTR_READS = {"on_off": 0}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 2
