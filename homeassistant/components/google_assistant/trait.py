@@ -2312,7 +2312,7 @@ class SensorStateTrait(_Trait):
     commands = []
 
     @classmethod
-    def supported(domain, features, device_class, _):
+    def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
         return (
             domain == sensor.DOMAIN
