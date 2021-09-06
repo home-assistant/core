@@ -921,7 +921,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.0
+pymazda==0.2.1
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.3
@@ -1400,4 +1400,4 @@ zigpy-znp==0.5.4
 zigpy==0.37.1
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.29.1
+zwave-js-server-python==0.30.0

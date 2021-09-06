@@ -1599,7 +1599,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.0
+pymazda==0.2.1
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -2489,4 +2489,4 @@ zigpy==0.37.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.29.1
+zwave-js-server-python==0.30.0
