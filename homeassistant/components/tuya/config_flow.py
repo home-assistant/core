@@ -89,7 +89,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_COUNTRY_CODE],
                 user_input[CONF_APP_TYPE],
             )
-            if response.get("success", False):
+            if response.get("success", False) and isinstance(api.token_info.platform_url, str):
                 api.endpoint = api.token_info.platform_url
                 user_input[CONF_ENDPOINT] = api.token_info.platform_url
 
