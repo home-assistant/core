@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_POWER,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
 )
@@ -82,6 +84,14 @@ class Ted5000Sensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
+
+    @property
+    def device_class(self):
+        """Return the device class the value is expressed in."""
+        if self._unit is POWER_WATT:
+            return DEVICE_CLASS_POWER
+        if self._unit is ELECTRIC_POTENTIAL_VOLT:
+            return DEVICE_CLASS_VOLTAGE
 
     @property
     def native_value(self):
