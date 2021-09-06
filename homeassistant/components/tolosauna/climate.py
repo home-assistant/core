@@ -1,6 +1,6 @@
 """TOLO Sauna climate controls (main sauna control)."""
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from tololib.const import Calefaction
 
@@ -26,7 +26,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity
+from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MAX_TEMP,
@@ -50,30 +50,26 @@ async def async_setup_entry(
 class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     """Sauna climate control."""
 
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        return f"{self._config_entry.entry_id}_climate"
+    def __init__(
+        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
+    ) -> None:
+        """Initialize TOLO Sauna Climate entity."""
+        super().__init__(coordinator, entry)
 
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return "Sauna Climate"
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return temperature uni."""
-        return TEMP_CELSIUS
-
-    @property
-    def target_temperature_step(self) -> int:
-        """Return target temperature step."""
-        return 1
-
-    @property
-    def precision(self) -> float:
-        """Return precision."""
-        return PRECISION_WHOLE
+        self._attr_fan_modes = [FAN_ON, FAN_OFF]
+        self._attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_DRY]
+        self._attr_max_humidity = DEFAULT_MAX_HUMIDITY
+        self._attr_max_temp = DEFAULT_MAX_TEMP
+        self._attr_min_humidity = DEFAULT_MIN_HUMIDITY
+        self._attr_min_temp = DEFAULT_MIN_TEMP
+        self._attr_name = "Sauna Climate"
+        self._attr_precision = PRECISION_WHOLE
+        self._attr_supported_features = (
+            SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY | SUPPORT_FAN_MODE
+        )
+        self._attr_target_temperature_step = 1
+        self._attr_temperature_unit = TEMP_CELSIUS
+        self._attr_unique_id = f"{self._config_entry.entry_id}_climate"
 
     @property
     def current_temperature(self) -> int:
@@ -96,30 +92,12 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         return self.settings.target_humidity
 
     @property
-    def max_temp(self) -> int:
-        """Return maximum supported temperature."""
-        return DEFAULT_MAX_TEMP
-
-    @property
-    def min_temp(self) -> int:
-        """Return minimum supported temperature."""
-        return DEFAULT_MIN_TEMP
-
-    @property
-    def max_humidity(self) -> int:
-        """Return maximum supported humidity."""
-        return DEFAULT_MAX_HUMIDITY
-
-    @property
-    def min_humidity(self) -> int:
-        """Return minimum supported humidity."""
-        return DEFAULT_MIN_HUMIDITY
-
-    @property
     def hvac_mode(self) -> str:
         """Get current HVAC mode."""
         if self.status.power_on:
             return HVAC_MODE_HEAT
+        elif not self.status.power_on and self.status.fan_on:
+            return HVAC_MODE_DRY
         else:
             return HVAC_MODE_OFF
 
@@ -138,47 +116,12 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         return None
 
     @property
-    def hvac_modes(self) -> List[str]:
-        """Return supported HVAC modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_DRY]
-
-    @property
-    def preset_mode(self) -> None:
-        """Return current preset mode."""
-        return None
-
-    @property
-    def preset_modes(self) -> None:
-        """Return supported preset modes."""
-        return None
-
-    @property
     def fan_mode(self) -> str:
         """Return current fan mode."""
         if self.status.fan_on:
             return FAN_ON
         else:
             return FAN_OFF
-
-    @property
-    def fan_modes(self) -> List[str]:
-        """Return supported fan modes."""
-        return [FAN_ON, FAN_OFF]
-
-    @property
-    def swing_mode(self) -> None:
-        """Return current swing mode (None supported)."""
-        return None
-
-    @property
-    def swing_modes(self) -> None:
-        """Return supported swing modes (None)."""
-        return None
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY | SUPPORT_FAN_MODE
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set HVAC mode."""
