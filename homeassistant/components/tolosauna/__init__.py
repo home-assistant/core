@@ -6,6 +6,7 @@ import logging
 from typing import Any, cast
 
 from tololib import ToloClient
+from tololib.errors import ResponseTimedOutError
 from tololib.message_info import SettingsInfo, StatusInfo
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,10 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from ...helpers.entity import DeviceInfo
-from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
+from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
 PLATFORMS = ["climate"]
 
@@ -54,20 +56,23 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=f"{DEFAULT_NAME} Data Update Coordinator",
+            name=f"{entry.title} ({entry.data[CONF_HOST]}) Data Update Coordinator",
             update_method=self._update_data,
             update_interval=timedelta(seconds=3),
         )
 
     async def _update_data(self) -> dict[str, Any]:
         client = ToloClient(self._config_entry.data[CONF_HOST])
-        status = client.get_status_info(
-            resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
-        )
-        settings = client.get_settings_info(
-            resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
-        )
-        return {"status": status, "settings": settings}
+        try:
+            status = client.get_status_info(
+                resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
+            )
+            settings = client.get_settings_info(
+                resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
+            )
+            return {"status": status, "settings": settings}
+        except ResponseTimedOutError:
+            raise UpdateFailed("communication timeout")
 
 
 class ToloSaunaCoordinatorEntity(CoordinatorEntity):

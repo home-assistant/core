@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tolosauna",
   "requirements": [
-    "tololib==0.1.0a6"
+    "tololib==0.1.0b1"
   ],
   "codeowners": [
     "@MatthiasLohr"
