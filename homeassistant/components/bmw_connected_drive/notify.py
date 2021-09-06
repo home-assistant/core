@@ -11,6 +11,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import ATTR_LATITUDE, ATTR_LOCATION, ATTR_LONGITUDE, ATTR_NAME
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 ATTR_LAT = "lat"
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
@@ -23,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the BMW notification service."""
-    accounts = hass.data[BMW_DOMAIN]
+    accounts = [e[CONF_ACCOUNT] for e in hass.data[BMW_DOMAIN][DATA_ENTRIES].values()]
     _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
     svc = BMWNotificationService()
     svc.setup(accounts)

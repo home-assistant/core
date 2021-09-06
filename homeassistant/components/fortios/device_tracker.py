@@ -46,29 +46,50 @@ def get_scanner(hass, config):
         _LOGGER.error("Failed to login to FortiOS API: %s", ex)
         return None
 
-    return FortiOSDeviceScanner(fgt)
+    status_json = fgt.monitor("system/status", "")
+    fos_major_version = int(status_json["version"][1])
+
+    if fos_major_version < 6 or fos_major_version > 7:
+        _LOGGER.error(
+            "Unsupported FortiOS version, fos_major_version =  %s",
+            fos_major_version,
+        )
+        return None
+
+    api_url = "user/device/query"
+    if fos_major_version == 6:
+        api_url = "user/device/select"
+
+    return FortiOSDeviceScanner(fgt, fos_major_version, api_url)
 
 
 class FortiOSDeviceScanner(DeviceScanner):
     """This class queries a FortiOS unit for connected devices."""
 
-    def __init__(self, fgt) -> None:
+    def __init__(self, fgt, fos_major_version, api_url) -> None:
         """Initialize the scanner."""
         self._clients = {}
         self._clients_json = {}
         self._fgt = fgt
+        self._fos_major_version = fos_major_version
+        self._api_url = api_url
 
     def update(self):
         """Update clients from the device."""
-        clients_json = self._fgt.monitor("user/device/select", "")
+        clients_json = self._fgt.monitor(self._api_url, "")
         self._clients_json = clients_json
 
         self._clients = []
 
         if clients_json:
-            for client in clients_json["results"]:
-                if client["last_seen"] < 180:
-                    self._clients.append(client["mac"].upper())
+            if self._fos_major_version == 6:
+                for client in clients_json["results"]:
+                    if client["last_seen"] < 180:
+                        self._clients.append(client["mac"].upper())
+            elif self._fos_major_version == 7:
+                for client in clients_json["results"]:
+                    if client["is_online"]:
+                        self._clients.append(client["mac"].upper())
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -90,7 +111,11 @@ class FortiOSDeviceScanner(DeviceScanner):
         for client in data["results"]:
             if client["mac"] == device:
                 try:
-                    name = client["host"]["name"]
+                    name = ""
+                    if self._fos_major_version == 6:
+                        name = client["host"]["name"]
+                    elif self._fos_major_version == 7:
+                        name = client["hostname"]
                     _LOGGER.debug("Getting device name=%s", name)
                     return name
                 except KeyError as kex:

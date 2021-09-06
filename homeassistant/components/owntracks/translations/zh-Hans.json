@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_allowed": "\u53ea\u6709\u4e00\u4e2a\u5b9e\u4f8b\u662f\u5fc5\u9700\u7684\u3002"
-        },
         "create_entry": {
             "default": "\n\n\u5728 Android \u8bbe\u5907\u4e0a\uff0c\u6253\u5f00 [OwnTracks APP]({android_url})\uff0c\u524d\u5f80 Preferences -> Connection\u3002\u4fee\u6539\u4ee5\u4e0b\u8bbe\u5b9a\uff1a\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification:\n   - Username: `<Your name>`\n   - Device ID: `<Your device name>`\n\n\u5728 iOS \u8bbe\u5907\u4e0a\uff0c\u6253\u5f00 [OwnTracks APP]({ios_url})\uff0c\u70b9\u51fb\u5de6\u4e0a\u89d2\u7684 (i) \u56fe\u6807-> Settings\u3002\u4fee\u6539\u4ee5\u4e0b\u8bbe\u5b9a\uff1a\n - Mode: HTTP\n - URL: {webhook_url}\n - Turn on authentication\n - UserID: `<Your name>`\n\n{secret}\n\n\u8bf7\u53c2\u9605[\u6587\u6863]({docs_url})\u4ee5\u4e86\u89e3\u66f4\u591a\u4fe1\u606f\u3002"
         },

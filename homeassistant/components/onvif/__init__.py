@@ -1,8 +1,5 @@
 """The ONVIF integration."""
-import asyncio
-
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
-import voluptuous as vol
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -19,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_per_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_RTSP_TRANSPORT,
@@ -33,10 +31,8 @@ from .const import (
 )
 from .device import ONVIFDevice
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ONVIF component."""
     # Import from yaml
     configs = {}
@@ -45,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             continue
 
         config = p_config.copy()
-        if config[CONF_HOST] not in configs.keys():
+        if config[CONF_HOST] not in configs:
             configs[config[CONF_HOST]] = {
                 CONF_HOST: config[CONF_HOST],
                 CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
@@ -64,7 +60,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ONVIF from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -91,12 +87,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if device.capabilities.events:
         platforms += ["binary_sensor", "sensor"]
 
-    for component in platforms:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.async_stop)
+    )
 
     return True
 
@@ -111,14 +106,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         platforms += ["binary_sensor", "sensor"]
         await device.events.async_stop()
 
-    return all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platforms
-            ]
-        )
-    )
+    return await hass.config_entries.async_unload_platforms(entry, platforms)
 
 
 async def _get_snapshot_auth(device):

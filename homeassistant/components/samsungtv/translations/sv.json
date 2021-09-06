@@ -4,7 +4,6 @@
             "already_configured": "Denna Samsung TV \u00e4r redan konfigurerad.",
             "already_in_progress": "Samsung TV-konfiguration p\u00e5g\u00e5r redan.",
             "auth_missing": "Home Assistant har inte beh\u00f6righet att ansluta till denna Samsung TV. Kontrollera tv:ns inst\u00e4llningar f\u00f6r att godk\u00e4nna Home Assistant.",
-            "not_successful": "Det g\u00e5r inte att ansluta till denna Samsung TV-enhet.",
             "not_supported": "Denna Samsung TV-enhet st\u00f6ds f\u00f6r n\u00e4rvarande inte."
         },
         "flow_title": "Samsung TV: {model}",

@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "UPnP / IGD ya est\u00e1 configurado",
             "incomplete_discovery": "Descubrimiento incompleto",
-            "no_devices_discovered": "No se descubrieron UPnP / IGDs",
             "no_devices_found": "No se encontraron dispositivos en la red"
         },
         "error": {
@@ -18,7 +17,17 @@
             "user": {
                 "data": {
                     "scan_interval": "Intervalo de actualizaci\u00f3n (segundos, m\u00ednimo 30)",
+                    "unique_id": "Dispositivo",
                     "usn": "Dispositivo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalo de actualizaci\u00f3n (segundos, m\u00ednimo 30)"
                 }
             }
         }

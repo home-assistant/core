@@ -4,7 +4,6 @@
             "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "identifier_exists": "Coordinate gi\u00e0 registrate",
             "invalid_api_key": "Chiave API non valida"
         },
         "step": {
@@ -16,6 +15,17 @@
                     "longitude": "Logitudine"
                 },
                 "title": "Inserisci i tuoi dati"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Indice UV iniziale per la finestra di protezione",
+                    "to_window": "Indice UV finale per la finestra di protezione"
+                },
+                "title": "Configura OpenUV"
             }
         }
     }

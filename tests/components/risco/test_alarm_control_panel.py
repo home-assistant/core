@@ -1,4 +1,6 @@
 """Tests for the Risco alarm control panel device."""
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -25,11 +27,11 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
 
-from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
@@ -113,7 +115,7 @@ async def test_cannot_connect(hass):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         assert not registry.async_is_registered(FIRST_ENTITY_ID)
         assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
@@ -129,14 +131,14 @@ async def test_unauthorized(hass):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         assert not registry.async_is_registered(FIRST_ENTITY_ID)
         assert not registry.async_is_registered(SECOND_ENTITY_ID)
 
 
 async def test_setup(hass, two_part_alarm):
     """Test entity setup."""
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert not registry.async_is_registered(FIRST_ENTITY_ID)
     assert not registry.async_is_registered(SECOND_ENTITY_ID)
@@ -146,12 +148,12 @@ async def test_setup(hass, two_part_alarm):
     assert registry.async_is_registered(FIRST_ENTITY_ID)
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
-    registry = await hass.helpers.device_registry.async_get_registry()
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_0")}, {})
+    registry = dr.async_get(hass)
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_0")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
@@ -166,7 +168,7 @@ async def _check_state(hass, alarm, property, state, entity_id, partition_id):
 
 async def test_states(hass, two_part_alarm):
     """Test the various alarm states."""
-    await setup_risco(hass, CUSTOM_MAPPING_OPTIONS)
+    await setup_risco(hass, [], CUSTOM_MAPPING_OPTIONS)
 
     assert hass.states.get(FIRST_ENTITY_ID).state == STATE_UNKNOWN
     for partition_id, entity_id in {0: FIRST_ENTITY_ID, 1: SECOND_ENTITY_ID}.items():
@@ -248,9 +250,9 @@ async def _call_alarm_service(hass, service, entity_id, **kwargs):
 
 async def test_sets_custom_mapping(hass, two_part_alarm):
     """Test settings the various modes when mapping some states."""
-    await setup_risco(hass, CUSTOM_MAPPING_OPTIONS)
+    await setup_risco(hass, [], CUSTOM_MAPPING_OPTIONS)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity = registry.async_get(FIRST_ENTITY_ID)
     assert entity.supported_features == EXPECTED_FEATURES
 
@@ -274,9 +276,9 @@ async def test_sets_custom_mapping(hass, two_part_alarm):
 
 async def test_sets_full_custom_mapping(hass, two_part_alarm):
     """Test settings the various modes when mapping all states."""
-    await setup_risco(hass, FULL_CUSTOM_MAPPING)
+    await setup_risco(hass, [], FULL_CUSTOM_MAPPING)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity = registry.async_get(FIRST_ENTITY_ID)
     assert (
         entity.supported_features == EXPECTED_FEATURES | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
@@ -308,7 +310,7 @@ async def test_sets_full_custom_mapping(hass, two_part_alarm):
 
 async def test_sets_with_correct_code(hass, two_part_alarm):
     """Test settings the various modes when code is required."""
-    await setup_risco(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
+    await setup_risco(hass, [], {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
 
     code = {"code": 1234}
     await _test_service_call(
@@ -350,7 +352,7 @@ async def test_sets_with_correct_code(hass, two_part_alarm):
 
 async def test_sets_with_incorrect_code(hass, two_part_alarm):
     """Test settings the various modes when code is required and incorrect."""
-    await setup_risco(hass, {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
+    await setup_risco(hass, [], {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
 
     code = {"code": 4321}
     await _test_no_service_call(

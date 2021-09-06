@@ -3,5 +3,6 @@
   "name": "QVR Pro",
   "documentation": "https://www.home-assistant.io/integrations/qvr_pro",
   "requirements": ["pyqvrpro==0.52"],
-  "codeowners": ["@oblogic7"]
+  "codeowners": ["@oblogic7"],
+  "iot_class": "local_polling"
 }

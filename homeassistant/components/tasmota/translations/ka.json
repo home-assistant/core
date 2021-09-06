@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "description": "\u10d2\u10e1\u10e3\u10e0\u10d7 \u10d3\u10d0\u10d0\u10e7\u10d4\u10dc\u10dd\u10d7 Tasmota?"
+            }
+        }
+    }
+}

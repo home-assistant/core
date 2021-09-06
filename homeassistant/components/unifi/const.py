@@ -4,8 +4,6 @@ import logging
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
 
-CONTROLLER_ID = "{host}-{site}"
-
 CONF_CONTROLLER = "controller"
 CONF_SITE_ID = "site"
 
@@ -15,6 +13,7 @@ CONF_ALLOW_BANDWIDTH_SENSORS = "allow_bandwidth_sensors"
 CONF_ALLOW_UPTIME_SENSORS = "allow_uptime_sensors"
 CONF_BLOCK_CLIENT = "block_client"
 CONF_DETECTION_TIME = "detection_time"
+CONF_DPI_RESTRICTIONS = "dpi_restrictions"
 CONF_IGNORE_WIRED_BUG = "ignore_wired_bug"
 CONF_POE_CLIENTS = "poe_clients"
 CONF_TRACK_CLIENTS = "track_clients"
@@ -24,6 +23,7 @@ CONF_SSID_FILTER = "ssid_filter"
 
 DEFAULT_ALLOW_BANDWIDTH_SENSORS = False
 DEFAULT_ALLOW_UPTIME_SENSORS = False
+DEFAULT_DPI_RESTRICTIONS = True
 DEFAULT_IGNORE_WIRED_BUG = False
 DEFAULT_POE_CLIENTS = True
 DEFAULT_TRACK_CLIENTS = True

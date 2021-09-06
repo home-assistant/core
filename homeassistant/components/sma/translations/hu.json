@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van"
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "cannot_retrieve_device_info": "Sikeres csatlakoz\u00e1s, de nem tudja lek\u00e9rni az eszk\u00f6z adatait",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "group": "Csoport",
+                    "host": "Gazdag\u00e9p",
+                    "password": "Jelsz\u00f3",
+                    "ssl": "SSL tan\u00fas\u00edtv\u00e1nyt haszn\u00e1l",
+                    "verify_ssl": "Ellen\u0151rizze az SSL tan\u00fas\u00edtv\u00e1nyt"
+                },
+                "description": "Adja meg az SMA-eszk\u00f6z adatait.",
+                "title": "Az SMA Solar be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

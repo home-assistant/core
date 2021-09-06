@@ -1,13 +1,17 @@
 """Component to interface with various media players."""
+from __future__ import annotations
+
 import asyncio
 import base64
 import collections
-from datetime import timedelta
+from contextlib import suppress
+from dataclasses import dataclass
+import datetime as dt
 import functools as ft
 import hashlib
 import logging
-from random import SystemRandom
-from typing import List, Optional
+import secrets
+from typing import final
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -15,6 +19,7 @@ from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -23,6 +28,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
@@ -48,13 +54,15 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+    datetime,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
@@ -62,6 +70,7 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -92,11 +101,14 @@ from .const import (
     MEDIA_CLASS_DIRECTORY,
     REPEAT_MODES,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_UNJOIN,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -119,7 +131,6 @@ from .errors import BrowseError
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_RND = SystemRandom()
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -130,7 +141,7 @@ CACHE_URL = "url"
 CACHE_CONTENT = "content"
 ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16}
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 DEVICE_CLASS_TV = "tv"
 DEVICE_CLASS_SPEAKER = "speaker"
@@ -299,6 +310,12 @@ async def async_setup(hass, config):
         [SUPPORT_SEEK],
     )
     component.async_register_entity_service(
+        SERVICE_JOIN,
+        {vol.Required(ATTR_GROUP_MEMBERS): vol.All(cv.ensure_list, [cv.entity_id])},
+        "async_join_players",
+        [SUPPORT_GROUPING],
+    )
+    component.async_register_entity_service(
         SERVICE_SELECT_SOURCE,
         {vol.Required(ATTR_INPUT_SOURCE): cv.string},
         "async_select_source",
@@ -329,6 +346,9 @@ async def async_setup(hass, config):
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
     )
+    component.async_register_entity_service(
+        SERVICE_UNJOIN, {}, "async_unjoin_player", [SUPPORT_GROUPING]
+    )
 
     component.async_register_entity_service(
         SERVICE_REPEAT_SET,
@@ -340,87 +360,128 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class MediaPlayerEntityDescription(EntityDescription):
+    """A class that describes media player entities."""
 
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
 
-    _access_token: Optional[str] = None
+    entity_description: MediaPlayerEntityDescription
+    _access_token: str | None = None
+
+    _attr_app_id: str | None = None
+    _attr_app_name: str | None = None
+    _attr_group_members: list[str] | None = None
+    _attr_is_volume_muted: bool | None = None
+    _attr_media_album_artist: str | None = None
+    _attr_media_album_name: str | None = None
+    _attr_media_artist: str | None = None
+    _attr_media_channel: str | None = None
+    _attr_media_content_id: str | None = None
+    _attr_media_content_type: str | None = None
+    _attr_media_duration: int | None = None
+    _attr_media_episode: str | None = None
+    _attr_media_image_hash: str | None
+    _attr_media_image_remotely_accessible: bool = False
+    _attr_media_image_url: str | None = None
+    _attr_media_playlist: str | None = None
+    _attr_media_position_updated_at: dt.datetime | None = None
+    _attr_media_position: int | None = None
+    _attr_media_season: str | None = None
+    _attr_media_series_title: str | None = None
+    _attr_media_title: str | None = None
+    _attr_media_track: int | None = None
+    _attr_repeat: str | None = None
+    _attr_shuffle: bool | None = None
+    _attr_sound_mode_list: list[str] | None = None
+    _attr_sound_mode: str | None = None
+    _attr_source_list: list[str] | None = None
+    _attr_source: str | None = None
+    _attr_state: str | None = None
+    _attr_supported_features: int = 0
+    _attr_volume_level: float | None = None
 
     # Implement these for your media player
     @property
-    def state(self):
+    def state(self) -> str | None:
         """State of the player."""
-        return None
+        return self._attr_state
 
     @property
     def access_token(self) -> str:
         """Access token for this media player."""
         if self._access_token is None:
-            self._access_token = hashlib.sha256(
-                _RND.getrandbits(256).to_bytes(32, "little")
-            ).hexdigest()
+            self._access_token = secrets.token_hex(32)
         return self._access_token
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return None
+        return self._attr_volume_level
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
-        return None
+        return self._attr_is_volume_muted
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return None
+        return self._attr_media_content_id
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str | None:
         """Content type of current playing media."""
-        return None
+        return self._attr_media_content_type
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return None
+        return self._attr_media_duration
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return None
+        return self._attr_media_position
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid.
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        return None
+        return self._attr_media_position_updated_at
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return None
+        return self._attr_media_image_url
 
     @property
     def media_image_remotely_accessible(self) -> bool:
         """If the image url is remotely accessible."""
-        return False
+        return self._attr_media_image_remotely_accessible
 
     @property
-    def media_image_hash(self):
+    def media_image_hash(self) -> str | None:
         """Hash value for media image."""
+        if hasattr(self, "_attr_media_image_hash"):
+            return self._attr_media_image_hash
+
         url = self.media_image_url
         if url is not None:
             return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
@@ -433,102 +494,120 @@ class MediaPlayerEntity(Entity):
         if url is None:
             return None, None
 
-        return await _async_fetch_image(self.hass, url)
+        return await self._async_fetch_image_from_cache(url)
+
+    async def async_get_browse_image(
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[str | None, str | None]:
+        """
+        Optionally fetch internally accessible image for media browser.
+
+        Must be implemented by integration.
+        """
+        return None, None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return None
+        return self._attr_media_title
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return None
+        return self._attr_media_artist
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return None
+        return self._attr_media_album_name
 
     @property
-    def media_album_artist(self):
+    def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
-        return None
+        return self._attr_media_album_artist
 
     @property
-    def media_track(self):
+    def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        return None
+        return self._attr_media_track
 
     @property
-    def media_series_title(self):
+    def media_series_title(self) -> str | None:
         """Title of series of current playing media, TV show only."""
-        return None
+        return self._attr_media_series_title
 
     @property
-    def media_season(self):
+    def media_season(self) -> str | None:
         """Season of current playing media, TV show only."""
-        return None
+        return self._attr_media_season
 
     @property
-    def media_episode(self):
+    def media_episode(self) -> str | None:
         """Episode of current playing media, TV show only."""
-        return None
+        return self._attr_media_episode
 
     @property
-    def media_channel(self):
+    def media_channel(self) -> str | None:
         """Channel currently playing."""
-        return None
+        return self._attr_media_channel
 
     @property
-    def media_playlist(self):
+    def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
-        return None
+        return self._attr_media_playlist
 
     @property
-    def app_id(self):
+    def app_id(self) -> str | None:
         """ID of the current running app."""
-        return None
+        return self._attr_app_id
 
     @property
-    def app_name(self):
+    def app_name(self) -> str | None:
         """Name of the current running app."""
-        return None
+        return self._attr_app_name
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Name of the current input source."""
-        return None
+        return self._attr_source
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str] | None:
         """List of available input sources."""
-        return None
+        return self._attr_source_list
 
     @property
-    def sound_mode(self):
+    def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
-        return None
+        return self._attr_sound_mode
 
     @property
-    def sound_mode_list(self):
+    def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
-        return None
+        return self._attr_sound_mode_list
 
     @property
-    def shuffle(self):
+    def shuffle(self) -> bool | None:
         """Boolean if shuffle is enabled."""
-        return None
+        return self._attr_shuffle
 
     @property
-    def repeat(self):
+    def repeat(self) -> str | None:
         """Return current repeat mode."""
-        return None
+        return self._attr_repeat
 
     @property
-    def supported_features(self):
+    def group_members(self) -> list[str] | None:
+        """List of members which are currently grouped together."""
+        return self._attr_group_members
+
+    @property
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
-        return 0
+        return self._attr_supported_features
 
     def turn_on(self):
         """Turn the media player on."""
@@ -726,14 +805,18 @@ class MediaPlayerEntity(Entity):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
+    @property
+    def support_grouping(self):
+        """Boolean if player grouping is supported."""
+        return bool(self.supported_features & SUPPORT_GROUPING)
+
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if self.state in [STATE_OFF, STATE_IDLE]:
+        if self.state in (STATE_OFF, STATE_IDLE):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
@@ -744,7 +827,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
@@ -757,7 +839,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
@@ -767,7 +848,6 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
@@ -818,6 +898,7 @@ class MediaPlayerEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""
@@ -834,13 +915,16 @@ class MediaPlayerEntity(Entity):
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
 
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
         return state_attr
 
     async def async_browse_media(
         self,
-        media_content_type: Optional[str] = None,
-        media_content_id: Optional[str] = None,
-    ) -> "BrowseMedia":
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 
         The BrowseMedia instance will be used by the
@@ -848,45 +932,83 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        raise NotImplementedError()
 
-async def _async_fetch_image(hass, url):
-    """Fetch image.
+    async def async_join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        await self.hass.async_add_executor_job(self.join_players, group_members)
 
-    Images are cached in memory (the images are typically 10-100kB in size).
-    """
-    cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
-    cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        raise NotImplementedError()
 
-    if urlparse(url).hostname is None:
-        url = f"{get_url(hass)}{url}"
+    async def async_unjoin_player(self):
+        """Remove this player from any group."""
+        await self.hass.async_add_executor_job(self.unjoin_player)
 
-    if url not in cache_images:
-        cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
+    async def _async_fetch_image_from_cache(self, url):
+        """Fetch image.
 
-    async with cache_images[url][CACHE_LOCK]:
-        if CACHE_CONTENT in cache_images[url]:
-            return cache_images[url][CACHE_CONTENT]
+        Images are cached in memory (the images are typically 10-100kB in size).
+        """
+        cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+        cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
-        content, content_type = (None, None)
-        websession = async_get_clientsession(hass)
-        try:
-            with async_timeout.timeout(10):
-                response = await websession.get(url)
+        if urlparse(url).hostname is None:
+            url = f"{get_url(self.hass)}{url}"
 
-                if response.status == HTTP_OK:
-                    content = await response.read()
-                    content_type = response.headers.get(CONTENT_TYPE)
-                    if content_type:
-                        content_type = content_type.split(";")[0]
-                    cache_images[url][CACHE_CONTENT] = content, content_type
+        if url not in cache_images:
+            cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
 
-        except asyncio.TimeoutError:
-            pass
+        async with cache_images[url][CACHE_LOCK]:
+            if CACHE_CONTENT in cache_images[url]:
+                return cache_images[url][CACHE_CONTENT]
 
-        while len(cache_images) > cache_maxsize:
-            cache_images.popitem(last=False)
+        (content, content_type) = await self._async_fetch_image(url)
+
+        async with cache_images[url][CACHE_LOCK]:
+            cache_images[url][CACHE_CONTENT] = content, content_type
+            while len(cache_images) > cache_maxsize:
+                cache_images.popitem(last=False)
 
         return content, content_type
+
+    async def _async_fetch_image(self, url):
+        """Retrieve an image."""
+        content, content_type = (None, None)
+        websession = async_get_clientsession(self.hass)
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTP_OK:
+                content = await response.read()
+                content_type = response.headers.get(CONTENT_TYPE)
+                if content_type:
+                    content_type = content_type.split(";")[0]
+
+        if content is None:
+            _LOGGER.warning("Error retrieving proxied image from %s", url)
+
+        return content, content_type
+
+    def get_browse_image_url(
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> str:
+        """Generate an url for a media browser image."""
+        url_path = (
+            f"/api/media_player_proxy/{self.entity_id}/browse_media"
+            f"/{media_content_type}/{media_content_id}"
+        )
+
+        url_query = {"token": self.access_token}
+        if media_image_id:
+            url_query["media_image_id"] = media_image_id
+
+        return str(URL(url_path).with_query(url_query))
 
 
 class MediaPlayerImageView(HomeAssistantView):
@@ -895,12 +1017,21 @@ class MediaPlayerImageView(HomeAssistantView):
     requires_auth = False
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
+    extra_urls = [
+        url + "/browse_media/{media_content_type}/{media_content_id}",
+    ]
 
     def __init__(self, component):
         """Initialize a media player view."""
         self.component = component
 
-    async def get(self, request: web.Request, entity_id: str) -> web.Response:
+    async def get(
+        self,
+        request: web.Request,
+        entity_id: str,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
@@ -915,7 +1046,13 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=HTTP_UNAUTHORIZED)
 
-        data, content_type = await player.async_get_media_image()
+        if media_content_type and media_content_id:
+            media_image_id = request.query.get("media_image_id")
+            data, content_type = await player.async_get_browse_image(
+                media_content_type, media_content_id, media_image_id
+            )
+        else:
+            data, content_type = await player.async_get_media_image()
 
         if data is None:
             return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
@@ -992,7 +1129,7 @@ async def websocket_browse_media(hass, connection, msg):
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
     component = hass.data[DOMAIN]
-    player: Optional[MediaPlayerDevice] = component.get_entity(msg["entity_id"])
+    player: MediaPlayerDevice | None = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1064,10 +1201,10 @@ class BrowseMedia:
         title: str,
         can_play: bool,
         can_expand: bool,
-        children: Optional[List["BrowseMedia"]] = None,
-        children_media_class: Optional[str] = None,
-        thumbnail: Optional[str] = None,
-    ):
+        children: list[BrowseMedia] | None = None,
+        children_media_class: str | None = None,
+        thumbnail: str | None = None,
+    ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
         self.media_content_id = media_content_id

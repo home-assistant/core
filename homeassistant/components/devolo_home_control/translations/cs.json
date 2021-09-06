@@ -1,23 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo."
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "Heslo",
                     "username": "E-mail / Devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Heslo",
+                    "username": "E-mail / devolo ID"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

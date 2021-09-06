@@ -1,15 +1,12 @@
 """Test check_config script."""
-import logging
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.config import YAML_CONFIG_FILE
 import homeassistant.scripts.check_config as check_config
 
-from tests.async_mock import patch
 from tests.common import get_test_config_dir, patch_yaml_files
-
-_LOGGER = logging.getLogger(__name__)
 
 BASE_CONFIG = (
     "homeassistant:\n"
@@ -30,14 +27,23 @@ async def apply_stop_hass(stop_hass):
     """Make sure all hass are stopped."""
 
 
+@pytest.fixture
+def mock_is_file():
+    """Mock is_file."""
+    # All files exist except for the old entity registry file
+    with patch(
+        "os.path.isfile", lambda path: not path.endswith("entity_registry.yaml")
+    ):
+        yield
+
+
 def normalize_yaml_files(check_dict):
     """Remove configuration path from ['yaml_files']."""
     root = get_test_config_dir()
     return [key.replace(root, "...") for key in sorted(check_dict["yaml_files"].keys())]
 
 
-@patch("os.path.isfile", return_value=True)
-def test_bad_core_config(isfile_patch, loop):
+def test_bad_core_config(mock_is_file, loop):
     """Test a bad core config setup."""
     files = {YAML_CONFIG_FILE: BAD_CORE_CONFIG}
     with patch_yaml_files(files):
@@ -46,8 +52,7 @@ def test_bad_core_config(isfile_patch, loop):
         assert res["except"]["homeassistant"][1] == {"unit_system": "bad"}
 
 
-@patch("os.path.isfile", return_value=True)
-def test_config_platform_valid(isfile_patch, loop):
+def test_config_platform_valid(mock_is_file, loop):
     """Test a valid platform setup."""
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: demo"}
     with patch_yaml_files(files):
@@ -60,8 +65,7 @@ def test_config_platform_valid(isfile_patch, loop):
         assert len(res["yaml_files"]) == 1
 
 
-@patch("os.path.isfile", return_value=True)
-def test_component_platform_not_found(isfile_patch, loop):
+def test_component_platform_not_found(mock_is_file, loop):
     """Test errors if component or platform not found."""
     # Make sure they don't exist
     files = {YAML_CONFIG_FILE: BASE_CONFIG + "beer:"}
@@ -92,8 +96,7 @@ def test_component_platform_not_found(isfile_patch, loop):
         assert len(res["yaml_files"]) == 1
 
 
-@patch("os.path.isfile", return_value=True)
-def test_secrets(isfile_patch, loop):
+def test_secrets(mock_is_file, loop):
     """Test secrets config checking method."""
     secrets_path = get_test_config_dir("secrets.yaml")
 
@@ -124,8 +127,7 @@ def test_secrets(isfile_patch, loop):
         ]
 
 
-@patch("os.path.isfile", return_value=True)
-def test_package_invalid(isfile_patch, loop):
+def test_package_invalid(mock_is_file, loop):
     """Test an invalid package."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')

@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -14,17 +15,25 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
 )
-from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.core import (
+    Context,
+    CoreState,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import template
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
-from tests.common import async_mock_service, get_test_home_assistant
+from tests.common import async_mock_service, get_test_home_assistant, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 ENTITY_ID = "script.test"
@@ -84,6 +93,7 @@ class TestScriptComponent(unittest.TestCase):
 
     def test_passing_variables(self):
         """Test different ways of passing in variables."""
+        mock_restore_cache(self.hass, ())
         calls = []
         context = Context()
 
@@ -173,7 +183,7 @@ async def test_turn_on_off_toggle(hass, toggle):
 
     assert not script.is_on(hass, ENTITY_ID)
     assert was_on
-    assert 1 == event_mock.call_count
+    assert event_mock.call_count == 1
 
 
 invalid_configs = [
@@ -190,7 +200,7 @@ async def test_setup_with_invalid_configs(hass, value):
         hass, "script", {"script": value}
     ), f"Script loaded with wrong config {value}"
 
-    assert 0 == len(hass.states.async_entity_ids("script"))
+    assert len(hass.states.async_entity_ids("script")) == 0
 
 
 @pytest.mark.parametrize("running", ["no", "same", "different"])
@@ -269,6 +279,7 @@ async def test_service_descriptions(hass):
 
     descriptions = await async_get_all_descriptions(hass)
 
+    assert descriptions[DOMAIN]["test"]["name"] == "test"
     assert descriptions[DOMAIN]["test"]["description"] == "test description"
     assert not descriptions[DOMAIN]["test"]["fields"]
 
@@ -302,6 +313,27 @@ async def test_service_descriptions(hass):
         descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["example"]
         == "test_param example"
     )
+
+    # Test 3: has "alias" that will be used as "name"
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={
+            "script": {
+                "test_name": {
+                    "alias": "ABC",
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[DOMAIN]["test_name"]["name"] == "ABC"
+
+    # Test 4: verify that names from YAML are taken into account as well
+    assert descriptions[DOMAIN]["turn_on"]["name"] == "Turn on"
 
 
 async def test_shared_context(hass):
@@ -496,6 +528,36 @@ async def test_config_basic(hass):
     assert test_script.attributes["icon"] == "mdi:party"
 
 
+async def test_config_multiple_domains(hass):
+    """Test splitting configuration over multiple domains."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "first_script": {
+                    "alias": "Main domain",
+                    "sequence": [],
+                }
+            },
+            "script second": {
+                "second_script": {
+                    "alias": "Secondary domain",
+                    "sequence": [],
+                }
+            },
+        },
+    )
+
+    test_script = hass.states.get("script.first_script")
+    assert test_script
+    assert test_script.name == "Main domain"
+
+    test_script = hass.states.get("script.second_script")
+    assert test_script
+    assert test_script.name == "Secondary domain"
+
+
 async def test_logbook_humanify_script_started_event(hass):
     """Test humanifying script started event."""
     hass.config.components.add("recorder")
@@ -587,7 +649,7 @@ async def test_concurrent_script(hass, concurrently):
     await asyncio.wait_for(service_called.wait(), 1)
     service_called.clear()
 
-    assert "script2a" == service_values[-1]
+    assert service_values[-1] == "script2a"
     assert script.is_on(hass, "script.script1")
     assert script.is_on(hass, "script.script2")
 
@@ -596,13 +658,13 @@ async def test_concurrent_script(hass, concurrently):
         await asyncio.wait_for(service_called.wait(), 1)
         service_called.clear()
 
-        assert "script2b" == service_values[-1]
+        assert service_values[-1] == "script2b"
 
     hass.states.async_set("input_boolean.test1", "on")
     await asyncio.wait_for(service_called.wait(), 1)
     service_called.clear()
 
-    assert "script1" == service_values[-1]
+    assert service_values[-1] == "script1"
     assert concurrently == script.is_on(hass, "script.script2")
 
     if concurrently:
@@ -610,7 +672,7 @@ async def test_concurrent_script(hass, concurrently):
         await asyncio.wait_for(service_called.wait(), 1)
         service_called.clear()
 
-        assert "script2b" == service_values[-1]
+        assert service_values[-1] == "script2b"
 
     await hass.async_block_till_done()
 
@@ -627,6 +689,7 @@ async def test_script_variables(hass, caplog):
             "script": {
                 "script1": {
                     "variables": {
+                        "this_variable": "{{this.entity_id}}",
                         "test_var": "from_config",
                         "templated_config_var": "{{ var_from_service | default('config-default') }}",
                     },
@@ -636,6 +699,8 @@ async def test_script_variables(hass, caplog):
                             "data": {
                                 "value": "{{ test_var }}",
                                 "templated_config_var": "{{ templated_config_var }}",
+                                "this_template": "{{this.entity_id}}",
+                                "this_variable": "{{this_variable}}",
                             },
                         },
                     ],
@@ -679,6 +744,10 @@ async def test_script_variables(hass, caplog):
     assert len(mock_calls) == 1
     assert mock_calls[0].data["value"] == "from_config"
     assert mock_calls[0].data["templated_config_var"] == "hello"
+    # Verify this available to all templates
+    assert mock_calls[0].data.get("this_template") == "script.script1"
+    # Verify this available during trigger variables rendering
+    assert mock_calls[0].data.get("this_variable") == "script.script1"
 
     await hass.services.async_call(
         "script", "script1", {"test_var": "from_service"}, blocking=True
@@ -706,3 +775,70 @@ async def test_script_variables(hass, caplog):
 
     assert len(mock_calls) == 4
     assert mock_calls[3].data["value"] == 1
+
+
+async def test_script_this_var_always(hass, caplog):
+    """Test script always has reference to this, even with no variabls are configured."""
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "script1": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {
+                                "this_template": "{{this.entity_id}}",
+                            },
+                        },
+                    ],
+                },
+            },
+        },
+    )
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await hass.services.async_call("script", "script1", blocking=True)
+
+    assert len(mock_calls) == 1
+    # Verify this available to all templates
+    assert mock_calls[0].data.get("this_template") == "script.script1"
+    assert "Error rendering variables" not in caplog.text
+
+
+async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
+    """Test if last triggered is restored on start."""
+    time = dt_util.utcnow()
+    mock_restore_cache(
+        hass,
+        (
+            State("script.no_last_triggered", STATE_OFF),
+            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
+        ),
+    )
+    hass.state = CoreState.starting
+
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "no_last_triggered": {
+                    "sequence": [{"delay": {"seconds": 5}}],
+                },
+                "last_triggered": {
+                    "sequence": [{"delay": {"seconds": 5}}],
+                },
+            },
+        },
+    )
+
+    state = hass.states.get("script.no_last_triggered")
+    assert state
+    assert state.attributes["last_triggered"] is None
+
+    state = hass.states.get("script.last_triggered")
+    assert state
+    assert state.attributes["last_triggered"] == time

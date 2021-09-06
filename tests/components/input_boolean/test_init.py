@@ -1,6 +1,7 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -19,10 +20,9 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Context, CoreState, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component, mock_restore_cache
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,23 +63,21 @@ async def test_methods(hass):
 
     assert not is_on(hass, entity_id)
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
 
     assert is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-
-    await hass.async_block_till_done()
 
     assert not is_on(hass, entity_id)
 
-    await hass.services.async_call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
 
     assert is_on(hass, entity_id)
 
@@ -111,13 +109,13 @@ async def test_config_options(hass):
     assert state_1 is not None
     assert state_2 is not None
 
-    assert STATE_OFF == state_1.state
+    assert state_1.state == STATE_OFF
     assert ATTR_ICON not in state_1.attributes
     assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-    assert STATE_ON == state_2.state
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+    assert state_2.state == STATE_ON
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
 async def test_restore_state(hass):
@@ -194,7 +192,7 @@ async def test_input_boolean_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     _LOGGER.debug("ENTITIES @ start: %s", hass.states.async_entity_ids())
 
@@ -220,7 +218,7 @@ async def test_reload(hass, hass_admin_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert STATE_ON == state_2.state
+    assert state_2.state == STATE_ON
 
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
@@ -246,7 +244,6 @@ async def test_reload(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -262,12 +259,12 @@ async def test_reload(hass, hass_admin_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
-    assert STATE_ON == state_2.state  # reload is not supposed to change entity state
-    assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
+    assert state_2.state == STATE_ON  # reload is not supposed to change entity state
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work_reloaded"
 
 
-async def test_load_person_storage(hass, storage_setup):
+async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -316,7 +313,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -349,6 +346,5 @@ async def test_setup_no_config(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())

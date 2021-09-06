@@ -27,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.config_entries import SOURCE_DISCOVERY
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import (
     ATTR_COMMAND,
     CONF_HOST,
@@ -43,6 +43,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -127,7 +128,7 @@ async def start_server_discovery(hass):
         asyncio.create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": SOURCE_DISCOVERY},
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
                 data={
                     CONF_HOST: server.host,
                     CONF_PORT: int(server.port),
@@ -146,7 +147,6 @@ async def start_server_discovery(hass):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
-
     if config:
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
@@ -168,8 +168,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
+    session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(async_get_clientsession(hass), host, port, username, password)
+    lms = Server(session, host, port, username, password)
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -209,7 +210,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     asyncio.create_task(_discovery())
 
     # Register entity services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CALL_METHOD,
         {
@@ -264,7 +265,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._remove_dispatcher = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device-specific attributes."""
         squeezebox_attr = {
             attr: getattr(self, attr)
@@ -282,7 +283,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._player.player_id
+        return format_mac(self._player.player_id)
 
     @property
     def available(self):
@@ -572,7 +573,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-
         _LOGGER.debug(
             "Reached async_browse_media with content_type %s and content_id %s",
             media_content_type,
@@ -587,4 +587,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self._player, payload)
+        return await build_item_response(self, self._player, payload)
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Get album art from Squeezebox server."""
+        if media_image_id:
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            result = await self._async_fetch_image(image_url)
+            if result == (None, None):
+                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+            return result
+
+        return (None, None)

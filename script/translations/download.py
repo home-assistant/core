@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
+from __future__ import annotations
+
 import json
 import os
 import pathlib
 import re
 import subprocess
-from typing import Dict, List, Union
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
@@ -51,7 +52,7 @@ def run_download_docker():
         raise ExitApp("Failed to download translations")
 
 
-def save_json(filename: str, data: Union[List, Dict]):
+def save_json(filename: str, data: list | dict):
     """Save JSON data to a file.
 
     Returns True on success.

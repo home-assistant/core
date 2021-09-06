@@ -2,11 +2,10 @@
 
 DOMAIN = "omnilogic"
 CONF_SCAN_INTERVAL = "polling_interval"
+DEFAULT_SCAN_INTERVAL = 6
+DEFAULT_PH_OFFSET = 0
 COORDINATOR = "coordinator"
 OMNI_API = "omni_api"
-ATTR_IDENTIFIERS = "identifiers"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MODEL = "model"
 
 PUMP_TYPES = {
     "FMT_VARIABLE_SPEED_PUMP": "VARIABLE",
@@ -20,7 +19,7 @@ PUMP_TYPES = {
 ALL_ITEM_KINDS = {
     "BOWS",
     "Filter",
-    "Heater",
+    "Heaters",
     "Chlorinator",
     "CSAD",
     "Lights",

@@ -8,8 +8,7 @@
             "onvif_error": "Wyst\u0105pi\u0142 b\u0142\u0105d podczas konfigurowania urz\u0105dzenia ONVIF. Sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej informacji."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_failed": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z us\u0142ug\u0105 ONVIF z podanymi po\u015bwiadczeniami"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "auth": {
@@ -18,6 +17,16 @@
                     "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Konfiguracja uwierzytelniania"
+            },
+            "configure": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Konfiguracja urz\u0105dzenia ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -41,6 +50,9 @@
                 "title": "Konfiguracja urz\u0105dzenia ONVIF"
             },
             "user": {
+                "data": {
+                    "auto": "Wyszukaj automatycznie"
+                },
                 "description": "Klikaj\u0105c przycisk Zatwierd\u017a, Twoja sie\u0107 zostanie przeszukana pod k\u0105tem urz\u0105dze\u0144 ONVIF obs\u0142uguj\u0105cych profil S.\n\nNiekt\u00f3rzy producenci zacz\u0119li domy\u015blnie wy\u0142\u0105cza\u0107 ONVIF. Upewnij si\u0119, \u017ce ONVIF jest w\u0142\u0105czony w konfiguracji kamery.",
                 "title": "Konfiguracja urz\u0105dzenia ONVIF"
             }

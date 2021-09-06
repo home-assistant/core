@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El sistema ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n err\u00f3nea",
+            "unknown": "Error desconocido"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "description": "Vuelva a autenticarse con su cuenta Prosegur.",
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de Usuario"
+                }
+            },
+            "user": {
+                "data": {
+                    "country": "Pa\u00eds",
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de Usuario"
+                }
+            }
+        }
+    }
+}

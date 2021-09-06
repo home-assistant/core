@@ -1,4 +1,5 @@
 """Support for Velbus sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
 
 from . import VelbusEntity
@@ -18,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusSensor(VelbusEntity):
+class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
     def __init__(self, module, channel, counter=False):
@@ -44,14 +45,14 @@ class VelbusSensor(VelbusEntity):
         return self._module.get_class(self._channel)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._is_counter:
             return self._module.get_counter_state(self._channel)
         return self._module.get_state(self._channel)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         if self._is_counter:
             return self._module.get_counter_unit(self._channel)

@@ -1,0 +1,12 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa ativa",
+            "google_enabled": "Google ativo",
+            "logged_in": "Ligado em",
+            "remote_connected": "Ligado remotamente",
+            "remote_enabled": "Remoto ativo",
+            "subscription_expiration": "Validade da Subscri\u00e7\u00e3o"
+        }
+    }
+}

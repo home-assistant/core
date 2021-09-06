@@ -7,6 +7,7 @@
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "Vols configurar {name} ({host})?",
@@ -19,6 +20,5 @@
                 "title": "Connexi\u00f3 amb el Hub PowerView"
             }
         }
-    },
-    "title": "Hunter Douglas PowerView"
+    }
 }

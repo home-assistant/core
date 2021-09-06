@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "bad_config_file": "Dades del fitxer de configuraci\u00f3 incorrectes",
             "link_local_address": "L'enlla\u00e7 d'adreces locals no est\u00e0 disponible",
             "not_axis_device": "El dispositiu descobert no \u00e9s un dispositiu Axis"
         },
@@ -10,11 +9,9 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "device_unavailable": "El dispositiu no est\u00e0 disponible",
-            "faulty_credentials": "Credencials d'usuari incorrectes",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
-        "flow_title": "Dispositiu d'eix: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

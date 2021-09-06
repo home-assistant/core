@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Zielort",
+                    "name": "Name",
+                    "origin": "Startort",
+                    "region": "Region"
+                },
+                "description": "Gib f\u00fcr Ursprung und Ziel die Adresse oder die GPS-Koordinaten des Standorts ein (GPS-Koordinaten m\u00fcssen durch ein Komma getrennt werden). Du kannst auch eine Entity-ID eingeben, die diese Informationen in ihrem Zustand bereitstellt, eine Entity-ID mit den Attributen Breitengrad und L\u00e4ngengrad oder einen Zonen-Namen."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "F\u00e4hren meiden?",
+                    "avoid_subscription_roads": "Stra\u00dfen vermeiden, die eine Vignette/ ein Abonnement ben\u00f6tigen?",
+                    "avoid_toll_roads": "Mautstra\u00dfen meiden?",
+                    "excl_filter": "Substring NICHT in Beschreibung der ausgew\u00e4hlten Route",
+                    "incl_filter": "Substring in Beschreibung der ausgew\u00e4hlten Route",
+                    "realtime": "Reisezeit in Echtzeit?",
+                    "units": "Einheiten",
+                    "vehicle_type": "Fahrzeugtyp"
+                },
+                "description": "Mit den \"Substring\"-Eintr\u00e4gen kannst du die Integration zwingen, eine bestimmte Route zu verwenden oder eine bestimmte Route bei der Zeitreiseberechnung zu vermeiden."
+            }
+        }
+    },
+    "title": "Waze Reisezeit"
+}

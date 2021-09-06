@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "powered_off": "Le projecteur est-il allum\u00e9? Vous devez allumer le projecteur pour la configuration initiale."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom"
+                }
+            }
+        }
+    }
+}

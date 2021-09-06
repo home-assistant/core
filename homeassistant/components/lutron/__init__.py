@@ -12,6 +12,8 @@ from homeassistant.util import slugify
 
 DOMAIN = "lutron"
 
+PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
+
 _LOGGER = logging.getLogger(__name__)
 
 LUTRON_BUTTONS = "lutron_buttons"
@@ -37,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def setup(hass, base_config):
-    """Set up the Lutron component."""
+    """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {
@@ -92,8 +94,8 @@ def setup(hass, base_config):
                 (area.name, area.occupancy_group)
             )
 
-    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
     return True
 
 
@@ -126,6 +128,11 @@ class LutronDevice(Entity):
         """No polling needed."""
         return False
 
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._controller.guid}_{self._lutron_device.uuid}"
+
 
 class LutronButton:
     """Representation of a button on a Lutron keypad.
@@ -138,6 +145,8 @@ class LutronButton:
     def __init__(self, hass, area_name, keypad, button):
         """Register callback for activity on the button."""
         name = f"{keypad.name}: {button.name}"
+        if button.name == "Unknown Button":
+            name += f" {button.number}"
         self._hass = hass
         self._has_release_event = (
             button.button_type is not None and "RaiseLower" in button.button_type
@@ -148,7 +157,7 @@ class LutronButton:
         self._button_name = button.name
         self._button = button
         self._event = "lutron_event"
-        self._full_id = slugify(f"{area_name} {keypad.name}: {button.name}")
+        self._full_id = slugify(f"{area_name} {name}")
 
         button.subscribe(self.button_callback, None)
 

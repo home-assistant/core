@@ -3,6 +3,10 @@
         "condition_type": {
             "is_home": "{entity_name} is home",
             "is_not_home": "{entity_name} is not home"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} enters a zone",
+            "leaves": "{entity_name} leaves a zone"
         }
     },
     "state": {

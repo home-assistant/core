@@ -5,14 +5,11 @@ import logging
 import voluptuous as vol
 import whois
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, TIME_DAYS
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DOMAIN = "domain"
 
 DEFAULT_NAME = "Whois"
 
@@ -49,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
 
-class WhoisSensor(Entity):
+class WhoisSensor(SensorEntity):
     """Implementation of a WHOIS sensor."""
 
     def __init__(self, name, domain):
@@ -73,17 +70,17 @@ class WhoisSensor(Entity):
         return "mdi:calendar-clock"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement to present the value in."""
         return TIME_DAYS
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the expiration days for hostname."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the more info attributes."""
         return self._attributes
 
@@ -121,6 +118,7 @@ class WhoisSensor(Entity):
             expiration_date = response["expiration_date"]
             if isinstance(expiration_date, list):
                 attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
+                expiration_date = expiration_date[0]
             else:
                 attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 

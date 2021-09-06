@@ -1,7 +1,9 @@
 """Tests for the Broadlink integration."""
+from dataclasses import dataclass
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components.broadlink.const import DOMAIN
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 # Do not edit/remove. Adding is ok.
@@ -11,7 +13,7 @@ BROADLINK_DEVICES = {
         "34ea34befc25",
         "RM mini 3",
         "Broadlink",
-        "RM2",
+        "RMMINI",
         0x2737,
         57,
         8,
@@ -21,7 +23,7 @@ BROADLINK_DEVICES = {
         "34ea34b43b5a",
         "RM mini 3",
         "Broadlink",
-        "RM4",
+        "RMMINIB",
         0x5F36,
         44017,
         10,
@@ -31,7 +33,7 @@ BROADLINK_DEVICES = {
         "34ea34b43d22",
         "RM pro",
         "Broadlink",
-        "RM2",
+        "RMPRO",
         0x2787,
         20025,
         7,
@@ -41,7 +43,7 @@ BROADLINK_DEVICES = {
         "34ea34c43f31",
         "RM4 pro",
         "Broadlink",
-        "RM4",
+        "RM4PRO",
         0x6026,
         52,
         4,
@@ -61,12 +63,21 @@ BROADLINK_DEVICES = {
         "34ea34b61d2c",
         "LB1",
         "Broadlink",
-        "SmartBulb",
+        "LB1",
         0x504E,
         57,
         5,
     ),
 }
+
+
+@dataclass
+class MockSetup:
+    """Representation of a mock setup."""
+
+    api: MagicMock
+    entry: MockConfigEntry
+    factory: MagicMock
 
 
 class BroadlinkDevice:
@@ -95,14 +106,11 @@ class BroadlinkDevice:
         with patch(
             "homeassistant.components.broadlink.device.blk.gendevice",
             return_value=mock_api,
-        ), patch(
-            "homeassistant.components.broadlink.updater.blk.discover",
-            return_value=[mock_api],
-        ):
+        ) as mock_factory:
             await hass.config_entries.async_setup(mock_entry.entry_id)
             await hass.async_block_till_done()
 
-        return mock_api, mock_entry
+        return MockSetup(mock_api, mock_entry, mock_factory)
 
     def get_mock_api(self):
         """Return a mock device (API)."""

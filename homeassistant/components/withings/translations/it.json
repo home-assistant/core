@@ -10,11 +10,9 @@
             "default": "Autenticazione riuscita con Withings."
         },
         "error": {
-            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
-            "profile_exists": "Il profilo utente \u00e8 gi\u00e0 configurato. Si prega di fornire un nome di profilo univoco."
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
-        "flow_title": "Withings: {profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "Scegli il metodo di autenticazione"
@@ -28,7 +26,7 @@
             },
             "reauth": {
                 "description": "Il profilo \"{profile}\" deve essere autenticato nuovamente per continuare a ricevere i dati Withings.",
-                "title": "Riautenticare il profilo"
+                "title": "Autenticare nuovamente l'integrazione"
             }
         }
     }

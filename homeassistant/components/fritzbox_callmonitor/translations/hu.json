@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "insufficient_permissions": "A felhaszn\u00e1l\u00f3nak nincs elegend\u0151 enged\u00e9lye az AVM FRITZ! Box be\u00e1ll\u00edt\u00e1sainak \u00e9s telefonk\u00f6nyveinek el\u00e9r\u00e9s\u00e9hez.",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Telefonk\u00f6nyv"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Az el\u0151tagok hib\u00e1san vannak form\u00e1zva, ellen\u0151rizze a form\u00e1tumukat."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "El\u0151tagok (vessz\u0151vel elv\u00e1lasztott lista)"
+                },
+                "title": "Konfigur\u00e1lja az el\u0151tagokat"
+            }
+        }
+    }
+}

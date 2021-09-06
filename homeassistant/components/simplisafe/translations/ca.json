@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Aquest compte ja est\u00e0 registrat",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_credentials": "Credencials inv\u00e0lides",
             "still_awaiting_mfa": "Esperant clic de l'enlla\u00e7 del correu MFA",
             "unknown": "Error inesperat"
         },
@@ -20,7 +19,7 @@
                 "data": {
                     "password": "Contrasenya"
                 },
-                "description": "El token d'acc\u00e9s ha caducat o ha estat revocat. Introdueix la teva contrasenya per tornar a vincular el compte.",
+                "description": "L'acc\u00e9s ha caducat o ha estat revocat. Introdueix la contrasenya per tornar a vincular el compte.",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {

@@ -3,11 +3,20 @@
         "abort": {
             "updated_entry": "Den h\u00e4r posten har redan konfigurerats, men namnet och/eller alternativen som definierats i konfigurationen matchar inte den tidigare importerade konfigurationen och d\u00e4rf\u00f6r har konfigureringsposten uppdaterats i enlighet med detta."
         },
-        "error": {
-            "host_exists": "Vizio-enheten med angivet v\u00e4rdnamn \u00e4r redan konfigurerad.",
-            "name_exists": "Vizio-enheten med angivet namn \u00e4r redan konfigurerad."
-        },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN-kod"
+                },
+                "description": "Din TV borde visa en kod. Skriv koden i formul\u00e4ret och forts\u00e4tt sedan till n\u00e4sta steg f\u00f6r att slutf\u00f6ra parningen.",
+                "title": "Slutf\u00f6r parningsprocessen"
+            },
+            "pairing_complete": {
+                "title": "Parkopplingen slutf\u00f6rd"
+            },
+            "pairing_complete_import": {
+                "title": "Parkopplingen slutf\u00f6rd"
+            },
             "user": {
                 "data": {
                     "access_token": "\u00c5tkomstnyckel",

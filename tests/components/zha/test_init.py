@@ -1,5 +1,7 @@
 """Tests for ZHA integration init."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
@@ -12,7 +14,6 @@ from homeassistant.components.zha.core.const import (
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 DATA_RADIO_TYPE = "deconz"
@@ -41,7 +42,7 @@ async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 2
+    assert config_entry_v1.version == 3
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -56,7 +57,7 @@ async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.data[CONF_DEVICE][CONF_BAUDRATE] == 115200
-    assert config_entry_v1.version == 2
+    assert config_entry_v1.version == 3
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -70,7 +71,7 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
-    assert config_entry_v1.version == 2
+    assert config_entry_v1.version == 3
 
 
 @pytest.mark.skipif(

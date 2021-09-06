@@ -4,7 +4,6 @@
             "already_configured": "Airly-integrationen f\u00f6r dessa koordinater \u00e4r redan konfigurerad."
         },
         "error": {
-            "auth": "API-nyckeln \u00e4r inte korrekt.",
             "wrong_location": "Inga Airly m\u00e4tstationer i detta omr\u00e5de."
         },
         "step": {

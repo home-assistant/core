@@ -1,6 +1,5 @@
 """Binary sensors on Zigbee Home Automation networks."""
 import functools
-import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -21,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .core import discovery
 from .core.const import (
     CHANNEL_ACCELEROMETER,
+    CHANNEL_BINARY_INPUT,
     CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
@@ -31,8 +31,6 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {
@@ -73,13 +71,9 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         self._channel = channels[0]
         self._device_class = self.DEVICE_CLASS
 
-    async def get_device_class(self):
-        """Get the HA device class from the channel."""
-
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        await self.get_device_class()
         self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
@@ -143,6 +137,13 @@ class Opening(BinarySensor):
     DEVICE_CLASS = DEVICE_CLASS_OPENING
 
 
+@STRICT_MATCH(channel_names=CHANNEL_BINARY_INPUT)
+class BinaryInput(BinarySensor):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "present_value"
+
+
 @STRICT_MATCH(
     channel_names=CHANNEL_ON_OFF,
     manufacturers="IKEA of Sweden",
@@ -168,10 +169,10 @@ class IASZone(BinarySensor):
 
     SENSOR_ATTR = "zone_status"
 
-    async def get_device_class(self) -> None:
-        """Get the HA device class from the channel."""
-        zone_type = await self._channel.get_attribute_value("zone_type")
-        self._device_class = CLASS_MAPPING.get(zone_type)
+    @property
+    def device_class(self) -> str:
+        """Return device class from component DEVICE_CLASSES."""
+        return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
 
     async def async_update(self):
         """Attempt to retrieve on off state from the binary sensor."""

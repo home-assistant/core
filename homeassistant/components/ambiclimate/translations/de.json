@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "access_token": "Unbekannter Fehler beim Generieren eines Zugriffstokens.",
-            "already_setup": "Das Ambiclimate Konto ist konfiguriert.",
-            "no_config": "Ambiclimate muss konfiguriert sein, bevor die Authentifizierund durchgef\u00fchrt werden kann. [Bitte lies die Anleitung] (https://www.home-assistant.io/components/ambiclimate/)."
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
         },
         "create_entry": {
-            "default": "Erfolgreiche Authentifizierung mit Ambiclimate"
+            "default": "Erfolgreich authentifiziert"
         },
         "error": {
             "follow_link": "Bitte folge dem Link und authentifizieren dich, bevor du auf Senden klickst",

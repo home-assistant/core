@@ -1,9 +1,10 @@
 """Test the Advantage Air config flow."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.advantage_air.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.components.advantage_air import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, USER_INPUT
 
 

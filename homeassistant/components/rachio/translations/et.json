@@ -12,6 +12,17 @@
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti"
+                },
+                "description": "Vaja on API-v\u00f5tit aadressilt https://app.rach.io/. Mine men\u00fc\u00fcsse Seaded ja seej\u00e4rel kl\u00f5psa nuppu \"Hangi API KEY\".",
+                "title": "\u00dchendu oma Rachio seadmega"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Tsoonil\u00fcliti aktiveerimisel t\u00f6\u00f6tamise kestus minutites"
                 }
             }
         }

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "no_homes": "S t\u00edmto \u00fa\u010dtem tado nejsou propojeny \u017e\u00e1dn\u00e9 domovy.",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {

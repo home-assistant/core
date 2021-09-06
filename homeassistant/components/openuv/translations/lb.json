@@ -4,7 +4,6 @@
             "already_configured": "Standuert ass scho konfigur\u00e9iert"
         },
         "error": {
-            "identifier_exists": "Koordinate si scho\u00a0registr\u00e9iert",
             "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
         },
         "step": {

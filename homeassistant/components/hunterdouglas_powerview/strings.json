@@ -1,5 +1,4 @@
 {
-  "title": "Hunter Douglas PowerView",
   "config": {
     "step": {
       "user": {
@@ -13,6 +12,7 @@
         "description": "Do you want to setup {name} ({host})?"
       }
     },
+    "flow_title": "{name} ({host})",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

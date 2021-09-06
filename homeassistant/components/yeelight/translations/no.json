@@ -7,7 +7,11 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
+        "flow_title": "{modell} {id} ({host})",
         "step": {
+            "discovery_confirm": {
+                "description": "Vil du sette opp {model} ( {host} )?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Enhet"
@@ -15,8 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert",
-                    "ip_address": "IP adresse"
+                    "host": "Vert"
                 },
                 "description": "Hvis du lar verten st\u00e5 tom, brukes automatisk oppdagelse til \u00e5 finne enheter"
             }
@@ -35,6 +38,5 @@
                 "description": "Hvis du lar modellen v\u00e6re tom, blir den automatisk oppdaget."
             }
         }
-    },
-    "title": ""
+    }
 }

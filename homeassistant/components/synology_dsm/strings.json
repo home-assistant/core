@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Synology DSM {name} ({host})",
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "title": "Synology DSM",
@@ -8,6 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -23,9 +24,18 @@
         "description": "Do you want to setup {name} ({host})?",
         "data": {
           "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "reauth": {
+        "title": "Synology DSM [%key:common::config_flow::title::reauth%]",
+        "description": "Reason: {details}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -37,7 +47,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "Re-configuration was successful"
     }
   },
   "options": {

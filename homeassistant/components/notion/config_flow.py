@@ -1,38 +1,38 @@
 """Config flow to configure the Notion integration."""
+from __future__ import annotations
+
 from aionotion import async_get_client
 from aionotion.errors import NotionError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Notion config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.data_schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
         )
 
-    async def _show_form(self, errors=None):
+    async def _show_form(self, errors: dict[str, str] | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()
@@ -44,7 +44,7 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await async_get_client(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session=session
             )
         except NotionError:
             return await self._show_form({"base": "invalid_auth"})

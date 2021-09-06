@@ -4,28 +4,52 @@ Helpers for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+from __future__ import annotations
 
 import asyncio
 import binascii
-import collections
+from collections.abc import Iterator
+from dataclasses import dataclass
 import functools
 import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable
 
 import voluptuous as vol
 import zigpy.exceptions
 import zigpy.types
 import zigpy.util
+import zigpy.zdo.types as zdo_types
 
 from homeassistant.core import State, callback
 
-from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
+from .const import (
+    CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
+    CUSTOM_CONFIGURATION,
+    DATA_ZHA,
+    DATA_ZHA_GATEWAY,
+)
 from .registries import BINDABLE_CLUSTERS
+from .typing import ZhaDeviceType, ZigpyClusterType
 
-ClusterPair = collections.namedtuple("ClusterPair", "source_cluster target_cluster")
+
+@dataclass
+class BindingPair:
+    """Information for binding."""
+
+    source_cluster: ZigpyClusterType
+    target_ieee: zigpy.types.EUI64
+    target_ep_id: int
+
+    @property
+    def destination_address(self) -> zdo_types.MultiAddress:
+        """Return a ZDO multi address instance."""
+        return zdo_types.MultiAddress(
+            addrmode=3, ieee=self.target_ieee, endpoint=self.target_ep_id
+        )
 
 
 async def safe_read(
@@ -49,7 +73,9 @@ async def safe_read(
         return {}
 
 
-async def get_matched_clusters(source_zha_device, target_zha_device):
+async def get_matched_clusters(
+    source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
+) -> list[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -59,15 +85,26 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
         for cluster_id in source_clusters[endpoint_id][CLUSTER_TYPE_OUT]:
             if cluster_id not in BINDABLE_CLUSTERS:
                 continue
+            if target_zha_device.nwk == 0x0000:
+                cluster_pair = BindingPair(
+                    source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
+                        cluster_id
+                    ],
+                    target_ieee=target_zha_device.ieee,
+                    target_ep_id=target_zha_device.device.application.get_endpoint_id(
+                        cluster_id, is_server_cluster=True
+                    ),
+                )
+                clusters_to_bind.append(cluster_pair)
+                continue
             for t_endpoint_id in target_clusters:
                 if cluster_id in target_clusters[t_endpoint_id][CLUSTER_TYPE_IN]:
-                    cluster_pair = ClusterPair(
+                    cluster_pair = BindingPair(
                         source_cluster=source_clusters[endpoint_id][CLUSTER_TYPE_OUT][
                             cluster_id
                         ],
-                        target_cluster=target_clusters[t_endpoint_id][CLUSTER_TYPE_IN][
-                            cluster_id
-                        ],
+                        target_ieee=target_zha_device.ieee,
+                        target_ep_id=t_endpoint_id,
                     )
                     clusters_to_bind.append(cluster_pair)
     return clusters_to_bind
@@ -76,6 +113,9 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
 @callback
 def async_is_bindable_target(source_zha_device, target_zha_device):
     """Determine if target is bindable to source."""
+    if target_zha_device.nwk == 0x0000:
+        return True
+
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
 
@@ -85,6 +125,31 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
                 source_clusters[endpoint_id][CLUSTER_TYPE_OUT].keys()
             ).intersection(target_clusters[t_endpoint_id][CLUSTER_TYPE_IN].keys())
             if any(bindable in BINDABLE_CLUSTERS for bindable in matches):
+                return True
+    return False
+
+
+@callback
+def async_get_zha_config_value(config_entry, section, config_key, default):
+    """Get the value for the specified configuration from the zha config entry."""
+    return (
+        config_entry.options.get(CUSTOM_CONFIGURATION, {})
+        .get(section, {})
+        .get(config_key, default)
+    )
+
+
+def async_cluster_exists(hass, cluster_id):
+    """Determine if a device containing the specified in cluster is paired."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_devices = zha_gateway.devices.values()
+    for zha_device in zha_devices:
+        clusters_by_endpoint = zha_device.async_get_clusters()
+        for clusters in clusters_by_endpoint.values():
+            if (
+                cluster_id in clusters[CLUSTER_TYPE_IN]
+                or cluster_id in clusters[CLUSTER_TYPE_OUT]
+            ):
                 return True
     return False
 
@@ -99,7 +164,7 @@ async def async_get_zha_device(hass, device_id):
     return zha_gateway.devices[ieee]
 
 
-def find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
         value = state.attributes.get(key)
@@ -118,9 +183,9 @@ def mean_tuple(*args):
 
 
 def reduce_attribute(
-    states: List[State],
+    states: list[State],
     key: str,
-    default: Optional[Any] = None,
+    default: Any | None = None,
     reduce: Callable[..., Any] = mean_int,
 ) -> Any:
     """Find the first attribute matching key from states.
@@ -248,7 +313,7 @@ QR_CODES = (
 )
 
 
-def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
+def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
     """Try to parse the QR code.
 
     if successful, return a tuple of a EUI64 address and install code.

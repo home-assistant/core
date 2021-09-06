@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "invalid_dongle_path": "Ugyldig donglesti",
+            "invalid_dongle_path": "Ugyldig donglebane",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
             "invalid_dongle_path": "Ingen gyldig dongle funnet for denne banen"
         },
-        "flow_title": "ENOcean oppsett",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Angi banen til din ENOcean dongle"
             }
         }
-    },
-    "title": ""
+    }
 }

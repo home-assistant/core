@@ -10,19 +10,22 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
-            "user": {
+            "reauth_validate": {
                 "data": {
-                    "login_method": "Zp\u016fsob p\u0159ihl\u00e1\u0161en\u00ed",
+                    "password": "Heslo"
+                }
+            },
+            "user_validate": {
+                "data": {
                     "password": "Heslo",
-                    "timeout": "\u010casov\u00fd limit (v sekund\u00e1ch)",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                },
-                "title": "Nastavte \u00fa\u010det August"
+                }
             },
             "validation": {
                 "data": {
                     "code": "Ov\u011b\u0159ovac\u00ed k\u00f3d"
                 },
+                "description": "Zkontrolujte pros\u00edm {login_method} ({username}) a n\u00ed\u017ee zadejte ov\u011b\u0159ovac\u00ed k\u00f3d",
                 "title": "Dvoufaktorov\u00e9 ov\u011b\u0159ov\u00e1n\u00ed"
             }
         }

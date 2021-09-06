@@ -4,10 +4,9 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "identifier_exists": "L'account \u00e8 gi\u00e0 configurato",
-            "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide"
+            "invalid_auth": "Autenticazione non valida"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -16,6 +15,16 @@
                     "port": "Porta"
                 },
                 "title": "Inserisci i tuoi dati"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Tempo di esecuzione della zona di default (in secondi)"
+                },
+                "title": "Configura RainMachine"
             }
         }
     }

@@ -8,17 +8,17 @@ from homeassistant.const import STATE_OFF, STATE_ON
 def test_state():
     """Test binary sensor state."""
     sensor = binary_sensor.BinarySensorEntity()
-    assert STATE_OFF == sensor.state
+    assert sensor.state == STATE_OFF
     with mock.patch(
         "homeassistant.components.binary_sensor.BinarySensorEntity.is_on",
         new=False,
     ):
-        assert STATE_OFF == binary_sensor.BinarySensorEntity().state
+        assert binary_sensor.BinarySensorEntity().state == STATE_OFF
     with mock.patch(
         "homeassistant.components.binary_sensor.BinarySensorEntity.is_on",
         new=True,
     ):
-        assert STATE_ON == binary_sensor.BinarySensorEntity().state
+        assert binary_sensor.BinarySensorEntity().state == STATE_ON
 
 
 def test_deprecated_base_class(caplog):

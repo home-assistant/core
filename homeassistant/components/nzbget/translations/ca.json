@@ -5,10 +5,9 @@
             "unknown": "Error inesperat"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

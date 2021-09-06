@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_url": "Invalid URL",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the motionEye service provided by the add-on: {addon}?",
+                "title": "motionEye via Home Assistant add-on"
+            },
+            "user": {
+                "data": {
+                    "admin_password": "Admin Password",
+                    "admin_username": "Admin Username",
+                    "surveillance_password": "Surveillance Password",
+                    "surveillance_username": "Surveillance Username",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "Configure motionEye webhooks to report events to Home Assistant",
+                    "webhook_set_overwrite": "Overwrite unrecognized webhooks"
+                }
+            }
+        }
+    }
+}

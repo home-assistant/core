@@ -2,9 +2,6 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.device_automation import (
-    _async_get_device_automations as async_get_device_automations,
-)
 from homeassistant.components.remote import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
@@ -12,10 +9,12 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -69,7 +68,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert actions == expected_actions
 
 
-async def test_action(hass, calls):
+async def test_action(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/prometheus",
   "requirements": ["prometheus_client==0.7.1"],
   "dependencies": ["http"],
-  "codeowners": ["@knyar"]
+  "codeowners": ["@knyar"],
+  "iot_class": "assumed_state"
 }

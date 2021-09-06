@@ -1,15 +1,16 @@
 """The camera tests for the august platform."""
 
+from unittest.mock import patch
+
 from homeassistant.const import STATE_IDLE
 
-from tests.async_mock import patch
 from tests.components.august.mocks import (
     _create_august_with_devices,
     _mock_doorbell_from_fixture,
 )
 
 
-async def test_create_doorbell(hass, aiohttp_client):
+async def test_create_doorbell(hass, hass_client_no_auth):
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
 
@@ -27,7 +28,7 @@ async def test_create_doorbell(hass, aiohttp_client):
             "entity_picture"
         ]
 
-        client = await aiohttp_client(hass.http.app)
+        client = await hass_client_no_auth()
         resp = await client.get(url)
         assert resp.status == 200
         body = await resp.text()

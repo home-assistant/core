@@ -1,10 +1,9 @@
 """Test the Mythic Beasts DNS component."""
 import logging
+from unittest.mock import patch
 
 from homeassistant.components import mythicbeastsdns
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 _LOGGER = logging.getLogger(__name__)
 

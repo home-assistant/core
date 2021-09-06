@@ -1,15 +1,19 @@
 """View to accept incoming websocket connection."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
+import datetime as dt
 import logging
-from typing import Optional
+from typing import Any, Final
 
 from aiohttp import WSMsgType, web
 import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
 from .auth import AuthPhase, auth_required_message
@@ -26,38 +30,47 @@ from .const import (
 from .error import Disconnect
 from .messages import message_to_json
 
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+_WS_LOGGER: Final = logging.getLogger(f"{__name__}.connection")
 
 
 class WebsocketAPIView(HomeAssistantView):
     """View to serve a websockets endpoint."""
 
-    name = "websocketapi"
-    url = URL
-    requires_auth = False
+    name: str = "websocketapi"
+    url: str = URL
+    requires_auth: bool = False
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
+class WebSocketAdapter(logging.LoggerAdapter):
+    """Add connection id to websocket messages."""
+
+    def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
+        """Add connid to websocket log messages."""
+        return f'[{self.extra["connid"]}] {msg}', kwargs
+
+
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
-    def __init__(self, hass, request):
+    def __init__(self, hass: HomeAssistant, request: web.Request) -> None:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.wsock: Optional[web.WebSocketResponse] = None
+        self.wsock: web.WebSocketResponse | None = None
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
-        self._handle_task = None
-        self._writer_task = None
-        self._logger = logging.getLogger("{}.connection.{}".format(__name__, id(self)))
-        self._peak_checker_unsub = None
+        self._handle_task: asyncio.Task | None = None
+        self._writer_task: asyncio.Task | None = None
+        self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
+        self._peak_checker_unsub: Callable[[], None] | None = None
 
-    async def _writer(self):
+    async def _writer(self) -> None:
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
+        assert self.wsock is not None
         with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
                 message = await self._to_write.get()
@@ -65,25 +78,24 @@ class WebSocketHandler:
                     break
 
                 self._logger.debug("Sending %s", message)
-
-                if not isinstance(message, str):
-                    message = message_to_json(message)
-
                 await self.wsock.send_str(message)
 
         # Clean up the peaker checker when we shut down the writer
-        if self._peak_checker_unsub:
+        if self._peak_checker_unsub is not None:
             self._peak_checker_unsub()
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message):
+    def _send_message(self, message: str | dict[str, Any]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
 
         Async friendly.
         """
+        if not isinstance(message, str):
+            message = message_to_json(message)
+
         try:
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:
@@ -105,7 +117,7 @@ class WebSocketHandler:
             )
 
     @callback
-    def _check_write_peak(self, _):
+    def _check_write_peak(self, _utc_time: dt.datetime) -> None:
         """Check that we are no longer above the write peak."""
         self._peak_checker_unsub = None
 
@@ -120,10 +132,12 @@ class WebSocketHandler:
         self._cancel()
 
     @callback
-    def _cancel(self):
+    def _cancel(self) -> None:
         """Cancel the connection."""
-        self._handle_task.cancel()
-        self._writer_task.cancel()
+        if self._handle_task is not None:
+            self._handle_task.cancel()
+        if self._writer_task is not None:
+            self._writer_task.cancel()
 
     async def async_handle(self) -> web.WebSocketResponse:
         """Handle a websocket response."""
@@ -134,7 +148,7 @@ class WebSocketHandler:
         self._handle_task = asyncio.current_task()
 
         @callback
-        def handle_hass_stop(event):
+        def handle_hass_stop(event: Event) -> None:
             """Cancel this connection."""
             self._cancel()
 
@@ -222,20 +236,20 @@ class WebSocketHandler:
                 self._to_write.put_nowait(None)
                 # Make sure all error messages are written before closing
                 await self._writer_task
-            except asyncio.QueueFull:
+                await wsock.close()
+            except asyncio.QueueFull:  # can be raised by put_nowait
                 self._writer_task.cancel()
 
-            await wsock.close()
+            finally:
+                if disconnect_warn is None:
+                    self._logger.debug("Disconnected")
+                else:
+                    self._logger.warning("Disconnected: %s", disconnect_warn)
 
-            if disconnect_warn is None:
-                self._logger.debug("Disconnected")
-            else:
-                self._logger.warning("Disconnected: %s", disconnect_warn)
-
-            if connection is not None:
-                self.hass.data[DATA_CONNECTIONS] -= 1
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_WEBSOCKET_DISCONNECTED
-            )
+                if connection is not None:
+                    self.hass.data[DATA_CONNECTIONS] -= 1
+                self.hass.helpers.dispatcher.async_dispatcher_send(
+                    SIGNAL_WEBSOCKET_DISCONNECTED
+                )
 
         return wsock

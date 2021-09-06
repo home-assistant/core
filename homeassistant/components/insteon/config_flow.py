@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-# pylint: disable=unused-import
 from .const import (
     CONF_HOUSECODE,
     CONF_HUB_VERSION,
@@ -65,10 +64,10 @@ async def _async_connect(**kwargs):
     """Connect to the Insteon modem."""
     try:
         await async_connect(**kwargs)
-        _LOGGER.info("Connected to Insteon modem.")
+        _LOGGER.info("Connected to Insteon modem")
         return True
     except ConnectionError:
-        _LOGGER.error("Could not connect to Insteon modem.")
+        _LOGGER.error("Could not connect to Insteon modem")
         return False
 
 

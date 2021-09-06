@@ -12,6 +12,7 @@
         "flow_title": "Sonarr: {name}",
         "step": {
             "reauth_confirm": {
+                "description": "Integraci Sonarr je t\u0159eba ru\u010dn\u011b znovu ov\u011b\u0159it pomoc\u00ed API Sonarr hostovan\u00e9ho na adrese: {host}",
                 "title": "Znovu ov\u011b\u0159it integraci"
             },
             "user": {
@@ -21,8 +22,7 @@
                     "port": "Port",
                     "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
                     "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
-                },
-                "title": "P\u0159ipojen\u00ed k Sonarr"
+                }
             }
         }
     },
@@ -35,6 +35,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

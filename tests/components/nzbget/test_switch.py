@@ -7,6 +7,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
@@ -18,7 +19,7 @@ async def test_download_switch(hass, nzbget_api) -> None:
     entry = await init_integration(hass)
     assert entry
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity_id = "switch.nzbgettest_download"
     entity_entry = registry.async_get(entity_id)
     assert entity_entry

@@ -4,6 +4,8 @@ Make sure that existing RainMachine support isn't broken.
 https://github.com/home-assistant/core/issues/31745
 """
 
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
 from tests.components.homekit_controller.common import (
     Helper,
     setup_accessories_from_file,
@@ -16,7 +18,7 @@ async def test_rainmachine_pro_8_setup(hass):
     accessories = await setup_accessories_from_file(hass, "rainmachine-pro-8.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Assert that the entity is correctly added to the entity registry
     entry = entity_registry.async_get("switch.rainmachine_00ce4a")
@@ -30,7 +32,7 @@ async def test_rainmachine_pro_8_setup(hass):
     # Assert that the friendly name is detected correctly
     assert state.attributes["friendly_name"] == "RainMachine-00ce4a"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get(entry.device_id)
     assert device.manufacturer == "Green Electronics LLC"

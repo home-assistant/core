@@ -8,5 +8,10 @@
                 "description": "Ali \u017eelite nastaviti komponento aplikacije Mobile App?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Po\u0161lji obvestilo"
+        }
     }
 }

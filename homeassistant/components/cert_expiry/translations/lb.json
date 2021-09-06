@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebs Kombinatioun vun Host an Port sinn scho konfigur\u00e9iert",
+            "already_configured": "Service ass scho konfigur\u00e9iert",
             "import_failed": "Import vun der Konfiguratioun feelgeschloen"
         },
         "error": {

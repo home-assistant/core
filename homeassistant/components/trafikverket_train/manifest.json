@@ -3,5 +3,6 @@
   "name": "Trafikverket Train",
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_train",
   "requirements": ["pytrafikverket==0.1.6.2"],
-  "codeowners": ["@endor-force"]
+  "codeowners": ["@endor-force"],
+  "iot_class": "cloud_polling"
 }

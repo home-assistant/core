@@ -3,5 +3,6 @@
   "name": "Neurio energy",
   "documentation": "https://www.home-assistant.io/integrations/neurio_energy",
   "requirements": ["neurio==0.3.1"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

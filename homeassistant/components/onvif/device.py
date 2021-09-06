@@ -1,8 +1,10 @@
 """ONVIF device abstraction."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 import datetime as dt
 import os
-from typing import List
 
 from httpx import RequestError
 import onvif
@@ -28,6 +30,7 @@ from .const import (
     LOGGER,
     PAN_FACTOR,
     RELATIVE_MOVE,
+    STOP_MOVE,
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
@@ -38,7 +41,7 @@ from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 class ONVIFDevice:
     """Manages an ONVIF device."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
@@ -49,7 +52,7 @@ class ONVIFDevice:
 
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
-        self.profiles: List[Profile] = []
+        self.profiles: list[Profile] = []
         self.max_resolution: int = 0
 
         self._dt_diff_seconds: int = 0
@@ -101,8 +104,11 @@ class ONVIFDevice:
 
             # Fetch basic device info and capabilities
             self.info = await self.async_get_device_info()
+            LOGGER.debug("Camera %s info = %s", self.name, self.info)
             self.capabilities = await self.async_get_capabilities()
+            LOGGER.debug("Camera %s capabilities = %s", self.name, self.capabilities)
             self.profiles = await self.async_get_profiles()
+            LOGGER.debug("Camera %s profiles = %s", self.name, self.profiles)
 
             # No camera profiles to add
             if not self.profiles:
@@ -124,6 +130,7 @@ class ONVIFDevice:
                 err,
             )
             self.available = False
+            await self.device.close()
         except Fault as err:
             LOGGER.error(
                 "Couldn't connect to camera '%s', please verify "
@@ -163,7 +170,9 @@ class ONVIFDevice:
                 cdate = device_time.UTCDateTime
             else:
                 tzone = (
-                    dt_util.get_time_zone(device_time.TimeZone)
+                    dt_util.get_time_zone(
+                        device_time.TimeZone or str(dt_util.DEFAULT_TIME_ZONE)
+                    )
                     or dt_util.DEFAULT_TIME_ZONE
                 )
                 cdate = device_time.LocalDateTime
@@ -239,29 +248,23 @@ class ONVIFDevice:
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
         snapshot = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
-        except (ONVIFError, Fault, RequestError):
-            pass
 
         pullpoint = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             pullpoint = await self.events.async_start()
-        except (ONVIFError, Fault):
-            pass
 
         ptz = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             self.device.get_definition("ptz")
             ptz = True
-        except ONVIFError:
-            pass
 
         return Capabilities(snapshot, pullpoint, ptz)
 
-    async def async_get_profiles(self) -> List[Profile]:
+    async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
@@ -433,9 +436,11 @@ class ONVIFDevice:
                     "Zoom": {"x": speed_val},
                 }
                 await ptz_service.GotoPreset(req)
+            elif move_mode == STOP_MOVE:
+                await ptz_service.Stop(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
-                LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 

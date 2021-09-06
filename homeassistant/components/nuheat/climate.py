@@ -291,4 +291,5 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
             "name": self._thermostat.room,
             "model": "nVent Signature",
             "manufacturer": MANUFACTURER,
+            "suggested_area": self._thermostat.room,
         }

@@ -28,6 +28,6 @@
         "title": "Discovered ESPHome node"
       }
     },
-    "flow_title": "ESPHome: {name}"
+    "flow_title": "{name}"
   }
 }

@@ -1,41 +1,50 @@
 """Sensor that can display the current Home Assistant versions."""
 from datetime import timedelta
+import logging
 
 from pyhaversion import (
-    DockerVersion,
-    HaIoVersion,
-    HassioVersion,
-    LocalVersion,
-    PyPiVersion,
+    HaVersion,
+    HaVersionChannel,
+    HaVersionSource,
+    exceptions as pyhaversionexceptions,
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 ALL_IMAGES = [
     "default",
     "intel-nuc",
-    "qemux86",
-    "qemux86-64",
-    "qemuarm",
-    "qemuarm-64",
-    "raspberrypi",
-    "raspberrypi2",
-    "raspberrypi3",
-    "raspberrypi3-64",
-    "raspberrypi4",
-    "raspberrypi4-64",
-    "tinker",
     "odroid-c2",
     "odroid-n2",
     "odroid-xu",
+    "qemuarm-64",
+    "qemuarm",
+    "qemux86-64",
+    "qemux86",
+    "raspberrypi",
+    "raspberrypi2",
+    "raspberrypi3-64",
+    "raspberrypi3",
+    "raspberrypi4-64",
+    "raspberrypi4",
+    "tinker",
 ]
-ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]
+
+HA_VERSION_SOURCES = [source.value for source in HaVersionSource]
+
+ALL_SOURCES = HA_VERSION_SOURCES + [
+    "hassio",  # Kept to not break existing configurations
+    "docker",  # Kept to not break existing configurations
+]
 
 CONF_BETA = "beta"
 CONF_IMAGE = "image"
@@ -44,8 +53,6 @@ DEFAULT_IMAGE = "default"
 DEFAULT_NAME_LATEST = "Latest Version"
 DEFAULT_NAME_LOCAL = "Current Version"
 DEFAULT_SOURCE = "local"
-
-ICON = "mdi:package-up"
 
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
@@ -58,6 +65,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER: logging.Logger = logging.getLogger(__name__)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
@@ -67,75 +76,80 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     source = config.get(CONF_SOURCE)
 
+    channel = HaVersionChannel.BETA if beta else HaVersionChannel.STABLE
     session = async_get_clientsession(hass)
 
-    if beta:
-        branch = "beta"
-    else:
-        branch = "stable"
-
-    if source == "pypi":
-        haversion = VersionData(PyPiVersion(hass.loop, session, branch))
+    if source in HA_VERSION_SOURCES:
+        source = HaVersionSource(source)
     elif source == "hassio":
-        haversion = VersionData(HassioVersion(hass.loop, session, branch, image))
+        source = HaVersionSource.SUPERVISOR
     elif source == "docker":
-        haversion = VersionData(DockerVersion(hass.loop, session, branch, image))
-    elif source == "haio":
-        haversion = VersionData(HaIoVersion(hass.loop, session))
-    else:
-        haversion = VersionData(LocalVersion(hass.loop, session))
+        source = HaVersionSource.CONTAINER
 
-    if not name:
-        if source == DEFAULT_SOURCE:
+    if (
+        source == HaVersionSource.CONTAINER
+        and image is not None
+        and image != DEFAULT_IMAGE
+    ):
+        image = f"{image}-homeassistant"
+
+    if not (name := config.get(CONF_NAME)):
+        if source == HaVersionSource.LOCAL:
             name = DEFAULT_NAME_LOCAL
         else:
             name = DEFAULT_NAME_LATEST
 
-    async_add_entities([VersionSensor(haversion, name)], True)
-
-
-class VersionSensor(Entity):
-    """Representation of a Home Assistant version sensor."""
-
-    def __init__(self, haversion, name):
-        """Initialize the Version sensor."""
-        self.haversion = haversion
-        self._name = name
-        self._state = None
-
-    async def async_update(self):
-        """Get the latest version information."""
-        await self.haversion.async_update()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.haversion.api.version
-
-    @property
-    def device_state_attributes(self):
-        """Return attributes for the sensor."""
-        return self.haversion.api.version_data
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
+    async_add_entities(
+        [
+            VersionSensor(
+                VersionData(
+                    HaVersion(
+                        session=session, source=source, image=image, channel=channel
+                    )
+                ),
+                SensorEntityDescription(key=source, name=name),
+            )
+        ],
+        True,
+    )
 
 
 class VersionData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api):
+    def __init__(self, api: HaVersion) -> None:
         """Initialize the data object."""
         self.api = api
 
     @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest version information."""
-        await self.api.get_version()
+        try:
+            await self.api.get_version()
+        except pyhaversionexceptions.HaVersionFetchException as exception:
+            _LOGGER.warning(exception)
+        except pyhaversionexceptions.HaVersionParseException as exception:
+            _LOGGER.warning(
+                "Could not parse data received for %s - %s", self.api.source, exception
+            )
+
+
+class VersionSensor(SensorEntity):
+    """Representation of a Home Assistant version sensor."""
+
+    _attr_icon = "mdi:package-up"
+
+    def __init__(
+        self,
+        data: VersionData,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the Version sensor."""
+        self.data = data
+        self.entity_description = description
+
+    async def async_update(self):
+        """Get the latest version information."""
+        await self.data.async_update()
+        self._attr_native_value = self.data.api.version
+        self._attr_extra_state_attributes = self.data.api.version_data

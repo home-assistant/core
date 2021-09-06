@@ -1,4 +1,5 @@
 """Support for EDL21 Smart Meters."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
@@ -7,17 +8,17 @@ from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import Optional
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +37,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the EDL21 sensor."""
     hass.data[DOMAIN] = EDL21(hass, config, async_add_entities)
     await hass.data[DOMAIN].connect()
@@ -49,7 +55,11 @@ class EDL21:
     _OBIS_NAMES = {
         # A=1: Electricity
         # C=0: General purpose objects
+        # D=0: Free ID-numbers for utilities
         "1-0:0.0.9*255": "Electricity ID",
+        # D=2: Program entries
+        "1-0:0.2.0*0": "Configuration program version number",
+        "1-0:0.2.0*1": "Firmware version number",
         # C=1: Active power +
         # D=8: Time integral 1
         # E=0: Total
@@ -69,6 +79,10 @@ class EDL21:
         "1-0:2.8.1*255": "Negative active energy in tariff T1",
         # E=2: Rate 2
         "1-0:2.8.2*255": "Negative active energy in tariff T2",
+        # C=14: Supply frequency
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:14.7.0*255": "Supply frequency",
         # C=15: Active power absolute
         # D=7: Instantaneous value
         # E=0: Total
@@ -77,20 +91,59 @@ class EDL21:
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:16.7.0*255": "Sum active instantaneous power",
+        # C=31: Active amperage L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:31.7.0*255": "L1 active instantaneous amperage",
+        # C=32: Active voltage L1
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:32.7.0*255": "L1 active instantaneous voltage",
         # C=36: Active power L1
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:36.7.0*255": "L1 active instantaneous power",
-        # C=56: Active power L1
+        # C=51: Active amperage L2
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:51.7.0*255": "L2 active instantaneous amperage",
+        # C=52: Active voltage L2
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:52.7.0*255": "L2 active instantaneous voltage",
+        # C=56: Active power L2
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:56.7.0*255": "L2 active instantaneous power",
-        # C=76: Active power L1
+        # C=71: Active amperage L3
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:71.7.0*255": "L3 active instantaneous amperage",
+        # C=72: Active voltage L3
+        # D=7: Instantaneous value
+        # E=0: Total
+        "1-0:72.7.0*255": "L3 active instantaneous voltage",
+        # C=76: Active power L3
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:76.7.0*255": "L3 active instantaneous power",
+        # C=81: Angles
+        # D=7: Instantaneous value
+        # E=4:  U(L1) x I(L1)
+        # E=15: U(L2) x I(L2)
+        # E=26: U(L3) x I(L3)
+        "1-0:81.7.4*255": "U(L1)/I(L1) phase angle",
+        "1-0:81.7.15*255": "U(L2)/I(L2) phase angle",
+        "1-0:81.7.26*255": "U(L3)/I(L3) phase angle",
+        # C=96: Electricity-related service entries
+        "1-0:96.1.0*255": "Metering point ID 1",
+        "1-0:96.5.0*255": "Internal operating status",
     }
     _OBIS_BLACKLIST = {
+        # C=96: Electricity-related service entries
+        "1-0:96.50.1*1",  # Manufacturer specific
+        "1-0:96.90.2*1",  # Manufacturer specific
+        "1-0:96.90.2*2",  # Manufacturer specific
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
@@ -98,7 +151,7 @@ class EDL21:
 
     def __init__(self, hass, config, async_add_entities) -> None:
         """Initialize an EDL21 object."""
-        self._registered_obis = set()
+        self._registered_obis: set[tuple[str, str]] = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._name = config[CONF_NAME]
@@ -115,7 +168,7 @@ class EDL21:
 
         electricity_id = None
         for telegram in message_body.get("valList", []):
-            if telegram.get("objName") == "1-0:0.0.9*255":
+            if telegram.get("objName") in ("1-0:0.0.9*255", "1-0:96.1.0*255"):
                 electricity_id = telegram.get("value")
                 break
 
@@ -177,7 +230,7 @@ class EDL21:
         self._async_add_entities(new_entities, update_before_add=True)
 
 
-class EDL21Entity(Entity):
+class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
     def __init__(self, electricity_id, obis, name, telegram):
@@ -243,17 +296,17 @@ class EDL21Entity(Entity):
         return self._obis
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return a name."""
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the value of the last received telegram."""
         return self._telegram.get("value")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Enumerate supported attributes."""
         return {
             self._state_attrs[k]: v
@@ -262,7 +315,7 @@ class EDL21Entity(Entity):
         }
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._telegram.get("unit")
 

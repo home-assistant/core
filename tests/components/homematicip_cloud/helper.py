@@ -1,5 +1,6 @@
 """Helper for HomematicIP Cloud Tests."""
 import json
+from unittest.mock import Mock, patch
 
 from homematicip.aio.class_maps import (
     TYPE_CLASS_MAP,
@@ -18,10 +19,9 @@ from homeassistant.components.homematicip_cloud.generic_entity import (
     ATTR_MODEL_TYPE,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import load_fixture
 
 HAPID = "3014F7110000000000000001"
@@ -76,7 +76,7 @@ class HomeFactory:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         mock_connection,
         hmip_config_entry: config_entries.ConfigEntry,
     ):
@@ -136,9 +136,9 @@ class HomeTemplate(Home):
     def __init__(self, connection=None, home_name="", test_devices=[], test_groups=[]):
         """Init template with connection."""
         super().__init__(connection=connection)
-        self.label = "Access Point"
         self.name = home_name
-        self.model_type = "HmIP-HAP"
+        self.label = "Home"
+        self.model_type = "HomematicIP Home"
         self.init_json_state = None
         self.test_devices = test_devices
         self.test_groups = test_groups
@@ -196,7 +196,7 @@ class HomeTemplate(Home):
         and sets required attributes.
         """
         mock_home = Mock(
-            spec=AsyncHome, wraps=self, label="Access Point", modelType="HmIP-HAP"
+            spec=AsyncHome, wraps=self, label="Home", modelType="HomematicIP Home"
         )
         mock_home.__dict__.update(self.__dict__)
 

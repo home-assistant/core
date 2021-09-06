@@ -1,8 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Ingen hjemmekoordinater er angitt i Home Assistant-konfigurasjonen"
+        },
         "error": {
-            "already_configured": "Tjenesten er allerede konfigurert",
-            "name_exists": "Plasseringen finnes allerede"
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "step": {
             "user": {

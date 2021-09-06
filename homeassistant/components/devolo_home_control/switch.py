@@ -1,19 +1,27 @@
 """Platform for switch integration."""
+from __future__ import annotations
+
+from typing import Any
+
+from devolo_home_control_api.devices.zwave import Zwave
+from devolo_home_control_api.homecontrol import HomeControl
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
     entities = []
 
-    for gateway in hass.data[DOMAIN][entry.entry_id]:
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
         for device in gateway.binary_switch_devices:
             for binary_switch in device.binary_switch_property:
                 # Exclude the binary switch which also has multi_level_switches here,
@@ -33,7 +41,9 @@ async def async_setup_entry(
 class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
     """Representation of a switch."""
 
-    def __init__(self, homecontrol, device_instance, element_uid):
+    def __init__(
+        self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
+    ) -> None:
         """Initialize an devolo Switch."""
         super().__init__(
             homecontrol=homecontrol,
@@ -41,45 +51,24 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             element_uid=element_uid,
         )
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
-            self._unique_id
+            self._attr_unique_id
         )
-        self._is_on = self._binary_switch_property.state
+        self._attr_is_on = self._binary_switch_property.state
 
-        if hasattr(self._device_instance, "consumption_property"):
-            self._consumption = self._device_instance.consumption_property.get(
-                self._unique_id.replace("BinarySwitch", "Meter")
-            ).current
-        else:
-            self._consumption = None
-
-    @property
-    def is_on(self):
-        """Return the state."""
-        return self._is_on
-
-    @property
-    def current_power_w(self):
-        """Return the current consumption."""
-        return self._consumption
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""
-        self._is_on = True
         self._binary_switch_property.set(state=True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Switch off the device."""
-        self._is_on = False
         self._binary_switch_property.set(state=False)
 
-    def _sync(self, message):
+    def _sync(self, message: tuple) -> None:
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
-            self._is_on = self._device_instance.binary_switch_property[message[0]].state
-        elif message[0].startswith("devolo.Meter"):
-            self._consumption = self._device_instance.consumption_property[
+            self._attr_is_on = self._device_instance.binary_switch_property[
                 message[0]
-            ].current
+            ].state
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()

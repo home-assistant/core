@@ -8,6 +8,20 @@ from pyipma.location import Location
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
@@ -38,20 +52,20 @@ ATTRIBUTION = "Instituto Português do Mar e Atmosfera"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 CONDITION_CLASSES = {
-    "cloudy": [4, 5, 24, 25, 27],
-    "fog": [16, 17, 26],
-    "hail": [21, 22],
-    "lightning": [19],
-    "lightning-rainy": [20, 23],
-    "partlycloudy": [2, 3],
-    "pouring": [8, 11],
-    "rainy": [6, 7, 9, 10, 12, 13, 14, 15],
-    "snowy": [18],
-    "snowy-rainy": [],
-    "sunny": [1],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_CLOUDY: [4, 5, 24, 25, 27],
+    ATTR_CONDITION_FOG: [16, 17, 26],
+    ATTR_CONDITION_HAIL: [21, 22],
+    ATTR_CONDITION_LIGHTNING: [19],
+    ATTR_CONDITION_LIGHTNING_RAINY: [20, 23],
+    ATTR_CONDITION_PARTLYCLOUDY: [2, 3],
+    ATTR_CONDITION_POURING: [8, 11],
+    ATTR_CONDITION_RAINY: [6, 7, 9, 10, 12, 13, 14, 15],
+    ATTR_CONDITION_SNOWY: [18],
+    ATTR_CONDITION_SNOWY_RAINY: [],
+    ATTR_CONDITION_SUNNY: [1],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
 FORECAST_MODE = ["hourly", "daily"]

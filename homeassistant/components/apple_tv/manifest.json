@@ -1,9 +1,10 @@
 {
   "domain": "apple_tv",
   "name": "Apple TV",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apple_tv",
-  "requirements": ["pyatv==0.3.13"],
-  "dependencies": ["configurator"],
-  "after_dependencies": ["discovery"],
-  "codeowners": []
+  "requirements": ["pyatv==0.8.2"],
+  "zeroconf": ["_mediaremotetv._tcp.local.", "_touch-able._tcp.local."],
+  "codeowners": ["@postlund"],
+  "iot_class": "local_push"
 }

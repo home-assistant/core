@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "turned_off": "{entity_name} st\u00e4ngdes av"
+        }
+    }
+}

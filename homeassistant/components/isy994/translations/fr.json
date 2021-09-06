@@ -4,8 +4,8 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "cannot_connect": "Echec de connexion",
-            "invalid_auth": "Autentification non valide",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
             "invalid_host": "L'entr\u00e9e d'h\u00f4te n'\u00e9tait pas au format URL complet, par exemple http://192.168.10.100:80",
             "unknown": "Erreur inattendue"
         },
@@ -37,5 +37,12 @@
             }
         }
     },
-    "title": "Universal Devices ISY994"
+    "system_health": {
+        "info": {
+            "device_connected": "ISY connect\u00e9",
+            "host_reachable": "H\u00f4te joignable",
+            "last_heartbeat": "Heure du dernier pulsation",
+            "websocket_status": "\u00c9tat du socket d'\u00e9v\u00e9nement"
+        }
+    }
 }

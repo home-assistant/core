@@ -4,7 +4,6 @@
             "already_configured": "Airly integracija za te koordinate je \u017ee nastavljen."
         },
         "error": {
-            "auth": "Klju\u010d API ni pravilen.",
             "wrong_location": "Na tem obmo\u010dju ni merilnih postaj Airly."
         },
         "step": {
@@ -18,6 +17,11 @@
                 "description": "Nastavite Airly integracijo za kakovost zraka. \u010ce \u017eelite ustvariti API klju\u010d pojdite na https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dostop do Airly stre\u017enika"
         }
     }
 }

@@ -1,28 +1,41 @@
 """The ping component."""
+from __future__ import annotations
 
-from homeassistant.core import callback
+import logging
 
-DOMAIN = "ping"
-PLATFORMS = ["binary_sensor"]
+from icmplib import SocketPermissionError, ping as icmp_ping
 
-PING_ID = "ping_id"
-DEFAULT_START_ID = 129
-MAX_PING_ID = 65534
+from homeassistant.helpers.reload import async_setup_reload_service
+
+from .const import DOMAIN, PING_PRIVS, PLATFORMS
+
+_LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def async_get_next_ping_id(hass):
-    """Find the next id to use in the outbound ping.
+async def async_setup(hass, config):
+    """Set up the template integration."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    hass.data[DOMAIN] = {
+        PING_PRIVS: await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege),
+    }
+    return True
 
-    Must be called in async
-    """
-    current_id = hass.data.setdefault(DOMAIN, {}).get(PING_ID, DEFAULT_START_ID)
 
-    if current_id == MAX_PING_ID:
-        next_id = DEFAULT_START_ID
+def _can_use_icmp_lib_with_privilege() -> None | bool:
+    """Verify we can create a raw socket."""
+    try:
+        icmp_ping("127.0.0.1", count=0, timeout=0, privileged=True)
+    except SocketPermissionError:
+        try:
+            icmp_ping("127.0.0.1", count=0, timeout=0, privileged=False)
+        except SocketPermissionError:
+            _LOGGER.debug(
+                "Cannot use icmplib because privileges are insufficient to create the socket"
+            )
+            return None
+        else:
+            _LOGGER.debug("Using icmplib in privileged=False mode")
+            return False
     else:
-        next_id = current_id + 1
-
-    hass.data[DOMAIN][PING_ID] = next_id
-
-    return next_id
+        _LOGGER.debug("Using icmplib in privileged=True mode")
+        return True

@@ -1,4 +1,6 @@
 """Platform for Control4 Lights."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -145,12 +147,12 @@ class Control4Light(Control4Entity, LightEntity):
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
-        device_name: str,
-        device_manufacturer: str,
-        device_model: str,
+        device_name: str | None,
+        device_manufacturer: str | None,
+        device_model: str | None,
         device_id: int,
         is_dimmer: bool,
-    ):
+    ) -> None:
         """Initialize Control4 light entity."""
         super().__init__(
             entry_data,
@@ -187,10 +189,9 @@ class Control4Light(Control4Entity, LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = 0
         if self._is_dimmer:
-            flags |= SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
-        return flags
+            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        return 0
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""

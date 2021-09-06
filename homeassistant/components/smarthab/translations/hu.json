@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "service": "Hiba t\u00f6rt\u00e9nt a SmartHab el\u00e9r\u00e9se k\u00f6zben. A szolg\u00e1ltat\u00e1s le\u00e1llhat. Ellen\u0151rizze a kapcsolatot.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Technikai okokb\u00f3l ne felejtsen el m\u00e1sodlagos fi\u00f3kot haszn\u00e1lni a Home Assistant be\u00e1ll\u00edt\u00e1s\u00e1hoz. A SmartHab alkalmaz\u00e1sb\u00f3l l\u00e9trehozhat egyet.",
+                "title": "A SmartHab be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    }
+}

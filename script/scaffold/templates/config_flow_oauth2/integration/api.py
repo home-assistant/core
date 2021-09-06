@@ -4,12 +4,12 @@ from asyncio import run_coroutine_threadsafe
 from aiohttp import ClientSession
 import my_pypi_package
 
-from homeassistant import config_entries, core
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 # TODO the following two API examples are based on our suggested best practices
 # for libraries using OAuth2 with requests or aiohttp. Delete the one you won't use.
-# For more info see the docs at <insert url>.
+# For more info see the docs at https://developers.home-assistant.io/docs/api_lib_auth/#oauth2.
 
 
 class ConfigEntryAuth(my_pypi_package.AbstractAuth):
@@ -17,16 +17,12 @@ class ConfigEntryAuth(my_pypi_package.AbstractAuth):
 
     def __init__(
         self,
-        hass: core.HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-    ):
+        hass: HomeAssistant,
+        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+    ) -> None:
         """Initialize NEW_NAME Auth."""
         self.hass = hass
-        self.config_entry = config_entry
-        self.session = config_entry_oauth2_flow.OAuth2Session(
-            hass, config_entry, implementation
-        )
+        self.session = oauth_session
         super().__init__(self.session.token)
 
     def refresh_tokens(self) -> str:
@@ -45,7 +41,7 @@ class AsyncConfigEntryAuth(my_pypi_package.AbstractAuth):
         self,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize NEW_NAME auth."""
         super().__init__(websession)
         self._oauth_session = oauth_session

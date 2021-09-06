@@ -1,14 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "already_configured_device": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "name_exists": "El nom existeix",
-            "wrong_credentials": "Credencials incorrectes"
+            "name_exists": "El nom existeix"
         },
         "step": {
             "user": {

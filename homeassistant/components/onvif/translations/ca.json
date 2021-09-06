@@ -8,8 +8,7 @@
             "onvif_error": "Error durant la configuraci\u00f3 del dispositiu ONVIF. Consulta els registres per a m\u00e9s informaci\u00f3."
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_failed": "No s'ha pogut connectar al servei ONVIF amb les credencials proporcionades."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "auth": {
@@ -18,6 +17,16 @@
                     "username": "Nom d'usuari"
                 },
                 "title": "Configuraci\u00f3 d'autenticaci\u00f3"
+            },
+            "configure": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Configuraci\u00f3 de dispositiu ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -41,6 +50,9 @@
                 "title": "Configura el dispositiu ONVIF"
             },
             "user": {
+                "data": {
+                    "auto": "Cerca autom\u00e0ticament"
+                },
                 "description": "En fer clic a envia, es cercaran a la xarxa dispositius ONVIF que suportin perfils S.\n\nAlguns fabricants han comen\u00e7at a desactivar ONVIF per defecte. Comprova que ONVIF est\u00e0 activat a la configuraci\u00f3 de les c\u00e0meres.",
                 "title": "Configuraci\u00f3 de dispositiu ONVIF"
             }

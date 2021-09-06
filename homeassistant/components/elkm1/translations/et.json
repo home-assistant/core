@@ -19,7 +19,8 @@
                     "temperature_unit": "ElkM1'i temperatuuri\u00fchik.",
                     "username": "Kasutajanimi"
                 },
-                "description": "Aadressistring peab olema kujul \"aadress[:port]\" \"secure\" ja \"non-secure\" puhul. N\u00e4ide: \"192.168.1.1\". Port on valikuline ja vaikimisi 2101 \"secure\" ja 2601 \"non-secure puhul\". Jadaprotokolli puhul peab aadress olema kujul \"tty[:baud]\". N\u00e4ide: \"/dev/ttyS1\". Baud on valikuline ja vaikimisi 115200."
+                "description": "Aadressistring peab olema kujul \"aadress[:port]\" \"secure\" ja \"non-secure\" puhul. N\u00e4ide: \"192.168.1.1\". Port on valikuline ja vaikimisi 2101 \"secure\" ja 2601 \"non-secure puhul\". Jadaprotokolli puhul peab aadress olema kujul \"tty[:baud]\". N\u00e4ide: \"/dev/ttyS1\". Baud on valikuline ja vaikimisi 115200.",
+                "title": "\u00dchendu Elk-M1 Control"
             }
         }
     }

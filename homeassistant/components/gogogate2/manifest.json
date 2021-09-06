@@ -1,13 +1,17 @@
 {
   "domain": "gogogate2",
-  "name": "Gogogate2 and iSmartGate",
+  "name": "Gogogate2 and ismartgate",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gogogate2",
-  "requirements": ["gogogate2-api==2.0.3"],
-  "codeowners": ["@vangorra"],
+  "requirements": ["ismartgate==4.0.0"],
+  "codeowners": ["@vangorra", "@bdraco"],
   "homekit": {
-    "models": [
-      "iSmartGate"
-    ]
-  }
+    "models": ["iSmartGate"]
+  },
+  "dhcp": [
+    {
+      "hostname": "ismartgate*"
+    }
+  ],
+  "iot_class": "local_polling"
 }

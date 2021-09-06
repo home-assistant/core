@@ -3,9 +3,15 @@ import json
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.const import DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    DEGREE,
+    DEVICE_CLASS_TEMPERATURE,
+    PRECIPITATION_INCHES,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,26 +36,36 @@ def discover_sensors(topic, payload):
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return ArwnSensor(name, "temp", unit)
+        return ArwnSensor(
+            topic, name, "temp", unit, device_class=DEVICE_CLASS_TEMPERATURE
+        )
     if domain == "moisture":
         name = f"{parts[2]} Moisture"
-        return ArwnSensor(name, "moisture", unit, "mdi:water-percent")
+        return ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
             return ArwnSensor(
-                "Rain Since Midnight", "since_midnight", "in", "mdi:water"
+                topic,
+                "Rain Since Midnight",
+                "since_midnight",
+                PRECIPITATION_INCHES,
+                "mdi:water",
             )
         return (
-            ArwnSensor("Total Rainfall", "total", unit, "mdi:water"),
-            ArwnSensor("Rainfall Rate", "rate", unit, "mdi:water"),
+            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
+            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, "mdi:water"),
         )
     if domain == "barometer":
-        return ArwnSensor("Barometer", "pressure", unit, "mdi:thermometer-lines")
+        return ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
     if domain == "wind":
         return (
-            ArwnSensor("Wind Speed", "speed", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Gust", "gust", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Direction", "direction", DEGREE, "mdi:compass"),
+            ArwnSensor(
+                topic + "/speed", "Wind Speed", "speed", unit, "mdi:speedometer"
+            ),
+            ArwnSensor(topic + "/gust", "Wind Gust", "gust", unit, "mdi:speedometer"),
+            ArwnSensor(
+                topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
+            ),
         )
 
 
@@ -95,62 +111,41 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 sensor.set_event(event)
                 store[sensor.name] = sensor
                 _LOGGER.debug(
-                    "Registering new sensor %(name)s => %(event)s",
+                    "Registering sensor %(name)s => %(event)s",
                     {"name": sensor.name, "event": event},
                 )
                 async_add_entities((sensor,), True)
             else:
+                _LOGGER.debug(
+                    "Recording sensor %(name)s => %(event)s",
+                    {"name": sensor.name, "event": event},
+                )
                 store[sensor.name].set_event(event)
 
     await mqtt.async_subscribe(hass, TOPIC, async_sensor_event_received, 0)
     return True
 
 
-class ArwnSensor(Entity):
+class ArwnSensor(SensorEntity):
     """Representation of an ARWN sensor."""
 
-    def __init__(self, name, state_key, units, icon=None):
+    _attr_should_poll = False
+
+    def __init__(self, topic, name, state_key, units, icon=None, device_class=None):
         """Initialize the sensor."""
-        self.hass = None
         self.entity_id = _slug(name)
-        self._name = name
+        self._attr_name = name
+        # This mqtt topic for the sensor which is its uid
+        self._attr_unique_id = topic
         self._state_key = state_key
-        self.event = {}
-        self._unit_of_measurement = units
-        self._icon = icon
+        self._attr_native_unit_of_measurement = units
+        self._attr_icon = icon
+        self._attr_device_class = device_class
 
     def set_event(self, event):
         """Update the sensor with the most recent event."""
-        self.event = {}
-        self.event.update(event)
+        ev = {}
+        ev.update(event)
+        self._attr_extra_state_attributes = ev
+        self._attr_native_value = ev.get(self._state_key, None)
         self.async_write_ha_state()
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self.event.get(self._state_key, None)
-
-    @property
-    def name(self):
-        """Get the name of the sensor."""
-        return self._name
-
-    @property
-    def state_attributes(self):
-        """Return all the state attributes."""
-        return self.event
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement the state is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def icon(self):
-        """Return the icon of device based on its type."""
-        return self._icon

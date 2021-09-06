@@ -1,12 +1,17 @@
 """Support for HomeMatic sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_CURRENT_MILLIAMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_MILLIMETERS,
@@ -16,7 +21,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    VOLT,
     VOLUME_CUBIC_METERS,
 )
 
@@ -46,11 +50,13 @@ HM_UNIT_HA_CAST = {
     "ACTUAL_TEMPERATURE": TEMP_CELSIUS,
     "BRIGHTNESS": "#",
     "POWER": POWER_WATT,
-    "CURRENT": "mA",
-    "VOLTAGE": VOLT,
+    "CURRENT": ELECTRIC_CURRENT_MILLIAMPERE,
+    "VOLTAGE": ELECTRIC_POTENTIAL_VOLT,
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "GAS_POWER": VOLUME_CUBIC_METERS,
     "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
+    "IEC_POWER": POWER_WATT,
+    "IEC_ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "LUX": LIGHT_LUX,
     "ILLUMINATION": LIGHT_LUX,
     "CURRENT_ILLUMINATION": LIGHT_LUX,
@@ -66,6 +72,9 @@ HM_UNIT_HA_CAST = {
     "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
     "VALVE_STATE": PERCENTAGE,
+    "CARRIER_SENSE_LEVEL": PERCENTAGE,
+    "DUTY_CYCLE_LEVEL": PERCENTAGE,
+    "CONCENTRATION": CONCENTRATION_PARTS_PER_MILLION,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {
@@ -79,6 +88,7 @@ HM_DEVICE_CLASS_HA_CAST = {
     "HIGHEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
     "POWER": DEVICE_CLASS_POWER,
     "CURRENT": DEVICE_CLASS_POWER,
+    "CONCENTRATION": DEVICE_CLASS_CO2,
 }
 
 HM_ICON_HA_CAST = {"WIND_SPEED": "mdi:weather-windy", "BRIGHTNESS": "mdi:invert-colors"}
@@ -97,11 +107,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMSensor(HMDevice):
+class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
@@ -112,7 +122,7 @@ class HMSensor(HMDevice):
         return self._hm_get_state()
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return HM_UNIT_HA_CAST.get(self._state)
 
