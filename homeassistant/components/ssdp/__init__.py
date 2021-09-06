@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Awaitable, Callable, Mapping
+from typing import Any, Callable, Mapping
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpSource
@@ -312,13 +313,13 @@ class Scanner:
     def _async_get_matching_callbacks(
         self,
         ssdp_device: SsdpDevice,
-        type: DeviceOrServiceType,
+        dst: DeviceOrServiceType,
     ) -> list[SsdpCallback]:
         """Return a list of callbacks that match."""
         return [
             callback
             for callback, match_dict in self._callbacks
-            if _async_headers_match(ssdp_device.combined_headers(type), match_dict)
+            if _async_headers_match(ssdp_device.combined_headers(dst), match_dict)
         ]
 
     @core_callback
@@ -332,11 +333,11 @@ class Scanner:
         return domains
 
     async def _ssdp_listener_callback(
-        self, ssdp_device: SsdpDevice, type: DeviceOrServiceType, source: SsdpSource
+        self, ssdp_device: SsdpDevice, dst: DeviceOrServiceType, source: SsdpSource
     ) -> None:
         """Handle a device/service change."""
         _LOGGER.debug(
-            "Change, ssdp_device: %s, type: %s, source: %s", ssdp_device, type, source
+            "Change, ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
         )
 
         assert self._description_cache is not None
@@ -345,11 +346,11 @@ class Scanner:
             await self._description_cache.async_get_description_dict(location) or {}
         )
         info_with_desc = CaseInsensitiveDict(
-            ssdp_device.combined_headers(type), **info_desc
+            ssdp_device.combined_headers(dst), **info_desc
         )
         discovery_info = discovery_info_from_headers_and_description(info_with_desc)
 
-        callbacks = self._async_get_matching_callbacks(ssdp_device, type)
+        callbacks = self._async_get_matching_callbacks(ssdp_device, dst)
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
