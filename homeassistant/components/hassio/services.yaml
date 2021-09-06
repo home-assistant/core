@@ -180,7 +180,7 @@ restore_partial:
   fields:
     homeassistant:
       name: Home Assistant settings
-      description: Restore system settings (proxy, audio, ...)
+      description: Restore Home Assistant
       selector:
         boolean:
     folders:
