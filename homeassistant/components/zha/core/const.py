@@ -7,7 +7,6 @@ import logging
 import bellows.zigbee.application
 import voluptuous as vol
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
-import zigpy_cc.zigbee.application
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
@@ -181,7 +180,6 @@ DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
 DEBUG_COMP_ZIGPY = "zigpy"
-DEBUG_COMP_ZIGPY_CC = "zigpy_cc"
 DEBUG_COMP_ZIGPY_ZNP = "zigpy_znp"
 DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
 DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
@@ -192,7 +190,6 @@ DEBUG_LEVELS = {
     DEBUG_COMP_BELLOWS: logging.DEBUG,
     DEBUG_COMP_ZHA: logging.DEBUG,
     DEBUG_COMP_ZIGPY: logging.DEBUG,
-    DEBUG_COMP_ZIGPY_CC: logging.DEBUG,
     DEBUG_COMP_ZIGPY_ZNP: logging.DEBUG,
     DEBUG_COMP_ZIGPY_DECONZ: logging.DEBUG,
     DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
@@ -245,10 +242,6 @@ class RadioType(enum.Enum):
     deconz = (
         "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
         zigpy_deconz.zigbee.application.ControllerApplication,
-    )
-    ti_cc = (
-        "Legacy TI_CC = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
-        zigpy_cc.zigbee.application.ControllerApplication,
     )
     zigate = (
         "ZiGate = ZiGate Zigbee radios: PiZiGate, ZiGate USB-TTL, ZiGate WiFi",

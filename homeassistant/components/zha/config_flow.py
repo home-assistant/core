@@ -31,7 +31,7 @@ DECONZ_DOMAIN = "deconz"
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize flow instance."""
