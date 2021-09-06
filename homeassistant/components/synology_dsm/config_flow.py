@@ -46,7 +46,6 @@ from .const import (
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    EXCEPTION_DETAILS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,11 +57,11 @@ def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Sc
     return vol.Schema(_ordered_shared_schema(discovery_info))
 
 
-def _reauth_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
+def _reauth_schema() -> vol.Schema:
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")): str,
+            vol.Required(CONF_USERNAME, default=""): str,
+            vol.Required(CONF_PASSWORD, default=""): str,
         }
     )
 
@@ -129,11 +128,6 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id = "link"
             data_schema = _discovery_schema_with_defaults(user_input)
             description_placeholders = self.discovered_conf
-        elif self.reauth_conf:
-            user_input.update(self.reauth_conf)
-            step_id = "reauth"
-            data_schema = _reauth_schema_with_defaults(user_input)
-            description_placeholders = {EXCEPTION_DETAILS: self.reauth_reason}
         else:
             step_id = "user"
             data_schema = _user_schema_with_defaults(user_input)
@@ -156,15 +150,6 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
-
-        if self.reauth_conf:
-            self.reauth_conf.update(
-                {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                }
-            )
-            user_input.update(self.reauth_conf)
 
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT)
@@ -274,14 +259,27 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
-    async def async_step_reauth(
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.reauth_conf = data.copy()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        self.reauth_conf = self.context.get("data", {})
-        self.reauth_reason = self.context.get(EXCEPTION_DETAILS)
-        if user_input is None:
-            return await self.async_step_user()
+        """Perform reauth confirm upon an API authentication error."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=_reauth_schema()
+            )
+
+        self.reauth_conf.update(
+            {
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+        )
+        user_input.update(self.reauth_conf)
         return await self.async_step_user(user_input)
 
     async def async_step_link(self, user_input: dict[str, Any]) -> FlowResult:

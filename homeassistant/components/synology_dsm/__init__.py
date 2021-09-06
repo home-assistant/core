@@ -26,7 +26,7 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_HOST,
@@ -40,7 +40,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -193,27 +193,14 @@ async def async_setup_entry(  # noqa: C901
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
-        _LOGGER.debug(
-            "Reauthentication for DSM '%s' needed - reason: %s",
-            entry.unique_id,
-            details,
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": SOURCE_REAUTH,
-                    "data": {**entry.data},
-                    EXCEPTION_DETAILS: details,
-                },
-            )
-        )
-        return False
+        raise ConfigEntryAuthFailed(f"reason for re-authemtication: {details}")
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-        _LOGGER.debug(
-            "Unable to connect to DSM '%s' during setup: %s", entry.unique_id, err
-        )
-        raise ConfigEntryNotReady from err
+        if err.args[0] and isinstance(err.args[0], dict):
+            # pylint: disable=no-member
+            details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
+        else:
+            details = EXCEPTION_UNKNOWN
+        raise ConfigEntryNotReady(details)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {

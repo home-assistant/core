@@ -274,29 +274,19 @@ async def test_reauth(hass: HomeAssistant, service: MagicMock):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "data": {
-                    CONF_HOST: HOST,
-                    CONF_USERNAME: USERNAME,
-                    CONF_PASSWORD: PASSWORD,
-                },
+            context={"source": SOURCE_REAUTH},
+            data={
+                CONF_HOST: HOST,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
             },
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "reauth"
+        assert result["step_id"] == "reauth_confirm"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "data": {
-                    CONF_HOST: HOST,
-                    CONF_USERNAME: USERNAME,
-                    CONF_PASSWORD: PASSWORD,
-                },
-            },
-            data={
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
                 CONF_USERNAME: USERNAME,
                 CONF_PASSWORD: PASSWORD,
             },
