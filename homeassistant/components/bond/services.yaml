@@ -83,7 +83,7 @@ set_light_brightness_belief:
     brightness:
       required: true
       name: Brightness
-      description: Brightness as a percentage
+      description: Brightness
       example: 50
       selector:
         number:
