@@ -95,10 +95,11 @@ def either_one_none(val1: Any | None, val2: Any | None) -> bool:
     return (val1 is None and val2 is not None) or (val1 is not None and val2 is None)
 
 
-def check_numeric_changed(
+def _check_numeric_change(
     val1: int | float | None,
     val2: int | float | None,
     change: int | float,
+    metric: Callable[[int | float, int | float], int | float],
 ) -> bool:
     """Check if two numeric values have changed."""
     if val1 is None and val2 is None:
@@ -110,10 +111,39 @@ def check_numeric_changed(
     assert val1 is not None
     assert val2 is not None
 
-    if abs(val1 - val2) >= change:
+    if metric(val1, val2) >= change:
         return True
 
     return False
+
+
+def check_absolute_change(
+    val1: int | float | None,
+    val2: int | float | None,
+    change: int | float,
+) -> bool:
+    """Check if two numeric values have changed."""
+    return _check_numeric_change(
+        val1, val2, change, lambda val1, val2: abs(val1 - val2)
+    )
+
+
+def check_percentage_change(
+    val1: int | float | None,
+    val2: int | float | None,
+    change: int | float,
+) -> bool:
+    """Check if two numeric values have changed."""
+
+    def percentage_change(val1: int | float, val2: int | float) -> float:
+        if val1 == val2:
+            return 0
+        try:
+            return (abs(val1 - val2) / val2) * 100.0
+        except ZeroDivisionError:
+            return float("inf")
+
+    return _check_numeric_change(val1, val2, change, percentage_change)
 
 
 class SignificantlyChangedChecker:
