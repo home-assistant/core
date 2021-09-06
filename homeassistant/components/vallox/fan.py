@@ -1,11 +1,19 @@
 """Support for the Vallox ventilation unit fan."""
+from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
+
+from vallox_websocket_api import Vallox
 
 from homeassistant.components.fan import FanEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import ValloxStateProxy
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -34,13 +42,17 @@ ATTR_PROFILE_FAN_SPEED_BOOST = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the fan device."""
     if discovery_info is None:
         return
 
     client = hass.data[DOMAIN]["client"]
-
     client.set_settable_address(METRIC_KEY_MODE, int)
 
     device = ValloxFan(
@@ -53,39 +65,41 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ValloxFan(FanEntity):
     """Representation of the fan."""
 
-    def __init__(self, name, client, state_proxy):
+    def __init__(
+        self, name: str, client: Vallox, state_proxy: ValloxStateProxy
+    ) -> None:
         """Initialize the fan."""
         self._name = name
         self._client = client
         self._state_proxy = state_proxy
         self._available = False
-        self._state = None
-        self._fan_speed_home = None
-        self._fan_speed_away = None
-        self._fan_speed_boost = None
+        self._is_on = False
+        self._fan_speed_home: int | None = None
+        self._fan_speed_away: int | None = None
+        self._fan_speed_boost: int | None = None
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Do not poll the device."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if state is known."""
         return self._available
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if device is on."""
-        return self._state
+        return self._is_on
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, int | None]:
         """Return device specific state attributes."""
         return {
             ATTR_PROFILE_FAN_SPEED_HOME["description"]: self._fan_speed_home,
@@ -93,7 +107,7 @@ class ValloxFan(FanEntity):
             ATTR_PROFILE_FAN_SPEED_BOOST["description"]: self._fan_speed_boost,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call to update."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -102,37 +116,41 @@ class ValloxFan(FanEntity):
         )
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self) -> None:
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
             # Fetch if the whole device is in regular operation state.
-            self._state = self._state_proxy.fetch_metric(METRIC_KEY_MODE) == MODE_ON
+            self._is_on = self._state_proxy.fetch_metric(METRIC_KEY_MODE) == MODE_ON
 
             # Fetch the profile fan speeds.
-            self._fan_speed_home = int(
-                self._state_proxy.fetch_metric(
-                    ATTR_PROFILE_FAN_SPEED_HOME["metric_key"]
-                )
+            fan_speed_home = self._state_proxy.fetch_metric(
+                ATTR_PROFILE_FAN_SPEED_HOME["metric_key"]
             )
-            self._fan_speed_away = int(
-                self._state_proxy.fetch_metric(
-                    ATTR_PROFILE_FAN_SPEED_AWAY["metric_key"]
-                )
+            fan_speed_away = self._state_proxy.fetch_metric(
+                ATTR_PROFILE_FAN_SPEED_AWAY["metric_key"]
             )
-            self._fan_speed_boost = int(
-                self._state_proxy.fetch_metric(
-                    ATTR_PROFILE_FAN_SPEED_BOOST["metric_key"]
-                )
+            fan_speed_boost = self._state_proxy.fetch_metric(
+                ATTR_PROFILE_FAN_SPEED_BOOST["metric_key"]
             )
 
-        except (OSError, KeyError) as err:
+        except (OSError, KeyError, TypeError) as err:
             self._available = False
             _LOGGER.error("Error updating fan: %s", err)
             return
+
+        self._fan_speed_home = (
+            int(fan_speed_home) if isinstance(fan_speed_home, (int, float)) else None
+        )
+        self._fan_speed_away = (
+            int(fan_speed_away) if isinstance(fan_speed_away, (int, float)) else None
+        )
+        self._fan_speed_boost = (
+            int(fan_speed_boost) if isinstance(fan_speed_boost, (int, float)) else None
+        )
 
         self._available = True
 
@@ -145,20 +163,19 @@ class ValloxFan(FanEntity):
     #
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
         _LOGGER.debug("Turn on: %s", speed)
 
-        # Only the case speed == None equals the GUI toggle switch being
-        # activated.
+        # Only the case speed == None equals the GUI toggle switch being activated.
         if speed is not None:
             return
 
-        if self._state is True:
+        if self._is_on:
             _LOGGER.error("Already on")
             return
 
@@ -172,11 +189,11 @@ class ValloxFan(FanEntity):
 
         # This state change affects other entities like sensors. Force an immediate update that can
         # be observed by all parties involved.
-        await self._state_proxy.async_update(None)
+        await self._state_proxy.async_update()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._state is False:
+        if not self._is_on:
             _LOGGER.error("Already off")
             return
 
