@@ -184,7 +184,7 @@ async def async_migrate_entry(
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
         config_entry.version = 2
-        config_entry.data = data
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
     if config_entry.version == 2:
         data = {**config_entry.data}
@@ -193,7 +193,7 @@ async def async_migrate_entry(
             data[CONF_RADIO_TYPE] = "znp"
 
         config_entry.version = 3
-        config_entry.data = data
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
