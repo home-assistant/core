@@ -76,7 +76,7 @@ class NumberEntity(WiffiEntity, SensorEntity):
         if self._is_measurement_entity():
             self._attr_state_class = STATE_CLASS_MEASUREMENT
         elif self._is_metered_entity():
-            self._attr_state = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
 
         self.reset_expiration_date()
 
