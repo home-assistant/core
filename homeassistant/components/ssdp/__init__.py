@@ -71,7 +71,6 @@ SsdpCallback = Callable[[Mapping[str, Any], SsdpChange], Awaitable]
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
     SsdpSource.SEARCH: SsdpChange.ALIVE,
-    SsdpSource.ADVERTISEMENT: SsdpChange.ALIVE,
     SsdpSource.ADVERTISEMENT_ALIVE: SsdpChange.ALIVE,
     SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
     SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
