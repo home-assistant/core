@@ -20,7 +20,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(RangeSwitch(device, coordinator))
         elif device.type == "sentry mode switch":
             entities.append(SentryModeSwitch(device, coordinator))
+        elif device.type == "heated steering switch":
+            entities.append(HeatedSteeringWheelSwitch(device, coordinator))
     async_add_entities(entities, True)
+
+
+class HeatedSteeringWheelSwitch(TeslaDevice, SwitchEntity):
+    """Representation of a Tesla Heated Steering Wheel switch."""
+
+    async def async_turn_on(self, **kwargs):
+        """Send the on command."""
+        _LOGGER.debug("Turn on Heating Steering Wheel: %s", self.name)
+        await self.tesla_device.set_steering_wheel_heat(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
+        """Send the off command."""
+        _LOGGER.debug("Turn off Heating Steering Wheel: %s", self.name)
+        await self.tesla_device.set_steering_wheel_heat(False)
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self):
+        """Get whether the switch is in on state."""
+        if self.tesla_device.get_steering_wheel_heat() is None:
+            return None
+        return self.tesla_device.get_steering_wheel_heat()
 
 
 class ChargerSwitch(TeslaDevice, SwitchEntity):

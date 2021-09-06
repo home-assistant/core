@@ -15,6 +15,7 @@ PLATFORMS = [
     "binary_sensor",
     "device_tracker",
     "switch",
+    "select",
 ]
 
 ICONS = {
