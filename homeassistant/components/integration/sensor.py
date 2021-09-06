@@ -5,10 +5,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -27,6 +28,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -116,18 +118,25 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        self._attr_state_class = STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
+        self._attr_last_reset = dt_util.utcnow()
         if state:
             try:
                 self._state = Decimal(state.state)
             except (DecimalException, ValueError) as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:
+                last_reset = dt_util.parse_datetime(
+                    state.attributes.get(ATTR_LAST_RESET, "")
+                )
+                self._attr_last_reset = (
+                    last_reset if last_reset else dt_util.utc_from_timestamp(0)
+                )
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
                 if self._unit_of_measurement is None:
                     self._unit_of_measurement = state.attributes.get(
