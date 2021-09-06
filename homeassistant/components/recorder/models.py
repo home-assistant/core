@@ -229,6 +229,8 @@ class StatisticData(TypedDict, total=False):
     last_reset: datetime | None
     state: float
     sum: float
+    sum_decrease: float
+    sum_increase: float
 
 
 class Statistics(Base):  # type: ignore
@@ -253,6 +255,8 @@ class Statistics(Base):  # type: ignore
     last_reset = Column(DATETIME_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
+    sum_decrease = Column(DOUBLE_TYPE)
+    sum_increase = Column(DOUBLE_TYPE)
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):

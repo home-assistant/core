@@ -48,6 +48,8 @@ QUERY_STATISTICS = [
     Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
+    Statistics.sum_decrease,
+    Statistics.sum_increase,
 ]
 
 QUERY_STATISTIC_META = [
@@ -459,6 +461,8 @@ def _sorted_statistics_to_dict(
                 "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
                 "state": convert(db_state.state, units),
                 "sum": convert(db_state.sum, units),
+                "sum_decrease": convert(db_state.sum_decrease, units),
+                "sum_increase": convert(db_state.sum_increase, units),
             }
             for db_state in group
         )
