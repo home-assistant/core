@@ -6,6 +6,7 @@ import pytest
 import zigpy
 from zigpy.application import ControllerApplication
 import zigpy.config
+from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 import zigpy.device
 import zigpy.group
 import zigpy.profiles
@@ -127,16 +128,16 @@ def zigpy_device_mock(zigpy_app_controller):
 
         for epid, ep in endpoints.items():
             endpoint = device.add_endpoint(epid)
-            endpoint.device_type = ep["device_type"]
-            endpoint.profile_id = ep.get("profile_id")
+            endpoint.device_type = ep[SIG_EP_TYPE]
+            endpoint.profile_id = ep.get(SIG_EP_PROFILE)
             endpoint.request = AsyncMock(return_value=[0])
 
-            for cluster_id in ep.get("in_clusters", []):
+            for cluster_id in ep.get(SIG_EP_INPUT, []):
                 cluster = endpoint.add_input_cluster(cluster_id)
                 if patch_cluster:
                     common.patch_cluster(cluster)
 
-            for cluster_id in ep.get("out_clusters", []):
+            for cluster_id in ep.get(SIG_EP_OUTPUT, []):
                 cluster = endpoint.add_output_cluster(cluster_id)
                 if patch_cluster:
                     common.patch_cluster(cluster)
