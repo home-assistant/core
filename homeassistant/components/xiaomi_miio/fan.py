@@ -1,6 +1,5 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 import asyncio
-from enum import Enum
 import logging
 import math
 
@@ -320,24 +319,13 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Return true if device is on."""
         return self._state
 
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
-
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._available = True
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
-            {
-                key: self._extract_value_from_attribute(self.coordinator.data, value)
-                for key, value in self._available_attributes.items()
-            }
+            {attribute: None for attribute in self._available_attributes}
         )
         self._mode = self.coordinator.data.mode.value
         self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
