@@ -57,6 +57,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = data[COORDINATOR]
     name = data[NAME]
 
+    # Add a Unique ID to previously discovered entities that were not given an ID
+    if not config_entry.unique_id:
+        config_entry.unique_id = coordinator.data.get("device_serial_number")
+
     entities = []
     for sensor_description in SENSORS:
         if (
@@ -126,7 +130,7 @@ class Envoy(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        if self._serial_number:
+        if self._serial_number and self.entity_description.key == "inverters":
             return self._serial_number
         if self._device_serial_number:
             return f"{self._device_serial_number}_{self.entity_description.key}"

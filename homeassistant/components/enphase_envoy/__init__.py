@@ -47,6 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
+            data["device_serial_number"] = await envoy_reader.get_full_serial_number()
+
             for description in SENSORS:
                 if description.key != "inverters":
                     data[description.key] = await getattr(

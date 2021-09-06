@@ -30,7 +30,9 @@ ENVOY = "Envoy"
 CONF_SERIAL = "serial"
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any], api: EnvoyReader
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     envoy_reader = EnvoyReader(
         data[CONF_HOST],
@@ -60,6 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.username = None
         self.serial = None
         self._reauth_entry = None
+        self._api = EnvoyReader()
 
     @callback
     def _async_generate_schema(self):
@@ -142,7 +145,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="already_configured")
             try:
-                await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input, self._api)
+                self.serial = self._api.get_full_serial_number()
+                await self.async_set_unique_id(self.serial)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
