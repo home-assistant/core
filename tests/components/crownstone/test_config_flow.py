@@ -38,6 +38,8 @@ def get_mocked_crownstone_cloud():
     """Return a mocked Crownstone Cloud instance."""
     mock_cloud = MagicMock()
     mock_cloud.async_initialize = AsyncMock()
+    mock_cloud.cloud_data = MagicMock()
+    mock_cloud.cloud_data.user_id = "account_id"
 
     return mock_cloud
 
@@ -106,7 +108,7 @@ async def test_abort_if_configured(hass: HomeAssistant):
     MockConfigEntry(
         domain=DOMAIN,
         data=configured_entry,
-        unique_id=configured_entry[CONF_EMAIL],
+        unique_id="account_id",
     ).add_to_hass(hass)
 
     result = await start_user_flow(hass, get_mocked_crownstone_cloud())
@@ -229,7 +231,7 @@ async def test_update_usb_config(serial_mock: MagicMock, hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=configured_entry,
-        unique_id=configured_entry[CONF_EMAIL],
+        unique_id="account_id",
     )
     entry.add_to_hass(hass)
 
@@ -349,7 +351,7 @@ async def test_options_flow(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=configured_entry,
-        unique_id=configured_entry[CONF_EMAIL],
+        unique_id="account_id",
     )
     entry.add_to_hass(hass)
 

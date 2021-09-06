@@ -90,7 +90,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         # set unique id and abort if already configured
-        await self.async_set_unique_id(user_input[CONF_EMAIL])
+        await self.async_set_unique_id(cloud.cloud_data.user_id)
         self._abort_if_unique_id_configured()
 
         # start next flow
@@ -193,7 +193,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     def async_finish_flow(self) -> FlowResult:
         """Create a new entry."""
         return self.async_create_entry(
-            title=f"Account: {self.unique_id}",
+            title=f"Account: {self.login_info[CONF_EMAIL]}",
             data={
                 CONF_EMAIL: self.login_info[CONF_EMAIL],
                 CONF_PASSWORD: self.login_info[CONF_PASSWORD],
