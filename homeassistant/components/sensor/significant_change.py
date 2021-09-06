@@ -79,7 +79,7 @@ def async_check_significant_change(
         return _absolute_and_relative_change(
             float(old_state), float(new_state), absolute_change, percentage_change
         )
-    elif absolute_change is not None:
+    if absolute_change is not None:
         return check_absolute_change(
             float(old_state), float(new_state), absolute_change
         )
