@@ -64,18 +64,3 @@ class FliprSensor(FliprEntity, SensorEntity):
         if isinstance(state, datetime):
             return state.isoformat()
         return state
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self.entity_description.device_class
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self.entity_description.icon
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return unit of measurement."""
-        return self.entity_description.native_unit_of_measurement

@@ -76,6 +76,8 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, description: EntityDescription
     ) -> None:
@@ -93,5 +95,3 @@ class FliprEntity(CoordinatorEntity):
             }
 
             self._attr_name = f"Flipr {flipr_id} {description.name}"
-
-            self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
