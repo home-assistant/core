@@ -80,7 +80,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
         self.last_lock_time = None
         self.graceful_state = False
 
-        self._attr_name = f"{tc_object} {description.name}"
+        self._attr_name = f"{tc_object.name} {description.name}"
 
     def lock_update(self):
         """Lock the update since TC clean takes some time to update."""
