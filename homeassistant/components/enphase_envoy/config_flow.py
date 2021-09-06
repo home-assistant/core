@@ -34,16 +34,8 @@ async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], api: EnvoyReader
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    envoy_reader = EnvoyReader(
-        data[CONF_HOST],
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        inverters=False,
-        async_client=get_async_client(hass),
-    )
-
     try:
-        await envoy_reader.getData()
+        await api.getData()
     except httpx.HTTPStatusError as err:
         raise InvalidAuth from err
     except (RuntimeError, httpx.HTTPError) as err:
@@ -62,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.username = None
         self.serial = None
         self._reauth_entry = None
-        self._api = EnvoyReader()
+        self._api = None
 
     @callback
     def _async_generate_schema(self):
@@ -78,6 +70,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema[vol.Optional(CONF_USERNAME, default=self.username or "envoy")] = str
         schema[vol.Optional(CONF_PASSWORD, default="")] = str
+        self._api = EnvoyReader(
+            CONF_HOST,
+            CONF_USERNAME,
+            CONF_PASSWORD,
+            inverters=False,
+            async_client=get_async_client(self.hass),
+        )
         return vol.Schema(schema)
 
     async def async_step_import(self, import_config):
