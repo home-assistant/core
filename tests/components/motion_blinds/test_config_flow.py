@@ -73,12 +73,6 @@ def motion_blinds_connect_fixture():
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Start_listen",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.motion_blinds.config_flow.AsyncMotionMulticast.Stop_listen",
-        return_value=True,
-    ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
         yield
