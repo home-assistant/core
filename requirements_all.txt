@@ -2468,9 +2468,6 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-cc==0.5.2
-
-# homeassistant.components.zha
 zigpy-deconz==0.13.0
 
 # homeassistant.components.zha
