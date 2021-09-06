@@ -108,6 +108,7 @@ async def async_setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
     config = Config(hass, yaml_config.get(DOMAIN, {}), local_ip)
+    await config.async_setup()
 
     app = web.Application()
     app["hass"] = hass
