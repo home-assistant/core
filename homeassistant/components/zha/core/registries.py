@@ -47,7 +47,6 @@ REMOTE_DEVICE_TYPES = {
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH,
         zigpy.profiles.zha.DeviceType.REMOTE_CONTROL,
         zigpy.profiles.zha.DeviceType.SCENE_SELECTOR,
-        zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR,
     ],
     zigpy.profiles.zll.PROFILE_ID: [
         zigpy.profiles.zll.DeviceType.COLOR_CONTROLLER,
@@ -112,7 +111,6 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
         zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
-        zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR: BINARY_SENSOR,
     },
     zigpy.profiles.zll.PROFILE_ID: {
         zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
