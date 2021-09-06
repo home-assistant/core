@@ -149,11 +149,14 @@ class AquaLogicSensor(SensorEntity):
         """Update callback."""
         panel = self._processor.panel
         if panel is not None:
-            self._attr_native_unit_of_measurement = (
-                self.entity_description.unit_metric
-                if panel.is_metric
-                else self.entity_description.unit_imperial
-            )
+            if panel.is_metric:
+                self._attr_native_unit_of_measurement = (
+                    self.entity_description.unit_metric
+                )
+            else:
+                self._attr_native_unit_of_measurement = (
+                    self.entity_description.unit_imperial
+                )
 
             self._attr_native_value = getattr(panel, self.entity_description.key)
             self.async_write_ha_state()
