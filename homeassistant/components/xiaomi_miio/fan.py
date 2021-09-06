@@ -131,6 +131,7 @@ PRESET_MODES_AIRPURIFIER_PRO_V7 = PRESET_MODES_AIRPURIFIER_PRO
 OPERATION_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_3 = ["Auto", "Silent", "Favorite", "Fan"]
+PRESET_MODES_AIRPURIFIER_3C = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRPURIFIER_V3 = [
     "Auto",
     "Silent",
@@ -368,13 +369,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
 class XiaomiAirPurifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier."""
 
-    PRESET_MODE_MAPPING = {
-        "Auto": AirpurifierOperationMode.Auto,
-        "Silent": AirpurifierOperationMode.Silent,
-        "Favorite": AirpurifierOperationMode.Favorite,
-        "Idle": AirpurifierOperationMode.Favorite,
-    }
-
     SPEED_MODE_MAPPING = {
         1: AirpurifierOperationMode.Silent,
         2: AirpurifierOperationMode.Medium,
@@ -479,7 +473,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self.PRESET_MODE_MAPPING[preset_mode],
+            self._operation_mode_class[preset_mode],
         ):
             self._mode = self._operation_mode_class[preset_mode].value
             self.async_write_ha_state()
@@ -508,13 +502,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
 class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     """Representation of a Xiaomi Air Purifier (MiOT protocol)."""
-
-    PRESET_MODE_MAPPING = {
-        "Auto": AirpurifierMiotOperationMode.Auto,
-        "Silent": AirpurifierMiotOperationMode.Silent,
-        "Favorite": AirpurifierMiotOperationMode.Favorite,
-        "Fan": AirpurifierMiotOperationMode.Fan,
-    }
 
     @property
     def percentage(self):
@@ -550,18 +537,12 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 class XiaomiAirPurifierMB4(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier MB4."""
 
-    PRESET_MODE_MAPPING = {
-        "Auto": AirpurifierMiotOperationMode.Auto,
-        "Silent": AirpurifierMiotOperationMode.Silent,
-        "Favorite": AirpurifierMiotOperationMode.Favorite,
-    }
-
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize Air Purifier MB4."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
-        self._preset_modes = list(self.PRESET_MODE_MAPPING)
+        self._preset_modes = PRESET_MODES_AIRPURIFIER_3C
         self._supported_features = SUPPORT_PRESET_MODE
         self._operation_mode_class = AirpurifierMiotOperationMode
 
@@ -573,9 +554,9 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self.PRESET_MODE_MAPPING[preset_mode],
+            self._operation_mode_class[preset_mode],
         ):
-            self._mode = self.PRESET_MODE_MAPPING[preset_mode].value
+            self._mode = self._operation_mode_class[preset_mode].value
             self.async_write_ha_state()
 
     @callback
@@ -661,9 +642,9 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self.PRESET_MODE_MAPPING[preset_mode],
+            self._operation_mode_class[preset_mode],
         ):
-            self._mode = self.PRESET_MODE_MAPPING[preset_mode].value
+            self._mode = self._operation_mode_class[preset_mode].value
             self.async_write_ha_state()
 
     async def async_set_extra_features(self, features: int = 1):
