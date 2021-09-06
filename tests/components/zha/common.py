@@ -3,6 +3,7 @@ import asyncio
 import math
 from unittest.mock import AsyncMock, Mock
 
+import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
