@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
-    DEVICE_CLASS_VOLTAGE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     POWER_WATT,
 )
