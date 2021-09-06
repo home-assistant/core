@@ -6,12 +6,12 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "one": "uno",
-            "other": "altri"
+            "one": "Pi\u00f9",
+            "other": "Altri"
         },
         "step": {
-            "one": "uno",
-            "other": "altri",
+            "one": "Pi\u00f9",
+            "other": "Altri",
             "setup_network": {
                 "data": {
                     "host": "Host",
@@ -39,7 +39,7 @@
             }
         }
     },
-    "one": "uno",
+    "one": "Pi\u00f9",
     "options": {
         "error": {
             "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
@@ -69,12 +69,12 @@
                     "off_delay": "Ritardo di spegnimento",
                     "off_delay_enabled": "Attivare il ritardo di spegnimento",
                     "replace_device": "Selezionare il dispositivo da sostituire",
-                    "signal_repetitions": "Numero di ripetizioni del segnale"
+                    "signal_repetitions": "Numero di ripetizioni del segnale",
+                    "venetian_blind_mode": "Modalit\u00e0 veneziana"
                 },
                 "title": "Configurare le opzioni del dispositivo"
             }
         }
     },
-    "other": "altri",
-    "title": "Rfxtrx"
+    "other": "Altri"
 }

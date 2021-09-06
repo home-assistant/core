@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unauthorized": "E\u015fle\u015ftirme reddedildi, kimlik do\u011frulama iste\u011fi i\u00e7in cihaz\u0131 kontrol edin"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                },
+                "title": "Cihaza ba\u011flan\u0131n"
+            }
+        }
+    }
+}

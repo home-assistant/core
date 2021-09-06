@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "Avastatud Volumioga ei saa \u00fchendust luua"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -9,7 +10,8 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Kas soovid lisada Volumio ('{name}') Home Assistanti?"
+                "description": "Kas soovid lisada Volumio ('{name}') Home Assistanti?",
+                "title": "Avastatud Volumio seade"
             },
             "user": {
                 "data": {

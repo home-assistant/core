@@ -1,12 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "not_zha_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e ZHA \u88dd\u7f6e",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
+            "usb_probe_failed": "\u5075\u6e2c USB \u88dd\u7f6e\u5931\u6557"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "\u7121\u7dda\u96fb\u985e\u578b"
@@ -18,18 +24,33 @@
                 "data": {
                     "baudrate": "\u901a\u8a0a\u57e0\u901f\u5ea6",
                     "flow_control": "\u8cc7\u6599\u6d41\u91cf\u63a7\u5236",
-                    "path": "\u5e8f\u5217\u8a2d\u5099\u8def\u5f91"
+                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
                 },
                 "description": "\u8f38\u5165\u901a\u8a0a\u57e0\u7279\u5b9a\u8a2d\u5b9a",
                 "title": "\u8a2d\u5b9a"
             },
             "user": {
                 "data": {
-                    "path": "\u5e8f\u5217\u8a2d\u5099\u8def\u5f91"
+                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
                 },
                 "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u5e8f\u5217\u57e0",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "\u8b66\u6212\u52d5\u4f5c\u9700\u8981\u4ee3\u78bc",
+            "alarm_failed_tries": "\u9023\u7e8c\u8f38\u5165\u4ee3\u78bc\u89f8\u767c\u8b66\u5831\u932f\u8aa4\u6b21\u6578",
+            "alarm_master_code": "\u8b66\u6212\u63a7\u5236\u9762\u677f\u63a7\u5236\u78bc",
+            "title": "\u8b66\u6212\u63a7\u5236\u9762\u677f\u9078\u9805"
+        },
+        "zha_options": {
+            "consider_unavailable_battery": "\u5c07\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\u8996\u70ba\u4e0d\u53ef\u7528\uff08\u79d2\u6578\uff09",
+            "consider_unavailable_mains": "\u5c07\u4e3b\u4f9b\u96fb\u88dd\u7f6e\u8996\u70ba\u4e0d\u53ef\u7528\uff08\u79d2\u6578\uff09",
+            "default_light_transition": "\u9810\u8a2d\u71c8\u5149\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09",
+            "enable_identify_on_join": "\u7576\u88dd\u7f6e\u52a0\u5165\u7db2\u8def\u6642\u3001\u958b\u555f\u8b58\u5225\u6548\u679c",
+            "title": "Global \u9078\u9805"
         }
     },
     "device_automation": {
@@ -62,14 +83,14 @@
             "turn_on": "\u958b\u555f"
         },
         "trigger_type": {
-            "device_dropped": "\u8a2d\u5099\u6389\u843d",
-            "device_flipped": "\u7ffb\u52d5 \"{subtype}\" \u8a2d\u5099",
-            "device_knocked": "\u6572\u64ca \"{subtype}\" \u8a2d\u5099",
-            "device_offline": "\u8a2d\u5099\u96e2\u7dda",
-            "device_rotated": "\u65cb\u8f49 \"{subtype}\" \u8a2d\u5099",
-            "device_shaken": "\u8a2d\u5099\u6416\u6643",
-            "device_slid": "\u63a8\u52d5 \"{subtype}\" \u8a2d\u5099",
-            "device_tilted": "\u8a2d\u5099\u540d\u7a31",
+            "device_dropped": "\u88dd\u7f6e\u6389\u843d",
+            "device_flipped": "\u7ffb\u52d5 \"{subtype}\" \u88dd\u7f6e",
+            "device_knocked": "\u6572\u64ca \"{subtype}\" \u88dd\u7f6e",
+            "device_offline": "\u88dd\u7f6e\u96e2\u7dda",
+            "device_rotated": "\u65cb\u8f49 \"{subtype}\" \u88dd\u7f6e",
+            "device_shaken": "\u88dd\u7f6e\u6416\u6643",
+            "device_slid": "\u63a8\u52d5 \"{subtype}\" \u88dd\u7f6e",
+            "device_tilted": "\u88dd\u7f6e\u540d\u7a31",
             "remote_button_alt_double_press": "\"{subtype}\" \u6309\u9215\u96d9\u64ca\u9375\uff08\u66ff\u4ee3\u6a21\u5f0f\uff09",
             "remote_button_alt_long_press": "\"{subtype}\" \u6309\u9215\u6301\u7e8c\u6309\u4e0b\uff08\u66ff\u4ee3\u6a21\u5f0f\uff09",
             "remote_button_alt_long_release": "\"{subtype}\" \u6309\u9215\u9577\u6309\u5f8c\u91cb\u653e\uff08\u66ff\u4ee3\u6a21\u5f0f\uff09",

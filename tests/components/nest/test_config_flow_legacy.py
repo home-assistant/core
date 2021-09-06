@@ -1,12 +1,11 @@
 """Tests for the Nest config flow."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.nest import DOMAIN, config_flow
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock
 from tests.common import mock_coro
 
 
@@ -100,7 +99,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
     flow.hass = hass
     result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_verify_code_timeout(hass):

@@ -5,21 +5,33 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(hass, config, async_add_entities):
-    """Initialize a Spider thermostat."""
+    """Initialize a Spider Power Plug."""
     api = hass.data[DOMAIN][config.entry_id]
-
-    entities = [SpiderPowerPlug(api, entity) for entity in api.get_power_plugs()]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            SpiderPowerPlug(api, entity)
+            for entity in await hass.async_add_executor_job(api.get_power_plugs)
+        ]
+    )
 
 
 class SpiderPowerPlug(SwitchEntity):
     """Representation of a Spider Power Plug."""
 
     def __init__(self, api, power_plug):
-        """Initialize the Vera device."""
+        """Initialize the Spider Power Plug."""
         self.api = api
         self.power_plug = power_plug
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self.power_plug.id)},
+            "name": self.power_plug.name,
+            "manufacturer": self.power_plug.manufacturer,
+            "model": self.power_plug.model,
+        }
 
     @property
     def unique_id(self):
@@ -30,16 +42,6 @@ class SpiderPowerPlug(SwitchEntity):
     def name(self):
         """Return the name of the switch if any."""
         return self.power_plug.name
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return round(self.power_plug.current_energy_consumption)
-
-    @property
-    def today_energy_kwh(self):
-        """Return the current power usage in Kwh."""
-        return round(self.power_plug.today_energy_consumption / 1000, 2)
 
     @property
     def is_on(self):
@@ -61,4 +63,4 @@ class SpiderPowerPlug(SwitchEntity):
 
     def update(self):
         """Get the latest data."""
-        self.power_plug = self.api.get_power_plug(self.unique_id)
+        self.power_plug = self.api.get_power_plug(self.power_plug.id)

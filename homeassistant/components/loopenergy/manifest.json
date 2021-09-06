@@ -3,7 +3,6 @@
   "name": "Loop Energy",
   "documentation": "https://www.home-assistant.io/integrations/loopenergy",
   "requirements": ["pyloopenergy==0.2.1"],
-  "codeowners": [
-    "@pavoni"
-  ]
+  "codeowners": ["@pavoni"],
+  "iot_class": "cloud_push"
 }

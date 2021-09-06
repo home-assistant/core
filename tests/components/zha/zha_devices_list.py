@@ -1372,10 +1372,22 @@ DEVICES = [
             },
         },
         "entities": [
+            "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
+            "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
         ],
         "entity_map": {
+            ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-12"): {
+                "channels": ["analog_input"],
+                "entity_class": "AnalogInput",
+                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
+            },
             ("switch", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["on_off"],
                 "entity_class": "Switch",
@@ -1385,6 +1397,11 @@ DEVICES = [
                 "channels": ["electrical_measurement"],
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-100-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.lumi_lumi_plug_maus01_77665544_binary_input",
             },
         },
         "event_channels": ["1:0x0019"],
@@ -2647,7 +2664,12 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.philips_rwl020_77665544_power",
-            }
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-2-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.philips_rwl020_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0005", "1:0x0006", "1:0x0008", "2:0x0019"],
         "manufacturer": "Philips",
@@ -2729,7 +2751,7 @@ DEVICES = [
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
                 "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
+                "entity_class": "BinaryInput",
                 "entity_id": "binary_sensor.samjin_multi_77665544_manufacturer_specific",
                 "default_match": True,
             },
@@ -3087,6 +3109,11 @@ DEVICES = [
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.smartthings_outletv4_77665544_electrical_measurement",
             },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-1-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.smartthings_outletv4_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0019"],
         "manufacturer": "SmartThings",
@@ -3110,7 +3137,12 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "ZHADeviceScannerEntity",
                 "entity_id": "device_tracker.smartthings_tagv4_77665544_power",
-            }
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-1-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.smartthings_tagv4_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0019"],
         "manufacturer": "SmartThings",
@@ -3600,6 +3632,8 @@ DEVICES = [
             "sensor.digi_xbee3_77665544_analog_input_2",
             "sensor.digi_xbee3_77665544_analog_input_3",
             "sensor.digi_xbee3_77665544_analog_input_4",
+            "number.digi_xbee3_77665544_analog_output",
+            "number.digi_xbee3_77665544_analog_output_2",
         ],
         "entity_map": {
             ("switch", "00:11:22:33:44:55:66:77-208-6"): {
@@ -3701,6 +3735,16 @@ DEVICES = [
                 "channels": ["analog_input"],
                 "entity_class": "AnalogInput",
                 "entity_id": "sensor.digi_xbee3_77665544_analog_input_5",
+            },
+            ("number", "00:11:22:33:44:55:66:77-218-13"): {
+                "channels": ["analog_output"],
+                "entity_class": "ZhaNumber",
+                "entity_id": "number.digi_xbee3_77665544_analog_output",
+            },
+            ("number", "00:11:22:33:44:55:66:77-219-13"): {
+                "channels": ["analog_output"],
+                "entity_class": "ZhaNumber",
+                "entity_id": "number.digi_xbee3_77665544_analog_output_2",
             },
         },
         "event_channels": ["232:0x0008"],

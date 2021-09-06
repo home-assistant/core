@@ -1,5 +1,6 @@
 """Test the aiohttp client helper."""
 import asyncio
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
@@ -7,8 +8,6 @@ import pytest
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture(name="camera_client")
@@ -196,3 +195,14 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
 
     resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
     assert resp.status == 502
+
+
+async def test_client_session_immutable_headers(hass):
+    """Test we can't mutate headers."""
+    session = client.async_get_clientsession(hass)
+
+    with pytest.raises(TypeError):
+        session.headers["user-agent"] = "bla"
+
+    with pytest.raises(AttributeError):
+        session.headers.update({"user-agent": "bla"})

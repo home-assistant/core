@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "device_unsupported": "Das Ger\u00e4t wird nicht unterst\u00fctzt."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "M\u00f6chtest du Nettigo Air Monitor unter {host} einrichten?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Einrichten der Nettigo Air Monitor Integration."
+            }
+        }
+    }
+}

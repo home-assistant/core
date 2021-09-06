@@ -13,7 +13,7 @@
                 "data": {
                     "api_key": "Chiave API"
                 },
-                "description": "\u00c8 necessaria la chiave API di https://app.rach.io/. Selezionare 'Impostazioni Account', quindi fare clic su 'GET API KEY'.",
+                "description": "\u00c8 necessaria la chiave API da https://app.rach.io/. Vai su Impostazioni, quindi fai clic su 'GET API KEY'.",
                 "title": "Connettiti al tuo dispositivo Rachio"
             }
         }
@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "Per quanto tempo, in minuti, accendere una stazione quando l'interruttore \u00e8 abilitato."
+                    "manual_run_mins": "Durata in minuti per l'esecuzione durante l'attivazione di un interruttore di zona"
                 }
             }
         }

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Dienst ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        }
+    }
+}

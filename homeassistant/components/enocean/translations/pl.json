@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "Nie znaleziono urz\u0105dzenia pod wskazan\u0105 \u015bcie\u017ck\u0105"
         },
-        "flow_title": "Konfiguracja ENOcean",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "Podaj \u015bcie\u017ck\u0119 urz\u0105dzenia ENOcean"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

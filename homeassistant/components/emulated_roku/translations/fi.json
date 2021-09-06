@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "name_exists": "Nimi on jo olemassa"
-        },
         "step": {
             "user": {
                 "data": {

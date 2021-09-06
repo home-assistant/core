@@ -1,0 +1,26 @@
+{
+    "options": {
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "log_level": "\u30ed\u30b0\u30ec\u30d9\u30eb",
+                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af"
+                },
+                "title": "Z-Wave JS\u306e\u30a2\u30c9\u30aa\u30f3\u304c\u59cb\u307e\u308a\u307e\u3059\u3002"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u306e\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u304c\u958b\u59cb\u3055\u308c\u307e\u3057\u305f\u3002"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "\u30a2\u30c9\u30aa\u30f3\u300cZ-Wave JS Supervisor\u300d\u306e\u4f7f\u7528"
+                },
+                "description": "Z-Wave JS Supervisor\u30a2\u30c9\u30aa\u30f3\u3092\u4f7f\u7528\u3057\u307e\u3059\u304b\uff1f",
+                "title": "\u63a5\u7d9a\u65b9\u6cd5\u306e\u9078\u629e"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS\u306e\u30a2\u30c9\u30aa\u30f3\u304c\u59cb\u307e\u308a\u307e\u3059\u3002"
+            }
+        }
+    }
+}

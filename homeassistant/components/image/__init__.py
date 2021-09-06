@@ -1,10 +1,11 @@
 """The Picture integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
 import secrets
 import shutil
-import typing
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 from aiohttp import hdrs, web
@@ -17,6 +18,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -36,7 +38,7 @@ UPDATE_FIELDS = {
 }
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""
     image_dir = pathlib.Path(hass.config.path(DOMAIN))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
@@ -69,7 +71,7 @@ class ImageStorageCollection(collection.StorageCollection):
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(dict(data))
         uploaded_file: FileField = data["file"]
@@ -117,11 +119,11 @@ class ImageStorageCollection(collection.StorageCollection):
         return media_file.stat().st_size
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_ID]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         return {**data, **self.UPDATE_SCHEMA(update_data)}
 
@@ -158,7 +160,7 @@ class ImageServeView(HomeAssistantView):
 
     def __init__(
         self, image_folder: pathlib.Path, image_collection: ImageStorageCollection
-    ):
+    ) -> None:
         """Initialize image serve view."""
         self.transform_lock = asyncio.Lock()
         self.image_folder = image_folder

@@ -1,13 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "El compte ja ha estat configurat"
+            "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
-            "account_error": "Autenticaci\u00f3 inv\u00e0lida",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "session_error": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },
         "step": {

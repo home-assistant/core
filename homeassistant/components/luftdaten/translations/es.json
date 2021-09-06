@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
-            "communication_error": "No se puede comunicar con la API de Luftdaten",
-            "invalid_sensor": "Sensor no disponible o no v\u00e1lido",
-            "sensor_exists": "Sensor ya registrado"
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_sensor": "Sensor no disponible o no v\u00e1lido"
         },
         "step": {
             "user": {

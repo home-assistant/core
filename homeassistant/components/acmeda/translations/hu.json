@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Gazdag\u00e9p azonos\u00edt\u00f3"
+                },
+                "title": "V\u00e1lassza ki a hozz\u00e1adni k\u00edv\u00e1nt hubot"
+            }
+        }
+    }
+}

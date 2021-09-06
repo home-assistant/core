@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "login": "Error de inicio de sesi\u00f3n: comprueba tu direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",
             "send_verification_code": "Error al enviar el c\u00f3digo de verificaci\u00f3n",
             "validate_verification_code": "No se pudo verificar el c\u00f3digo de verificaci\u00f3n, elegir un dispositivo de confianza e iniciar la verificaci\u00f3n de nuevo"
         },

@@ -1,6 +1,5 @@
 """Support for Vallox ventilation units."""
 
-from datetime import timedelta
 import ipaddress
 import logging
 
@@ -15,18 +14,20 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
+from .const import (
+    DEFAULT_FAN_SPEED_AWAY,
+    DEFAULT_FAN_SPEED_BOOST,
+    DEFAULT_FAN_SPEED_HOME,
+    DEFAULT_NAME,
+    DOMAIN,
+    METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
+    METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
+    METRIC_KEY_PROFILE_FAN_SPEED_HOME,
+    SIGNAL_VALLOX_STATE_UPDATE,
+    STATE_PROXY_SCAN_INTERVAL,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "vallox"
-DEFAULT_NAME = "Vallox"
-SIGNAL_VALLOX_STATE_UPDATE = "vallox_state_update"
-SCAN_INTERVAL = timedelta(seconds=60)
-
-# Various metric keys that are reused between profiles.
-METRIC_KEY_MODE = "A_CYC_MODE"
-METRIC_KEY_PROFILE_FAN_SPEED_HOME = "A_CYC_HOME_SPEED_SETTING"
-METRIC_KEY_PROFILE_FAN_SPEED_AWAY = "A_CYC_AWAY_SPEED_SETTING"
-METRIC_KEY_PROFILE_FAN_SPEED_BOOST = "A_CYC_BOOST_SPEED_SETTING"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,7 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# pylint: disable=no-member
 PROFILE_TO_STR_SETTABLE = {
     VALLOX_PROFILE.HOME: "Home",
     VALLOX_PROFILE.AWAY: "Away",
@@ -50,7 +50,6 @@ PROFILE_TO_STR_SETTABLE = {
 
 STR_TO_PROFILE = {v: k for (k, v) in PROFILE_TO_STR_SETTABLE.items()}
 
-# pylint: disable=no-member
 PROFILE_TO_STR_REPORTABLE = {
     **{VALLOX_PROFILE.NONE: "None", VALLOX_PROFILE.EXTRA: "Extra"},
     **PROFILE_TO_STR_SETTABLE,
@@ -95,10 +94,6 @@ SERVICE_TO_METHOD = {
     },
 }
 
-DEFAULT_FAN_SPEED_HOME = 50
-DEFAULT_FAN_SPEED_AWAY = 25
-DEFAULT_FAN_SPEED_BOOST = 65
-
 
 async def async_setup(hass, config):
     """Set up the client and boot the platforms."""
@@ -112,8 +107,8 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {"client": client, "state_proxy": state_proxy, "name": name}
 
-    for vallox_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[vallox_service]["schema"]
+    for vallox_service, method in SERVICE_TO_METHOD.items():
+        schema = method["schema"]
         hass.services.async_register(
             DOMAIN, vallox_service, service_handler.async_handle, schema=schema
         )
@@ -128,7 +123,7 @@ async def async_setup(hass, config):
     hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
     hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
 
-    async_track_time_interval(hass, state_proxy.async_update, SCAN_INTERVAL)
+    async_track_time_interval(hass, state_proxy.async_update, STATE_PROXY_SCAN_INTERVAL)
 
     return True
 
@@ -172,12 +167,13 @@ class ValloxStateProxy:
         try:
             self._metric_cache = await self._client.fetch_metrics()
             self._profile = await self._client.get_profile()
-            self._valid = True
 
         except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error during state cache update: %s", err)
             self._valid = False
+            _LOGGER.error("Error during state cache update: %s", err)
+            return
 
+        self._valid = True
         async_dispatcher_send(self._hass, SIGNAL_VALLOX_STATE_UPDATE)
 
 
@@ -220,7 +216,7 @@ class ValloxServiceHandler:
     async def async_set_profile_fan_speed_away(
         self, fan_speed: int = DEFAULT_FAN_SPEED_AWAY
     ) -> bool:
-        """Set the fan speed in percent for the Home profile."""
+        """Set the fan speed in percent for the Away profile."""
         _LOGGER.debug("Setting Away fan speed to: %d%%", fan_speed)
 
         try:

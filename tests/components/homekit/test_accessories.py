@@ -2,7 +2,7 @@
 
 This includes tests for all mock object types.
 """
-from datetime import timedelta
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -10,14 +10,10 @@ from homeassistant.components.homekit.accessories import (
     HomeAccessory,
     HomeBridge,
     HomeDriver,
-    debounce,
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
-    ATTR_INTERGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
+    ATTR_INTEGRATION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_NAME,
@@ -37,49 +33,19 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
+    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     __version__,
+    __version__ as hass_version,
 )
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
-import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
-from tests.common import async_fire_time_changed, async_mock_service
-
-
-async def test_debounce(hass):
-    """Test add_timeout decorator function."""
-
-    def demo_func(*args):
-        nonlocal arguments, counter
-        counter += 1
-        arguments = args
-
-    arguments = None
-    counter = 0
-    mock = Mock(hass=hass, debounce={})
-
-    debounce_demo = debounce(demo_func)
-    assert debounce_demo.__name__ == "demo_func"
-    now = dt_util.utcnow()
-
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.async_add_executor_job(debounce_demo, mock, "value")
-    async_fire_time_changed(hass, now + timedelta(seconds=3))
-    await hass.async_block_till_done()
-    assert counter == 1
-    assert len(arguments) == 2
-
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.async_add_executor_job(debounce_demo, mock, "value")
-        await hass.async_add_executor_job(debounce_demo, mock, "value")
-
-    async_fire_time_changed(hass, now + timedelta(seconds=3))
-    await hass.async_block_till_done()
-    assert counter == 2
+from tests.common import async_mock_service
 
 
 async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
@@ -92,7 +58,7 @@ async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
-        await acc.run_handler()
+        await acc.run()
     assert len(hass.data[TRACK_STATE_CHANGE_CALLBACKS][entity_id]) == 1
     acc.async_stop()
     assert entity_id not in hass.data[TRACK_STATE_CHANGE_CALLBACKS]
@@ -101,7 +67,7 @@ async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):
 async def test_home_accessory(hass, hk_driver):
     """Test HomeAccessory class."""
     entity_id = "sensor.accessory"
-    entity_id2 = "light.accessory"
+    entity_id2 = "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum_maximum_maximum_maximum_allowed_length"
 
     hass.states.async_set(entity_id, None)
     hass.states.async_set(entity_id2, STATE_UNAVAILABLE)
@@ -129,34 +95,83 @@ async def test_home_accessory(hass, hk_driver):
     assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == f"{MANUFACTURER} Light"
     assert serv.get_characteristic(CHAR_MODEL).value == "Light"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
 
     acc3 = HomeAccessory(
         hass,
         hk_driver,
-        "Home Accessory",
+        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
         entity_id2,
         3,
         {
-            ATTR_MODEL: "Awesome",
-            ATTR_MANUFACTURER: "Lux Brands",
-            ATTR_SOFTWARE_VERSION: "0.4.3",
-            ATTR_INTERGRATION: "luxe",
+            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "0.4.3 that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
         },
     )
     assert acc3.available is False
     serv = acc3.services[0]  # SERV_ACCESSORY_INFO
-    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
-    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Lux Brands"
-    assert serv.get_characteristic(CHAR_MODEL).value == "Awesome"
-    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == "light.accessory"
+    assert (
+        serv.get_characteristic(CHAR_NAME).value
+        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+    )
+    assert (
+        serv.get_characteristic(CHAR_MANUFACTURER).value
+        == "Lux Brands that exceeds the maximum maximum maximum maximum maxi"
+    )
+    assert (
+        serv.get_characteristic(CHAR_MODEL).value
+        == "Awesome Model that exceeds the maximum maximum maximum maximum m"
+    )
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == "0.4.3"
+
+    acc4 = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory that exceeds the maximum maximum maximum maximum maximum maximum length",
+        entity_id2,
+        3,
+        {
+            ATTR_MODEL: "Awesome Model that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_MANUFACTURER: "Lux Brands that exceeds the maximum maximum maximum maximum maximum maximum length",
+            ATTR_SW_VERSION: "will_not_match_regex",
+            ATTR_INTEGRATION: "luxe that exceeds the maximum maximum maximum maximum maximum maximum length",
+        },
+    )
+    assert acc4.available is False
+    serv = acc4.services[0]  # SERV_ACCESSORY_INFO
+    assert (
+        serv.get_characteristic(CHAR_NAME).value
+        == "Home Accessory that exceeds the maximum maximum maximum maximum "
+    )
+    assert (
+        serv.get_characteristic(CHAR_MANUFACTURER).value
+        == "Lux Brands that exceeds the maximum maximum maximum maximum maxi"
+    )
+    assert (
+        serv.get_characteristic(CHAR_MODEL).value
+        == "Awesome Model that exceeds the maximum maximum maximum maximum m"
+    )
+    assert (
+        serv.get_characteristic(CHAR_SERIAL_NUMBER).value
+        == "light.accessory_that_exceeds_the_maximum_maximum_maximum_maximum"
+    )
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
 
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -177,6 +192,31 @@ async def test_home_accessory(hass, hk_driver):
     assert serv.get_characteristic(CHAR_MODEL).value == "Test Model"
 
 
+async def test_accessory_with_missing_basic_service_info(hass, hk_driver):
+    """Test HomeAccessory class."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, "on")
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Home Accessory",
+        entity_id,
+        3,
+        {
+            ATTR_MODEL: None,
+            ATTR_MANUFACTURER: None,
+            ATTR_SW_VERSION: None,
+            ATTR_INTEGRATION: None,
+        },
+    )
+    serv = acc.get_service(SERV_ACCESSORY_INFO)
+    assert serv.get_characteristic(CHAR_NAME).value == "Home Accessory"
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == "Home Assistant Sensor"
+    assert serv.get_characteristic(CHAR_MODEL).value == "Sensor"
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == entity_id
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == hass_version
+
+
 async def test_battery_service(hass, hk_driver, caplog):
     """Test battery service."""
     entity_id = "homekit.accessory"
@@ -191,7 +231,7 @@ async def test_battery_service(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -247,7 +287,7 @@ async def test_battery_service(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -288,7 +328,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -333,7 +373,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -375,7 +415,7 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -387,7 +427,7 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_set(linked_battery_charging_sensor, STATE_OFF, None)
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -397,7 +437,7 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -407,7 +447,7 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_remove(linked_battery_charging_sensor)
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
     assert acc._char_charging.value == 1
 
@@ -440,7 +480,7 @@ async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -484,7 +524,7 @@ async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
 
     # Make sure we don't throw if the entity_id
@@ -493,7 +533,7 @@ async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
 
 
@@ -517,7 +557,7 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -531,7 +571,7 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
         hass.states.async_remove(entity_id)
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
 
     assert not acc.linked_battery_sensor
@@ -552,7 +592,7 @@ async def test_battery_appears_after_startup(hass, hk_driver, caplog):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ) as mock_async_update_state:
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_async_update_state.assert_called_with(state)
@@ -586,7 +626,7 @@ async def test_call_service(hass, hk_driver, events):
     test_service = "open_cover"
     test_value = "value"
 
-    await acc.async_call_service(
+    acc.async_call_service(
         test_domain, test_service, {ATTR_ENTITY_ID: entity_id}, test_value
     )
     await hass.async_block_till_done()
@@ -611,7 +651,7 @@ def test_home_bridge(hk_driver):
     assert bridge.hass == "hass"
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
@@ -622,7 +662,7 @@ def test_home_bridge(hk_driver):
 
     bridge = HomeBridge("hass", hk_driver, "test_name")
     assert bridge.display_name == "test_name"
-    assert len(bridge.services) == 1
+    assert len(bridge.services) == 2
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
 
     # setup_message
@@ -638,21 +678,27 @@ def test_home_driver():
 
     with patch("pyhap.accessory_driver.AccessoryDriver.__init__") as mock_driver:
         driver = HomeDriver(
-            "hass", "entry_id", "name", address=ip_address, port=port, persist_file=path
+            "hass",
+            "entry_id",
+            "name",
+            "title",
+            address=ip_address,
+            port=port,
+            persist_file=path,
         )
 
     mock_driver.assert_called_with(address=ip_address, port=port, persist_file=path)
-    driver.state = Mock(pincode=pin)
+    driver.state = Mock(pincode=pin, paired=False)
     xhm_uri_mock = Mock(return_value="X-HM://0")
-    driver.accessory = Mock(xhm_uri=xhm_uri_mock)
+    driver.accessory = Mock(display_name="any", xhm_uri=xhm_uri_mock)
 
     # pair
     with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
         "homeassistant.components.homekit.accessories.dismiss_setup_message"
     ) as mock_dissmiss_msg:
-        driver.pair("client_uuid", "client_public")
+        driver.pair("client_uuid", "client_public", b"1")
 
-    mock_pair.assert_called_with("client_uuid", "client_public")
+    mock_pair.assert_called_with("client_uuid", "client_public", b"1")
     mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair
@@ -662,4 +708,4 @@ def test_home_driver():
         driver.unpair("client_uuid")
 
     mock_unpair.assert_called_with("client_uuid")
-    mock_show_msg.assert_called_with("hass", "entry_id", "name", pin, "X-HM://0")
+    mock_show_msg.assert_called_with("hass", "entry_id", "title (any)", pin, "X-HM://0")

@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     scsgate = hass.data[DOMAIN]
 
     if devices:
-        for _, entity_info in devices.items():
+        for entity_info in devices.values():
             if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 

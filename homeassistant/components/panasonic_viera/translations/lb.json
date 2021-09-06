@@ -3,13 +3,11 @@
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "cannot_connect": "Feeler beim verbannen",
-            "not_connected": "Verbindung mam Panasonic Viera TV as \u00ebnnerbrach. Kuck Log fir w\u00e9ider Informatiounen.",
             "unknown": "Onerwaarte Feeler."
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
-            "invalid_pin_code": "PIN Code ass ong\u00eblteg",
-            "not_connected": "Konnt keng Verbindung mam Panasonic Viera TV ariichten"
+            "invalid_pin_code": "PIN Code ass ong\u00eblteg"
         },
         "step": {
             "pairing": {
@@ -28,6 +26,5 @@
                 "title": "Fernseh ariichten"
             }
         }
-    },
-    "title": "Panasonic Viera"
+    }
 }

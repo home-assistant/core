@@ -1,13 +1,40 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "OpenZWave'i lisandmooduli teabe hankimine nurjus.",
+            "addon_install_failed": "OpenZWave'i lisandmooduli paigaldamine nurjus.",
+            "addon_set_config_failed": "OpenZWave'i konfiguratsiooni seadistamine eba\u00f5nnestus.",
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "mqtt_required": "MQTT sidumine pole seadistatud",
-            "one_instance_allowed": "Sidumine toetab ainult \u00fchte Z-Wave'i eksemplari",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
+        "error": {
+            "addon_start_failed": "OpenZWave'i lisandmooduli k\u00e4ivitamine nurjus. Kontrolli s\u00e4tteid."
+        },
+        "progress": {
+            "install_addon": "Palun oota kuni OpenZWave lisandmooduli paigaldus l\u00f5peb. See v\u00f5ib v\u00f5tta mitu minutit."
+        },
         "step": {
-            "user": {
-                "title": "Kinnita seadistamine"
+            "hassio_confirm": {
+                "title": "Seadista OpenZWave'i sidumine OpenZWave lisandmooduli abil"
+            },
+            "install_addon": {
+                "title": "OpenZWave lisandmooduli paigaldamine on alanud"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Kasuta OpenZWave Supervisori lisandmoodulit"
+                },
+                "description": "Kas soovid kasutada OpenZWave'i halduri lisandmoodulit?",
+                "title": "Vali \u00fchendusviis"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "V\u00f5rgu v\u00f5ti",
+                    "usb_path": "USB seadme rada"
+                },
+                "title": "Sisesta OpenZWave'i lisandmooduli seaded"
             }
         }
     }

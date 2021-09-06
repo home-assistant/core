@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne Elgato Key Light-enhed er allerede konfigureret.",
-            "connection_error": "Kunne ikke oprette forbindelse til Elgato Key Light-enheden."
-        },
-        "error": {
-            "connection_error": "Kunne ikke oprette forbindelse til Elgato Key Light-enheden."
+            "already_configured": "Denne Elgato Key Light-enhed er allerede konfigureret."
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {

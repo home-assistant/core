@@ -1,7 +1,10 @@
 """Support for FFmpeg."""
+from __future__ import annotations
+
+import asyncio
 import re
 
-from haffmpeg.tools import FFVersion
+from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -10,13 +13,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.loader import bind_hass
 
 DOMAIN = "ffmpeg"
 
@@ -86,6 +90,32 @@ async def async_setup(hass, config):
     return True
 
 
+@bind_hass
+async def async_get_image(
+    hass: HomeAssistant,
+    input_source: str,
+    output_format: str = IMAGE_JPEG,
+    extra_cmd: str | None = None,
+    width: int | None = None,
+    height: int | None = None,
+) -> bytes | None:
+    """Get an image from a frame of an RTSP stream."""
+    manager = hass.data[DATA_FFMPEG]
+    ffmpeg = ImageFrame(manager.binary)
+
+    if width and height and (extra_cmd is None or "-s" not in extra_cmd):
+        size_cmd = f"-s {width}x{height}"
+        if extra_cmd is None:
+            extra_cmd = size_cmd
+        else:
+            extra_cmd += " " + size_cmd
+
+    image = await asyncio.shield(
+        ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
+    )
+    return image
+
+
 class FFmpegManager:
     """Helper for ha-ffmpeg."""
 
@@ -105,7 +135,7 @@ class FFmpegManager:
     async def async_get_version(self):
         """Return ffmpeg version."""
 
-        ffversion = FFVersion(self._bin, self.hass.loop)
+        ffversion = FFVersion(self._bin)
         self._version = await ffversion.get_version()
 
         self._major_version = None

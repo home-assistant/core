@@ -1,8 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "No se han establecido las coordenadas de casa en la configuraci\u00f3n de Home Assistant"
+        },
         "error": {
-            "already_configured": "El servicio ya est\u00e1 configurado",
-            "name_exists": "La ubicaci\u00f3n ya existe"
+            "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "step": {
             "user": {

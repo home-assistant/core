@@ -1,5 +1,6 @@
 """Tests for emulated_kasa library bindings."""
 import math
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import (
@@ -28,8 +29,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"
@@ -216,6 +215,12 @@ async def test_switch_power(hass):
     # Turn switch on
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SWITCH}, blocking=True
+    )
+
+    hass.states.async_set(
+        ENTITY_SWITCH,
+        STATE_ON,
+        attributes={ATTR_CURRENT_POWER_W: 100, ATTR_FRIENDLY_NAME: "AC"},
     )
 
     switch = hass.states.get(ENTITY_SWITCH)

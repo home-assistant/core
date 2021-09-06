@@ -33,6 +33,12 @@ def test_is_link_local():
     assert not network_util.is_link_local(ip_address("127.0.0.1"))
 
 
+def test_is_invalid():
+    """Test invalid address."""
+    assert network_util.is_invalid(ip_address("0.0.0.0"))
+    assert not network_util.is_invalid(ip_address("127.0.0.1"))
+
+
 def test_is_local():
     """Test local addresses."""
     assert network_util.is_local(ip_address("192.168.0.1"))

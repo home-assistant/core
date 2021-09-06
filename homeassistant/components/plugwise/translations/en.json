@@ -8,14 +8,11 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Connection type",
-                    "host": "IP Address",
-                    "password": "Smile ID",
-                    "port": "Port"
+                    "flow_type": "Connection type"
                 },
                 "description": "Product:",
                 "title": "Plugwise type"
@@ -24,9 +21,10 @@
                 "data": {
                     "host": "IP Address",
                     "password": "Smile ID",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Smile Username"
                 },
-                "description": "Please enter:",
+                "description": "Please enter",
                 "title": "Connect to the Smile"
             }
         }

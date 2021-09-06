@@ -7,7 +7,7 @@ from homeassistant.components.websocket_api.decorators import (
     require_admin,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers.device_registry import DISABLED_USER, async_get_registry
 
 WS_TYPE_LIST = "config/device_registry/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -21,6 +21,8 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
         vol.Required("device_id"): str,
         vol.Optional("area_id"): vol.Any(str, None),
         vol.Optional("name_by_user"): vol.Any(str, None),
+        # We only allow setting disabled_by user via API.
+        vol.Optional("disabled_by"): vol.Any(DISABLED_USER, None),
     }
 )
 
@@ -77,4 +79,5 @@ def _entry_dict(entry):
         "via_device_id": entry.via_device_id,
         "area_id": entry.area_id,
         "name_by_user": entry.name_by_user,
+        "disabled_by": entry.disabled_by,
     }

@@ -1,6 +1,6 @@
 {
-  "title": "Yeelight",
   "config": {
+    "flow_title": "{model} {id} ({host})",
     "step": {
       "user": {
         "description": "If you leave the host empty, discovery will be used to find devices.",
@@ -12,6 +12,9 @@
         "data": {
           "device": "Device"
         }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {model} ({host})?"
       }
     },
     "error": {

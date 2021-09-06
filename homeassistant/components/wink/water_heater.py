@@ -66,7 +66,7 @@ class WinkWaterHeater(WinkDevice, WaterHeaterEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional device state attributes."""
         data = {}
         data[ATTR_VACATION_MODE] = self.wink.vacation_mode_enabled()

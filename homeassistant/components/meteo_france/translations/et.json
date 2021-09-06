@@ -4,9 +4,32 @@
             "already_configured": "Asukoht on juba m\u00e4\u00e4ratud",
             "unknown": "Tundmatu viga"
         },
+        "error": {
+            "empty": "Otsingus tulemusi pole: kontrolli linna nime"
+        },
         "step": {
-            "user": {
+            "cities": {
+                "data": {
+                    "city": "Linn"
+                },
+                "description": "Vali loendist oma linn",
                 "title": ""
+            },
+            "user": {
+                "data": {
+                    "city": "Linn"
+                },
+                "description": "Sisesta sihtnumber (ainult Prantsusmaa, soovitatav) v\u00f5i linna nimi",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Ilmateate re\u017eiim"
+                }
             }
         }
     }

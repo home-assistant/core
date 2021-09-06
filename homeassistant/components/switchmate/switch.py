@@ -1,7 +1,7 @@
 """Support for Switchmate."""
 from datetime import timedelta
 
-# pylint: disable=import-error, no-member
+# pylint: disable=import-error
 import switchmate
 import voluptuous as vol
 

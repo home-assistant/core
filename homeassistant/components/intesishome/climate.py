@@ -212,7 +212,7 @@ class IntesisAC(ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {}
         if self._outdoor_temp:
@@ -374,9 +374,11 @@ class IntesisAC(ClimateEntity):
                 reconnect_minutes,
             )
             # Schedule reconnection
-            async_call_later(
-                self.hass, reconnect_minutes * 60, self._controller.connect()
-            )
+
+            async def try_connect(_now):
+                await self._controller.connect()
+
+            async_call_later(self.hass, reconnect_minutes * 60, try_connect)
 
         if self._controller.is_connected and not self._connected:
             # Connection has been restored

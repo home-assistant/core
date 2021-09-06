@@ -1,5 +1,5 @@
 """Support for the demo for speech to text service."""
-from typing import List
+from __future__ import annotations
 
 from aiohttp import StreamReader
 
@@ -25,32 +25,32 @@ class DemoProvider(Provider):
     """Demo speech API provider."""
 
     @property
-    def supported_languages(self) -> List[str]:
+    def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_formats(self) -> List[AudioFormats]:
+    def supported_formats(self) -> list[AudioFormats]:
         """Return a list of supported formats."""
         return [AudioFormats.WAV]
 
     @property
-    def supported_codecs(self) -> List[AudioCodecs]:
+    def supported_codecs(self) -> list[AudioCodecs]:
         """Return a list of supported codecs."""
         return [AudioCodecs.PCM]
 
     @property
-    def supported_bit_rates(self) -> List[AudioBitRates]:
+    def supported_bit_rates(self) -> list[AudioBitRates]:
         """Return a list of supported bit rates."""
         return [AudioBitRates.BITRATE_16]
 
     @property
-    def supported_sample_rates(self) -> List[AudioSampleRates]:
+    def supported_sample_rates(self) -> list[AudioSampleRates]:
         """Return a list of supported sample rates."""
         return [AudioSampleRates.SAMPLERATE_16000, AudioSampleRates.SAMPLERATE_44100]
 
     @property
-    def supported_channels(self) -> List[AudioChannels]:
+    def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_STEREO]
 

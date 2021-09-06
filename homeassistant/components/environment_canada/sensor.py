@@ -3,19 +3,19 @@ from datetime import datetime, timedelta
 import logging
 import re
 
-from env_canada import ECData  # pylint: disable=import-error
+from env_canada import ECData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +61,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
         ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
 
-    sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
+    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
 
 
-class ECSensor(Entity):
+class ECSensor(SensorEntity):
     """Implementation of an Environment Canada sensor."""
 
     def __init__(self, sensor_type, ec_data):
@@ -78,6 +78,7 @@ class ECSensor(Entity):
         self._state = None
         self._attr = None
         self._unit = None
+        self._device_class = None
 
     @property
     def unique_id(self) -> str:
@@ -90,19 +91,24 @@ class ECSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attr
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
 
     def update(self):
         """Update current conditions."""
@@ -131,11 +137,12 @@ class ECSensor(Entity):
         else:
             self._state = value
 
-        if sensor_data.get("unit") == "C" or self.sensor_type in [
+        if sensor_data.get("unit") == "C" or self.sensor_type in (
             "wind_chill",
             "humidex",
-        ]:
+        ):
             self._unit = TEMP_CELSIUS
+            self._device_class = DEVICE_CLASS_TEMPERATURE
         else:
             self._unit = sensor_data.get("unit")
 

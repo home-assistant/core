@@ -6,8 +6,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "name_exists": "Nome gi\u00e0 esistente",
-            "wrong_credentials": "Nome utente o password non validi"
+            "name_exists": "Nome gi\u00e0 esistente"
         },
         "step": {
             "user": {

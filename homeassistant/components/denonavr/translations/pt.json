@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer"
+        },
         "step": {
             "select": {
                 "data": {
@@ -9,6 +13,16 @@
             "user": {
                 "data": {
                     "host": "endere\u00e7o de IP"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone2": "Configurar a Zona 2",
+                    "zone3": "Configurar a Zona 3"
                 }
             }
         }

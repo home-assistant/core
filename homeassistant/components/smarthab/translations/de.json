@@ -1,15 +1,18 @@
 {
     "config": {
         "error": {
-            "unknown": "Unerwarteter Fehler",
-            "unknown_error": "Unerwarteter Fehler"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "service": "Fehler beim Versuch, SmartHab zu erreichen. Der Dienst ist m\u00f6glicherweise nicht erreichbar. Pr\u00fcfe deine Verbindung.",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
                     "email": "E-Mail",
                     "password": "Passwort"
-                }
+                },
+                "description": "Stelle aus technischen Gr\u00fcnden sicher, dass du ein sekund\u00e4res Konto speziell f\u00fcr deine Home Assistant-Einrichtung verwendest. Du kannst ein solches Konto \u00fcber die SmartHab-Anwendung erstellen.",
+                "title": "SmartHab einrichten"
             }
         }
     }

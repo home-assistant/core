@@ -24,6 +24,16 @@ TEST_DISCOVERY = {
 }
 
 
+TEST_DISCOVERY_WO_UUID = {
+    "host": "1.1.1.1",
+    "port": 8080,
+    "hostname": "hostname.local.",
+    "type": "_xbmc-jsonrpc-h._tcp.local.",
+    "name": "hostname._xbmc-jsonrpc-h._tcp.local.",
+    "properties": {},
+}
+
+
 TEST_IMPORT = {
     "name": "name",
     "host": "1.1.1.1",

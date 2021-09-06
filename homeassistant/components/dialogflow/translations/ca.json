@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "La inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per rebre missatges de Dialogflow.",
-            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia.",
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "webhook_not_internet_accessible": "La teva inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per poder rebre missatges webhook."
         },
         "create_entry": {
             "default": "Per enviar esdeveniments a Home Assistant, haur\u00e0s de configurar la [integraci\u00f3 webhook de Dialogflow]({dialogflow_url}). \n\n Completa la seg\u00fcent informaci\u00f3: \n\n- URL: `{webhook_url}` \n- M\u00e8tode: POST \n- Tipus de contingut: application/json\n\nConsulta la [documentaci\u00f3]({docs_url}) per a m\u00e9s detalls."

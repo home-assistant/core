@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ja hi ha un controlador configurat.",
-            "cannot_connect": "No s'ha pogut connectar amb el controlador amb l'URL {base_url}"
+            "cannot_connect": "No s'ha pogut connectar amb el controlador amb URL {base_url}"
         },
         "step": {
             "user": {
@@ -11,7 +10,7 @@
                     "lights": "Identificadors de dispositiu dels commutadors Vera a tractar com a llums a Home Assistant.",
                     "vera_controller_url": "URL del controlador"
                 },
-                "description": "Proporciona un URL pel controlador Vera. Hauria de quedar aix\u00ed: http://192.168.1.161:3480.",
+                "description": "Proporciona un URL pel controlador Vera. Hauria de ser similar al seg\u00fcent: http://192.168.1.161:3480.",
                 "title": "Configuraci\u00f3 del controlador Vera"
             }
         }

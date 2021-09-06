@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
-            "no_devices": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "auth": "Niepoprawny token dost\u0119pu",
             "invalid_access_token": "Niepoprawny token dost\u0119pu",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },

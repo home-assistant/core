@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "La inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per rebre missatges de Traccar.",
-            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia.",
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "webhook_not_internet_accessible": "La teva inst\u00e0ncia de Home Assistant ha de ser accessible des d'Internet per poder rebre missatges webhook."
         },
         "create_entry": {
-            "default": "Per enviar esdeveniments a Home Assistant, haur\u00e0s de configurar l'opci\u00f3 webhook de Traccar.\n\nUtilitza el seg\u00fcent enlla\u00e7: `{webhook_url}`\n\nConsulta la [documentaci\u00f3]({docs_url}) per a m\u00e9s detalls."
+            "default": "Per enviar esdeveniments a Home Assistant, haur\u00e0s de configurar l'opci\u00f3 webhook de Traccar.\n\nUtilitza el seg\u00fcent URL: `{webhook_url}`\n\nConsulta la [documentaci\u00f3]({docs_url}) per a m\u00e9s detalls."
         },
         "step": {
             "user": {

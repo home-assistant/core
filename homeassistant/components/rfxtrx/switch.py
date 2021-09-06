@@ -8,13 +8,12 @@ from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
-    SIGNAL_EVENT,
     RfxtrxCommandEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -92,8 +91,7 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, switch_update)
+    connect_auto_add(hass, discovery_info, switch_update)
 
 
 class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
@@ -119,12 +117,10 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     @callback
     def _handle_event(self, event, device_id):
         """Check if event applies to me and update."""
-        if device_id != self._device_id:
-            return
+        if self._event_applies(event, device_id):
+            self._apply_event(event)
 
-        self._apply_event(event)
-
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     @property
     def is_on(self):

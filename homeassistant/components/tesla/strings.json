@@ -5,11 +5,16 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "step": {
       "user": {
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "mfa": "MFA Code (Optional)"
         },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"

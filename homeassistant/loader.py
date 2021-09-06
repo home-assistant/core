@@ -4,7 +4,10 @@ The methods for loading Home Assistant integrations.
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 import functools as ft
 import importlib
 import json
@@ -12,28 +15,30 @@ import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    TypeVar,
-    Union,
-    cast,
+from typing import TYPE_CHECKING, Any, Callable, Dict, TypedDict, TypeVar, cast
+
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionException,
+    AwesomeVersionStrategy,
 )
 
+from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
+from homeassistant.generated.usb import USB
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
+from homeassistant.util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+# mypy: disallow-any-generics
+
+CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
+    "CALLABLE_T", bound=Callable[..., Any]
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,20 +48,52 @@ DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
-    "You are using a custom integration for %s which has not "
+    "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
-    "experience issues with Home Assistant."
+    "experience issues with Home Assistant"
 )
-_UNDEF = object()
+
+_UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
+
+MAX_LOAD_CONCURRENTLY = 4
 
 
-def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
+class Manifest(TypedDict, total=False):
+    """
+    Integration manifest.
+
+    Note that none of the attributes are marked Optional here. However, some of them may be optional in manifest.json
+    in the sense that they can be omitted altogether. But when present, they should not have null values in it.
+    """
+
+    name: str
+    disabled: str
+    domain: str
+    dependencies: list[str]
+    after_dependencies: list[str]
+    requirements: list[str]
+    config_flow: bool
+    documentation: str
+    issue_tracker: str
+    quality_scale: str
+    iot_class: str
+    mqtt: list[str]
+    ssdp: list[dict[str, str]]
+    zeroconf: list[str | dict[str, str]]
+    dhcp: list[dict[str, str]]
+    usb: list[dict[str, str]]
+    homekit: dict[str, list[str]]
+    is_built_in: bool
+    version: str
+    codeowners: list[str]
+
+
+def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     """Generate a manifest from a legacy module."""
     return {
         "domain": domain,
         "name": domain,
-        "documentation": None,
         "requirements": getattr(module, "REQUIREMENTS", []),
         "dependencies": getattr(module, "DEPENDENCIES", []),
         "codeowners": [],
@@ -64,8 +101,8 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
 
 
 async def _async_get_custom_components(
-    hass: "HomeAssistant",
-) -> Dict[str, "Integration"]:
+    hass: HomeAssistant,
+) -> dict[str, Integration]:
     """Return list of custom integrations."""
     if hass.config.safe_mode:
         return {}
@@ -75,7 +112,7 @@ async def _async_get_custom_components(
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: List[str]) -> List[pathlib.Path]:
+    def get_sub_directories(paths: list[str]) -> list[pathlib.Path]:
         """Return all sub directories in a set of paths."""
         return [
             entry
@@ -88,13 +125,14 @@ async def _async_get_custom_components(
         get_sub_directories, custom_components.__path__
     )
 
-    integrations = await asyncio.gather(
+    integrations = await gather_with_concurrency(
+        MAX_LOAD_CONCURRENTLY,
         *(
             hass.async_add_executor_job(
                 Integration.resolve_from_root, hass, custom_components, comp.name
             )
             for comp in dirs
-        )
+        ),
     )
 
     return {
@@ -105,8 +143,8 @@ async def _async_get_custom_components(
 
 
 async def async_get_custom_components(
-    hass: "HomeAssistant",
-) -> Dict[str, "Integration"]:
+    hass: HomeAssistant,
+) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
     reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
@@ -126,12 +164,12 @@ async def async_get_custom_components(
     return cast(Dict[str, "Integration"], reg_or_evt)
 
 
-async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
+async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
     from homeassistant.generated.config_flows import FLOWS
 
-    flows: Set[str] = set()
+    flows: set[str] = set()
     flows.update(FLOWS)
 
     integrations = await async_get_custom_components(hass)
@@ -146,9 +184,9 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
+async def async_get_zeroconf(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: Dict[str, List[Dict[str, str]]] = ZEROCONF.copy()
+    zeroconf: dict[str, list[dict[str, str]]] = ZEROCONF.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -169,10 +207,43 @@ async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, 
     return zeroconf
 
 
-async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
+async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str]]:
+    """Return cached list of dhcp types."""
+    dhcp: list[dict[str, str]] = DHCP.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.dhcp:
+            continue
+        for entry in integration.dhcp:
+            dhcp.append({"domain": integration.domain, **entry})
+
+    return dhcp
+
+
+async def async_get_usb(hass: HomeAssistant) -> list[dict[str, str]]:
+    """Return cached list of usb types."""
+    usb: list[dict[str, str]] = USB.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.usb:
+            continue
+        for entry in integration.usb:
+            usb.append(
+                {
+                    "domain": integration.domain,
+                    **{k: v for k, v in entry.items() if k != "known_devices"},
+                }
+            )
+
+    return usb
+
+
+async def async_get_homekit(hass: HomeAssistant) -> dict[str, str]:
     """Return cached list of homekit models."""
 
-    homekit: Dict[str, str] = HOMEKIT.copy()
+    homekit: dict[str, str] = HOMEKIT.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -188,10 +259,10 @@ async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
     return homekit
 
 
-async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_ssdp(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
-    ssdp: Dict[str, List] = SSDP.copy()
+    ssdp: dict[str, list[dict[str, str]]] = SSDP.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -203,10 +274,10 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
     return ssdp
 
 
-async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
     """Return cached list of MQTT mappings."""
 
-    mqtt: Dict[str, List] = MQTT.copy()
+    mqtt: dict[str, list[str]] = MQTT.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -223,8 +294,8 @@ class Integration:
 
     @classmethod
     def resolve_from_root(
-        cls, hass: "HomeAssistant", root_module: ModuleType, domain: str
-    ) -> "Optional[Integration]":
+        cls, hass: HomeAssistant, root_module: ModuleType, domain: str
+    ) -> Integration | None:
         """Resolve an integration from a root module."""
         for base in root_module.__path__:  # type: ignore
             manifest_path = pathlib.Path(base) / domain / "manifest.json"
@@ -240,39 +311,48 @@ class Integration:
                 )
                 continue
 
-            return cls(
-                hass, f"{root_module.__name__}.{domain}", manifest_path.parent, manifest
+            integration = cls(
+                hass,
+                f"{root_module.__name__}.{domain}",
+                manifest_path.parent,
+                manifest,
             )
+
+            if integration.is_built_in:
+                return integration
+
+            _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+            try:
+                AwesomeVersion(
+                    integration.version,
+                    [
+                        AwesomeVersionStrategy.CALVER,
+                        AwesomeVersionStrategy.SEMVER,
+                        AwesomeVersionStrategy.SIMPLEVER,
+                        AwesomeVersionStrategy.BUILDVER,
+                        AwesomeVersionStrategy.PEP440,
+                    ],
+                )
+            except AwesomeVersionException:
+                _LOGGER.error(
+                    "The custom integration '%s' does not have a "
+                    "valid version key (%s) in the manifest file and was blocked from loading. "
+                    "See https://developers.home-assistant.io/blog/2021/01/29/custom-integration-changes#versions for more details",
+                    integration.domain,
+                    integration.version,
+                )
+                return None
+            return integration
 
         return None
 
-    @classmethod
-    def resolve_legacy(
-        cls, hass: "HomeAssistant", domain: str
-    ) -> "Optional[Integration]":
-        """Resolve legacy component.
-
-        Will create a stub manifest.
-        """
-        comp = _load_file(hass, domain, _lookup_path(hass))
-
-        if comp is None:
-            return None
-
-        return cls(
-            hass,
-            comp.__name__,
-            pathlib.Path(comp.__file__).parent,
-            manifest_from_legacy_module(domain, comp),
-        )
-
     def __init__(
         self,
-        hass: "HomeAssistant",
+        hass: HomeAssistant,
         pkg_path: str,
         file_path: pathlib.Path,
-        manifest: Dict[str, Any],
-    ):
+        manifest: Manifest,
+    ) -> None:
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
@@ -281,8 +361,8 @@ class Integration:
         manifest["is_built_in"] = self.is_built_in
 
         if self.dependencies:
-            self._all_dependencies_resolved: Optional[bool] = None
-            self._all_dependencies: Optional[Set[str]] = None
+            self._all_dependencies_resolved: bool | None = None
+            self._all_dependencies: set[str] | None = None
         else:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
@@ -292,72 +372,87 @@ class Integration:
     @property
     def name(self) -> str:
         """Return name."""
-        return cast(str, self.manifest["name"])
+        return self.manifest["name"]
 
     @property
-    def disabled(self) -> Optional[str]:
+    def disabled(self) -> str | None:
         """Return reason integration is disabled."""
-        return cast(Optional[str], self.manifest.get("disabled"))
+        return self.manifest.get("disabled")
 
     @property
     def domain(self) -> str:
         """Return domain."""
-        return cast(str, self.manifest["domain"])
+        return self.manifest["domain"]
 
     @property
-    def dependencies(self) -> List[str]:
+    def dependencies(self) -> list[str]:
         """Return dependencies."""
-        return cast(List[str], self.manifest.get("dependencies", []))
+        return self.manifest.get("dependencies", [])
 
     @property
-    def after_dependencies(self) -> List[str]:
+    def after_dependencies(self) -> list[str]:
         """Return after_dependencies."""
-        return cast(List[str], self.manifest.get("after_dependencies", []))
+        return self.manifest.get("after_dependencies", [])
 
     @property
-    def requirements(self) -> List[str]:
+    def requirements(self) -> list[str]:
         """Return requirements."""
-        return cast(List[str], self.manifest.get("requirements", []))
+        return self.manifest.get("requirements", [])
 
     @property
     def config_flow(self) -> bool:
         """Return config_flow."""
-        return cast(bool, self.manifest.get("config_flow", False))
+        return self.manifest.get("config_flow") or False
 
     @property
-    def documentation(self) -> Optional[str]:
+    def documentation(self) -> str | None:
         """Return documentation."""
-        return cast(str, self.manifest.get("documentation"))
+        return self.manifest.get("documentation")
 
     @property
-    def issue_tracker(self) -> Optional[str]:
+    def issue_tracker(self) -> str | None:
         """Return issue tracker link."""
-        return cast(str, self.manifest.get("issue_tracker"))
+        return self.manifest.get("issue_tracker")
 
     @property
-    def quality_scale(self) -> Optional[str]:
+    def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
-        return cast(str, self.manifest.get("quality_scale"))
+        return self.manifest.get("quality_scale")
 
     @property
-    def mqtt(self) -> Optional[list]:
+    def iot_class(self) -> str | None:
+        """Return the integration IoT Class."""
+        return self.manifest.get("iot_class")
+
+    @property
+    def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
-        return cast(List[dict], self.manifest.get("mqtt"))
+        return self.manifest.get("mqtt")
 
     @property
-    def ssdp(self) -> Optional[list]:
+    def ssdp(self) -> list[dict[str, str]] | None:
         """Return Integration SSDP entries."""
-        return cast(List[dict], self.manifest.get("ssdp"))
+        return self.manifest.get("ssdp")
 
     @property
-    def zeroconf(self) -> Optional[list]:
+    def zeroconf(self) -> list[str | dict[str, str]] | None:
         """Return Integration zeroconf entries."""
-        return cast(List[str], self.manifest.get("zeroconf"))
+        return self.manifest.get("zeroconf")
 
     @property
-    def homekit(self) -> Optional[dict]:
+    def dhcp(self) -> list[dict[str, str]] | None:
+        """Return Integration dhcp entries."""
+        return self.manifest.get("dhcp")
+
+    @property
+    def usb(self) -> list[dict[str, str]] | None:
+        """Return Integration usb entries."""
+        return self.manifest.get("usb")
+
+    @property
+    def homekit(self) -> dict[str, list[str]] | None:
         """Return Integration homekit entries."""
-        return cast(Dict[str, List], self.manifest.get("homekit"))
+        return self.manifest.get("homekit")
 
     @property
     def is_built_in(self) -> bool:
@@ -365,7 +460,14 @@ class Integration:
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
 
     @property
-    def all_dependencies(self) -> Set[str]:
+    def version(self) -> AwesomeVersion | None:
+        """Return the version of the integration."""
+        if "version" not in self.manifest:
+            return None
+        return AwesomeVersion(self.manifest["version"])
+
+    @property
+    def all_dependencies(self) -> set[str]:
         """Return all dependencies including sub-dependencies."""
         if self._all_dependencies is None:
             raise RuntimeError("Dependencies not resolved!")
@@ -431,7 +533,7 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
-async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integration:
+async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration."""
     cache = hass.data.get(DATA_INTEGRATIONS)
     if cache is None:
@@ -439,7 +541,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
 
-    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
+    int_or_evt: Integration | asyncio.Event | None = cache.get(domain, _UNDEF)
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
@@ -456,39 +558,33 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
 
     event = cache[domain] = asyncio.Event()
 
+    try:
+        integration = await _async_get_integration(hass, domain)
+    except Exception:
+        # Remove event from cache.
+        cache.pop(domain)
+        event.set()
+        raise
+
+    cache[domain] = integration
+    event.set()
+    return integration
+
+
+async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
-    integration = (await async_get_custom_components(hass)).get(domain)
-    if integration is not None:
-        _LOGGER.warning(CUSTOM_WARNING, domain)
-        cache[domain] = integration
-        event.set()
+    if integration := (await async_get_custom_components(hass)).get(domain):
         return integration
 
     from homeassistant import components  # pylint: disable=import-outside-toplevel
 
-    integration = await hass.async_add_executor_job(
+    if integration := await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain
-    )
-
-    if integration is not None:
-        cache[domain] = integration
-        event.set()
+    ):
         return integration
 
-    integration = Integration.resolve_legacy(hass, domain)
-    if integration is not None:
-        cache[domain] = integration
-    else:
-        # Remove event from cache.
-        cache.pop(domain)
-
-    event.set()
-
-    if not integration:
-        raise IntegrationNotFound(domain)
-
-    return integration
+    raise IntegrationNotFound(domain)
 
 
 class LoaderError(Exception):
@@ -515,18 +611,16 @@ class CircularDependency(LoaderError):
 
 
 def _load_file(
-    hass: "HomeAssistant", comp_or_platform: str, base_paths: List[str]
-) -> Optional[ModuleType]:
+    hass: HomeAssistant, comp_or_platform: str, base_paths: list[str]
+) -> ModuleType | None:
     """Try to load specified file.
 
     Looks in config dir first, then built-in components.
     Only returns it if also found to be valid.
     Async friendly.
     """
-    try:
+    with suppress(KeyError):
         return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
-    except KeyError:
-        pass
 
     cache = hass.data.get(DATA_COMPONENTS)
     if cache is None:
@@ -552,9 +646,6 @@ def _load_file(
 
             cache[comp_or_platform] = module
 
-            if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-                _LOGGER.warning(CUSTOM_WARNING, comp_or_platform)
-
             return module
 
         except ImportError as err:
@@ -579,7 +670,7 @@ def _load_file(
 class ModuleWrapper:
     """Class to wrap a Python module and auto fill in hass argument."""
 
-    def __init__(self, hass: "HomeAssistant", module: ModuleType) -> None:
+    def __init__(self, hass: HomeAssistant, module: ModuleType) -> None:
         """Initialize the module wrapper."""
         self._hass = hass
         self._module = module
@@ -598,7 +689,7 @@ class ModuleWrapper:
 class Components:
     """Helper to load components."""
 
-    def __init__(self, hass: "HomeAssistant") -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Components class."""
         self._hass = hass
 
@@ -608,7 +699,7 @@ class Components:
         integration = self._hass.data.get(DATA_INTEGRATIONS, {}).get(comp_name)
 
         if isinstance(integration, Integration):
-            component: Optional[ModuleType] = integration.get_component()
+            component: ModuleType | None = integration.get_component()
         else:
             # Fallback to importing old-school
             component = _load_file(self._hass, comp_name, _lookup_path(self._hass))
@@ -624,7 +715,7 @@ class Components:
 class Helpers:
     """Helper to load helpers."""
 
-    def __init__(self, hass: "HomeAssistant") -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Helpers class."""
         self._hass = hass
 
@@ -643,12 +734,12 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant",
+    hass: HomeAssistant,
     start_domain: str,
     integration: Integration,
-    loaded: Set[str],
-    loading: Set[str],
-) -> Set[str]:
+    loaded: set[str],
+    loading: set[str],
+) -> set[str]:
     """Recursive function to get component dependencies.
 
     Async friendly.
@@ -685,7 +776,7 @@ async def _async_component_dependencies(
     return loaded
 
 
-def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
+def _async_mount_config_dir(hass: HomeAssistant) -> bool:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.
@@ -698,7 +789,7 @@ def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     return True
 
 
-def _lookup_path(hass: "HomeAssistant") -> List[str]:
+def _lookup_path(hass: HomeAssistant) -> list[str]:
     """Return the lookup paths for legacy lookups."""
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]

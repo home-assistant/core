@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "login": "Chyba p\u0159ihl\u00e1\u0161en\u00ed: zkontrolujte pros\u00edm sv\u016fj e-mail a heslo",
             "send_verification_code": "Odesl\u00e1n\u00ed ov\u011b\u0159ovac\u00edho k\u00f3du se nezda\u0159ilo",
             "validate_verification_code": "Nepoda\u0159ilo se ov\u011b\u0159it v\u00e1\u0161 ov\u011b\u0159ovac\u00ed k\u00f3d, vyberte d\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed a spus\u0165te ov\u011b\u0159en\u00ed znovu"
         },

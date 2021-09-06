@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostnaam (of IP-adres van uw Twinkly apparaat"
+                },
+                "description": "Uw Twinkly LED-string instellen",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "Slu\u017eba je ji\u017e nastavena",
-            "name_exists": "Um\u00edst\u011bn\u00ed ji\u017e existuje"
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
         },
         "step": {
             "user": {

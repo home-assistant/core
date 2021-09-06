@@ -1,9 +1,7 @@
 {
-  "title": "Smart Meter Texas",
   "config": {
     "step": {
       "user": {
-        "description": "Provide your username and password for Smart Meter Texas.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

@@ -8,8 +8,7 @@
             "onvif_error": "Error setting up ONVIF device.  Check logs for more information."
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "connection_failed": "Could not connect to ONVIF service with provided credentials."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "auth": {
@@ -18,6 +17,16 @@
                     "username": "Username"
                 },
                 "title": "Configure authentication"
+            },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Configure ONVIF device"
             },
             "configure_profile": {
                 "data": {
@@ -41,6 +50,9 @@
                 "title": "Configure ONVIF device"
             },
             "user": {
+                "data": {
+                    "auto": "Search automatically"
+                },
                 "description": "By clicking submit, we will search your network for ONVIF devices that support Profile S.\n\nSome manufacturers have started to disable ONVIF by default. Please ensure ONVIF is enabled in your camera's configuration.",
                 "title": "ONVIF device setup"
             }

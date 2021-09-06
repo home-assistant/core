@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "conn_error": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
-            "auth_failed": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "flow_title": "Tuya \u8a2d\u5b9a",
@@ -22,6 +19,46 @@
                 },
                 "description": "\u8f38\u5165 Tuya \u6191\u8b49\u3002",
                 "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "error": {
+            "dev_multi_type": "\u591a\u91cd\u9078\u64c7\u8a2d\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u4f7f\u7528\u76f8\u540c\u985e\u578b",
+            "dev_not_config": "\u88dd\u7f6e\u985e\u578b\u7121\u6cd5\u8a2d\u5b9a",
+            "dev_not_found": "\u627e\u4e0d\u5230\u88dd\u7f6e"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "\u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b\u4eae\u5ea6\u7bc4\u570d",
+                    "curr_temp_divider": "\u76ee\u524d\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "max_kelvin": "Kelvin \u652f\u63f4\u6700\u9ad8\u8272\u6eab",
+                    "max_temp": "\u6700\u9ad8\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "min_kelvin": "Kelvin \u652f\u63f4\u6700\u4f4e\u8272\u6eab",
+                    "min_temp": "\u6700\u4f4e\u76ee\u6a19\u8272\u6eab\uff08\u4f7f\u7528\u6700\u4f4e\u8207\u6700\u9ad8 = 0 \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "set_temp_divided": "\u4f7f\u7528\u5206\u9694\u865f\u6eab\u5ea6\u503c\u4ee5\u57f7\u884c\u8a2d\u5b9a\u6eab\u5ea6\u6307\u4ee4",
+                    "support_color": "\u5f37\u5236\u8272\u6eab\u652f\u63f4",
+                    "temp_divider": "\u8272\u6eab\u503c\u5206\u914d\u5668\uff080 = \u4f7f\u7528\u9810\u8a2d\uff09",
+                    "temp_step_override": "\u76ee\u6a19\u6eab\u5ea6\u8a2d\u5b9a",
+                    "tuya_max_coltemp": "\u88dd\u7f6e\u56de\u5831\u6700\u9ad8\u8272\u6eab",
+                    "unit_of_measurement": "\u88dd\u7f6e\u6240\u4f7f\u7528\u4e4b\u6eab\u5ea6\u55ae\u4f4d"
+                },
+                "description": "\u8a2d\u5b9a\u9078\u9805\u4ee5\u8abf\u6574 {device_type} \u88dd\u7f6e `{device_name}` \u986f\u793a\u8cc7\u8a0a",
+                "title": "\u8a2d\u5b9a Tuya \u88dd\u7f6e"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "\u63a2\u7d22\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd",
+                    "list_devices": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u8a2d\u5b9a\u3001\u6216\u4fdd\u6301\u7a7a\u767d\u4ee5\u5132\u5b58\u8a2d\u5b9a",
+                    "query_device": "\u9078\u64c7\u88dd\u7f6e\u5c07\u4f7f\u7528\u67e5\u8a62\u65b9\u5f0f\u4ee5\u7372\u5f97\u66f4\u5feb\u7684\u72c0\u614b\u66f4\u65b0",
+                    "query_interval": "\u67e5\u8a62\u88dd\u7f6e\u66f4\u65b0\u79d2\u9593\u8ddd"
+                },
+                "description": "\u66f4\u65b0\u9593\u8ddd\u4e0d\u8981\u8a2d\u5b9a\u7684\u904e\u4f4e\u3001\u53ef\u80fd\u6703\u5c0e\u81f4\u65bc\u65e5\u8a8c\u4e2d\u7522\u751f\u932f\u8aa4\u8a0a\u606f",
+                "title": "\u8a2d\u5b9a Tuya \u9078\u9805"
             }
         }
     }

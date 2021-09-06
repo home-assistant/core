@@ -14,7 +14,7 @@
                     "language": "Language",
                     "latitude": "[%key:common::config_flow::data::latitude%]",
                     "longitude": "[%key:common::config_flow::data::longitude%]",
-                    "mode": "Mode",
+                    "mode": "[%key:common::config_flow::data::mode%]",
                     "name": "Name of the integration"
                 },
                 "description": "Set up OpenWeatherMap integration. To generate API key go to https://openweathermap.org/appid",
@@ -27,7 +27,7 @@
             "init": {
                 "data": {
                     "language": "Language",
-                    "mode": "Mode"
+                    "mode": "[%key:common::config_flow::data::mode%]"
                 }
             }
         }

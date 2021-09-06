@@ -1,6 +1,10 @@
 """Webhooks for Home Assistant."""
+from __future__ import annotations
+
+from collections.abc import Awaitable
 import logging
 import secrets
+from typing import Callable
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -8,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import HTTP_OK
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
@@ -28,7 +32,13 @@ SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 
 @callback
 @bind_hass
-def async_register(hass, domain, name, webhook_id, handler):
+def async_register(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    webhook_id: str,
+    handler: Callable[[HomeAssistant, str, Request], Awaitable[Response | None]],
+) -> None:
     """Register a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
 
@@ -40,21 +50,21 @@ def async_register(hass, domain, name, webhook_id, handler):
 
 @callback
 @bind_hass
-def async_unregister(hass, webhook_id):
+def async_unregister(hass: HomeAssistant, webhook_id: str) -> None:
     """Remove a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
     handlers.pop(webhook_id, None)
 
 
 @callback
-def async_generate_id():
+def async_generate_id() -> str:
     """Generate a webhook_id."""
     return secrets.token_hex(32)
 
 
 @callback
 @bind_hass
-def async_generate_url(hass, webhook_id):
+def async_generate_url(hass: HomeAssistant, webhook_id: str) -> str:
     """Generate the full URL for a webhook_id."""
     return "{}{}".format(
         get_url(hass, prefer_external=True, allow_cloud=False),
@@ -63,7 +73,7 @@ def async_generate_url(hass, webhook_id):
 
 
 @callback
-def async_generate_path(webhook_id):
+def async_generate_path(webhook_id: str) -> str:
     """Generate the path component for a webhook_id."""
     return URL_WEBHOOK_PATH.format(webhook_id=webhook_id)
 
@@ -89,7 +99,7 @@ async def async_handle_webhook(hass, webhook_id, request):
         # Look at content to provide some context for received webhook
         # Limit to 64 chars to avoid flooding the log
         content = await request.content.read(64)
-        _LOGGER.debug("%s...", content)
+        _LOGGER.debug("%s", content)
         return Response(status=HTTP_OK)
 
     try:

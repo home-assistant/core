@@ -1,10 +1,13 @@
 """Support for Luftdaten stations."""
+from __future__ import annotations
+
 import logging
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenError
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -12,8 +15,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    PRESSURE_PA,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -33,6 +39,8 @@ DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
+PLATFORMS = ["sensor"]
+
 SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
 SENSOR_PM2_5 = "P2"
@@ -42,44 +50,73 @@ SENSOR_TEMPERATURE = "temperature"
 
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
-SENSORS = {
-    SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
-    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_PA],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_PA],
-    SENSOR_PM10: [
-        "PM10",
-        "mdi:thought-bubble",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ],
-    SENSOR_PM2_5: [
-        "PM2.5",
-        "mdi:thought-bubble-outline",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    ],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_HUMIDITY,
+        name="Humidity",
+        icon="mdi:water-percent",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PRESSURE,
+        name="Pressure",
+        icon="mdi:arrow-down-bold",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PRESSURE_AT_SEALEVEL,
+        name="Pressure at sealevel",
+        icon="mdi:download",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PM10,
+        name="PM10",
+        icon="mdi:thought-bubble",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_PM2_5,
+        name="PM2.5",
+        icon="mdi:thought-bubble-outline",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
+                    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -144,7 +181,7 @@ async def async_setup_entry(hass, config_entry):
         luftdaten = LuftDatenData(
             Luftdaten(config_entry.data[CONF_SENSOR_ID], hass.loop, session),
             config_entry.data.get(CONF_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(SENSORS)
+                CONF_MONITORED_CONDITIONS, SENSOR_KEYS
             ),
         )
         await luftdaten.async_update()
@@ -152,9 +189,7 @@ async def async_setup_entry(hass, config_entry):
     except LuftdatenError as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     async def refresh_sensors(event_time):
         """Refresh Luftdaten data."""
@@ -181,7 +216,7 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
 
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class LuftDatenData:
@@ -198,8 +233,9 @@ class LuftDatenData:
         try:
             await self.client.get_data()
 
-            self.data[DATA_LUFTDATEN] = self.client.values
-            self.data[DATA_LUFTDATEN].update(self.client.meta)
+            if self.client.values:
+                self.data[DATA_LUFTDATEN] = self.client.values
+                self.data[DATA_LUFTDATEN].update(self.client.meta)
 
         except LuftdatenError:
             _LOGGER.error("Unable to retrieve data from luftdaten.info")

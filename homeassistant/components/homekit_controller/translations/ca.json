@@ -12,15 +12,13 @@
         },
         "error": {
             "authentication_error": "Codi HomeKit incorrecte. Verifica'l i torna-ho a provar.",
-            "busy_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 actualment ho est\u00e0 intentant amb un altre controlador diferent.",
+            "insecure_setup_code": "El codi de configuraci\u00f3 sol\u00b7licitat no \u00e9s segur per naturalesa. Aquest accessori no compleix els requisits b\u00e0sics de seguretat.",
             "max_peers_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 no t\u00e9 suficient espai lliure.",
-            "max_tries_error": "El dispositiu ha refusat la vinculaci\u00f3 perqu\u00e8 ha rebut m\u00e9s de 100 intents d'autenticaci\u00f3 fallits.",
             "pairing_failed": "S'ha produ\u00eft un error mentre s'intentava la vinculaci\u00f3 amb aquest dispositiu. Pot ser que sigui un error temporal o pot ser que el teu dispositiu encara no sigui compatible.",
-            "protocol_error": "Error en comunicar-se amb l'accessori. \u00c9s possible que el dispositiu no estigui en mode de vinculaci\u00f3, potser cal pr\u00e9mer un bot\u00f3 f\u00edsic o virtual.",
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
         },
-        "flow_title": "{name} a trav\u00e9s de HomeKit Accessory Protocol",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Atura la vinculaci\u00f3 a tots els controladors o prova de reiniciar el dispositiu, despr\u00e9s, segueix amb la vinculaci\u00f3.",
@@ -32,6 +30,7 @@
             },
             "pair": {
                 "data": {
+                    "allow_insecure_setup_codes": "Permet la vinculaci\u00f3 amb codis de configuraci\u00f3 insegurs.",
                     "pairing_code": "Codi de vinculaci\u00f3"
                 },
                 "description": "El controlador HomeKit es comunica amb {name} a trav\u00e9s de la xarxa d'\u00e0rea local utilitzant una connexi\u00f3 segura encriptada sense un HomeKit o iCloud separats. Introdueix el codi de vinculaci\u00f3 de HomeKit (en format XXX-XX-XXX) per utilitzar aquest accessori. Aquest codi es troba normalment en el propi dispositiu o en la seva caixa.",
@@ -40,10 +39,6 @@
             "protocol_error": {
                 "description": "\u00c9s possible que el dispositiu no estigui en mode de vinculaci\u00f3, potser cal pr\u00e9mer un bot\u00f3 f\u00edsic o virtual. Assegura't que el dispositiu est\u00e0 en mode vinculaci\u00f3 o prova de reiniciar-lo, despr\u00e9s, segueix amb la vinculaci\u00f3.",
                 "title": "Error en comunicar-se amb l'accessori"
-            },
-            "try_pair_later": {
-                "description": "Assegura't que el dispositiu estigui en mode vinculaci\u00f3 o prova de reiniciar-lo, despr\u00e9s continua reiniciant la vinculaci\u00f3.",
-                "title": "Vinculaci\u00f3 no disponible"
             },
             "user": {
                 "data": {

@@ -4,9 +4,7 @@ import logging
 
 import aiohttp
 import tibber
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
@@ -20,10 +18,7 @@ PLATFORMS = [
     "sensor",
 ]
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,18 +27,6 @@ async def async_setup(hass, config):
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
-
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
     return True
 
 
@@ -60,7 +43,7 @@ async def async_setup_entry(hass, entry):
     async def _close(event):
         await tibber_connection.rt_disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()
@@ -73,10 +56,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Failed to login. %s", exp)
         return False
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -90,17 +70,10 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
-
     if unload_ok:
         tibber_connection = hass.data.get(DOMAIN)
         await tibber_connection.rt_disconnect()
-
     return unload_ok

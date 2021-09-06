@@ -4,7 +4,6 @@
             "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno"
         },
         "error": {
-            "auth": "Kl\u00ed\u010d API nen\u00ed spr\u00e1vn\u00fd.",
             "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
             "wrong_location": "\u017d\u00e1dn\u00e9 m\u011b\u0159ic\u00ed stanice Airly v t\u00e9to oblasti."
         },
@@ -19,6 +18,11 @@
                 "description": "Nastavte integraci kvality vzduchu Airly. Chcete-li vygenerovat kl\u00ed\u010d rozhran\u00ed API, p\u0159ejd\u011bte na https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Lze kontaktovat Airly server"
         }
     }
 }

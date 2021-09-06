@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bu Plex sunucusu zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "title": "Plex Medya Sunucusu"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Kurulum y\u00f6ntemi"
+                },
+                "title": "Plex Medya Sunucusu"
+            }
+        }
+    }
+}

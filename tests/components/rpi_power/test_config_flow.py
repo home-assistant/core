@@ -1,4 +1,6 @@
 """Tests for rpi_power config flow."""
+from unittest.mock import MagicMock
+
 from homeassistant.components.rpi_power.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -8,7 +10,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import MagicMock
 from tests.common import patch
 
 MODULE = "homeassistant.components.rpi_power.config_flow.new_under_voltage"

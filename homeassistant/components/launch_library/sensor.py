@@ -1,21 +1,27 @@
 """A sensor platform that give you information about the next space launch."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
-from pylaunches.api import Launches
+from pylaunches import PyLaunches, PyLaunchesException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+
+from .const import (
+    ATTR_AGENCY,
+    ATTR_AGENCY_COUNTRY_CODE,
+    ATTR_LAUNCH_TIME,
+    ATTR_STREAM,
+    ATTRIBUTION,
+    DEFAULT_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Launch Library."
-
-DEFAULT_NAME = "Next launch"
 
 SCAN_INTERVAL = timedelta(hours=1)
 
@@ -26,59 +32,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the launch sensor."""
-
     name = config[CONF_NAME]
-
     session = async_get_clientsession(hass)
-    launches = Launches(hass.loop, session)
-    sensor = [LaunchLibrarySensor(launches, name)]
-    async_add_entities(sensor, True)
+    launches = PyLaunches(session)
+
+    async_add_entities([LaunchLibrarySensor(launches, name)], True)
 
 
-class LaunchLibrarySensor(Entity):
+class LaunchLibrarySensor(SensorEntity):
     """Representation of a launch_library Sensor."""
 
-    def __init__(self, launches, name):
+    _attr_icon = "mdi:rocket"
+
+    def __init__(self, api: PyLaunches, name: str) -> None:
         """Initialize the sensor."""
-        self.launches = launches
-        self._attributes = {}
-        self._name = name
-        self._state = None
+        self.api = api
+        self._attr_name = name
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data."""
-        await self.launches.get_launches()
-        if self.launches.launches is None:
-            _LOGGER.error("No data received")
-            return
         try:
-            data = self.launches.launches[0]
-            self._state = data["name"]
-            self._attributes["launch_time"] = data["start"]
-            self._attributes["agency"] = data["agency"]
-            agency_country_code = data["agency_country_code"]
-            self._attributes["agency_country_code"] = agency_country_code
-            self._attributes["stream"] = data["stream"]
-            self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
-        except (KeyError, IndexError) as error:
-            _LOGGER.debug("Error getting data, %s", error)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return "mdi:rocket"
-
-    @property
-    def device_state_attributes(self):
-        """Return attributes for the sensor."""
-        return self._attributes
+            launches = await self.api.upcoming_launches()
+        except PyLaunchesException as exception:
+            _LOGGER.error("Error getting data, %s", exception)
+            self._attr_available = False
+        else:
+            if next_launch := next((launch for launch in launches), None):
+                self._attr_available = True
+                self._attr_native_value = next_launch.name
+                self._attr_extra_state_attributes = {
+                    ATTR_LAUNCH_TIME: next_launch.net,
+                    ATTR_AGENCY: next_launch.launch_service_provider.name,
+                    ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
+                    ATTR_STREAM: next_launch.webcast_live,
+                    ATTR_ATTRIBUTION: ATTRIBUTION,
+                }

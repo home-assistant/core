@@ -8,8 +8,7 @@
             "onvif_error": "Errore durante la configurazione del dispositivo ONVIF.  Controllare i registri per ulteriori informazioni."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "connection_failed": "Impossibile connettersi al servizio ONVIF con le credenziali fornite."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "auth": {
@@ -18,6 +17,16 @@
                     "username": "Nome utente"
                 },
                 "title": "Configurare l'autenticazione"
+            },
+            "configure": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Configura il dispositivo ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -41,6 +50,9 @@
                 "title": "Configurare il dispositivo ONVIF"
             },
             "user": {
+                "data": {
+                    "auto": "Cerca automaticamente"
+                },
                 "description": "Facendo clic su Invia, cercheremo nella tua rete i dispositivi ONVIF che supportano il profilo S. \n\nAlcuni produttori hanno iniziato a disabilitare ONVIF per impostazione predefinita. Assicurati che ONVIF sia abilitato nella configurazione della tua telecamera.",
                 "title": "Configurazione del dispositivo ONVIF"
             }

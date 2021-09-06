@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ee Kontroller ass scho konfigur\u00e9iert",
             "cannot_connect": "Et konnt keng Verbindung mam Kontroller mat der URL {base_url} hiergestallt ginn"
         },
         "step": {

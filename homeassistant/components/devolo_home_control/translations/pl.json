@@ -1,23 +1,28 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika i/lub has\u0142o"
+            "reauth_failed": "U\u017cyj tego samego u\u017cytkownika mydevolo co poprzednio."
         },
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "URL Home Control",
                     "mydevolo_url": "URL mydevolo",
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika/identyfikator devolo"
-                },
-                "title": "devolo Home Control"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail/identyfikator devolo"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

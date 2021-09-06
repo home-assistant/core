@@ -1,10 +1,9 @@
 """Support for getting information from Arduino pins."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -30,30 +29,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ArduinoSensor(Entity):
+class ArduinoSensor(SensorEntity):
     """Representation of an Arduino Sensor."""
 
     def __init__(self, name, pin, pin_type, board):
         """Initialize the sensor."""
         self._pin = pin
-        self._name = name
-        self.pin_type = pin_type
-        self.direction = "in"
-        self._value = None
+        self._attr_name = name
 
-        board.set_mode(self._pin, self.direction, self.pin_type)
+        board.set_mode(self._pin, "in", pin_type)
         self._board = board
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
-    def name(self):
-        """Get the name of the sensor."""
-        return self._name
 
     def update(self):
         """Get the latest value from the pin."""
-        self._value = self._board.get_analog_inputs()[self._pin][1]
+        self._attr_native_value = self._board.get_analog_inputs()[self._pin][1]

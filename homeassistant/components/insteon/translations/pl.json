@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Po\u0142\u0105czenie z modemem Insteon jest ju\u017c skonfigurowane",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
@@ -10,24 +9,6 @@
             "select_single": "Wybierz jedn\u0105 z opcji"
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Adres IP Huba",
-                    "port": "Numer portu IP"
-                },
-                "description": "Konfiguracja Huba Insteon \u2014 wersja 1 (sprzed 2014r.)",
-                "title": "Hub Insteon \u2014 wersja 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Adres IP Huba",
-                    "password": "Has\u0142o",
-                    "port": "Numer portu IP",
-                    "username": "Nazwa u\u017cytkownika"
-                },
-                "description": "Konfiguracja Huba Insteon \u2014 wersja 2.",
-                "title": "Hub Insteon \u2014 wersja 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "Adres IP",
@@ -46,15 +27,6 @@
                 "description": "Konfiguracja Huba Insteon \u2014 wersja 2",
                 "title": "Hub Insteon \u2014 wersja 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub \u2014 wersja 1 (sprzed 2014r.)",
-                    "hubv2": "Hub \u2014 wersja 2",
-                    "plm": "Modem PowerLink (PLM)"
-                },
-                "description": "Wybierz typ modemu Insteon.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "\u015acie\u017cka urz\u0105dzenia USB"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Po\u0142\u0105czenie z modemem Insteon jest ju\u017c skonfigurowane",
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z modemem Insteon"
-        },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "input_error": "Nieprawid\u0142owe wpisy, sprawd\u017a wpisane warto\u015bci",
@@ -108,7 +76,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistant. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
+                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistanta. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
                 "title": "Insteon"
             },
             "init": {

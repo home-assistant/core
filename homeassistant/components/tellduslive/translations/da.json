@@ -1,12 +1,8 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Ukendt fejl ved generering af en autoriseret url.",
             "authorize_url_timeout": "Timeout ved generering af autoriseret url.",
             "unknown": "Ukendt fejl opstod"
-        },
-        "error": {
-            "auth_error": "Godkendelsesfejl, pr\u00f8v venligst igen"
         },
         "step": {
             "auth": {

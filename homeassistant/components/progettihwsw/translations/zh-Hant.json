@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
-            "wrong_info_relay_modes": "\u7e7c\u96fb\u5668\u6a21\u5f0f\u9078\u64c7\u5fc5\u9808\u70ba\u8907\u632f\u5668\u6216\u96d9\u7a69\u614b\u96fb\u8def\u3002"
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
             "relay_modes": {
@@ -38,6 +37,5 @@
                 "title": "\u8a2d\u5b9a\u4e3b\u6a5f\u677f"
             }
         }
-    },
-    "title": "ProgettiHWSW \u81ea\u52d5\u5316"
+    }
 }

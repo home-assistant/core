@@ -15,6 +15,7 @@ from tests.common import (
     async_mock_service,
     mock_device_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 REMOTES_RESPONSE = {"7": HUE_TAP_REMOTE_1, "8": HUE_DIMMER_REMOTE_1}
 
@@ -42,7 +43,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
 
     # Get triggers for specific tap switch
     hue_tap_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}, connections={}
+        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     triggers = await async_get_device_automations(hass, "trigger", hue_tap_device.id)
 
@@ -54,13 +55,13 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
             "type": t_type,
             "subtype": t_subtype,
         }
-        for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE.keys()
+        for t_type, t_subtype in device_trigger.HUE_TAP_REMOTE
     ]
     assert_lists_same(triggers, expected_triggers)
 
     # Get triggers for specific dimmer switch
     hue_dimmer_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}, connections={}
+        {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
     triggers = await async_get_device_automations(hass, "trigger", hue_dimmer_device.id)
 
@@ -73,7 +74,7 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
     }
     expected_triggers = [
         trigger_batt,
-        *[
+        *(
             {
                 "platform": "device",
                 "domain": hue.DOMAIN,
@@ -81,8 +82,8 @@ async def test_get_triggers(hass, mock_bridge, device_reg):
                 "type": t_type,
                 "subtype": t_subtype,
             }
-            for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE.keys()
-        ],
+            for t_type, t_subtype in device_trigger.HUE_DIMMER_REMOTE
+        ),
     ]
     assert_lists_same(triggers, expected_triggers)
 
@@ -96,7 +97,7 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
 
     # Set an automation with a specific tap switch trigger
     hue_tap_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}, connections={}
+        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
     assert await async_setup_component(
         hass,
@@ -139,6 +140,7 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
 
     # Fake that the remote is being pressed.
     new_sensor_response = dict(REMOTES_RESPONSE)
+    new_sensor_response["7"] = dict(new_sensor_response["7"])
     new_sensor_response["7"]["state"] = {
         "buttonevent": 18,
         "lastupdated": "2019-12-28T22:58:02",
@@ -155,7 +157,7 @@ async def test_if_fires_on_state_change(hass, mock_bridge, device_reg, calls):
     assert calls[0].data["some"] == "B4 - 18"
 
     # Fake another button press.
-    new_sensor_response = dict(REMOTES_RESPONSE)
+    new_sensor_response["7"] = dict(new_sensor_response["7"])
     new_sensor_response["7"]["state"] = {
         "buttonevent": 34,
         "lastupdated": "2019-12-28T22:58:05",

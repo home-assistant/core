@@ -6,15 +6,12 @@
             "not_huawei_lte": "No es un dispositivo Huawei LTE"
         },
         "error": {
-            "connection_failed": "La conexi\u00f3n fall\u00f3",
             "connection_timeout": "El tiempo de conexi\u00f3n expir\u00f3",
             "incorrect_password": "Contrase\u00f1a incorrecta",
             "incorrect_username": "Nombre de usuario incorrecto",
-            "incorrect_username_or_password": "Nombre de usuario o contrase\u00f1a incorrecta",
             "invalid_url": "URL invalida",
             "login_attempts_exceeded": "Se han excedido los intentos de inicio de sesi\u00f3n m\u00e1ximos. Vuelva a intentarlo m\u00e1s tarde",
-            "response_error": "Error desconocido del dispositivo",
-            "unknown_connection_error": "Error desconocido al conectarse al dispositivo"
+            "response_error": "Error desconocido del dispositivo"
         },
         "step": {
             "user": {

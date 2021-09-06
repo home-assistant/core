@@ -1,8 +1,10 @@
 """Support for Salda Smarty XP/XV Ventilation Unit Sensors."""
+from __future__ import annotations
 
 import datetime as dt
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -10,7 +12,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
@@ -35,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class SmartySensor(Entity):
+class SmartySensor(SensorEntity):
     """Representation of a Smarty Sensor."""
 
     def __init__(
@@ -43,7 +44,7 @@ class SmartySensor(Entity):
     ):
         """Initialize the entity."""
         self._name = name
-        self._state = None
+        self._state: dt.datetime | None = None
         self._sensor_type = device_class
         self._unit_of_measurement = unit_of_measurement
         self._smarty = smarty
@@ -64,12 +65,12 @@ class SmartySensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 

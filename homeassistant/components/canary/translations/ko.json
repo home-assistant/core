@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\uc774\ubbf8 \uc124\uc815\ub418\uc5b4 \uc788\uc74c. \ud558\ub098\uc758 \uc124\uc815\ub9cc \uac00\ub2a5\ud568.",
-            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec \ubc1c\uc0dd"
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328"
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "flow_title": "Canary: {name}",
         "step": {
             "user": {
                 "data": {
-                    "password": "\uc554\ud638",
-                    "username": "\uc0ac\uc6a9\uc790\uba85"
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
-                "title": "Canary\uc5d0 \uc5f0\uacb0"
+                "title": "Canary\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
         }
     },
@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "ffmpeg_arguments": "\uce74\uba54\ub77c ffmpeg\uc5d0 \uc804\ub2ec \ub41c \uc778\uc218",
+                    "ffmpeg_arguments": "\uce74\uba54\ub77c\uc5d0 \ub300\ud55c ffmpeg \uc804\ub2ec \uc778\uc218",
                     "timeout": "\uc694\uccad \uc81c\ud55c \uc2dc\uac04 (\ucd08)"
                 }
             }

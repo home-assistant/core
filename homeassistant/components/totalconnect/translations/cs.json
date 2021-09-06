@@ -1,13 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "login": "Chyba p\u0159ihl\u00e1\u0161en\u00ed: zkontrolujte sv\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no a heslo"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Um\u00edst\u011bn\u00ed"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",

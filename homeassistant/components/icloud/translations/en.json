@@ -7,9 +7,8 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
-            "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
+            "validate_verification_code": "Failed to verify your verification code, try again"
         },
         "step": {
             "reauth": {

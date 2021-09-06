@@ -1,9 +1,9 @@
 """Test the UPB Control config flow."""
 
+from unittest.mock import MagicMock, PropertyMock, patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.upb.const import DOMAIN
-
-from tests.async_mock import MagicMock, PropertyMock, patch
 
 
 def mocked_upb(sync_complete=True, config_ok=True):
@@ -43,8 +43,6 @@ async def test_full_upb_flow_with_serial_port(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with mocked_upb(), patch(
-        "homeassistant.components.upb.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         flow = await hass.config_entries.flow.async_init(
@@ -69,7 +67,6 @@ async def test_full_upb_flow_with_serial_port(hass):
         "host": "serial:///dev/ttyS0:115200",
         "file_path": "upb.upe",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -116,8 +113,6 @@ async def test_form_import(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with mocked_upb(), patch(
-        "homeassistant.components.upb.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
@@ -131,7 +126,6 @@ async def test_form_import(hass):
     assert result["title"] == "UPB"
 
     assert result["data"] == {"host": "tcp://42.4.2.42", "file_path": "upb.upe"}
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

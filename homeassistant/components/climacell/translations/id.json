@@ -1,0 +1,34 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_api_key": "Kunci API tidak valid",
+            "rate_limited": "Saat ini tingkatnya dibatasi, coba lagi nanti.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "api_version": "Versi API",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "name": "Nama"
+                },
+                "description": "Jika Lintang dan Bujur tidak tersedia, nilai default dalam konfigurasi Home Assistant akan digunakan. Entitas akan dibuat untuk setiap jenis prakiraan tetapi hanya yang Anda pilih yang akan diaktifkan secara default."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Jarak Interval Prakiraan NowCast dalam Menit"
+                },
+                "description": "Jika Anda memilih untuk mengaktifkan entitas prakiraan 'nowcast', Anda dapat mengonfigurasi jarak interval prakiraan dalam menit. Jumlah prakiraan yang diberikan tergantung pada nilai interval yang dipilih.",
+                "title": "Perbarui Opsi ClimaCell"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

@@ -45,7 +45,7 @@
                     "name": "Nazwa (opcjonalnie)",
                     "type": "Typ sensora binarnego"
                 },
-                "description": "Wybierz opcje dla sensora binarnego powi\u0105zanego ze {zone}",
+                "description": "Opcje {zone}",
                 "title": "Konfiguracja sensora binarnego"
             },
             "options_digital": {
@@ -54,7 +54,7 @@
                     "poll_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (minuty) (opcjonalnie)",
                     "type": "Typ sensora"
                 },
-                "description": "Wybierz opcje dla cyfrowego sensora powi\u0105zanego ze {zone}",
+                "description": "Opcje {zone}",
                 "title": "Konfiguracja sensora cyfrowego"
             },
             "options_io": {
@@ -90,7 +90,7 @@
                     "api_host": "Zast\u0119powanie adresu URL hosta API (opcjonalnie)",
                     "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu",
                     "discovery": "Odpowiadaj na \u017c\u0105dania wykrywania w Twojej sieci",
-                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistant"
+                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistanta"
                 },
                 "description": "Wybierz po\u017c\u0105dane zachowanie dla swojego panelu",
                 "title": "R\u00f3\u017cne opcje"

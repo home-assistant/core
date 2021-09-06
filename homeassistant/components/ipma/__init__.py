@@ -1,26 +1,18 @@
 """Component for the Portuguese weather service - IPMA."""
-from homeassistant.core import Config, HomeAssistant
-
 from .config_flow import IpmaFlowHandler  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
 DEFAULT_NAME = "ipma"
 
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured IPMA."""
-    return True
+PLATFORMS = ["weather"]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up IPMA station as config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "weather")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

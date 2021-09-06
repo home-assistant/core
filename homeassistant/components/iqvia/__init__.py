@@ -1,12 +1,15 @@
 """Support for IQVIA."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -34,15 +37,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up the IQVIA component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up IQVIA as config entry."""
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data.setdefault(DOMAIN, {})
+    coordinators = {}
 
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -51,7 +49,7 @@ async def async_setup_entry(hass, entry):
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(entry.data[CONF_ZIP_CODE], websession)
+    client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
     async def async_get_data_from_api(api_coro):
         """Get data from a particular API coroutine."""
@@ -61,7 +59,7 @@ async def async_setup_entry(hass, entry):
             raise UpdateFailed from err
 
     init_data_update_tasks = []
-    for sensor_type, api_coro in [
+    for sensor_type, api_coro in (
         (TYPE_ALLERGY_FORECAST, client.allergens.extended),
         (TYPE_ALLERGY_INDEX, client.allergens.current),
         (TYPE_ALLERGY_OUTLOOK, client.allergens.outlook),
@@ -69,104 +67,71 @@ async def async_setup_entry(hass, entry):
         (TYPE_ASTHMA_INDEX, client.asthma.current),
         (TYPE_DISEASE_FORECAST, client.disease.extended),
         (TYPE_DISEASE_INDEX, client.disease.current),
-    ]:
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            sensor_type
-        ] = DataUpdateCoordinator(
+    ):
+        coordinator = coordinators[sensor_type] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{entry.data[CONF_ZIP_CODE]} {sensor_type}",
             update_interval=DEFAULT_SCAN_INTERVAL,
-            update_method=lambda coro=api_coro: async_get_data_from_api(coro),
+            update_method=partial(async_get_data_from_api, api_coro),
         )
         init_data_update_tasks.append(coordinator.async_refresh())
 
-    await asyncio.gather(*init_data_update_tasks)
+    results = await asyncio.gather(*init_data_update_tasks, return_exceptions=True)
+    if all(isinstance(result, Exception) for result in results):
+        # The IQVIA API can be selectively flaky, meaning that any number of the setup
+        # API calls could fail. We only retry integration setup if *all* of the initial
+        # API calls fail:
+        raise ConfigEntryNotReady()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload an OpenUV config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity):
+class IQVIAEntity(CoordinatorEntity, SensorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(self, coordinator, entry, sensor_type, name, icon):
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_icon = icon
+        self._attr_name = name
+        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
+        self._attr_native_unit_of_measurement = "index"
         self._entry = entry
-        self._icon = icon
-        self._name = name
-        self._state = None
         self._type = sensor_type
 
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return self._attrs
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            return
 
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
-    def unique_id(self):
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._entry.data[CONF_ZIP_CODE]}_{self._type}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return "index"
+        self.update_from_latest_data()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
+        await super().async_added_to_hass()
 
         if self._type == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][TYPE_ALLERGY_OUTLOOK]
-            self.async_on_remove(outlook_coordinator.async_add_listener(update))
+            self.async_on_remove(
+                self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                    TYPE_ALLERGY_OUTLOOK
+                ].async_add_listener(self._handle_coordinator_update)
+            )
 
         self.update_from_latest_data()
 

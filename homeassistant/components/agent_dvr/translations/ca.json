@@ -5,8 +5,7 @@
         },
         "error": {
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "device_unavailable": "Dispositiu no est\u00e0 disponible"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "user": {
@@ -17,6 +16,5 @@
                 "title": "Configuraci\u00f3 de Agent DVR"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

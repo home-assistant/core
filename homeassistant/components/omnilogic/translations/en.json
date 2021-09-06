@@ -21,10 +21,10 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "pH offset (positive or negative)",
                     "polling_interval": "Polling interval (in seconds)"
                 }
             }
         }
-    },
-    "title": "Omnilogic"
+    }
 }

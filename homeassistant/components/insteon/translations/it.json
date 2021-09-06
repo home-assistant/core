@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Una connessione modem Insteon \u00e8 gi\u00e0 configurata",
             "cannot_connect": "Impossibile connettersi",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
@@ -10,24 +9,6 @@
             "select_single": "Selezionare un'opzione."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Indirizzo IP dell'hub",
-                    "port": "Porta IP"
-                },
-                "description": "Configurare la versione 1 di Insteon Hub (pre-2014).",
-                "title": "Insteon Hub versione 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Indirizzo IP dell'hub",
-                    "password": "Password",
-                    "port": "Porta IP",
-                    "username": "Nome utente"
-                },
-                "description": "Configurare la versione 2 di Insteon Hub.",
-                "title": "Insteon Hub versione 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "Indirizzo IP",
@@ -46,15 +27,6 @@
                 "description": "Configurare la versione 2 di Insteon Hub.",
                 "title": "Insteon Hub Versione 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub versione 1 (precedente al 2014)",
-                    "hubv2": "Hub versione 2",
-                    "plm": "Modem PowerLink (PLM)"
-                },
-                "description": "Selezionare il tipo di modem Insteon.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "Percorso del dispositivo USB"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Una connessione modem Insteon \u00e8 gi\u00e0 configurata",
-            "cannot_connect": "Impossibile connettersi al modem Insteon"
-        },
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "input_error": "Voci non valide, si prega di controllare i valori.",

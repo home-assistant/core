@@ -121,14 +121,14 @@ async def test_auth_active_with_token(
     assert auth_msg["type"] == TYPE_AUTH_OK
 
 
-async def test_auth_active_user_inactive(hass, aiohttp_client, hass_access_token):
+async def test_auth_active_user_inactive(hass, hass_client_no_auth, hass_access_token):
     """Test authenticating with a token."""
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -140,12 +140,12 @@ async def test_auth_active_user_inactive(hass, aiohttp_client, hass_access_token
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
+async def test_auth_active_with_password_not_allow(hass, hass_client_no_auth):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -157,12 +157,14 @@ async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_legacy_support_with_password(hass, aiohttp_client, legacy_auth):
+async def test_auth_legacy_support_with_password(
+    hass, hass_client_no_auth, legacy_auth
+):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -174,12 +176,12 @@ async def test_auth_legacy_support_with_password(hass, aiohttp_client, legacy_au
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_with_invalid_token(hass, aiohttp_client):
+async def test_auth_with_invalid_token(hass, hass_client_no_auth):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()

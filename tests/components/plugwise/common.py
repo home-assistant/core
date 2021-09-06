@@ -1,6 +1,6 @@
 """Common initialisation for the Plugwise integration."""
 
-from homeassistant.components.plugwise import DOMAIN
+from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

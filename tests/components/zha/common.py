@@ -1,8 +1,11 @@
 """Common test objects."""
+import asyncio
+import math
 import time
+from unittest.mock import AsyncMock, Mock
 
-from zigpy.device import Device as zigpy_dev
-from zigpy.endpoint import Endpoint as zigpy_ep
+import zigpy.device as zigpy_dev
+import zigpy.endpoint as zigpy_ep
 import zigpy.profiles.zha
 import zigpy.types
 import zigpy.zcl
@@ -12,8 +15,6 @@ import zigpy.zdo.types
 
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
-
-from tests.async_mock import AsyncMock, Mock
 
 
 class FakeEndpoint:
@@ -27,7 +28,7 @@ class FakeEndpoint:
         self.out_clusters = {}
         self._cluster_attr = {}
         self.member_of = {}
-        self.status = 1
+        self.status = zigpy_ep.Status.ZDO_INIT
         self.manufacturer = manufacturer
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
@@ -40,8 +41,9 @@ class FakeEndpoint:
         if _patch_cluster:
             patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
-        if hasattr(cluster, "ep_attribute"):
-            setattr(self, cluster.ep_attribute, cluster)
+        ep_attribute = cluster.ep_attribute
+        if ep_attribute:
+            setattr(self, ep_attribute, cluster)
 
     def add_output_cluster(self, cluster_id, _patch_cluster=True):
         """Add an output cluster."""
@@ -56,7 +58,7 @@ class FakeEndpoint:
     @property
     def __class__(self):
         """Fake being Zigpy endpoint."""
-        return zigpy_ep
+        return zigpy_ep.Endpoint
 
     @property
     def unique_id(self):
@@ -64,18 +66,47 @@ class FakeEndpoint:
         return self.device.ieee, self.endpoint_id
 
 
-FakeEndpoint.add_to_group = zigpy_ep.add_to_group
-FakeEndpoint.remove_from_group = zigpy_ep.remove_from_group
+FakeEndpoint.add_to_group = zigpy_ep.Endpoint.add_to_group
+FakeEndpoint.remove_from_group = zigpy_ep.Endpoint.remove_from_group
 
 
 def patch_cluster(cluster):
     """Patch a cluster for testing."""
+    cluster.PLUGGED_ATTR_READS = {}
+
+    async def _read_attribute_raw(attributes, *args, **kwargs):
+        result = []
+        for attr_id in attributes:
+            value = cluster.PLUGGED_ATTR_READS.get(attr_id)
+            if value is None:
+                # try converting attr_id to attr_name and lookup the plugs again
+                attr_name = cluster.attributes.get(attr_id)
+                value = attr_name and cluster.PLUGGED_ATTR_READS.get(attr_name[0])
+            if value is not None:
+                result.append(
+                    zcl_f.ReadAttributeRecord(
+                        attr_id,
+                        zcl_f.Status.SUCCESS,
+                        zcl_f.TypeValue(python_type=None, value=value),
+                    )
+                )
+            else:
+                result.append(zcl_f.ReadAttributeRecord(attr_id, zcl_f.Status.FAILURE))
+        return (result,)
+
     cluster.bind = AsyncMock(return_value=[0])
-    cluster.configure_reporting = AsyncMock(return_value=[0])
+    cluster.configure_reporting = AsyncMock(
+        return_value=[
+            [zcl_f.ConfigureReportingResponseRecord(zcl_f.Status.SUCCESS, 0x00, 0xAABB)]
+        ]
+    )
+    cluster.configure_reporting_multiple = AsyncMock(
+        return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
+    )
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.read_attributes = AsyncMock(return_value=[{}, {}])
-    cluster.read_attributes_raw = Mock()
+    cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
+    cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)
     cluster.unbind = AsyncMock(return_value=[0])
     cluster.write_attributes = AsyncMock(
         return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]]
@@ -98,12 +129,11 @@ class FakeDevice:
         self.lqi = 255
         self.rssi = 8
         self.last_seen = time.time()
-        self.status = 2
+        self.status = zigpy_dev.Status.ENDPOINTS_INIT
         self.initializing = False
         self.skip_configuration = False
         self.manufacturer = manufacturer
         self.model = model
-        self.node_desc = zigpy.zdo.types.NodeDescriptor()
         self.remove_from_group = AsyncMock()
         if node_desc is None:
             node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
@@ -111,7 +141,7 @@ class FakeDevice:
         self.neighbors = []
 
 
-FakeDevice.add_to_group = zigpy_dev.add_to_group
+FakeDevice.add_to_group = zigpy_dev.Device.add_to_group
 
 
 def get_zha_gateway(hass):
@@ -201,6 +231,7 @@ def reset_clusters(clusters):
     for cluster in clusters:
         cluster.bind.reset_mock()
         cluster.configure_reporting.reset_mock()
+        cluster.configure_reporting_multiple.reset_mock()
         cluster.write_attributes.reset_mock()
 
 
@@ -214,5 +245,26 @@ async def async_test_rejoin(hass, zigpy_device, clusters, report_counts, ep_id=1
     for cluster, reports in zip(clusters, report_counts):
         assert cluster.bind.call_count == 1
         assert cluster.bind.await_count == 1
-        assert cluster.configure_reporting.call_count == reports
-        assert cluster.configure_reporting.await_count == reports
+        if reports:
+            assert cluster.configure_reporting.call_count == 0
+            assert cluster.configure_reporting.await_count == 0
+            assert cluster.configure_reporting_multiple.call_count == math.ceil(
+                reports / zha_const.REPORT_CONFIG_ATTR_PER_REQ
+            )
+            assert cluster.configure_reporting_multiple.await_count == math.ceil(
+                reports / zha_const.REPORT_CONFIG_ATTR_PER_REQ
+            )
+        else:
+            # no reports at all
+            assert cluster.configure_reporting.call_count == reports
+            assert cluster.configure_reporting.await_count == reports
+            assert cluster.configure_reporting_multiple.call_count == reports
+            assert cluster.configure_reporting_multiple.await_count == reports
+
+
+async def async_wait_for_updates(hass):
+    """Wait until all scheduled updates are executed."""
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()

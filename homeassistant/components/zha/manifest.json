@@ -4,15 +4,28 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.20.3",
-    "pyserial==3.4",
-    "zha-quirks==0.0.45",
-    "zigpy-cc==0.5.2",
-    "zigpy-deconz==0.11.0",
-    "zigpy==0.26.0",
-    "zigpy-xbee==0.13.0",
-    "zigpy-zigate==0.6.2",
-    "zigpy-znp==0.2.2"
+    "bellows==0.27.0",
+    "pyserial==3.5",
+    "pyserial-asyncio==0.5",
+    "zha-quirks==0.0.60",
+    "zigpy-deconz==0.13.0",
+    "zigpy==0.37.1",
+    "zigpy-xbee==0.14.0",
+    "zigpy-zigate==0.7.3",
+    "zigpy-znp==0.5.4"
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga"]
+  "usb": [
+   {"vid":"10C4","pid":"EA60","description":"*2652*","known_devices":["slae.sh cc2652rb stick"]},
+   {"vid":"1CF1","pid":"0030","description":"*conbee*","known_devices":["Conbee II"]},
+   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]}
+  ],
+  "codeowners": ["@dmulcahey", "@adminiuga"],
+  "zeroconf": [
+    {
+      "type": "_esphomelib._tcp.local.",
+      "name": "tube*"
+    }
+  ],
+  "after_dependencies": ["usb", "zeroconf"],
+  "iot_class": "local_polling"
 }

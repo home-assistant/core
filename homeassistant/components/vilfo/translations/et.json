@@ -13,7 +13,9 @@
                 "data": {
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
                     "host": ""
-                }
+                },
+                "description": "Seadista Vilfo ruuteri sidumine. Vaja on oma Vilfo ruuteri hosti nime / IP-d ja API juurdep\u00e4\u00e4suluba. Lisateavet selle integreerimise ja selle kohta, kuidas neid \u00fcksikasju saada, leiad aadressilt https://www.home-assistant.io/integrations/vilfo",
+                "title": "\u00dchenda Vilfo ruuteriga"
             }
         }
     }

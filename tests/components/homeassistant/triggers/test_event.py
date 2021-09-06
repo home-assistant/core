@@ -17,7 +17,7 @@ def calls(hass):
 
 @pytest.fixture
 def context_with_user():
-    """Track calls to a mock service."""
+    """Create a context with default user_id."""
     return Context(user_id="test_user_id")
 
 
@@ -37,6 +37,43 @@ async def test_if_fires_on_event(hass, calls):
         {
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["id"] == 0
+
+
+async def test_if_fires_on_templated_event(hass, calls):
+    """Test the firing of events."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"event_type": "test_event"},
+                "trigger": {"platform": "event", "event_type": "{{event_type}}"},
                 "action": {"service": "test.automation"},
             }
         },
@@ -57,6 +94,33 @@ async def test_if_fires_on_event(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_if_fires_on_multiple_events(hass, calls):
+    """Test the firing of events."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": ["test_event", "test2_event"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    hass.bus.async_fire("test2_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].context.parent_id == context.id
+    assert calls[1].context.parent_id == context.id
 
 
 async def test_if_fires_on_event_extra_data(hass, calls, context_with_user):
@@ -129,6 +193,58 @@ async def test_if_fires_on_event_with_data_and_context(hass, calls, context_with
     hass.bus.async_fire(
         "test_event",
         {"some_attr": "some_value", "another": "value", "second_attr": "second_value"},
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_event_with_templated_data_and_context(
+    hass, calls, context_with_user
+):
+    """Test the firing of events with templated data and context."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {
+                    "attr_1_val": "milk",
+                    "attr_2_val": "beer",
+                    "user_id": context_with_user.user_id,
+                },
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {
+                        "attr_1": "{{attr_1_val}}",
+                        "attr_2": "{{attr_2_val}}",
+                    },
+                    "context": {"user_id": "{{user_id}}"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire(
+        "test_event",
+        {"attr_1": "milk", "another": "value", "attr_2": "beer"},
+        context=context_with_user,
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.bus.async_fire(
+        "test_event",
+        {"attr_1": "milk", "another": "value"},
+        context=context_with_user,
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1  # No new call
+
+    hass.bus.async_fire(
+        "test_event",
+        {"attr_1": "milk", "another": "value", "attr_2": "beer"},
     )
     await hass.async_block_till_done()
     assert len(calls) == 1

@@ -4,7 +4,6 @@
             "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "general_error": "Si \u00e8 verificato un errore sconosciuto.",
             "unknown": "Errore imprevisto"
         },
         "step": {

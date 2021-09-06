@@ -1,13 +1,40 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "No s'ha pogut obtenir la informaci\u00f3 del complement OpenZWave.",
+            "addon_install_failed": "No s'ha pogut instal\u00b7lar el complement OpenZWave.",
+            "addon_set_config_failed": "No s'ha pogut establir la configuraci\u00f3 d'OpenZWave.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "mqtt_required": "La integraci\u00f3 MQTT no est\u00e0 configurada",
-            "one_instance_allowed": "La integraci\u00f3 nom\u00e9s admet una inst\u00e0ncia Z-Wave",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
+        "error": {
+            "addon_start_failed": "No s'ha pogut iniciar el complement OpenZWave. Comprova la configuraci\u00f3."
+        },
+        "progress": {
+            "install_addon": "Espera mentre finalitza la instal\u00b7laci\u00f3 del complement OpenZWave. Pot tardar uns quants minuts."
+        },
         "step": {
-            "user": {
-                "title": "Confirmaci\u00f3 de configuraci\u00f3"
+            "hassio_confirm": {
+                "title": "Configuraci\u00f3 de la integraci\u00f3 d'OpenZWave amb el complement OpenZWave"
+            },
+            "install_addon": {
+                "title": "Ha comen\u00e7at la instal\u00b7laci\u00f3 del complement OpenZWave"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Utilitza el complement OpenZWave Supervisor"
+                },
+                "description": "Vols utilitzar el complement Supervisor d'OpenZWave?",
+                "title": "Selecciona el m\u00e8tode de connexi\u00f3"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Clau de xarxa",
+                    "usb_path": "Ruta del port USB del dispositiu"
+                },
+                "title": "Introdueix la configuraci\u00f3 del complement OpenZWave"
             }
         }
     }

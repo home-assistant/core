@@ -4,7 +4,6 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "duplicate_entry": "Questo host \u00e8 gi\u00e0 stato aggiunto.",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
@@ -17,10 +16,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Inserisci il nome host o l'IP del tuo server Roon.",
-                "title": "Configurare Il server Roon"
+                "description": "Impossibile individuare il server Roon, inserire l'hostname o l'IP."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

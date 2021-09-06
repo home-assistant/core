@@ -3,7 +3,7 @@
   "name": "Netatmo",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": [
-    "pyatmo==4.1.0"
+    "pyatmo==5.2.3"
   ],
   "after_dependencies": [
     "cloud",
@@ -23,5 +23,6 @@
       "Presence",
       "Welcome"
     ]
-  }
+  },
+  "iot_class": "cloud_polling"
 }

@@ -1,11 +1,11 @@
-"""Support for devices connected to UniFi POE."""
+"""Integration to UniFi controllers and its various features."""
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .config_flow import get_controller_id_from_config_entry
 from .const import (
     ATTR_MANUFACTURER,
+    CONF_CONTROLLER,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
@@ -29,13 +29,24 @@ async def async_setup_entry(hass, config_entry):
     """Set up the UniFi component."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
+    # Flat configuration was introduced with 2021.3
+    await async_flatten_entry_data(hass, config_entry)
+
     controller = UniFiController(hass, config_entry)
     if not await controller.async_setup():
         return False
 
+    # Unique ID was introduced with 2021.3
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=controller.site_id
+        )
+
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
+    )
 
     LOGGER.debug("UniFi config options %s", config_entry.options)
 
@@ -60,6 +71,17 @@ async def async_unload_entry(hass, config_entry):
     return await controller.async_reset()
 
 
+async def async_flatten_entry_data(hass, config_entry):
+    """Simpler configuration structure for entry data.
+
+    Keep controller key layer in case user rollbacks.
+    """
+
+    data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
+    if config_entry.data != data:
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+
 class UnifiWirelessClients:
     """Class to store clients known to be wireless.
 
@@ -82,21 +104,12 @@ class UnifiWirelessClients:
     @callback
     def get_data(self, config_entry):
         """Get data related to a specific controller."""
-        controller_id = get_controller_id_from_config_entry(config_entry)
-        key = config_entry.entry_id
-        if controller_id in self.data:
-            key = controller_id
-
-        data = self.data.get(key, {"wireless_devices": []})
+        data = self.data.get(config_entry.entry_id, {"wireless_devices": []})
         return set(data["wireless_devices"])
 
     @callback
     def update_data(self, data, config_entry):
         """Update data and schedule to save to file."""
-        controller_id = get_controller_id_from_config_entry(config_entry)
-        if controller_id in self.data:
-            self.data.pop(controller_id)
-
         self.data[config_entry.entry_id] = {"wireless_devices": list(data)}
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 

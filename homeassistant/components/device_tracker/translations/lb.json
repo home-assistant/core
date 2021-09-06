@@ -3,6 +3,10 @@
         "condition_type": {
             "is_home": "{entity_name} ass doheem",
             "is_not_home": "{entity_name} ass net doheem"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} k\u00ebnnt an eng Zone",
+            "leaves": "{entity_name} verl\u00e9isst eng Zone"
         }
     },
     "state": {
