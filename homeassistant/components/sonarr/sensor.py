@@ -174,23 +174,23 @@ class SonarrSensor(SonarrEntity, SensorEntity):
                 attrs[
                     disk.path
                 ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
-        elif key == "commands" and self.data.get("commands") is not None:
-            for command in self.data["commands"]:
+        elif key == "commands" and self.data.get(key) is not None:
+            for command in self.data[key]:
                 attrs[command.name] = command.state
-        elif key == "queue" and self.data.get("queue") is not None:
-            for item in self.data["queue"]:
+        elif key == "queue" and self.data.get(key) is not None:
+            for item in self.data[key]:
                 remaining = 1 if item.size == 0 else item.size_remaining / item.size
                 remaining_pct = 100 * (1 - remaining)
                 name = f"{item.episode.series.title} {item.episode.identifier}"
                 attrs[name] = f"{remaining_pct:.2f}%"
-        elif key == "series" and self.data.get("series") is not None:
-            for item in self.data["series"]:
+        elif key == "series" and self.data.get(key) is not None:
+            for item in self.data[key]:
                 attrs[item.series.title] = f"{item.downloaded}/{item.episodes} Episodes"
-        elif key == "upcoming" and self.data.get("upcoming") is not None:
-            for episode in self.data["upcoming"]:
+        elif key == "upcoming" and self.data.get(key) is not None:
+            for episode in self.data[key]:
                 attrs[episode.series.title] = episode.identifier
-        elif key == "wanted" and self.data.get("wanted") is not None:
-            for episode in self.data["wanted"].episodes:
+        elif key == "wanted" and self.data.get(key) is not None:
+            for episode in self.data[key].episodes:
                 name = f"{episode.series.title} {episode.identifier}"
                 attrs[name] = episode.airdate
 
@@ -206,19 +206,19 @@ class SonarrSensor(SonarrEntity, SensorEntity):
             free = total_free / 1024 ** 3
             return f"{free:.2f}"
 
-        if key == "commands" and self.data.get("commands") is not None:
-            return len(self.data["commands"])
+        if key == "commands" and self.data.get(key) is not None:
+            return len(self.data[key])
 
-        if key == "queue" and self.data.get("queue") is not None:
-            return len(self.data["queue"])
+        if key == "queue" and self.data.get(key) is not None:
+            return len(self.data[key])
 
-        if key == "series" and self.data.get("series") is not None:
-            return len(self.data["series"])
+        if key == "series" and self.data.get(key) is not None:
+            return len(self.data[key])
 
-        if key == "upcoming" and self.data.get("upcoming") is not None:
-            return len(self.data["upcoming"])
+        if key == "upcoming" and self.data.get(key) is not None:
+            return len(self.data[key])
 
-        if key == "wanted" and self.data.get("wanted") is not None:
-            return self.data["wanted"].total
+        if key == "wanted" and self.data.get(key) is not None:
+            return self.data[key].total
 
         return None
