@@ -104,7 +104,9 @@ def round_nicely(number):
 class QNAPSensor(CoordinatorEntity, SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None):
+    def __init__(
+        self, coordinator, description, uid, monitor_device=None, monitor_subdevice=None
+    ):
         """Initialize the sensor."""
         self.coordinator = coordinator
         self.entity_description = description

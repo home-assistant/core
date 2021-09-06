@@ -17,8 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
