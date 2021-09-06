@@ -144,11 +144,11 @@ class PlexServer:
         config_entry_update_needed = False
 
         def _connect_with_token():
-            available_servers = [
-                (x.name, x.clientIdentifier)
-                for x in self.account.resources()
-                if "server" in x.provides and x.presence
+            all_servers = [
+                x for x in self.account.resources() if "server" in x.provides
             ]
+            servers = [x for x in all_servers if x.presence] or all_servers
+            available_servers = [(x.name, x.clientIdentifier) for x in servers]
 
             if not available_servers:
                 raise NoServersFound

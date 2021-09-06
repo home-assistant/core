@@ -19,7 +19,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for AsusWrt component."""
     router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
-    tracked = set()
+    tracked: set = set()
 
     @callback
     def update_router():

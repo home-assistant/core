@@ -127,7 +127,6 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "day_average",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
-        ATTR_ICON: "mdi:gas-cylinder",
         ATTR_DEFAULT_ENABLED: False,
     },
     "gas_daily_usage": {
@@ -136,7 +135,6 @@ SENSOR_ENTITIES = {
         ATTR_MEASUREMENT: "day_usage",
         ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
-        ATTR_ICON: "mdi:gas-cylinder",
     },
     "gas_daily_cost": {
         ATTR_NAME: "Gas Cost Today",
@@ -150,7 +148,6 @@ SENSOR_ENTITIES = {
         ATTR_SECTION: "gas_usage",
         ATTR_MEASUREMENT: "meter",
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
-        ATTR_ICON: "mdi:gas-cylinder",
         ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_GAS,
         ATTR_DEFAULT_ENABLED: False,

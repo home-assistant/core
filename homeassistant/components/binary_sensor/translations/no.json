@@ -17,6 +17,7 @@
             "is_no_problem": "{entity_name} registrerer ikke et problem",
             "is_no_smoke": "{entity_name} registrerer ikke r\u00f8yk",
             "is_no_sound": "{entity_name} registrerer ikke lyd",
+            "is_no_update": "{entity_name} er oppdatert",
             "is_no_vibration": "{entity_name} registrerer ikke bevegelse",
             "is_not_bat_low": "{entity_name} batteri er normalt",
             "is_not_cold": "{entity_name} er ikke kald",
@@ -42,6 +43,7 @@
             "is_smoke": "{entity_name} registrerer r\u00f8yk",
             "is_sound": "{entity_name} registrerer lyd",
             "is_unsafe": "{entity_name} er utrygg",
+            "is_update": "{entity_name} har en tilgjengelig oppdatering",
             "is_vibration": "{entity_name} registrerer vibrasjon"
         },
         "trigger_type": {
@@ -61,6 +63,7 @@
             "no_problem": "{entity_name} sluttet \u00e5 registrere problem",
             "no_smoke": "{entity_name} sluttet \u00e5 registrere r\u00f8yk",
             "no_sound": "{entity_name} sluttet \u00e5 registrere lyd",
+            "no_update": "{entity_name} ble oppdatert",
             "no_vibration": "{entity_name} sluttet \u00e5 registrere vibrasjon",
             "not_bat_low": "{entity_name} batteri normalt",
             "not_cold": "{entity_name} ble ikke lenger kald",
@@ -86,6 +89,7 @@
             "turned_off": "{entity_name} sl\u00e5tt av",
             "turned_on": "{entity_name} sl\u00e5tt p\u00e5",
             "unsafe": "{entity_name} ble usikker",
+            "update": "{entity_name} har en oppdatering tilgjengelig",
             "vibration": "{entity_name} begynte \u00e5 oppdage vibrasjon"
         }
     },
@@ -177,6 +181,10 @@
         "sound": {
             "off": "Klart",
             "on": "Oppdaget"
+        },
+        "update": {
+            "off": "Oppdatert",
+            "on": "Oppdatering tilgjengelig"
         },
         "vibration": {
             "off": "Klart",

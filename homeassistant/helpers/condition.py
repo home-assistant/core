@@ -69,6 +69,8 @@ from .trace import (
     trace_stack_top,
 )
 
+# mypy: disallow-any-generics
+
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
@@ -113,7 +115,7 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator:
+def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None, None]:
     """Trace condition evaluation."""
     should_pop = True
     trace_element = trace_stack_top(trace_stack_cv)

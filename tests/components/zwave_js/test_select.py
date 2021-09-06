@@ -1,7 +1,10 @@
 """Test the Z-Wave JS number platform."""
 from zwave_js_server.event import Event
 
+from homeassistant.const import STATE_UNKNOWN
+
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
+PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
 
 
 async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration):
@@ -99,3 +102,100 @@ async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration
 
     state = hass.states.get(DEFAULT_TONE_SELECT_ENTITY)
     assert state.state == "30DOOR~1 (27 sec)"
+
+
+async def test_protection_select(hass, client, inovelli_lzw36, integration):
+    """Test the default tone select entity."""
+    node = inovelli_lzw36
+    state = hass.states.get(PROTECTION_SELECT_ENTITY)
+
+    assert state
+    assert state.state == "Unprotected"
+    attr = state.attributes
+    assert attr["options"] == [
+        "Unprotected",
+        "ProtectedBySequence",
+        "NoOperationPossible",
+    ]
+
+    # Test select option with string value
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": PROTECTION_SELECT_ENTITY, "option": "ProtectedBySequence"},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 117,
+        "commandClassName": "Protection",
+        "property": "local",
+        "propertyName": "local",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Local protection state",
+            "states": {
+                "0": "Unprotected",
+                "1": "ProtectedBySequence",
+                "2": "NoOperationPossible",
+            },
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+    # Test value update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Protection",
+                "commandClass": 117,
+                "endpoint": 0,
+                "property": "local",
+                "newValue": 1,
+                "prevValue": 0,
+                "propertyName": "local",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(PROTECTION_SELECT_ENTITY)
+    assert state.state == "ProtectedBySequence"
+
+    # Test null value
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Protection",
+                "commandClass": 117,
+                "endpoint": 0,
+                "property": "local",
+                "newValue": None,
+                "prevValue": 1,
+                "propertyName": "local",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(PROTECTION_SELECT_ENTITY)
+    assert state.state == STATE_UNKNOWN

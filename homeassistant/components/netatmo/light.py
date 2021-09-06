@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, cast
 
 import pyatmo
 
@@ -141,7 +141,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         """Return true if light is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs: dict) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
         await self._data.async_set_state(
@@ -150,7 +150,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
             floodlight="on",
         )
 
-    async def async_turn_off(self, **kwargs: dict) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
         await self._data.async_set_state(

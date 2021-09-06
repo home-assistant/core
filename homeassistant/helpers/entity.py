@@ -622,7 +622,6 @@ class Entity(ABC):
             await self.parallel_updates.acquire()
 
         try:
-            # pylint: disable=no-member
             if hasattr(self, "async_update"):
                 task = self.hass.async_create_task(self.async_update())  # type: ignore
             elif hasattr(self, "update"):

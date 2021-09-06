@@ -57,6 +57,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FliprSensor(FliprEntity, SensorEntity):
     """Sensor representing FliprSensor data."""
 
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     @property
     def name(self):
         """Return the name of the particular component."""
@@ -84,8 +86,3 @@ class FliprSensor(FliprEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return unit of measurement."""
         return SENSORS[self.info_type]["unit"]
-
-    @property
-    def device_state_attributes(self):
-        """Return device attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
