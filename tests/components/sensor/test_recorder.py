@@ -1511,8 +1511,8 @@ def test_compile_hourly_statistics_changing_statistics(
                 "last_reset": None,
                 "state": approx(30.0),
                 "sum": approx(30.0),
-                "sum_decrease": approx(0.0),
-                "sum_increase": approx(30.0),
+                "sum_decrease": approx(10.0),
+                "sum_increase": approx(40.0),
             },
         ]
     }
