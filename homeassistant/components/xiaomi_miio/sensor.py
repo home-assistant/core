@@ -68,6 +68,7 @@ from .const import (
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
+    MODELS_AIR_QUALITY_MONITOR,
     MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
@@ -380,10 +381,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         model = config_entry.data[CONF_MODEL]
-        device = hass.data[DOMAIN].get(config_entry.entry_id, {}).get(KEY_DEVICE)
-        sensors = []
+
         if model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4, MODEL_FAN_P5):
             return
+
+        if model in MODELS_AIR_QUALITY_MONITOR:
+            device = AirQualityMonitor(host, token)
+        else:
+            device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
+
+        sensors = []
         if model in MODEL_TO_SENSORS_MAP:
             sensors = MODEL_TO_SENSORS_MAP[model]
         elif model in MODELS_HUMIDIFIER_MIOT:
