@@ -104,7 +104,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_SET_LIGHT_BRIGHTNESS_STATE_BELIEF,
         {
-            vol.Optional(ATTR_BRIGHTNESS): vol.All(
+            vol.Required(ATTR_BRIGHTNESS): vol.All(
                 vol.Number(scale=0), vol.Range(0, 100)
             )
         },
