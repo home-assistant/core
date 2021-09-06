@@ -13,13 +13,11 @@ from tuya_iot import (
     TuyaOpenAPI,
     TuyaOpenMQ,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     CONF_ACCESS_ID,
@@ -43,8 +41,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
+
+
+
     _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
 
     hass.data[DOMAIN] = {entry.entry_id: {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: set()}}
@@ -164,9 +166,7 @@ class DeviceListener(TuyaDeviceListener):
                 self,
                 device.id,
             )
-            dispatcher_send(
-                self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}"
-            )
+            dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
 
     def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""

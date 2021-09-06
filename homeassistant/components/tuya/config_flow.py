@@ -130,9 +130,9 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="login", data_schema=DATA_SCHEMA_SMART_HOME, errors=errors
             )
-        else:
-            return self.async_show_form(
-                step_id="login",
-                data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
-                errors=errors,
-            )
+
+        return self.async_show_form(
+            step_id="login",
+            data_schema=DATA_SCHEMA_INDUSTRY_SOLUTIONS,
+            errors=errors,
+        )
