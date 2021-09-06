@@ -150,7 +150,7 @@ class BondFan(BondEntity, FanEntity):
         if fan_speed == 0:
             await self.async_set_power_state_belief(False)
             return
-            
+
         await self.async_set_power_state_belief(True)
 
         bond_speed = math.ceil(percentage_to_ranged_value(self._speed_range, fan_speed))
