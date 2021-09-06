@@ -37,33 +37,6 @@ from homeassistant.data_entry_flow import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="async_get_addon_info_installed")
-def mock_async_get_addon_info_installed():
-    """Mock get add-on get addon."""
-    with patch(
-        "homeassistant.components.zha.config_flow.async_get_addon_info",
-        return_value={"version": "any"},
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
-
-
-@pytest.fixture(name="async_get_addon_info_not_installed")
-def mock_async_get_addon_info_not_installed():
-    """Mock get add-on get addon."""
-    with patch(
-        "homeassistant.components.zha.config_flow.async_get_addon_info",
-        return_value={"version": None},
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
-
-
-@pytest.fixture(name="supervisor")
-def mock_supervisor_fixture():
-    """Mock Supervisor."""
-    with patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True):
-        yield
-
-
 def com_port():
     """Mock of a serial port."""
     port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
@@ -137,6 +110,34 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
         CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
         CONF_BAUDRATE: 115200,
         CONF_FLOWCONTROL: None,
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
+    """Test zeroconf flow that was ignored gets updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="tube_zb_gw_cc2652p2_poe",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    service_info = {
+        "host": "192.168.1.22",
+        "port": 6053,
+        "hostname": "tube_zb_gw_cc2652p2_poe.local.",
+        "properties": {"address": "tube_zb_gw_cc2652p2_poe.local"},
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
     }
 
 
@@ -344,10 +345,17 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
     assert result["step_id"] == "confirm"
 
 
-async def test_discovery_via_usb_zigbee2mqtt_installed(
-    hass, supervisor, async_get_addon_info_installed
-):
-    """Test usb flow -- zigbee2mqtt installed."""
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_zha_ignored_updates(detect_mock, hass):
+    """Test usb flow that was ignored gets updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+        unique_id="AAAA:AAAA_1234_test_zigbee radio",
+    )
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
     discovery_info = {
         "device": "/dev/ttyZIGBEE",
         "pid": "AAAA",
@@ -362,28 +370,10 @@ async def test_discovery_via_usb_zigbee2mqtt_installed(
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_zha_device"
-
-
-async def test_discovery_via_usb_zigbee2mqtt_not_installed(
-    hass, supervisor, async_get_addon_info_not_installed
-):
-    """Test usb flow -- zigbee2mqtt not installed."""
-    discovery_info = {
-        "device": "/dev/ttyZIGBEE",
-        "pid": "AAAA",
-        "vid": "AAAA",
-        "serial_number": "1234",
-        "description": "zigbee radio",
-        "manufacturer": "test",
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
     }
-    result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": SOURCE_USB}, data=discovery_info
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "confirm"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
