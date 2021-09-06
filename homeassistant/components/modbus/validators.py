@@ -248,7 +248,10 @@ def duplicate_modbus_validator(config: list) -> list:
     errors = []
     for index, hub in enumerate(config):
         name = hub.get(CONF_NAME, DEFAULT_HUB)
-        host = hub[CONF_PORT] if hub[CONF_TYPE] == SERIAL else hub[CONF_HOST]
+        if hub[CONF_TYPE] == SERIAL:
+            host = hub[CONF_PORT]
+        else:
+            host = f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
         if host in hosts:
             err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
             _LOGGER.warning(err)
