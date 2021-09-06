@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 import pyiss
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
