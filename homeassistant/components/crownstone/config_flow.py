@@ -12,6 +12,7 @@ import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
+from homeassistant.components import usb
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.core import callback
@@ -27,7 +28,6 @@ from .const import (
     MANUAL_PATH,
     REFRESH_LIST,
 )
-from .helpers import get_serial_by_id
 
 
 class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -137,7 +137,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         (ports_as_string.index(selection) - 1)
                     ]
                     self.usb_path = await self.hass.async_add_executor_job(
-                        get_serial_by_id, selected_port.device
+                        usb.get_serial_by_id, selected_port.device
                     )
 
                     # check if we are updating an existing entry

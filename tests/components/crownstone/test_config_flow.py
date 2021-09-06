@@ -176,7 +176,7 @@ async def test_successful_login_no_usb(hass: HomeAssistant):
     "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
 )
 @patch(
-    "homeassistant.components.crownstone.config_flow.get_serial_by_id",
+    "homeassistant.components.usb.get_serial_by_id",
     return_value="/dev/serial/by-id/crownstone-usb",
 )
 async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssistant):
@@ -213,7 +213,7 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
     "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
 )
 @patch(
-    "homeassistant.components.crownstone.config_flow.get_serial_by_id",
+    "homeassistant.components.usb.get_serial_by_id",
     return_value="/dev/serial/by-id/crownstone-usb",
 )
 async def test_update_usb_config(serial_mock: MagicMock, hass: HomeAssistant):

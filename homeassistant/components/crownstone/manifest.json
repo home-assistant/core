@@ -9,9 +9,7 @@
     "crownstone-uart==2.1.0",
     "pyserial==3.5"
   ],
-  "codeowners": [
-    "@Crownstone",
-    "@RicArch97"
-  ],
+  "codeowners": ["@Crownstone", "@RicArch97"],
+  "after_dependencies": ["usb"],
   "iot_class": "cloud_push"
 }
