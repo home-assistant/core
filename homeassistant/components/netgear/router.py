@@ -54,7 +54,7 @@ async def async_setup_netgear_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    entity_class_generator: Callable[[NetgearRouter, dict], list],
+    entity_class_generator: Callable[["NetgearRouter", dict], list],
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id]
