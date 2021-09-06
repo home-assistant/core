@@ -50,7 +50,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         split_unique_id = self._unique_id.split("-")
         return {
             "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
-            "name": DEFAULT_NAME,
+            "name": f"{DEFAULT_NAME} {split_unique_id[2]}",
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }

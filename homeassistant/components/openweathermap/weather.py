@@ -60,9 +60,10 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def device_info(self):
         """Return the device info."""
+        split_unique_id = self._unique_id.split("-")
         return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": DEFAULT_NAME,
+            "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            "name": f"{DEFAULT_NAME} {split_unique_id[2]}",
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
