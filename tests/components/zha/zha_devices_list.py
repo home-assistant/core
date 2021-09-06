@@ -2665,7 +2665,7 @@ DEVICES = [
                 "entity_class": "Battery",
                 "entity_id": "sensor.philips_rwl020_77665544_power",
             },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-2"): {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-2-15"): {
                 "channels": ["binary_input"],
                 "entity_class": "BinaryInput",
                 "entity_id": "binary_sensor.philips_rwl020_77665544_binary_input",
