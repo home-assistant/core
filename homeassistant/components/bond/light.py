@@ -108,13 +108,13 @@ async def async_setup_entry(
                 vol.Number(scale=0), vol.Range(0, 100)
             )
         },
-        "async_set_state_belief",
+        "async_set_brightness_state_belief",
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_LIGHT_POWER_STATE_BELIEF,
         {vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
-        "async_set_state_belief",
+        "async_set_power_state_belief",
     )
 
     async_add_entities(
@@ -128,28 +128,27 @@ class BondBaseLight(BondEntity, LightEntity):
 
     _attr_supported_features = 0
 
-    async def async_set_state_belief(self, **kwargs: Any) -> None:
+    async def async_set_brightness_state_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
-            if not self._device.supports_set_brightness():
-                raise TemplateError(
-                    Exception("This device does not support brightness")
-                )
-            if brightness == 0:
-                await self._hub.bond.action(
-                    self._device.device_id, Action.set_light_state_belief(False)
-                )
-            else:
-                await self._hub.bond.action(
-                    self._device.device_id,
-                    Action.set_brightness_belief(round((brightness * 100) / 255)),
-                )
-        else:
-            state = kwargs.get(ATTR_POWER_STATE)
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_light_state_belief(state)
+        if not self._device.supports_set_brightness():
+            raise TemplateError(
+                Exception("This device does not support setting brightness")
             )
+        if brightness == 0:
+            await self._hub.bond.action(
+                self._device.device_id, Action.set_light_state_belief(False)
+            )
+        else:
+            await self._hub.bond.action(
+                self._device.device_id,
+                Action.set_brightness_belief(round((brightness * 100) / 255)),
+            )
+
+    async def async_set_power_state_belief(self, power_state: bool) -> None:
+        """Set the belief state of the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_light_state_belief(power_state)
+        )
 
 
 class BondLight(BondBaseLight, BondEntity, LightEntity):
@@ -280,31 +279,24 @@ class BondFireplace(BondEntity, LightEntity):
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
-    async def async_set_state_belief(self, **kwargs: Any) -> None:
-        """Set the belief state of the fireplace."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
-            if not self._device.supports_set_brightness():
-                raise TemplateError(
-                    Exception("This device does not support brightness")
-                )
-            if brightness == 0:
-                await self._hub.bond.action(
-                    self._device.device_id, Action.set_power_state_belief(False)
-                )
-            else:
-                await self._hub.bond.action(
-                    self._device.device_id,
-                    Action.set_brightness_belief(round((brightness * 100) / 255)),
-                )
-        else:
-            state = kwargs.get(ATTR_POWER_STATE)
-            if state is None:
-                raise TemplateError(
-                    Exception(
-                        f"Either {ATTR_BRIGHTNESS} or {ATTR_POWER_STATE} is required.  Neither were provided."
-                    )
-                )
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_power_state_belief(state)
+    async def async_set_brightness_state_belief(self, brightness: int) -> None:
+        """Set the belief state of the light."""
+        if not self._device.supports_set_brightness():
+            raise TemplateError(
+                Exception("This device does not support setting brightness")
             )
+        if brightness == 0:
+            await self._hub.bond.action(
+                self._device.device_id, Action.set_power_state_belief(False)
+            )
+        else:
+            await self._hub.bond.action(
+                self._device.device_id,
+                Action.set_brightness_belief(round((brightness * 100) / 255)),
+            )
+
+    async def async_set_power_state_belief(self, power_state: bool) -> None:
+        """Set the belief state of the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action.set_power_state_belief(power_state)
+        )
