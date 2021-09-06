@@ -338,7 +338,7 @@ async def test_add_node_secure(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_inclusion",
-        "options": {"inclusionStrategy": InclusionStrategy.SECURITY_S0},
+        "options": {"strategy": InclusionStrategy.SECURITY_S0},
     }
 
     client.async_send_command.reset_mock()
@@ -363,7 +363,7 @@ async def test_add_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_inclusion",
-        "options": {"inclusionStrategy": InclusionStrategy.INSECURE},
+        "options": {"strategy": InclusionStrategy.INSECURE},
     }
 
     event = Event(
@@ -671,7 +671,7 @@ async def test_replace_failed_node_secure(
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.replace_failed_node",
         "nodeId": nortek_thermostat.node_id,
-        "options": {"inclusionStrategy": InclusionStrategy.SECURITY_S0},
+        "options": {"strategy": InclusionStrategy.SECURITY_S0},
     }
 
     client.async_send_command.reset_mock()
@@ -720,7 +720,7 @@ async def test_replace_failed_node(
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.replace_failed_node",
         "nodeId": nortek_thermostat.node_id,
-        "options": {"inclusionStrategy": InclusionStrategy.INSECURE},
+        "options": {"strategy": InclusionStrategy.INSECURE},
     }
 
     client.async_send_command.reset_mock()
