@@ -300,7 +300,7 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
         """Call a vacuum command handling error messages."""
         try:
             await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
-            await self.hass.async_run_job(self.coordinator.async_refresh)
+            await self.coordinator.async_refresh()
             return True
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
