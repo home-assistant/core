@@ -1057,6 +1057,7 @@ omit =
     homeassistant/components/tesla/lock.py
     homeassistant/components/tesla/sensor.py
     homeassistant/components/tesla/switch.py
+    homeassistant/components/tesla/select.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
