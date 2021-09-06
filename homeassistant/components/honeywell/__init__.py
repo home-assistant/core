@@ -10,6 +10,7 @@ from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
 
+UPDATE_LOOP_SLEEP_TIME = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 PLATFORMS = ["climate"]
 
@@ -107,7 +108,7 @@ class HoneywellData:
         """Refresh each enabled device."""
         for device in self.devices:
             await self._hass.async_add_executor_job(device.refresh)
-            await asyncio.sleep(5)
+            await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
