@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_EMAIL,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
@@ -14,7 +13,7 @@ from homeassistant.const import (
 )
 
 from . import PoolSenseEntity
-from .const import ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -86,13 +85,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
-
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def __init__(self, coordinator, email, description: SensorEntityDescription):
-        """Initialize PoolSense sensor."""
-        super().__init__(coordinator, email, description)
-        self._attr_name = f"PoolSense {description.name}"
 
     @property
     def native_value(self):

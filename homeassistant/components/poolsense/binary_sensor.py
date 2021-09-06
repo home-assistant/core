@@ -40,11 +40,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     """Representation of PoolSense binary sensors."""
 
-    def __init__(self, coordinator, email, description: BinarySensorEntityDescription):
-        """Initialize PoolSense binary_sensor."""
-        super().__init__(coordinator, email, description)
-        self._attr_name = f"PoolSense {description.name}"
-
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
