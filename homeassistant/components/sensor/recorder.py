@@ -393,9 +393,7 @@ def compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
-            sum_decrease = 0.0
             sum_increase = 0.0
-            sum_decrease_tmp = 0.0
             sum_increase_tmp = 0.0
             last_stats = statistics.get_last_statistics(hass, 1, entity_id, False)
             if entity_id in last_stats:
@@ -403,7 +401,6 @@ def compile_statistics(  # noqa: C901
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 new_state = old_state = last_stats[entity_id][0]["state"]
                 _sum = last_stats[entity_id][0]["sum"] or 0.0
-                sum_decrease = last_stats[entity_id][0]["sum_decrease"] or 0.0
                 sum_increase = last_stats[entity_id][0]["sum_increase"] or 0.0
 
             for fstate, state in fstates:
@@ -458,14 +455,10 @@ def compile_statistics(  # noqa: C901
                     # The sensor has been reset, update the sum
                     if old_state is not None:
                         _sum += new_state - old_state
-                        sum_decrease += sum_decrease_tmp
                         sum_increase += sum_increase_tmp
-                        sum_decrease_tmp = 0.0
                         sum_increase_tmp = 0.0
                         if fstate > 0:
                             sum_increase_tmp += fstate - 0
-                        else:
-                            sum_decrease_tmp += 0 - fstate
                     # ..and update the starting point
                     new_state = fstate
                     old_last_reset = last_reset
@@ -475,11 +468,8 @@ def compile_statistics(  # noqa: C901
                     else:
                         old_state = new_state
                 else:
-                    if new_state is not None:
-                        if fstate > new_state:
-                            sum_increase_tmp += fstate - new_state
-                        else:
-                            sum_decrease_tmp += new_state - fstate
+                    if new_state is not None and fstate > new_state:
+                        sum_increase_tmp += fstate - new_state
                     new_state = fstate
 
             # Deprecated, will be removed in Home Assistant 2021.11
@@ -495,12 +485,10 @@ def compile_statistics(  # noqa: C901
 
             # Update the sum with the last state
             _sum += new_state - old_state
-            sum_decrease += sum_decrease_tmp
             sum_increase += sum_increase_tmp
             if last_reset is not None:
                 stat["last_reset"] = dt_util.parse_datetime(last_reset)
             stat["sum"] = _sum
-            stat["sum_decrease"] = sum_decrease
             stat["sum_increase"] = sum_increase
             stat["state"] = new_state
 
