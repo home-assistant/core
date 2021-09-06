@@ -331,13 +331,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
         self.async_write_ha_state()
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self,
         speed: str = None,
