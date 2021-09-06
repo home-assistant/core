@@ -112,7 +112,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.reauth_conf: dict[str, Any] = {}
         self.reauth_reason: str | None = None
 
-    async def _show_form(
+    def _show_form(
         self,
         step_id: str,
         user_input: dict[str, Any] | None = None,
@@ -187,7 +187,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "missing_data"
 
         if errors:
-            return await self._show_form(step_id, user_input, errors)
+            return self._show_form(step_id, user_input, errors)
 
         # unique_id should be serial for services purpose
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
@@ -225,7 +225,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         step = "user"
         if not user_input:
-            return await self._show_form(step)
+            return self._show_form(step)
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
@@ -269,7 +269,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Link a config entry from discovery."""
         step = "link"
         if not user_input:
-            return await self._show_form(step)
+            return self._show_form(step)
         user_input = {**self.discovered_conf, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
@@ -284,7 +284,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Perform reauth confirm upon an API authentication error."""
         step = "reauth_confirm"
         if not user_input:
-            return await self._show_form(step)
+            return self._show_form(step)
         user_input = {**self.reauth_conf, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
