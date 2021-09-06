@@ -1,5 +1,5 @@
 """Utility meter from sensors providing raw data."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal, DecimalException
 import logging
 
@@ -163,11 +163,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._period = meter_type
         if meter_type is not None:
             # For backwards compatibility reasons we convert the period and offset into a cron pattern
-            if meter_offset.days >= 31:
-                _LOGGER.error(
-                    "Unsupported offset, please use a cron pattern. Continuing without offset"
-                )
-                meter_offset = timedelta()
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
                 hour=meter_offset.seconds // 3600,

@@ -65,6 +65,16 @@ def period_or_cron(config):
     return config
 
 
+def max_31_days(config):
+    """Check that time period does not include more then 31 days."""
+    if config.days >= 31:
+        raise vol.Invalid(
+            "Unsupported offset of more then 31 days, please use a cron pattern. Continuing without offset"
+        )
+
+    return config
+
+
 METER_CONFIG_SCHEMA = vol.Schema(
     vol.All(
         {
@@ -72,7 +82,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
             vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
-                cv.time_period, cv.positive_timedelta
+                cv.time_period, cv.positive_timedelta, max_31_days
             ),
             vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
             vol.Optional(CONF_TARIFFS, default=[]): vol.All(
