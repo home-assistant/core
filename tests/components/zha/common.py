@@ -1,7 +1,6 @@
 """Common test objects."""
 import asyncio
 import math
-import time
 from unittest.mock import AsyncMock, Mock
 
 import zigpy.zcl.foundation as zcl_f
