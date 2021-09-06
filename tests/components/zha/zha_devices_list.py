@@ -1398,6 +1398,11 @@ DEVICES = [
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
             },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-100-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.lumi_lumi_plug_maus01_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0019"],
         "manufacturer": "LUMI",
@@ -2659,7 +2664,12 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "Battery",
                 "entity_id": "sensor.philips_rwl020_77665544_power",
-            }
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-2"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.philips_rwl020_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0005", "1:0x0006", "1:0x0008", "2:0x0019"],
         "manufacturer": "Philips",
@@ -2741,7 +2751,7 @@ DEVICES = [
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
                 "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
+                "entity_class": "BinaryInput",
                 "entity_id": "binary_sensor.samjin_multi_77665544_manufacturer_specific",
                 "default_match": True,
             },
@@ -3099,6 +3109,11 @@ DEVICES = [
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.smartthings_outletv4_77665544_electrical_measurement",
             },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-1-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.smartthings_outletv4_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0019"],
         "manufacturer": "SmartThings",
@@ -3122,7 +3137,12 @@ DEVICES = [
                 "channels": ["power"],
                 "entity_class": "ZHADeviceScannerEntity",
                 "entity_id": "device_tracker.smartthings_tagv4_77665544_power",
-            }
+            },
+            ("binary_sensor", "00:11:22:33:44:55:66:77-1-15"): {
+                "channels": ["binary_input"],
+                "entity_class": "BinaryInput",
+                "entity_id": "binary_sensor.smartthings_tagv4_77665544_binary_input",
+            },
         },
         "event_channels": ["1:0x0019"],
         "manufacturer": "SmartThings",

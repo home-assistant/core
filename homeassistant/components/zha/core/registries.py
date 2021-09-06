@@ -47,6 +47,7 @@ REMOTE_DEVICE_TYPES = {
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH,
         zigpy.profiles.zha.DeviceType.REMOTE_CONTROL,
         zigpy.profiles.zha.DeviceType.SCENE_SELECTOR,
+        zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR,
     ],
     zigpy.profiles.zll.PROFILE_ID: [
         zigpy.profiles.zll.DeviceType.COLOR_CONTROLLER,
@@ -66,6 +67,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     VOC_LEVEL_CLUSTER: SENSOR,
     zcl.clusters.closures.DoorLock.cluster_id: LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: COVER,
+    zcl.clusters.general.BinaryInput.cluster_id: BINARY_SENSOR,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
     zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
@@ -110,6 +112,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
         zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
+        zigpy.profiles.zha.DeviceType.SIMPLE_SENSOR: BINARY_SENSOR,
     },
     zigpy.profiles.zll.PROFILE_ID: {
         zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
