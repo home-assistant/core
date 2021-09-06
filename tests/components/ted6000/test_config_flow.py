@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ted6000 import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 
-CONFIG = {CONF_IP_ADDRESS: "127.0.0.1"}
+CONFIG = {CONF_HOST: "127.0.0.1"}
 
 
 async def test_form(hass):

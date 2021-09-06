@@ -22,12 +22,12 @@ CONF_SERIAL = "serial"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Enphase Envoy."""
+    """Handle a config flow for Ted6000."""
 
     VERSION = 1
 
     def __init__(self):
-        """Initialize an envoy flow."""
+        """Initialize an Ted6000 flow."""
         self.ip_address = None
         self.name = None
         self.serial = None
