@@ -1,5 +1,6 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
 import asyncio
+from enum import Enum
 import logging
 import math
 
@@ -273,7 +274,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._supported_features = 0
         self._speed_count = 100
         self._preset_modes = []
-        self._operation_mode_class = None
+        self._operation_mode_class = Enum
 
     @property
     def supported_features(self):
