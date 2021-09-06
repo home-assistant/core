@@ -13,6 +13,7 @@ BPUP_STOP = "bpup_stop"
 
 SERVICE_SET_FAN_SPEED_BELIEF = "set_fan_speed_belief"
 SERVICE_SET_POWER_STATE_BELIEF = "set_switch_power_state_belief"
-SERVICE_SET_LIGHT_STATE_BELIEF = "set_light_state_belief"
+SERVICE_SET_LIGHT_POWER_STATE_BELIEF = "set_light_power_state_belief"
+SERVICE_SET_LIGHT_BRIGHTNESS_STATE_BELIEF = "set_light_brightness_state_belief"
 ATTR_FANSPEED = "fan_speed"
 ATTR_POWER_STATE = "power_state"

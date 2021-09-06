@@ -25,7 +25,8 @@ from .const import (
     BPUP_SUBS,
     DOMAIN,
     HUB,
-    SERVICE_SET_LIGHT_STATE_BELIEF,
+    SERVICE_SET_LIGHT_BRIGHTNESS_STATE_BELIEF,
+    SERVICE_SET_LIGHT_POWER_STATE_BELIEF,
 )
 from .entity import BondEntity
 from .utils import BondDevice
@@ -101,13 +102,18 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_STATE_BELIEF,
+        SERVICE_SET_LIGHT_BRIGHTNESS_STATE_BELIEF,
         {
             vol.Optional(ATTR_BRIGHTNESS): vol.All(
                 vol.Number(scale=0), vol.Range(0, 100)
-            ),
-            vol.Optional(ATTR_POWER_STATE): vol.All(cv.boolean),
+            )
         },
+        "async_set_state_belief",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_LIGHT_POWER_STATE_BELIEF,
+        {vol.Optional(ATTR_POWER_STATE): vol.All(cv.boolean)},
         "async_set_state_belief",
     )
 
@@ -293,6 +299,12 @@ class BondFireplace(BondEntity, LightEntity):
                 )
         else:
             state = kwargs.get(ATTR_POWER_STATE)
+            if state is None:
+                raise TemplateError(
+                    Exception(
+                        f"Either {ATTR_BRIGHTNESS} or {ATTR_POWER_STATE} is required.  Neither were provided."
+                    )
+                )
             await self._hub.bond.action(
                 self._device.device_id, Action.set_power_state_belief(state)
             )
