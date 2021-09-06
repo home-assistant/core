@@ -1,73 +1,12 @@
 """Common test objects."""
 import asyncio
 import math
-import time
 from unittest.mock import AsyncMock, Mock
 
-import zigpy.device as zigpy_dev
-import zigpy.endpoint as zigpy_ep
-import zigpy.profiles.zha
-import zigpy.types
-import zigpy.zcl
-import zigpy.zcl.clusters.general
 import zigpy.zcl.foundation as zcl_f
-import zigpy.zdo.types
 
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
-
-
-class FakeEndpoint:
-    """Fake endpoint for moking zigpy."""
-
-    def __init__(self, manufacturer, model, epid=1):
-        """Init fake endpoint."""
-        self.device = None
-        self.endpoint_id = epid
-        self.in_clusters = {}
-        self.out_clusters = {}
-        self._cluster_attr = {}
-        self.member_of = {}
-        self.status = zigpy_ep.Status.ZDO_INIT
-        self.manufacturer = manufacturer
-        self.model = model
-        self.profile_id = zigpy.profiles.zha.PROFILE_ID
-        self.device_type = None
-        self.request = AsyncMock(return_value=[0])
-
-    def add_input_cluster(self, cluster_id, _patch_cluster=True):
-        """Add an input cluster."""
-        cluster = zigpy.zcl.Cluster.from_id(self, cluster_id, is_server=True)
-        if _patch_cluster:
-            patch_cluster(cluster)
-        self.in_clusters[cluster_id] = cluster
-        ep_attribute = cluster.ep_attribute
-        if ep_attribute:
-            setattr(self, ep_attribute, cluster)
-
-    def add_output_cluster(self, cluster_id, _patch_cluster=True):
-        """Add an output cluster."""
-        cluster = zigpy.zcl.Cluster.from_id(self, cluster_id, is_server=False)
-        if _patch_cluster:
-            patch_cluster(cluster)
-        self.out_clusters[cluster_id] = cluster
-
-    reply = AsyncMock(return_value=[0])
-    request = AsyncMock(return_value=[0])
-
-    @property
-    def __class__(self):
-        """Fake being Zigpy endpoint."""
-        return zigpy_ep.Endpoint
-
-    @property
-    def unique_id(self):
-        """Return the unique id for the endpoint."""
-        return self.device.ieee, self.endpoint_id
-
-
-FakeEndpoint.add_to_group = zigpy_ep.Endpoint.add_to_group
-FakeEndpoint.remove_from_group = zigpy_ep.Endpoint.remove_from_group
 
 
 def patch_cluster(cluster):
@@ -113,35 +52,6 @@ def patch_cluster(cluster):
     )
     if cluster.cluster_id == 4:
         cluster.add = AsyncMock(return_value=[0])
-
-
-class FakeDevice:
-    """Fake device for mocking zigpy."""
-
-    def __init__(self, app, ieee, manufacturer, model, node_desc=None, nwk=0xB79C):
-        """Init fake device."""
-        self._application = app
-        self.application = app
-        self.ieee = zigpy.types.EUI64.convert(ieee)
-        self.nwk = nwk
-        self.zdo = Mock()
-        self.endpoints = {0: self.zdo}
-        self.lqi = 255
-        self.rssi = 8
-        self.last_seen = time.time()
-        self.status = zigpy_dev.Status.ENDPOINTS_INIT
-        self.initializing = False
-        self.skip_configuration = False
-        self.manufacturer = manufacturer
-        self.model = model
-        self.remove_from_group = AsyncMock()
-        if node_desc is None:
-            node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
-        self.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_desc)[0]
-        self.neighbors = []
-
-
-FakeDevice.add_to_group = zigpy_dev.Device.add_to_group
 
 
 def get_zha_gateway(hass):
