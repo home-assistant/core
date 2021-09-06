@@ -34,7 +34,7 @@ ZIGBEE2MQTT_ADDON_SLUG = "45df7312_zigbee2mqtt"
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize flow instance."""
