@@ -334,7 +334,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.19.0
+envoy_reader==0.20.0
 
 # homeassistant.components.season
 ephem==3.7.7.0
