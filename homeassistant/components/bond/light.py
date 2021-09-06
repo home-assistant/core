@@ -14,7 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -131,9 +131,7 @@ class BondBaseLight(BondEntity, LightEntity):
     async def async_set_brightness_state_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
         if not self._device.supports_set_brightness():
-            raise TemplateError(
-                Exception("This device does not support setting brightness")
-            )
+            raise HomeAssistantError("This device does not support setting brightness")
         if brightness == 0:
             await self._hub.bond.action(
                 self._device.device_id, Action.set_light_state_belief(False)
@@ -282,9 +280,7 @@ class BondFireplace(BondEntity, LightEntity):
     async def async_set_brightness_state_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
         if not self._device.supports_set_brightness():
-            raise TemplateError(
-                Exception("This device does not support setting brightness")
-            )
+            raise HomeAssistantError("This device does not support setting brightness")
         if brightness == 0:
             await self._hub.bond.action(
                 self._device.device_id, Action.set_power_state_belief(False)
