@@ -1,7 +1,6 @@
 """The tests for the emulated Hue component."""
 import json
 import unittest
-from unittest.mock import patch
 
 from aiohttp import web
 import defusedxml.ElementTree as ET
