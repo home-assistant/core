@@ -43,8 +43,6 @@ class HeatedSteeringWheelSwitch(TeslaDevice, SwitchEntity):
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        if self.tesla_device.get_steering_wheel_heat() is None:
-            return None
         return self.tesla_device.get_steering_wheel_heat()
 
 
