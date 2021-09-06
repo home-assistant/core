@@ -1,6 +1,7 @@
 """Represent the Netgear router and its devices."""
 from datetime import timedelta
 import logging
+from typing import Callable
 
 from pynetgear import Netgear
 
@@ -20,6 +21,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
@@ -51,8 +53,8 @@ def get_api(
 async def async_setup_netgear_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities,
-    entity_class_generator,
+    async_add_entities: AddEntitiesCallback,
+    entity_class_generator: Callable[[NetgearRouter, dict], list],
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.unique_id]
