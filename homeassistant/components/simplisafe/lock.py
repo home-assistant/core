@@ -16,7 +16,6 @@ from . import SimpliSafe, SimpliSafeEntity
 from .const import DATA_CLIENT, DOMAIN, LOGGER
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
-ATTR_JAMMED = "jammed"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
 
 
@@ -47,7 +46,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
 
         self._lock = lock
 
-    async def async_lock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         try:
             await self._lock.lock()
@@ -58,7 +57,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         self._attr_is_locked = True
         self.async_write_ha_state()
 
-    async def async_unlock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         try:
             await self._lock.unlock()
@@ -75,9 +74,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         self._attr_extra_state_attributes.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
-                ATTR_JAMMED: self._lock.state == LockStates.jammed,
                 ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
             }
         )
 
+        self._attr_is_jammed = self._lock.state == LockStates.jammed
         self._attr_is_locked = self._lock.state == LockStates.locked

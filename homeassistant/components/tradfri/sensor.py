@@ -30,14 +30,14 @@ class TradfriSensor(TradfriBaseDevice, SensorEntity):
     """The platform class required by Home Assistant."""
 
     _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, device, api, gateway_id):
         """Initialize the device."""
         super().__init__(device, api, gateway_id)
-        self._unique_id = f"{gateway_id}-{device.id}"
+        self._attr_unique_id = f"{gateway_id}-{device.id}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current state of the device."""
         return self._device.device_info.battery_level

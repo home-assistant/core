@@ -1,10 +1,16 @@
 """Support for monitoring the Deluge BitTorrent client API."""
+from __future__ import annotations
+
 import logging
 
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -25,11 +31,24 @@ DEFAULT_NAME = "Deluge"
 DEFAULT_PORT = 58846
 DHT_UPLOAD = 1000
 DHT_DOWNLOAD = 1000
-SENSOR_TYPES = {
-    "current_status": ["Status", None],
-    "download_speed": ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
-    "upload_speed": ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="current_status",
+        name="Status",
+    ),
+    SensorEntityDescription(
+        key="download_speed",
+        name="Down Speed",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+    ),
+    SensorEntityDescription(
+        key="upload_speed",
+        name="Up Speed",
+        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
+    ),
+)
+
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
@@ -60,46 +79,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except ConnectionRefusedError as err:
         _LOGGER.error("Connection to Deluge Daemon failed")
         raise PlatformNotReady from err
-    dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(DelugeSensor(variable, deluge_api, name))
+    monitored_variables = config[CONF_MONITORED_VARIABLES]
+    entities = [
+        DelugeSensor(deluge_api, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_variables
+    ]
 
-    add_entities(dev)
+    add_entities(entities)
 
 
 class DelugeSensor(SensorEntity):
     """Representation of a Deluge sensor."""
 
-    def __init__(self, sensor_type, deluge_client, client_name):
+    def __init__(
+        self, deluge_client, client_name, description: SensorEntityDescription
+    ):
         """Initialize the sensor."""
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self.entity_description = description
         self.client = deluge_client
-        self.type = sensor_type
-        self.client_name = client_name
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.data = None
-        self._available = False
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return true if device is available."""
-        return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_available = False
+        self._attr_name = f"{client_name} {description.name}"
 
     def update(self):
         """Get the latest data from Deluge and updates the state."""
@@ -114,34 +116,35 @@ class DelugeSensor(SensorEntity):
                     "dht_download_rate",
                 ],
             )
-            self._available = True
+            self._attr_available = True
         except FailedToReconnectException:
             _LOGGER.error("Connection to Deluge Daemon Lost")
-            self._available = False
+            self._attr_available = False
             return
 
         upload = self.data[b"upload_rate"] - self.data[b"dht_upload_rate"]
         download = self.data[b"download_rate"] - self.data[b"dht_download_rate"]
 
-        if self.type == "current_status":
+        sensor_type = self.entity_description.key
+        if sensor_type == "current_status":
             if self.data:
                 if upload > 0 and download > 0:
-                    self._state = "Up/Down"
+                    self._attr_native_value = "Up/Down"
                 elif upload > 0 and download == 0:
-                    self._state = "Seeding"
+                    self._attr_native_value = "Seeding"
                 elif upload == 0 and download > 0:
-                    self._state = "Downloading"
+                    self._attr_native_value = "Downloading"
                 else:
-                    self._state = STATE_IDLE
+                    self._attr_native_value = STATE_IDLE
             else:
-                self._state = None
+                self._attr_native_value = None
 
         if self.data:
-            if self.type == "download_speed":
+            if sensor_type == "download_speed":
                 kb_spd = float(download)
                 kb_spd = kb_spd / 1024
-                self._state = round(kb_spd, 2 if kb_spd < 0.1 else 1)
-            elif self.type == "upload_speed":
+                self._attr_native_value = round(kb_spd, 2 if kb_spd < 0.1 else 1)
+            elif sensor_type == "upload_speed":
                 kb_spd = float(upload)
                 kb_spd = kb_spd / 1024
-                self._state = round(kb_spd, 2 if kb_spd < 0.1 else 1)
+                self._attr_native_value = round(kb_spd, 2 if kb_spd < 0.1 else 1)

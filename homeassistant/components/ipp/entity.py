@@ -1,17 +1,17 @@
 """Entities for The Internet Printing Protocol (IPP) integration."""
 from __future__ import annotations
 
-from homeassistant.const import ATTR_NAME
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from .const import (
+from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DOMAIN,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
 )
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
 from .coordinator import IPPDataUpdateCoordinator
 
 
@@ -47,5 +47,5 @@ class IPPEntity(CoordinatorEntity):
             ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.manufacturer,
             ATTR_MODEL: self.coordinator.data.info.model,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SW_VERSION: self.coordinator.data.info.version,
         }

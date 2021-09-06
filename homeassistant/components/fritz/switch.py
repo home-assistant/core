@@ -13,7 +13,6 @@ from fritzconnection.core.exceptions import (
     FritzSecurityError,
     FritzServiceError,
 )
-import slugify as unicode_slug
 import xmltodict
 
 from homeassistant.components.network import async_get_source_ip
@@ -248,10 +247,18 @@ def wifi_entities_list(
         )
         if network_info:
             ssid = network_info["NewSSID"]
-            if unicode_slug.slugify(ssid, lowercase=False) in networks.values():
+            _LOGGER.debug("SSID from device: <%s>", ssid)
+            if (
+                slugify(
+                    ssid,
+                )
+                in [slugify(v) for v in networks.values()]
+            ):
+                _LOGGER.debug("SSID duplicated, adding suffix")
                 networks[i] = f'{ssid} {std_table[network_info["NewStandard"]]}'
             else:
                 networks[i] = ssid
+            _LOGGER.debug("SSID normalized: <%s>", networks[i])
 
     return [
         FritzBoxWifiSwitch(fritzbox_tools, device_friendly_name, net, network_name)
@@ -401,11 +408,10 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
 
-    async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
         await self._switch(turn_on)
         self._attr_is_on = turn_on
-        return True
 
 
 class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
@@ -461,9 +467,9 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._is_available = True
 
         attributes_dict = {
-            "NewInternalClient": "internalIP",
-            "NewInternalPort": "internalPort",
-            "NewExternalPort": "externalPort",
+            "NewInternalClient": "internal_ip",
+            "NewInternalPort": "internal_port",
+            "NewExternalPort": "external_port",
             "NewProtocol": "protocol",
             "NewPortMappingDescription": "description",
         }
@@ -540,15 +546,15 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._attr_is_on = self.dict_of_deflection["Enable"] == "1"
         self._is_available = True
 
-        self._attributes["Type"] = self.dict_of_deflection["Type"]
-        self._attributes["Number"] = self.dict_of_deflection["Number"]
-        self._attributes["DeflectionToNumber"] = self.dict_of_deflection[
+        self._attributes["type"] = self.dict_of_deflection["Type"]
+        self._attributes["number"] = self.dict_of_deflection["Number"]
+        self._attributes["deflection_to_number"] = self.dict_of_deflection[
             "DeflectionToNumber"
         ]
         # Return mode sample: "eImmediately"
-        self._attributes["Mode"] = self.dict_of_deflection["Mode"][1:]
-        self._attributes["Outgoing"] = self.dict_of_deflection["Outgoing"]
-        self._attributes["PhonebookID"] = self.dict_of_deflection["PhonebookID"]
+        self._attributes["mode"] = self.dict_of_deflection["Mode"][1:]
+        self._attributes["outgoing"] = self.dict_of_deflection["Outgoing"]
+        self._attributes["phonebook_id"] = self.dict_of_deflection["PhonebookID"]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle deflection switch."""
@@ -667,7 +673,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
 
         std = wifi_info["NewStandard"]
         self._attributes["standard"] = std if std else None
-        self._attributes["BSSID"] = wifi_info["NewBSSID"]
+        self._attributes["bssid"] = wifi_info["NewBSSID"]
         self._attributes["mac_address_control"] = wifi_info[
             "NewMACAddressControlEnabled"
         ]

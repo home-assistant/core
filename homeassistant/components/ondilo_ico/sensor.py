@@ -28,49 +28,49 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SensorEntityDescription(
         key="orp",
         name="Oxydo Reduction Potential",
-        unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
         device_class=None,
     ),
     SensorEntityDescription(
         key="ph",
         name="pH",
-        unit_of_measurement=None,
+        native_unit_of_measurement=None,
         icon="mdi:pool",
         device_class=None,
     ),
     SensorEntityDescription(
         key="tds",
         name="TDS",
-        unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         icon="mdi:pool",
         device_class=None,
     ),
     SensorEntityDescription(
         key="battery",
         name="Battery",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon=None,
         device_class=DEVICE_CLASS_BATTERY,
     ),
     SensorEntityDescription(
         key="rssi",
         name="RSSI",
-        unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         icon=None,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
     ),
     SensorEntityDescription(
         key="salt",
         name="Salt",
-        unit_of_measurement="mg/L",
+        native_unit_of_measurement="mg/L",
         icon="mdi:pool",
         device_class=None,
     ),
@@ -141,9 +141,9 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
         self._poolid = self.coordinator.data[poolidx]["id"]
 
         pooldata = self._pooldata()
-        self._unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
+        self._attr_unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
         self._device_name = pooldata["name"]
-        self._name = f"{self._device_name} {description.name}"
+        self._attr_name = f"{self._device_name} {description.name}"
 
     def _pooldata(self):
         """Get pool data dict."""
@@ -164,14 +164,9 @@ class OndiloICO(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Last value of the sensor."""
         return self._devdata()["value"]
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this entity."""
-        return self._unique_id
 
     @property
     def device_info(self):

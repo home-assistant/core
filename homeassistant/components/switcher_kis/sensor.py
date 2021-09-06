@@ -110,7 +110,7 @@ class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
         # Entity class attributes
         self._attr_name = f"{wrapper.name} {description.name}"
         self._attr_icon = description.icon
-        self._attr_unit_of_measurement = description.unit
+        self._attr_native_unit_of_measurement = description.unit
         self._attr_device_class = description.device_class
         self._attr_entity_registry_enabled_default = description.default_enabled
 
@@ -122,6 +122,6 @@ class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return getattr(self.wrapper.data, self.attribute)  # type: ignore[no-any-return]

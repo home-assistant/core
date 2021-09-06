@@ -50,7 +50,9 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         async with self._image_cond:
             self._image_cond.notify_all()
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return single camera image bytes."""
         if not self.available:
             return None

@@ -37,6 +37,8 @@ from .helpers import async_get_blueprints
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
+PACKAGE_MERGE_HINT = "list"
+
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(

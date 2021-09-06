@@ -1,7 +1,6 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Final, cast
 
 from homeassistant.components import sensor
@@ -21,9 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt
 
-from .const import LAST_RESET_NEVER, LAST_RESET_UPTIME, SHAIR_MAX_WORK_HOURS
+from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
@@ -42,6 +40,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_BATTERY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
+        available=lambda block: cast(bool, block.battery != -1),
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -113,49 +112,43 @@ SENSORS: Final = {
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=LAST_RESET_UPTIME,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=LAST_RESET_NEVER,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("emeter", "energyReturned"): BlockAttributeDescription(
         name="Energy Returned",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=LAST_RESET_NEVER,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("light", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
         default_enabled=False,
-        last_reset=LAST_RESET_UPTIME,
     ),
     ("relay", "energy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=LAST_RESET_UPTIME,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("roller", "rollerEnergy"): BlockAttributeDescription(
         name="Energy",
         unit=ENERGY_KILO_WATT_HOUR,
         value=lambda value: round(value / 60 / 1000, 2),
         device_class=sensor.DEVICE_CLASS_ENERGY,
-        state_class=sensor.STATE_CLASS_MEASUREMENT,
-        last_reset=LAST_RESET_UPTIME,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
     ),
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
@@ -184,6 +177,7 @@ SENSORS: Final = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: cast(bool, block.luminosity != -1),
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
@@ -256,7 +250,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
@@ -266,21 +260,7 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def last_reset(self) -> datetime | None:
-        """State class of sensor."""
-        if self.description.last_reset == LAST_RESET_UPTIME:
-            self._last_value = get_device_uptime(
-                self.wrapper.device.status, self._last_value
-            )
-            return dt.parse_datetime(self._last_value)
-
-        if self.description.last_reset == LAST_RESET_NEVER:
-            return dt.utc_from_timestamp(0)
-
-        return None
-
-    @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)
 
@@ -289,7 +269,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
 
@@ -299,7 +279,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return self.description.unit
 
@@ -308,7 +288,7 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
             return self.attribute_value
@@ -321,6 +301,6 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         return self.description.state_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of sensor."""
         return cast(str, self._unit)

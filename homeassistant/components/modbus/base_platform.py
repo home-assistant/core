@@ -21,13 +21,15 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     STATE_ON,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_COILS,
     CALL_TYPE_WRITE_REGISTER,
@@ -36,6 +38,7 @@ from .const import (
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STATE_OFF,
@@ -60,7 +63,11 @@ class BasePlatform(Entity):
     def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE)
+        # temporary fix,
+        # make sure slave is always defined to avoid an error in pymodbus
+        # attr(in_waiting) not defined.
+        # see issue #657 and PR #660 in riptideio/pymodbus
+        self._slave = entry.get(CONF_SLAVE, 0)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value = None
@@ -72,6 +79,8 @@ class BasePlatform(Entity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = True
         self._attr_unit_of_measurement = None
+        self._lazy_error_count = entry[CONF_LAZY_ERROR]
+        self._lazy_errors = self._lazy_error_count
 
     @abstractmethod
     async def async_update(self, now=None):
@@ -80,9 +89,10 @@ class BasePlatform(Entity):
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
         if self._scan_interval > 0:
-            async_track_time_interval(
+            cancel_func = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
+            self._hub.entity_timers.append(cancel_func)
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
@@ -120,52 +130,58 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         registers = self._swap_registers(registers)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DATA_TYPE_STRING:
-            self._value = byte_string.decode()
-        else:
-            val = struct.unpack(self._structure, byte_string)
+            return byte_string.decode()
 
-            # Issue: https://github.com/home-assistant/core/issues/41944
-            # If unpack() returns a tuple greater than 1, don't try to process the value.
-            # Instead, return the values of unpack(...) separated by commas.
-            if len(val) > 1:
-                # Apply scale and precision to floats and ints
-                v_result = []
-                for entry in val:
-                    v_temp = self._scale * entry + self._offset
-
-                    # We could convert int to float, and the code would still work; however
-                    # we lose some precision, and unit tests will fail. Therefore, we do
-                    # the conversion only when it's absolutely necessary.
-                    if isinstance(v_temp, int) and self._precision == 0:
-                        v_result.append(str(v_temp))
-                    else:
-                        v_result.append(f"{float(v_temp):.{self._precision}f}")
-                self._value = ",".join(map(str, v_result))
-            else:
-                # Apply scale and precision to floats and ints
-                val = self._scale * val[0] + self._offset
+        val = struct.unpack(self._structure, byte_string)
+        # Issue: https://github.com/home-assistant/core/issues/41944
+        # If unpack() returns a tuple greater than 1, don't try to process the value.
+        # Instead, return the values of unpack(...) separated by commas.
+        if len(val) > 1:
+            # Apply scale and precision to floats and ints
+            v_result = []
+            for entry in val:
+                v_temp = self._scale * entry + self._offset
 
                 # We could convert int to float, and the code would still work; however
                 # we lose some precision, and unit tests will fail. Therefore, we do
                 # the conversion only when it's absolutely necessary.
-                if isinstance(val, int) and self._precision == 0:
-                    self._value = str(val)
+                if isinstance(v_temp, int) and self._precision == 0:
+                    v_result.append(str(v_temp))
                 else:
-                    self._value = f"{float(val):.{self._precision}f}"
+                    v_result.append(f"{float(v_temp):.{self._precision}f}")
+            return ",".join(map(str, v_result))
+
+        # Apply scale and precision to floats and ints
+        val = self._scale * val[0] + self._offset
+
+        # We could convert int to float, and the code would still work; however
+        # we lose some precision, and unit tests will fail. Therefore, we do
+        # the conversion only when it's absolutely necessary.
+        if isinstance(val, int) and self._precision == 0:
+            return str(val)
+        return f"{float(val):.{self._precision}f}"
 
 
-class BaseSwitch(BasePlatform, RestoreEntity):
+class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
     def __init__(self, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
         config[CONF_INPUT_TYPE] = ""
         super().__init__(hub, config)
-        self._is_on = None
+        self._attr_is_on = False
         convert = {
             CALL_TYPE_REGISTER_HOLDING: (
                 CALL_TYPE_REGISTER_HOLDING,
                 CALL_TYPE_WRITE_REGISTER,
+            ),
+            CALL_TYPE_DISCRETE: (
+                CALL_TYPE_DISCRETE,
+                None,
+            ),
+            CALL_TYPE_REGISTER_INPUT: (
+                CALL_TYPE_REGISTER_INPUT,
+                None,
             ),
             CALL_TYPE_COIL: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COIL),
             CALL_TYPE_X_COILS: (CALL_TYPE_COIL, CALL_TYPE_WRITE_COILS),
@@ -185,9 +201,9 @@ class BaseSwitch(BasePlatform, RestoreEntity):
             self._verify_address = config[CONF_VERIFY].get(
                 CONF_ADDRESS, config[CONF_ADDRESS]
             )
-            self._verify_type = config[CONF_VERIFY].get(
-                CONF_INPUT_TYPE, convert[config[CONF_WRITE_TYPE]][0]
-            )
+            self._verify_type = convert[
+                config[CONF_VERIFY].get(CONF_INPUT_TYPE, config[CONF_WRITE_TYPE])
+            ][0]
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
         else:
@@ -198,12 +214,7 @@ class BaseSwitch(BasePlatform, RestoreEntity):
         await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._is_on = state.state == STATE_ON
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._is_on
+            self._attr_is_on = state.state == STATE_ON
 
     async def async_turn(self, command):
         """Evaluate switch result."""
@@ -217,7 +228,7 @@ class BaseSwitch(BasePlatform, RestoreEntity):
 
         self._attr_available = True
         if not self._verify_active:
-            self._is_on = command == self.command_on
+            self._attr_is_on = command == self.command_on
             self.async_write_ha_state()
             return
 
@@ -248,19 +259,24 @@ class BaseSwitch(BasePlatform, RestoreEntity):
         )
         self._call_active = False
         if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
             return
 
+        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._verify_type == CALL_TYPE_COIL:
-            self._is_on = bool(result.bits[0] & 1)
+            self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])
             if value == self._state_on:
-                self._is_on = True
+                self._attr_is_on = True
             elif value == self._state_off:
-                self._is_on = False
+                self._attr_is_on = False
             elif value is not None:
                 _LOGGER.error(
                     "Unexpected response from modbus device slave %s register %s, got 0x%2x",

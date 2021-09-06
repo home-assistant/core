@@ -32,6 +32,8 @@ class TradfriBaseClass(Entity):
     All devices and groups should ultimately inherit from this class.
     """
 
+    _attr_should_poll = False
+
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
         self._api = handle_error(api)
@@ -39,9 +41,6 @@ class TradfriBaseClass(Entity):
         self._device_control = None
         self._device_data = None
         self._gateway_id = gateway_id
-        self._name = None
-        self._unique_id = None
-
         self._refresh(device)
 
     @callback
@@ -49,7 +48,7 @@ class TradfriBaseClass(Entity):
         """Start observation of device."""
         if exc:
             self.async_write_ha_state()
-            _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
+            _LOGGER.warning("Observation failed for %s", self._attr_name, exc_info=exc)
 
         try:
             cmd = self._device.observe(
@@ -66,21 +65,6 @@ class TradfriBaseClass(Entity):
         """Start thread when added to hass."""
         self._async_start_observe()
 
-    @property
-    def name(self):
-        """Return the display name of this device."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed for tradfri device."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return unique ID for device."""
-        return self._unique_id
-
     @callback
     def _observe_update(self, device):
         """Receive new state data for this device."""
@@ -90,7 +74,7 @@ class TradfriBaseClass(Entity):
     def _refresh(self, device):
         """Refresh the device data."""
         self._device = device
-        self._name = device.name
+        self._attr_name = device.name
 
 
 class TradfriBaseDevice(TradfriBaseClass):
@@ -98,16 +82,6 @@ class TradfriBaseDevice(TradfriBaseClass):
 
     All devices should inherit from this class.
     """
-
-    def __init__(self, device, api, gateway_id):
-        """Initialize a device."""
-        super().__init__(device, api, gateway_id)
-        self._available = True
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def device_info(self):
@@ -118,7 +92,7 @@ class TradfriBaseDevice(TradfriBaseClass):
             "identifiers": {(DOMAIN, self._device.id)},
             "manufacturer": info.manufacturer,
             "model": info.model_number,
-            "name": self._name,
+            "name": self._attr_name,
             "sw_version": info.firmware_version,
             "via_device": (DOMAIN, self._gateway_id),
         }
@@ -126,4 +100,4 @@ class TradfriBaseDevice(TradfriBaseClass):
     def _refresh(self, device):
         """Refresh the device data."""
         super()._refresh(device)
-        self._available = device.reachable
+        self._attr_available = device.reachable

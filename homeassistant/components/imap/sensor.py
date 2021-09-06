@@ -95,7 +95,7 @@ class ImapSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the number of emails found."""
         return self._email_count
 

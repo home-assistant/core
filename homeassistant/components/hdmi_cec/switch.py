@@ -57,8 +57,3 @@ class CecSwitchEntity(CecEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._state == STATE_ON
-
-    @property  # type: ignore
-    def state(self) -> str | None:
-        """Return the cached state of device."""
-        return self._state

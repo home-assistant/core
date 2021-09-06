@@ -16,7 +16,7 @@
                     "currencies": "Kontostand W\u00e4hrungen",
                     "exchange_rates": "Wechselkurse"
                 },
-                "description": "Bitte gib die Details deines API-Schl\u00fcssels ein, wie von Coinbase bereitgestellt. Trenne mehrere W\u00e4hrungen mit einem Komma (z. B. \"BTC, EUR\")",
+                "description": "Bitte gib die Details deines API-Schl\u00fcssels ein, wie von Coinbase bereitgestellt.",
                 "title": "Coinbase API Schl\u00fcssel Details"
             }
         }

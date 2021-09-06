@@ -21,9 +21,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)"
+                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)",
+                    "devices": "Seadmed (p\u00e4\u00e4stikud)"
                 },
-                "description": "Neid s\u00e4tteid tuleb muuta ainult siis kui HomeKit ei t\u00f6\u00f6ta.",
+                "description": "Iga valitud seadme jaoks luuakse programmeeritavad l\u00fclitid. Seadme p\u00e4\u00e4stiku k\u00e4ivitamisel saab HomeKiti seadistada automaatiseeringu v\u00f5i stseeni k\u00e4ivitamiseks.",
                 "title": "T\u00e4psem seadistamine"
             },
             "cameras": {

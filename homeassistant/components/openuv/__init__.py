@@ -24,14 +24,18 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.service import verify_domain_control
 
 from .const import (
+    CONF_FROM_WINDOW,
+    CONF_TO_WINDOW,
     DATA_CLIENT,
     DATA_LISTENER,
     DATA_PROTECTION_WINDOW,
     DATA_UV,
+    DEFAULT_FROM_WINDOW,
+    DEFAULT_TO_WINDOW,
     DOMAIN,
     LOGGER,
 )
@@ -55,13 +59,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
         openuv = OpenUV(
+            config_entry,
             Client(
                 config_entry.data[CONF_API_KEY],
                 config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
                 config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-                websession,
                 altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
-            )
+                session=websession,
+                logger=LOGGER,
+            ),
         )
         await openuv.async_update()
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = openuv
@@ -134,15 +140,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 class OpenUV:
     """Define a generic OpenUV object."""
 
-    def __init__(self, client: Client) -> None:
+    def __init__(self, config_entry: ConfigEntry, client: Client) -> None:
         """Initialize."""
+        self._config_entry = config_entry
         self.client = client
         self.data: dict[str, Any] = {}
 
     async def async_update_protection_data(self) -> None:
         """Update binary sensor (protection window) data."""
+        low = self._config_entry.options.get(CONF_FROM_WINDOW, DEFAULT_FROM_WINDOW)
+        high = self._config_entry.options.get(CONF_TO_WINDOW, DEFAULT_TO_WINDOW)
+
         try:
-            resp = await self.client.uv_protection_window()
+            resp = await self.client.uv_protection_window(low=low, high=high)
             self.data[DATA_PROTECTION_WINDOW] = resp["result"]
         except OpenUvError as err:
             LOGGER.error("Error during protection data update: %s", err)
@@ -166,14 +176,14 @@ class OpenUV:
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
 
-    def __init__(self, openuv: OpenUV, sensor_type: str) -> None:
+    def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._attr_should_poll = False
         self._attr_unique_id = (
-            f"{openuv.client.latitude}_{openuv.client.longitude}_{sensor_type}"
+            f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"
         )
-        self._sensor_type = sensor_type
+        self.entity_description = description
         self.openuv = openuv
 
     async def async_added_to_hass(self) -> None:

@@ -1,6 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 from __future__ import annotations
 
+from asyncio import sleep
 from typing import Any
 
 from pyHS100 import SmartPlug
@@ -39,7 +40,7 @@ async def async_setup_entry(
     ]
     switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     for switch in switches:
-        coordinator = coordinators[switch.mac]
+        coordinator = coordinators[switch.context or switch.mac]
         entities.append(SmartPlugSwitch(switch, coordinator))
 
     async_add_entities(entities)
@@ -89,9 +90,15 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(self.smartplug.turn_on)
+        # Workaround for delayed device state update on HS210: #55190
+        if "HS210" in self.device_info["model"]:
+            await sleep(0.5)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self.smartplug.turn_off)
+        # Workaround for delayed device state update on HS210: #55190
+        if "HS210" in self.device_info["model"]:
+            await sleep(0.5)
         await self.coordinator.async_refresh()

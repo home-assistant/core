@@ -9,18 +9,27 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
     CONF_COUNT,
+    CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
+    CONF_TYPE,
 )
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_INPUT_TYPE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
+    CONF_WRITE_TYPE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_FLOAT16,
@@ -35,8 +44,10 @@ from .const import (
     DATA_TYPE_UINT16,
     DATA_TYPE_UINT32,
     DATA_TYPE_UINT64,
+    DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     PLATFORMS,
+    SERIAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,6 +97,7 @@ def struct_validator(config):
         _LOGGER.warning(error)
         try:
             data_type = OLD_DATA_TYPES[data_type][config.get(CONF_COUNT, 1)]
+            config[CONF_DATA_TYPE] = data_type
         except KeyError as exp:
             error = f"{name}  cannot convert automatically {data_type}"
             raise vol.Invalid(error) from exp
@@ -187,4 +199,71 @@ def scan_interval_validator(config: dict) -> dict:
                 minimum_scan_interval - 1,
             )
             hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+    return config
+
+
+def duplicate_entity_validator(config: dict) -> dict:
+    """Control scan_interval."""
+    for hub_index, hub in enumerate(config):
+        for component, conf_key in PLATFORMS:
+            if conf_key not in hub:
+                continue
+            names: set[str] = set()
+            errors: list[int] = []
+            addresses: set[str] = set()
+            for index, entry in enumerate(hub[conf_key]):
+                name = entry[CONF_NAME]
+                addr = str(entry[CONF_ADDRESS])
+                if CONF_INPUT_TYPE in entry:
+                    addr += "_" + str(entry[CONF_INPUT_TYPE])
+                elif CONF_WRITE_TYPE in entry:
+                    addr += "_" + str(entry[CONF_WRITE_TYPE])
+                if CONF_COMMAND_ON in entry:
+                    addr += "_" + str(entry[CONF_COMMAND_ON])
+                if CONF_COMMAND_OFF in entry:
+                    addr += "_" + str(entry[CONF_COMMAND_OFF])
+                if CONF_SLAVE in entry:
+                    addr += "_" + str(entry[CONF_SLAVE])
+                if addr in addresses:
+                    err = f"Modbus {component}/{name} address {addr} is duplicate, second entry not loaded!"
+                    _LOGGER.warning(err)
+                    errors.append(index)
+                elif name in names:
+                    err = f"Modbus {component}/{name}  is duplicate, second entry not loaded!"
+                    _LOGGER.warning(err)
+                    errors.append(index)
+                else:
+                    names.add(name)
+                    addresses.add(addr)
+
+            for i in reversed(errors):
+                del config[hub_index][conf_key][i]
+    return config
+
+
+def duplicate_modbus_validator(config: list) -> list:
+    """Control modbus connection for duplicates."""
+    hosts: set[str] = set()
+    names: set[str] = set()
+    errors = []
+    for index, hub in enumerate(config):
+        name = hub.get(CONF_NAME, DEFAULT_HUB)
+        if hub[CONF_TYPE] == SERIAL:
+            host = hub[CONF_PORT]
+        else:
+            host = f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
+        if host in hosts:
+            err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
+            _LOGGER.warning(err)
+            errors.append(index)
+        elif name in names:
+            err = f"Modbus {name}  is duplicate, second entry not loaded!"
+            _LOGGER.warning(err)
+            errors.append(index)
+        else:
+            hosts.add(host)
+            names.add(name)
+
+    for i in reversed(errors):
+        del config[i]
     return config

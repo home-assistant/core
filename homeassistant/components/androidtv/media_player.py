@@ -449,6 +449,11 @@ class ADBDevice(MediaPlayerEntity):
             ATTR_HDMI_INPUT: None,
         }
 
+    @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        return f"{datetime.now().timestamp()}" if self._screencap else None
+
     @adb_decorator()
     async def _adb_screencap(self):
         """Take a screen capture from the device."""
@@ -458,9 +463,6 @@ class ADBDevice(MediaPlayerEntity):
         """Fetch current playing image."""
         if not self._screencap or self.state in (STATE_OFF, None) or not self.available:
             return None, None
-        self._attr_media_image_hash = (
-            f"{datetime.now().timestamp()}" if self._screencap else None
-        )
 
         media_data = await self._adb_screencap()
         if media_data:

@@ -3,7 +3,18 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from miio import AirHumidifier, AirHumidifierMiot, DeviceException
+from miio import (
+    AirFresh,
+    AirHumidifier,
+    AirHumidifierMiot,
+    AirHumidifierMjjsq,
+    AirPurifier,
+    AirPurifierMB4,
+    AirPurifierMiot,
+    DeviceException,
+    Fan,
+    FanP5,
+)
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
@@ -21,11 +32,17 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRPURIFIER_3C,
+    MODEL_FAN_P5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_FAN_MIIO,
     MODELS_HUMIDIFIER,
+    MODELS_HUMIDIFIER_MIIO,
     MODELS_HUMIDIFIER_MIOT,
+    MODELS_HUMIDIFIER_MJJSQ,
     MODELS_LIGHT,
+    MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
 )
@@ -35,8 +52,15 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan"]
-HUMIDIFIER_PLATFORMS = ["humidifier", "number", "select", "sensor", "switch"]
+FAN_PLATFORMS = ["fan", "number", "select", "sensor", "switch"]
+HUMIDIFIER_PLATFORMS = [
+    "binary_sensor",
+    "humidifier",
+    "number",
+    "select",
+    "sensor",
+    "switch",
+]
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
@@ -99,31 +123,63 @@ async def async_create_miio_device_and_coordinator(
     token = entry.data[CONF_TOKEN]
     name = entry.title
     device = None
+    migrate = False
 
-    if model not in MODELS_HUMIDIFIER:
+    if model not in MODELS_HUMIDIFIER and model not in MODELS_FAN:
         return
 
     _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
+    # Humidifiers
     if model in MODELS_HUMIDIFIER_MIOT:
         device = AirHumidifierMiot(host, token)
-    else:
+        migrate = True
+    elif model in MODELS_HUMIDIFIER_MJJSQ:
+        device = AirHumidifierMjjsq(host, token, model=model)
+        migrate = True
+    elif model in MODELS_HUMIDIFIER_MIIO:
         device = AirHumidifier(host, token, model=model)
+        migrate = True
+    # Airpurifiers and Airfresh
+    elif model in MODEL_AIRPURIFIER_3C:
+        device = AirPurifierMB4(host, token)
+    elif model in MODELS_PURIFIER_MIOT:
+        device = AirPurifierMiot(host, token)
+    elif model.startswith("zhimi.airpurifier."):
+        device = AirPurifier(host, token)
+    elif model.startswith("zhimi.airfresh."):
+        device = AirFresh(host, token)
+    # Pedestal fans
+    elif model == MODEL_FAN_P5:
+        device = FanP5(host, token)
+    elif model in MODELS_FAN_MIIO:
+        device = Fan(host, token, model=model)
+    else:
+        _LOGGER.error(
+            "Unsupported device found! Please create an issue at "
+            "https://github.com/syssi/xiaomi_airpurifier/issues "
+            "and provide the following data: %s",
+            model,
+        )
+        return
 
-    # Removing fan platform entity for humidifiers and migrate the name to the config entry for migration
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
-    if entity_id:
-        # This check is entities that have a platform migration only and should be removed in the future
-        if migrate_entity_name := entity_registry.async_get(entity_id).name:
-            hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
-        entity_registry.async_remove(entity_id)
+    if migrate:
+        # Removing fan platform entity for humidifiers and migrate the name to the config entry for migration
+        entity_registry = er.async_get(hass)
+        entity_id = entity_registry.async_get_entity_id("fan", DOMAIN, entry.unique_id)
+        if entity_id:
+            # This check is entities that have a platform migration only and should be removed in the future
+            if migrate_entity_name := entity_registry.async_get(entity_id).name:
+                hass.config_entries.async_update_entry(entry, title=migrate_entity_name)
+            entity_registry.async_remove(entity_id)
 
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
         try:
             async with async_timeout.timeout(10):
-                return await hass.async_add_executor_job(device.status)
+                state = await hass.async_add_executor_job(device.status)
+                _LOGGER.debug("Got new state: %s", state)
+                return state
 
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex

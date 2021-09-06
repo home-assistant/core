@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 import shlex
 
@@ -22,20 +21,17 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
+from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,50 +57,55 @@ SERVICE_OPEN_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
-
-    client = Bridge(
+    bridge = Bridge(
         BridgeClient(aiohttp_client.async_get_clientsession(hass)),
         f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
         entry.data[CONF_API_KEY],
     )
 
-    async def async_update_data() -> Bridge:
-        """Fetch data from Bridge."""
-        try:
-            async with async_timeout.timeout(60):
-                await asyncio.gather(
-                    *[
-                        client.async_get_battery(),
-                        client.async_get_cpu(),
-                        client.async_get_filesystem(),
-                        client.async_get_memory(),
-                        client.async_get_network(),
-                        client.async_get_os(),
-                        client.async_get_processes(),
-                        client.async_get_system(),
-                    ]
-                )
-            return client
-        except BridgeAuthenticationException as exception:
-            raise ConfigEntryAuthFailed from exception
-        except BRIDGE_CONNECTION_ERRORS as exception:
-            raise UpdateFailed("Could not connect to System Bridge.") from exception
+    try:
+        async with async_timeout.timeout(30):
+            await bridge.async_get_information()
+    except BridgeAuthenticationException as exception:
+        raise ConfigEntryAuthFailed(
+            f"Authentication failed for {entry.title} ({entry.data[CONF_HOST]})"
+        ) from exception
+    except BRIDGE_CONNECTION_ERRORS as exception:
+        raise ConfigEntryNotReady(
+            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name=f"{DOMAIN}_coordinator",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=60),
-    )
+    coordinator = SystemBridgeDataUpdateCoordinator(hass, bridge, _LOGGER, entry=entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    # Wait for initial data
+    try:
+        async with async_timeout.timeout(60):
+            while (
+                coordinator.bridge.battery is None
+                or coordinator.bridge.cpu is None
+                or coordinator.bridge.filesystem is None
+                or coordinator.bridge.graphics is None
+                or coordinator.bridge.information is None
+                or coordinator.bridge.memory is None
+                or coordinator.bridge.network is None
+                or coordinator.bridge.os is None
+                or coordinator.bridge.processes is None
+                or coordinator.bridge.system is None
+            ):
+                _LOGGER.debug(
+                    "Waiting for initial data from %s (%s)",
+                    entry.title,
+                    entry.data[CONF_HOST],
+                )
+                await asyncio.sleep(1)
+    except asyncio.TimeoutError as exception:
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -128,8 +129,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for entry in hass.config_entries.async_entries(DOMAIN)
             if entry.entry_id in device_entry.config_entries
         )
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.data
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        bridge: Bridge = coordinator.bridge
 
         _LOGGER.debug(
             "Command payload: %s",
@@ -166,8 +167,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             for entry in hass.config_entries.async_entries(DOMAIN)
             if entry.entry_id in device_entry.config_entries
         )
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.data
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+        bridge: Bridge = coordinator.bridge
 
         _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
         try:
@@ -190,14 +191,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_OPEN_SCHEMA,
     )
 
+    # Reload entry when its updated.
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            entry.entry_id
+        ]
+
+        # Ensure disconnected and cleanup stop sub
+        await coordinator.bridge.async_close_websocket()
+        if coordinator.unsub:
+            coordinator.unsub()
+
+        del hass.data[DOMAIN][entry.entry_id]
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_SEND_COMMAND)
@@ -206,28 +219,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-class BridgeEntity(CoordinatorEntity):
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry when it changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+class SystemBridgeEntity(CoordinatorEntity):
     """Defines a base System Bridge entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        bridge: Bridge,
+        coordinator: SystemBridgeDataUpdateCoordinator,
         key: str,
-        name: str,
-        icon: str | None,
-        enabled_by_default: bool,
+        name: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
-        self._key = f"{bridge.os.hostname}_{key}"
-        self._name = f"{bridge.os.hostname} {name}"
-        self._icon = icon
-        self._enabled_default = enabled_by_default
-        self._hostname = bridge.os.hostname
-        self._default_interface = bridge.network.interfaces[
-            bridge.network.interfaceDefault
-        ]
+        bridge: Bridge = coordinator.data
+        self._key = f"{bridge.information.host}_{key}"
+        self._name = f"{bridge.information.host} {name}"
+        self._hostname = bridge.information.host
+        self._mac = bridge.information.mac
         self._manufacturer = bridge.system.system.manufacturer
         self._model = bridge.system.system.model
         self._version = bridge.system.system.version
@@ -242,27 +254,15 @@ class BridgeEntity(CoordinatorEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
-    def icon(self) -> str | None:
-        """Return the mdi icon of the entity."""
-        return self._icon
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
-
-
-class BridgeDeviceEntity(BridgeEntity):
+class SystemBridgeDeviceEntity(SystemBridgeEntity):
     """Defines a System Bridge device entity."""
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
         return {
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._default_interface["mac"])
-            },
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "manufacturer": self._manufacturer,
             "model": self._model,
             "name": self._hostname,
