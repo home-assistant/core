@@ -28,16 +28,12 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="auto_watering",
         name="Automatic Watering",
-        icon=None,
         device_class=DEVICE_CLASS_SWITCH,
-        unit_of_measurement=None,
     ),
     SwitchEntityDescription(
         key="manual_watering",
         name="Manual Watering",
-        icon=None,
         device_class=DEVICE_CLASS_SWITCH,
-        unit_of_measurement=None,
     ),
 )
 

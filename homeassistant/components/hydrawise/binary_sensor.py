@@ -22,18 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
     name="Status",
-    icon=None,
     device_class=DEVICE_CLASS_CONNECTIVITY,
-    unit_of_measurement=None,
 )
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_watering",
         name="Watering",
-        icon=None,
         device_class=DEVICE_CLASS_MOISTURE,
-        unit_of_measurement=None,
     ),
 )
 

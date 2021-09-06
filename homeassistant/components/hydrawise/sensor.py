@@ -26,15 +26,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
         name="Next Cycle",
-        icon=None,
         device_class=DEVICE_CLASS_TIMESTAMP,
-        native_unit_of_measurement=None,
     ),
     SensorEntityDescription(
         key="watering_time",
         name="Watering Time",
         icon="mdi:water-pump",
-        device_class=None,
         native_unit_of_measurement=TIME_MINUTES,
     ),
 )
