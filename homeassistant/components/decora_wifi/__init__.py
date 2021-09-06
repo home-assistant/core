@@ -104,10 +104,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if session.unique_id == conf_data[CONF_ID]:
         await component.async_add_entities([session], False)
     else:
-        _LOGGER.error(
-            "Userid mismatch with config entry. If trying to setup a different account, delete this entry and make a new one."
-        )
-        raise LoginMismatch("Userid mismatch with config entry.")
+        _LOGGER.error("Userid mismatch with config entry")
+        raise LoginMismatch("Userid mismatch with config entry")
     conf_data[CONF_ENTITY_ID] = session.entity_id
     hass.config_entries.async_update_entry(
         entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=conf_data

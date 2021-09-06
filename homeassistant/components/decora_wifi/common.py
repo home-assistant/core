@@ -101,7 +101,8 @@ class DecoraWifiPlatform(BinarySensorEntity):
         self._loggedin = True
         if self.platform:
             self.schedule_update_ha_state()
-        self._user_id = user._id
+        # Upstream api does not currently provide a way to get the user id without accessing the protected member.
+        self._user_id = user._id  # pylint: disable= protected-access
 
     def _api_logout(self):
         """Log out of decora_wifi session."""
@@ -193,7 +194,7 @@ class DecoraWifiPlatform(BinarySensorEntity):
 class DecoraWifiEntity(Entity):
     """Initiate Decora Wifi Base Class."""
 
-    def __init__(self, device: IotSwitch):
+    def __init__(self, device: IotSwitch) -> None:
         """Initialize Decora Wifi device base class."""
         self._switch = device
         self._unique_id = device.mac

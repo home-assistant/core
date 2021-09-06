@@ -46,10 +46,6 @@ async def async_setup_entry(
 class DecoraWifiLight(DecoraWifiEntity, LightEntity):
     """Representation of a Decora WiFi switch."""
 
-    def __init__(self, device):
-        """Initialize the light object."""
-        super().__init__(device)
-
     @property
     def supported_features(self):
         """Return supported features."""
