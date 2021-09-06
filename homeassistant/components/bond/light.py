@@ -94,7 +94,7 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        fan_lights + fan_up_lights + fan_down_lights + fp_lights + fireplaces + lights,
+        fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,
         True,
     )
 
