@@ -459,7 +459,7 @@ def list_statistic_ids(
                 unit = _configured_unit(unit, units)
             platform_statistic_ids[statistic_id] = unit
 
-        statistic_ids = {**statistic_ids, **platform_statistic_ids}
+        statistic_ids = {**platform_statistic_ids, **statistic_ids}
 
     return [
         {"statistic_id": _id, "unit_of_measurement": unit}
