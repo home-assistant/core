@@ -74,26 +74,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.services.has_service(DOMAIN, SERVICE_SCAN):
         return True
 
-    def get_entry_id(interface: str) -> str | None:
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in entry.data and entry.data["port"] == interface:
-                return entry.entry_id
-        _LOGGER.warning("Can not find the config entry for: %s", interface)
-        return None
-
     def check_entry_id(interface: str):
         for entry in hass.config_entries.async_entries(DOMAIN):
             if "port" in entry.data and entry.data["port"] == interface:
-                return interface
+                return entry.entry_id
         raise vol.Invalid(
             "The interface provided is not defined as a port in a Velbus integration"
         )
 
     async def scan(call):
-        entry_id = get_entry_id(call.data[CONF_INTERFACE])
-        if not entry_id:
-            return
-        await hass.data[DOMAIN][entry_id]["cntrl"].scan()
+        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].scan()
 
     hass.services.async_register(
         DOMAIN,
@@ -103,10 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     async def syn_clock(call):
-        entry_id = get_entry_id(call.data[CONF_INTERFACE])
-        if not entry_id:
-            return
-        await hass.data[DOMAIN][entry_id]["cntrl"].sync_clock()
+        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].sync_clock()
 
     hass.services.async_register(
         DOMAIN,
@@ -117,12 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def set_memo_text(call):
         """Handle Memo Text service call."""
-        entry_id = get_entry_id(call.data[CONF_INTERFACE])
-        if not entry_id:
-            return
         memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
-        await hass.data[DOMAIN][entry_id]["cntrl"].get_module(
+        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].get_module(
             call.data[CONF_ADDRESS]
         ).set_memo_text(memo_text.async_render())
 
