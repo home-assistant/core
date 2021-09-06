@@ -105,7 +105,7 @@ async def async_setup_entry(
         SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
         {
             vol.Required(ATTR_BRIGHTNESS): vol.All(
-                vol.Number(scale=0), vol.Range(0, 100)
+                vol.Number(scale=0), vol.Range(0, 255)
             )
         },
         "async_set_brightness_belief",

@@ -9,6 +9,7 @@ from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
 import voluptuous as vol
 
 from homeassistant.components.fan import (
+    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     SUPPORT_DIRECTION,
@@ -26,7 +27,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import ATTR_FANSPEED, BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_BELIEF
+from .const import BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_BELIEF
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
 
@@ -52,7 +53,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SPEED_BELIEF,
-        {vol.Required(ATTR_FANSPEED): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
+        {vol.Required(ATTR_SPEED): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
         "async_set_speed_belief",
     )
 
@@ -143,20 +144,20 @@ class BondFan(BondEntity, FanEntity):
             self._device.device_id, Action.set_power_state_belief(power_state)
         )
 
-    async def async_set_speed_belief(self, fan_speed: int) -> None:
+    async def async_set_speed_belief(self, speed: int) -> None:
         """Set the believed speed for the fan."""
-        _LOGGER.debug("async_set_speed_belief called with percentage %s", fan_speed)
+        _LOGGER.debug("async_set_speed_belief called with percentage %s", speed)
 
-        if fan_speed == 0:
+        if speed == 0:
             await self.async_set_power_belief(False)
             return
 
         await self.async_set_power_belief(True)
 
-        bond_speed = math.ceil(percentage_to_ranged_value(self._speed_range, fan_speed))
+        bond_speed = math.ceil(percentage_to_ranged_value(self._speed_range, speed))
         _LOGGER.debug(
             "async_set_percentage converted percentage %s to bond speed %s",
-            fan_speed,
+            speed,
             bond_speed,
         )
 

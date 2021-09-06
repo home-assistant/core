@@ -13,10 +13,10 @@ set_fan_speed_belief:
         entity:
           integration: bond
           domain: fan
-    fan_speed:
+    speed:
       required: true
       name: Fan Speed
-      description: Fan Speed as int.
+      description: Fan Speed as %.
       example: 50
       selector:
         number:
@@ -88,7 +88,7 @@ set_light_brightness_belief:
       selector:
         number:
           min: 0
-          max: 100
+          max: 255
           step: 1
           mode: slider
 

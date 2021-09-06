@@ -7,6 +7,10 @@ from bond_api import Action, DeviceType, Direction
 
 from homeassistant import core
 from homeassistant.components import fan
+from homeassistant.components.bond.const import (
+    DOMAIN as BOND_DOMAIN,
+    SERVICE_SET_FAN_SPEED_BELIEF,
+)
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_SPEED,
@@ -252,6 +256,47 @@ async def test_turn_off_fan(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
+
+
+async def test_set_speed_belief_speed_zero(hass: core.HomeAssistant):
+    """Tests that set power belief service delegates to API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_FAN_SPEED_BELIEF,
+            {ATTR_ENTITY_ID: "fan.name_1", ATTR_SPEED: 0},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with(
+        "test-device-id", Action.set_power_state_belief(False)
+    )
+
+
+async def test_set_speed_belief_speed_100(hass: core.HomeAssistant):
+    """Tests that set power belief service delegates to API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_FAN_SPEED_BELIEF,
+            {ATTR_ENTITY_ID: "fan.name_1", ATTR_SPEED: 100},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with(
+        "test-device-id", Action.set_power_state_belief(True)
+    )
+    mock_action.assert_called_once_with("test-device-id", Action.set_speed_belief(255))
 
 
 async def test_update_reports_fan_on(hass: core.HomeAssistant):
