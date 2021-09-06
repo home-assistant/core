@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
-HAP-python==4.1.0
+HAP-python==4.2.1
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
