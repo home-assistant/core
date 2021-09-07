@@ -441,3 +441,43 @@ async def test_validation_grid_price_errors(
         ],
         "device_consumption": [],
     }
+
+
+async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded):
+    """Test validating gas with sensors for energy and cost/compensation."""
+    mock_is_entity_recorded["sensor.gas_cost_1"] = False
+    mock_is_entity_recorded["sensor.gas_compensation_1"] = False
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption_1",
+                    "stat_cost": "sensor.gas_cost_1",
+                }
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption_1",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_gas",
+                    "identifier": "sensor.gas_consumption_1",
+                    "value": "beers",
+                },
+                {
+                    "type": "recorder_untracked",
+                    "identifier": "sensor.gas_cost_1",
+                    "value": None,
+                },
+            ]
+        ],
+        "device_consumption": [],
+    }
