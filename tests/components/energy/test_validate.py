@@ -454,7 +454,12 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                     "type": "gas",
                     "stat_energy_from": "sensor.gas_consumption_1",
                     "stat_cost": "sensor.gas_cost_1",
-                }
+                },
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption_2",
+                    "stat_cost": "sensor.gas_cost_2",
+                },
             ]
         }
     )
@@ -462,6 +467,16 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
         "sensor.gas_consumption_1",
         "10.10",
         {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption_2",
+        "10.10",
+        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.gas_cost_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/kWh", "state_class": "total_increasing"},
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -477,7 +492,8 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                     "identifier": "sensor.gas_cost_1",
                     "value": None,
                 },
-            ]
+            ],
+            [],
         ],
         "device_consumption": [],
     }
