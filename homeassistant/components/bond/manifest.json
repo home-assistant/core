@@ -3,7 +3,7 @@
   "name": "Bond",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bond",
-  "requirements": ["bond-api==0.1.12"],
+  "requirements": ["bond-api==0.1.13"],
   "zeroconf": ["_bond._tcp.local."],
   "codeowners": ["@prystupa"],
   "quality_scale": "platinum",
