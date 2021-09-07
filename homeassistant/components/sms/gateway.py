@@ -27,11 +27,11 @@ class Gateway:
         try:
             await self._worker.set_incoming_sms_async()
         except gammu.ERR_NOTSUPPORTED:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Your phone does not support callback SMS notifications!, falling back to pulling method"
             )
         except gammu.GSMError:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "GSM error, your phone does not support callback SMS notifications!, falling back to pulling method"
             )
         else:
