@@ -3,7 +3,7 @@
 import re
 from urllib.parse import urlparse
 
-from pysyncthru import SyncThru
+from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
 import voluptuous as vol
 
@@ -109,7 +109,9 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 break
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        printer = SyncThru(user_input[CONF_URL], session)
+        printer = SyncThru(
+            user_input[CONF_URL], session, connection_mode=ConnectionMode.API
+        )
         errors = {}
         try:
             await printer.update()
@@ -117,8 +119,8 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_NAME] = DEFAULT_NAME_TEMPLATE.format(
                     printer.model() or DEFAULT_MODEL
                 )
-        except ValueError:
-            errors[CONF_URL] = "syncthru_not_supported"
+        except SyncThruAPINotSupported:
+            errors[CONF_URL] = "syncthru_api_not_supported"
         else:
             if printer.is_unknown_state():
                 errors[CONF_URL] = "unknown_state"

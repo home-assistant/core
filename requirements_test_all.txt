@@ -1052,7 +1052,7 @@ pyspcwebgw==0.4.0
 pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
-pysyncthru==0.7.3
+pysyncthru==0.7.9
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11
