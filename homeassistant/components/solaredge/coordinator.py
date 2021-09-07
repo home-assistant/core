@@ -216,9 +216,6 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
             if len(meter["values"][0]) == 2:
                 self.data[meter["type"]] = meter["values"][0]["value"]
                 self.attributes[meter["type"]] = {"date": meter["values"][0]["date"]}
-                reset = datetime.strptime(
-                    meter["values"][0]["date"], "%Y-%m-%d %H:%M:%S"
-                )
 
         LOGGER.debug(
             "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
