@@ -3,6 +3,8 @@
 import re
 from unittest.mock import patch
 
+from pysyncthru import SyncThruAPINotSupported
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.syncthru.config_flow import SyncThru
@@ -71,7 +73,7 @@ async def test_already_configured_by_url(hass, aioclient_mock):
 
 async def test_syncthru_not_supported(hass):
     """Test we show user form on unsupported device."""
-    with patch.object(SyncThru, "update", side_effect=ValueError):
+    with patch.object(SyncThru, "update", side_effect=SyncThruAPINotSupported):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
