@@ -86,7 +86,6 @@ SENSOR_TYPES_GENERIC: tuple[ViCareSensorEntityDescription[Device], ...] = (
     ViCareSensorEntityDescription[Device](
         key=SENSOR_OUTSIDE_TEMPERATURE,
         name="Outside Temperature",
-        icon=None,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getOutsideTemperature(),
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -94,7 +93,6 @@ SENSOR_TYPES_GENERIC: tuple[ViCareSensorEntityDescription[Device], ...] = (
     ViCareSensorEntityDescription[Device](
         key=SENSOR_SUPPLY_TEMPERATURE,
         name="Supply Temperature",
-        icon=None,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getSupplyTemperature(),
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -105,7 +103,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_BOILER_TEMPERATURE,
         name="Boiler Temperature",
-        icon=None,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getBoilerTemperature(),
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -116,7 +113,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getBurnerModulation(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_DHW_GAS_CONSUMPTION_TODAY,
@@ -124,7 +120,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionDomesticHotWaterToday(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK,
@@ -132,7 +127,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionDomesticHotWaterThisWeek(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH,
@@ -140,7 +134,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionDomesticHotWaterThisMonth(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR,
@@ -148,7 +141,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionDomesticHotWaterThisYear(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_GAS_CONSUMPTION_TODAY,
@@ -156,7 +148,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionHeatingToday(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_GAS_CONSUMPTION_THIS_WEEK,
@@ -164,7 +155,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionHeatingThisWeek(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_GAS_CONSUMPTION_THIS_MONTH,
@@ -172,7 +162,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionHeatingThisMonth(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_GAS_CONSUMPTION_THIS_YEAR,
@@ -180,15 +169,12 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getGasConsumptionHeatingThisYear(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_BURNER_STARTS,
         name="Burner Starts",
         icon="mdi:counter",
-        native_unit_of_measurement=None,
         value_getter=lambda api: api.getBurnerStarts(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[GazBoiler](
         key=SENSOR_BURNER_HOURS,
@@ -196,7 +182,6 @@ SENSOR_TYPES_GAS: tuple[ViCareSensorEntityDescription[GazBoiler], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getBurnerHours(),
-        device_class=None,
     ),
 )
 
@@ -205,9 +190,7 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         key=SENSOR_COMPRESSOR_STARTS,
         name="Compressor Starts",
         icon="mdi:counter",
-        native_unit_of_measurement=None,
         value_getter=lambda api: api.getCompressorStarts(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_HOURS,
@@ -215,7 +198,6 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getCompressorHours(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_HOURS_LOADCLASS1,
@@ -223,7 +205,6 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getCompressorHoursLoadClass1(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_HOURS_LOADCLASS2,
@@ -231,7 +212,6 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getCompressorHoursLoadClass2(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_HOURS_LOADCLASS3,
@@ -239,7 +219,6 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getCompressorHoursLoadClass3(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_HOURS_LOADCLASS4,
@@ -247,7 +226,6 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getCompressorHoursLoadClass4(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_HOURS_LOADCLASS5,
@@ -255,12 +233,10 @@ SENSOR_TYPES_HEATPUMP: tuple[ViCareSensorEntityDescription[HeatPump], ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=TIME_HOURS,
         value_getter=lambda api: api.getCompressorHoursLoadClass5(),
-        device_class=None,
     ),
     ViCareSensorEntityDescription[HeatPump](
         key=SENSOR_RETURN_TEMPERATURE,
         name="Return Temperature",
-        icon=None,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getReturnTemperature(),
         device_class=DEVICE_CLASS_TEMPERATURE,
@@ -271,7 +247,6 @@ SENSOR_TYPES_FUELCELL: tuple[ViCareSensorEntityDescription[FuelCell], ...] = (
     ViCareSensorEntityDescription[FuelCell](
         key=SENSOR_POWER_PRODUCTION_CURRENT,
         name="Power production current",
-        icon=None,
         native_unit_of_measurement=POWER_WATT,
         value_getter=lambda api: api.getPowerProductionCurrent(),
         device_class=DEVICE_CLASS_POWER,
@@ -279,7 +254,6 @@ SENSOR_TYPES_FUELCELL: tuple[ViCareSensorEntityDescription[FuelCell], ...] = (
     ViCareSensorEntityDescription[FuelCell](
         key=SENSOR_POWER_PRODUCTION_TODAY,
         name="Power production today",
-        icon=None,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerProductionToday(),
         device_class=DEVICE_CLASS_ENERGY,
@@ -287,7 +261,6 @@ SENSOR_TYPES_FUELCELL: tuple[ViCareSensorEntityDescription[FuelCell], ...] = (
     ViCareSensorEntityDescription[FuelCell](
         key=SENSOR_POWER_PRODUCTION_THIS_WEEK,
         name="Power production this week",
-        icon=None,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerProductionThisWeek(),
         device_class=DEVICE_CLASS_ENERGY,
@@ -295,7 +268,6 @@ SENSOR_TYPES_FUELCELL: tuple[ViCareSensorEntityDescription[FuelCell], ...] = (
     ViCareSensorEntityDescription[FuelCell](
         key=SENSOR_POWER_PRODUCTION_THIS_MONTH,
         name="Power production this month",
-        icon=None,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerProductionThisMonth(),
         device_class=DEVICE_CLASS_ENERGY,
@@ -303,7 +275,6 @@ SENSOR_TYPES_FUELCELL: tuple[ViCareSensorEntityDescription[FuelCell], ...] = (
     ViCareSensorEntityDescription[FuelCell](
         key=SENSOR_POWER_PRODUCTION_THIS_YEAR,
         name="Power production this year",
-        icon=None,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value_getter=lambda api: api.getPowerProductionThisYear(),
         device_class=DEVICE_CLASS_ENERGY,
