@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_API, CONF_UNLOAD_CB, COORDINATOR, DOMAIN, PLATFORMS
+from .const import CONF_API, COORDINATOR, DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,9 +102,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if "api" in config_data:
             energy_api = config_data[CONF_API]
             await energy_api.close()
-
-        if CONF_UNLOAD_CB in config_data:
-            unload_cb = config_data[CONF_UNLOAD_CB]
-            unload_cb()
 
     return unload_ok
