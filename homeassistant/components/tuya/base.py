@@ -2,11 +2,12 @@
 """Tuya Home Assistant Base Device Model."""
 from __future__ import annotations
 
+from typing import Any
+
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from typing import Any
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
 
