@@ -120,7 +120,7 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     printer.model() or DEFAULT_MODEL
                 )
         except SyncThruAPINotSupported:
-            errors[CONF_URL] = "syncthru_api_not_supported"
+            errors[CONF_URL] = "syncthru_not_supported"
         else:
             if printer.is_unknown_state():
                 errors[CONF_URL] = "unknown_state"
