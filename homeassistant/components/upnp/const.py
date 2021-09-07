@@ -31,6 +31,3 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()
 ST_IGD_V1 = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 ST_IGD_V2 = "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
 SSDP_SEARCH_TIMEOUT = 4
-
-RAW_SENSOR = "raw_sensor"
-DERIVED_SENSOR = "derived_sensor"
