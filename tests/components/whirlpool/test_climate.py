@@ -79,7 +79,7 @@ async def test_name_fallback_on_exception(
 
     await init_integration(hass)
     state = hass.states.get("climate.said1")
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "said1"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "said1"
 
 
 async def test_static_attributes(hass: HomeAssistant, mock_aircon_api: MagicMock):
@@ -96,29 +96,29 @@ async def test_static_attributes(hass: HomeAssistant, mock_aircon_api: MagicMock
     assert state.state == HVAC_MODE_COOL
 
     attributes = state.attributes
-    assert attributes.get(ATTR_FRIENDLY_NAME) == "TestZone"
+    assert attributes[ATTR_FRIENDLY_NAME] == "TestZone"
 
     assert (
-        attributes.get(ATTR_SUPPORTED_FEATURES)
+        attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
     )
-    assert attributes.get(ATTR_HVAC_MODES) == [
+    assert attributes[ATTR_HVAC_MODES] == [
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT,
         HVAC_MODE_FAN_ONLY,
         HVAC_MODE_OFF,
     ]
-    assert attributes.get(ATTR_FAN_MODES) == [
+    assert attributes[ATTR_FAN_MODES] == [
         FAN_AUTO,
         FAN_HIGH,
         FAN_MEDIUM,
         FAN_LOW,
         FAN_OFF,
     ]
-    assert attributes.get(ATTR_SWING_MODES) == [SWING_HORIZONTAL, SWING_OFF]
-    assert attributes.get(ATTR_TARGET_TEMP_STEP) == 1
-    assert attributes.get(ATTR_MIN_TEMP) == 16
-    assert attributes.get(ATTR_MAX_TEMP) == 30
+    assert attributes[ATTR_SWING_MODES] == [SWING_HORIZONTAL, SWING_OFF]
+    assert attributes[ATTR_TARGET_TEMP_STEP] == 1
+    assert attributes[ATTR_MIN_TEMP] == 16
+    assert attributes[ATTR_MAX_TEMP] == 30
 
 
 async def test_dynamic_attributes(hass: HomeAssistant, mock_aircon_api: MagicMock):
@@ -154,51 +154,51 @@ async def test_dynamic_attributes(hass: HomeAssistant, mock_aircon_api: MagicMoc
         whirlpool.aircon.FanSpeed.Auto
     )
     state = await update_ac_state(hass, mock_aircon_api)
-    assert state.attributes.get(ATTR_FAN_MODE) == HVAC_MODE_AUTO
+    assert state.attributes[ATTR_FAN_MODE] == HVAC_MODE_AUTO
 
     mock_aircon_api.return_value.get_fanspeed.return_value = (
         whirlpool.aircon.FanSpeed.Low
     )
     state = await update_ac_state(hass, mock_aircon_api)
-    assert state.attributes.get(ATTR_FAN_MODE) == FAN_LOW
+    assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
 
     mock_aircon_api.return_value.get_fanspeed.return_value = (
         whirlpool.aircon.FanSpeed.Medium
     )
     state = await update_ac_state(hass, mock_aircon_api)
-    assert state.attributes.get(ATTR_FAN_MODE) == FAN_MEDIUM
+    assert state.attributes[ATTR_FAN_MODE] == FAN_MEDIUM
 
     mock_aircon_api.return_value.get_fanspeed.return_value = (
         whirlpool.aircon.FanSpeed.High
     )
     state = await update_ac_state(hass, mock_aircon_api)
-    assert state.attributes.get(ATTR_FAN_MODE) == FAN_HIGH
+    assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
 
     mock_aircon_api.return_value.get_fanspeed.return_value = (
         whirlpool.aircon.FanSpeed.Off
     )
     state = await update_ac_state(hass, mock_aircon_api)
-    assert state.attributes.get(ATTR_FAN_MODE) == FAN_OFF
+    assert state.attributes[ATTR_FAN_MODE] == FAN_OFF
 
     mock_aircon_api.return_value.get_current_temp.return_value = 15
     mock_aircon_api.return_value.get_temp.return_value = 20
     mock_aircon_api.return_value.get_current_humidity.return_value = 80
     mock_aircon_api.return_value.get_h_louver_swing.return_value = True
     attributes = (await update_ac_state(hass, mock_aircon_api)).attributes
-    assert attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
-    assert attributes.get(ATTR_TEMPERATURE) == 20
-    assert attributes.get(ATTR_CURRENT_HUMIDITY) == 80
-    assert attributes.get(ATTR_SWING_MODE) == SWING_HORIZONTAL
+    assert attributes[ATTR_CURRENT_TEMPERATURE] == 15
+    assert attributes[ATTR_TEMPERATURE] == 20
+    assert attributes[ATTR_CURRENT_HUMIDITY] == 80
+    assert attributes[ATTR_SWING_MODE] == SWING_HORIZONTAL
 
     mock_aircon_api.return_value.get_current_temp.return_value = 16
     mock_aircon_api.return_value.get_temp.return_value = 21
     mock_aircon_api.return_value.get_current_humidity.return_value = 70
     mock_aircon_api.return_value.get_h_louver_swing.return_value = False
     attributes = (await update_ac_state(hass, mock_aircon_api)).attributes
-    assert attributes.get(ATTR_CURRENT_TEMPERATURE) == 16
-    assert attributes.get(ATTR_TEMPERATURE) == 21
-    assert attributes.get(ATTR_CURRENT_HUMIDITY) == 70
-    assert attributes.get(ATTR_SWING_MODE) == SWING_OFF
+    assert attributes[ATTR_CURRENT_TEMPERATURE] == 16
+    assert attributes[ATTR_TEMPERATURE] == 21
+    assert attributes[ATTR_CURRENT_HUMIDITY] == 70
+    assert attributes[ATTR_SWING_MODE] == SWING_OFF
 
 
 async def test_service_calls(hass: HomeAssistant, mock_aircon_api: MagicMock):
