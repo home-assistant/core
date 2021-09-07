@@ -55,7 +55,6 @@ TUYA_INPUT_INDUSTRY_DATA = {
 }
 
 TUYA_IMPORT_SMART_HOME_DATA = {
-    CONF_PROJECT_TYPE: MOCK_SMART_HOME_PROJECT_TYPE,
     CONF_ACCESS_ID: MOCK_ACCESS_ID,
     CONF_ACCESS_SECRET: MOCK_ACCESS_SECRET,
     CONF_USERNAME: MOCK_USERNAME,
@@ -138,36 +137,29 @@ async def test_smart_home_user(hass, tuya):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "login"
 
-    with patch(
-        "homeassistant.components.tuya.config_flow.TuyaConfigFlow._try_login",
-        return_value={"success": False, "result": ""},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=TUYA_INPUT_SMART_HOME_DATA
-        )
-        await hass.async_block_till_done()
+    tuya().login = MagicMock(return_value={"success": False, "errorCode": 1024})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA
+    )
+    await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "login"
+    assert result["errors"]["base"] == RESULT_AUTH_FAILED
 
-    with patch(
-        "homeassistant.components.tuya.config_flow.TuyaConfigFlow._try_login",
-        return_value={"success": True, "result": ""},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=TUYA_INPUT_SMART_HOME_DATA
-        )
-        await hass.async_block_till_done()
+    tuya().login = MagicMock(return_value={"success": True, "errorCode": 1024})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=TUYA_IMPORT_SMART_HOME_DATA
+    )
+    await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == MOCK_USERNAME
-        assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
-        assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
-        assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-        assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-        assert result["data"][CONF_COUNTRY_CODE] == MOCK_COUNTRY_CODE
-        assert result["data"][CONF_APP_TYPE] == MOCK_APP_TYPE
-        assert not result["result"].unique_id
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_USERNAME
+    assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
+    assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
+    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
+    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["data"][CONF_COUNTRY_CODE] == MOCK_COUNTRY_CODE
+    assert result["data"][CONF_APP_TYPE] == MOCK_APP_TYPE
+    assert not result["result"].unique_id
 
 
 async def test_error_on_invalid_credentials(hass, tuya):

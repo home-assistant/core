@@ -45,8 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Async setup hass config entry."""
 
-
-
     _LOGGER.debug("tuya.__init__.async_setup_entry-->%s", entry.data)
 
     hass.data[DOMAIN] = {entry.entry_id: {TUYA_HA_TUYA_MAP: {}, TUYA_HA_DEVICES: set()}}
