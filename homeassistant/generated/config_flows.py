@@ -222,6 +222,7 @@ FLOWS = [
     "plum_lightpad",
     "point",
     "poolsense",
+    "poolstation",
     "powerwall",
     "profiler",
     "progettihwsw",

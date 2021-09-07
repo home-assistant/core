@@ -399,6 +399,7 @@ homeassistant/components/plugwise/* @CoMPaTech @bouwew @brefra
 homeassistant/components/plum_lightpad/* @ColinHarrington @prystupa
 homeassistant/components/point/* @fredrike
 homeassistant/components/poolsense/* @haemishkyd
+homeassistant/components/poolstation/* @cibernox
 homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/profiler/* @bdraco
 homeassistant/components/progettihwsw/* @ardaseremet

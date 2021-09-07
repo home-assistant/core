@@ -1,0 +1,13 @@
+{
+  "domain": "poolstation",
+  "name": "Poolstation",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/poolstation",
+  "requirements": [
+    "pypoolstation==0.1.3"
+  ],
+  "codeowners": [
+    "@cibernox"
+  ],
+  "iot_class": "cloud_polling"
+}
