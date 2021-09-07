@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable
+
+from pydaikin.daikin_base import Appliance
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
@@ -54,7 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(ATTR_COMPRESSOR_FREQUENCY)
 
     entities = [
-        description.cls(daikin_api, description)
+        DaikinSensor(daikin_api, description)
         for description in SENSOR_TYPES
         if description.key in sensors
     ]
@@ -80,9 +83,9 @@ class DaikinSensor(SensorEntity):
         return f"{self._api.device.mac}-{self.entity_description.key}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        raise NotImplementedError
+        return self.entity_description.value_func(self._api.device)
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -94,48 +97,11 @@ class DaikinSensor(SensorEntity):
         return self._api.device_info
 
 
-class DaikinClimateSensor(DaikinSensor):
-    """Representation of a Climate Sensor."""
-
-    @property
-    def native_value(self):
-        """Return the internal state of the sensor."""
-        if self.entity_description.key == ATTR_INSIDE_TEMPERATURE:
-            return self._api.device.inside_temperature
-        if self.entity_description.key == ATTR_OUTSIDE_TEMPERATURE:
-            return self._api.device.outside_temperature
-
-        if self.entity_description.key == ATTR_HUMIDITY:
-            return self._api.device.humidity
-        if self.entity_description.key == ATTR_TARGET_HUMIDITY:
-            return self._api.device.target_humidity
-
-        if self.entity_description.key == ATTR_COMPRESSOR_FREQUENCY:
-            return self._api.device.compressor_frequency
-
-        return None
-
-
-class DaikinPowerSensor(DaikinSensor):
-    """Representation of a power/energy consumption sensor."""
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self.entity_description.key == ATTR_TOTAL_POWER:
-            return round(self._api.device.current_total_power_consumption, 2)
-        if self.entity_description.key == ATTR_COOL_ENERGY:
-            return round(self._api.device.last_hour_cool_energy_consumption, 2)
-        if self.entity_description.key == ATTR_HEAT_ENERGY:
-            return round(self._api.device.last_hour_heat_energy_consumption, 2)
-        return None
-
-
 @dataclass
 class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
-    cls: type[DaikinSensor]
+    value_func: Callable[[Appliance], float | None]
 
 
 @dataclass
@@ -147,59 +113,59 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_INSIDE_TEMPERATURE,
         name="Inside Temperature",
-        cls=DaikinClimateSensor,
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        value_func=lambda device: device.inside_temperature,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
         name="Outside Temperature",
-        cls=DaikinClimateSensor,
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        value_func=lambda device: device.outside_temperature,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
         name="Humidity",
-        cls=DaikinClimateSensor,
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        value_func=lambda device: device.humidity,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
         name="Target Humidity",
-        cls=DaikinClimateSensor,
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        value_func=lambda device: device.humidity,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TOTAL_POWER,
         name="Total Power Consumption",
-        cls=DaikinPowerSensor,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
+        value_func=lambda device: round(device.current_total_power_consumption, 2),
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
         name="Cool Energy Consumption",
-        cls=DaikinPowerSensor,
         icon="mdi:snowflake",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
         name="Heat Energy Consumption",
-        cls=DaikinPowerSensor,
         icon="mdi:fire",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
         name="Compressor Frequency",
-        cls=DaikinClimateSensor,
         icon="mdi:fan",
         native_unit_of_measurement=FREQUENCY_HERTZ,
+        value_func=lambda device: device.compressor_frequency,
     ),
 )
