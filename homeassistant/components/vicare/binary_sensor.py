@@ -4,8 +4,12 @@ from __future__ import annotations
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import Union
 
 from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
+from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareGazBoiler import GazBoiler
+from PyViCare.PyViCareHeatPump import HeatPump
 import requests
 
 from homeassistant.components.binary_sensor import (
@@ -16,6 +20,7 @@ from homeassistant.components.binary_sensor import (
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
+    T_API,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
@@ -36,27 +41,31 @@ SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
 
 @dataclass
 class ViCareBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ViCareRequiredKeysMixin
+    BinarySensorEntityDescription, ViCareRequiredKeysMixin[T_API]
 ):
     """Describes ViCare binary sensor entity."""
 
 
-SENSOR_TYPES: tuple[ViCareBinarySensorEntityDescription, ...] = (
-    ViCareBinarySensorEntityDescription(
+SENSOR_TYPES_GENERIC: tuple[ViCareBinarySensorEntityDescription[Device]] = (
+    ViCareBinarySensorEntityDescription[Device](
         key=SENSOR_CIRCULATION_PUMP_ACTIVE,
         name="Circulation pump active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getCirculationPumpActive(),
     ),
-    # gas sensors
-    ViCareBinarySensorEntityDescription(
+)
+
+SENSOR_TYPES_GAS: tuple[ViCareBinarySensorEntityDescription[GazBoiler]] = (
+    ViCareBinarySensorEntityDescription[GazBoiler](
         key=SENSOR_BURNER_ACTIVE,
         name="Burner active",
         device_class=DEVICE_CLASS_POWER,
         value_getter=lambda api: api.getBurnerActive(),
     ),
-    # heatpump sensors
-    ViCareBinarySensorEntityDescription(
+)
+
+SENSOR_TYPES_HEATPUMP: tuple[ViCareBinarySensorEntityDescription[HeatPump]] = (
+    ViCareBinarySensorEntityDescription[HeatPump](
         key=SENSOR_COMPRESSOR_ACTIVE,
         name="Compressor active",
         device_class=DEVICE_CLASS_POWER,
@@ -91,18 +100,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ViCareBinarySensor(
                 hass.data[VICARE_DOMAIN][VICARE_NAME], vicare_api, description
             )
-            for description in SENSOR_TYPES
+            for description in (
+                *SENSOR_TYPES_GENERIC,
+                *SENSOR_TYPES_GAS,
+                *SENSOR_TYPES_HEATPUMP,
+            )
             if description.key in sensors
         ]
     )
 
 
+DescriptionT = Union[
+    ViCareBinarySensorEntityDescription[Device],
+    ViCareBinarySensorEntityDescription[GazBoiler],
+    ViCareBinarySensorEntityDescription[HeatPump],
+]
+
+
 class ViCareBinarySensor(BinarySensorEntity):
     """Representation of a ViCare sensor."""
 
-    entity_description: ViCareBinarySensorEntityDescription
+    entity_description: DescriptionT
 
-    def __init__(self, name, api, description: ViCareBinarySensorEntityDescription):
+    def __init__(self, name, api, description: DescriptionT):
         """Initialize the sensor."""
         self._attr_name = f"{name} {description.name}"
         self._api = api
