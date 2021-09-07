@@ -9,7 +9,6 @@ PLATFORMS = ["sensor"]
 # Platform config.
 CONF_SERIAL = "serial"
 CONF_API = "api"
-CONF_UNLOAD_CB = "unload_unsub"
 CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_ver"
 CONF_DATA = "data"
