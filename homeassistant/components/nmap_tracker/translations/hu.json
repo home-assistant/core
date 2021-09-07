@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "K\u00e9sleltet\u00e9s (m\u00e1sodpercben), am\u00edg az eszk\u00f6zk\u00f6vet\u0151 elveszt\u00e9se ut\u00e1n aktiv\u00e1l\u00f3djon a funcki\u00f3.",
                     "exclude": "A szkennel\u00e9sb\u0151l kiz\u00e1rand\u00f3 h\u00e1l\u00f3zati c\u00edmek (vessz\u0151vel elv\u00e1lasztva)",
                     "home_interval": "Minim\u00e1lis percsz\u00e1m az akt\u00edv eszk\u00f6z\u00f6k vizsg\u00e1lata k\u00f6z\u00f6tt (akkumul\u00e1tor k\u00edm\u00e9l\u00e9se)",
                     "hosts": "H\u00e1l\u00f3zati c\u00edmek (vessz\u0151vel elv\u00e1lasztva) a beolvas\u00e1shoz",

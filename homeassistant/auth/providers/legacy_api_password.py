@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import hmac
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -18,6 +18,8 @@ import homeassistant.helpers.config_validation as cv
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
+
+# mypy: disallow-any-generics
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
@@ -44,7 +46,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
         """Return api_password."""
         return str(self.config[CONF_API_PASSWORD])
 
-    async def async_login_flow(self, context: dict | None) -> LoginFlow:
+    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
         return LegacyLoginFlow(self)
 

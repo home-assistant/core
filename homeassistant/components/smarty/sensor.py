@@ -1,4 +1,5 @@
 """Support for Salda Smarty XP/XV Ventilation Unit Sensors."""
+from __future__ import annotations
 
 import datetime as dt
 import logging
@@ -43,7 +44,7 @@ class SmartySensor(SensorEntity):
     ):
         """Initialize the entity."""
         self._name = name
-        self._state = None
+        self._state: dt.datetime | None = None
         self._sensor_type = device_class
         self._unit_of_measurement = unit_of_measurement
         self._smarty = smarty

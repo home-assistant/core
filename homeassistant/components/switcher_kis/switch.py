@@ -137,13 +137,13 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
 
         return bool(self.wrapper.data.device_state == DeviceState.ON)
 
-    async def async_turn_on(self, **kwargs: dict) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_call_api("control_device", Command.ON)
         self.control_result = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs: dict) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_call_api("control_device", Command.OFF)
         self.control_result = False
