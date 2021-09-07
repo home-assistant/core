@@ -342,7 +342,11 @@ def compile_statistics(  # noqa: C901
         )
         history_list = {**history_list, **_history_list}
 
-    for entity_id, state_class, device_class in entities:
+    for (  # pylint: disable=too-many-nested-blocks
+        entity_id,
+        state_class,
+        device_class,
+    ) in entities:
         if entity_id not in history_list:
             continue
 
