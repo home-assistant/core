@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEVICE_ICONS, DOMAIN
