@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pypoolstation import Pool
+from pypoolstation import Pool, Relay
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -26,8 +26,8 @@ async def async_setup_entry(
     entities = []
     for pool_id, pool in pools.items():
         coordinator = coordinators[pool_id]
-        entities.append(PoolRelaySwitch(pool, coordinator))
-        # for relay in pool.relays:
+        for relay in pool.relays:
+            entities.append(PoolRelaySwitch(pool, coordinator, relay))
 
     async_add_entities(entities)
 
@@ -36,26 +36,26 @@ class PoolRelaySwitch(PoolEntity, SwitchEntity):
     """Representation of a diffuser switch."""
 
     def __init__(
-        self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator
+        self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator, relay: Relay
     ) -> None:
         """Initialize the diffuser switch."""
-        super().__init__(pool, coordinator, "")
-        self.relay = pool.relays[0]
-        self._attr_is_on = self.relay["active"]
+        super().__init__(pool, coordinator, f" Relay {relay.name}")
+        self.relay = relay
+        self._attr_is_on = self.relay.active
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the relay on."""
 
-        self._attr_is_on = await self._pool.set_relay(self._pool.relays[0]["id"], True)
+        self._attr_is_on = await self.relay.set_active(True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the relay off."""
-        self._attr_is_on = await self._pool.set_relay(self._pool.relays[0]["id"], False)
+        self._attr_is_on = await self.relay.set_active(False)
         self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self._pool.relays[0]["active"]
+        self._attr_is_on = self.relay.active
         self.async_write_ha_state()
