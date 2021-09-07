@@ -1,8 +1,9 @@
 """Validate the energy preferences provide valid data."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 import dataclasses
-from typing import Any, Sequence
+from typing import Any
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
