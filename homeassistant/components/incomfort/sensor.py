@@ -96,6 +96,7 @@ class IncomfortSensor(IncomfortChild, SensorEntity):
         """Return the state of the sensor."""
         return self._heater.status[self.entity_description.key]
 
+    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         if (extra_key := self.entity_description.extra_key) is None:
