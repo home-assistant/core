@@ -148,7 +148,7 @@ class BondFan(BondEntity, FanEntity):
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
-                f"The bond API returned an error calling set_power_state_belief on {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f"The bond API returned an error calling set_power_state_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
             )
 
     async def async_set_speed_belief(self, speed: int) -> None:
@@ -172,7 +172,7 @@ class BondFan(BondEntity, FanEntity):
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
-                f"The bond API returned an error calling set_speed_belief on {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f"The bond API returned an error calling set_speed_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
             )
 
     async def async_turn_on(
