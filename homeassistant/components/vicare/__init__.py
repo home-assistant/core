@@ -37,14 +37,14 @@ CONF_HEATING_TYPE = "heating_type"
 DEFAULT_HEATING_TYPE = "generic"
 
 
-T_API = TypeVar("T_API", bound=Device)
+ApiT = TypeVar("ApiT", bound=Device)
 
 
 @dataclass()
-class ViCareRequiredKeysMixin(Generic[T_API]):
+class ViCareRequiredKeysMixin(Generic[ApiT]):
     """Mixin for required keys."""
 
-    value_getter: Callable[[T_API], bool]
+    value_getter: Callable[[ApiT], bool]
 
 
 class HeatingType(enum.Enum):

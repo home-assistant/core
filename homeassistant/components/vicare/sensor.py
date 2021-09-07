@@ -27,10 +27,10 @@ from homeassistant.const import (
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
-    T_API,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
+    ApiT,
     HeatingType,
     ViCareRequiredKeysMixin,
 )
@@ -77,7 +77,7 @@ SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
 
 @dataclass
 class ViCareSensorEntityDescription(
-    SensorEntityDescription, ViCareRequiredKeysMixin[T_API]
+    SensorEntityDescription, ViCareRequiredKeysMixin[ApiT]
 ):
     """Describes ViCare sensor entity."""
 

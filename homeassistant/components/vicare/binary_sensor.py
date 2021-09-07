@@ -20,10 +20,10 @@ from homeassistant.components.binary_sensor import (
 
 from . import (
     DOMAIN as VICARE_DOMAIN,
-    T_API,
     VICARE_API,
     VICARE_HEATING_TYPE,
     VICARE_NAME,
+    ApiT,
     HeatingType,
     ViCareRequiredKeysMixin,
 )
@@ -41,7 +41,7 @@ SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
 
 @dataclass
 class ViCareBinarySensorEntityDescription(
-    BinarySensorEntityDescription, ViCareRequiredKeysMixin[T_API]
+    BinarySensorEntityDescription, ViCareRequiredKeysMixin[ApiT]
 ):
     """Describes ViCare binary sensor entity."""
 
