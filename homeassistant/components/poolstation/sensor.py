@@ -49,7 +49,7 @@ async def async_setup_entry(
 class PoolPhSensor(PoolEntity, SensorEntity):
     """Representation of a pool's PH sensor."""
 
-    _attr_icon = "mdi:ph"
+    _attr_icon = "mdi:flask"
 
     def __init__(
         self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator
@@ -85,7 +85,7 @@ class PoolTemperatureSensor(PoolEntity, SensorEntity):
 class PoolSaltConcentrationSensor(PoolEntity, SensorEntity):
     """Representation of a pool's salt concentration sensor."""
 
-    _attr_icon = "mdi:flask-outline"
+    _attr_icon = "mdi:shaker"
     _attr_native_unit_of_measurement = "gr/l"
 
     def __init__(
@@ -104,7 +104,7 @@ class PoolElectrolysisSensor(PoolEntity, SensorEntity):
     """Representation of a pool's electrolysis production sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_icon = "mdi:water-opacity"
+    _attr_icon = "mdi:water-percent"
 
     def __init__(
         self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator

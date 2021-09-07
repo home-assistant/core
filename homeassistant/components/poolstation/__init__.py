@@ -7,14 +7,12 @@ from pypoolstation import Account, Pool
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import COORDINATORS, DEVICES, DOMAIN, TOKEN
 
-# PLATFORMS = ["binary_sensor", "number", "select", "sensor", "switch"]
+# TODO: Add binary sensors for the 4 inputs. Info is in vars['d1'], vars['d2'], vars['d3'], vars['d4']
 PLATFORMS = ["sensor", "number", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
