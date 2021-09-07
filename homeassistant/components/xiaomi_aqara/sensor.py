@@ -29,43 +29,36 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon=None,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         device_class=DEVICE_CLASS_HUMIDITY,
     ),
     "illumination": SensorEntityDescription(
         key="illumination",
         native_unit_of_measurement="lm",
-        icon=None,
         device_class=DEVICE_CLASS_ILLUMINANCE,
     ),
     "lux": SensorEntityDescription(
         key="lux",
         native_unit_of_measurement=LIGHT_LUX,
-        icon=None,
         device_class=DEVICE_CLASS_ILLUMINANCE,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         native_unit_of_measurement=PRESSURE_HPA,
-        icon=None,
         device_class=DEVICE_CLASS_PRESSURE,
     ),
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
         native_unit_of_measurement="μm",
-        icon=None,
         device_class=None,
     ),
     "load_power": SensorEntityDescription(
         key="load_power",
         native_unit_of_measurement=POWER_WATT,
-        icon=None,
         device_class=DEVICE_CLASS_POWER,
     ),
 }
