@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.energy import data
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.components.sensor.recorder import compile_statistics
@@ -357,7 +358,7 @@ async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     assert state.state == "50.0"
 
 
-@pytest.mark.parametrize("state_class", [None])
+@pytest.mark.parametrize("state_class", [None, STATE_CLASS_TOTAL])
 async def test_cost_sensor_wrong_state_class(
     hass, hass_storage, caplog, state_class
 ) -> None:

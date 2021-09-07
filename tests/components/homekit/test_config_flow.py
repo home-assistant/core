@@ -951,10 +951,15 @@ async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_sou
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "cameras"
 
-    result3 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={"camera_copy": ["camera.tv"]},
-    )
+    with patch(
+        "homeassistant.components.homekit.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"camera_copy": ["camera.tv"]},
+        )
+        await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
@@ -968,6 +973,7 @@ async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_sou
             "include_entities": ["camera.tv"],
         },
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 def _get_schema_default(schema, key_name):

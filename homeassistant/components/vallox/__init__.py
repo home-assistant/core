@@ -167,12 +167,13 @@ class ValloxStateProxy:
         try:
             self._metric_cache = await self._client.fetch_metrics()
             self._profile = await self._client.get_profile()
-            self._valid = True
 
         except (OSError, ValloxApiException) as err:
-            _LOGGER.error("Error during state cache update: %s", err)
             self._valid = False
+            _LOGGER.error("Error during state cache update: %s", err)
+            return
 
+        self._valid = True
         async_dispatcher_send(self._hass, SIGNAL_VALLOX_STATE_UPDATE)
 
 

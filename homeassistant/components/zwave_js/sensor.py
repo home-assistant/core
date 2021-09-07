@@ -15,7 +15,7 @@ from zwave_js_server.const.command_class.meter import (
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
-from zwave_js_server.util.command_class import get_meter_type
+from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,

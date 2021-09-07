@@ -1308,7 +1308,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_zeroconf):
 
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.HomeKit.async_stop"
-    ), patch(f"{PATH_HOMEKIT}.port_is_available"):
+    ), patch(f"{PATH_HOMEKIT}.async_port_is_available"):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -1701,7 +1701,7 @@ async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):
 
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.HomeKit.async_stop"
-    ), patch(f"{PATH_HOMEKIT}.port_is_available", return_value=True) as port_mock:
+    ), patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True) as port_mock:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(entry.entry_id)
@@ -1712,7 +1712,7 @@ async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.HomeKit.async_stop"
     ), patch.object(homekit_base, "PORT_CLEANUP_CHECK_INTERVAL_SECS", 0), patch(
-        f"{PATH_HOMEKIT}.port_is_available", return_value=False
+        f"{PATH_HOMEKIT}.async_port_is_available", return_value=False
     ) as port_mock:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
