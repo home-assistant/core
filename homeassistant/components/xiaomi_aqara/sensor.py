@@ -61,6 +61,15 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
+    "final_tilt_angle": SensorEntityDescription(
+        key="final_tilt_angle",
+    ),
+    "coordination": SensorEntityDescription(
+        key="coordination",
+    ),
+    "Battery": SensorEntityDescription(
+        key="Battery",
+    ),
 }
 
 
