@@ -265,7 +265,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Initialize the generic Xiaomi device."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._available = False
         self._available_attributes = {}
         self._state = None
         self._mode = None
@@ -307,11 +306,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return None
 
     @property
-    def available(self):
-        """Return true when state is known."""
-        return super().available and self._available
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
@@ -324,7 +318,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._available = True
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
@@ -425,6 +418,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._speed_count = 1
             self._operation_mode_class = AirpurifierOperationMode
 
+        self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
@@ -546,6 +540,9 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         self._supported_features = SUPPORT_PRESET_MODE
         self._operation_mode_class = AirpurifierMiotOperationMode
 
+        self._state = self.coordinator.data.is_on
+        self._mode = self.coordinator.data.mode.value
+
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if preset_mode not in self.preset_modes:
@@ -562,7 +559,6 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._available = True
         self._state = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
         self.async_write_ha_state()
@@ -594,11 +590,13 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
         self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+        self._operation_mode_class = AirfreshOperationMode
+
+        self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
         self._mode = self.coordinator.data.mode.value
-        self._operation_mode_class = AirfreshOperationMode
 
     @property
     def percentage(self):
