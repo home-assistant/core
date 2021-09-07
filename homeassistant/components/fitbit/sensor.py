@@ -368,12 +368,6 @@ class FitbitSensor(SensorEntity):
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
             unit_type = measurement_system[split_resource]
         self._attr_native_unit_of_measurement = unit_type
-        self._state: str | None = None
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        return self._state
 
     @property
     def icon(self) -> str | None:
@@ -407,25 +401,25 @@ class FitbitSensor(SensorEntity):
             self.extra = list(
                 filter(lambda device: device.get("id") == device_id, registered_devs)
             )[0]
-            self._state = self.extra.get("battery")
+            self._attr_native_value = self.extra.get("battery")
 
         else:
             container = resource_type.replace("/", "-")
             response = self.client.time_series(resource_type, period="7d")
             raw_state = response[container][-1].get("value")
             if resource_type == "activities/distance":
-                self._state = format(float(raw_state), ".2f")
+                self._attr_native_value = format(float(raw_state), ".2f")
             elif resource_type == "activities/tracker/distance":
-                self._state = format(float(raw_state), ".2f")
+                self._attr_native_value = format(float(raw_state), ".2f")
             elif resource_type == "body/bmi":
-                self._state = format(float(raw_state), ".1f")
+                self._attr_native_value = format(float(raw_state), ".1f")
             elif resource_type == "body/fat":
-                self._state = format(float(raw_state), ".1f")
+                self._attr_native_value = format(float(raw_state), ".1f")
             elif resource_type == "body/weight":
-                self._state = format(float(raw_state), ".1f")
+                self._attr_native_value = format(float(raw_state), ".1f")
             elif resource_type == "sleep/startTime":
                 if raw_state == "":
-                    self._state = "-"
+                    self._attr_native_value = "-"
                 elif self.clock_format == "12H":
                     hours, minutes = raw_state.split(":")
                     hours, minutes = int(hours), int(minutes)
@@ -435,20 +429,22 @@ class FitbitSensor(SensorEntity):
                         hours -= 12
                     elif hours == 0:
                         hours = 12
-                    self._state = f"{hours}:{minutes:02d} {setting}"
+                    self._attr_native_value = f"{hours}:{minutes:02d} {setting}"
                 else:
-                    self._state = raw_state
+                    self._attr_native_value = raw_state
             else:
                 if self.is_metric:
-                    self._state = raw_state
+                    self._attr_native_value = raw_state
                 else:
                     try:
-                        self._state = f"{int(raw_state):,}"
+                        self._attr_native_value = f"{int(raw_state):,}"
                     except TypeError:
-                        self._state = raw_state
+                        self._attr_native_value = raw_state
 
         if resource_type == "activities/heart":
-            self._state = response[container][-1].get("value").get("restingHeartRate")
+            self._attr_native_value = (
+                response[container][-1].get("value").get("restingHeartRate")
+            )
 
         token = self.client.client.session.token
         config_contents = {
