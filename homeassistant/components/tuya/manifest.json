@@ -1,17 +1,13 @@
 {
   "domain": "tuya",
   "name": "Tuya",
-  "documentation": "https://www.home-assistant.io/integrations/tuya",
-  "requirements": [],
-  "codeowners": [],
+  "documentation": "https://github.com/tuya/tuya-home-assistant",
+  "requirements": [
+    "tuya-iot-py-sdk==0.4.1"
+  ],
+  "codeowners": [
+    "@Tuya"
+  ],
   "config_flow": true,
-  "iot_class": "cloud_push",
-  "dhcp": [
-    { "macaddress": "508A06*" },
-    { "macaddress": "7CF666*" },
-    { "macaddress": "10D561*" },
-    { "macaddress": "D4A651*" },
-    { "macaddress": "68572D*" },
-    { "macaddress": "1869D8*" }
-  ]
+  "iot_class": "cloud_push"
 }
