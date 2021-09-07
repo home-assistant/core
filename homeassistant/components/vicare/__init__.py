@@ -1,6 +1,10 @@
 """The ViCare integration."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 import enum
 import logging
+from typing import Callable
 
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareFuelCell import FuelCell
@@ -31,6 +35,13 @@ VICARE_HEATING_TYPE = "heating_type"
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
 DEFAULT_HEATING_TYPE = "generic"
+
+
+@dataclass()
+class ViCareRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_getter: Callable[[Device | HeatPump | GazBoiler | FuelCell], bool]
 
 
 class HeatingType(enum.Enum):

@@ -4,12 +4,8 @@ from __future__ import annotations
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
-from typing import Callable
 
 from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
-from PyViCare.PyViCareDevice import Device
-from PyViCare.PyViCareGazBoiler import GazBoiler
-from PyViCare.PyViCareHeatPump import HeatPump
 import requests
 
 from homeassistant.components.binary_sensor import (
@@ -24,11 +20,10 @@ from . import (
     VICARE_HEATING_TYPE,
     VICARE_NAME,
     HeatingType,
+    ViCareRequiredKeysMixin,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_GETTER = "getter"
 
 SENSOR_CIRCULATION_PUMP_ACTIVE = "circulationpump_active"
 
@@ -37,13 +32,6 @@ SENSOR_BURNER_ACTIVE = "burner_active"
 
 # heatpump sensors
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
-
-
-@dataclass
-class ViCareRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_getter: Callable[[Device | HeatPump | GazBoiler], bool]
 
 
 @dataclass

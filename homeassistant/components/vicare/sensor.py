@@ -1,16 +1,15 @@
 """Viessmann ViCare sensor device."""
+from __future__ import annotations
+
 from contextlib import suppress
+from dataclasses import dataclass
 import logging
 
 from PyViCare.PyViCare import PyViCareNotSupportedFeatureError, PyViCareRateLimitError
 import requests
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
@@ -27,11 +26,10 @@ from . import (
     VICARE_HEATING_TYPE,
     VICARE_NAME,
     HeatingType,
+    ViCareRequiredKeysMixin,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_GETTER = "getter"
 
 SENSOR_TYPE_TEMPERATURE = "temperature"
 
@@ -70,200 +68,233 @@ SENSOR_POWER_PRODUCTION_THIS_WEEK = "power_production_this_week"
 SENSOR_POWER_PRODUCTION_THIS_MONTH = "power_production_this_month"
 SENSOR_POWER_PRODUCTION_THIS_YEAR = "power_production_this_year"
 
-SENSOR_TYPES = {
-    SENSOR_OUTSIDE_TEMPERATURE: {
-        CONF_NAME: "Outside Temperature",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-        CONF_GETTER: lambda api: api.getOutsideTemperature(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    SENSOR_SUPPLY_TEMPERATURE: {
-        CONF_NAME: "Supply Temperature",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-        CONF_GETTER: lambda api: api.getSupplyTemperature(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
+
+@dataclass
+class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysMixin):
+    """Describes ViCare sensor entity."""
+
+
+SENSOR_TYPES: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key=SENSOR_OUTSIDE_TEMPERATURE,
+        name="Outside Temperature",
+        icon=None,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getOutsideTemperature(),
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_SUPPLY_TEMPERATURE,
+        name="Supply Temperature",
+        icon=None,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getSupplyTemperature(),
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
     # gas sensors
-    SENSOR_BOILER_TEMPERATURE: {
-        CONF_NAME: "Boiler Temperature",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-        CONF_GETTER: lambda api: api.getBoilerTemperature(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    SENSOR_BURNER_MODULATION: {
-        CONF_NAME: "Burner modulation",
-        CONF_ICON: "mdi:percent",
-        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
-        CONF_GETTER: lambda api: api.getBurnerModulation(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_DHW_GAS_CONSUMPTION_TODAY: {
-        CONF_NAME: "Hot water gas consumption today",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterToday(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK: {
-        CONF_NAME: "Hot water gas consumption this week",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterThisWeek(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH: {
-        CONF_NAME: "Hot water gas consumption this month",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterThisMonth(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR: {
-        CONF_NAME: "Hot water gas consumption this year",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionDomesticHotWaterThisYear(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_GAS_CONSUMPTION_TODAY: {
-        CONF_NAME: "Heating gas consumption today",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionHeatingToday(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_GAS_CONSUMPTION_THIS_WEEK: {
-        CONF_NAME: "Heating gas consumption this week",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionHeatingThisWeek(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_GAS_CONSUMPTION_THIS_MONTH: {
-        CONF_NAME: "Heating gas consumption this month",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionHeatingThisMonth(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_GAS_CONSUMPTION_THIS_YEAR: {
-        CONF_NAME: "Heating gas consumption this year",
-        CONF_ICON: "mdi:power",
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getGasConsumptionHeatingThisYear(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_BURNER_STARTS: {
-        CONF_NAME: "Burner Starts",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_GETTER: lambda api: api.getBurnerStarts(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_BURNER_HOURS: {
-        CONF_NAME: "Burner Hours",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getBurnerHours(),
-        CONF_DEVICE_CLASS: None,
-    },
+    ViCareSensorEntityDescription(
+        key=SENSOR_BOILER_TEMPERATURE,
+        name="Boiler Temperature",
+        icon=None,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getBoilerTemperature(),
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_BURNER_MODULATION,
+        name="Burner modulation",
+        icon="mdi:percent",
+        native_unit_of_measurement=PERCENTAGE,
+        value_getter=lambda api: api.getBurnerModulation(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_DHW_GAS_CONSUMPTION_TODAY,
+        name="Hot water gas consumption today",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionDomesticHotWaterToday(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK,
+        name="Hot water gas consumption this week",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionDomesticHotWaterThisWeek(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH,
+        name="Hot water gas consumption this month",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionDomesticHotWaterThisMonth(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_DHW_GAS_CONSUMPTION_THIS_YEAR,
+        name="Hot water gas consumption this year",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionDomesticHotWaterThisYear(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_GAS_CONSUMPTION_TODAY,
+        name="Heating gas consumption today",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionHeatingToday(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_GAS_CONSUMPTION_THIS_WEEK,
+        name="Heating gas consumption this week",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionHeatingThisWeek(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_GAS_CONSUMPTION_THIS_MONTH,
+        name="Heating gas consumption this month",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionHeatingThisMonth(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_GAS_CONSUMPTION_THIS_YEAR,
+        name="Heating gas consumption this year",
+        icon="mdi:power",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getGasConsumptionHeatingThisYear(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_BURNER_STARTS,
+        name="Burner Starts",
+        icon="mdi:counter",
+        native_unit_of_measurement=None,
+        value_getter=lambda api: api.getBurnerStarts(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_BURNER_HOURS,
+        name="Burner Hours",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getBurnerHours(),
+        device_class=None,
+    ),
     # heatpump sensors
-    SENSOR_COMPRESSOR_STARTS: {
-        CONF_NAME: "Compressor Starts",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
-        CONF_GETTER: lambda api: api.getCompressorStarts(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_COMPRESSOR_HOURS: {
-        CONF_NAME: "Compressor Hours",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getCompressorHours(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_COMPRESSOR_HOURS_LOADCLASS1: {
-        CONF_NAME: "Compressor Hours Load Class 1",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass1(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_COMPRESSOR_HOURS_LOADCLASS2: {
-        CONF_NAME: "Compressor Hours Load Class 2",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass2(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_COMPRESSOR_HOURS_LOADCLASS3: {
-        CONF_NAME: "Compressor Hours Load Class 3",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass3(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_COMPRESSOR_HOURS_LOADCLASS4: {
-        CONF_NAME: "Compressor Hours Load Class 4",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass4(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_COMPRESSOR_HOURS_LOADCLASS5: {
-        CONF_NAME: "Compressor Hours Load Class 5",
-        CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
-        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass5(),
-        CONF_DEVICE_CLASS: None,
-    },
-    SENSOR_RETURN_TEMPERATURE: {
-        CONF_NAME: "Return Temperature",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-        CONF_GETTER: lambda api: api.getReturnTemperature(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_STARTS,
+        name="Compressor Starts",
+        icon="mdi:counter",
+        native_unit_of_measurement=None,
+        value_getter=lambda api: api.getCompressorStarts(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_HOURS,
+        name="Compressor Hours",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getCompressorHours(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_HOURS_LOADCLASS1,
+        name="Compressor Hours Load Class 1",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getCompressorHoursLoadClass1(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_HOURS_LOADCLASS2,
+        name="Compressor Hours Load Class 2",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getCompressorHoursLoadClass2(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_HOURS_LOADCLASS3,
+        name="Compressor Hours Load Class 3",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getCompressorHoursLoadClass3(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_HOURS_LOADCLASS4,
+        name="Compressor Hours Load Class 4",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getCompressorHoursLoadClass4(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_COMPRESSOR_HOURS_LOADCLASS5,
+        name="Compressor Hours Load Class 5",
+        icon="mdi:counter",
+        native_unit_of_measurement=TIME_HOURS,
+        value_getter=lambda api: api.getCompressorHoursLoadClass5(),
+        device_class=None,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_RETURN_TEMPERATURE,
+        name="Return Temperature",
+        icon=None,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getReturnTemperature(),
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
     # fuelcell sensors
-    SENSOR_POWER_PRODUCTION_CURRENT: {
-        CONF_NAME: "Power production current",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: POWER_WATT,
-        CONF_GETTER: lambda api: api.getPowerProductionCurrent(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-    },
-    SENSOR_POWER_PRODUCTION_TODAY: {
-        CONF_NAME: "Power production today",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getPowerProductionToday(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-    },
-    SENSOR_POWER_PRODUCTION_THIS_WEEK: {
-        CONF_NAME: "Power production this week",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getPowerProductionThisWeek(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-    },
-    SENSOR_POWER_PRODUCTION_THIS_MONTH: {
-        CONF_NAME: "Power production this month",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getPowerProductionThisMonth(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-    },
-    SENSOR_POWER_PRODUCTION_THIS_YEAR: {
-        CONF_NAME: "Power production this year",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        CONF_GETTER: lambda api: api.getPowerProductionThisYear(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-    },
-}
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_PRODUCTION_CURRENT,
+        name="Power production current",
+        icon=None,
+        native_unit_of_measurement=POWER_WATT,
+        value_getter=lambda api: api.getPowerProductionCurrent(),
+        device_class=DEVICE_CLASS_POWER,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_PRODUCTION_TODAY,
+        name="Power production today",
+        icon=None,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerProductionToday(),
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_PRODUCTION_THIS_WEEK,
+        name="Power production this week",
+        icon=None,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerProductionThisWeek(),
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_PRODUCTION_THIS_MONTH,
+        name="Power production this month",
+        icon=None,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerProductionThisMonth(),
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+    ViCareSensorEntityDescription(
+        key=SENSOR_POWER_PRODUCTION_THIS_YEAR,
+        name="Power production this year",
+        icon=None,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerProductionThisYear(),
+        device_class=DEVICE_CLASS_ENERGY,
+    ),
+)
 
 SENSORS_GENERIC = [SENSOR_OUTSIDE_TEMPERATURE, SENSOR_SUPPLY_TEMPERATURE]
 
@@ -331,8 +362,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(
         [
-            ViCareSensor(hass.data[VICARE_DOMAIN][VICARE_NAME], vicare_api, sensor)
-            for sensor in sensors
+            ViCareSensor(hass.data[VICARE_DOMAIN][VICARE_NAME], vicare_api, description)
+            for description in SENSOR_TYPES
+            if description.key in sensors
         ]
     )
 
@@ -340,12 +372,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ViCareSensor(SensorEntity):
     """Representation of a ViCare sensor."""
 
-    def __init__(self, name, api, sensor_type):
+    entity_description: ViCareSensorEntityDescription
+
+    def __init__(self, name, api, description: ViCareSensorEntityDescription):
         """Initialize the sensor."""
-        self._sensor = SENSOR_TYPES[sensor_type]
-        self._name = f"{name} {self._sensor[CONF_NAME]}"
+        self.entity_description = description
+        self._attr_name = f"{name} {description.name}"
         self._api = api
-        self._sensor_type = sensor_type
         self._state = None
 
     @property
@@ -356,38 +389,18 @@ class ViCareSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.service.id}-{self._sensor_type}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._sensor[CONF_ICON]
+        return f"{self._api.service.id}-{self.entity_description.key}"
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._sensor[CONF_UNIT_OF_MEASUREMENT]
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._sensor[CONF_DEVICE_CLASS]
-
     def update(self):
         """Update state of sensor."""
         try:
             with suppress(PyViCareNotSupportedFeatureError):
-                self._state = self._sensor[CONF_GETTER](self._api)
+                self._state = self.entity_description.value_getter(self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
