@@ -667,11 +667,11 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         )
 
 
-class XiaomiFan(XiaomiGenericDevice):
-    """Representation of a Xiaomi Fan."""
+class XiaomiGenericFan(XiaomiGenericDevice):
+    """Representation of a generic Xiaomi Fan."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
-        """Initialize the plug switch."""
+        """Initialize the fan."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
         if self._model == MODEL_FAN_P5:
@@ -680,7 +680,6 @@ class XiaomiFan(XiaomiGenericDevice):
         else:
             self._device_features = FEATURE_FLAGS_FAN
             self._preset_modes = [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
-            self._nature_mode = False
         self._supported_features = (
             SUPPORT_SET_SPEED
             | SUPPORT_OSCILLATE
@@ -694,32 +693,73 @@ class XiaomiFan(XiaomiGenericDevice):
     @property
     def preset_mode(self):
         """Get the active preset mode."""
-        return ATTR_MODE_NATURE if self._nature_mode else ATTR_MODE_NORMAL
+        return self._preset_mode
 
     @property
     def percentage(self):
         """Return the current speed as a percentage."""
-        return self._percentage
+        if self._state:
+            return self._percentage
+
+        return None
 
     @property
     def oscillating(self):
         """Return whether or not the fan is currently oscillating."""
         return self._oscillating
 
-    @callback
-    def _handle_coordinator_update(self):
-        """Fetch state from the device."""
-        self._available = True
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation."""
+        await self._try_command(
+            "Setting oscillate on/off of the miio device failed.",
+            self._device.set_oscillate,
+            oscillating,
+        )
+        self._oscillating = oscillating
+        self.async_write_ha_state()
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        if self._oscillating:
+            await self.async_oscillate(oscillating=False)
+
+        await self._try_command(
+            "Setting move direction of the miio device failed.",
+            self._device.set_rotate,
+            FanMoveDirection(FAN_DIRECTIONS_MAP[direction]),
+        )
+
+
+class XiaomiFan(XiaomiGenericFan):
+    """Representation of a Xiaomi Fan."""
+
+    def __init__(self, name, device, entry, unique_id, coordinator):
+        """Initialize the fan."""
+        super().__init__(name, device, entry, unique_id, coordinator)
+
         self._state = self.coordinator.data.is_on
         self._oscillating = self.coordinator.data.oscillate
         self._nature_mode = self.coordinator.data.natural_speed != 0
-        if self.coordinator.data.is_on:
-            if self._nature_mode:
-                self._percentage = self.coordinator.data.natural_speed
-            else:
-                self._percentage = self.coordinator.data.direct_speed
+        if self._nature_mode:
+            self._percentage = self.coordinator.data.natural_speed
         else:
-            self._percentage = 0
+            self._percentage = self.coordinator.data.direct_speed
+
+    @property
+    def preset_mode(self):
+        """Get the active preset mode."""
+        return ATTR_MODE_NATURE if self._nature_mode else ATTR_MODE_NORMAL
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        self._state = self.coordinator.data.is_on
+        self._oscillating = self.coordinator.data.oscillate
+        self._nature_mode = self.coordinator.data.natural_speed != 0
+        if self._nature_mode:
+            self._percentage = self.coordinator.data.natural_speed
+        else:
+            self._percentage = self.coordinator.data.direct_speed
 
         self.async_write_ha_state()
 
@@ -771,47 +811,26 @@ class XiaomiFan(XiaomiGenericDevice):
         else:
             self.async_write_ha_state()
 
-    async def async_oscillate(self, oscillating: bool) -> None:
-        """Set oscillation."""
-        await self._try_command(
-            "Setting oscillate on/off of the miio device failed.",
-            self._device.set_oscillate,
-            oscillating,
-        )
-        self._oscillating = oscillating
-        self.async_write_ha_state()
 
-    async def async_set_direction(self, direction: str) -> None:
-        """Set the direction of the fan."""
-        if self._oscillating:
-            await self.async_oscillate(oscillating=False)
-
-        await self._try_command(
-            "Setting move direction of the miio device failed.",
-            self._device.set_rotate,
-            FanMoveDirection(FAN_DIRECTIONS_MAP[direction]),
-        )
-
-
-class XiaomiFanP5(XiaomiFan):
+class XiaomiFanP5(XiaomiGenericFan):
     """Representation of a Xiaomi Fan P5."""
 
-    @property
-    def preset_mode(self):
-        """Get the active preset mode."""
-        return self._preset_mode
+    def __init__(self, name, device, entry, unique_id, coordinator):
+        """Initialize the fan."""
+        super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._state = self.coordinator.data.is_on
+        self._preset_mode = self.coordinator.data.mode.name
+        self._oscillating = self.coordinator.data.oscillate
+        self._percentage = self.coordinator.data.speed
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._available = True
         self._state = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
-        if self.coordinator.data.is_on:
-            self._percentage = self.coordinator.data.speed
-        else:
-            self._percentage = 0
+        self._percentage = self.coordinator.data.speed
 
         self.async_write_ha_state()
 
