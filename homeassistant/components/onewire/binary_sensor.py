@@ -57,6 +57,20 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
         )
         for id in DEVICE_KEYS_0_7
     ),
+    "3A": (
+        OneWireBinarySensorEntityDescription(
+            key="sensed.A",
+            entity_registry_enabled_default=False,
+            name="Sensed A",
+            read_mode=READ_MODE_BOOL,
+        ),
+        OneWireBinarySensorEntityDescription(
+            key="sensed.B",
+            entity_registry_enabled_default=False,
+            name="Sensed B",
+            read_mode=READ_MODE_BOOL,
+        ),
+    ),
 }
 
 
