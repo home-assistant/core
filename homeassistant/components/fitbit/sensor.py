@@ -376,7 +376,7 @@ class FitbitSensor(SensorEntity):
         return self._state
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self.entity_description.key == "devices/battery" and self.extra is not None:
             extra_battery = self.extra.get("battery")
@@ -384,7 +384,7 @@ class FitbitSensor(SensorEntity):
                 battery_level = BATTERY_LEVELS.get(extra_battery)
                 if battery_level is not None:
                     return icon_for_battery_level(battery_level=battery_level)
-        return f"mdi:{self.entity_description.icon}"
+        return self.entity_description.icon
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
