@@ -69,4 +69,4 @@ class BondSwitch(BondEntity, SwitchEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 f"The bond API returned an error calling set_power_state_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
-            )
+            ) from ex
