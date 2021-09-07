@@ -14,6 +14,12 @@
                 },
                 "title": "Kamereon-Kontonummer ausw\u00e4hlen"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte \u00e4ndere Dein Passwort f\u00fcr {username}"
+            },
             "user": {
                 "data": {
                     "locale": "Gebietsschema",
