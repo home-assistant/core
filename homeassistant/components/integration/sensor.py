@@ -106,7 +106,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = STATE_UNAVAILABLE
+        self._state = None
         self._method = integration_method
 
         self._name = name if name is not None else f"{source_entity} integral"
