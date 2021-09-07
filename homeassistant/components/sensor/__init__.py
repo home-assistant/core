@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_DATE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
@@ -69,6 +70,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
+    DEVICE_CLASS_DATE,  # date (ISO8601)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
