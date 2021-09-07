@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "身份认证无效"
+        },
+        "flow_title": "涂鸦配置",
+        "step": {
+            "user":{
+                "title":"Tuya插件",
+                "data":{
+                  "tuya_project_type": "涂鸦云项目类型"
+                }
+            },
+            "login": {
+                "data": {
+                    "endpoint": "可用区域",
+                    "access_id": "Access ID",
+                    "access_secret": "Access Secret",
+                    "tuya_app_type": "移动应用",
+                    "country_code": "国家码",
+                    "username": "账号",
+                    "password": "密码"
+                },
+                "description": "请输入涂鸦账户信息。",
+                "title": "涂鸦"
+            }
+        }
+    }
+}
