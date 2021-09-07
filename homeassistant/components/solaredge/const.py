@@ -13,7 +13,6 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
-from homeassistant.util import dt as dt_util
 
 from .models import SolarEdgeSensorEntityDescription
 
