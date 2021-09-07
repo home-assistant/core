@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable, Generic, TypeVar, cast, overload
+from typing import Any, Callable, Generic, NamedTuple, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,
@@ -569,51 +569,60 @@ async def _async_setup_device_registry(
     return device_entry.id
 
 
+class ServiceMetadata(NamedTuple):
+    """Metadata for services."""
+
+    validator: Any
+    example: str
+    selector: dict[str, Any]
+    description: str | None = None
+
+
 ARG_TYPE_METADATA = {
-    UserServiceArgType.BOOL: {
-        "validator": cv.boolean,
-        "example": "False",
-        "selector": {"boolean": None},
-    },
-    UserServiceArgType.INT: {
-        "validator": vol.Coerce(int),
-        "example": "42",
-        "selector": {"number": {CONF_MODE: "box"}},
-    },
-    UserServiceArgType.FLOAT: {
-        "validator": vol.Coerce(float),
-        "example": "12.3",
-        "selector": {"number": {CONF_MODE: "box", "step": 1e-3}},
-    },
-    UserServiceArgType.STRING: {
-        "validator": cv.string,
-        "example": "Example text",
-        "selector": {"text": None},
-    },
-    UserServiceArgType.BOOL_ARRAY: {
-        "validator": [cv.boolean],
-        "description": "A list of boolean values.",
-        "example": "[True, False]",
-        "selector": {"object": {}},
-    },
-    UserServiceArgType.INT_ARRAY: {
-        "validator": [vol.Coerce(int)],
-        "description": "A list of integer values.",
-        "example": "[42, 34]",
-        "selector": {"object": {}},
-    },
-    UserServiceArgType.FLOAT_ARRAY: {
-        "validator": [vol.Coerce(float)],
-        "description": "A list of floating point numbers.",
-        "example": "[ 12.3, 34.5 ]",
-        "selector": {"object": {}},
-    },
-    UserServiceArgType.STRING_ARRAY: {
-        "validator": [cv.string],
-        "description": "A list of strings.",
-        "example": "['Example text', 'Another example']",
-        "selector": {"object": {}},
-    },
+    UserServiceArgType.BOOL: ServiceMetadata(
+        validator=cv.boolean,
+        example="False",
+        selector={"boolean": None},
+    ),
+    UserServiceArgType.INT: ServiceMetadata(
+        validator=vol.Coerce(int),
+        example="42",
+        selector={"number": {CONF_MODE: "box"}},
+    ),
+    UserServiceArgType.FLOAT: ServiceMetadata(
+        validator=vol.Coerce(float),
+        example="12.3",
+        selector={"number": {CONF_MODE: "box", "step": 1e-3}},
+    ),
+    UserServiceArgType.STRING: ServiceMetadata(
+        validator=cv.string,
+        example="Example text",
+        selector={"text": None},
+    ),
+    UserServiceArgType.BOOL_ARRAY: ServiceMetadata(
+        validator=[cv.boolean],
+        description="A list of boolean values.",
+        example="[True, False]",
+        selector={"object": {}},
+    ),
+    UserServiceArgType.INT_ARRAY: ServiceMetadata(
+        validator=[vol.Coerce(int)],
+        description="A list of integer values.",
+        example="[42, 34]",
+        selector={"object": {}},
+    ),
+    UserServiceArgType.FLOAT_ARRAY: ServiceMetadata(
+        validator=[vol.Coerce(float)],
+        description="A list of floating point numbers.",
+        example="[ 12.3, 34.5 ]",
+        selector={"object": {}},
+    ),
+    UserServiceArgType.STRING_ARRAY: ServiceMetadata(
+        validator=[cv.string],
+        description="A list of strings.",
+        example="['Example text', 'Another example']",
+        selector={"object": {}},
+    ),
 }
 
 
@@ -636,13 +645,13 @@ async def _register_service(
             )
             return
         metadata = ARG_TYPE_METADATA[arg.type]
-        schema[vol.Required(arg.name)] = metadata["validator"]
+        schema[vol.Required(arg.name)] = metadata.validator
         fields[arg.name] = {
             "name": arg.name,
             "required": True,
-            "description": metadata.get("description"),
-            "example": metadata["example"],
-            "selector": metadata["selector"],
+            "description": metadata.description,
+            "example": metadata.example,
+            "selector": metadata.selector,
         }
 
     async def execute_service(call: ServiceCall) -> None:
