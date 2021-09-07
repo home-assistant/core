@@ -4,9 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.tuya.config_flow import (
-    RESULT_AUTH_FAILED,
-)
+from homeassistant.components.tuya.config_flow import RESULT_AUTH_FAILED
 from homeassistant.components.tuya.const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,

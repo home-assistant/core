@@ -14,7 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-
 from .base import TuyaHaEntity
 from .const import (
     DOMAIN,
