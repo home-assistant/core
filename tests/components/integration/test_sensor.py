@@ -123,7 +123,7 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state
-    assert state.state == "unavailable"
+    assert state.state == "unknown"
     assert state.attributes.get("unit_of_measurement") is None
     assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
 
