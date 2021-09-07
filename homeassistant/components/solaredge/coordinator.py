@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 
 from solaredge import Solaredge
 from stringcase import snakecase
@@ -219,8 +219,6 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
                 reset = datetime.strptime(
                     meter["values"][0]["date"], "%Y-%m-%d %H:%M:%S"
                 )
-                reset = reset.replace(tzinfo=timezone.utc)
-                self.attributes[meter["type"]] = {"last_reset": reset.isoformat()}
 
         LOGGER.debug(
             "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
