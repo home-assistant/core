@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 
 from .common import async_enable_traffic, find_entity_id
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 
 @pytest.fixture
@@ -25,9 +26,10 @@ def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
     endpoints = {
         1: {
-            "in_clusters": [security.IasAce.cluster_id],
-            "out_clusters": [],
-            "device_type": zha.DeviceType.IAS_ANCILLARY_CONTROL,
+            SIG_EP_INPUT: [security.IasAce.cluster_id],
+            SIG_EP_OUTPUT: [],
+            SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
+            SIG_EP_PROFILE: zha.PROFILE_ID,
         }
     }
     return zigpy_device_mock(

@@ -240,7 +240,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def _send_key(self, key):
         """Send the key using legacy protocol."""
-        self._get_remote().control(key)
+        if remote := self._get_remote():
+            remote.control(key)
 
     def stop(self):
         """Stop Bridge."""
@@ -315,7 +316,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
-        self._get_remote().send_key(key)
+        if remote := self._get_remote():
+            remote.send_key(key)
 
     def _get_remote(self, avoid_open: bool = False):
         """Create or return a remote control instance."""

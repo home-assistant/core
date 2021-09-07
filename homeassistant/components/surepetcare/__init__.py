@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_FLAP_ID,
@@ -62,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sure Petcare integration."""
     conf = config[DOMAIN]
     hass.data.setdefault(DOMAIN, {})
@@ -110,8 +111,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 vol.Lower,
                 vol.In(
                     [
-                        # https://github.com/PyCQA/pylint/issues/2062
-                        # pylint: disable=no-member
                         LockState.UNLOCKED.name.lower(),
                         LockState.LOCKED_IN.name.lower(),
                         LockState.LOCKED_OUT.name.lower(),
@@ -139,13 +138,13 @@ class SurePetcareAPI:
         """Initialize the Sure Petcare object."""
         self.hass = hass
         self.surepy = surepy
-        self.states = {}
+        self.states: dict[int, Any] = {}
 
     async def async_update(self, _: Any = None) -> None:
         """Get the latest data from Sure Petcare."""
 
         try:
-            self.states = await self.surepy.get_entities()
+            self.states = await self.surepy.get_entities(refresh=True)
         except SurePetcareError as error:
             _LOGGER.error("Unable to fetch data: %s", error)
             return
@@ -155,8 +154,6 @@ class SurePetcareAPI:
     async def set_lock_state(self, flap_id: int, state: str) -> None:
         """Update the lock state of a flap."""
 
-        # https://github.com/PyCQA/pylint/issues/2062
-        # pylint: disable=no-member
         if state == LockState.UNLOCKED.name.lower():
             await self.surepy.sac.unlock(flap_id)
         elif state == LockState.LOCKED_IN.name.lower():

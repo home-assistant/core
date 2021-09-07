@@ -12,7 +12,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,6 +24,16 @@ from .entity import BondEntity
 from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_START_INCREASING_BRIGHTNESS = "start_increasing_brightness"
+SERVICE_START_DECREASING_BRIGHTNESS = "start_decreasing_brightness"
+SERVICE_STOP = "stop"
+
+ENTITY_SERVICES = [
+    SERVICE_START_INCREASING_BRIGHTNESS,
+    SERVICE_START_DECREASING_BRIGHTNESS,
+    SERVICE_STOP,
+]
 
 
 async def async_setup_entry(
@@ -33,6 +45,14 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+
+    platform = entity_platform.async_get_current_platform()
+    for service in ENTITY_SERVICES:
+        platform.async_register_entity_service(
+            service,
+            {},
+            f"async_{service}",
+        )
 
     fan_lights: list[Entity] = [
         BondLight(hub, device, bpup_subs)
@@ -118,6 +138,31 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._hub.bond.action(self._device.device_id, Action.turn_light_off())
+
+    @callback
+    def _async_has_action_or_raise(self, action: str) -> None:
+        """Raise HomeAssistantError if the device does not support an action."""
+        if not self._device.has_action(action):
+            raise HomeAssistantError(f"{self.entity_id} does not support {action}")
+
+    async def async_start_increasing_brightness(self) -> None:
+        """Start increasing the light brightness."""
+        self._async_has_action_or_raise(Action.START_INCREASING_BRIGHTNESS)
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.START_INCREASING_BRIGHTNESS)
+        )
+
+    async def async_start_decreasing_brightness(self) -> None:
+        """Start decreasing the light brightness."""
+        self._async_has_action_or_raise(Action.START_DECREASING_BRIGHTNESS)
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.START_DECREASING_BRIGHTNESS)
+        )
+
+    async def async_stop(self) -> None:
+        """Stop all actions and clear the queue."""
+        self._async_has_action_or_raise(Action.STOP)
+        await self._hub.bond.action(self._device.device_id, Action(Action.STOP))
 
 
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):

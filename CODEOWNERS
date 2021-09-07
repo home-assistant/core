@@ -29,6 +29,7 @@ homeassistant/components/aemet/* @noltari
 homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airnow/* @asymworks
+homeassistant/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
@@ -118,7 +119,6 @@ homeassistant/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
 homeassistant/components/digital_ocean/* @fabaff
-homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7 @bdraco
 homeassistant/components/dsmr/* @Robbie1221 @frenck
@@ -162,6 +162,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
+homeassistant/components/fjaraskupan/* @elupus
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flipr/* @cnico
 homeassistant/components/flo/* @dmulcahey
@@ -187,6 +188,7 @@ homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
+homeassistant/components/github/* @timmo001 @ludeeus
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
@@ -197,10 +199,10 @@ homeassistant/components/gpsd/* @fabaff
 homeassistant/components/gree/* @cmroche
 homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/group/* @home-assistant/core
-homeassistant/components/growatt_server/* @indykoning @muppet3000
+homeassistant/components/growatt_server/* @indykoning @muppet3000 @JasperPlant
 homeassistant/components/guardian/* @bachya
 homeassistant/components/habitica/* @ASMfreaK @leikoilja
-homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
+homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 homeassistant/components/hassio/* @home-assistant/supervisor
 homeassistant/components/heatmiser/* @andylockran
 homeassistant/components/heos/* @andrewsayre
@@ -246,6 +248,7 @@ homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
+homeassistant/components/iotawatt/* @gtdiehl
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes @abmantis
 homeassistant/components/ipp/* @ctalkington
@@ -320,10 +323,11 @@ homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mullvad/* @meichthys
 homeassistant/components/mutesync/* @currentoor
 homeassistant/components/my/* @home-assistant/core
-homeassistant/components/myq/* @bdraco
+homeassistant/components/myq/* @bdraco @ehendrix23
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nam/* @bieniu
+homeassistant/components/nanoleaf/* @milanmeu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
@@ -338,6 +342,7 @@ homeassistant/components/nfandroidtv/* @tkdrob
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
+homeassistant/components/nmap_tracker/* @bdraco
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/noaa_tides/* @jdelaney72
@@ -371,6 +376,7 @@ homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
 homeassistant/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
+homeassistant/components/p1_monitor/* @klaasnicolaas
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 homeassistant/components/pcal9535a/* @Shulyaka
@@ -503,7 +509,7 @@ homeassistant/components/synology_dsm/* @hacf-fr @Quentame @mib1185
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/system_bridge/* @timmo001
-homeassistant/components/tado/* @michaelarnauts @bdraco @noltari
+homeassistant/components/tado/* @michaelarnauts @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
@@ -526,7 +532,7 @@ homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/trace/* @home-assistant/core
-homeassistant/components/tractive/* @Danielhiversen @zhulik
+homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
 homeassistant/components/tradfri/* @janiversen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
@@ -542,10 +548,12 @@ homeassistant/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
-homeassistant/components/upnp/* @StevenLooman
+homeassistant/components/upnp/* @StevenLooman @ehendrix23
 homeassistant/components/uptimerobot/* @ludeeus
+homeassistant/components/usb/* @bdraco
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
+homeassistant/components/vallox/* @andre-richter
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/vera/* @pavoni
@@ -579,7 +587,7 @@ homeassistant/components/worldclock/* @fabaff
 homeassistant/components/xbox/* @hunterjm
 homeassistant/components/xbox_live/* @MartinHjelmare
 homeassistant/components/xiaomi_aqara/* @danielhiversen @syssi
-homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG
+homeassistant/components/xiaomi_miio/* @rytilahti @syssi @starkillerOG @bieniu
 homeassistant/components/xiaomi_tv/* @simse
 homeassistant/components/xmpp/* @fabaff @flowolf
 homeassistant/components/yale_smart_alarm/* @gjohansson-ST

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later
 
@@ -45,16 +45,16 @@ from .const import (
     CONF_PARITY,
     CONF_RETRIES,
     CONF_RETRY_ON_EMPTY,
-    CONF_RTUOVERTCP,
-    CONF_SERIAL,
     CONF_STOPBITS,
-    CONF_TCP,
-    CONF_UDP,
     DEFAULT_HUB,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
+    RTUOVERTCP,
+    SERIAL,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
+    TCP,
+    UDP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -194,6 +194,7 @@ class ModbusHub:
 
         # generic configuration
         self._client = None
+        self.entity_timers: list[CALLBACK_TYPE] = []
         self._async_cancel_listener = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -203,10 +204,10 @@ class ModbusHub:
         self._config_delay = client_config[CONF_DELAY]
         self._pb_call = {}
         self._pb_class = {
-            CONF_SERIAL: ModbusSerialClient,
-            CONF_TCP: ModbusTcpClient,
-            CONF_UDP: ModbusUdpClient,
-            CONF_RTUOVERTCP: ModbusTcpClient,
+            SERIAL: ModbusSerialClient,
+            TCP: ModbusTcpClient,
+            UDP: ModbusUdpClient,
+            RTUOVERTCP: ModbusTcpClient,
         }
         self._pb_params = {
             "port": client_config[CONF_PORT],
@@ -215,7 +216,7 @@ class ModbusHub:
             "retries": client_config[CONF_RETRIES],
             "retry_on_empty": client_config[CONF_RETRY_ON_EMPTY],
         }
-        if self._config_type == CONF_SERIAL:
+        if self._config_type == SERIAL:
             # serial configuration
             self._pb_params.update(
                 {
@@ -229,19 +230,19 @@ class ModbusHub:
         else:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
-            if self._config_type == CONF_RTUOVERTCP:
+            if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = ModbusRtuFramer
 
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if CONF_MSG_WAIT in client_config:
             self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
-        elif self._config_type == CONF_SERIAL:
+        elif self._config_type == SERIAL:
             self._msg_wait = 30 / 1000
         else:
             self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
-        log_text = f"Pymodbus: {text}"
+        log_text = f"Pymodbus: {self.name}: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
@@ -288,12 +289,16 @@ class ModbusHub:
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
-        if self._client:
-            try:
-                self._client.close()
-            except ModbusException as exception_error:
-                self._log_error(str(exception_error))
-        self._client = None
+        for call in self.entity_timers:
+            call()
+        self.entity_timers = []
+        async with self._lock:
+            if self._client:
+                try:
+                    self._client.close()
+                except ModbusException as exception_error:
+                    self._log_error(str(exception_error))
+                self._client = None
 
     def _pymodbus_connect(self):
         """Connect client."""
@@ -322,9 +327,9 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
-        if not self._client:
-            return None
         async with self._lock:
+            if not self._client:
+                return None
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )

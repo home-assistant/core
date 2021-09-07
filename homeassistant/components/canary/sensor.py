@@ -120,7 +120,7 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             "model": device.device_type["name"],
             "manufacturer": MANUFACTURER,
         }
-        self._attr_unit_of_measurement = sensor_type[1]
+        self._attr_native_unit_of_measurement = sensor_type[1]
         self._attr_device_class = sensor_type[3]
         self._attr_icon = sensor_type[2]
 

@@ -11,13 +11,6 @@ import homeassistant.util.dt as dt_util
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
-@pytest.fixture(autouse=True)
-def mock_zeroconf():
-    """Mock zeroconf."""
-    with mock.patch("homeassistant.components.zeroconf.models.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
-
-
 @pytest.fixture
 def utcnow(request):
     """Freeze time at a known point."""

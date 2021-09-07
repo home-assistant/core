@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "auth": {
+                "description": "Het IoTawatt-apparaat vereist authenticatie. Voer de gebruikersnaam en het wachtwoord in en klik op de knop Verzenden."
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

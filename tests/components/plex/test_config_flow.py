@@ -210,7 +210,9 @@ async def test_multiple_servers_with_selection(
 
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(second_server_enabled=1),
+        text=plextv_resources_base.format(
+            first_server_enabled=1, second_server_enabled=1
+        ),
     )
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
@@ -248,6 +250,42 @@ async def test_multiple_servers_with_selection(
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
 
+async def test_only_non_present_servers(
+    hass,
+    mock_plex_calls,
+    requests_mock,
+    plextv_resources_base,
+    current_request_with_host,
+):
+    """Test creating an entry with one server available."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    requests_mock.get(
+        "https://plex.tv/api/resources",
+        text=plextv_resources_base.format(
+            first_server_enabled=0, second_server_enabled=0
+        ),
+    )
+    with patch("plexauth.PlexAuth.initiate_auth"), patch(
+        "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+        assert result["type"] == "external"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == "external_done"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == "form"
+        assert result["step_id"] == "select_server"
+
+
 async def test_adding_last_unconfigured_server(
     hass,
     mock_plex_calls,
@@ -272,7 +310,9 @@ async def test_adding_last_unconfigured_server(
 
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(second_server_enabled=1),
+        text=plextv_resources_base.format(
+            first_server_enabled=1, second_server_enabled=1
+        ),
     )
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
@@ -332,7 +372,9 @@ async def test_all_available_servers_configured(
     requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get(
         "https://plex.tv/api/resources",
-        text=plextv_resources_base.format(second_server_enabled=1),
+        text=plextv_resources_base.format(
+            first_server_enabled=1, second_server_enabled=1
+        ),
     )
 
     with patch("plexauth.PlexAuth.initiate_auth"), patch(
@@ -467,7 +509,7 @@ async def test_external_timed_out(hass, current_request_with_host):
         assert result["reason"] == "token_request_timeout"
 
 
-async def test_callback_view(hass, aiohttp_client, current_request_with_host):
+async def test_callback_view(hass, hass_client_no_auth, current_request_with_host):
     """Test callback view."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -483,7 +525,7 @@ async def test_callback_view(hass, aiohttp_client, current_request_with_host):
         )
         assert result["type"] == "external"
 
-        client = await aiohttp_client(hass.http.app)
+        client = await hass_client_no_auth()
         forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
 
         resp = await client.get(forward_url)
