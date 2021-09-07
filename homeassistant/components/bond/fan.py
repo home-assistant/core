@@ -5,6 +5,7 @@ import logging
 import math
 from typing import Any
 
+from aiohttp.client_exceptions import ClientResponseError
 from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
 import voluptuous as vol
 
@@ -18,6 +19,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -140,14 +142,18 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the believed state to on or off."""
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_power_state_belief(power_state)
-        )
+        try:
+            await self._hub.bond.action(
+                self._device.device_id, Action.set_power_state_belief(power_state)
+            )
+        except ClientResponseError as ex:
+            raise HomeAssistantError(
+                f"The bond API returned an error calling set_power_state_belief on {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+            )
 
     async def async_set_speed_belief(self, speed: int) -> None:
         """Set the believed speed for the fan."""
         _LOGGER.debug("async_set_speed_belief called with percentage %s", speed)
-
         if speed == 0:
             await self.async_set_power_belief(False)
             return
@@ -160,10 +166,14 @@ class BondFan(BondEntity, FanEntity):
             speed,
             bond_speed,
         )
-
-        await self._hub.bond.action(
-            self._device.device_id, Action.set_speed_belief(bond_speed)
-        )
+        try:
+            await self._hub.bond.action(
+                self._device.device_id, Action.set_speed_belief(bond_speed)
+            )
+        except ClientResponseError as ex:
+            raise HomeAssistantError(
+                f"The bond API returned an error calling set_speed_belief on {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+            )
 
     async def async_turn_on(
         self,

@@ -73,7 +73,7 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
-homeassistant/components/bond/* @prystupa
+homeassistant/components/bond/* @prystupa @joshs85
 homeassistant/components/bosch_shc/* @tschamm
 homeassistant/components/braviatv/* @bieniu @Drafteed
 homeassistant/components/broadlink/* @danielhiversen @felipediel
