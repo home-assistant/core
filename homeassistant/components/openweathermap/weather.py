@@ -63,7 +63,7 @@ class OpenWeatherMapWeather(WeatherEntity):
         split_unique_id = self._unique_id.split("-")
         return {
             "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
-            "name": f"{DEFAULT_NAME} {split_unique_id[2]}",
+            "name": DEFAULT_NAME,
             "manufacturer": MANUFACTURER,
             "entry_type": "service",
         }
