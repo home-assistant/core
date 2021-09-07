@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 1)
+@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Initialize the config entry."""
     config_entry.add_to_hass(hass)
@@ -18,7 +18,7 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry):
     assert hass.states.async_entity_ids_count() == 1
 
 
-@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 1)
+@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
 async def test_setup_multiple_thermostats(
     hass: HomeAssistant, config_entry: MockConfigEntry, location, another_device
 ) -> None:
