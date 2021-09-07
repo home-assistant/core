@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Credentials updated successfully"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Do you want to start set up?",
+                "title": "Connect to your Poolstation account"
+            },
+            "reauth_confirm": {
+                "data": {
+                  "email": "Email",
+                  "password": "Password"
+                },
+                "description": "Please update your credentials",
+                "title": "Authentication with Poolstation failed"
+            }            
+        }
+    }
+}
