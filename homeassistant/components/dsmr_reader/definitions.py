@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Final
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -21,10 +21,11 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
-    PRICE_EUR_KWH,
-    PRICE_EUR_M3,
     VOLUME_CUBIC_METERS,
 )
+
+PRICE_EUR_KWH: Final = f"EUR/{ENERGY_KILO_WATT_HOUR}"
+PRICE_EUR_M3: Final = f"EUR/{VOLUME_CUBIC_METERS}"
 
 
 def dsmr_transform(value):
