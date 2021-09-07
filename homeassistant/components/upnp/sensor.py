@@ -16,7 +16,6 @@ from .const import (
     DERIVED_SENSOR,
     DOMAIN,
     KIBIBYTE,
-    LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     RAW_SENSOR,
@@ -116,25 +115,23 @@ async def async_setup_entry(
     """Set up the UPnP/IGD sensors."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    LOGGER.debug("Adding sensors")
-
-    entities = []
-    entities.append(
+    entities: list[UpnpSensor] = [
         RawUpnpSensor(
             coordinator=coordinator,
             entity_description=entity_description,
         )
         for entity_description in SENSOR_ENTITY_DESCRIPTIONS[RAW_SENSOR]
         if coordinator.data.get(entity_description.key) is not None
-    )
-
-    entities.append(
-        DerivedUpnpSensor(
-            coordinator=coordinator,
-            entity_description=entity_description,
-        )
-        for entity_description in SENSOR_ENTITY_DESCRIPTIONS[DERIVED_SENSOR]
-        if coordinator.data.get(entity_description.key) is not None
+    ]
+    entities.extend(
+        [
+            DerivedUpnpSensor(
+                coordinator=coordinator,
+                entity_description=entity_description,
+            )
+            for entity_description in SENSOR_ENTITY_DESCRIPTIONS[DERIVED_SENSOR]
+            if coordinator.data.get(entity_description.key) is not None
+        ]
     )
 
     async_add_entities(entities)
