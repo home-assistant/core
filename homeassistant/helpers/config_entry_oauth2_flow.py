@@ -505,7 +505,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
     if secret is None:
         secret = hass.data[DATA_JWT_SECRET] = secrets.token_hex()
 
-    return jwt.encode(data, secret, algorithm="HS256").decode()
+    return jwt.encode(data, secret, algorithm="HS256")
 
 
 @callback
