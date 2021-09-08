@@ -36,7 +36,7 @@ def test_compile_hourly_statistics(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
@@ -82,19 +82,19 @@ def test_compile_hourly_statistics(hass_recorder):
     assert stats == {}
 
     # Test get_last_statistics
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    stats = get_last_statistics(hass, 1, "sensor.test1")
+    stats = get_last_statistics(hass, 1, "sensor.test1", True)
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
-    stats = get_last_statistics(hass, 2, "sensor.test1")
+    stats = get_last_statistics(hass, 2, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_statistics(hass, 3, "sensor.test1")
+    stats = get_last_statistics(hass, 3, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_statistics(hass, 1, "sensor.test3")
+    stats = get_last_statistics(hass, 1, "sensor.test3", True)
     assert stats == {}
 
 
@@ -219,7 +219,7 @@ def test_rename_entity(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
