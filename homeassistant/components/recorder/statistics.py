@@ -8,6 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable
 
 from sqlalchemy import bindparam
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
 
@@ -217,7 +218,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                 )
                 try:
                     session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
-                except Exception:
+                except SQLAlchemyError:
                     _LOGGER.exception(
                         "Unexpected exception when inserting statistics %s"
                     )
