@@ -1,7 +1,13 @@
 """Base class for IKEA TRADFRI."""
+from __future__ import annotations
+
 from functools import wraps
 import logging
+from typing import Any, Callable
 
+from pytradfri.command import Command
+from pytradfri.device.socket import Socket
+from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
@@ -34,12 +40,14 @@ class TradfriBaseClass(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device, api, gateway_id):
+    def __init__(
+        self, device: Command, api: Callable[[str], Any], gateway_id: str
+    ) -> None:
         """Initialize a device."""
         self._api = handle_error(api)
-        self._device = None
-        self._device_control = None
-        self._device_data = None
+        self._device: Command | None = None
+        self._device_control: SocketControl = None
+        self._device_data: Socket = None
         self._gateway_id = gateway_id
         self._refresh(device)
 
@@ -71,7 +79,7 @@ class TradfriBaseClass(Entity):
         self._refresh(device)
         self.async_write_ha_state()
 
-    def _refresh(self, device):
+    def _refresh(self, device: Command) -> None:
         """Refresh the device data."""
         self._device = device
         self._attr_name = device.name
@@ -97,7 +105,7 @@ class TradfriBaseDevice(TradfriBaseClass):
             "via_device": (DOMAIN, self._gateway_id),
         }
 
-    def _refresh(self, device):
+    def _refresh(self, device: Command) -> None:
         """Refresh the device data."""
         super()._refresh(device)
         self._attr_available = device.reachable
