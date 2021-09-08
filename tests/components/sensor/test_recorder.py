@@ -432,6 +432,10 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
                 "last_reset": process_timestamp_to_utc_isoformat(one),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(
+                    factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])
+                ),
             },
         ]
     }
