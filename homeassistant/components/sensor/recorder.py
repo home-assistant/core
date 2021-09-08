@@ -138,7 +138,7 @@ def _time_weighted_average(
 ) -> float:
     """Calculate a time weighted average.
 
-    The average is calculated by, weighting the states by duration in seconds between
+    The average is calculated by weighting the states by duration in seconds between
     state changes.
     Note: there's no interpolation of values between state changes.
     """
@@ -462,7 +462,7 @@ def compile_statistics(  # noqa: C901
                         sum_increase += sum_increase_tmp
                         sum_increase_tmp = 0.0
                         if fstate > 0:
-                            sum_increase_tmp += fstate - 0
+                            sum_increase_tmp += fstate
                     # ..and update the starting point
                     new_state = fstate
                     old_last_reset = last_reset
