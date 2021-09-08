@@ -49,6 +49,7 @@ from .common import (
     get_zha_gateway,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.components.zha.common import async_wait_for_updates
 
@@ -61,9 +62,10 @@ def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""
     endpoints = {
         1: {
-            "in_clusters": [hvac.Fan.cluster_id],
-            "out_clusters": [],
-            "device_type": zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_INPUT: [hvac.Fan.cluster_id],
+            SIG_EP_OUTPUT: [],
+            SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_PROFILE: zha.PROFILE_ID,
         }
     }
     return zigpy_device_mock(
@@ -78,9 +80,10 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.Groups.cluster_id],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_INPUT: [general.Groups.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         },
         ieee="00:15:8d:00:02:32:4f:32",
@@ -99,13 +102,14 @@ async def device_fan_1(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     general.Groups.cluster_id,
                     general.OnOff.cluster_id,
                     hvac.Fan.cluster_id,
                 ],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             },
         },
         ieee=IEEE_GROUPABLE_DEVICE,
@@ -123,14 +127,15 @@ async def device_fan_2(hass, zigpy_device_mock, zha_device_joined):
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     general.Groups.cluster_id,
                     general.OnOff.cluster_id,
                     hvac.Fan.cluster_id,
                     general.LevelControl.cluster_id,
                 ],
-                "out_clusters": [],
-                "device_type": zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
             },
         },
         ieee=IEEE_GROUPABLE_DEVICE2,

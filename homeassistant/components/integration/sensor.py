@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_TOTAL,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -106,23 +106,17 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
+        self._state = None
         self._method = integration_method
 
         self._name = name if name is not None else f"{source_entity} integral"
-
-        if unit_of_measurement is None:
-            self._unit_template = (
-                f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
-            )
-            # we postpone the definition of unit_of_measurement to later
-            self._unit_of_measurement = None
-        else:
-            self._unit_of_measurement = unit_of_measurement
-
+        self._unit_template = (
+            f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
+        )
+        self._unit_of_measurement = unit_of_measurement
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        self._attr_state_class = STATE_CLASS_TOTAL
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -135,10 +129,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
                 _LOGGER.warning("Could not restore last state: %s", err)
             else:
                 self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-
-                self._unit_of_measurement = state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
+                if self._unit_of_measurement is None:
+                    self._unit_of_measurement = state.attributes.get(
+                        ATTR_UNIT_OF_MEASUREMENT
+                    )
 
         @callback
         def calc_integration(event):
@@ -193,7 +187,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate integral: %s", err)
             else:
-                self._state += integral
+                if isinstance(self._state, Decimal):
+                    self._state += integral
+                else:
+                    self._state = integral
                 self.async_write_ha_state()
 
         async_track_state_change_event(
@@ -208,7 +205,9 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return round(self._state, self._round_digits)
+        if isinstance(self._state, Decimal):
+            return round(self._state, self._round_digits)
+        return self._state
 
     @property
     def native_unit_of_measurement(self):

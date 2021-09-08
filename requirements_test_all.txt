@@ -301,7 +301,7 @@ debugpy==1.4.1
 defusedxml==0.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.10.8
+denonavr==0.10.9
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.4
@@ -334,7 +334,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.19.0
+envoy_reader==0.20.0
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -441,7 +441,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.47.1
+hass-nabucasa==0.49.0
 
 # homeassistant.components.tasmota
 hatasmota==0.2.20
@@ -568,7 +568,7 @@ millheater==0.5.2
 minio==4.0.9
 
 # homeassistant.components.motion_blinds
-motionblinds==0.4.10
+motionblinds==0.5.5
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.11
@@ -921,7 +921,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.2.0
+pymazda==0.2.1
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.3
@@ -1382,9 +1382,6 @@ zeroconf==0.36.2
 zha-quirks==0.0.60
 
 # homeassistant.components.zha
-zigpy-cc==0.5.2
-
-# homeassistant.components.zha
 zigpy-deconz==0.13.0
 
 # homeassistant.components.zha
@@ -1400,4 +1397,4 @@ zigpy-znp==0.5.4
 zigpy==0.37.1
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.29.1
+zwave-js-server-python==0.30.0

@@ -3,7 +3,6 @@ from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -45,21 +44,16 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
-    # Pre-create registry entries for sensors
-    registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        "my_random_entity_id",
-        suggested_object_id="sensor.flipr_myfliprid_chlorine",
-        disabled_by=None,
-    )
-
     with patch(
         "flipr_api.FliprAPIRestClient.get_pool_measure_latest",
         return_value=MOCK_FLIPR_MEASURE,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+    # Check entity unique_id value that is generated in FliprEntity base class.
+    entity = registry.async_get("sensor.flipr_myfliprid_red_ox")
+    assert entity.unique_id == "myfliprid-red_ox"
 
     state = hass.states.get("sensor.flipr_myfliprid_ph")
     assert state
@@ -90,3 +84,11 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
     assert state.state == "0.23654886"
+
+    state = hass.states.get("binary_sensor.flipr_myfliprid_ph_status")
+    assert state
+    assert state.state == "on"  # Alert is on for binary sensor
+
+    state = hass.states.get("binary_sensor.flipr_myfliprid_chlorine_status")
+    assert state
+    assert state.state == "off"
