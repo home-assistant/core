@@ -106,7 +106,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
         """Initialize the integration sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
-        self._state = 0
+        self._state = STATE_UNAVAILABLE
         self._method = integration_method
 
         self._name = name if name is not None else f"{source_entity} integral"
@@ -187,7 +187,10 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate integral: %s", err)
             else:
-                self._state += integral
+                if isinstance(self._state, Decimal):
+                    self._state += integral
+                else:
+                    self._state = integral
                 self.async_write_ha_state()
 
         async_track_state_change_event(
@@ -202,7 +205,9 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return round(self._state, self._round_digits)
+        if isinstance(self._state, Decimal):
+            return round(self._state, self._round_digits)
+        return self._state
 
     @property
     def native_unit_of_measurement(self):

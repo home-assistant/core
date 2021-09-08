@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import itertools
 import logging
+import math
 from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
@@ -172,6 +173,14 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
 
 
+def _parse_float(state: str) -> float:
+    """Parse a float string, throw on inf or nan."""
+    fstate = float(state)
+    if math.isnan(fstate) or math.isinf(fstate):
+        raise ValueError
+    return fstate
+
+
 def _normalize_states(
     hass: HomeAssistant,
     entity_history: list[State],
@@ -186,9 +195,10 @@ def _normalize_states(
         fstates = []
         for state in entity_history:
             try:
-                fstates.append((float(state.state), state))
-            except ValueError:
+                fstate = _parse_float(state.state)
+            except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
                 continue
+            fstates.append((fstate, state))
 
         if fstates:
             all_units = _get_units(fstates)
@@ -218,20 +228,20 @@ def _normalize_states(
 
     for state in entity_history:
         try:
-            fstate = float(state.state)
-            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            # Exclude unsupported units from statistics
-            if unit not in UNIT_CONVERSIONS[device_class]:
-                if WARN_UNSUPPORTED_UNIT not in hass.data:
-                    hass.data[WARN_UNSUPPORTED_UNIT] = set()
-                if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
-                    hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
-                    _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
-                continue
-
-            fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
+            fstate = _parse_float(state.state)
         except ValueError:
             continue
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        # Exclude unsupported units from statistics
+        if unit not in UNIT_CONVERSIONS[device_class]:
+            if WARN_UNSUPPORTED_UNIT not in hass.data:
+                hass.data[WARN_UNSUPPORTED_UNIT] = set()
+            if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
+                hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
+                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+            continue
+
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
 
     return DEVICE_CLASS_UNITS[device_class], fstates
 
@@ -380,7 +390,7 @@ def compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id)
+            last_stats = statistics.get_last_statistics(hass, 1, entity_id, False)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
