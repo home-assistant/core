@@ -97,16 +97,6 @@ async def test_show_zeroconf_form(hass: HomeAssistant):
     assert result["description_placeholders"] == {"host_name": "test"}
 
 
-async def test_abort_zeroconf_no_discovery(hass: HomeAssistant):
-    """Test we abort zeroconf on missing discovery info."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=None
-    )
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 async def test_abort_zeroconf_wrong_device(hass: HomeAssistant):
     """Test we abort zeroconf for wrong devices."""
     await setup.async_setup_component(hass, "persistent_notification", {})
