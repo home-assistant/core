@@ -87,7 +87,7 @@ class Gateway:
                     text = ""
                     for inner_entry in decoded_entry["Entries"]:
                         if inner_entry["Buffer"] is not None:
-                            text = text + inner_entry["Buffer"]
+                            text += inner_entry["Buffer"]
 
                 event_data = {
                     "phone": message["Number"],
