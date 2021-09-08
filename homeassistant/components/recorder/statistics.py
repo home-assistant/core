@@ -419,9 +419,9 @@ def _sorted_statistics_to_dict(
     result: dict = defaultdict(list)
     units = hass.config.units
 
-    def no_conversion(x: Any, _: Any) -> float | None:
+    def no_conversion(val: Any, _: Any) -> float | None:
         """Return x."""
-        return x  # type: ignore
+        return val  # type: ignore
 
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:

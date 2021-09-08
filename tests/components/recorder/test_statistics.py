@@ -116,7 +116,7 @@ def test_rename_entity(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
