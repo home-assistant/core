@@ -28,17 +28,6 @@ def _ssdp_headers(headers):
     )
 
 
-@pytest.fixture
-async def silent_ssdp_listener(hass):
-    """Patch SsdpListener class, preventing any actual SSDP traffic."""
-    with patch("homeassistant.components.ssdp.SsdpListener.async_start"), patch(
-        "homeassistant.components.ssdp.SsdpListener.async_stop"
-    ), patch("homeassistant.components.ssdp.SsdpListener.async_search"):
-        # Fixtures are initialized before patches. When the component is started here,
-        # certain functions/methods might not be patched in time.
-        yield SsdpListener
-
-
 async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
     """Initialize ssdp component and get SsdpListener."""
     await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
@@ -46,20 +35,11 @@ async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
     return hass.data[ssdp.DOMAIN]._ssdp_listeners[0]
 
 
-@pytest.fixture
-def mock_flow_init(hass):
-    """Mock hass.config_entries.flow.async_init."""
-    with patch.object(
-        hass.config_entries.flow, "async_init", return_value=AsyncMock()
-    ) as mock_init:
-        yield mock_init
-
-
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
 )
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow_init):
     """Test matching based on ST."""
     mock_ssdp_search_response = _ssdp_headers(
@@ -95,7 +75,7 @@ async def test_ssdp_flow_dispatched_on_st(mock_get_ssdp, hass, caplog, mock_flow
     assert "Failed to fetch ssdp data" not in caplog.text
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"manufacturer": "Paulus"}]},
@@ -136,7 +116,7 @@ async def test_scan_match_upnp_devicedesc_manufacturer(
     }
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"deviceType": "Paulus"}]},
@@ -178,7 +158,7 @@ async def test_scan_match_upnp_devicedesc_devicetype(
     }
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -219,7 +199,7 @@ async def test_scan_not_all_present(
     assert not mock_flow_init.mock_calls
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -260,11 +240,11 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
     assert not mock_flow_init.mock_calls
 
 
-@patch(
+@patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 async def test_start_stop_scanner(mock_source_set, hass):
     """Test we start and stop the scanner."""
     ssdp_listener = await init_ssdp_component(hass)
@@ -286,7 +266,7 @@ async def test_start_stop_scanner(mock_source_set, hass):
     assert ssdp_listener.async_stop.call_count == 1
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch("homeassistant.components.ssdp.async_get_ssdp", return_value={})
 async def test_scan_with_registered_callback(
     mock_get_ssdp, hass, aioclient_mock, caplog
@@ -375,7 +355,7 @@ async def test_scan_with_registered_callback(
     assert async_integration_callback_from_cache.call_count == 1
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={"mock-domain": [{"st": "mock-st"}]},
@@ -491,9 +471,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 ]
 
 
-@pytest.mark.usefixtures(
-    "silent_ssdp_listener", "mock_get_source_ip"
-)  # XXX TODO: Needed?
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -507,7 +485,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)
+)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
 async def test_async_detect_interfaces_setting_empty_route(
     mock_get_adapters, mock_get_ssdp, hass
 ):
@@ -519,7 +497,7 @@ async def test_async_detect_interfaces_setting_empty_route(
     assert source_ips == {IPv6Address("2001:db8::"), IPv4Address("192.168.1.5")}
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -533,7 +511,7 @@ async def test_async_detect_interfaces_setting_empty_route(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)
+)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
 async def test_bind_failure_skips_adapter(
     mock_get_adapters, mock_get_ssdp, hass, caplog
 ):
@@ -555,7 +533,7 @@ async def test_bind_failure_skips_adapter(
     }  # Note no SsdpListener for IPv6 address.
 
 
-@pytest.mark.usefixtures("silent_ssdp_listener", "mock_get_source_ip")
+@pytest.mark.usefixtures("mock_get_source_ip")
 @patch(
     "homeassistant.components.ssdp.async_get_ssdp",
     return_value={
@@ -569,7 +547,7 @@ async def test_bind_failure_skips_adapter(
 @patch(
     "homeassistant.components.ssdp.network.async_get_adapters",
     return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
-)
+)  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
 async def test_ipv4_does_additional_search_for_sonos(
     mock_get_adapters, mock_get_ssdp, hass
 ):

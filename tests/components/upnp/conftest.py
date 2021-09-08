@@ -1,7 +1,6 @@
-"""Common for upnp."""
-
+"""Configuration for SSDP tests."""
 from typing import Any, Mapping
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
 
 import pytest
@@ -18,7 +17,6 @@ from homeassistant.components.upnp.const import (
     WAN_STATUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 TEST_UDN = "uuid:device"
@@ -122,7 +120,7 @@ class MockDevice:
         }
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_upnp_device():
     """Mock homeassistant.components.upnp.Device."""
     with patch(
@@ -132,14 +130,24 @@ def mock_upnp_device():
 
 
 @pytest.fixture
-async def ssdp_listener(hass: HomeAssistant):
-    """Start SSDP component and get SsdpListener, prevent actual SSDP traffic."""
-    with patch("homeassistant.components.ssdp.SsdpListener.async_start"), patch(
-        "homeassistant.components.ssdp.SsdpListener.async_stop"
-    ), patch("homeassistant.components.ssdp.SsdpListener.async_search"):
-        await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
-        await hass.async_block_till_done()
-        yield hass.data[ssdp.DOMAIN]._ssdp_listeners[0]
+def mock_setup_entry():
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.upnp.async_setup_entry",
+        return_value=AsyncMock(True),
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
 
 
 @pytest.fixture
@@ -151,16 +159,12 @@ async def ssdp_instant_discovery():
         await callback(TEST_DISCOVERY, ssdp.SsdpChange.ALIVE)
         return MagicMock()
 
-    async def get_discovery_info(hass, st):
-        """Return discovery info."""
-        return [TEST_DISCOVERY]
-
     with patch(
         "homeassistant.components.ssdp.async_register_callback",
         side_effect=register_callback,
     ) as mock_register, patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
-        side_effect=get_discovery_info,
+        return_value=[TEST_DISCOVERY],
     ) as mock_get_info:
         yield (mock_register, mock_get_info)
 
@@ -173,15 +177,11 @@ async def ssdp_no_discovery():
         """Don't do callback."""
         return MagicMock()
 
-    async def get_discovery_info(hass, st):
-        """Return no discovery infos."""
-        return []
-
     with patch(
         "homeassistant.components.ssdp.async_register_callback",
         side_effect=register_callback,
     ) as mock_register, patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
-        side_effect=get_discovery_info,
+        return_value=[],
     ) as mock_get_info:
         yield (mock_register, mock_get_info)

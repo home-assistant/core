@@ -339,11 +339,8 @@ class Scanner:
             "Change, ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
         )
 
-        assert self._description_cache is not None
         location = ssdp_device.location
-        info_desc = (
-            await self._description_cache.async_get_description_dict(location) or {}
-        )
+        info_desc = await self._async_get_description_dict(location) or {}
         info_with_desc = CaseInsensitiveDict(
             ssdp_device.combined_headers(dst), **info_desc
         )
@@ -363,6 +360,13 @@ class Scanner:
             }
             assert self._flow_dispatcher is not None
             self._flow_dispatcher.create(flow)
+
+    async def _async_get_description_dict(
+        self, location: str | None
+    ) -> Mapping[str, str]:
+        """Get description dict."""
+        assert self._description_cache is not None
+        return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
         self, headers: Mapping[str, Any]

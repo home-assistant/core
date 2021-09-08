@@ -11,17 +11,12 @@ from homeassistant.components.upnp.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .common import TEST_ST, TEST_UDN
-from .common import mock_upnp_device  # noqa: F401
-from .common import ssdp_instant_discovery  # noqa: F401
-from .common import ssdp_listener  # noqa: F401
+from .conftest import TEST_ST, TEST_UDN
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures(
-    "ssdp_listener", "ssdp_instant_discovery", "mock_upnp_device", "mock_get_source_ip"
-)
+@pytest.mark.usefixtures("ssdp_instant_discovery", "mock_get_source_ip")
 async def test_async_setup_entry_default(hass: HomeAssistant):
     """Test async_setup_entry."""
 
