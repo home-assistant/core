@@ -29,7 +29,9 @@ class Gateway:
         except gammu.ERR_NOTSUPPORTED:
             _LOGGER.warning("Falling back to pulling method for SMS notifications")
         except gammu.GSMError:
-            _LOGGER.warning("GSM error, falling back to pulling method for SMS notifications")
+            _LOGGER.warning(
+                "GSM error, falling back to pulling method for SMS notifications"
+            )
         else:
             await self._worker.set_incoming_callback_async(self.sms_callback)
 
