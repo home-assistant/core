@@ -1,6 +1,7 @@
 """Validate the energy preferences provide valid data."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 import dataclasses
 from typing import Any
 
@@ -10,11 +11,23 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
 from . import data
 from .const import DOMAIN
+
+ENERGY_USAGE_UNITS = (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
+ENERGY_UNIT_ERROR = "entity_unexpected_unit_energy"
+GAS_USAGE_UNITS = (
+    ENERGY_WATT_HOUR,
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+    VOLUME_CUBIC_FEET,
+)
+GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 
 
 @dataclasses.dataclass
@@ -43,8 +56,12 @@ class EnergyPreferencesValidation:
 
 
 @callback
-def _async_validate_energy_stat(
-    hass: HomeAssistant, stat_value: str, result: list[ValidationIssue]
+def _async_validate_usage_stat(
+    hass: HomeAssistant,
+    stat_value: str,
+    allowed_units: Sequence[str],
+    unit_error: str,
+    result: list[ValidationIssue],
 ) -> None:
     """Validate a statistic."""
     has_entity_source = valid_entity_id(stat_value)
@@ -91,14 +108,16 @@ def _async_validate_energy_stat(
 
     unit = state.attributes.get("unit_of_measurement")
 
-    if unit not in (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR):
-        result.append(
-            ValidationIssue("entity_unexpected_unit_energy", stat_value, unit)
-        )
+    if unit not in allowed_units:
+        result.append(ValidationIssue(unit_error, stat_value, unit))
 
     state_class = state.attributes.get("state_class")
 
-    if state_class != sensor.STATE_CLASS_TOTAL_INCREASING:
+    supported_state_classes = [
+        sensor.STATE_CLASS_MEASUREMENT,
+        sensor.STATE_CLASS_TOTAL_INCREASING,
+    ]
+    if state_class not in supported_state_classes:
         result.append(
             ValidationIssue(
                 "entity_unexpected_state_class_total_increasing",
@@ -125,15 +144,12 @@ def _async_validate_price_entity(
         return
 
     try:
-        value: float | None = float(state.state)
+        float(state.state)
     except ValueError:
         result.append(
             ValidationIssue("entity_state_non_numeric", entity_id, state.state)
         )
         return
-
-    if value is not None and value < 0:
-        result.append(ValidationIssue("entity_negative_state", entity_id, value))
 
     unit = state.attributes.get("unit_of_measurement")
 
@@ -188,7 +204,11 @@ def _async_validate_cost_entity(
 
     state_class = state.attributes.get("state_class")
 
-    if state_class != sensor.STATE_CLASS_TOTAL_INCREASING:
+    supported_state_classes = [
+        sensor.STATE_CLASS_MEASUREMENT,
+        sensor.STATE_CLASS_TOTAL_INCREASING,
+    ]
+    if state_class not in supported_state_classes:
         result.append(
             ValidationIssue(
                 "entity_unexpected_state_class_total_increasing", entity_id, state_class
@@ -211,8 +231,12 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
 
         if source["type"] == "grid":
             for flow in source["flow_from"]:
-                _async_validate_energy_stat(
-                    hass, flow["stat_energy_from"], source_result
+                _async_validate_usage_stat(
+                    hass,
+                    flow["stat_energy_from"],
+                    ENERGY_USAGE_UNITS,
+                    ENERGY_UNIT_ERROR,
+                    source_result,
                 )
 
                 if flow.get("stat_cost") is not None:
@@ -229,7 +253,13 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
 
             for flow in source["flow_to"]:
-                _async_validate_energy_stat(hass, flow["stat_energy_to"], source_result)
+                _async_validate_usage_stat(
+                    hass,
+                    flow["stat_energy_to"],
+                    ENERGY_USAGE_UNITS,
+                    ENERGY_UNIT_ERROR,
+                    source_result,
+                )
 
                 if flow.get("stat_compensation") is not None:
                     _async_validate_cost_stat(
@@ -247,7 +277,13 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
 
         elif source["type"] == "gas":
-            _async_validate_energy_stat(hass, source["stat_energy_from"], source_result)
+            _async_validate_usage_stat(
+                hass,
+                source["stat_energy_from"],
+                GAS_USAGE_UNITS,
+                GAS_UNIT_ERROR,
+                source_result,
+            )
 
             if source.get("stat_cost") is not None:
                 _async_validate_cost_stat(hass, source["stat_cost"], source_result)
@@ -263,15 +299,39 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 )
 
         elif source["type"] == "solar":
-            _async_validate_energy_stat(hass, source["stat_energy_from"], source_result)
+            _async_validate_usage_stat(
+                hass,
+                source["stat_energy_from"],
+                ENERGY_USAGE_UNITS,
+                ENERGY_UNIT_ERROR,
+                source_result,
+            )
 
         elif source["type"] == "battery":
-            _async_validate_energy_stat(hass, source["stat_energy_from"], source_result)
-            _async_validate_energy_stat(hass, source["stat_energy_to"], source_result)
+            _async_validate_usage_stat(
+                hass,
+                source["stat_energy_from"],
+                ENERGY_USAGE_UNITS,
+                ENERGY_UNIT_ERROR,
+                source_result,
+            )
+            _async_validate_usage_stat(
+                hass,
+                source["stat_energy_to"],
+                ENERGY_USAGE_UNITS,
+                ENERGY_UNIT_ERROR,
+                source_result,
+            )
 
     for device in manager.data["device_consumption"]:
         device_result: list[ValidationIssue] = []
         result.device_consumption.append(device_result)
-        _async_validate_energy_stat(hass, device["stat_consumption"], device_result)
+        _async_validate_usage_stat(
+            hass,
+            device["stat_consumption"],
+            ENERGY_USAGE_UNITS,
+            ENERGY_UNIT_ERROR,
+            device_result,
+        )
 
     return result
