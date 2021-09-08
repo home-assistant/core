@@ -1,5 +1,8 @@
 """Test the sensor significant change platform."""
+import pytest
+
 from homeassistant.components.sensor.significant_change import (
+    DEVICE_CLASS_AQI,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -12,48 +15,54 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
+AQI_ATTRS = {
+    ATTR_DEVICE_CLASS: DEVICE_CLASS_AQI,
+}
 
-async def test_significant_change_temperature():
+BATTERY_ATTRS = {
+    ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+}
+
+HUMIDITY_ATTRS = {
+    ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+}
+
+TEMP_CELSIUS_ATTRS = {
+    ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+}
+
+TEMP_FREEDOM_ATTRS = {
+    ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
+}
+
+
+@pytest.mark.parametrize(
+    "old_state,new_state,attrs,result",
+    [
+        ("0", "1", AQI_ATTRS, True),
+        ("1", "0", AQI_ATTRS, True),
+        ("0.1", "0.5", AQI_ATTRS, False),
+        ("0.5", "0.1", AQI_ATTRS, False),
+        ("99", "100", AQI_ATTRS, False),
+        ("100", "99", AQI_ATTRS, False),
+        ("101", "99", AQI_ATTRS, False),
+        ("99", "101", AQI_ATTRS, True),
+        ("100", "100", BATTERY_ATTRS, False),
+        ("100", "99", BATTERY_ATTRS, True),
+        ("100", "100", HUMIDITY_ATTRS, False),
+        ("100", "99", HUMIDITY_ATTRS, True),
+        ("12", "12", TEMP_CELSIUS_ATTRS, False),
+        ("12", "13", TEMP_CELSIUS_ATTRS, True),
+        ("12.1", "12.2", TEMP_CELSIUS_ATTRS, False),
+        ("70", "71", TEMP_FREEDOM_ATTRS, True),
+        ("70", "70.5", TEMP_FREEDOM_ATTRS, False),
+    ],
+)
+async def test_significant_change_temperature(old_state, new_state, attrs, result):
     """Detect temperature significant changes."""
-    celsius_attrs = {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-    }
-    assert not async_check_significant_change(
-        None, "12", celsius_attrs, "12", celsius_attrs
+    assert (
+        async_check_significant_change(None, old_state, attrs, new_state, attrs)
+        is result
     )
-    assert async_check_significant_change(
-        None, "12", celsius_attrs, "13", celsius_attrs
-    )
-    assert not async_check_significant_change(
-        None, "12.1", celsius_attrs, "12.2", celsius_attrs
-    )
-
-    freedom_attrs = {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
-    }
-    assert async_check_significant_change(
-        None, "70", freedom_attrs, "71", freedom_attrs
-    )
-    assert not async_check_significant_change(
-        None, "70", freedom_attrs, "70.5", freedom_attrs
-    )
-
-
-async def test_significant_change_battery():
-    """Detect battery significant changes."""
-    attrs = {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
-    }
-    assert not async_check_significant_change(None, "100", attrs, "100", attrs)
-    assert async_check_significant_change(None, "100", attrs, "99", attrs)
-
-
-async def test_significant_change_humidity():
-    """Detect humidity significant changes."""
-    attrs = {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-    }
-    assert not async_check_significant_change(None, "100", attrs, "100", attrs)
-    assert async_check_significant_change(None, "100", attrs, "99", attrs)
