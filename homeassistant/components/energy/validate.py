@@ -115,6 +115,7 @@ def _async_validate_usage_stat(
 
     supported_state_classes = [
         sensor.STATE_CLASS_MEASUREMENT,
+        sensor.STATE_CLASS_TOTAL,
         sensor.STATE_CLASS_TOTAL_INCREASING,
     ]
     if state_class not in supported_state_classes:
