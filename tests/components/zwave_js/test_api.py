@@ -160,7 +160,7 @@ async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
     )
     msg = await ws_client.receive_json()
 
-    # Assert that the data returned doesn't match the stale note state data
+    # Assert that the data returned doesn't match the stale node state data
     assert msg["result"] != node.data
 
     # Replace data for the value we updated and assert the new node data is the same
