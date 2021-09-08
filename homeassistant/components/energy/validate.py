@@ -98,7 +98,11 @@ def _async_validate_energy_stat(
 
     state_class = state.attributes.get("state_class")
 
-    if state_class != sensor.STATE_CLASS_TOTAL_INCREASING:
+    supported_state_classes = [
+        sensor.STATE_CLASS_MEASUREMENT,
+        sensor.STATE_CLASS_TOTAL_INCREASING,
+    ]
+    if state_class not in supported_state_classes:
         result.append(
             ValidationIssue(
                 "entity_unexpected_state_class_total_increasing",
@@ -125,15 +129,12 @@ def _async_validate_price_entity(
         return
 
     try:
-        value: float | None = float(state.state)
+        float(state.state)
     except ValueError:
         result.append(
             ValidationIssue("entity_state_non_numeric", entity_id, state.state)
         )
         return
-
-    if value is not None and value < 0:
-        result.append(ValidationIssue("entity_negative_state", entity_id, value))
 
     unit = state.attributes.get("unit_of_measurement")
 
@@ -185,15 +186,6 @@ def _async_validate_cost_entity(
             )
         )
         return
-
-    state_class = state.attributes.get("state_class")
-
-    if state_class != sensor.STATE_CLASS_TOTAL_INCREASING:
-        result.append(
-            ValidationIssue(
-                "entity_unexpected_state_class_total_increasing", entity_id, state_class
-            )
-        )
 
 
 async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
