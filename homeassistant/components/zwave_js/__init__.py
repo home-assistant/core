@@ -152,13 +152,13 @@ async def async_setup_entry(  # noqa: C901
             client,
             disc_info,
         )
+
         platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
         platform = disc_info.platform
         if platform not in platform_setup_tasks:
             platform_setup_tasks[platform] = hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
-
         await platform_setup_tasks[platform]
 
         LOGGER.debug("Discovered entity: %s", disc_info)
@@ -169,14 +169,11 @@ async def async_setup_entry(  # noqa: C901
         # If we don't need to watch for updates return early
         if not disc_info.assumed_state:
             return
-
         value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
-
         # If this isn't the first time we found a value we want to watch for updates,
         # return early
         if len(value_updates_disc_info) != 1:
             return
-
         # add listener for value updated events
         entry.async_on_unload(
             disc_info.node.on(
