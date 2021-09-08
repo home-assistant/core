@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensor_type = info["sensor_type"]
         temp_id = info["temp_id"]
         description = SENSOR_TYPES[sensor_type]
-        name = f"{info['name']}{description.name}"
+        name = f"{info['name']}{description.name or ''}"
         if temp_id is not None:
             _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
             name = f"{name}{temp_id}"

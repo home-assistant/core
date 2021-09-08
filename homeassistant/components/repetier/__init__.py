@@ -153,7 +153,6 @@ SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
         key="current_state",
         type="state",
         icon="mdi:printer-3d",
-        name="",
     ),
     "current_job": RepetierSensorEntityDescription(
         key="current_job",
