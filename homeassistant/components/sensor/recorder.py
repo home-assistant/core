@@ -199,7 +199,7 @@ def _normalize_states(
         for state in entity_history:
             try:
                 fstate = _parse_float(state.state)
-            except ValueError:
+            except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
                 continue
             fstates.append((fstate, state))
 
