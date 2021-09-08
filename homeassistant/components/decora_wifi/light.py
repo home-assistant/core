@@ -36,11 +36,8 @@ async def async_setup_entry(
 
     if session:
         lights = session.lights
-        entities = []
         if lights:
-            for light in lights:
-                entities.append(DecoraWifiLight(light))
-        async_add_entities(entities, True)
+            async_add_entities(lights, True)
 
 
 class DecoraWifiLight(DecoraWifiEntity, LightEntity):
