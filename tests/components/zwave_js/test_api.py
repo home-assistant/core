@@ -40,6 +40,8 @@ from homeassistant.components.zwave_js.const import (
 )
 from homeassistant.helpers import device_registry as dr
 
+from .common import PROPERTY_ULTRAVIOLET
+
 
 async def test_network_status(hass, integration, hass_ws_client):
     """Test the network status websocket command."""
@@ -130,7 +132,7 @@ async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
     node = multisensor_6
 
     # Update a value and ensure it is reflected in the node state
-    value_id = get_value_id(node, CommandClass.SENSOR_MULTILEVEL, "Ultraviolet")
+    value_id = get_value_id(node, CommandClass.SENSOR_MULTILEVEL, PROPERTY_ULTRAVIOLET)
     event = Event(
         type="value updated",
         data={
@@ -141,10 +143,10 @@ async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
                 "commandClassName": "Multilevel Sensor",
                 "commandClass": 49,
                 "endpoint": 0,
-                "property": "Ultraviolet",
+                "property": PROPERTY_ULTRAVIOLET,
                 "newValue": 1,
                 "prevValue": 0,
-                "propertyName": "Ultraviolet",
+                "propertyName": PROPERTY_ULTRAVIOLET,
             },
         },
     )
