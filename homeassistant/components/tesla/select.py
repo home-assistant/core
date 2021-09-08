@@ -32,7 +32,7 @@ class HeatedSeatSelect(TeslaDevice, SelectEntity):
         """Change the selected option."""
         level: int = OPTIONS.index(option)
 
-        _LOGGER.debug(f"Setting {self.name} to {level}")
+        _LOGGER.debug("Setting %s to %s", self.name, level)
         await self.tesla_device.set_seat_heat_level(level)
         self.async_write_ha_state()
 
