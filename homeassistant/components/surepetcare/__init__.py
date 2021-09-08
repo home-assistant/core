@@ -103,21 +103,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
         )
 
+    lock_states = {
+        LockState.UNLOCKED.name.lower(): surepy.sac.unlock,
+        LockState.LOCKED_IN.name.lower(): surepy.sac.lock_in,
+        LockState.LOCKED_OUT.name.lower(): surepy.sac.lock_out,
+        LockState.LOCKED_ALL.name.lower(): surepy.sac.lock,
+    }
+
     async def handle_set_lock_state(call):
         """Call when setting the lock state."""
         flap_id = call.data[ATTR_FLAP_ID]
         state = call.data[ATTR_LOCK_STATE]
-
-        if state == LockState.UNLOCKED.name.lower():
-            await surepy.sac.unlock(flap_id)
-        elif state == LockState.LOCKED_IN.name.lower():
-            await surepy.sac.lock_in(flap_id)
-        elif state == LockState.LOCKED_OUT.name.lower():
-            await surepy.sac.lock_out(flap_id)
-        elif state == LockState.LOCKED_ALL.name.lower():
-            await surepy.sac.lock(flap_id)
-        else:
-            return
+        await lock_states[state](flap_id)
         await coordinator.async_request_refresh()
 
     lock_state_service_schema = vol.Schema(
@@ -128,14 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Required(ATTR_LOCK_STATE): vol.All(
                 cv.string,
                 vol.Lower,
-                vol.In(
-                    [
-                        LockState.UNLOCKED.name.lower(),
-                        LockState.LOCKED_IN.name.lower(),
-                        LockState.LOCKED_OUT.name.lower(),
-                        LockState.LOCKED_ALL.name.lower(),
-                    ]
-                ),
+                vol.In(lock_states.keys()),
             ),
         }
     )
