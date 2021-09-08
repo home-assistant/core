@@ -18,6 +18,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.components.recorder.common import wait_recording_done
 
@@ -194,22 +195,29 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
 
 @pytest.mark.parametrize("state_class", ["measurement", "total"])
 @pytest.mark.parametrize(
-    "device_class,unit,native_unit,factor",
+    "units,device_class,unit,display_unit,factor",
     [
-        ("energy", "kWh", "kWh", 1),
-        ("energy", "Wh", "kWh", 1 / 1000),
-        ("monetary", "EUR", "EUR", 1),
-        ("monetary", "SEK", "SEK", 1),
-        ("gas", "m³", "m³", 1),
-        ("gas", "ft³", "m³", 0.0283168466),
+        (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", 1),
+        (IMPERIAL_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
+        (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", 1),
+        (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", 1),
+        (IMPERIAL_SYSTEM, "gas", "m³", "ft³", 35.314666711),
+        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", 1),
+        (METRIC_SYSTEM, "energy", "kWh", "kWh", 1),
+        (METRIC_SYSTEM, "energy", "Wh", "kWh", 1 / 1000),
+        (METRIC_SYSTEM, "monetary", "EUR", "EUR", 1),
+        (METRIC_SYSTEM, "monetary", "SEK", "SEK", 1),
+        (METRIC_SYSTEM, "gas", "m³", "m³", 1),
+        (METRIC_SYSTEM, "gas", "ft³", "m³", 0.0283168466),
     ],
 )
 def test_compile_hourly_sum_statistics_amount(
-    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+    hass_recorder, caplog, units, state_class, device_class, unit, display_unit, factor
 ):
     """Test compiling hourly statistics."""
     zero = dt_util.utcnow()
     hass = hass_recorder()
+    hass.config.units = units
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     attributes = {
@@ -236,7 +244,7 @@ def test_compile_hourly_sum_statistics_amount(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {"statistic_id": "sensor.test1", "unit_of_measurement": display_unit}
     ]
     stats = statistics_during_period(hass, zero)
     assert stats == {
