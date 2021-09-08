@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     DOMAIN,
@@ -88,7 +88,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: DEFAULT_USER,
             CONF_SSL: False,
         }
-        self.discoverd = False
+        self.discovered = False
 
     @staticmethod
     @callback
@@ -103,7 +103,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             user_input = {}
 
-        if self.discoverd:
+        if self.discovered:
             data_schema = _discovery_schema_with_defaults(user_input)
         else:
             data_schema = _user_schema_with_defaults(user_input)
@@ -136,7 +136,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
         self.placeholders.update(updated_data)
-        self.discoverd = True
+        self.discovered = True
 
         self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
         return await self.async_step_user()
@@ -168,8 +168,8 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         # Check if already configured
-        infos = await self.hass.async_add_executor_job(api.get_info)
-        await self.async_set_unique_id(infos["SerialNumber"], raise_on_progress=False)
+        info = await self.hass.async_add_executor_job(api.get_info)
+        await self.async_set_unique_id(info["SerialNumber"], raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         config_data = {
@@ -181,6 +181,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_create_entry(
-            title=f"{infos['ModelName']} - {infos['DeviceName']}",
+            title=f"{info['ModelName']} - {info['DeviceName']}",
             data=config_data,
         )

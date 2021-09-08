@@ -72,27 +72,15 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Initialize a Netgear device."""
         super().__init__(router, device)
         self._attribute = attribute
-        self._discription = SENSOR_TYPES[self._attribute]
-        self._name = f"{self.get_device_name()} {self._discription.name}"
+        self.entity_description = SENSOR_TYPES[self._attribute]
+        self._name = f"{self.get_device_name()} {self.entity_description.name}"
         self._unique_id = f"{self._mac}-{self._attribute}"
-        self._device_class = self._discription.device_class
-        self._unit = self._discription.native_unit_of_measurement
         self._state = self._device[self._attribute]
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._unit
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
 
     @callback
     def async_update_device(self) -> None:
