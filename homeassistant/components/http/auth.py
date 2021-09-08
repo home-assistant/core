@@ -45,7 +45,7 @@ def async_sign_path(
         secret,
         algorithm="HS256",
     )
-    return f"{path}?{SIGN_QUERY_PARAM}={encoded.decode()}"
+    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
 
 
 @callback
