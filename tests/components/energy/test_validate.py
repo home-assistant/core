@@ -383,15 +383,6 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
             },
         ),
         (
-            "-100",
-            "$/kWh",
-            {
-                "type": "entity_negative_state",
-                "identifier": "sensor.grid_price_1",
-                "value": -100.0,
-            },
-        ),
-        (
             "123",
             "$/Ws",
             {
@@ -414,7 +405,7 @@ async def test_validation_grid_price_errors(
     hass.states.async_set(
         "sensor.grid_price_1",
         state,
-        {"unit_of_measurement": unit, "state_class": "total_increasing"},
+        {"unit_of_measurement": unit, "state_class": "measurement"},
     )
     await mock_energy_manager.async_update(
         {
