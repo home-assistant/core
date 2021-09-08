@@ -1,8 +1,7 @@
 {
   "domain": "homewizard_energy",
   "name": "HomeWizard Energy",
-  "documentation": "https://github.com/DCSBL/ha-homewizard-energy",
-  "issue_tracker": "https://github.com/DCSBL/ha-homewizard-energy/issues",
+  "documentation": "https://www.home-assistant.io/integrations/homewizard_energy",
   "codeowners": ["@DCSBL"],
   "dependencies": ["zeroconf"],
   "requirements": ["aiohwenergy==0.4.0"],
