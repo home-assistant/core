@@ -18,20 +18,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "temperature": SensorEntityDescription(
         key=DEVICE_CLASS_TEMPERATURE,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
-    SensorEntityDescription(
+    "humidity": SensorEntityDescription(
         key=DEVICE_CLASS_HUMIDITY,
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
     ),
-)
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = [
         KonnectedSensor(device_id, data=sensor_config, description=description)
         for sensor_config in dht_sensors
-        for description in SENSOR_TYPES
+        for description in SENSOR_TYPES.values()
     ]
 
     async_add_entities(entities)
@@ -70,7 +70,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 KonnectedSensor(
                     device_id,
                     sensor_config,
-                    SENSOR_TYPES[0],
+                    SENSOR_TYPES["temperature"],
                     addr=attrs.get("addr"),
                     initial_state=attrs.get("temp"),
                 )
