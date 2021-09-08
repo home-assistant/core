@@ -17,6 +17,7 @@ from .common import (
     find_entity_id,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import mock_coro
 
@@ -27,9 +28,9 @@ def zigpy_analog_output_device(zigpy_device_mock):
 
     endpoints = {
         1: {
-            "device_type": zigpy.profiles.zha.DeviceType.LEVEL_CONTROL_SWITCH,
-            "in_clusters": [general.AnalogOutput.cluster_id, general.Basic.cluster_id],
-            "out_clusters": [],
+            SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.LEVEL_CONTROL_SWITCH,
+            SIG_EP_INPUT: [general.AnalogOutput.cluster_id, general.Basic.cluster_id],
+            SIG_EP_OUTPUT: [],
         }
     }
     return zigpy_device_mock(endpoints)

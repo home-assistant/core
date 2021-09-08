@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.profiles
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
 import zigpy.zcl.foundation as zcl_f
@@ -51,74 +52,79 @@ from homeassistant.components.zha.core.const import PRESET_COMPLEX, PRESET_SCHED
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 CLIMATE = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 
 CLIMATE_FAN = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Fan.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 
 CLIMATE_SINOPE = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
             65281,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id, 65281],
-        "profile_id": 260,
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id, 65281],
     },
 }
 
 CLIMATE_ZEN = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Fan.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 
 CLIMATE_MOES = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.THERMOSTAT,
-        "in_clusters": [
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+        SIG_EP_INPUT: [
             zigpy.zcl.clusters.general.Basic.cluster_id,
             zigpy.zcl.clusters.general.Identify.cluster_id,
             zigpy.zcl.clusters.hvac.Thermostat.cluster_id,
             zigpy.zcl.clusters.hvac.UserInterface.cluster_id,
             61148,
         ],
-        "out_clusters": [zigpy.zcl.clusters.general.Ota.cluster_id],
+        SIG_EP_OUTPUT: [zigpy.zcl.clusters.general.Ota.cluster_id],
     }
 }
 MANUF_SINOPE = "Sinope Technologies"

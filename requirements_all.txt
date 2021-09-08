@@ -243,7 +243,7 @@ aiorecollect==1.0.8
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.4
+aioswitcher==2.0.5
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -760,7 +760,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.47.1
+hass-nabucasa==0.49.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
@@ -1194,7 +1194,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.2.0
+pillow==8.3.2
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1954,9 +1954,6 @@ pytouchline==0.7
 # homeassistant.components.traccar
 pytraccar==0.9.0
 
-# homeassistant.components.trackr
-pytrackr==0.0.5
-
 # homeassistant.components.tradfri
 pytradfri[async]==7.0.6
 
@@ -2486,4 +2483,4 @@ zigpy==0.37.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.29.1
+zwave-js-server-python==0.30.0
