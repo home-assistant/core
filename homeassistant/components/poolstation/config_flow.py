@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from pypoolstation import Account  # , AuthenticationException
+from pypoolstation import Account, AuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,9 +13,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, TOKEN
-
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,22 +46,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("#### poolstation: About to attempt login!!!!")
             token = await account.login()
         except ClientResponseError:
-            # errors["base"] = "cannot_connect"
-            _LOGGER.info("#### poolstation: Login failed")
-            errors[
-                "base"
-            ] = "invalid_auth"  # TODO: Not all errors should be considered auth errors
-        # except AuthenticationException:
-        #     errors["base"] = "invalid_auth"
+            errors["base"] = "cannot_connect"
+        except AuthenticationException:
+            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            _LOGGER.info("#### poolstation: Login failed")
-            _LOGGER.info(f"#### poolstation: user_input is {user_input}")
             await self.async_set_unique_id(user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
-            _LOGGER.info(f"#### poolstation: token is {token}")
             return self.async_create_entry(
                 title=user_input[CONF_EMAIL],
                 data={TOKEN: token},

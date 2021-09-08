@@ -21,10 +21,6 @@ PH_SUFFIX = " PH"
 TEMPERATURE_SUFFIX = " Temperature"
 SALT_SUFFIX = " Salt concentration"
 ELECTROLYSIS_SUFFIX = " Electrolysis"
-# BATTERY_SUFFIX = " Battery"
-# PERFUME_SUFFIX = " Perfume"
-# FILL_SUFFIX = " Fill"
-# WIFI_SUFFIX = " Wifi"
 
 
 async def async_setup_entry(

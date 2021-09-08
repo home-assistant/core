@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import COORDINATORS, DEVICES, DOMAIN, TOKEN
 
-# TODO: Add binary sensors for the 4 inputs. Info is in vars['d1'], vars['d2'], vars['d3'], vars['d4']
 PLATFORMS = ["sensor", "number", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         pools = await Pool.all(account=account)
     except aiohttp.ClientError as err:
-        _LOGGER.info("#### Poolstation: error pulling all pools")
         raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
