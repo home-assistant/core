@@ -215,7 +215,12 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                 metadata_id = _update_or_add_metadata(
                     instance.hass, session, entity_id, stat["meta"]
                 )
-                session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+                try:
+                    session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+                except Exception:
+                    _LOGGER.exception(
+                        "Unexpected exception when inserting statistics %s"
+                    )
         session.add(StatisticsRuns(start=start))
 
     return True
