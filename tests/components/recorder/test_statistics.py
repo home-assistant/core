@@ -3,11 +3,15 @@
 from datetime import timedelta
 from unittest.mock import patch, sentinel
 
+import pytest
 from pytest import approx
 
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    Statistics,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
@@ -92,6 +96,105 @@ def test_compile_hourly_statistics(hass_recorder):
 
     stats = get_last_statistics(hass, 1, "sensor.test3")
     assert stats == {}
+
+
+@pytest.fixture
+def mock_sensor_statistics():
+    """Generate some fake statistics."""
+    sensor_stats = {
+        "meta": {"unit_of_measurement": "dogs", "has_mean": True, "has_sum": False},
+        "stat": {},
+    }
+
+    def get_fake_stats():
+        return {
+            "sensor.test1": sensor_stats,
+            "sensor.test2": sensor_stats,
+            "sensor.test3": sensor_stats,
+        }
+
+    with patch(
+        "homeassistant.components.sensor.recorder.compile_statistics",
+        return_value=get_fake_stats(),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_from_stats():
+    """Mock out Statistics.from_stats."""
+    counter = 0
+    real_from_stats = Statistics.from_stats
+
+    def from_stats(metadata_id, start, stats):
+        nonlocal counter
+        if counter == 0 and metadata_id == 2:
+            counter += 1
+            return None
+        return real_from_stats(metadata_id, start, stats)
+
+    with patch(
+        "homeassistant.components.recorder.statistics.Statistics.from_stats",
+        side_effect=from_stats,
+        autospec=True,
+    ):
+        yield
+
+
+def test_compile_hourly_statistics_exception(
+    hass_recorder, mock_sensor_statistics, mock_from_stats
+):
+    """Test exception handling when compiling hourly statistics."""
+
+    def mock_from_stats():
+        raise ValueError
+
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+
+    now = dt_util.utcnow()
+    recorder.do_adhoc_statistics(period="hourly", start=now)
+    recorder.do_adhoc_statistics(period="hourly", start=now + timedelta(hours=1))
+    wait_recording_done(hass)
+    expected_1 = {
+        "statistic_id": "sensor.test1",
+        "start": process_timestamp_to_utc_isoformat(now),
+        "mean": None,
+        "min": None,
+        "max": None,
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+    }
+    expected_2 = {
+        "statistic_id": "sensor.test1",
+        "start": process_timestamp_to_utc_isoformat(now + timedelta(hours=1)),
+        "mean": None,
+        "min": None,
+        "max": None,
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+    }
+    expected_stats1 = [
+        {**expected_1, "statistic_id": "sensor.test1"},
+        {**expected_2, "statistic_id": "sensor.test1"},
+    ]
+    expected_stats2 = [
+        {**expected_2, "statistic_id": "sensor.test2"},
+    ]
+    expected_stats3 = [
+        {**expected_1, "statistic_id": "sensor.test3"},
+        {**expected_2, "statistic_id": "sensor.test3"},
+    ]
+
+    stats = statistics_during_period(hass, now)
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.test3": expected_stats3,
+    }
 
 
 def test_rename_entity(hass_recorder):
