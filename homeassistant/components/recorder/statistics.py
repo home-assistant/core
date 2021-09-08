@@ -220,7 +220,9 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                     session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
                 except SQLAlchemyError:
                     _LOGGER.exception(
-                        "Unexpected exception when inserting statistics %s"
+                        "Unexpected exception when inserting statistics %s:%s ",
+                        metadata_id,
+                        stat,
                     )
         session.add(StatisticsRuns(start=start))
 
