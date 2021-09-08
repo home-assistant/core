@@ -15,7 +15,6 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     CONF_ACCESS_TOKEN,
-    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
@@ -53,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_TOKEN): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
@@ -104,7 +103,7 @@ async def async_setup(hass, base_config):
     if not config:
         return True
     email = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
+    token = config[CONF_TOKEN]
     scan_interval = config[CONF_SCAN_INTERVAL]
     if email in _async_configured_emails(hass):
         try:
@@ -115,7 +114,6 @@ async def async_setup(hass, base_config):
             email,
             data={
                 CONF_USERNAME: email,
-                CONF_PASSWORD: password,
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
                 CONF_EXPIRATION: info[CONF_EXPIRATION],
@@ -127,7 +125,7 @@ async def async_setup(hass, base_config):
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data={CONF_USERNAME: email, CONF_PASSWORD: password},
+                data={CONF_USERNAME: email, CONF_TOKEN: token},
             )
         )
         hass.data.setdefault(DOMAIN, {})
@@ -152,7 +150,6 @@ async def async_setup_entry(hass, config_entry):
         controller = TeslaAPI(
             async_client,
             email=config.get(CONF_USERNAME),
-            password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
             expiration=config.get(CONF_EXPIRATION, 0),

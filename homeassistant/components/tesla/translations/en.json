@@ -14,9 +14,10 @@
                 "data": {
                     "mfa": "MFA Code (Optional)",
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Email",
+                    "token": "Refresh Token"
                 },
-                "description": "Please enter your information.",
+                "description": "Use 'Auth App for Tesla' on iOS or 'Tesla Tokens' on Android\r\n to create a refresh token and enter it below.",
                 "title": "Tesla - Configuration"
             }
         }

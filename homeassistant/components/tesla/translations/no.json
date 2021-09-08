@@ -16,7 +16,7 @@
                     "password": "Passord",
                     "username": "E-post"
                 },
-                "description": "Vennligst fyll inn din informasjonen.",
+                "description": "Bruk 'Auth App for Tesla' på iOS eller 'Tesla Tokens' på Android for å generere et 'refresh token' du kan bruke her.",
                 "title": "Tesla - Konfigurasjon"
             }
         }
