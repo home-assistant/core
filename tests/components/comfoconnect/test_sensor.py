@@ -19,7 +19,7 @@ VALID_CONFIG = {
             "current_temperature",
             "supply_fan_duty",
             "power_usage",
-            "preheater_energy_total",
+            "preheater_power_total",
         ],
     },
 }
