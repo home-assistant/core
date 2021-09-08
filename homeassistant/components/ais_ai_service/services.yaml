@@ -1,6 +1,6 @@
 # Describes the format for available ADS services
 mob_notify:
-  description: 'Wysłanie powiadomienia push do aplikacji mobilnej.'
+  description: 'Wysłanie powiadomienia do aplikacji AIS-dom.'
   fields:
     device_id:
       description: 'Identyfikator urządzenia.'
