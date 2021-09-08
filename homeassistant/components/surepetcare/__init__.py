@@ -144,7 +144,7 @@ class SurePetcareAPI:
         """Get the latest data from Sure Petcare."""
 
         try:
-            self.states = await self.surepy.get_entities()
+            self.states = await self.surepy.get_entities(refresh=True)
         except SurePetcareError as error:
             _LOGGER.error("Unable to fetch data: %s", error)
             return
