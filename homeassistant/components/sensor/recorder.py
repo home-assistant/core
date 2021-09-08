@@ -176,12 +176,12 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
 
 
-def _parse_float(s: str) -> float:
+def _parse_float(state: str) -> float:
     """Parse a float string, throw on inf or nan."""
-    val = float(s)
-    if math.isnan(val) or math.isinf(val):
+    fstate = float(state)
+    if math.isnan(fstate) or math.isinf(fstate):
         raise ValueError
-    return val
+    return fstate
 
 
 def _normalize_states(
