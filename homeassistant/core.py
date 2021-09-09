@@ -462,31 +462,38 @@ class HomeAssistant:
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
         start_time: float | None = None
+        log = _LOGGER.isEnabledFor(logging.DEBUG)
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks if not task.done()]
             self._pending_tasks.clear()
-            if pending:
-                await self._await_and_log_pending(pending)
-
-                if start_time is None:
-                    # Avoid calling monotonic() until we know
-                    # we may need to start logging blocked tasks.
-                    start_time = 0
-                elif start_time == 0:
-                    # If we have waited twice then we set the start
-                    # time
-                    start_time = monotonic()
-                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
-                    # We have waited at least three loops and new tasks
-                    # continue to block. At this point we start
-                    # logging all waiting tasks.
-                    for task in pending:
-                        _LOGGER.debug("Waiting for task: %s", task)
-            else:
+            if not pending:
                 await asyncio.sleep(0)
+                continue
 
-    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+            await self._await_and_log_pending(pending, log)
+
+            if start_time is None:
+                # Avoid calling monotonic() until we know
+                # we may need to start logging blocked tasks.
+                start_time = 0
+            elif start_time == 0:
+                # If we have waited twice then we set the start
+                # time
+                start_time = monotonic()
+            elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                # We have waited at least three loops and new tasks
+                # continue to block. At this point we start
+                # logging all waiting tasks.
+                if log:
+                    for task in pending:
+                        _LOGGER.debug(
+                            "Waiting for task: %s: %s", task, task.get_stack()
+                        )
+
+    async def _await_and_log_pending(
+        self, pending: Iterable[Awaitable[Any]], log: bool
+    ) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
@@ -494,8 +501,14 @@ class HomeAssistant:
             if not pending:
                 return
             wait_time += BLOCK_LOG_TIMEOUT
-            for task in pending:
-                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
+            if log:
+                for task in pending:
+                    _LOGGER.debug(
+                        "Waited %s seconds for task: %s: %s",
+                        wait_time,
+                        task,
+                        task.get_stack(),
+                    )
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
