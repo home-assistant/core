@@ -29,10 +29,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the pool numbers."""
-    diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
+    pools = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
     entities: list[PoolEntity] = []
-    for pool_id, pool in diffusers.items():
+    for pool_id, pool in pools.items():
         coordinator = coordinators[pool_id]
         entities.append(PoolTargetPh(pool, coordinator))
         entities.append(PoolTargetElectrolysisProduction(pool, coordinator))

@@ -33,17 +33,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        errors: dict[str, str]
 
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
-            )
-
+            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        errors = {}
         account = Account(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
 
         try:
-            _LOGGER.info("#### poolstation: About to attempt login!!!!")
             token = await account.login()
         except ClientResponseError:
             errors["base"] = "cannot_connect"

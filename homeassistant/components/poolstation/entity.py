@@ -37,5 +37,4 @@ class PoolEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return True  # for now, IDK if I can tell or not.
-        # return super().available and self._diffuser.is_online
+        return super().available  # for now, IDK if I can tell or not.

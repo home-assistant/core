@@ -33,12 +33,12 @@ async def async_setup_entry(
 
 
 class PoolRelaySwitch(PoolEntity, SwitchEntity):
-    """Representation of a diffuser switch."""
+    """Representation of a pool relay switch."""
 
     def __init__(
         self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator, relay: Relay
     ) -> None:
-        """Initialize the diffuser switch."""
+        """Initialize the pool relay switch."""
         super().__init__(pool, coordinator, f" Relay {relay.name}")
         self.relay = relay
         self._attr_is_on = self.relay.active
