@@ -111,7 +111,6 @@ def setup_platform(
 
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        _LOGGER.warning(variable)
         if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
             url_string = f"{_RESOURCE}getCurrentValuesSummary?token={app_token}"
             response = requests.get(url_string, timeout=10)
@@ -154,7 +153,6 @@ class EfergySensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        _LOGGER.warning(description)
         self.sid = sid
         if sid:
             self._attr_name = f"efergy_{sid}"
