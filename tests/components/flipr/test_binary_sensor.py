@@ -1,15 +1,9 @@
-"""Test the Flipr sensor and binary sensor."""
+"""Test the Flipr binary sensor."""
 from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
-from homeassistant.const import (
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -29,7 +23,7 @@ MOCK_FLIPR_MEASURE = {
 
 
 async def test_sensors(hass: HomeAssistant) -> None:
-    """Test the creation and values of the Flipr sensors."""
+    """Test the creation and values of the Flipr binary sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test_entry_unique_id",
@@ -52,38 +46,8 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Check entity unique_id value that is generated in FliprEntity base class.
-    entity = registry.async_get("sensor.flipr_myfliprid_red_ox")
-    assert entity.unique_id == "myfliprid-red_ox"
-
-    state = hass.states.get("sensor.flipr_myfliprid_ph")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:pool"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "7.03"
-
-    state = hass.states.get("sensor.flipr_myfliprid_water_temp")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is TEMP_CELSIUS
-    assert state.state == "10.5"
-
-    state = hass.states.get("sensor.flipr_myfliprid_last_measured")
-    assert state
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2021-02-15T09:10:32+00:00"
-
-    state = hass.states.get("sensor.flipr_myfliprid_red_ox")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:pool"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
-    assert state.state == "657.58"
-
-    state = hass.states.get("sensor.flipr_myfliprid_chlorine")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:pool"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
-    assert state.state == "0.23654886"
+    entity = registry.async_get("binary_sensor.flipr_myfliprid_ph_status")
+    assert entity.unique_id == "myfliprid-ph_status"
 
     state = hass.states.get("binary_sensor.flipr_myfliprid_ph_status")
     assert state
