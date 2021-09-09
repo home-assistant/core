@@ -710,21 +710,12 @@ async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
         MockModule(
             domain="normal_integration",
             async_setup=gen_domain_setup("normal_integration"),
-            partial_manifest={"after_dependencies": ["an_after_dep"]},
-        ),
-    )
-    mock_integration(
-        hass,
-        MockModule(
-            domain="an_after_dep",
-            async_setup=gen_domain_setup("an_after_dep"),
+            partial_manifest={},
         ),
     )
 
     with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
-        await bootstrap._async_set_up_integrations(
-            hass, {"normal_integration": {}, "an_after_dep": {}}
-        )
+        await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
         await hass.async_block_till_done()
 
     assert "Setup timed out for bootstrap - moving forward" in caplog.text
