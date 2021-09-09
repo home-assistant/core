@@ -560,8 +560,7 @@ def validate_statistics(
         device_class,
     ) in entities:
         state = hass.states.get(entity_id)
-        if not state:
-            continue
+        assert state is not None
 
         metadata = statistics.get_metadata(hass, entity_id)
         if not metadata:
