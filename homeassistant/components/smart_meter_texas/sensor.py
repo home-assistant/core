@@ -2,7 +2,7 @@
 from smart_meter_texas import Meter
 
 from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
-from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CONF_ADDRESS, DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import (
@@ -33,6 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
+    _attr_device_class = DEVICE_CLASS_ENERGY
     _attr_state_class = STATE_CLASS_TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
