@@ -5,6 +5,8 @@ import os
 
 from serial.tools.list_ports_common import ListPortInfo
 
+from homeassistant.components import usb
+
 from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
 
 
@@ -24,9 +26,14 @@ def list_ports_as_str(
 
     for port in serial_ports:
         ports_as_string.append(
-            f"{port.device}"
-            + f" - {port.product}"
-            + f" - {format(port.vid, 'x')}:{format(port.pid, 'x')}"
+            usb.human_readable_device_name(
+                port.device,
+                port.serial_number,
+                port.manufacturer,
+                port.description,
+                port.vid,
+                port.pid,
+            )
         )
     ports_as_string.append(MANUAL_PATH)
     ports_as_string.append(REFRESH_LIST)

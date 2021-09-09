@@ -12,6 +12,7 @@ import pytest
 from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import data_entry_flow
+from homeassistant.components import usb
 from homeassistant.components.crownstone.const import (
     CONF_USB_MANUAL_PATH,
     CONF_USB_PATH,
@@ -62,7 +63,9 @@ def get_mocked_com_port():
     """Mock of a serial port."""
     port = ListPortInfo("/dev/ttyUSB1234")
     port.device = "/dev/ttyUSB1234"
-    port.product = "Crownstone dongle"
+    port.serial_number = "1234567"
+    port.manufacturer = "crownstone"
+    port.description = "crownstone dongle - crownstone dongle"
     port.vid = 1234
     port.pid = 5678
 
@@ -228,10 +231,13 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
 
     # create a mocked port
     port = get_mocked_com_port()
-    port_select = (
-        f"{port.device}"
-        + f" - {port.product}"
-        + f" - {format(port.vid, 'x')}:{format(port.pid, 'x')}"
+    port_select = usb.human_readable_device_name(
+        port.device,
+        port.serial_number,
+        port.manufacturer,
+        port.description,
+        port.vid,
+        port.pid,
     )
 
     # select a port from the list
@@ -335,10 +341,13 @@ async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistan
 
     # create a mocked port
     port = get_mocked_com_port()
-    port_select = (
-        f"{port.device}"
-        + f" - {port.product}"
-        + f" - {format(port.vid, 'x')}:{format(port.pid, 'x')}"
+    port_select = usb.human_readable_device_name(
+        port.device,
+        port.serial_number,
+        port.manufacturer,
+        port.description,
+        port.vid,
+        port.pid,
     )
 
     # select a port from the list
