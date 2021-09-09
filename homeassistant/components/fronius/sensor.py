@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_RESOURCE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,6 +57,10 @@ async def async_setup_entry(
         fronius.meter_coordinator.add_entities_for_seen_keys(
             async_add_entities, MeterSensor
         )
+    if fronius.storage_coordinator is not None:
+        fronius.storage_coordinator.add_entities_for_seen_keys(
+            async_add_entities, StorageSensor
+        )
 
 
 class MeterSensor(FroniusEntity, SensorEntity):
@@ -85,13 +89,23 @@ class MeterSensor(FroniusEntity, SensorEntity):
             f'{meter_data["serial"]["value"]}-{self.entity_description.key}'
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        try:
-            self._attr_native_value = self._device_data[self.entity_description.key][
-                "value"
-            ]
-        except KeyError:
-            return
-        self.async_write_ha_state()
+
+class StorageSensor(FroniusEntity, SensorEntity):
+    """Defines a Fronius storage device sensor entity."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Set up an individual Fronius storage sensor."""
+        super().__init__(*args, **kwargs)
+        storage_data = self._device_data
+
+        self._attr_device_info = DeviceInfo(
+            name=storage_data["model"]["value"],
+            identifiers={(DOMAIN, storage_data["serial"]["value"])},
+            manufacturer=storage_data["manufacturer"]["value"],
+            model=storage_data["model"]["value"],
+            # TODO: via_device? entry_type?
+        )
+        self._attr_native_value = storage_data[self.entity_description.key]["value"]
+        self._attr_unique_id = (
+            f'{storage_data["serial"]["value"]}-{self.entity_description.key}'
+        )

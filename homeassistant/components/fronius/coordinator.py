@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import SolarNetId
-from .descriptions import METER_ENTITY_DESCRIPTIONS
+from .descriptions import METER_ENTITY_DESCRIPTIONS, STORAGE_ENTITY_DESCRIPTIONS
 
 
 class _FroniusSystemUpdateCoordinator(
@@ -89,6 +89,17 @@ class FroniusMeterUpdateCoordinator(_FroniusSystemUpdateCoordinator):
         return data["meters"]
 
 
+class FroniusStorageUpdateCoordinator(_FroniusSystemUpdateCoordinator):
+    """Query Fronius system storage endpoint and keep track of seen conditions."""
+
+    valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
+
+    @staticmethod
+    def _get_fronius_device_data(data: dict[str, Any]) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from raw data."""
+        return data["storages"]
+
+
 # class FroniusInverterUpdateCoordinator(DataUpdateCoordinator):
 #     """Query Fronius endpoint and keep track of seen conditions."""
 
@@ -126,3 +137,14 @@ class FroniusEntity(CoordinatorEntity):
     @property
     def _device_data(self) -> dict[str, Any]:
         return self.coordinator.data[self.solar_net_id]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        try:
+            self._attr_native_value = self._device_data[self.entity_description.key][
+                "value"
+            ]
+        except KeyError:
+            return
+        self.async_write_ha_state()

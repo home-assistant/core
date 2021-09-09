@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .coordinator import FroniusMeterUpdateCoordinator
+from .coordinator import FroniusMeterUpdateCoordinator, FroniusStorageUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = ["sensor"]
@@ -57,6 +57,7 @@ class FroniusSolarNet:
 
         self.bridge: Fronius = self._init_bridge()
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
+        self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
 
     @callback
     def _init_bridge(self) -> Fronius:
@@ -67,7 +68,6 @@ class FroniusSolarNet:
     async def init_devices(self):
         """Initialize DataUpdateCoordinators for SolarNet devices."""
         # inverter_count = await self._get_inverter_unique_ids()
-        # await self._setup_meter_coordinator()
         self.meter_coordinator = await self.init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
                 hass=self.hass,
@@ -77,15 +77,15 @@ class FroniusSolarNet:
                 update_method=self.bridge.current_system_meter_data,
             )
         )
-        # self.storage_coordinator = await self.init_optional_coordinator(
-        #     FroniusStorageUpdateCoordinator(
-        #         hass=self.hass,
-        #         logger=_LOGGER,
-        #         name=f"{DOMAIN}_storages",
-        #         update_interval=self.update_interval,
-        #         update_method=self.bridge.current_system_storage_data,
-        #     )
-        # )
+        self.storage_coordinator = await self.init_optional_coordinator(
+            FroniusStorageUpdateCoordinator(
+                hass=self.hass,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_storages",
+                update_interval=self.update_interval,
+                update_method=self.bridge.current_system_storage_data,
+            )
+        )
 
         # power_flow
         # logger_info
@@ -123,22 +123,3 @@ class FroniusSolarNet:
         # else ConfigEntryNotReady raised form KeyError
         # in FroniusMeterUpdateCoordinator._get_fronius_device_data
         return coordinator
-
-    # async def _setup_storage_coordinator(self) -> None:
-    #     """Initialize an update coordinator for storages if storages are found."""
-    # coordinator = FroniusStorageUpdateCoordinator(
-    #     hass=self.hass,
-    #     logger=_LOGGER,
-    #     name=f"{DOMAIN}_storages",
-    #     update_interval=self.update_interval,
-    #     update_method=self.bridge.current_system_storage_data,
-    # )
-    #     try:
-    #         await coordinator.async_config_entry_first_refresh()
-    #     except ConfigEntryNotReady:
-    #         # TODO: do we have to clean up the coordinator if not used?
-    #         return
-    #     # keep coordinator only if storages are found
-    #     # else ConfigEntryNotReady raised form KeyError
-    #     # in FroniusStorageUpdateCoordinator._get_fronius_device_data
-    #     self.storage_coordinator = coordinator

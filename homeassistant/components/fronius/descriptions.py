@@ -7,19 +7,25 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
+    PERCENTAGE,
     POWER_VOLT_AMPERE,
     POWER_WATT,
+    TEMP_CELSIUS,
 )
 
+# TODO: [homeassistant.components.sensor.recorder] sensor.power_reactive_phase_1 has unknown unit VAr
+AMPERE_HOURS = "Ah"
 VOLTAMPEREREACTIVE = "VAr"
 VOLTAMPEREREACTIVE_HOUR = "VArh"
 
@@ -242,6 +248,61 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         name="Voltage AC phase 3-1",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+}
+
+STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "capacity_maximum": SensorEntityDescription(
+        key="capacity_maximum",
+        name="Capacity maximum",
+        native_unit_of_measurement=AMPERE_HOURS,
+    ),
+    "capacity_designed": SensorEntityDescription(
+        key="capacity_designed",
+        name="Capacity designed",
+        native_unit_of_measurement=AMPERE_HOURS,
+    ),
+    "current_dc": SensorEntityDescription(
+        key="current_dc",
+        name="Current DC",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage_dc": SensorEntityDescription(
+        key="voltage_dc",
+        name="Voltage DC",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage_dc_maximum_cell": SensorEntityDescription(
+        key="voltage_dc_maximum_cell",
+        name="Voltage DC maximum cell",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage_dc_minimum_cell": SensorEntityDescription(
+        key="voltage_dc_minimum_cell",
+        name="Voltage DC minimum cell",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "state_of_charge": SensorEntityDescription(
+        key="state_of_charge",
+        name="State of charge",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_BATTERY,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "temperature_cell": SensorEntityDescription(
+        key="temperature_cell",
+        name="Temperature cell",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
