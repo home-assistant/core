@@ -101,6 +101,8 @@ def test_compile_hourly_statistics(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -163,6 +165,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ],
         "sensor.test6": [
@@ -175,6 +179,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ],
         "sensor.test7": [
@@ -187,6 +193,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ],
     }
@@ -258,6 +266,8 @@ def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -268,6 +278,8 @@ def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 40.0),
+                "sum_decrease": approx(factor * 10.0),
+                "sum_increase": approx(factor * 50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -278,6 +290,8 @@ def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 70.0),
+                "sum_decrease": approx(factor * 10.0),
+                "sum_increase": approx(factor * 80.0),
             },
         ]
     }
@@ -352,6 +366,8 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
                 "last_reset": process_timestamp_to_utc_isoformat(one),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (sum(seq) - seq[0])),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * (sum(seq) - seq[0])),
             },
         ]
     }
@@ -416,6 +432,10 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
                 "last_reset": process_timestamp_to_utc_isoformat(one),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(
+                    factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])
+                ),
             },
         ]
     }
@@ -478,6 +498,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -488,6 +510,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 30.0),
+                "sum_decrease": approx(factor * 10.0),
+                "sum_increase": approx(factor * 40.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -498,6 +522,8 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 60.0),
+                "sum_decrease": approx(factor * 10.0),
+                "sum_increase": approx(factor * 70.0),
             },
         ]
     }
@@ -558,6 +584,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -568,6 +596,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 50.0),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * 50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -578,6 +608,8 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 80.0),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * 80.0),
             },
         ]
     }
@@ -648,6 +680,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * 10.0),
             },
             {
                 "last_reset": None,
@@ -658,6 +692,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 30.0),
+                "sum_decrease": approx(factor * 1.0),
+                "sum_increase": approx(factor * 31.0),
             },
             {
                 "last_reset": None,
@@ -668,6 +704,8 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 60.0),
+                "sum_decrease": approx(factor * 2.0),
+                "sum_increase": approx(factor * 62.0),
             },
         ]
     }
@@ -735,6 +773,8 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(20.0),
                 "sum": approx(10.0),
+                "sum_decrease": approx(0.0),
+                "sum_increase": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -745,6 +785,8 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
                 "sum": approx(40.0),
+                "sum_decrease": approx(10.0),
+                "sum_increase": approx(50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -755,6 +797,8 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
                 "sum": approx(70.0),
+                "sum_decrease": approx(10.0),
+                "sum_increase": approx(80.0),
             },
         ]
     }
@@ -818,6 +862,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(20.0),
                 "sum": approx(10.0),
+                "sum_decrease": approx(0.0),
+                "sum_increase": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -828,6 +874,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
                 "sum": approx(40.0),
+                "sum_decrease": approx(10.0),
+                "sum_increase": approx(50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -838,6 +886,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
                 "sum": approx(70.0),
+                "sum_decrease": approx(10.0),
+                "sum_increase": approx(80.0),
             },
         ],
         "sensor.test2": [
@@ -850,6 +900,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(130.0),
                 "sum": approx(20.0),
+                "sum_decrease": approx(0.0),
+                "sum_increase": approx(20.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -860,6 +912,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(45.0),
                 "sum": approx(-65.0),
+                "sum_decrease": approx(130.0),
+                "sum_increase": approx(65.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -870,6 +924,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(75.0),
                 "sum": approx(-35.0),
+                "sum_decrease": approx(130.0),
+                "sum_increase": approx(95.0),
             },
         ],
         "sensor.test3": [
@@ -882,6 +938,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
                 "state": approx(5.0 / 1000),
                 "sum": approx(5.0 / 1000),
+                "sum_decrease": approx(0.0 / 1000),
+                "sum_increase": approx(5.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -892,6 +950,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(50.0 / 1000),
                 "sum": approx(60.0 / 1000),
+                "sum_decrease": approx(0.0 / 1000),
+                "sum_increase": approx(60.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -902,6 +962,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(90.0 / 1000),
                 "sum": approx(100.0 / 1000),
+                "sum_decrease": approx(0.0 / 1000),
+                "sum_increase": approx(100.0 / 1000),
             },
         ],
     }
@@ -955,6 +1017,8 @@ def test_compile_hourly_statistics_unchanged(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -987,6 +1051,8 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -1044,6 +1110,8 @@ def test_compile_hourly_statistics_unavailable(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -1194,6 +1262,8 @@ def test_compile_hourly_statistics_changing_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -1220,6 +1290,8 @@ def test_compile_hourly_statistics_changing_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -1325,6 +1397,8 @@ def test_compile_hourly_statistics_changing_units_3(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -1349,6 +1423,8 @@ def test_compile_hourly_statistics_changing_units_3(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -1427,6 +1503,8 @@ def test_compile_hourly_statistics_changing_statistics(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             },
             {
                 "statistic_id": "sensor.test1",
@@ -1437,6 +1515,8 @@ def test_compile_hourly_statistics_changing_statistics(
                 "last_reset": None,
                 "state": approx(30.0),
                 "sum": approx(30.0),
+                "sum_decrease": approx(10.0),
+                "sum_increase": approx(40.0),
             },
         ]
     }

@@ -51,6 +51,8 @@ def test_compile_hourly_statistics(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_2 = {
         "statistic_id": "sensor.test1",
@@ -61,6 +63,8 @@ def test_compile_hourly_statistics(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
@@ -166,6 +170,8 @@ def test_compile_hourly_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_2 = {
         "statistic_id": "sensor.test1",
@@ -176,6 +182,8 @@ def test_compile_hourly_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
@@ -233,6 +241,8 @@ def test_rename_entity(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
