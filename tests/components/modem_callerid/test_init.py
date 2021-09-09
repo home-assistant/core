@@ -5,13 +5,14 @@ from phone_modem import exceptions
 
 from homeassistant.components.modem_callerid.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, _patch_init_modem
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_config(hass):
+async def test_setup_config(hass: HomeAssistant):
     """Test Modem Caller ID setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -24,7 +25,7 @@ async def test_setup_config(hass):
     assert entry.state == ConfigEntryState.LOADED
 
 
-async def test_async_setup_entry_not_ready(hass):
+async def test_async_setup_entry_not_ready(hass: HomeAssistant):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -37,10 +38,12 @@ async def test_async_setup_entry_not_ready(hass):
         side_effect=exceptions.SerialError(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert not hass.data.get(DOMAIN)
 
 
-async def test_unload_config_entry(hass):
+async def test_unload_config_entry(hass: HomeAssistant):
     """Test unload."""
     entry = MockConfigEntry(
         domain=DOMAIN,
