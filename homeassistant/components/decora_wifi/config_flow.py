@@ -25,6 +25,8 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         self.entry = None
 
+    # Disable pylint error about number of arguments in step_user
+    # pylint: disable=arguments-differ
     async def async_step_user(self, user_input=None, errors=None):
         """Prompt for user input to setup decora_wifi."""
 
@@ -73,6 +75,8 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{CONF_TITLE} - {self.data[CONF_USERNAME]}", data=self.data
         )
 
+    # Disable pylint error about number of arguments in step_reauth
+    # pylint: disable=arguments-differ
     async def async_step_reauth(self, user_input=None, errors=None):
         """Re-authenticate a user."""
 
