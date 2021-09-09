@@ -687,3 +687,44 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
 
     assert "normal_integration" in hass.config.components
     assert order == ["an_after_dep", "normal_integration"]
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
+    """Test we log a warning on bootstrap timeout."""
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            await asyncio.sleep(0.1)
+
+            async def _background_task():
+                await asyncio.sleep(0.2)
+
+            await hass.async_create_task(_background_task())
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep",
+            async_setup=gen_domain_setup("an_after_dep"),
+        ),
+    )
+
+    with patch.object(bootstrap, "WRAP_UP_TIMEOUT", 0):
+        await bootstrap._async_set_up_integrations(
+            hass, {"normal_integration": {}, "an_after_dep": {}}
+        )
+        await hass.async_block_till_done()
+
+    assert "Setup timed out for bootstrap - moving forward" in caplog.text
