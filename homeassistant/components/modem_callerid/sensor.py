@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CID, DATA_KEY_API, DEFAULT_NAME, DOMAIN, ICON, SERVICE_REJECT_CALL
 
-# Deprecated in Home Assistant 2021.9
+# Deprecated in Home Assistant 2021.10
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
