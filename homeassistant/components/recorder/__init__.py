@@ -565,7 +565,7 @@ class Recorder(threading.Thread):
             self.queue.put(PerodicCleanupTask())
 
     @callback
-    def async_hourly_statistics(self, now):
+    def async_periodic_statistics(self, now):
         """Trigger the hourly statistics run."""
         start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
@@ -582,9 +582,9 @@ class Recorder(threading.Thread):
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
 
-        # Compile hourly statistics every hour at *:12
+        # Compile short term statistics every 5 minutes
         async_track_time_change(
-            self.hass, self.async_hourly_statistics, minute=12, second=0
+            self.hass, self.async_periodic_statistics, minute=range(3, 60, 5), second=0
         )
 
     def run(self):
@@ -995,20 +995,21 @@ class Recorder(threading.Thread):
     def _schedule_compile_missing_statistics(self, session: Session) -> None:
         """Add tasks for missing statistics runs."""
         now = dt_util.utcnow()
-        last_hour = now.replace(minute=0, second=0, microsecond=0)
+        last_period_minutes = now.minute - now.minute % 5
+        last_period = now.replace(minute=last_period_minutes, second=0, microsecond=0)
         start = now - timedelta(days=self.keep_days)
         start = start.replace(minute=0, second=0, microsecond=0)
 
         # Find the newest statistics run, if any
         if last_run := session.query(func.max(StatisticsRuns.start)).scalar():
-            start = max(start, process_timestamp(last_run) + timedelta(hours=1))
+            start = max(start, process_timestamp(last_run) + timedelta(minutes=5))
 
         # Add tasks
-        while start < last_hour:
-            end = start + timedelta(hours=1)
+        while start < last_period:
+            end = start + timedelta(minutes=5)
             _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
             self.queue.put(StatisticsTask(start))
-            start = start + timedelta(hours=1)
+            start = start + timedelta(minutes=5)
 
     def _end_session(self):
         """End the recorder session."""

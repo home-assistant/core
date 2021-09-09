@@ -700,7 +700,7 @@ def test_auto_statistics(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
-    # Statistics is scheduled to happen at *:12am every hour. Exercise this behavior by
+    # Statistics is scheduled to happen every 5 minutes. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
     # arbitrary year in the future to avoid boundary conditions relative to the current
     # date.
@@ -714,27 +714,27 @@ def test_auto_statistics(hass_recorder):
         "homeassistant.components.recorder.statistics.compile_statistics",
         return_value=True,
     ) as compile_statistics:
-        # Advance one hour, and the statistics task should run
-        test_time = test_time + timedelta(hours=1)
+        # Advance 5 minutes, and the statistics task should run
+        test_time = test_time + timedelta(minutes=5)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
 
         compile_statistics.reset_mock()
 
-        # Advance one hour, and the statistics task should run again
-        test_time = test_time + timedelta(hours=1)
+        # Advance 5 minutes, and the statistics task should run again
+        test_time = test_time + timedelta(minutes=5)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
 
         compile_statistics.reset_mock()
 
-        # Advance less than one full hour. The task should not run.
-        test_time = test_time + timedelta(minutes=50)
+        # Advance less than 5 minutes. The task should not run.
+        test_time = test_time + timedelta(minutes=3)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 0
 
-        # Advance to the next hour, and the statistics task should run again
-        test_time = test_time + timedelta(hours=1)
+        # Advance 5 minutes, and the statistics task should run again
+        test_time = test_time + timedelta(minutes=5)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
 
@@ -754,8 +754,8 @@ def test_statistics_runs_initiated(hass_recorder):
             assert len(statistics_runs) == 1
             last_run = process_timestamp(statistics_runs[0].start)
             assert process_timestamp(last_run) == now.replace(
-                minute=0, second=0, microsecond=0
-            ) - timedelta(hours=1)
+                minute=now.minute - now.minute % 5, second=0, microsecond=0
+            ) - timedelta(minutes=5)
 
 
 def test_compile_missing_statistics(tmpdir):
@@ -776,7 +776,7 @@ def test_compile_missing_statistics(tmpdir):
             statistics_runs = list(session.query(StatisticsRuns))
             assert len(statistics_runs) == 1
             last_run = process_timestamp(statistics_runs[0].start)
-            assert last_run == now - timedelta(hours=1)
+            assert last_run == now - timedelta(minutes=5)
 
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -795,7 +795,7 @@ def test_compile_missing_statistics(tmpdir):
 
         with session_scope(hass=hass) as session:
             statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 2
+            assert len(statistics_runs) == 13  # 12 5-minute runs
             last_run = process_timestamp(statistics_runs[1].start)
             assert last_run == now
 

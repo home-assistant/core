@@ -124,6 +124,7 @@ class LazyState(history_models.LazyState):
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
+        vol.Optional("period"): str,
     }
 )
 @websocket_api.async_response
@@ -157,6 +158,7 @@ async def ws_get_statistics_during_period(
         start_time,
         end_time,
         msg.get("statistic_ids"),
+        msg.get("period"),
     )
     connection.send_result(msg["id"], statistics)
 
