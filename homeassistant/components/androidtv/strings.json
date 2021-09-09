@@ -7,7 +7,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "adbkey": "Path to your ADB key file (leave empty to auto generate)",
-          "adb_server_ip": "IP address of the ADB server",
+          "adb_server_ip": "IP address of the ADB server (leave empty to not use)",
           "adb_server_port": "Port of the ADB server",
           "device_class": "The type of device",
           "port": "[%key:common::config_flow::data::port%]"
@@ -36,8 +36,8 @@
           "exclude_unnamed_apps": "Exclude app with unknown name",
           "screencap": "Determines if album art should be pulled from what is shown on screen",
           "state_detection_rules": "Dictionary of state detection rules (see documentation)",
-          "turn_off_command": "An ADB shell command that will override the default turn_on command.",
-          "turn_on_command": "An ADB shell command that will override the default turn_on command."
+          "turn_off_command": "ADB shell command to override default turn_off command",
+          "turn_on_command": "ADB shell command to override default turn_on command"
         }
       },
       "apps": {
