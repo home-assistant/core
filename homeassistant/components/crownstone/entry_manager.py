@@ -104,7 +104,9 @@ class CrownstoneEntryManager:
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(_async_update_listener)
         )
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_shutdown)
+        self.config_entry.async_on_unload(
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_shutdown)
+        )
 
         return True
 
