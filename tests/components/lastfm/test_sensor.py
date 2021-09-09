@@ -67,7 +67,7 @@ async def test_update_playing(hass, lastfm_network):
     """Test update when song playing."""
 
     lastfm_network.return_value.get_user.return_value = MockUser(
-        Track("artist", "title", None)
+        Track("artist", "title", None, username="test")
     )
 
     assert await async_setup_component(
