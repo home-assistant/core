@@ -383,15 +383,6 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
             },
         ),
         (
-            "-100",
-            "$/kWh",
-            {
-                "type": "entity_negative_state",
-                "identifier": "sensor.grid_price_1",
-                "value": -100.0,
-            },
-        ),
-        (
             "123",
             "$/Ws",
             {
@@ -414,7 +405,7 @@ async def test_validation_grid_price_errors(
     hass.states.async_set(
         "sensor.grid_price_1",
         state,
-        {"unit_of_measurement": unit, "state_class": "total_increasing"},
+        {"unit_of_measurement": unit, "state_class": "measurement"},
     )
     await mock_energy_manager.async_update(
         {
@@ -438,6 +429,62 @@ async def test_validation_grid_price_errors(
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [
             [expected],
+        ],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded):
+    """Test validating gas with sensors for energy and cost/compensation."""
+    mock_is_entity_recorded["sensor.gas_cost_1"] = False
+    mock_is_entity_recorded["sensor.gas_compensation_1"] = False
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption_1",
+                    "stat_cost": "sensor.gas_cost_1",
+                },
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption_2",
+                    "stat_cost": "sensor.gas_cost_2",
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption_1",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption_2",
+        "10.10",
+        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.gas_cost_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/kWh", "state_class": "total_increasing"},
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_gas",
+                    "identifier": "sensor.gas_consumption_1",
+                    "value": "beers",
+                },
+                {
+                    "type": "recorder_untracked",
+                    "identifier": "sensor.gas_cost_1",
+                    "value": None,
+                },
+            ],
+            [],
         ],
         "device_consumption": [],
     }

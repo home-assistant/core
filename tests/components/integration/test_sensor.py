@@ -81,7 +81,6 @@ async def test_restore_state(hass: HomeAssistant) -> None:
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -114,7 +113,6 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": ENERGY_KILO_WATT_HOUR,
         }
     }
 
@@ -123,9 +121,10 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state
-    assert state.state == "0"
-    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
+    assert state.state == "unavailable"
+    assert state.attributes.get("unit_of_measurement") is None
     assert state.attributes.get("state_class") == STATE_CLASS_TOTAL_INCREASING
+
     assert "device_class" not in state.attributes
 
 
