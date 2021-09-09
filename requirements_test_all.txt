@@ -505,7 +505,7 @@ influxdb-client==1.14.0
 influxdb==5.2.3
 
 # homeassistant.components.iotawatt
-iotawattpy==0.0.8
+iotawattpy==0.1.0
 
 # homeassistant.components.gogogate2
 ismartgate==4.0.0
@@ -1274,9 +1274,6 @@ tellduslive==0.10.11
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.10
-
-# homeassistant.components.tesla
-teslajsonpy==0.18.3
 
 # homeassistant.components.toon
 toonapi==0.2.0

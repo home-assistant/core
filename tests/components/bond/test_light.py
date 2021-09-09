@@ -36,6 +36,7 @@ from homeassistant.util import utcnow
 from .common import (
     help_test_entity_available,
     patch_bond_action,
+    patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
     setup_platform,
 )
@@ -306,6 +307,27 @@ async def test_light_set_brightness_belief_full(hass: core.HomeAssistant):
     )
 
 
+async def test_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
 async def test_fp_light_set_brightness_belief_full(hass: core.HomeAssistant):
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
@@ -327,6 +349,27 @@ async def test_fp_light_set_brightness_belief_full(hass: core.HomeAssistant):
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_brightness_belief(brightness=100)
     )
+
+
+async def test_fp_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light_supports_brightness("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_brightnes_not_supported(
@@ -419,6 +462,27 @@ async def test_light_set_power_belief(hass: core.HomeAssistant):
     )
 
 
+async def test_light_set_power_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
 async def test_fp_light_set_power_belief(hass: core.HomeAssistant):
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(
@@ -440,6 +504,27 @@ async def test_fp_light_set_power_belief(hass: core.HomeAssistant):
     mock_bond_action.assert_called_once_with(
         "test-device-id", Action.set_power_state_belief(False)
     )
+
+
+async def test_fp_light_set_power_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_brightnes_not_supported(

@@ -135,16 +135,16 @@ class BondBaseLight(BondEntity, LightEntity):
             raise HomeAssistantError("This device does not support setting brightness")
         if brightness == 0:
             await self.async_set_power_belief(False)
-        else:
-            try:
-                await self._hub.bond.action(
-                    self._device.device_id,
-                    Action.set_brightness_belief(round((brightness * 100) / 255)),
-                )
-            except ClientResponseError as ex:
-                raise HomeAssistantError(
-                    f"The bond API returned an error calling set_brightness_belief {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
-                )
+            return
+        try:
+            await self._hub.bond.action(
+                self._device.device_id,
+                Action.set_brightness_belief(round((brightness * 100) / 255)),
+            )
+        except ClientResponseError as ex:
+            raise HomeAssistantError(
+                f"The bond API returned an error calling set_brightness_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+            ) from ex
 
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the belief state of the light."""
@@ -154,8 +154,8 @@ class BondBaseLight(BondEntity, LightEntity):
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
-                f"The bond API returned an error calling set_light_state_belief {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
-            )
+                f"The bond API returned an error calling set_light_state_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+            ) from ex
 
 
 class BondLight(BondBaseLight, BondEntity, LightEntity):
@@ -292,16 +292,16 @@ class BondFireplace(BondEntity, LightEntity):
             raise HomeAssistantError("This device does not support setting brightness")
         if brightness == 0:
             await self.async_set_power_belief(False)
-        else:
-            try:
-                await self._hub.bond.action(
-                    self._device.device_id,
-                    Action.set_brightness_belief(round((brightness * 100) / 255)),
-                )
-            except ClientResponseError as ex:
-                raise HomeAssistantError(
-                    f"The bond API returned an error calling set_brightness_belief {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
-                )
+            return
+        try:
+            await self._hub.bond.action(
+                self._device.device_id,
+                Action.set_brightness_belief(round((brightness * 100) / 255)),
+            )
+        except ClientResponseError as ex:
+            raise HomeAssistantError(
+                f"The bond API returned an error calling set_brightness_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+            ) from ex
 
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the belief state of the light."""
@@ -311,5 +311,5 @@ class BondFireplace(BondEntity, LightEntity):
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
-                f"The bond API returned an error calling set_power_state_belief {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
-            )
+                f"The bond API returned an error calling set_power_state_belief for {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+            ) from ex
