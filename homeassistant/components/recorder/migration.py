@@ -509,7 +509,7 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
         )
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == "mysql":
-            for table in ["events", "states", "statistics_meta"]:
+            for table in ("events", "states", "statistics_meta"):
                 try:
                     connection.execute(
                         text(
