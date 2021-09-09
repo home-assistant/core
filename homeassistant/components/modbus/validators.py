@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
@@ -201,15 +203,19 @@ def scan_interval_validator(config: dict) -> dict:
 def duplicate_entity_validator(config: dict) -> dict:
     """Control scan_interval."""
     for hub_index, hub in enumerate(config):
-        addresses: set[str] = set()
         for component, conf_key in PLATFORMS:
             if conf_key not in hub:
                 continue
             names: set[str] = set()
             errors: list[int] = []
+            addresses: set[str] = set()
             for index, entry in enumerate(hub[conf_key]):
                 name = entry[CONF_NAME]
                 addr = str(entry[CONF_ADDRESS])
+                if CONF_COMMAND_ON in entry:
+                    addr += "_" + str(entry[CONF_COMMAND_ON])
+                if CONF_COMMAND_OFF in entry:
+                    addr += "_" + str(entry[CONF_COMMAND_OFF])
                 if CONF_SLAVE in entry:
                     addr += "_" + str(entry[CONF_SLAVE])
                 if addr in addresses:
