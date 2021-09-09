@@ -57,6 +57,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.debug("No appliances found")
         return
 
+    # the whirlpool library needs to be updated to be able to support more
+    # than one device, so we use only the first one for now
     aircon = AirConEntity(said_list[0], auth)
     async_add_entities([aircon], True)
 
@@ -79,10 +81,11 @@ class AirConEntity(ClimateEntity):
     _attr_swing_modes = [SWING_HORIZONTAL, SWING_OFF]
     _attr_target_temperature_step = 1
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_should_poll = False
 
     def __init__(self, said, auth: Auth):
         """Initialize the entity."""
-        self._aircon = Aircon(auth, said, self.schedule_update_ha_state)
+        self._aircon = Aircon(auth, said, self.async_write_ha_state)
 
         self._attr_name = said
         self._attr_unique_id = said
@@ -148,7 +151,7 @@ class AirConEntity(ClimateEntity):
 
         mode = HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)
         if not mode:
-            _LOGGER.warning("Unexpected hvac mode")
+            _LOGGER.warning("Unexpected hvac mode: %s", hvac_mode)
             return
 
         await self._aircon.set_mode(mode)
@@ -175,10 +178,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target temperature."""
-        if swing_mode == SWING_HORIZONTAL:
-            await self._aircon.set_h_louver_swing(True)
-        else:
-            await self._aircon.set_h_louver_swing(False)
+        await self._aircon.set_h_louver_swing(swing_mode == SWING_HORIZONTAL)
 
     async def async_turn_on(self):
         """Turn device on."""

@@ -33,7 +33,7 @@ async def test_setup_auth_failed(hass: HomeAssistant, mock_auth_api: MagicMock):
     mock_auth_api.return_value.is_access_token_valid.return_value = False
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry(hass: HomeAssistant):

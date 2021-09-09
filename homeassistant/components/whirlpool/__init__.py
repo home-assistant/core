@@ -23,12 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await auth.do_auth(store=False)
     except aiohttp.ClientError as ex:
-        _LOGGER.error("Connection error")
         raise ConfigEntryNotReady("Cannot connect") from ex
 
     if not auth.is_access_token_valid():
         _LOGGER.error("Authentication failed")
-        raise ConfigEntryNotReady("Authentication failed")
+        return False
 
     hass.data[DOMAIN][entry.entry_id] = {AUTH_INSTANCE_KEY: auth}
 
