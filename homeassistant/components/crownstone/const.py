@@ -11,9 +11,6 @@ PLATFORMS: Final[list[str]] = ["light"]
 SSE_LISTENERS: Final = "sse_listeners"
 UART_LISTENERS: Final = "uart_listeners"
 
-# Class attributes
-ATTR_UART: Final = "uart"
-
 # Unique ID suffixes
 CROWNSTONE_SUFFIX: Final = "crownstone"
 

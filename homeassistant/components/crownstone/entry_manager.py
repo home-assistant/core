@@ -22,7 +22,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
-    ATTR_UART,
     CONF_USB_PATH,
     CONF_USB_SPHERE,
     DOMAIN,
@@ -39,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 class CrownstoneEntryManager:
     """Manage a Crownstone config entry."""
 
-    uart: CrownstoneUart
+    uart: CrownstoneUart | None = None
     cloud: CrownstoneCloud
     sse: CrownstoneSSEAsync
 
@@ -131,7 +130,7 @@ class CrownstoneEntryManager:
         try:
             await self.uart.initialize_usb(serial_port)
         except UartException:
-            delattr(self, ATTR_UART)
+            self.uart = None
             # Set entry data for usb to null
             updated_entry_data = self.config_entry.data.copy()
             updated_entry_data[CONF_USB_PATH] = None
@@ -163,7 +162,7 @@ class CrownstoneEntryManager:
         for sse_unsub in self.listeners[SSE_LISTENERS]:
             sse_unsub()
 
-        if hasattr(self, ATTR_UART):
+        if self.uart:
             self.uart.stop()
             for subscription_id in self.listeners[UART_LISTENERS]:
                 UartEventBus.unsubscribe(subscription_id)
@@ -181,7 +180,7 @@ class CrownstoneEntryManager:
     def on_shutdown(self, _: Event) -> None:
         """Close all IO connections."""
         self.sse.close_client()
-        if hasattr(self, ATTR_UART):
+        if self.uart:
             self.uart.stop()
 
 
