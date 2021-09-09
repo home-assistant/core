@@ -238,6 +238,7 @@ class Statistics(Base):  # type: ignore
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
         Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
