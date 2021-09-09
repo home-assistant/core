@@ -451,8 +451,8 @@ def compile_statistics(  # noqa: C901
                     _LOGGER.info(
                         "Detected new cycle for %s, value dropped from %s to %s",
                         entity_id,
-                        fstate,
                         new_state,
+                        fstate,
                     )
 
                 if reset:
