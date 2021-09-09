@@ -345,13 +345,13 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
     # Fetch the actual segments with a fake byte payload
     for segment in hls.get_segments():
         segment.init = INIT_BYTES
-        segment.parts_by_byterange = {
-            0: Part(
+        segment.parts = [
+            Part(
                 duration=SEGMENT_DURATION,
                 has_keyframe=True,
                 data=FAKE_PAYLOAD,
             )
-        }
+        ]
 
     # The segment that fell off the buffer is not accessible
     with patch.object(hls.stream_settings, "hls_part_timeout", 0.1):

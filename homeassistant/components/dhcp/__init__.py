@@ -14,13 +14,8 @@ from aiodiscover.discovery import (
     IP_ADDRESS as DISCOVERY_IP_ADDRESS,
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
-from scapy.arch.common import compile_filter
 from scapy.config import conf
 from scapy.error import Scapy_Exception
-from scapy.layers.dhcp import DHCP
-from scapy.layers.inet import IP
-from scapy.layers.l2 import Ether
-from scapy.sendrecv import AsyncSniffer
 
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
@@ -282,6 +277,12 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        # Local import because importing from scapy has side effects such as opening
+        # sockets
+        from scapy.sendrecv import (  # pylint: disable=import-outside-toplevel
+            AsyncSniffer,
+        )
+
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
 
@@ -318,6 +319,12 @@ class DHCPWatcher(WatcherBase):
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
+        # Local import because importing from scapy has side effects such as opening
+        # sockets
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
+
         if DHCP not in packet:
             return
 
@@ -382,4 +389,10 @@ def _verify_working_pcap(cap_filter):
     If we cannot create a filter we will be listening for
     all traffic which is too intensive.
     """
+    # Local import because importing from scapy has side effects such as opening
+    # sockets
+    from scapy.arch.common import (  # pylint: disable=import-outside-toplevel
+        compile_filter,
+    )
+
     compile_filter(cap_filter)

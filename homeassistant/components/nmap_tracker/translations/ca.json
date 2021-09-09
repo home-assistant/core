@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu de seguiment com 'a fora' despr\u00e9s de no ser vist.",
                     "exclude": "Adreces de xarxa a excloure de l'escaneig (separades per comes)",
                     "home_interval": "Nombre m\u00ednim de minuts entre escanejos de dispositius actius (conserva la bateria)",
                     "hosts": "Adreces de xarxa a escanejar (separades per comes)",

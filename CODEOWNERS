@@ -248,6 +248,7 @@ homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
+homeassistant/components/iotawatt/* @gtdiehl
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes @abmantis
 homeassistant/components/ipp/* @ctalkington
@@ -518,7 +519,6 @@ homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne @home-assistant/core
-homeassistant/components/tesla/* @zabuldon @alandtse
 homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/threshold/* @fabaff

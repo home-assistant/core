@@ -5,7 +5,9 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import BarrierEventSignalingSubsystemState
+from zwave_js_server.const.command_class.barrier_operator import (
+    BarrierEventSignalingSubsystemState,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry

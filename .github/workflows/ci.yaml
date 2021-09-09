@@ -10,7 +10,7 @@ on:
   pull_request: ~
 
 env:
-  CACHE_VERSION: 2
+  CACHE_VERSION: 3
   DEFAULT_PYTHON: 3.8
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   SQLALCHEMY_WARN_20: 1
@@ -580,7 +580,7 @@ jobs:
 
           python -m venv venv
           . venv/bin/activate
-          pip install -U "pip<20.3" setuptools wheel
+          pip install -U "pip<20.3" "setuptools<58" wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
           pip install -e .

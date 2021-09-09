@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import zigpy.exceptions
+from zigpy.zcl.foundation import Status
 
 from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
@@ -23,6 +24,7 @@ from ..const import (
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
+    REPORT_CONFIG_ATTR_PER_REQ,
     SIGNAL_ATTR_UPDATED,
     ZHA_CHANNEL_MSG,
     ZHA_CHANNEL_MSG_BIND,
@@ -87,7 +89,7 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG = ()
+    REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
     BIND: bool = True
 
     def __init__(
@@ -101,9 +103,8 @@ class ZigbeeChannel(LogMixin):
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
-        self._report_config = self.REPORT_CONFIG
-        if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
-            attr = self._report_config[0].get("attr")
+        if not hasattr(self, "_value_attribute") and self.REPORT_CONFIG:
+            attr = self.REPORT_CONFIG[0].get("attr")
             if isinstance(attr, str):
                 self.value_attribute = self.cluster.attridx.get(attr)
             else:
@@ -195,42 +196,42 @@ class ZigbeeChannel(LogMixin):
         if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
             kwargs["manufacturer"] = self._ch_pool.manufacturer_code
 
-        for report in self._report_config:
-            attr = report["attr"]
+        for attr_report in self.REPORT_CONFIG:
+            attr, config = attr_report["attr"], attr_report["config"]
             attr_name = self.cluster.attributes.get(attr, [attr])[0]
-            min_report_int, max_report_int, reportable_change = report["config"]
             event_data[attr_name] = {
-                "min": min_report_int,
-                "max": max_report_int,
+                "min": config[0],
+                "max": config[1],
                 "id": attr,
                 "name": attr_name,
-                "change": reportable_change,
+                "change": config[2],
+                "success": False,
             }
 
+        to_configure = [*self.REPORT_CONFIG]
+        chunk, rest = (
+            to_configure[:REPORT_CONFIG_ATTR_PER_REQ],
+            to_configure[REPORT_CONFIG_ATTR_PER_REQ:],
+        )
+        while chunk:
+            reports = {rec["attr"]: rec["config"] for rec in chunk}
             try:
-                res = await self.cluster.configure_reporting(
-                    attr, min_report_int, max_report_int, reportable_change, **kwargs
-                )
-                self.debug(
-                    "reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
-                    attr_name,
-                    self.cluster.ep_attribute,
-                    min_report_int,
-                    max_report_int,
-                    reportable_change,
-                    res,
-                )
-                event_data[attr_name]["success"] = (
-                    res[0][0].status == 0 or res[0][0].status == 134
-                )
+                res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
+                self._configure_reporting_status(reports, res[0])
+                # if we get a response, then it's a success
+                for attr_stat in event_data.values():
+                    attr_stat["success"] = True
             except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
-                    "failed to set reporting for '%s' attr on '%s' cluster: %s",
-                    attr_name,
+                    "failed to set reporting on '%s' cluster for: %s",
                     self.cluster.ep_attribute,
                     str(ex),
                 )
-                event_data[attr_name]["success"] = False
+                break
+            chunk, rest = (
+                rest[:REPORT_CONFIG_ATTR_PER_REQ],
+                rest[REPORT_CONFIG_ATTR_PER_REQ:],
+            )
 
         async_dispatcher_send(
             self._ch_pool.hass,
@@ -243,6 +244,46 @@ class ZigbeeChannel(LogMixin):
                     "attributes": event_data,
                 },
             },
+        )
+
+    def _configure_reporting_status(
+        self, attrs: dict[int | str, tuple], res: list | tuple
+    ) -> None:
+        """Parse configure reporting result."""
+        if not isinstance(res, list):
+            # assume default response
+            self.debug(
+                "attr reporting for '%s' on '%s': %s",
+                attrs,
+                self.name,
+                res,
+            )
+            return
+        if res[0].status == Status.SUCCESS and len(res) == 1:
+            self.debug(
+                "Successfully configured reporting for '%s' on '%s' cluster: %s",
+                attrs,
+                self.name,
+                res,
+            )
+            return
+
+        failed = [
+            self.cluster.attributes.get(r.attrid, [r.attrid])[0]
+            for r in res
+            if r.status != Status.SUCCESS
+        ]
+        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        self.debug(
+            "Successfully configured reporting for '%s' on '%s' cluster",
+            attrs - set(failed),
+            self.name,
+        )
+        self.debug(
+            "Failed to configure reporting for '%s' on '%s' cluster: %s",
+            failed,
+            self.name,
+            res,
         )
 
     async def async_configure(self) -> None:
@@ -267,7 +308,7 @@ class ZigbeeChannel(LogMixin):
             return
 
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = [cfg["attr"] for cfg in self._report_config]
+        attributes = [cfg["attr"] for cfg in self.REPORT_CONFIG]
         if attributes:
             await self.get_attributes(attributes, from_cache=from_cache)
 

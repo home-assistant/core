@@ -8,15 +8,14 @@ from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
-    CommandClass,
-    ConfigurationValueType,
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
-from zwave_js_server.util.command_class import get_meter_type
+from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
@@ -63,6 +62,7 @@ from .const import (
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_HUMIDITY,
     ENTITY_DESC_KEY_ILLUMINANCE,
+    ENTITY_DESC_KEY_MEASUREMENT,
     ENTITY_DESC_KEY_POWER,
     ENTITY_DESC_KEY_POWER_FACTOR,
     ENTITY_DESC_KEY_PRESSURE,
@@ -70,6 +70,7 @@ from .const import (
     ENTITY_DESC_KEY_TARGET_TEMPERATURE,
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TIMESTAMP,
+    ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
     SERVICE_RESET_METER,
 )
@@ -167,6 +168,16 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=None,
+    ),
+    ENTITY_DESC_KEY_MEASUREMENT: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_MEASUREMENT,
+        device_class=None,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    ENTITY_DESC_KEY_TOTAL_INCREASING: ZwaveSensorEntityDescription(
+        ENTITY_DESC_KEY_TOTAL_INCREASING,
+        device_class=None,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
 }
 

@@ -914,15 +914,23 @@ def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def device_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get a device ID from an entity ID."""
-    if not isinstance(entity_id, str) or "." not in entity_id:
-        raise TemplateError(f"Must provide an entity ID, got {entity_id}")  # type: ignore
+def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
+    """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
-    entity = entity_reg.async_get(entity_id)
-    if entity is None:
-        return None
-    return entity.device_id
+    entity = entity_reg.async_get(entity_id_or_device_name)
+    if entity is not None:
+        return entity.device_id
+
+    dev_reg = device_registry.async_get(hass)
+    return next(
+        (
+            id
+            for id, device in dev_reg.devices.items()
+            if (name := device.name_by_user or device.name)
+            and (str(entity_id_or_device_name) == name)
+        ),
+        None,
+    )
 
 
 def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
@@ -957,6 +965,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
         return area.id
 
     ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
     from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
         config_validation as cv,
@@ -968,10 +977,14 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
         pass
     else:
         if entity := ent_reg.async_get(lookup_value):
-            return entity.area_id
+            # If entity has an area ID, return that
+            if entity.area_id:
+                return entity.area_id
+            # If entity has a device ID, return the area ID for the device
+            if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
+                return device.area_id
 
-    # Check if this could be a device ID (hex string)
-    dev_reg = device_registry.async_get(hass)
+    # Check if this could be a device ID
     if device := dev_reg.async_get(lookup_value):
         return device.area_id
 
@@ -992,6 +1005,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     if area:
         return area.name
 
+    dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
     from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
@@ -1004,11 +1018,18 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
         pass
     else:
         if entity := ent_reg.async_get(lookup_value):
+            # If entity has an area ID, get the area name for that
             if entity.area_id:
                 return _get_area_name(area_reg, entity.area_id)
-            return None
+            # If entity has a device ID and the device exists with an area ID, get the
+            # area name for that
+            if (
+                entity.device_id
+                and (device := dev_reg.async_get(entity.device_id))
+                and device.area_id
+            ):
+                return _get_area_name(area_reg, device.area_id)
 
-    dev_reg = device_registry.async_get(hass)
     if (device := dev_reg.async_get(lookup_value)) and device.area_id:
         return _get_area_name(area_reg, device.area_id)
 
@@ -1376,10 +1397,15 @@ def regex_search(value, find="", ignorecase=False):
 
 def regex_findall_index(value, find="", index=0, ignorecase=False):
     """Find all matches using regex and then pick specific match index."""
+    return regex_findall(value, find, ignorecase)[index]
+
+
+def regex_findall(value, find="", ignorecase=False):
+    """Find all matches using regex."""
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return re.findall(find, value, flags)[index]
+    return re.findall(find, value, flags)
 
 
 def bitwise_and(first_value, second_value):
@@ -1544,6 +1570,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_match"] = regex_match
         self.filters["regex_replace"] = regex_replace
         self.filters["regex_search"] = regex_search
+        self.filters["regex_findall"] = regex_findall
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or

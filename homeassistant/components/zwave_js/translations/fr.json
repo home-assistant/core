@@ -8,7 +8,9 @@
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS.",
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
-            "cannot_connect": "\u00c9chec de connexion"
+            "cannot_connect": "\u00c9chec de connexion",
+            "discovery_requires_supervisor": "La d\u00e9couverte n\u00e9cessite le superviseur.",
+            "not_zwave_device": "L'appareil d\u00e9couvert n'est pas un appareil Z-Wave."
         },
         "error": {
             "addon_start_failed": "\u00c9chec du d\u00e9marrage du module compl\u00e9mentaire Z-Wave JS. V\u00e9rifiez la configuration.",
@@ -67,7 +69,9 @@
             "event.value_notification.basic": "\u00c9v\u00e9nement CC de base sur {subtype}",
             "event.value_notification.central_scene": "Action de la sc\u00e8ne centrale sur {subtype}",
             "event.value_notification.scene_activation": "Activation de la sc\u00e8ne sur {sous-type}",
-            "state.node_status": "Changement de statut du noeud"
+            "state.node_status": "Changement de statut du noeud",
+            "zwave_js.value_updated.config_parameter": "Changement de valeur sur le param\u00e8tre de configuration {subtype}",
+            "zwave_js.value_updated.value": "Changement de valeur sur une valeur Z-Wave JS"
         }
     },
     "options": {

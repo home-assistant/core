@@ -10,10 +10,10 @@ from homeassistant.components.upnp.const import (
     BYTES_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    ROUTER_IP,
+    ROUTER_UPTIME,
     TIMESTAMP,
-    UPTIME,
-    WANIP,
-    WANSTATUS,
+    WAN_STATUS,
 )
 from homeassistant.components.upnp.device import Device
 from homeassistant.util import dt
@@ -83,9 +83,9 @@ class MockDevice(Device):
         """Get connection status, uptime, and external IP."""
         self.status_times_polled += 1
         return {
-            WANSTATUS: "Connected",
-            UPTIME: 0,
-            WANIP: "192.168.0.1",
+            WAN_STATUS: "Connected",
+            ROUTER_UPTIME: 0,
+            ROUTER_IP: "192.168.0.1",
         }
 
     async def async_start(self) -> None:

@@ -382,11 +382,13 @@ def _listen_count(hass):
     return sum(hass.bus.async_listeners().values())
 
 
-async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin_user):
+async def test_api_error_log(
+    hass, hass_client_no_auth, hass_access_token, hass_admin_user
+):
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = "/some/path"
     await async_setup_component(hass, "api", {})
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.get(const.URL_API_ERROR_LOG)
     # Verify auth required
