@@ -11,6 +11,7 @@ from homeassistant.setup import async_setup_component
 
 class MockNetwork:
     """Mock _Network object for pylast."""
+
     def __init__(self, username: str):
         self.username = username
 
