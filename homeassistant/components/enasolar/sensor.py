@@ -47,38 +47,25 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the enasolar platform."""
-    _LOGGER.warning(
-        "Configuration of the enasolar platform in configuration.yaml is deprecated "
-        "in Home Assistant 0.119. Please remove entry from your configuration"
-    )
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add enasolar entry."""
+
+    # Use all sensors by default, but split them to have two update frequencies
+    hass_meter_sensors = []
+    hass_data_sensors = []
     remove_interval_update_meters = None
     remove_interval_update_data = None
 
-    # Use all sensors by default
-    hass_meter_sensors = []
-    hass_data_sensors = []
-
-    kwargs = {}
-
     host = config_entry.data[CONF_HOST]
 
+    _LOGGER.info("Instantiate an EnaSolar Inverter at '%s'", host)
+    enasolar = pyenasolar.EnaSolar()
+
     try:
-        _LOGGER.info("Instantiate an EnaSolar Inverter at '%s'", host)
-        enasolar = pyenasolar.EnaSolar(host, **kwargs)
-        await enasolar.interogate_inverter()
-    except Exception as e:
-        _LOGGER.error(
-            "Connection to EnaSolar Inverter '%s' failed (%s), check host FQDN/ip address",
-            host,
-            e,
-        )
-        raise PlatformNotReady
+        await enasolar.interogate_inverter(host)
+    except Exception as conerr:
+        _LOGGER.error("Connection to EnaSolar Inverter '%s' failed (%s)", host, conerr)
+        raise PlatformNotReady from conerr
 
     if config_entry.options != {}:
         enasolar.sun_up = dt_util.parse_time(config_entry.options[CONF_SUN_UP])
@@ -91,10 +78,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     enasolar.dc_strings = config_entry.data[CONF_DC_STRINGS]
     enasolar.max_output = config_entry.data[CONF_MAX_OUTPUT]
 
-    _LOGGER.info("Polling between %s and %s", enasolar.sun_up, enasolar.sun_down)
+    _LOGGER.info("   Polling between %s and %s", enasolar.sun_up, enasolar.sun_down)
+    _LOGGER.info(
+        "   Max Output: %s, DC Strings: %s, Capability: %s",
+        enasolar.max_output,
+        enasolar.dc_strings,
+        enasolar.capability,
+    )
 
     enasolar.setup_sensors()
-
     for sensor in enasolar.sensors:
         _LOGGER.debug("Setup sensor %s", sensor.key)
         if sensor.enabled:
@@ -127,9 +119,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
             _LOGGER.debug(
-                "Meter Sensor %s updated => %s", sensor._sensor.key, sensor.state
+                "Meter Sensor %s updated => %s", sensor.sensor_key, sensor.state
             )
-
         return values
 
     async def async_enasolar_data():
@@ -149,9 +140,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
             _LOGGER.debug(
-                "Data Sensor %s updated => %s", sensor._sensor.key, sensor.state
+                "Data Sensor %s updated => %s", sensor.sensor_key, sensor.state
             )
-
         return values
 
     def start_update_interval(event):
@@ -214,6 +204,8 @@ class EnaSolarSensor(SensorEntity):
             self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        self._attr_unit_of_measurement = ENASOLAR_UNIT_MAPPINGS[self._sensor.unit]
+        self._attr_should_poll = False
 
     @property
     def name(self):
@@ -229,27 +221,22 @@ class EnaSolarSensor(SensorEntity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return ENASOLAR_UNIT_MAPPINGS[self._sensor.unit]
+    def sensor_key(self):
+        """Return the sensor key."""
+        return self._sensor.key
 
     @property
     def device_class(self):
         """Return the device class the sensor belongs to."""
-        if self.unit_of_measurement == POWER_WATT:
+        if self._attr_unit_of_measurement == POWER_WATT:
             return DEVICE_CLASS_POWER
-        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+        if self._attr_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             return DEVICE_CLASS_ENERGY
         if (
-            self.unit_of_measurement == TEMP_CELSIUS
-            or self._sensor.unit == TEMP_FAHRENHEIT
+            self._attr_unit_of_measurement == TEMP_CELSIUS
+            or self._attr_unit_of_measurement == TEMP_FAHRENHEIT
         ):
             return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def should_poll(self) -> bool:
-        """Enasolar sensors are updated & don't poll."""
-        return False
 
     @property
     def per_day_basis(self) -> bool:

@@ -248,6 +248,8 @@ omit =
     homeassistant/components/emoncms_history/*
     homeassistant/components/emonitor/__init__.py
     homeassistant/components/emonitor/sensor.py
+    homeassistant/components/enasolar/__init__.py
+    homeassistant/components/enasolar/sensor.py
     homeassistant/components/enigma2/media_player.py
     homeassistant/components/enocean/__init__.py
     homeassistant/components/enocean/binary_sensor.py

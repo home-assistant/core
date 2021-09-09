@@ -13,6 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CAPABILITY,
     CONF_CAPABILITY,
     CONF_DC_STRINGS,
     CONF_HOST,
@@ -20,11 +21,13 @@ from .const import (
     CONF_NAME,
     CONF_SUN_DOWN,
     CONF_SUN_UP,
+    DC_STRINGS,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_SUN_DOWN,
     DEFAULT_SUN_UP,
     DOMAIN,
+    MAX_OUTPUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,9 +48,9 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._errors: dict[str, str] = {}
-        self._enasolar = None
+        self._enasolar = pyenasolar.EnaSolar()
         self._data: dict[str, Any] = {}
+        self._errors: dict[str, str] = {}
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
@@ -55,33 +58,21 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return True
         return False
 
-    def _get_serial_no(self):
-        return self._enasolar.get_serial_no()
-
-    def _get_max_output(self):
-        return self._enasolar.get_max_output()
-
-    def _get_dc_strings(self):
-        return self._enasolar.get_dc_strings()
-
-    def _get_capability(self):
-        return self._enasolar.get_capability()
-
-    def _get_name(self):
-        return self._data[CONF_NAME]
-
     async def _try_connect(self, host):
-        kwargs = {}
-
         try:
-            self._enasolar = pyenasolar.EnaSolar(host, **kwargs)
-            await self._enasolar.interogate_inverter()
+            await self._enasolar.interogate_inverter(host)
             return True
 
-        except Exception as e:
+        except Exception as conerr:  # pylint: disable=broad-except
             self._errors[CONF_HOST] = "cannot_connect"
-            _LOGGER.error("Connection to EnaSolar inverter '%s' failed (%s)", host, e)
+            _LOGGER.error(
+                "Connection to EnaSolar inverter '%s' failed (%s)", host, conerr
+            )
         return False
+
+    def get_name(self):
+        """Needed to mock name when running tests."""
+        return self._data[CONF_NAME]
 
     @staticmethod
     @callback
@@ -91,16 +82,17 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
-        self._errors = {}
+        _errors = {}
 
         if user_input is not None:
             self._data[CONF_HOST] = user_input[CONF_HOST]
             if self._host_in_configuration_exists(self._data[CONF_HOST]):
-                self._errors[CONF_HOST] = "already_configured"
+                return self.async_abort(reason="already_configured")
             self._data[CONF_NAME] = user_input[CONF_NAME]
             if await self._try_connect(self._data[CONF_HOST]):
-                await self.async_set_unique_id(self._get_serial_no())
+                await self.async_set_unique_id(self._enasolar.get_serial_no())
                 return await self.async_step_inverter()
+            _errors = self._errors
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
@@ -114,31 +106,30 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_NAME, default=user_input[CONF_NAME]): cv.string,
                 }
             ),
-            errors=self._errors,
+            errors=_errors,
             last_step=False,
         )
 
     async def async_step_inverter(self, user_input=None):
         """Give the user the opportunities to override inverter config."""
 
-        self._errors = {}
+        _errors = {}
         if user_input is not None:
-            if not (
-                (0 <= user_input[CONF_CAPABILITY] <= 7)
-                or (256 <= user_input[CONF_CAPABILITY] <= 263)
-            ):
-                self._errors[CONF_CAPABILITY] = "capabilty_invalid"
+            # CAPABILITY is a 9 bit value, bits 1-3 and 9 representing
+            # what features the Innverter has.
+            if user_input[CONF_CAPABILITY] & ~CAPABILITY:
+                _errors[CONF_CAPABILITY] = "capability_invalid"
             else:
-                self._data[CONF_CAPABILITY] = user_input[CONF_CAPABILITY]
-                self._data[CONF_MAX_OUTPUT] = user_input[CONF_MAX_OUTPUT]
-                self._data[CONF_DC_STRINGS] = user_input[CONF_DC_STRINGS]
-                title = self._get_name()
+                self._data.update(user_input)
+                title = self.get_name()
                 return self.async_create_entry(title=title, data=self._data)
         else:
+            # Use the capability bits from the Inverter. This assumes it
+            # had been possible to actually scrap them from the jScript
             user_input = {}
-            user_input[CONF_MAX_OUTPUT] = self._get_max_output()
-            user_input[CONF_DC_STRINGS] = self._get_dc_strings()
-            user_input[CONF_CAPABILITY] = self._get_capability()
+            user_input[CONF_MAX_OUTPUT] = self._enasolar.get_max_output()
+            user_input[CONF_DC_STRINGS] = self._enasolar.get_dc_strings()
+            user_input[CONF_CAPABILITY] = self._enasolar.get_capability()
 
         return self.async_show_form(
             step_id="inverter",
@@ -146,26 +137,18 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_MAX_OUTPUT, default=user_input[CONF_MAX_OUTPUT]
-                    ): vol.In([1.5, 2.0, 3.0, 3.8, 4.0, 5.0]),
+                    ): vol.In(MAX_OUTPUT),
                     vol.Required(
                         CONF_DC_STRINGS, default=user_input[CONF_DC_STRINGS]
-                    ): vol.In([1, 2]),
+                    ): vol.In(DC_STRINGS),
                     vol.Required(
                         CONF_CAPABILITY, default=user_input[CONF_CAPABILITY]
-                    ): int,
+                    ): vol.Coerce(int),
                 }
             ),
-            errors=self._errors,
+            errors=_errors,
             last_step=True,
         )
-
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        host = user_input[CONF_HOST]
-
-        if self._host_in_configuration_exists(host):
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)
 
 
 class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
@@ -179,24 +162,23 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Allow user to reset the Polling times."""
 
-        self._errors = {}
+        _errors = {}
         if user_input is not None:
             input_valid = True
             if dt_util.parse_time(user_input[CONF_SUN_UP]) is None:
-                self._errors[CONF_SUN_UP] = "time_invalid"
+                _errors[CONF_SUN_UP] = "time_invalid"
                 input_valid = False
             if dt_util.parse_time(user_input[CONF_SUN_DOWN]) is None:
-                self._errors[CONF_SUN_DOWN] = "time_invalid"
+                _errors[CONF_SUN_DOWN] = "time_invalid"
                 input_valid = False
             if input_valid:
                 if dt_util.parse_time(user_input[CONF_SUN_UP]) >= dt_util.parse_time(
                     user_input[CONF_SUN_DOWN]
                 ):
-                    self._errors[CONF_SUN_DOWN] = "time_range"
+                    _errors[CONF_SUN_DOWN] = "time_range"
                     input_valid = False
             if input_valid:
-                self._options[CONF_SUN_UP] = user_input[CONF_SUN_UP]
-                self._options[CONF_SUN_DOWN] = user_input[CONF_SUN_DOWN]
+                self._options.update(user_input)
                 return self.async_create_entry(title="", data=self._options)
         else:
             user_input = {}
@@ -204,8 +186,7 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
                 user_input[CONF_SUN_UP] = DEFAULT_SUN_UP
                 user_input[CONF_SUN_DOWN] = DEFAULT_SUN_DOWN
             else:
-                user_input[CONF_SUN_UP] = self._options[CONF_SUN_UP]
-                user_input[CONF_SUN_DOWN] = self._options[CONF_SUN_DOWN]
+                user_input.update(self._options)
 
         return self.async_show_form(
             step_id="init",
@@ -219,5 +200,5 @@ class EnaSolarOptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.string,
                 }
             ),
-            errors=self._errors,
+            errors=_errors,
         )
