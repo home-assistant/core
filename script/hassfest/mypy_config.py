@@ -42,7 +42,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.harmony.*",
     "homeassistant.components.hassio.*",
     "homeassistant.components.hdmi_cec.*",
-    "homeassistant.components.here_travel_time.*",
     "homeassistant.components.hisense_aehw4a1.*",
     "homeassistant.components.home_connect.*",
     "homeassistant.components.home_plus_control.*",
