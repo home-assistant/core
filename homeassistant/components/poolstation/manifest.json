@@ -9,5 +9,6 @@
   "codeowners": [
     "@cibernox"
   ],
+  "quality_scale": "silver",
   "iot_class": "cloud_polling"
 }
