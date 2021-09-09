@@ -11,6 +11,7 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -19,11 +20,15 @@ from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-class DecoraWifiLoginFailed(Exception):
+class DecoraWifiError(HomeAssistantError):
+    """Base for errors raised when the decora_wifi integration encounters an issue."""
+
+
+class LoginFailed(DecoraWifiError):
     """Raised when DecoraWifiPlatform.login() fails to log in."""
 
 
-class DecoraWifiCommFailed(Exception):
+class CommFailed(DecoraWifiError):
     """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
 
 
@@ -66,10 +71,10 @@ class DecoraWifiPlatform:
 
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if success is None:
-                raise DecoraWifiLoginFailed
+                raise LoginFailed
             self._loggedin = True
         except ValueError as exc:
-            raise DecoraWifiCommFailed from exc
+            raise CommFailed from exc
 
         self._loggedin = True
 
@@ -79,7 +84,7 @@ class DecoraWifiPlatform:
             try:
                 Person.logout(self._session)
             except ValueError as exc:
-                raise DecoraWifiCommFailed from exc
+                raise CommFailed from exc
         self._loggedin = False
 
     def _api_get_devices(self):
@@ -109,7 +114,7 @@ class DecoraWifiPlatform:
                         platform = DecoraWifiPlatform.classifydevice(switch)
                         self._iot_switches[platform].append(switch)
         except ValueError as exc:
-            raise DecoraWifiCommFailed from exc
+            raise CommFailed from exc
 
     def reauth(self):
         """Reauthenticate this object's session."""
@@ -148,7 +153,7 @@ decorawifisessions: dict[str, DecoraWifiPlatform] = {}
 class DecoraWifiEntity(Entity):
     """Initiate Decora Wifi Base Class."""
 
-    def __init__(self, device):
+    def __init__(self, device: IotSwitch) -> None:
         """Initialize Decora Wifi device base class."""
         self._switch = device
         self._unique_id = device.mac

@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.decora_wifi.common import (
-    DecoraWifiCommFailed,
-    DecoraWifiLoginFailed,
+    CommFailed,
     DecoraWifiPlatform,
+    LoginFailed,
     decorawifisessions,
 )
 from homeassistant.components.decora_wifi.const import CONF_TITLE, DOMAIN
@@ -109,7 +109,7 @@ async def test_reauth_flow(hass):
 
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWifiPlatform.async_setup_decora_wifi",
-        side_effect=DecoraWifiLoginFailed(),
+        side_effect=LoginFailed(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -178,7 +178,7 @@ async def test_user_flow_invalid_username(hass):
 
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWifiPlatform.async_setup_decora_wifi",
-        side_effect=DecoraWifiLoginFailed(),
+        side_effect=LoginFailed(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -201,7 +201,7 @@ async def test_user_flow_invalid_password(hass):
 
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWifiPlatform.async_setup_decora_wifi",
-        side_effect=DecoraWifiLoginFailed(),
+        side_effect=LoginFailed(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -225,7 +225,7 @@ async def test_user_flow_no_internet_connection(hass):
 
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWifiPlatform.async_setup_decora_wifi",
-        side_effect=DecoraWifiCommFailed(),
+        side_effect=CommFailed(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -253,7 +253,7 @@ async def test_reauth_flow_no_internet_connection(hass):
 
     with patch(
         "homeassistant.components.decora_wifi.config_flow.DecoraWifiPlatform.async_setup_decora_wifi",
-        side_effect=DecoraWifiCommFailed(),
+        side_effect=CommFailed(),
     ):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,

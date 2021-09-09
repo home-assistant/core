@@ -15,12 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
-from .common import (
-    DecoraWifiCommFailed,
-    DecoraWifiLoginFailed,
-    DecoraWifiPlatform,
-    decorawifisessions,
-)
+from .common import CommFailed, DecoraWifiPlatform, LoginFailed, decorawifisessions
 from .const import CONF_OPTIONS, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,10 +88,10 @@ async def async_setup_entry(hass: HomeAssistant, entry):
                 email,
                 password,
             )
-        except DecoraWifiLoginFailed as exc:
+        except LoginFailed as exc:
             _LOGGER.error("Login failed")
             raise ConfigEntryAuthFailed from exc
-        except DecoraWifiCommFailed as exc:
+        except CommFailed as exc:
             _LOGGER.error("Communication with myLeviton failed")
             raise ConfigEntryNotReady from exc
         decorawifisessions.update({email: session})
@@ -120,7 +115,7 @@ async def async_unload_entry(hass, entry):
             try:
                 # Attempt to log out.
                 await hass.async_create_task(session.api_logout)
-            except DecoraWifiCommFailed:
+            except CommFailed:
                 _LOGGER.warning(
                     "Communication with myLeviton failed while attempting to logout"
                 )

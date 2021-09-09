@@ -3,10 +3,10 @@
 from unittest.mock import patch
 
 from homeassistant.components.decora_wifi.common import (
-    DecoraWifiCommFailed,
+    CommFailed,
     DecoraWifiEntity,
-    DecoraWifiLoginFailed,
     DecoraWifiPlatform,
+    LoginFailed,
 )
 from homeassistant.components.decora_wifi.const import LIGHT_DOMAIN
 
@@ -74,7 +74,7 @@ def test_DecoraWifiPlatform_init_invalidpw():
             instance.setup()
         except Exception as ex:
             exception = ex
-        assert isinstance(exception, DecoraWifiLoginFailed)
+        assert isinstance(exception, LoginFailed)
         mock_session_login.assert_called_once()
         mock_apigetdevices.assert_not_called()
         mock_apilogout.assert_not_called()
@@ -99,7 +99,7 @@ def test_DecoraWifiPlatform_init_nocomms():
             instance.setup()
         except Exception as ex:
             exception = ex
-        assert isinstance(exception, DecoraWifiCommFailed)
+        assert isinstance(exception, CommFailed)
         mock_session_login.assert_called_once()
         mock_apigetdevices.assert_not_called()
         mock_apilogout.assert_not_called()
@@ -164,9 +164,9 @@ def test_DecoraWifiPlatform_apigetdevices_commfailed():
         try:
             instance = DecoraWifiPlatform(USERNAME, PASSWORD)
             instance.setup()
-        except DecoraWifiCommFailed as ex:
+        except CommFailed as ex:
             exception = ex
-        assert isinstance(exception, DecoraWifiCommFailed)
+        assert isinstance(exception, CommFailed)
 
 
 def test_DecoraWifiPlatform_apilogout_commfailed():
@@ -187,9 +187,9 @@ def test_DecoraWifiPlatform_apilogout_commfailed():
             instance = DecoraWifiPlatform(USERNAME, PASSWORD)
             instance.setup()
             instance.api_logout()
-        except DecoraWifiCommFailed as ex:
+        except CommFailed as ex:
             exception = ex
-        assert isinstance(exception, DecoraWifiCommFailed)
+        assert isinstance(exception, CommFailed)
         mock_person_logout.assert_called_once()
 
 

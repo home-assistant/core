@@ -4,12 +4,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .common import (
-    DecoraWifiCommFailed,
-    DecoraWifiLoginFailed,
-    DecoraWifiPlatform,
-    decorawifisessions,
-)
+from .common import CommFailed, DecoraWifiPlatform, LoginFailed, decorawifisessions
 from .const import CONF_TITLE, DOMAIN
 
 
@@ -58,12 +53,12 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 email=self.data[CONF_USERNAME],
                 password=self.data[CONF_PASSWORD],
             )
-        except DecoraWifiLoginFailed:
+        except LoginFailed:
             errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
-        except DecoraWifiCommFailed:
+        except CommFailed:
             errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
@@ -101,12 +96,12 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 email=self.data[CONF_USERNAME],
                 password=self.data[CONF_PASSWORD],
             )
-        except DecoraWifiLoginFailed:
+        except LoginFailed:
             errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
             )
-        except DecoraWifiCommFailed:
+        except CommFailed:
             errors["base"] = "cannot_connect"
             return self.async_show_form(
                 step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
