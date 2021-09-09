@@ -116,6 +116,9 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         """Query all members and determine the binary sensor group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         filtered_states: list[str] = [x.state for x in all_states if x is not None]
+        self._attr_available = any(
+            state != STATE_UNAVAILABLE for state in filtered_states
+        )
         if STATE_UNAVAILABLE in filtered_states:
             self._attr_is_on = None
         else:
