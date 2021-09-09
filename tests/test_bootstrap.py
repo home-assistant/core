@@ -678,6 +678,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
         await bootstrap._async_set_up_integrations(
             hass, {"normal_integration": {}, "an_after_dep": {}}
         )
+        await hass.async_block_till_done()
 
     assert integrations[0] != {}
     assert "an_after_dep" in integrations[0]
