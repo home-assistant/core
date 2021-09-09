@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable
 
 from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
@@ -64,6 +65,28 @@ QUERY_STATISTICS_SHORT_TERM = [
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     StatisticsShortTerm.sum_increase,
+]
+
+QUERY_STATISTICS_SUMMARY_MEAN = [
+    StatisticsShortTerm.metadata_id,
+    func.avg(StatisticsShortTerm.mean),
+    func.min(StatisticsShortTerm.min),
+    func.max(StatisticsShortTerm.max),
+]
+
+QUERY_STATISTICS_SUMMARY_SUM = [
+    StatisticsShortTerm.metadata_id,
+    StatisticsShortTerm.start,
+    StatisticsShortTerm.last_reset,
+    StatisticsShortTerm.state,
+    StatisticsShortTerm.sum,
+    StatisticsShortTerm.sum_increase,
+    func.row_number()
+    .over(
+        partition_by=StatisticsShortTerm.metadata_id,
+        order_by=StatisticsShortTerm.start.desc(),
+    )
+    .label("rownum"),
 ]
 
 QUERY_STATISTIC_META = [
@@ -230,15 +253,8 @@ def compile_hourly_statistics(
     end_time = start_time + timedelta(hours=1)
     # Get last hour's average, min, max
     summary = {}
-    QUERY_STATISTICS_SUMMARY = [
-        StatisticsShortTerm.metadata_id,
-        func.avg(StatisticsShortTerm.mean),
-        func.min(StatisticsShortTerm.min),
-        func.max(StatisticsShortTerm.max),
-    ]
-
     baked_query = instance.hass.data[STATISTICS_SHORT_TERM_BAKERY](
-        lambda session: session.query(*QUERY_STATISTICS_SUMMARY)
+        lambda session: session.query(*QUERY_STATISTICS_SUMMARY_MEAN)
     )
 
     baked_query += lambda q: q.filter(
@@ -263,25 +279,8 @@ def compile_hourly_statistics(
             }
 
     # Get last hour's sum
-    QUERY_STATISTICS_SUMMARY_2 = [
-        StatisticsShortTerm.metadata_id,
-        StatisticsShortTerm.start,
-        StatisticsShortTerm.last_reset,
-        StatisticsShortTerm.state,
-        StatisticsShortTerm.sum,
-        StatisticsShortTerm.sum_increase,
-        func.row_number()
-        .over(
-            partition_by=StatisticsShortTerm.metadata_id,
-            order_by=StatisticsShortTerm.start.desc(),
-        )
-        .label("rownum"),
-    ]
-
     subquery = (
-        session.query(
-            *QUERY_STATISTICS_SUMMARY_2,
-        )
+        session.query(*QUERY_STATISTICS_SUMMARY_SUM)
         .filter(StatisticsShortTerm.start >= bindparam("start_time"))
         .filter(StatisticsShortTerm.start < bindparam("end_time"))
         .subquery()

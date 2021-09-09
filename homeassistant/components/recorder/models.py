@@ -242,7 +242,7 @@ class StatisticsBase:
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     @declared_attr
-    def metadata_id(cls):
+    def metadata_id(self):
         """Define the metadata_id column for sub classes."""
         return Column(
             Integer,
