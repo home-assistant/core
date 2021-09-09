@@ -164,7 +164,7 @@ aiorecollect==1.0.8
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.4
+aioswitcher==2.0.5
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -209,7 +209,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.20.0
+async-upnp-client==0.21.0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -675,7 +675,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.2.0
+pillow==8.3.2
 
 # homeassistant.components.plex
 plexapi==4.7.0
