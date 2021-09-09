@@ -3,6 +3,36 @@ from __future__ import annotations
 
 import os
 
+from serial.tools.list_ports_common import ListPortInfo
+
+from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
+
+
+def list_ports_as_str(
+    serial_ports: list[ListPortInfo], no_usb_option: bool = True
+) -> list[str]:
+    """
+    Represent currently available serial ports as string.
+
+    Adds option to not use usb on top of the list,
+    option to use manual path or refresh list at the end.
+    """
+    ports_as_string: list[str] = []
+
+    if no_usb_option:
+        ports_as_string.append(DONT_USE_USB)
+
+    for port in serial_ports:
+        ports_as_string.append(
+            f"{port.device}"
+            + f" - {port.product}"
+            + f" - {format(port.vid, 'x')}:{format(port.pid, 'x')}"
+        )
+    ports_as_string.append(MANUAL_PATH)
+    ports_as_string.append(REFRESH_LIST)
+
+    return ports_as_string
+
 
 def get_port(dev_path: str) -> str | None:
     """Get the port that the by-id link points to."""

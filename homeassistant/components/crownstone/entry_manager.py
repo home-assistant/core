@@ -16,12 +16,7 @@ from crownstone_uart.Exceptions import UartException
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_UNIQUE_ID,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -29,8 +24,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import (
     ATTR_UART,
     CONF_USB_PATH,
-    CONF_USE_CROWNSTONE_USB,
-    CROWNSTONE_USB,
+    CONF_USB_SPHERE,
     DOMAIN,
     PLATFORMS,
     SSE_LISTENERS,
@@ -63,22 +57,15 @@ class CrownstoneEntryManager:
         This class is a combination of Crownstone cloud, Crownstone SSE and Crownstone uart.
         Returns True if the setup was successful.
         """
-        # Setup email and password gained from config flow
-        customer_email = self.config_entry.data[CONF_EMAIL]
-        customer_password = self.config_entry.data[CONF_PASSWORD]
+        email = self.config_entry.data[CONF_EMAIL]
+        password = self.config_entry.data[CONF_PASSWORD]
 
-        # Add entry update listener
-        self.config_entry.async_on_unload(
-            self.config_entry.add_update_listener(async_update_entry_options)
-        )
-
-        # Create cloud instance
         self.cloud = CrownstoneCloud(
-            email=customer_email,
-            password=customer_password,
+            email=email,
+            password=password,
             clientsession=aiohttp_client.async_get_clientsession(self.hass),
         )
-        # Login
+        # Login & sync all user data
         try:
             await self.cloud.async_initialize()
         except CrownstoneAuthenticationError as auth_err:
@@ -92,64 +79,33 @@ class CrownstoneEntryManager:
             _LOGGER.error("Unknown error during login")
             raise ConfigEntryNotReady from unknown_err
 
-        # Create SSE instance
-        # a new clientsession is created because the default one does not cleanup on unload
+        # A new clientsession is created because the default one does not cleanup on unload
         self.sse = CrownstoneSSEAsync(
-            email=customer_email,
-            password=customer_password,
+            email=email,
+            password=password,
             access_token=self.cloud.access_token,
             websession=aiohttp_client.async_create_clientsession(self.hass),
         )
         # Listen for events in the background, without task tracking
         asyncio.create_task(self.async_process_events(self.sse))
-        # Create listeners for events to update entity data
         setup_sse_listeners(self)
 
-        # Check if a usb by-id exists, if not use cloud
+        # Set up a Crownstone USB only if path exists
         if self.config_entry.data[CONF_USB_PATH] is not None:
-            port = await self.hass.async_add_executor_job(
-                get_port, self.config_entry.data[CONF_USB_PATH]
-            )
-            # port can be None when Home Assistant is started without the USB plugged in
-            if port is not None:
-                self.uart = CrownstoneUart()
-                # UartException is raised when serial controller fails to open
-                try:
-                    await self.uart.initialize_usb(port)
-                except UartException:
-                    delattr(self, ATTR_UART)
-                    # remove usb path to make usb setup available from options
-                    entry_data = self.config_entry.data.copy()
-                    entry_data[CONF_USB_PATH] = None
-                    self.hass.config_entries.async_update_entry(
-                        entry=self.config_entry, data=entry_data
-                    )
-                    # show notification to ensure the user knows the cloud is now used
-                    persistent_notification.async_create(
-                        self.hass,
-                        f"Setup of Crownstone USB dongle was unsuccessful on port {port}.\n \
-                        Crownstone Cloud will be used to switch Crownstones.\n \
-                        Please check if your port is correct and set up the USB again from integration options.",
-                        "Crownstone",
-                        "crownstone_usb_dongle_setup",
-                    )
-                # Create listeners for uart events
-                setup_uart_listeners(self)
+            await self.async_setup_usb()
 
-        # Save in what sphere the Crownstone USB is if it was setup correctly
-        # Crownstones could only be switched using the USB if they are in the same sphere (using BLE)
-        # Assuming that the other spheres are different buildings
-        if hasattr(self, ATTR_UART):
-            for sphere in self.cloud.cloud_data:
-                for crownstone in sphere.crownstones:
-                    if crownstone.type == CROWNSTONE_USB:
-                        self.usb_sphere_id = sphere.cloud_id
+        # Save the sphere where the USB is located
+        # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
+        self.usb_sphere_id = self.config_entry.data[CONF_USB_SPHERE]
 
-        # create listener for when home assistant is stopped
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_shutdown)
-
-        # register all entities
+        self.hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+
+        # HA specific listeners
+        self.config_entry.async_on_unload(
+            self.config_entry.add_update_listener(_async_update_listener)
+        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_shutdown)
 
         return True
 
@@ -158,27 +114,60 @@ class CrownstoneEntryManager:
         async with sse_client as client:
             async for event in client:
                 if event is not None:
-                    # make SSE updates, like ability change, available to the user
+                    # Make SSE updates, like ability change, available to the user
                     self.hass.bus.async_fire(f"{DOMAIN}_{event.type}", event.data)
+
+    async def async_setup_usb(self) -> None:
+        """Attempt setup of a Crownstone usb dongle."""
+        # Trace by-id symlink back to the serial port
+        serial_port = await self.hass.async_add_executor_job(
+            get_port, self.config_entry.data[CONF_USB_PATH]
+        )
+        if serial_port is None:
+            return
+
+        self.uart = CrownstoneUart()
+        # UartException is raised when serial controller fails to open
+        try:
+            await self.uart.initialize_usb(serial_port)
+        except UartException:
+            delattr(self, ATTR_UART)
+            # Set entry data for usb to null
+            updated_entry_data = self.config_entry.data.copy()
+            updated_entry_data[CONF_USB_PATH] = None
+            updated_entry_data[CONF_USB_SPHERE] = None
+            # Ensure that the user can configure an USB again from options
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=updated_entry_data, options={}
+            )
+            # Show notification to ensure the user knows the cloud is now used
+            persistent_notification.async_create(
+                self.hass,
+                f"Setup of Crownstone USB dongle was unsuccessful on port {serial_port}.\n \
+                Crownstone Cloud will be used to switch Crownstones.\n \
+                Please check if your port is correct and set up the USB again from integration options.",
+                "Crownstone",
+                "crownstone_usb_dongle_setup",
+            )
+            return
+
+        setup_uart_listeners(self)
 
     async def async_unload(self) -> bool:
         """Unload the current config entry."""
-        # authentication failed
+        # Authentication failed
         if self.cloud.cloud_data is None:
             return True
 
-        # close sse client and unsub from listeners
         self.sse.close_client()
         for sse_unsub in self.listeners[SSE_LISTENERS]:
             sse_unsub()
 
-        # close uart connection and unsub from listeners
         if hasattr(self, ATTR_UART):
             self.uart.stop()
             for subscription_id in self.listeners[UART_LISTENERS]:
                 UartEventBus.unsubscribe(subscription_id)
 
-        # unload all platform entities
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )
@@ -196,31 +185,6 @@ class CrownstoneEntryManager:
             self.uart.stop()
 
 
-async def async_update_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    entry_data = entry.data.copy()
-    # USB was configured at setup & user wants to remove config
-    if (
-        not entry.options.get(CONF_USE_CROWNSTONE_USB)
-        and entry.data.get(CONF_USB_PATH) is not None
-    ):
-        entry_data[CONF_USB_PATH] = None
-
-        # update and reload
-        # USB connection is closed and entry will be created without USB connection
-        hass.config_entries.async_update_entry(entry, data=entry_data)
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    # USB was not configured at setup & user wants to configure
-    # Init config flow on USB configuration step
-    elif (
-        entry.options.get(CONF_USE_CROWNSTONE_USB)
-        and entry.data.get(CONF_USB_PATH) is None
-    ):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "usb_config"},
-                data={CONF_UNIQUE_ID: entry.entry_id},
-            )
-        )
+    await hass.config_entries.async_reload(entry.entry_id)

@@ -1,6 +1,7 @@
 """Flow handler for Crownstone."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 
 from crownstone_cloud import CrownstoneCloud
@@ -14,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
@@ -22,18 +23,23 @@ from homeassistant.helpers import aiohttp_client
 from .const import (
     CONF_USB_MANUAL_PATH,
     CONF_USB_PATH,
-    CONF_USE_CROWNSTONE_USB,
+    CONF_USB_SPHERE,
+    CONF_USB_SPHERE_OPTION,
+    CONF_USE_USB_OPTION,
     DOMAIN,
     DONT_USE_USB,
     MANUAL_PATH,
     REFRESH_LIST,
 )
+from .entry_manager import CrownstoneEntryManager
+from .helpers import list_ports_as_str
 
 
 class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Crownstone."""
 
     VERSION = 1
+    cloud: CrownstoneCloud
 
     @staticmethod
     @callback
@@ -47,7 +53,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.login_info: dict[str, Any] = {}
         self.usb_path: str | None = None
-        self.existing_entry_id: str | None = None
+        self.usb_sphere_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,15 +68,14 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        cloud = CrownstoneCloud(
+        self.cloud = CrownstoneCloud(
             email=user_input[CONF_EMAIL],
             password=user_input[CONF_PASSWORD],
             clientsession=aiohttp_client.async_get_clientsession(self.hass),
         )
-
+        # Login & sync all user data
         try:
-            # get all cloud data for this account
-            await cloud.async_initialize()
+            await self.cloud.async_initialize()
         except CrownstoneAuthenticationError as auth_error:
             if auth_error.type == "LOGIN_FAILED":
                 errors["base"] = "invalid_auth"
@@ -89,11 +94,9 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        # set unique id and abort if already configured
-        await self.async_set_unique_id(cloud.cloud_data.user_id)
+        await self.async_set_unique_id(self.cloud.cloud_data.user_id)
         self._abort_if_unique_id_configured()
 
-        # start next flow
         self.login_info = user_input
         return await self.async_step_usb_config()
 
@@ -104,47 +107,23 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         list_of_ports = await self.hass.async_add_executor_job(
             serial.tools.list_ports.comports
         )
-        ports_as_string = [DONT_USE_USB]
-        for port in list_of_ports:
-            ports_as_string.append(
-                f"{port.device}"
-                + f" - {port.product}"
-                + f" - {format(port.vid, 'x')}:{format(port.pid, 'x')}"
-            )
-        ports_as_string.append(MANUAL_PATH)
-        ports_as_string.append(REFRESH_LIST)
+        ports_as_string = list_ports_as_str(list_of_ports)
 
         if user_input is not None:
-            if user_input.get(CONF_UNIQUE_ID) is not None:
-                # provided unique id from entry that needs to be updated
-                self.existing_entry_id = user_input.get(CONF_UNIQUE_ID)
+            selection = user_input[CONF_USB_PATH]
 
-            if user_input.get(CONF_USB_PATH) is not None:
-                selection = user_input[CONF_USB_PATH]
-
-                # no usb should be used, finish flow
-                if selection == DONT_USE_USB:
-                    return self.async_finish_flow()
-
-                # show a form with text field to enter manual path
-                if selection == MANUAL_PATH:
-                    return await self.async_step_usb_manual_config()
-
-                # user can refresh the list while in this step
-                if selection != REFRESH_LIST:
-                    # get serial-id info
-                    selected_port: ListPortInfo = list_of_ports[
-                        (ports_as_string.index(selection) - 1)
-                    ]
-                    self.usb_path = await self.hass.async_add_executor_job(
-                        usb.get_serial_by_id, selected_port.device
-                    )
-
-                    # check if we are updating an existing entry
-                    if self.existing_entry_id is not None:
-                        return await self.async_update_existing_entry_usb_path()
-
-                    return self.async_finish_flow()
+            if selection == DONT_USE_USB:
+                return self.async_create_new_entry()
+            if selection == MANUAL_PATH:
+                return await self.async_step_usb_manual_config()
+            if selection != REFRESH_LIST:
+                selected_port: ListPortInfo = list_of_ports[
+                    (ports_as_string.index(selection) - 1)
+                ]
+                self.usb_path = await self.hass.async_add_executor_job(
+                    usb.get_serial_by_id, selected_port.device
+                )
+                return await self.async_step_usb_sphere_config()
 
         return self.async_show_form(
             step_id="usb_config",
@@ -163,34 +142,28 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({vol.Required(CONF_USB_MANUAL_PATH): str}),
             )
 
-        # save usb path
         self.usb_path = user_input[CONF_USB_MANUAL_PATH]
+        return await self.async_step_usb_sphere_config()
 
-        # check if we are updating an existing entry
-        if self.existing_entry_id is not None:
-            return await self.async_update_existing_entry_usb_path()
+    async def async_step_usb_sphere_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Select a Crownstone sphere that the USB operates in."""
+        spheres = {sphere.name: sphere.cloud_id for sphere in self.cloud.cloud_data}
+        # no need to select if there's only 1 option
+        if len(spheres) == 1:
+            user_input = {CONF_USB_SPHERE: next(iter(spheres.keys()))}
 
-        return self.async_finish_flow()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="usb_sphere_config",
+                data_schema=vol.Schema({CONF_USB_SPHERE: vol.In(spheres.keys())}),
+            )
 
-    async def async_update_existing_entry_usb_path(self) -> FlowResult:
-        """Update usb path of existing entry."""
-        existing_entry = self.hass.config_entries.async_get_entry(
-            str(self.existing_entry_id)
-        )
-        if existing_entry is not None:
-            # copy instead of directly changing memory
-            data = existing_entry.data.copy()
-            data[CONF_USB_PATH] = self.usb_path
-            # update entry & reload
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            # this exits the flow immediately
-            return self.async_abort(reason="usb_setup_complete")
+        self.usb_sphere_id = spheres[user_input[CONF_USB_SPHERE]]
+        return self.async_create_new_entry()
 
-        # if we couldn't find the entry
-        return self.async_abort(reason="usb_setup_unsuccessful")
-
-    def async_finish_flow(self) -> FlowResult:
+    def async_create_new_entry(self) -> FlowResult:
         """Create a new entry."""
         return self.async_create_entry(
             title=f"Account: {self.login_info[CONF_EMAIL]}",
@@ -198,6 +171,7 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_EMAIL: self.login_info[CONF_EMAIL],
                 CONF_PASSWORD: self.login_info[CONF_PASSWORD],
                 CONF_USB_PATH: self.usb_path,
+                CONF_USB_SPHERE: self.usb_sphere_id,
             },
         )
 
@@ -207,23 +181,116 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Crownstone options."""
-        self.config_entry = config_entry
+        self.entry = config_entry
+        self.updated_entry_data = config_entry.data.copy()
+        self.spheres: dict[str, str] = {}
+        self.options_input: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage Crownstone options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+        manager: CrownstoneEntryManager = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
+        spheres = {sphere.name: sphere.cloud_id for sphere in manager.cloud.cloud_data}
+        usb_path = self.entry.data.get(CONF_USB_PATH)
+        usb_sphere = self.entry.data.get(CONF_USB_SPHERE)
+
+        options_schema = vol.Schema(
+            {vol.Optional(CONF_USE_USB_OPTION, default=usb_path is not None): bool}
+        )
+        if usb_path is not None and len(spheres) > 1:
+            options_schema = options_schema.extend(
                 {
                     vol.Optional(
-                        CONF_USE_CROWNSTONE_USB,
-                        default=self.config_entry.data.get(CONF_USB_PATH) is not None,
-                    ): bool
+                        CONF_USB_SPHERE_OPTION,
+                        default=manager.cloud.cloud_data.spheres[usb_sphere].name,
+                    ): vol.In(spheres.keys())
                 }
+            )
+
+        if user_input is not None:
+            if user_input[CONF_USE_USB_OPTION] and usb_path is None:
+                self.options_input = user_input
+                self.spheres = spheres
+                return await self.async_step_usb_config_option()
+            if not user_input[CONF_USE_USB_OPTION] and usb_path is not None:
+                self.updated_entry_data[CONF_USB_PATH] = None
+                self.updated_entry_data[CONF_USB_SPHERE] = None
+                user_input.pop(CONF_USB_SPHERE_OPTION)
+            elif (
+                CONF_USB_SPHERE_OPTION in user_input
+                and spheres[user_input[CONF_USB_SPHERE_OPTION]] != usb_sphere
+            ):
+                sphere_id = spheres[user_input[CONF_USB_SPHERE_OPTION]]
+                user_input[CONF_USB_SPHERE_OPTION] = sphere_id
+                self.updated_entry_data[CONF_USB_SPHERE] = sphere_id
+
+            self.entry.data = MappingProxyType(self.updated_entry_data)
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
+
+    async def async_step_usb_config_option(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Set up a Crownstone USB dongle."""
+        list_of_ports = await self.hass.async_add_executor_job(
+            serial.tools.list_ports.comports
+        )
+        ports_as_string = list_ports_as_str(list_of_ports, False)
+
+        if user_input is not None:
+            selection = user_input[CONF_USB_PATH]
+
+            if selection == MANUAL_PATH:
+                return await self.async_step_usb_manual_config_option()
+            if selection != REFRESH_LIST:
+                selected_port: ListPortInfo = list_of_ports[
+                    ports_as_string.index(selection)
+                ]
+                usb_path = await self.hass.async_add_executor_job(
+                    usb.get_serial_by_id, selected_port.device
+                )
+                self.updated_entry_data[CONF_USB_PATH] = usb_path
+                return await self.async_step_usb_sphere_config_option()
+
+        return self.async_show_form(
+            step_id="usb_config_option",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_USB_PATH): vol.In(ports_as_string)}
             ),
         )
+
+    async def async_step_usb_manual_config_option(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manually enter Crownstone USB dongle path."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="usb_manual_config_option",
+                data_schema=vol.Schema({vol.Required(CONF_USB_MANUAL_PATH): str}),
+            )
+
+        self.updated_entry_data[CONF_USB_PATH] = user_input[CONF_USB_MANUAL_PATH]
+        return await self.async_step_usb_sphere_config_option()
+
+    async def async_step_usb_sphere_config_option(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Select a Crownstone sphere that the USB operates in."""
+        # no need to select if there's only 1 option
+        if len(self.spheres) == 1:
+            user_input = {CONF_USB_SPHERE: next(iter(self.spheres.keys()))}
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="usb_sphere_config_option",
+                data_schema=vol.Schema({CONF_USB_SPHERE: vol.In(self.spheres.keys())}),
+            )
+
+        self.updated_entry_data[CONF_USB_SPHERE] = self.spheres[
+            user_input[CONF_USB_SPHERE]
+        ]
+        self.entry.data = MappingProxyType(self.updated_entry_data)
+        return self.async_create_entry(title="", data=self.options_input)

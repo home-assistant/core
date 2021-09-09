@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ABILITY_STATE,
+    ATTR_UART,
     CROWNSTONE_INCLUDE_TYPES,
     CROWNSTONE_SUFFIX,
     DOMAIN,
@@ -57,7 +58,10 @@ async def async_setup_entry(
         for crownstone in sphere.crownstones:
             if crownstone.type in CROWNSTONE_INCLUDE_TYPES:
                 # Crownstone can communicate with Crownstone USB
-                if sphere.cloud_id == manager.usb_sphere_id:
+                if (
+                    hasattr(manager, ATTR_UART)
+                    and sphere.cloud_id == manager.usb_sphere_id
+                ):
                     entities.append(CrownstoneEntity(crownstone, manager.uart))
                 # Crownstone can't communicate with Crownstone USB
                 else:

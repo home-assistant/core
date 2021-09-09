@@ -99,14 +99,14 @@ def update_crwn_state_uart(
     except KeyError:
         return
 
-    # only update on change
-    if data.switchState is not None:
-        # this variable is initialized as None in the lib
-        updated_state = cast(SwitchState, data.switchState)
-        if updated_crownstone.state != updated_state.intensity:
-            updated_crownstone.state = updated_state.intensity
+    if data.switchState is None:
+        return
+    # update on change
+    updated_state = cast(SwitchState, data.switchState)
+    if updated_crownstone.state != updated_state.intensity:
+        updated_crownstone.state = updated_state.intensity
 
-            dispatcher_send(manager.hass, SIG_CROWNSTONE_STATE_UPDATE)
+        dispatcher_send(manager.hass, SIG_CROWNSTONE_STATE_UPDATE)
 
 
 def setup_sse_listeners(manager: CrownstoneEntryManager) -> None:

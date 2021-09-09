@@ -31,6 +31,13 @@
         },
         "title": "Crownstone USB dongle manual path",
         "description": "Manually enter the path of a Crownstone USB dongle."
+      },
+      "usb_sphere_config": {
+        "data": {
+          "usb_sphere": "Crownstone Sphere"
+        },
+        "title": "Crownstone USB Sphere",
+        "description": "Select a Crownstone Sphere where the USB is located."
       }
     }
   },
@@ -38,8 +45,30 @@
     "step": {
       "init": {
         "data": {
-          "use_crownstone_usb": "Use a Crownstone USB dongle for local data transmission."
+          "use_usb_option": "Use a Crownstone USB dongle for local data transmission",
+          "usb_sphere_option": "Crownstone Sphere where the USB is located"
         }
+      },
+      "usb_config_option": {
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Crownstone USB dongle configuration",
+        "description": "Select the serial port of the Crownstone USB dongle.\n\nLook for a device with VID 10c4 and PID ea60."
+      },
+      "usb_manual_config_option": {
+        "data": {
+          "usb_manual_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Crownstone USB dongle manual path",
+        "description": "Manually enter the path of a Crownstone USB dongle."
+      },
+      "usb_sphere_config_option": {
+        "data": {
+          "usb_sphere": "Crownstone Sphere"
+        },
+        "title": "Crownstone USB Sphere",
+        "description": "Select a Crownstone Sphere where the USB is located."
       }
     }
   }
