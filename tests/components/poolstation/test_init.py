@@ -1,4 +1,4 @@
-"""Tests for the Rituals Perfume Genie integration."""
+"""Tests for the Poolstation integration."""
 from unittest.mock import patch
 
 import aiohttp

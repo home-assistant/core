@@ -1,4 +1,4 @@
-"""Support for Rituals Perfume Genie sensors."""
+"""Support for Poolstation sensors."""
 from __future__ import annotations
 
 from pypoolstation import Pool
@@ -13,7 +13,7 @@ from . import PoolstationDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import PoolEntity
 
-PH_SUFFIX = " PH"
+PH_SUFFIX = " pH"
 TEMPERATURE_SUFFIX = " Temperature"
 SALT_SUFFIX = " Salt concentration"
 ELECTROLYSIS_SUFFIX = " Electrolysis"

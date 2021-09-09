@@ -8,9 +8,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import PoolstationDataUpdateCoordinator
 from .const import DOMAIN
 
-MANUFACTURER = "MANUFACTURER: WORK IN PROGRESS"
-MODEL = "MODEL: WORK IN PROGRESS"
-
 
 class PoolEntity(CoordinatorEntity):
     """Representation of a pool entity."""
