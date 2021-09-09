@@ -1276,5 +1276,6 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
 
-    # TYPE_CHECKING block is never executed during pytest run
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
     if TYPE_CHECKING:
+    @overload
