@@ -13,6 +13,7 @@ class MockNetwork:
     """Mock _Network object for pylast."""
 
     def __init__(self, username: str):
+        """Initialize the mock."""
         self.username = username
 
 
