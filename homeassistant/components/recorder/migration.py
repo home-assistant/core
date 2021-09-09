@@ -501,6 +501,12 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                     "sum DOUBLE PRECISION",
                 ],
             )
+    elif new_version == 21:
+        _add_columns(
+            connection,
+            "statistics",
+            ["sum_increase DOUBLE PRECISION"],
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
