@@ -1478,7 +1478,7 @@ pyfreedompro==1.1.0
 pyfritzhome==0.6.2
 
 # homeassistant.components.fronius
-pyfronius==0.6.0
+pyfronius==0.6.3
 
 # homeassistant.components.ifttt
 pyfttt==0.3

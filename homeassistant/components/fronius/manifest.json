@@ -1,8 +1,13 @@
 {
   "domain": "fronius",
   "name": "Fronius",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fronius",
-  "requirements": ["pyfronius==0.6.0"],
-  "codeowners": ["@nielstron"],
+  "requirements": ["pyfronius==0.6.3"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@nielstron", "@farmio"],
   "iot_class": "local_polling"
 }
