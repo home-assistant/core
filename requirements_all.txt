@@ -1856,7 +1856,7 @@ python-family-hub-local==0.0.2
 python-forecastio==1.4.0
 
 # homeassistant.components.sms
-# python-gammu==3.1
+# python-gammu==3.2.3
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0
