@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
@@ -88,6 +89,18 @@ UNIT_CONVERSIONS = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class ValidationIssue:
+    """Error or warning message."""
+
+    type: str
+    data: dict[str, str | None] | None = None
+
+    def as_dict(self) -> dict:
+        """Return dictionary version."""
+        return dataclasses.asdict(self)
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -468,3 +481,16 @@ def _sorted_statistics_to_dict(
 
     # Filter out the empty lists if some states had 0 results.
     return {metadata[key]["statistic_id"]: val for key, val in result.items() if val}
+
+
+def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
+    """Validate statistics."""
+    platform_validation: dict[str, list[ValidationIssue]] = {}
+    for platform in hass.data[DOMAIN].values():
+        if not hasattr(platform, "validate_statistics"):
+            continue
+        platform_validation = {
+            **platform_validation,
+            **platform.validate_statistics(hass),
+        }
+    return platform_validation
