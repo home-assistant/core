@@ -19,7 +19,8 @@
       },
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-        "no_devices_found": "No remaining device where found"
+        "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+        "no_devices_found": "No remaining devices where found"
       }
     }
   }

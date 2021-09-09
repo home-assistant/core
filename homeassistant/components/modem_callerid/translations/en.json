@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "no_devices_found": "No remaining device where found"
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No remaining devices where found"
         },
         "error": {
             "cannot_connect": "Failed to connect"

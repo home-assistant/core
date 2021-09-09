@@ -20,6 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({"name": str, "device": str})
 
 
+def _generate_unique_id(port: Any):
+    """Generate unique id from usb attributes."""
+    return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
+
+
 class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Phone Modem."""
 
@@ -37,8 +42,8 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         description = discovery_info["description"]
 
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
-        uid = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        _, errors = await self.validate_input(dev_path=dev_path, uid=uid)
+        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        _, errors = await self.validate_input(dev_path=dev_path, unique_id=unique_id)
         if errors is None:
             self._device = dev_path
             return await self.async_step_usb_confirm()
@@ -60,39 +65,50 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
         errors = {}
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        for port in ports:
-            if self.source == config_entries.SOURCE_IMPORT:
-                if port.device == user_input.get(CONF_DEVICE):  # type: ignore
-                    uid = f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
+        if self.source == config_entries.SOURCE_IMPORT and user_input is not None:
+            for port in ports:
+                if port.device == user_input[CONF_DEVICE]:
                     entry, errors = await self.validate_input(
-                        user_input=user_input, dev_path=port.device, uid=uid
+                        user_input=user_input,
+                        dev_path=port.device,
+                        unique_id=_generate_unique_id(port),
                     )
                     if errors is None:
                         return entry
-            for entry in self._async_current_entries():
-                if entry.data[CONF_DEVICE] == port.device:
-                    ports.remove(port)
-        list_of_ports = [
-            f"{p}, s/n: {p.serial_number or 'n/a'}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
+        existing_devices = [
+            entry.data[CONF_DEVICE] for entry in self._async_current_entries()
         ]
-        if not list_of_ports:
+        unused_ports = [
+            usb.human_readable_device_name(
+                port.device,
+                port.serial_number,
+                port.manufacturer,
+                port.description,
+                port.vid,
+                port.pid,
+            )
+            for port in ports
+            if port.device not in existing_devices
+        ]
+        if not unused_ports:
             return self.async_abort(reason="no_devices_found")
 
         if user_input is not None:
-            port = ports[list_of_ports.index(str(user_input.get(CONF_DEVICE)))]
+            port = ports[unused_ports.index(str(user_input.get(CONF_DEVICE)))]
             dev_path = await self.hass.async_add_executor_job(
                 usb.get_serial_by_id, port.device
             )
-            uid = f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
-            entry, errors = await self.validate_input(dev_path=dev_path, uid=uid)
+            entry, errors = await self.validate_input(
+                dev_path=dev_path, unique_id=_generate_unique_id(port)
+            )
             if errors is None:
                 return entry
         user_input = user_input or {}
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list_of_ports)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(unused_ports)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
@@ -106,12 +122,12 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(config)
 
-    async def validate_input(self, user_input=None, dev_path=None, uid=None):
+    async def validate_input(self, user_input=None, dev_path=None, unique_id=None):
         """Handle common flow input validation."""
         user_input = user_input or {}
         errors = {}
         self._async_abort_entries_match({CONF_DEVICE: dev_path})
-        await self.async_set_unique_id(uid)
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
         try:
             api = PhoneModem()

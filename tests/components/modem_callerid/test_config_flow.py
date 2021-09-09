@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import phone_modem
 import serial.tools.list_ports
 
+from homeassistant.components import usb
 from homeassistant.components.modem_callerid.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_SOURCE
@@ -35,7 +36,7 @@ def _patch_setup():
 def com_port():
     """Mock of a serial port."""
     port = serial.tools.list_ports_common.ListPortInfo(phone_modem.DEFAULT_PORT)
-    port.serial_number = "12344"
+    port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
     port.device = phone_modem.DEFAULT_PORT
     port.description = "Some serial port"
@@ -80,7 +81,14 @@ async def test_flow_usb_cannot_connect(hass):
 async def test_flow_user(hass):
     """Test user initialized flow."""
     port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    port_select = usb.human_readable_device_name(
+        port.device,
+        port.serial_number,
+        port.manufacturer,
+        port.description,
+        port.vid,
+        port.pid,
+    )
     mocked_modem = AsyncMock()
     with _patch_config_flow_modem(mocked_modem), _patch_setup():
         result = await hass.config_entries.flow.async_init(
@@ -104,7 +112,14 @@ async def test_flow_user(hass):
 async def test_flow_user_error(hass):
     """Test user initialized flow with unreachable device."""
     port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    port_select = usb.human_readable_device_name(
+        port.device,
+        port.serial_number,
+        port.manufacturer,
+        port.description,
+        port.vid,
+        port.pid,
+    )
     with _patch_config_flow_modem(AsyncMock()) as modemmock:
         modemmock.side_effect = phone_modem.exceptions.SerialError
         result = await hass.config_entries.flow.async_init(
@@ -134,6 +149,27 @@ async def test_flow_user_no_port_list(hass):
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "no_devices_found"
+
+
+async def test_abort_user_with_existing_flow(hass):
+    """Test user flow is aborted when another discovery has happened."""
+    with _patch_config_flow_modem(AsyncMock()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USB},
+            data=DISCOVERY_INFO,
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "usb_confirm"
+
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data={},
+        )
+
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == "already_in_progress"
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
