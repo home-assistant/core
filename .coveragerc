@@ -269,6 +269,9 @@ omit =
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/climate.py
+    homeassistant/components/escea/climate.py
+    homeassistant/components/escea/discovery.py
+    homeassistant/components/escea/__init__.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
     homeassistant/components/esphome/camera.py

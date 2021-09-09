@@ -1163,6 +1163,9 @@ pdunehd==1.3.2
 # homeassistant.components.pencom
 pencompy==0.0.3
 
+# homeassistant.components.escea
+pescea==1.0.8
+
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
