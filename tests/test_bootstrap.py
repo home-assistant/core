@@ -689,7 +689,6 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(hass
     assert order == ["an_after_dep", "normal_integration"]
 
 
-@pytest.mark.parametrize("load_registries", [False])
 async def test_warning_logged_on_wrap_up_timeout(hass, caplog):
     """Test we log a warning on bootstrap timeout."""
 
