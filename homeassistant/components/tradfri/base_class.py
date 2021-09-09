@@ -1,22 +1,28 @@
 """Base class for IKEA TRADFRI."""
+from __future__ import annotations
+
 from functools import wraps
 import logging
+from typing import Any, Callable
 
+from pytradfri.command import Command
+from pytradfri.device.socket import Socket
+from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_error(func):
+def handle_error(func: Callable) -> Callable:
     """Handle tradfri api call error."""
 
     @wraps(func)
-    async def wrapper(command):
+    async def wrapper(command: str) -> None:
         """Decorate api call."""
         try:
             await func(command)
@@ -34,17 +40,19 @@ class TradfriBaseClass(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device, api, gateway_id):
+    def __init__(
+        self, device: Command, api: Callable[[str], Any], gateway_id: str
+    ) -> None:
         """Initialize a device."""
         self._api = handle_error(api)
-        self._device = None
-        self._device_control = None
-        self._device_data = None
+        self._device: Command = None
+        self._device_control: SocketControl = None
+        self._device_data: Socket = None
         self._gateway_id = gateway_id
         self._refresh(device)
 
     @callback
-    def _async_start_observe(self, exc=None):
+    def _async_start_observe(self, exc: bool | None = None) -> None:
         """Start observation of device."""
         if exc:
             self.async_write_ha_state()
@@ -61,17 +69,17 @@ class TradfriBaseClass(Entity):
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Start thread when added to hass."""
         self._async_start_observe()
 
     @callback
-    def _observe_update(self, device):
+    def _observe_update(self, device: Command) -> None:
         """Receive new state data for this device."""
         self._refresh(device)
         self.async_write_ha_state()
 
-    def _refresh(self, device):
+    def _refresh(self, device: Command) -> None:
         """Refresh the device data."""
         self._device = device
         self._attr_name = device.name
@@ -84,7 +92,7 @@ class TradfriBaseDevice(TradfriBaseClass):
     """
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         info = self._device.device_info
 
@@ -97,7 +105,7 @@ class TradfriBaseDevice(TradfriBaseClass):
             "via_device": (DOMAIN, self._gateway_id),
         }
 
-    def _refresh(self, device):
+    def _refresh(self, device: Command) -> None:
         """Refresh the device data."""
         super()._refresh(device)
         self._attr_available = device.reachable
