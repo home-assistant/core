@@ -1362,12 +1362,14 @@ def fail_when_undefined(value):
     return value
 
 
-def forgiving_float(value):
+def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
         return float(value)
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            return value
+        return default
 
 
 def regex_match(value, find="", ignorecase=False):
