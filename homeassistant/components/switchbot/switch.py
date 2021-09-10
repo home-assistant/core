@@ -81,7 +81,8 @@ async def async_setup_entry(
 
     bot_device = []
 
-    if entry.data[CONF_SENSOR_TYPE] == ATTR_BOT:
+    if entry.data[CONF_SENSOR_TYPE] != ATTR_BOT:
+        return
         bot_device.append(
             SwitchBot(
                 coordinator,
