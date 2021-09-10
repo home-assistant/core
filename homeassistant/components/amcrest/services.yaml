@@ -162,3 +162,20 @@ ptz_control:
           max: 1
           step: 0.01
           unit_of_measurement: seconds
+
+privacy_mode:
+  name: Privacy Mode
+  description: Enable or disable the privacy mode of the camera.
+  fields:
+    privacy_mode:
+      name: Privacy Mode
+      description: "Enable or disable privacy mode"
+      required: true
+      selector:
+        boolean:
+    entity_id:
+      name: Entity
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+      selector:
+        text:
