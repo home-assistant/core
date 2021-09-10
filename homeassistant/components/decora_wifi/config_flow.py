@@ -4,7 +4,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .common import CommFailed, DecoraWifiPlatform, LoginFailed, decorawifisessions
+from .common import CommFailed, DecoraWifiPlatform, LoginFailed
 from .const import CONF_TITLE, DOMAIN
 
 
@@ -63,7 +63,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
-        decorawifisessions.update({self.data[CONF_USERNAME]: self.session})
+        self.hass.data[DOMAIN].update({self.entry.entry_id: self.session})
 
         # Normal config entry setup
         return self.async_create_entry(
@@ -106,7 +106,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
             )
-        decorawifisessions.update({self.data[CONF_USERNAME]: self.session})
+        self.hass.data[DOMAIN].update({self.entry.entry_id: self.session})
 
         # Login attempt succeeded. Complete the entry setup.
         self.hass.config_entries.async_update_entry(

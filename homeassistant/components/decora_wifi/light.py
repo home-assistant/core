@@ -9,18 +9,21 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.const import CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from .common import DecoraWifiEntity, DecoraWifiPlatform, decorawifisessions
+from .common import DecoraWifiEntity, DecoraWifiPlatform
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up Decora Wifi lights based on a config entry."""
     # Retrieve the platform session from the reference stored in data.
-    email = entry.data[CONF_USERNAME]
-    session: DecoraWifiPlatform = decorawifisessions[email]
+    session: DecoraWifiPlatform = hass.data[DOMAIN][entry.entry_id]
 
     if session:
         lights = session.lights

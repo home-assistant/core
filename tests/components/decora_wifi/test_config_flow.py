@@ -7,7 +7,6 @@ from homeassistant.components.decora_wifi.common import (
     CommFailed,
     DecoraWifiPlatform,
     LoginFailed,
-    decorawifisessions,
 )
 from homeassistant.components.decora_wifi.const import CONF_TITLE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -31,7 +30,7 @@ async def test_import_flow(hass):
         DecoraWifiPlatform,
         "async_setup_decora_wifi",
         MockDecoraWifiPlatform.async_setup_decora_wifi,
-    ), patch.dict(decorawifisessions) as mock_decorawifisessions, patch(
+    ), patch.dict(hass.data[DOMAIN]), patch(
         "homeassistant.components.decora_wifi.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
@@ -42,7 +41,6 @@ async def test_import_flow(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
-        assert isinstance(mock_decorawifisessions[USERNAME], MockDecoraWifiPlatform)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == f"{CONF_TITLE} - {USERNAME}"
@@ -68,7 +66,7 @@ async def test_user_flow(hass):
         DecoraWifiPlatform,
         "async_setup_decora_wifi",
         MockDecoraWifiPlatform.async_setup_decora_wifi,
-    ), patch.dict(decorawifisessions) as mock_decorawifisessions, patch(
+    ), patch.dict(hass.data[DOMAIN]), patch(
         "homeassistant.components.decora_wifi.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
@@ -79,7 +77,6 @@ async def test_user_flow(hass):
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         await hass.async_block_till_done()
-        assert isinstance(mock_decorawifisessions[USERNAME], MockDecoraWifiPlatform)
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{CONF_TITLE} - {USERNAME}"
@@ -127,7 +124,7 @@ async def test_reauth_flow(hass):
         DecoraWifiPlatform,
         "async_setup_decora_wifi",
         MockDecoraWifiPlatform.async_setup_decora_wifi,
-    ), patch.dict(decorawifisessions) as mock_decorawifisessions:
+    ), patch.dict(hass.data[DOMAIN]):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -135,7 +132,6 @@ async def test_reauth_flow(hass):
                 CONF_PASSWORD: UPDATED_PASSWORD,
             },
         )
-        assert isinstance(mock_decorawifisessions[USERNAME], MockDecoraWifiPlatform)
     await hass.async_block_till_done()
 
     assert mock_config.data.get("username") == USERNAME

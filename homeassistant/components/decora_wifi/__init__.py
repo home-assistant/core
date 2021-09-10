@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
-from .common import CommFailed, DecoraWifiPlatform, LoginFailed, decorawifisessions
+from .common import CommFailed, DecoraWifiPlatform, LoginFailed
 from .const import CONF_OPTIONS, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ async def async_setup(hass, config):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": SOURCE_IMPORT},
                 data={
                     CONF_USERNAME: conf[CONF_USERNAME],
                     CONF_PASSWORD: conf[CONF_PASSWORD],
@@ -63,14 +63,14 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Decora Wifi from a config entry."""
 
     conf_data = dict(entry.data)
     email = conf_data[CONF_USERNAME]
     password = conf_data[CONF_PASSWORD]
 
-    # Set a sane default scan interval.
+    # Set scan interval, or grab a sane default.
     conf_data[CONF_OPTIONS] = {
         CONF_SCAN_INTERVAL: dict(entry.options).get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry):
     }
 
     # If a session is already setup, don't start a new one.
-    session = decorawifisessions.get(email, None)
+    session: DecoraWifiPlatform = hass.data[DOMAIN].get(entry.entry_id, None)
     if not session:
         # Re-login
         try:
@@ -94,32 +94,28 @@ async def async_setup_entry(hass: HomeAssistant, entry):
         except CommFailed as exc:
             _LOGGER.error("Communication with myLeviton failed")
             raise ConfigEntryNotReady from exc
-        decorawifisessions.update({email: session})
+        hass.data[DOMAIN].update({entry.entry_id: session})
 
     if session:
-        activeplatforms = session.active_platforms
+        active_platforms = session.active_platforms
         # Forward the config entry to each platform which has devices to set up.
-        hass.config_entries.async_setup_platforms(entry, activeplatforms)
+        hass.config_entries.async_setup_platforms(entry, active_platforms)
         return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    conf_data = dict(entry.data)
-    email = conf_data[CONF_USERNAME]
-    session: DecoraWifiPlatform = decorawifisessions.get(email, None)
+    session: DecoraWifiPlatform = hass.data[DOMAIN].get(entry.entry_id, None)
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         if session:
-            session.teardown()
             try:
                 # Attempt to log out.
-                await hass.async_create_task(session.api_logout)
+                await hass.async_add_executor_job(session.teardown)
             except CommFailed:
                 _LOGGER.warning(
                     "Communication with myLeviton failed while attempting to logout"
                 )
-            decorawifisessions.pop(email)
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

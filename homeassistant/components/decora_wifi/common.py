@@ -147,9 +147,6 @@ class DecoraWifiPlatform:
         return LIGHT_DOMAIN
 
 
-decorawifisessions: dict[str, DecoraWifiPlatform] = {}
-
-
 class DecoraWifiEntity(Entity):
     """Initiate Decora Wifi Base Class."""
 
