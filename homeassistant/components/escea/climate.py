@@ -1,8 +1,9 @@
 """Support for the Escea HVAC."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from pescea import Controller
 
