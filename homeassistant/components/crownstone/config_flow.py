@@ -151,16 +151,21 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Select a Crownstone sphere that the USB operates in."""
         spheres = {sphere.name: sphere.cloud_id for sphere in self.cloud.cloud_data}
         # no need to select if there's only 1 option
+        sphere_id: str | None = None
         if len(spheres) == 1:
-            user_input = {CONF_USB_SPHERE: next(iter(spheres.keys()))}
+            sphere_id = next(iter(spheres.values()))
 
-        if user_input is None:
+        if user_input is None and sphere_id is None:
             return self.async_show_form(
                 step_id="usb_sphere_config",
                 data_schema=vol.Schema({CONF_USB_SPHERE: vol.In(spheres.keys())}),
             )
 
-        self.usb_sphere_id = spheres[user_input[CONF_USB_SPHERE]]
+        if sphere_id:
+            self.usb_sphere_id = sphere_id
+        elif user_input:
+            self.usb_sphere_id = spheres[user_input[CONF_USB_SPHERE]]
+
         return self.async_create_new_entry()
 
     def async_create_new_entry(self) -> FlowResult:
@@ -280,17 +285,21 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Select a Crownstone sphere that the USB operates in."""
         # no need to select if there's only 1 option
+        sphere_id: str | None = None
         if len(self.spheres) == 1:
-            user_input = {CONF_USB_SPHERE: next(iter(self.spheres.keys()))}
+            sphere_id = next(iter(self.spheres.values()))
 
-        if user_input is None:
+        if user_input is None and sphere_id is None:
             return self.async_show_form(
                 step_id="usb_sphere_config_option",
                 data_schema=vol.Schema({CONF_USB_SPHERE: vol.In(self.spheres.keys())}),
             )
 
-        self.updated_entry_data[CONF_USB_SPHERE] = self.spheres[
-            user_input[CONF_USB_SPHERE]
-        ]
+        if sphere_id:
+            self.updated_entry_data[CONF_USB_SPHERE] = sphere_id
+        elif user_input:
+            self.updated_entry_data[CONF_USB_SPHERE] = self.spheres[
+                user_input[CONF_USB_SPHERE]
+            ]
         self.entry.data = MappingProxyType(self.updated_entry_data)
         return self.async_create_entry(title="", data=self.options_input)
