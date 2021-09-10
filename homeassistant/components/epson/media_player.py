@@ -37,11 +37,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
+from .const import (
+    ATTR_CMODE,
+    DOMAIN,
+    SERVICE_SELECT_CMODE,
+    SIGNAL_CONFIG_OPTIONS_UPDATE,
+    TIMEOUT_SCALE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,6 +156,23 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             "model": "Epson",
             "via_hub": (DOMAIN, self._unique_id),
         }
+
+    async def async_added_to_hass(self):
+        """Use lifecycle hooks."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._entry.entry_id),
+                self.update_options,
+            )
+        )
+
+    @callback
+    def update_options(self, options):
+        """Update timeout scale option."""
+        timeout = options.get(TIMEOUT_SCALE, 1.0)
+        _LOGGER.debug("Setting new timeout scale value: %s", timeout)
+        self._projector.set_timeout_scale(timeout)
 
     @property
     def name(self):

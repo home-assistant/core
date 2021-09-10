@@ -4,8 +4,10 @@ from unittest.mock import patch
 from epson_projector.const import PWR_OFF_STATE
 
 from homeassistant import config_entries, setup
-from homeassistant.components.epson.const import DOMAIN
+from homeassistant.components.epson.const import DOMAIN, TIMEOUT_SCALE
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -76,3 +78,26 @@ async def test_form_powered_off(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "powered_off"}
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={TIMEOUT_SCALE: 1.1},
+    )
+
+    assert entry.options[TIMEOUT_SCALE] == 1.1
+    assert TIMEOUT_SCALE not in entry.data
