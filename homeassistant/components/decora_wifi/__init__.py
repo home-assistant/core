@@ -7,9 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_ENTITY_ID,
     CONF_HOST,
-    CONF_ID,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -17,8 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 
 from .common import CommFailed, DecoraWifiPlatform, LoginFailed, LoginMismatch
 from .const import CONF_OPTIONS, CONF_TITLE, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
@@ -46,9 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Decora Wifi component."""
-    hass.data.setdefault(
-        DOMAIN, EntityComponent(_LOGGER, DOMAIN, hass, timedelta(DEFAULT_SCAN_INTERVAL))
-    )
+    hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN not in config:
         return True
