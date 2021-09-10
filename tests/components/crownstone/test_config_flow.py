@@ -72,17 +72,22 @@ def get_mocked_com_port():
     return port
 
 
-def create_mocked_entry_conf(
-    email: str, password: str, usb_path: str | None, usb_sphere: str | None
-):
-    """Set a result for the entry for comparison."""
-    MOCK_CONF: dict[str, str | None] = {}
-    MOCK_CONF[CONF_EMAIL] = email
-    MOCK_CONF[CONF_PASSWORD] = password
-    MOCK_CONF[CONF_USB_PATH] = usb_path
-    MOCK_CONF[CONF_USB_SPHERE] = usb_sphere
+def create_mocked_entry_data_conf(email: str, password: str):
+    """Set a result for the entry data for comparison."""
+    mock_data: dict[str, str | None] = {}
+    mock_data[CONF_EMAIL] = email
+    mock_data[CONF_PASSWORD] = password
 
-    return MOCK_CONF
+    return mock_data
+
+
+def create_mocked_entry_options_conf(usb_path: str | None, usb_sphere: str | None):
+    """Set a result for the entry options for comparison."""
+    mock_options: dict[str, str | None] = {}
+    mock_options[CONF_USB_PATH] = usb_path
+    mock_options[CONF_USB_SPHERE] = usb_sphere
+
+    return mock_options
 
 
 async def start_config_flow(hass: HomeAssistant, mocked_cloud: MagicMock):
@@ -129,9 +134,11 @@ async def test_no_user_input(hass: HomeAssistant):
 async def test_abort_if_configured(hass: HomeAssistant):
     """Test flow with correct login input and abort if sphere already configured."""
     # create mock entry conf
-    configured_entry = create_mocked_entry_conf(
+    configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    configured_entry_options = create_mocked_entry_options_conf(
         usb_path="/dev/serial/by-id/crownstone-usb",
         usb_sphere="sphere_id",
     )
@@ -139,7 +146,8 @@ async def test_abort_if_configured(hass: HomeAssistant):
     # create mocked entry
     MockConfigEntry(
         domain=DOMAIN,
-        data=configured_entry,
+        data=configured_entry_data,
+        options=configured_entry_options,
         unique_id="account_id",
     ).add_to_hass(hass)
 
@@ -188,12 +196,15 @@ async def test_unknown_error(hass: HomeAssistant):
 
 async def test_successful_login_no_usb(hass: HomeAssistant):
     """Test a successful login without configuring a USB."""
-    entry_without_usb = create_mocked_entry_conf(
+    entry_data_without_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    entry_options_without_usb = create_mocked_entry_options_conf(
         usb_path=None,
         usb_sphere=None,
     )
+
     result = await start_config_flow(hass, get_mocked_crownstone_cloud())
     # should show usb form
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -204,7 +215,8 @@ async def test_successful_login_no_usb(hass: HomeAssistant):
         result["flow_id"], user_input={CONF_USB_PATH: DONT_USE_USB}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == entry_without_usb
+    assert result["data"] == entry_data_without_usb
+    assert result["options"] == entry_options_without_usb
 
 
 @patch(
@@ -216,12 +228,15 @@ async def test_successful_login_no_usb(hass: HomeAssistant):
 )
 async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
-    entry_with_usb = create_mocked_entry_conf(
+    entry_data_with_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    entry_options_with_usb = create_mocked_entry_options_conf(
         usb_path="/dev/serial/by-id/crownstone-usb",
         usb_sphere="sphere_id_1",
     )
+
     result = await start_config_flow(
         hass, get_mocked_crownstone_cloud(create_mocked_spheres(2))
     )
@@ -253,7 +268,8 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
         result["flow_id"], user_input={CONF_USB_SPHERE: "sphere_name_1"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == entry_with_usb
+    assert result["data"] == entry_data_with_usb
+    assert result["options"] == entry_options_with_usb
 
 
 @patch(
@@ -261,12 +277,15 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
 )
 async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
-    entry_with_manual_usb = create_mocked_entry_conf(
+    entry_data_with_manual_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    entry_options_with_manual_usb = create_mocked_entry_options_conf(
         usb_path="/dev/crownstone-usb",
         usb_sphere="sphere_id_0",
     )
+
     result = await start_config_flow(
         hass, get_mocked_crownstone_cloud(create_mocked_spheres(1))
     )
@@ -291,7 +310,8 @@ async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
     # since we only have 1 sphere here, test that it's automatically selected and
     # creating entry without asking for user input
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == entry_with_manual_usb
+    assert result["data"] == entry_data_with_manual_usb
+    assert result["options"] == entry_options_with_manual_usb
 
 
 @patch(
@@ -303,9 +323,11 @@ async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
 )
 async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistant):
     """Test options flow init."""
-    configured_entry = create_mocked_entry_conf(
+    configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    configured_entry_options = create_mocked_entry_options_conf(
         usb_path=None,
         usb_sphere=None,
     )
@@ -313,7 +335,8 @@ async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistan
     # create mocked entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=configured_entry,
+        data=configured_entry_data,
+        options=configured_entry_options,
         unique_id="account_id",
     )
     entry.add_to_hass(hass)
@@ -363,17 +386,18 @@ async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistan
         result["flow_id"], user_input={CONF_USB_SPHERE: "sphere_name_1"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_USE_USB_OPTION: True}
-    # check updated entry data
-    assert entry.data[CONF_USB_PATH] == "/dev/serial/by-id/crownstone-usb"
-    assert entry.data[CONF_USB_SPHERE] == "sphere_id_1"
+    assert result["data"] == create_mocked_entry_options_conf(
+        usb_path="/dev/serial/by-id/crownstone-usb", usb_sphere="sphere_id_1"
+    )
 
 
 async def test_options_flow_remove_usb(hass: HomeAssistant):
     """Test selecting to set up an USB dongle."""
-    configured_entry = create_mocked_entry_conf(
+    configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    configured_entry_options = create_mocked_entry_options_conf(
         usb_path="/dev/serial/by-id/crownstone-usb",
         usb_sphere="sphere_id_0",
     )
@@ -381,7 +405,8 @@ async def test_options_flow_remove_usb(hass: HomeAssistant):
     # create mocked entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=configured_entry,
+        data=configured_entry_data,
+        options=configured_entry_options,
         unique_id="account_id",
     )
     entry.add_to_hass(hass)
@@ -408,10 +433,9 @@ async def test_options_flow_remove_usb(hass: HomeAssistant):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_USE_USB_OPTION: False}
-    # check updated entry data
-    assert entry.data[CONF_USB_PATH] is None
-    assert entry.data[CONF_USB_SPHERE] is None
+    assert result["data"] == create_mocked_entry_options_conf(
+        usb_path=None, usb_sphere=None
+    )
 
 
 @patch(
@@ -419,9 +443,11 @@ async def test_options_flow_remove_usb(hass: HomeAssistant):
 )
 async def test_options_flow_manual_usb_path(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
-    configured_entry = create_mocked_entry_conf(
+    configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    configured_entry_options = create_mocked_entry_options_conf(
         usb_path=None,
         usb_sphere=None,
     )
@@ -429,7 +455,8 @@ async def test_options_flow_manual_usb_path(hass: HomeAssistant):
     # create mocked entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=configured_entry,
+        data=configured_entry_data,
+        options=configured_entry_options,
         unique_id="account_id",
     )
     entry.add_to_hass(hass)
@@ -462,17 +489,18 @@ async def test_options_flow_manual_usb_path(hass: HomeAssistant):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_USE_USB_OPTION: True}
-    # check updated entry data
-    assert entry.data[CONF_USB_PATH] == path
-    assert entry.data[CONF_USB_SPHERE] == "sphere_id_0"
+    assert result["data"] == create_mocked_entry_options_conf(
+        usb_path=path, usb_sphere="sphere_id_0"
+    )
 
 
 async def test_options_flow_change_usb_sphere(hass: HomeAssistant):
     """Test changing the usb sphere in the options."""
-    configured_entry = create_mocked_entry_conf(
+    configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
         password="homeassistantisawesome",
+    )
+    configured_entry_options = create_mocked_entry_options_conf(
         usb_path="/dev/serial/by-id/crownstone-usb",
         usb_sphere="sphere_id_0",
     )
@@ -480,7 +508,8 @@ async def test_options_flow_change_usb_sphere(hass: HomeAssistant):
     # create mocked entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=configured_entry,
+        data=configured_entry_data,
+        options=configured_entry_options,
         unique_id="account_id",
     )
     entry.add_to_hass(hass)
@@ -497,10 +526,6 @@ async def test_options_flow_change_usb_sphere(hass: HomeAssistant):
         user_input={CONF_USE_USB_OPTION: True, CONF_USB_SPHERE_OPTION: "sphere_name_2"},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {
-        CONF_USE_USB_OPTION: True,
-        CONF_USB_SPHERE_OPTION: "sphere_id_2",
-    }
-    # check updated entry data
-    assert entry.data[CONF_USB_PATH] == "/dev/serial/by-id/crownstone-usb"
-    assert entry.data[CONF_USB_SPHERE] == "sphere_id_2"
+    assert result["data"] == create_mocked_entry_options_conf(
+        usb_path="/dev/serial/by-id/crownstone-usb", usb_sphere="sphere_id_2"
+    )

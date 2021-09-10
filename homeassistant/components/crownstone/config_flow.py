@@ -1,7 +1,6 @@
 """Flow handler for Crownstone."""
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import Any
 
 from crownstone_cloud import CrownstoneCloud
@@ -175,9 +174,8 @@ class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_EMAIL: self.login_info[CONF_EMAIL],
                 CONF_PASSWORD: self.login_info[CONF_PASSWORD],
-                CONF_USB_PATH: self.usb_path,
-                CONF_USB_SPHERE: self.usb_sphere_id,
             },
+            options={CONF_USB_PATH: self.usb_path, CONF_USB_SPHERE: self.usb_sphere_id},
         )
 
 
@@ -187,9 +185,8 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Crownstone options."""
         self.entry = config_entry
-        self.updated_entry_data = config_entry.data.copy()
+        self.updated_options = config_entry.options.copy()
         self.spheres: dict[str, str] = {}
-        self.options_input: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -198,8 +195,8 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
         manager: CrownstoneEntryManager = self.hass.data[DOMAIN][self.entry.entry_id]
 
         spheres = {sphere.name: sphere.cloud_id for sphere in manager.cloud.cloud_data}
-        usb_path = self.entry.data.get(CONF_USB_PATH)
-        usb_sphere = self.entry.data.get(CONF_USB_SPHERE)
+        usb_path = self.entry.options.get(CONF_USB_PATH)
+        usb_sphere = self.entry.options.get(CONF_USB_SPHERE)
 
         options_schema = vol.Schema(
             {vol.Optional(CONF_USE_USB_OPTION, default=usb_path is not None): bool}
@@ -216,23 +213,20 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             if user_input[CONF_USE_USB_OPTION] and usb_path is None:
-                self.options_input = user_input
                 self.spheres = spheres
                 return await self.async_step_usb_config_option()
             if not user_input[CONF_USE_USB_OPTION] and usb_path is not None:
-                self.updated_entry_data[CONF_USB_PATH] = None
-                self.updated_entry_data[CONF_USB_SPHERE] = None
-                user_input.pop(CONF_USB_SPHERE_OPTION)
+                self.updated_options[CONF_USB_PATH] = None
+                self.updated_options[CONF_USB_SPHERE] = None
             elif (
                 CONF_USB_SPHERE_OPTION in user_input
                 and spheres[user_input[CONF_USB_SPHERE_OPTION]] != usb_sphere
             ):
                 sphere_id = spheres[user_input[CONF_USB_SPHERE_OPTION]]
                 user_input[CONF_USB_SPHERE_OPTION] = sphere_id
-                self.updated_entry_data[CONF_USB_SPHERE] = sphere_id
+                self.updated_options[CONF_USB_SPHERE] = sphere_id
 
-            self.entry.data = MappingProxyType(self.updated_entry_data)
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title="", data=self.updated_options)
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
 
@@ -257,7 +251,7 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
                 usb_path = await self.hass.async_add_executor_job(
                     usb.get_serial_by_id, selected_port.device
                 )
-                self.updated_entry_data[CONF_USB_PATH] = usb_path
+                self.updated_options[CONF_USB_PATH] = usb_path
                 return await self.async_step_usb_sphere_config_option()
 
         return self.async_show_form(
@@ -277,7 +271,7 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
                 data_schema=vol.Schema({vol.Required(CONF_USB_MANUAL_PATH): str}),
             )
 
-        self.updated_entry_data[CONF_USB_PATH] = user_input[CONF_USB_MANUAL_PATH]
+        self.updated_options[CONF_USB_PATH] = user_input[CONF_USB_MANUAL_PATH]
         return await self.async_step_usb_sphere_config_option()
 
     async def async_step_usb_sphere_config_option(
@@ -296,10 +290,10 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
             )
 
         if sphere_id:
-            self.updated_entry_data[CONF_USB_SPHERE] = sphere_id
+            self.updated_options[CONF_USB_SPHERE] = sphere_id
         elif user_input:
-            self.updated_entry_data[CONF_USB_SPHERE] = self.spheres[
+            self.updated_options[CONF_USB_SPHERE] = self.spheres[
                 user_input[CONF_USB_SPHERE]
             ]
-        self.entry.data = MappingProxyType(self.updated_entry_data)
-        return self.async_create_entry(title="", data=self.options_input)
+
+        return self.async_create_entry(title="", data=self.updated_options)

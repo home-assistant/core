@@ -90,12 +90,12 @@ class CrownstoneEntryManager:
         setup_sse_listeners(self)
 
         # Set up a Crownstone USB only if path exists
-        if self.config_entry.data[CONF_USB_PATH] is not None:
+        if self.config_entry.options[CONF_USB_PATH] is not None:
             await self.async_setup_usb()
 
         # Save the sphere where the USB is located
         # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
-        self.usb_sphere_id = self.config_entry.data[CONF_USB_SPHERE]
+        self.usb_sphere_id = self.config_entry.options[CONF_USB_SPHERE]
 
         self.hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
@@ -122,7 +122,7 @@ class CrownstoneEntryManager:
         """Attempt setup of a Crownstone usb dongle."""
         # Trace by-id symlink back to the serial port
         serial_port = await self.hass.async_add_executor_job(
-            get_port, self.config_entry.data[CONF_USB_PATH]
+            get_port, self.config_entry.options[CONF_USB_PATH]
         )
         if serial_port is None:
             return
@@ -133,13 +133,13 @@ class CrownstoneEntryManager:
             await self.uart.initialize_usb(serial_port)
         except UartException:
             self.uart = None
-            # Set entry data for usb to null
-            updated_entry_data = self.config_entry.data.copy()
-            updated_entry_data[CONF_USB_PATH] = None
-            updated_entry_data[CONF_USB_SPHERE] = None
+            # Set entry options for usb to null
+            updated_options = self.config_entry.options.copy()
+            updated_options[CONF_USB_PATH] = None
+            updated_options[CONF_USB_SPHERE] = None
             # Ensure that the user can configure an USB again from options
             self.hass.config_entries.async_update_entry(
-                self.config_entry, data=updated_entry_data, options={}
+                self.config_entry, options=updated_options
             )
             # Show notification to ensure the user knows the cloud is now used
             persistent_notification.async_create(
