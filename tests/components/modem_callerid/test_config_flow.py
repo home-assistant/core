@@ -191,3 +191,14 @@ async def test_flow_import(hass: HomeAssistant):
 
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_flow_import_cannot_connect(hass: HomeAssistant):
+    """Test import connection error."""
+    with _patch_config_flow_modem(AsyncMock()) as modemmock:
+        modemmock.side_effect = phone_modem.exceptions.SerialError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
