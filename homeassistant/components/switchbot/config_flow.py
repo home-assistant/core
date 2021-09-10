@@ -15,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_BOT,
+    BTLE_LOCK,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
     CONF_SCAN_TIMEOUT,
@@ -27,7 +28,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-CONNECT_LOCK = Lock()
 
 
 def _btle_connect(mac: str) -> dict:
@@ -55,10 +55,17 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(data[CONF_MAC].replace(":", ""))
         self._abort_if_unique_id_configured()
 
+        # asyncio.lock prevents btle adapter exceptions if there are multiple calls to this method.
+        # store asyncio.lock in hass data if not present.
+        if not self.hass.data.get(DOMAIN):
+            self.hass.data.setdefault(DOMAIN, {})
+            self.hass.data[DOMAIN][BTLE_LOCK] = Lock()
+
+        connect_lock = self.hass.data[DOMAIN][BTLE_LOCK]
+
         # Validate bluetooth device mac.
-        # CONNECT_LOCK prevents btle adapter exceptions if there are multiple calls to this method.
         try:
-            async with CONNECT_LOCK:
+            async with connect_lock:
                 _btle_adv_data = await self.hass.async_add_executor_job(
                     _btle_connect, data[CONF_MAC]
                 )

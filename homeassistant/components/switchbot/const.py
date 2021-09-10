@@ -20,3 +20,4 @@ CONF_SCAN_TIMEOUT = "scan_timeout"
 
 # Data
 DATA_COORDINATOR = "coordinator"
+BTLE_LOCK = "btle_lock"

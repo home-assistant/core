@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    BTLE_LOCK,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
     CONF_SCAN_TIMEOUT,
@@ -40,18 +41,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Use same coordinator instance for all entities.
     # Uses BTLE advertisement data, all Switchbot devices in range is stored here.
-    if hass.data.get(DOMAIN):
-        for item in hass.config_entries.async_entries(domain=DOMAIN):
-            if hass.data[DOMAIN].get(item.entry_id):
-                coordinator = hass.data[DOMAIN][item.entry_id].get(DATA_COORDINATOR)
-                break
+    if not hass.data[DOMAIN].get(DATA_COORDINATOR):
 
-    else:
-        switchbot.DEFAULT_RETRY_TIMEOUT = entry.options[CONF_RETRY_TIMEOUT]
-
+        # Check if asyncio.lock is stored in hass data.
         # BTLE has issues with multiple connections,
         # so we use a lock to ensure that only one API request is reaching it at a time:
-        api_lock = Lock()
+        if not hass.data[DOMAIN].get(BTLE_LOCK):
+            hass.data[DOMAIN][BTLE_LOCK] = Lock()
+
+        switchbot.DEFAULT_RETRY_TIMEOUT = entry.options[CONF_RETRY_TIMEOUT]
 
         # Store api in coordinator.
         coordinator = SwitchbotDataUpdateCoordinator(
@@ -60,19 +58,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api=switchbot,
             retry_count=entry.options[CONF_RETRY_COUNT],
             scan_timeout=entry.options[CONF_SCAN_TIMEOUT],
-            api_lock=api_lock,
+            api_lock=hass.data[DOMAIN][BTLE_LOCK],
         )
 
+        hass.data[DOMAIN][DATA_COORDINATOR] = coordinator
+
         await coordinator.async_config_entry_first_refresh()
+
+    else:
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR]
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_COORDINATOR: coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -85,6 +86,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+        if len(hass.config_entries.async_entries(DOMAIN)) == 1:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
 
