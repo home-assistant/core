@@ -341,12 +341,14 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
                             "stat_energy_from": "sensor.grid_consumption_1",
                             "entity_energy_from": "sensor.grid_consumption_1",
                             "entity_energy_price": "sensor.grid_price_1",
+                            "number_energy_price": None,
                         }
                     ],
                     "flow_to": [
                         {
                             "stat_energy_to": "sensor.grid_production_1",
                             "entity_energy_to": "sensor.grid_production_1",
+                            "entity_energy_price": None,
                             "number_energy_price": 0.10,
                         }
                     ],
@@ -417,6 +419,7 @@ async def test_validation_grid_price_errors(
                             "stat_energy_from": "sensor.grid_consumption_1",
                             "entity_energy_from": "sensor.grid_consumption_1",
                             "entity_energy_price": "sensor.grid_price_1",
+                            "number_energy_price": None,
                         }
                     ],
                     "flow_to": [],
