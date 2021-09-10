@@ -183,7 +183,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         """Return the state attributes."""
         return {
             "last_run_success": self._last_run_success,
-            "MAC": self._mac,
+            "mac_address": self._mac,
             "switch_mode": self.coordinator.data[self._idx]["data"]["switchMode"],
         }
 
