@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Callable, Coroutine
 
 from pescea import Controller
 
@@ -45,7 +46,7 @@ _ESCEA_FAN_TO_HA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigType, async_add_entities
+    hass: HomeAssistant, config: ConfigType, async_add_entities: Callable
 ):
     """Initialize an Escea Controller."""
     disco = hass.data[DATA_DISCOVERY_SERVICE]
@@ -74,8 +75,8 @@ async def async_setup_entry(
     return True
 
 
-def _return_on_connection_error(ret=None):
-    def wrap(func):
+def _return_on_connection_error(ret: Any = None):
+    def wrap(func: Callable):
         def wrapped_f(*args, **kwargs):
             if not args[0].available:
                 return ret
@@ -265,7 +266,7 @@ class ControllerDevice(ClimateEntity):
         """Return the maximum temperature."""
         return self._controller.max_temp
 
-    async def wrap_and_catch(self, coro):
+    async def wrap_and_catch(self, coro: Coroutine):
         """Catch any connection errors and set unavailable."""
         try:
             await coro

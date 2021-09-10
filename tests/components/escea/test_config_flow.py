@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.escea.const import DISPATCH_CONTROLLER_DISCOVERED, ESCEA
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
 @pytest.fixture
@@ -18,8 +19,6 @@ def mock_disco():
 
 
 def _mock_start_discovery(hass, mock_disco):
-    from homeassistant.helpers.dispatcher import async_dispatcher_send
-
     def do_disovered(*args):
         async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, True)
         return mock_disco
