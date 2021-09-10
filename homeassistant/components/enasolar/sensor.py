@@ -166,11 +166,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         )
 
-    async def async_unload_entry(hass, config_entry):
-        """Properly cancel the scheduled update."""
-        for listener in hass.data[DOMAIN][config_entry.entry_id]["listeners"]:
-            listener()
-
     if hass.is_running:
         start_update_interval(None)
     else:
