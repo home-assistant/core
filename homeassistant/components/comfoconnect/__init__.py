@@ -116,5 +116,5 @@ class ComfoConnectBridge:
         """Notify listeners that we have received an update."""
         _LOGGER.debug("Received update for %s: %s", var, value)
         dispatcher_send(
-            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(var), value
+            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(var), var, value
         )

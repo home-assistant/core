@@ -10,10 +10,17 @@ from pycomfoconnect import (
     CMD_FAN_MODE_HIGH,
     CMD_FAN_MODE_LOW,
     CMD_FAN_MODE_MEDIUM,
+    CMD_MODE_AUTO,
+    CMD_MODE_MANUAL,
     SENSOR_FAN_SPEED_MODE,
+    SENSOR_OPERATING_MODE,
 )
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import (
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -34,6 +41,14 @@ CMD_MAPPING = {
 
 SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
 
+PRESET_MODE_AUTO = "auto"
+PRESET_MODE_MANUAL = "manual"
+
+PRESET_MODES = [
+    PRESET_MODE_AUTO,
+    PRESET_MODE_MANUAL,
+]
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
@@ -46,6 +61,7 @@ class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
     current_speed = None
+    current_mode = None
 
     def __init__(self, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
@@ -64,14 +80,27 @@ class ComfoConnectFan(FanEntity):
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
-
-    def _handle_update(self, value):
-        """Handle update callbacks."""
-        _LOGGER.debug(
-            "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
+        _LOGGER.debug("Registering for operating mode")
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(SENSOR_OPERATING_MODE),
+                self._handle_update,
+            )
         )
-        self.current_speed = value
-        self.schedule_update_ha_state()
+        await self.hass.async_add_executor_job(
+            self._ccb.comfoconnect.register_sensor, SENSOR_OPERATING_MODE
+        )
+
+    def _handle_update(self, var, value):
+        """Handle update callbacks."""
+        _LOGGER.debug("Handle update for fan: %s = %s", var, value)
+        if var == SENSOR_FAN_SPEED_MODE:
+            self.current_speed = value
+            self.schedule_update_ha_state()
+        elif var == SENSOR_OPERATING_MODE:
+            self.current_mode = PRESET_MODE_AUTO if value == -1 else PRESET_MODE_MANUAL
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self) -> bool:
@@ -96,7 +125,36 @@ class ComfoConnectFan(FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_SET_SPEED
+        return SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
+
+    @property
+    def speed(self) -> str | None:
+        """Return the current speed."""
+        percentage = self.percentage
+        if percentage is None:
+            return None
+        return self.percentage_to_speed(percentage)
+
+    @property
+    def preset_modes(self):
+        """Return the available preset modes."""
+        return PRESET_MODES
+
+    @property
+    def preset_mode(self):
+        """Return the current mode."""
+        return self.current_mode
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set a preset mode on the fan."""
+        if preset_mode not in self.preset_modes:
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
+
+        if preset_mode == PRESET_MODE_AUTO:
+            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_AUTO)
+        elif preset_mode == PRESET_MODE_MANUAL:
+            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_MANUAL)
+        self.schedule_update_ha_state()
 
     @property
     def percentage(self) -> int | None:

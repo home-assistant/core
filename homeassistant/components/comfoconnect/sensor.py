@@ -327,12 +327,13 @@ class ComfoConnectSensor(SensorEntity):
             self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
 
-    def _handle_update(self, value):
+    def _handle_update(self, var, value):
         """Handle update callbacks."""
         _LOGGER.debug(
-            "Handle update for sensor %s (%d): %s",
+            "Handle update for sensor %s (%d): %s = %s",
             self.entity_description.key,
             self.entity_description.sensor_id,
+            var,
             value,
         )
         self._attr_native_value = round(value * self.entity_description.multiplier, 2)
