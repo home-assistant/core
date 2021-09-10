@@ -6,16 +6,23 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+)
+from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceEntry
 
+from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
+    NumericSensorDataTemplate,
     ZwaveValueID,
 )
 
@@ -59,14 +66,14 @@ class ZwaveDiscoveryInfo:
     assumed_state: bool
     # the home assistant platform for which an entity should be created
     platform: str
+    # helper data to use in platform setup
+    platform_data: Any
+    # additional values that need to be watched by entity
+    additional_value_ids_to_watch: set[str]
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
     # data template to use in platform logic
     platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
-    # helper data to use in platform setup
-    platform_data: dict[str, Any] | None = None
-    # additional values that need to be watched by entity
-    additional_value_ids_to_watch: set[str] | None = None
     # bool to specify whether entity should be enabled by default
     entity_registry_enabled_default: bool = True
 
@@ -487,6 +494,7 @@ DISCOVERY_SCHEMAS = [
             },
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     ZWaveDiscoverySchema(
         platform="sensor",
@@ -495,6 +503,7 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.INDICATOR},
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
@@ -508,6 +517,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
             property={"value"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     # special list sensors (Notification CC)
     ZWaveDiscoverySchema(
@@ -542,6 +552,7 @@ DISCOVERY_SCHEMAS = [
                 property={"targetValue"},
             )
         ],
+        data_template=NumericSensorDataTemplate(),
         entity_registry_enabled_default=False,
     ),
     # binary switches
@@ -660,7 +671,9 @@ DISCOVERY_SCHEMAS = [
 
 
 @callback
-def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
+def async_discover_values(
+    node: ZwaveNode, device: DeviceEntry
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         for schema in DISCOVERY_SCHEMAS:
@@ -745,9 +758,19 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
 
             # resolve helper data from template
             resolved_data = None
-            additional_value_ids_to_watch = None
+            additional_value_ids_to_watch = set()
             if schema.data_template:
-                resolved_data = schema.data_template.resolve_data(value)
+                try:
+                    resolved_data = schema.data_template.resolve_data(value)
+                except UnknownValueData as err:
+                    LOGGER.error(
+                        "Discovery for value %s on device '%s' (%s) will be skipped: %s",
+                        value,
+                        device.name_by_user or device.name,
+                        node,
+                        err,
+                    )
+                    continue
                 additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
                     resolved_data
                 )

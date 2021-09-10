@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import inspect
 import logging
 from typing import Any, Final, cast, final
 
@@ -17,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_DATE,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
@@ -36,6 +38,7 @@ from homeassistant.const import (
     DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -48,6 +51,8 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+from .const import CONF_STATE_CLASS  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -65,14 +70,15 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
+    DEVICE_CLASS_DATE,  # date (ISO8601)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_OZONE,  # Amount of O3 (µg/m³)
     DEVICE_CLASS_NITROGEN_DIOXIDE,  # Amount of NO2 (µg/m³)
-    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of NO  (µg/m³)
-    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of N2O (µg/m³)
+    DEVICE_CLASS_NITROUS_OXIDE,  # Amount of N2O  (µg/m³)
+    DEVICE_CLASS_NITROGEN_MONOXIDE,  # Amount of NO (µg/m³)
     DEVICE_CLASS_PM1,  # Particulate matter <= 0.1 μm (µg/m³)
     DEVICE_CLASS_PM10,  # Particulate matter <= 10 μm (µg/m³)
     DEVICE_CLASS_PM25,  # Particulate matter <= 2.5 μm (µg/m³)
@@ -84,6 +90,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_POWER,  # power (W/kW)
     DEVICE_CLASS_POWER_FACTOR,  # power factor (%)
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,  # Amount of VOC (µg/m³)
     DEVICE_CLASS_GAS,  # gas (m³ or ft³)
 ]
 
@@ -91,11 +98,14 @@ DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT: Final = "measurement"
+# The state represents a total amount, e.g. net energy consumption
+STATE_CLASS_TOTAL: Final = "total"
 # The state represents a monotonically increasing total, e.g. an amount of consumed gas
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 
 STATE_CLASSES: Final[list[str]] = [
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
 
@@ -128,9 +138,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
-    state_class: str | None = None
     last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
     native_unit_of_measurement: str | None = None
+    state_class: str | None = None
+    unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
+
+    def __post_init__(self) -> None:
+        """Post initialisation processing."""
+        if self.unit_of_measurement:
+            caller = inspect.stack()[2]  # type: ignore[unreachable]
+            module = inspect.getmodule(caller[0])
+            if "custom_components" in module.__file__:
+                report_issue = "report it to the custom component author."
+            else:
+                report_issue = (
+                    "create a bug report at "
+                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                )
+            _LOGGER.warning(
+                "%s is setting 'unit_of_measurement' on an instance of "
+                "SensorEntityDescription, this is not valid and will be unsupported "
+                "from Home Assistant 2021.11. Please %s",
+                module.__name__,
+                report_issue,
+            )
+            self.native_unit_of_measurement = self.unit_of_measurement
 
 
 class SensorEntity(Entity):
@@ -142,6 +174,9 @@ class SensorEntity(Entity):
     _attr_native_value: StateType = None
     _attr_state_class: str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
+    _attr_unit_of_measurement: None = (
+        None  # Subclasses of SensorEntity should not set this
+    )
     _last_reset_reported = False
     _temperature_conversion_reported = False
 
@@ -184,9 +219,10 @@ class SensorEntity(Entity):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
-                    "last_reset is deprecated and will be unsupported from Home "
-                    "Assistant Core 2021.11. Please update your configuration if "
-                    "state_class is manually configured, otherwise %s",
+                    "last_reset for entities with state_class other than 'total' is "
+                    "deprecated and will be removed from Home Assistant Core 2021.11. "
+                    "Please update your configuration if state_class is manually "
+                    "configured, otherwise %s",
                     self.entity_id,
                     type(self),
                     self.state_class,
@@ -215,16 +251,12 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        # Support for _attr_unit_of_measurement will be removed in Home Assistant 2021.11
         if (
             hasattr(self, "_attr_unit_of_measurement")
             and self._attr_unit_of_measurement is not None
         ):
-            return self._attr_unit_of_measurement
-        if (
-            hasattr(self, "entity_description")
-            and self.entity_description.unit_of_measurement is not None
-        ):
-            return self.entity_description.unit_of_measurement
+            return self._attr_unit_of_measurement  # type: ignore
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
@@ -271,7 +303,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 temp = units.temperature(float(value), unit_of_measurement)
-                value = str(round(temp) if prec == 0 else round(temp, prec))
+                value = round(temp) if prec == 0 else round(temp, prec)
 
         return value
 

@@ -17,9 +17,9 @@
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "port": "Port",
-                    "ssl": "AdGuard Home utilise un certificat SSL",
+                    "ssl": "Utilise un certificat SSL",
                     "username": "Nom d'utilisateur",
-                    "verify_ssl": "AdGuard Home utilise un certificat appropri\u00e9"
+                    "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
                 "description": "Configurez votre instance AdGuard Home pour permettre la surveillance et le contr\u00f4le."
             }

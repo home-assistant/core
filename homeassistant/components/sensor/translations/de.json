@@ -13,8 +13,8 @@
             "is_nitrogen_monoxide": "Aktuelle Stickstoffmonoxidkonzentration von {entity_name}",
             "is_nitrous_oxide": "Aktuelle Lachgaskonzentration von {entity_name}",
             "is_ozone": "Aktuelle Ozonkonzentration von {entity_name}",
-            "is_pm1": "Aktuelle PM1-Konzentrationswert von {entity_name}",
-            "is_pm10": "Aktuelle PM10-Konzentrationswert von {entity_name}",
+            "is_pm1": "Aktuelle PM1-Konzentration von {entity_name}",
+            "is_pm10": "Aktuelle PM10-Konzentration von {entity_name}",
             "is_pm25": "Aktuelle PM2.5-Konzentration von {entity_name}",
             "is_power": "Aktuelle {entity_name} Leistung",
             "is_power_factor": "Aktueller Leistungsfaktor f\u00fcr {entity_name}",
@@ -23,6 +23,7 @@
             "is_sulphur_dioxide": "Aktuelle Schwefeldioxid-Konzentration von {entity_name}",
             "is_temperature": "Aktuelle {entity_name} Temperatur",
             "is_value": "Aktueller {entity_name} Wert",
+            "is_volatile_organic_compounds": "Aktuelle Konzentration fl\u00fcchtiger organischer Verbindungen in {entity_name}",
             "is_voltage": "Aktuelle Spannung von {entity_name}"
         },
         "trigger_type": {
@@ -48,6 +49,7 @@
             "sulphur_dioxide": "\u00c4nderung der Schwefeldioxidkonzentration bei {entity_name}",
             "temperature": "{entity_name} Temperatur\u00e4nderungen",
             "value": "{entity_name} Wert\u00e4nderungen",
+            "volatile_organic_compounds": "{entity_name} Konzentrations\u00e4nderungen fl\u00fcchtiger organischer Verbindungen",
             "voltage": "{entity_name} Spannungs\u00e4nderungen"
         }
     },

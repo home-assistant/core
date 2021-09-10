@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SULPHUR_DIOXIDE,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -111,6 +112,12 @@ SIMPLE_SENSOR = {
     CharacteristicsTypes.DENSITY_SO2: {
         "name": "Sulphur Dioxide Density",
         "device_class": DEVICE_CLASS_SULPHUR_DIOXIDE,
+        "state_class": STATE_CLASS_MEASUREMENT,
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    CharacteristicsTypes.DENSITY_VOC: {
+        "name": "Volatile Organic Compound Density",
+        "device_class": DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         "state_class": STATE_CLASS_MEASUREMENT,
         "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },

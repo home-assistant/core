@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Anfitri\u00f3n"
+                }
+            }
+        }
+    }
+}
