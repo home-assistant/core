@@ -285,7 +285,7 @@ class DHCPWatcher(WatcherBase):
         # Importing scapy.sendrecv will cause a scapy resync which will
         # import scapy.arch.read_routes which will import scapy.sendrecv
         #
-        # We avoid this circular import by importing it above to ensure
+        # We avoid this circular import by importing arch above to ensure
         # the module is loaded and avoid the problem
         #
         from scapy.sendrecv import (  # pylint: disable=import-outside-toplevel
