@@ -35,7 +35,7 @@ class LoginMismatch(DecoraWifiError):
     """Raised if the userid returned on reauth does not match the userid cached when the integration was originally set up."""
 
 
-class DecoraWifiPlatform():
+class DecoraWifiPlatform:
     """Class to hold decora_wifi platform sessions and related methods."""
 
     def __init__(self, email: str, password: str) -> None:
@@ -154,7 +154,7 @@ class DecoraWifiPlatform():
 
 
 class DecoraWifiEntity(Entity):
-    """Initiate Decora Wifi Base Class."""
+    """Base Class for decora_wifi entities."""
 
     def __init__(self, device: IotSwitch) -> None:
         """Initialize Decora Wifi device base class."""

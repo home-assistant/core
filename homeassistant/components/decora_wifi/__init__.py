@@ -1,6 +1,5 @@
 """Support for the myLeviton decora_wifi component."""
 
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -80,8 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     }
 
+    # Login and store session in hass.data
     try:
-        # Attempt to log in.
         session = await DecoraWifiPlatform.async_setup_decora_wifi(
             hass,
             email,
@@ -93,21 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except CommFailed as exc:
         _LOGGER.error("Communication with myLeviton failed")
         raise ConfigEntryNotReady from exc
+    hass.data[DOMAIN][entry.entry_id] = session
 
-    # Verify the Unique ID matches, then add the entity to hass
-    if session.unique_id == conf_data[CONF_ID]:
-        await component.async_add_entities([session], False)
-    else:
-        _LOGGER.error("Userid mismatch with config entry")
-        raise LoginMismatch("Userid mismatch with config entry")
-    conf_data[CONF_ENTITY_ID] = session.entity_id
-    hass.config_entries.async_update_entry(
-        entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=conf_data
-    )
-
-    activeplatforms = session.active_platforms
     # Forward the config entry to each platform which has devices to set up.
-    hass.config_entries.async_setup_platforms(entry, activeplatforms)
+    active_platforms = session.active_platforms
+    hass.config_entries.async_setup_platforms(entry, active_platforms)
     return True
 
 
