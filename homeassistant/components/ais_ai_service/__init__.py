@@ -3126,7 +3126,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_PLAY, ["Start", "Graj", "Odtwarzaj"])
     async_register(hass, INTENT_SCENE, ["Scena {item}", "Aktywuj [scenę] {item}"])
     async_register(
-        hass, INTENT_RUN_AUTOMATION, ["Uruchom {item}", "Automatyzacja {item}"]
+        hass, INTENT_RUN_AUTOMATION, ["Uruchom {item}", "Automatyzacja {item}", "Jolka {item}"]
     )
     async_register(hass, INTENT_ASK_GOOGLE, ["Google {item}"])
     async_register(
