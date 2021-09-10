@@ -133,7 +133,7 @@ async def async_setup_entry(  # noqa: C901
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
-    processed_value_ids: dict[str, set[str]] = defaultdict(set)
+    discovered_value_ids: dict[str, set[str]] = defaultdict(set)
 
     async def async_handle_discovery_info(
         device: device_registry.DeviceEntry,
@@ -196,10 +196,14 @@ async def async_setup_entry(  # noqa: C901
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_node_values(node, device, processed_value_ids):
-            await async_handle_discovery_info(
-                device, disc_info, value_updates_disc_info
+        await asyncio.gather(
+            *(
+                async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+                for disc_info in async_discover_node_values(
+                    node, device, discovered_value_ids
+                )
             )
+        )
 
         # add listeners to handle new values that get added later
         for event in ("value added", "value updated", "metadata updated"):
@@ -274,17 +278,19 @@ async def async_setup_entry(  # noqa: C901
         if (
             not value.node.ready
             or not (device := dev_reg.async_get_device({device_id}))
-            or value.value_id in processed_value_ids[device.id]
+            or value.value_id in discovered_value_ids[device.id]
         ):
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
 
-        processed_value_ids[device.id].add(value.value_id)
-        for disc_info in async_discover_single_value(value, device):
-            await async_handle_discovery_info(
-                device, disc_info, value_updates_disc_info
+        discovered_value_ids[device.id].add(value.value_id)
+        await asyncio.gather(
+            *(
+                async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+                for disc_info in async_discover_single_value(value, device)
             )
+        )
 
     @callback
     def async_on_node_removed(node: ZwaveNode) -> None:
@@ -295,7 +301,7 @@ async def async_setup_entry(  # noqa: C901
         # note: removal of entity registry entry is handled by core
         dev_reg.async_remove_device(device.id)  # type: ignore
         registered_unique_ids.pop(device.id, None)  # type: ignore
-        processed_value_ids.pop(device.id, None)  # type: ignore
+        discovered_value_ids.pop(device.id, None)  # type: ignore
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:

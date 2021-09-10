@@ -672,14 +672,14 @@ DISCOVERY_SCHEMAS = [
 
 @callback
 def async_discover_node_values(
-    node: ZwaveNode, device: DeviceEntry, processed_value_ids: dict[str, set[str]]
+    node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
 ) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
-        if value.value_id in processed_value_ids[device.id]:
+        if value.value_id in discovered_value_ids[device.id]:
             continue
-        processed_value_ids[device.id].add(value.value_id)
+        discovered_value_ids[device.id].add(value.value_id)
         yield from async_discover_single_value(value, device)
 
 
