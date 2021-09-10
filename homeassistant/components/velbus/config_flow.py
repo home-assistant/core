@@ -77,3 +77,13 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
+
+    async def async_step_import(self, user_input=None):
+        """Import a config entry."""
+        user_input[CONF_NAME] = "Velbus Import"
+        prt = user_input[CONF_PORT]
+        if self._prt_in_configuration_exists(prt):
+            # if the velbus import is already in the config
+            # we should not proceed the import
+            return self.async_abort(reason="already_configured")
+        return await self.async_step_user(user_input)

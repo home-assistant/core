@@ -76,12 +76,27 @@ async def test_user_fail(hass, controller_assert):
     assert result["errors"] == {CONF_PORT: "cannot_connect"}
 
 
+async def test_import(hass, controller):
+    """Test import step."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_import({CONF_PORT: PORT_TCP})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "velbus_import"
+
+
 async def test_abort_if_already_setup(hass):
     """Test we abort if Daikin is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
         domain="velbus", data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus home"}
     ).add_to_hass(hass)
+
+    result = await flow.async_step_import(
+        {CONF_PORT: PORT_TCP, CONF_NAME: "velbus import test"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
     result = await flow.async_step_user(
         {CONF_PORT: PORT_TCP, CONF_NAME: "velbus import test"}
