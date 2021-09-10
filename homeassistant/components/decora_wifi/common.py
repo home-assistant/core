@@ -10,9 +10,10 @@ from decora_wifi.models.residential_account import ResidentialAccount
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import Entity
 
-from .const import LIGHT_DOMAIN, PLATFORMS
+from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
 
 
 class DecoraWifiError(HomeAssistantError):
@@ -158,7 +159,20 @@ class DecoraWifiEntity(Entity):
     def __init__(self, device: IotSwitch) -> None:
         """Initialize Decora Wifi device base class."""
         self._switch = device
+        self._model = device.model
         self._unique_id = device.mac
+
+    @property
+    def device_info(self):
+        """Return device info for the associated device."""
+        return {
+            "name": self._switch.name,
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self._unique_id)},
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "manufacturer": self._switch.manufacturer,
+            "model": self._model,
+            "sw_version": self._switch.version,
+        }
 
     @property
     def name(self):

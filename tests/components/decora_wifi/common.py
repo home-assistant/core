@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 
 # Test Inputs
 SWITCH_NAME = "Fake Switch"
+MANUFACTURER = "Leviton Manufacturing Co., Inc."
+VERSION = "1.5.72; CP 1.19"
 
 
 class MockDecoraWifiPlatform(DecoraWifiPlatform):
@@ -170,9 +172,19 @@ class FakeDecoraWiFiIotSwitch(IotSwitch):
         return f"DE-AD-BE-EF-{digits1}-{digits2}"
 
     @property
+    def manufacturer(self):
+        """Override the manufacturer property."""
+        return f"fake_iot_sw {MANUFACTURER}"
+
+    @property
     def model(self):
         """Override the model property."""
-        return f"fake_iot_sw {self.model_id}"
+        return f"fake_iot_sw {self._model_id}"
+
+    @property
+    def version(self):
+        """Override the version property."""
+        return VERSION
 
     @classmethod
     def nextID(cls):

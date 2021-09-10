@@ -9,8 +9,8 @@ from homeassistant.components.decora_wifi.common import (
     DecoraWifiPlatform,
     LoginFailed,
 )
-from homeassistant.components.decora_wifi.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components.decora_wifi.const import DOMAIN
+from homeassistant.helpers import device_registry
 
 from tests.components.decora_wifi.common import (
     SWITCH_NAME,
@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 USERNAME = "username@home-assisant.com"
 PASSWORD = "test-password"
 INCORRECT_PASSWORD = "incoreect-password"
+MODEL = "DW4SF"
 
 
 async def test_DecoraWifiPlatform_init(hass):
@@ -206,10 +207,18 @@ async def test_DecoraWifiPlatform_apilogout_commfailed(hass):
 async def test_DecoraWifiEntity_init(hass):
     """Check DecoraWifiEntity initialization."""
     session = FakeDecoraWiFiSession()
-    switch = FakeDecoraWiFiIotSwitch(session)
+    switch = FakeDecoraWiFiIotSwitch(session, MODEL)
 
     entity = DecoraWifiEntity(switch)
 
     assert entity._switch == switch
     assert entity.unique_id == switch.mac
     assert entity.name == SWITCH_NAME
+    assert entity.device_info == {
+        "name": entity._switch.name,
+        "connections": {(device_registry.CONNECTION_NETWORK_MAC, entity._unique_id)},
+        "identifiers": {(DOMAIN, entity._unique_id)},
+        "manufacturer": entity._switch.manufacturer,
+        "model": entity._switch.model,
+        "sw_version": entity._switch.version,
+    }
