@@ -7,31 +7,10 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 from decora_wifi.models.residential_permission import ResidentialPermission
 
-from homeassistant.components.decora_wifi.common import DecoraWifiPlatform
-from homeassistant.core import HomeAssistant
-
 # Test Inputs
 SWITCH_NAME = "Fake Switch"
 MANUFACTURER = "Leviton Manufacturing Co., Inc."
 VERSION = "1.5.72; CP 1.19"
-
-
-class MockDecoraWifiPlatform(DecoraWifiPlatform):
-    """Class to simulate decora_wifi platform sessions and related methods for unit testing."""
-
-    def __init__(self, email: str, password: str) -> None:
-        """Iniialize session holder."""
-        self._email = email
-        self._password = password
-
-    @staticmethod
-    async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
-        """Set up a mock decora wifi session."""
-
-        def setup_platform():
-            return MockDecoraWifiPlatform(email, password)
-
-        return await hass.async_add_executor_job(setup_platform)
 
 
 class FakeDecoraWiFiSession(DecoraWiFiSession):
@@ -47,7 +26,7 @@ class FakeDecoraWiFiSession(DecoraWiFiSession):
 
     def login(self, email, password):
         """Emulate login to LCS."""
-        if "incoreect" in password:
+        if password == "incorrect-password":
             self._email = None
             self._password = None
             self.user = None
