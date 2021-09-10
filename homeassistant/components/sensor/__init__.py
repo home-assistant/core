@@ -209,6 +209,9 @@ class SensorEntity(Entity):
                 and not self._last_reset_reported
             ):
                 self._last_reset_reported = True
+                if self.platform and self.platform.platform_name == "energy":
+                    return {ATTR_LAST_RESET: last_reset.isoformat()}
+
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) with state_class %s has set last_reset. Setting "
