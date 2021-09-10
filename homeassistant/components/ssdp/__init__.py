@@ -170,12 +170,13 @@ class Scanner:
         self._integration_matchers: dict[str, list[dict[str, str]]] | None = None
 
     @property
-    def _ssdp_devices(self) -> set[SsdpDevice]:
+    def _ssdp_devices(self) -> list[SsdpDevice]:
         """Get all seen devices."""
-        ssdp_devices: set[SsdpDevice] = set()
-        for ssdp_listener in self._ssdp_listeners:
-            ssdp_devices.update(ssdp_listener.devices.values())
-        return ssdp_devices
+        return [
+            ssdp_device
+            for ssdp_listener in self._ssdp_listeners
+            for ssdp_device in ssdp_listener.devices.values()
+        ]
 
     @property
     def _all_headers_from_ssdp_devices(
@@ -222,8 +223,10 @@ class Scanner:
 
     async def _async_stop_ssdp_listeners(self) -> None:
         """Stop the SSDP listeners."""
-        for ssdp_listener in self._ssdp_listeners:
-            await ssdp_listener.async_stop()
+        await asyncio.gather(
+            *(listener.async_stop() for listener in self._ssdp_listeners),
+            return_exceptions=True,
+        )
 
     async def _async_build_source_set(self) -> set[IPv4Address | IPv6Address]:
         """Build the list of ssdp sources."""
