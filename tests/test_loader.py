@@ -369,10 +369,18 @@ def _get_test_integration_with_usb_matcher(hass, name, config_flow):
             "dependencies": [],
             "requirements": [],
             "usb": [
-                {"vid": "10C4", "pid": "EA60"},
-                {"vid": "1CF1", "pid": "0030"},
-                {"vid": "1A86", "pid": "7523"},
-                {"vid": "10C4", "pid": "8A2A"},
+                {
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "known_devices": ["slae.sh cc2652rb stick"],
+                },
+                {"vid": "1CF1", "pid": "0030", "known_devices": ["Conbee II"]},
+                {
+                    "vid": "1A86",
+                    "pid": "7523",
+                    "known_devices": ["Electrolama zig-a-zig-ah"],
+                },
+                {"vid": "10C4", "pid": "8A2A", "known_devices": ["Nortek HUSBZB-1"]},
             ],
         },
     )

@@ -35,7 +35,7 @@ class TradfriSensor(TradfriBaseDevice, SensorEntity):
     def __init__(self, device, api, gateway_id):
         """Initialize the device."""
         super().__init__(device, api, gateway_id)
-        self._unique_id = f"{gateway_id}-{device.id}"
+        self._attr_unique_id = f"{gateway_id}-{device.id}"
 
     @property
     def native_value(self):

@@ -2,7 +2,8 @@
     "config": {
         "error": {
             "pairing_failed": "El emparejamiento ha fallado; compruebe que el Bosch Smart Home Controller est\u00e1 en modo de emparejamiento (el LED parpadea) y que su contrase\u00f1a es correcta.",
-            "session_error": "Error de sesi\u00f3n: La API devuelve un resultado no correcto."
+            "session_error": "Error de sesi\u00f3n: La API devuelve un resultado no correcto.",
+            "unknown": "Error inesperado"
         },
         "flow_title": "Bosch SHC: {name}",
         "step": {
@@ -18,6 +19,9 @@
                 "description": "La integraci\u00f3n bosch_shc necesita volver a autentificar su cuenta"
             },
             "user": {
+                "data": {
+                    "host": "Anfitri\u00f3n"
+                },
                 "description": "Configura tu Bosch Smart Home Controller para permitir la supervisi\u00f3n y el control con Home Assistant.",
                 "title": "Par\u00e1metros de autenticaci\u00f3n SHC"
             }

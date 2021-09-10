@@ -10,6 +10,9 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.zwave_js import DOMAIN, device_condition
 from homeassistant.components.zwave_js.helpers import get_zwave_value_from_config
 from homeassistant.exceptions import HomeAssistantError
@@ -431,16 +434,15 @@ async def test_get_condition_capabilities_value(
     assert capabilities and "extra_fields" in capabilities
 
     cc_options = [
-        (133, "ASSOCIATION"),
-        (128, "BATTERY"),
-        (112, "CONFIGURATION"),
-        (98, "DOOR_LOCK"),
-        (122, "FIRMWARE_UPDATE_MD"),
-        (114, "MANUFACTURER_SPECIFIC"),
-        (113, "NOTIFICATION"),
-        (152, "SECURITY"),
-        (99, "USER_CODE"),
-        (134, "VERSION"),
+        (133, "Association"),
+        (128, "Battery"),
+        (98, "Door Lock"),
+        (122, "Firmware Update Meta Data"),
+        (114, "Manufacturer Specific"),
+        (113, "Notification"),
+        (152, "Security"),
+        (99, "User Code"),
+        (134, "Version"),
     ]
 
     assert voluptuous_serialize.convert(
@@ -520,6 +522,7 @@ async def test_get_condition_capabilities_config_parameter(
         {
             "name": "value",
             "required": True,
+            "type": "integer",
             "valueMin": 0,
             "valueMax": 124,
         }
@@ -565,6 +568,30 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
             )
             == {}
         )
+
+    INVALID_CONFIG = {
+        "condition": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "value",
+        "command_class": CommandClass.DOOR_LOCK.value,
+        "property": 9999,
+        "property_key": 9999,
+        "endpoint": 9999,
+        "value": 9999,
+    }
+
+    # Test that invalid config raises exception
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
+
+    # Unload entry so we can verify that validation will pass on an invalid config
+    # since we return early
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert (
+        await device_condition.async_validate_condition_config(hass, INVALID_CONFIG)
+        == INVALID_CONFIG
+    )
 
 
 async def test_get_value_from_config_failure(

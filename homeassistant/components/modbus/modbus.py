@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later
 
@@ -194,6 +194,7 @@ class ModbusHub:
 
         # generic configuration
         self._client = None
+        self.entity_timers: list[CALLBACK_TYPE] = []
         self._async_cancel_listener = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -241,7 +242,7 @@ class ModbusHub:
             self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
-        log_text = f"Pymodbus: {text}"
+        log_text = f"Pymodbus: {self.name}: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
@@ -288,12 +289,16 @@ class ModbusHub:
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
-        if self._client:
-            try:
-                self._client.close()
-            except ModbusException as exception_error:
-                self._log_error(str(exception_error))
-        self._client = None
+        for call in self.entity_timers:
+            call()
+        self.entity_timers = []
+        async with self._lock:
+            if self._client:
+                try:
+                    self._client.close()
+                except ModbusException as exception_error:
+                    self._log_error(str(exception_error))
+                self._client = None
 
     def _pymodbus_connect(self):
         """Connect client."""
@@ -322,9 +327,9 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
-        if not self._client:
-            return None
         async with self._lock:
+            if not self._client:
+                return None
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )

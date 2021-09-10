@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -137,13 +138,10 @@ class NotionEntity(CoordinatorEntity):
         sensor_id: str,
         bridge_id: str,
         system_id: str,
-        name: str,
-        device_class: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-
-        self._attr_device_class = device_class
 
         bridge = self.coordinator.data["bridges"].get(bridge_id, {})
         sensor = self.coordinator.data["sensors"][sensor_id]
@@ -157,7 +155,7 @@ class NotionEntity(CoordinatorEntity):
         }
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_name = f'{sensor["name"]}: {name}'
+        self._attr_name = f'{sensor["name"]}: {description.name}'
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
         )
@@ -165,6 +163,7 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._system_id = system_id
         self._task_id = task_id
+        self.entity_description = description
 
     @property
     def available(self) -> bool:

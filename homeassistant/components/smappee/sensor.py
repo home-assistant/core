@@ -89,7 +89,7 @@ SOLAR_SENSORS = {
         None,
         ENERGY_WATT_HOUR,
         "solar_today",
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
         False,  # cloud only
     ],
     "solar_current_hour": [
@@ -97,7 +97,7 @@ SOLAR_SENSORS = {
         None,
         ENERGY_WATT_HOUR,
         "solar_current_hour",
-        DEVICE_CLASS_POWER,
+        DEVICE_CLASS_ENERGY,
         False,  # cloud only
     ],
 }

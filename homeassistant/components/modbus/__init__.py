@@ -12,7 +12,9 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
 )
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
@@ -65,6 +67,7 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_FANS,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MSG_WAIT,
@@ -118,6 +121,7 @@ from .const import (
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
+    duplicate_modbus_validator,
     number_validator,
     scan_interval_validator,
     struct_validator,
@@ -136,6 +140,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
+        vol.Optional(CONF_LAZY_ERROR, default=0): cv.positive_int,
     }
 )
 
@@ -267,6 +272,7 @@ SENSOR_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
         }
@@ -333,6 +339,7 @@ CONFIG_SCHEMA = vol.Schema(
             cv.ensure_list,
             scan_interval_validator,
             duplicate_entity_validator,
+            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],

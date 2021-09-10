@@ -7,6 +7,7 @@
     "pyserial==3.5"
   ],
   "codeowners": ["@bdraco"],
+  "dependencies": ["websocket_api"],
   "quality_scale": "internal",
   "iot_class": "local_push"
 }

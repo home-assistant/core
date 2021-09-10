@@ -1,6 +1,7 @@
 """Tests for the Yeelight integration."""
 import asyncio
 from datetime import timedelta
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.search import SSDPListener
@@ -18,6 +19,8 @@ from homeassistant.components.yeelight import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+
+FAIL_TO_BIND_IP = "1.2.3.4"
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"
@@ -87,11 +90,33 @@ YAML_CONFIGURATION = {
 CONFIG_ENTRY_DATA = {CONF_ID: ID}
 
 
+class MockAsyncBulb:
+    """A mock for yeelight.aio.AsyncBulb."""
+
+    def __init__(self, model, bulb_type, cannot_connect):
+        """Init the mock."""
+        self.model = model
+        self.bulb_type = bulb_type
+        self._async_callback = None
+        self._cannot_connect = cannot_connect
+
+    async def async_listen(self, callback):
+        """Mock the listener."""
+        if self._cannot_connect:
+            raise BulbException
+        self._async_callback = callback
+
+    async def async_stop_listening(self):
+        """Drop the listener."""
+        self._async_callback = None
+
+    def set_capabilities(self, capabilities):
+        """Mock setting capabilities."""
+        self.capabilities = capabilities
+
+
 def _mocked_bulb(cannot_connect=False):
-    bulb = MagicMock()
-    type(bulb).async_listen = AsyncMock(
-        side_effect=BulbException if cannot_connect else None
-    )
+    bulb = MockAsyncBulb(MODEL, BulbType.Color, cannot_connect)
     type(bulb).async_get_properties = AsyncMock(
         side_effect=BulbException if cannot_connect else None
     )
@@ -99,14 +124,10 @@ def _mocked_bulb(cannot_connect=False):
         side_effect=BulbException if cannot_connect else None
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
-
     bulb.capabilities = CAPABILITIES.copy()
-    bulb.model = MODEL
-    bulb.bulb_type = BulbType.Color
     bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()
-    bulb.async_stop_listening = AsyncMock()
     bulb.async_update = AsyncMock()
     bulb.async_turn_on = AsyncMock()
     bulb.async_turn_off = AsyncMock()
@@ -119,7 +140,7 @@ def _mocked_bulb(cannot_connect=False):
     bulb.async_set_power_mode = AsyncMock()
     bulb.async_set_scene = AsyncMock()
     bulb.async_set_default = AsyncMock()
-
+    bulb.start_music = MagicMock()
     return bulb
 
 
@@ -127,6 +148,8 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     listener = SSDPListener(*args, **kwargs)
 
     async def _async_callback(*_):
+        if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
+            raise OSError
         await listener.async_connect_callback()
 
     @callback
@@ -139,12 +162,12 @@ def _patched_ssdp_listener(info, *args, **kwargs):
     return listener
 
 
-def _patch_discovery(no_device=False):
+def _patch_discovery(no_device=False, capabilities=None):
     YeelightScanner._scanner = None  # Clear class scanner to reset hass
 
     def _generate_fake_ssdp_listener(*args, **kwargs):
         return _patched_ssdp_listener(
-            None if no_device else CAPABILITIES,
+            None if no_device else capabilities or CAPABILITIES,
             *args,
             **kwargs,
         )
