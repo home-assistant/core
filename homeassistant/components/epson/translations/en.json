@@ -12,5 +12,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout_scale": "Timeout scale"
+                },
+                "description": "Epson projectors sometimes have delay responding. Default timeouts are turn_on - 40s, off - 10s, source-5s, rest-3s. You can multiply this time by setting timeout scale eg. 1.5.",
+                "title": "Epson Options"
+            }
+        }
     }
 }

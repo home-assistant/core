@@ -12,5 +12,16 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "powered_off": "Is projector turned on? You need to turn on projector for initial configuration."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Epson Options",
+        "description": "Epson projectors sometimes have delay responding. Default timeouts are turn_on - 40s, off - 10s, source-5s, rest-3s. You can multiply this time by setting timeout scale eg. 1.5.",
+        "data": {
+          "timeout_scale": "Timeout scale"
+        }
+      }
+    }
   }
 }
