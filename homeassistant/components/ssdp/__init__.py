@@ -7,7 +7,7 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Iterable, Mapping
+from typing import Any, Callable, Mapping
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpSource
@@ -170,7 +170,7 @@ class Scanner:
         self._integration_matchers: dict[str, list[dict[str, str]]] | None = None
 
     @property
-    def _ssdp_devices(self) -> Iterable[SsdpDevice]:
+    def _ssdp_devices(self) -> list[SsdpDevice]:
         """Get all seen devices."""
         return [
             ssdp_device
