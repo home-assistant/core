@@ -1,4 +1,5 @@
 """Schema migration helpers."""
+import contextlib
 from datetime import timedelta
 import logging
 
@@ -509,16 +510,14 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
         )
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == "mysql":
-            for table in ["events", "states"]:
-                try:
+            for table in ("events", "states", "statistics_meta"):
+                with contextlib.suppress(SQLAlchemyError):
                     connection.execute(
                         text(
                             f"ALTER TABLE {table} CONVERT TO "
                             "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
                         )
                     )
-                except SQLAlchemyError:
-                    pass
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

@@ -278,6 +278,9 @@ class StatisticMetaData(TypedDict, total=False):
 class StatisticsMeta(Base):  # type: ignore
     """Statistics meta data."""
 
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_STATISTICS_META
     id = Column(Integer, primary_key=True)
     statistic_id = Column(String(255), index=True)
