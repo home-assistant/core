@@ -192,6 +192,7 @@ homeassistant/components/debugpy/* @frenck
 tests/components/debugpy/* @frenck
 homeassistant/components/deconz/* @Kane610
 tests/components/deconz/* @Kane610
+homeassistant/components/decora_wifi/* @TheBassEngineer
 homeassistant/components/delijn/* @bollewolle @Emilv2
 homeassistant/components/demo/* @home-assistant/core
 tests/components/demo/* @home-assistant/core
