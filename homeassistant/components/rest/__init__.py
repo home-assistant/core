@@ -43,8 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
-CONF_PAYLOAD_TEMPLATE = "payload_template"
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the rest platforms."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -148,7 +146,6 @@ def _rest_coordinator(hass, rest, resource_template, update_interval):
 def create_rest_data_from_config(hass, config):
     """Create RestData from config."""
     resource = config.get(CONF_RESOURCE)
-    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
     payload_template = config.get(CONF_PAYLOAD_TEMPLATE)
@@ -159,9 +156,12 @@ def create_rest_data_from_config(hass, config):
     params = config.get(CONF_PARAMS)
     timeout = config.get(CONF_TIMEOUT)
 
-    if resource_template is not None:
-        resource_template.hass = hass
-        resource = resource_template.async_render(parse_result=False)
+    if resource is not None:
+        resource.hass = hass
+        try:
+            resource = resource.async_render(parse_result=False)
+        except:
+            resource = config.get(CONF_RESOURCE)
 
     if payload_template is not None:
         payload_template.hass = hass
