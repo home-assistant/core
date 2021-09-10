@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_MONETARY,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
@@ -32,6 +33,7 @@ from .data import EnergyManager, async_get_manager
 
 SUPPORTED_STATE_CLASSES = [
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
 ]
 _LOGGER = logging.getLogger(__name__)
@@ -214,7 +216,7 @@ class EnergyCostSensor(SensorEntity):
             f"{config[adapter.entity_energy_key]}_{adapter.entity_id_suffix}"
         )
         self._attr_device_class = DEVICE_CLASS_MONETARY
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = STATE_CLASS_TOTAL
         self._config = config
         self._last_energy_sensor_state: State | None = None
         self._cur_value = 0.0
