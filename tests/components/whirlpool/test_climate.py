@@ -56,8 +56,8 @@ from . import init_integration
 
 async def update_ac_state(hass: HomeAssistant, mock_aircon_api: MagicMock):
     """Simulate an update trigger from the API."""
-    schedule_update_ha_state_cb = mock_aircon_api.call_args.args[2]
-    schedule_update_ha_state_cb()
+    update_ha_state_cb = mock_aircon_api.call_args.args[2]
+    update_ha_state_cb()
     await hass.async_block_till_done()
     return hass.states.get("climate.said1")
 
