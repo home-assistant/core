@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 import logging
+from typing import Callable
 
 import pyenasolar
 
@@ -20,8 +21,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    POWER_WATT,
+    POWER_KILO_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -38,6 +38,7 @@ from .const import (
     CONF_SUN_UP,
     DEFAULT_SUN_DOWN,
     DEFAULT_SUN_UP,
+    DOMAIN,
     ENASOLAR_UNIT_MAPPINGS,
     SCAN_DATA_MIN_INTERVAL,
     SCAN_MAX_INTERVAL,
@@ -53,8 +54,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Use all sensors by default, but split them to have two update frequencies
     hass_meter_sensors = []
     hass_data_sensors = []
-    remove_interval_update_meters = None
-    remove_interval_update_data = None
+    listeners = []
 
     host = config_entry.data[CONF_HOST]
 
@@ -92,11 +92,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if sensor.enabled:
             if sensor.is_meter:
                 hass_meter_sensors.append(
-                    EnaSolarSensor(sensor, inverter_name=config_entry.data[CONF_NAME])
+                    EnaSolarSensor(
+                        sensor, config_entry.data[CONF_NAME], enasolar.serial_no
+                    )
                 )
             else:
                 hass_data_sensors.append(
-                    EnaSolarSensor(sensor, inverter_name=config_entry.data[CONF_NAME])
+                    EnaSolarSensor(
+                        sensor, config_entry.data[CONF_NAME], enasolar.serial_no
+                    )
                 )
 
     async_add_entities(hass_meter_sensors)
@@ -113,13 +117,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in hass_meter_sensors:
             state_unknown = False
             if not values and (
-                (sensor.per_day_basis and date.today() > sensor.date_updated)
-                or (not sensor.per_day_basis and not sensor.per_total_basis)
+                (sensor.sensor.per_day_basis and date.today() > sensor.sensor.date)
+                or (
+                    not sensor.sensor.per_day_basis
+                    and not sensor.sensor.per_total_basis
+                )
             ):
                 state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
             _LOGGER.debug(
-                "Meter Sensor %s updated => %s", sensor.sensor_key, sensor.state
+                "Meter Sensor %s updated => %s", sensor.sensor.key, sensor.native_value
             )
         return values
 
@@ -134,45 +141,56 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in hass_data_sensors:
             state_unknown = False
             if not values and (
-                (sensor.per_day_basis and date.today() > sensor.date_updated)
-                or (not sensor.per_day_basis and not sensor.per_total_basis)
+                (sensor.sensor.per_day_basis and date.today() > sensor.sensor.date)
+                or (
+                    not sensor.sensor.per_day_basis
+                    and not sensor.sensor.per_total_basis
+                )
             ):
                 state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
             _LOGGER.debug(
-                "Data Sensor %s updated => %s", sensor.sensor_key, sensor.state
+                "Data Sensor %s updated => %s", sensor.sensor.key, sensor.native_value
             )
         return values
 
     def start_update_interval(event):
         """Start the update interval scheduling."""
-        nonlocal remove_interval_update_meters, remove_interval_update_data
-
-        remove_interval_update_meters = async_track_time_interval_backoff(
-            hass, async_enasolar_meters, SCAN_METERS_MIN_INTERVAL
+        listeners.append(
+            async_track_time_interval_backoff(
+                hass, async_enasolar_meters, SCAN_METERS_MIN_INTERVAL
+            )
         )
-        remove_interval_update_data = async_track_time_interval_backoff(
-            hass, async_enasolar_data, SCAN_DATA_MIN_INTERVAL
+        listeners.append(
+            async_track_time_interval_backoff(
+                hass, async_enasolar_data, SCAN_DATA_MIN_INTERVAL
+            )
         )
 
-    def stop_update_interval(event):
+    async def async_unload_entry(hass, config_entry):
         """Properly cancel the scheduled update."""
-        remove_interval_update_meters()  # pylint: disable=not-callable
-        remove_interval_update_data()  # pylint: disable=not-callable
+        for listener in hass.data[DOMAIN][config_entry.entry_id]["listeners"]:
+            listener()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    if hass.is_running:
+        start_update_interval(None)
+    else:
+        listeners.append(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
+        )
+    hass.data[DOMAIN] = {config_entry.entry_id: {"listeners": listeners}}
 
 
 @callback
 def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively and increases the interval when failed."""
-    remove = None
+    remove: Callable | None = None
     interval = min_interval
 
     async def interval_listener(now=None):
         """Handle elapsed interval with backoff."""
         nonlocal interval, remove
+
         try:
             if await action():
                 interval = min_interval
@@ -194,43 +212,39 @@ def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TY
 class EnaSolarSensor(SensorEntity):
     """Representation of a EnaSolar sensor."""
 
-    def __init__(self, pyenasolar_sensor, inverter_name=None):
+    def __init__(self, pyenasolar_sensor, inverter_name=None, serial_no=None):
         """Initialize the EnaSolar sensor."""
-        self._sensor = pyenasolar_sensor
+        self.sensor = pyenasolar_sensor
         self._inverter_name = inverter_name
-        self._state = self._sensor.value
+        self.serial_no = serial_no
+        self._native_value = self.sensor.value
 
         if pyenasolar_sensor.is_meter:
             self._attr_state_class = STATE_CLASS_MEASUREMENT
         else:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-        self._attr_unit_of_measurement = ENASOLAR_UNIT_MAPPINGS[self._sensor.unit]
+        self._attr_native_unit_of_measurement = ENASOLAR_UNIT_MAPPINGS[self.sensor.unit]
         self._attr_should_poll = False
 
     @property
     def name(self):
         """Return the name of the sensor."""
         if self._inverter_name:
-            return f"enasolar_{self._inverter_name}_{self._sensor.name}"
+            return f"enasolar_{self._inverter_name}_{self.sensor.name}"
 
-        return f"enasolar_{self._sensor.name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        return f"enasolar_{self.sensor.name}"
 
     @property
-    def sensor_key(self):
-        """Return the sensor key."""
-        return self._sensor.key
+    def native_value(self):
+        """Return the current sensor value."""
+        return self._native_value
 
     @property
     def device_class(self):
         """Return the device class the sensor belongs to."""
-        if self._attr_unit_of_measurement == POWER_WATT:
+        if self._attr_native_unit_of_measurement == POWER_KILO_WATT:
             return DEVICE_CLASS_POWER
-        if self._attr_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+        if self._attr_native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             return DEVICE_CLASS_ENERGY
         if (
             self._attr_unit_of_measurement == TEMP_CELSIUS
@@ -238,33 +252,18 @@ class EnaSolarSensor(SensorEntity):
         ):
             return DEVICE_CLASS_TEMPERATURE
 
-    @property
-    def per_day_basis(self) -> bool:
-        """Return if the sensors value is on daily basis or not."""
-        return self._sensor.per_day_basis
-
-    @property
-    def per_total_basis(self) -> bool:
-        """Return if the sensors value is cumulative or not."""
-        return self._sensor.per_total_basis
-
-    @property
-    def date_updated(self) -> date:
-        """Return the date when the sensor was last updated."""
-        return self._sensor.date
-
     @callback
     def async_update_values(self, unknown_state=False):
         """Update this sensor."""
         update = False
 
-        if self._sensor.value != self._state:
+        if self.sensor.value != self._native_value:
             update = True
-            self._state = self._sensor.value
+            self._native_value = self.sensor.value
 
-        if unknown_state and self._state is not None:
+        if unknown_state and self._native_value is not None:
             update = True
-            self._state = None
+            self.native_value = None
 
         if update:
             self.async_write_ha_state()
@@ -272,4 +271,4 @@ class EnaSolarSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return f"{self._sensor.name}"
+        return f"{self.serial_no}_{self.sensor.name}"
