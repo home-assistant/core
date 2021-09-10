@@ -236,8 +236,8 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
         port.serial_number,
         port.manufacturer,
         port.description,
-        port.vid,
-        port.pid,
+        f"{hex(port.vid)[2:]:0>4}".upper(),
+        f"{hex(port.pid)[2:]:0>4}".upper(),
     )
 
     # select a port from the list
@@ -346,8 +346,8 @@ async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistan
         port.serial_number,
         port.manufacturer,
         port.description,
-        port.vid,
-        port.pid,
+        f"{hex(port.vid)[2:]:0>4}".upper(),
+        f"{hex(port.pid)[2:]:0>4}".upper(),
     )
 
     # select a port from the list
