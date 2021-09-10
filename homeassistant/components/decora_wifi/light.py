@@ -1,7 +1,6 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
 
 import logging
-from typing import cast
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
