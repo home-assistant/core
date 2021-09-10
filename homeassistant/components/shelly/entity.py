@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Callable, Final, cast
 
-import aioshelly
+from aioshelly.block_device import Block
 import async_timeout
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -61,6 +61,8 @@ async def async_setup_block_attribute_entities(
 ) -> None:
     """Set up entities for block attributes."""
     blocks = []
+
+    assert wrapper.device.blocks
 
     for block in wrapper.device.blocks:
         for sensor_id in block.sensor_ids:
@@ -175,10 +177,10 @@ class BlockAttributeDescription:
     device_class: str | None = None
     state_class: str | None = None
     default_enabled: bool = True
-    available: Callable[[aioshelly.Block], bool] | None = None
+    available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
-    removal_condition: Callable[[dict, aioshelly.Block], bool] | None = None
-    extra_state_attributes: Callable[[aioshelly.Block], dict | None] | None = None
+    removal_condition: Callable[[dict, Block], bool] | None = None
+    extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
 @dataclass
@@ -198,7 +200,7 @@ class RestAttributeDescription:
 class ShellyBlockEntity(entity.Entity):
     """Helper class to represent a block."""
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: aioshelly.Block) -> None:
+    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
@@ -267,7 +269,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     def __init__(
         self,
         wrapper: ShellyDeviceWrapper,
-        block: aioshelly.Block,
+        block: Block,
         attribute: str,
         description: BlockAttributeDescription,
     ) -> None:
@@ -418,7 +420,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     def __init__(
         self,
         wrapper: ShellyDeviceWrapper,
-        block: aioshelly.Block,
+        block: Block | None,
         attribute: str,
         description: BlockAttributeDescription,
         entry: entity_registry.RegistryEntry | None = None,
@@ -429,7 +431,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         self.last_state: StateType = None
         self.wrapper = wrapper
         self.attribute = attribute
-        self.block = block
+        self.block: Block | None = block  # type: ignore[assignment]
         self.description = description
         self._unit = self.description.unit
 
@@ -467,6 +469,8 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             return
 
         _, entity_block, entity_sensor = self.unique_id.split("-")
+
+        assert self.wrapper.device.blocks
 
         for block in self.wrapper.device.blocks:
             if block.description != entity_block:
