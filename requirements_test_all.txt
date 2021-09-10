@@ -675,7 +675,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.3.2
+pillow==8.2.0
 
 # homeassistant.components.plex
 plexapi==4.7.0
