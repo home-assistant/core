@@ -38,7 +38,6 @@ from .const import (
     CONF_SUN_UP,
     DEFAULT_SUN_DOWN,
     DEFAULT_SUN_UP,
-    DOMAIN,
     ENASOLAR_UNIT_MAPPINGS,
     SCAN_DATA_MIN_INTERVAL,
     SCAN_MAX_INTERVAL,
@@ -54,7 +53,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Use all sensors by default, but split them to have two update frequencies
     hass_meter_sensors = []
     hass_data_sensors = []
-    listeners = []
 
     host = config_entry.data[CONF_HOST]
 
@@ -169,10 +167,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if hass.is_running:
         start_update_interval(None)
     else:
-        config_entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
-        )
-    hass.data[DOMAIN] = {config_entry.entry_id: {"listeners": listeners}}
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
 
 
 @callback

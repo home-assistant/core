@@ -111,6 +111,10 @@ ZEROCONF = {
             "name": "bosch shc*"
         },
         {
+            "domain": "enasolar",
+            "macaddress": "0023A7*"
+        },
+        {
             "domain": "nam",
             "name": "nam-*"
         },
