@@ -10,11 +10,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import DecoraWifiEntity, DecoraWifiPlatform, SessionEntityNotFound
+from .common import DecoraWifiEntity, DecoraWifiPlatform
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,21 +23,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Decora Wifi lights based on a config entry."""
-    # Retrieve the platform session from the binary sensor entity component.
-    component: EntityComponent = hass.data[DOMAIN]
-    session_entity = component.get_entity(entry.data[CONF_ENTITY_ID])
-    session = None
-    if session_entity:
-        session = cast(DecoraWifiPlatform, session_entity)
-    else:
-        raise SessionEntityNotFound("Session entity not found.")
+    # Retrieve the platform session from the reference stored in data.
+    session: DecoraWifiPlatform = hass.data[DOMAIN][entry.entry_id]
+    lights = session.lights
 
-    if session:
-        lights = session.lights
-        entities = []
-        if lights:
-            entities.extend([DecoraWifiLight(light) for light in lights])
-        async_add_entities(entities, True)
+    entities = []
+    if lights:
+        entities.extend([DecoraWifiLight(light) for light in lights])
+    async_add_entities(entities, True)
 
 
 class DecoraWifiLight(DecoraWifiEntity, LightEntity):
@@ -68,8 +60,8 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             max_level = self._switch.data.get("maxLevel", 100)
             min_level = self._switch.data.get("minLevel", 100)
-            brightness = int(kwargs[ATTR_BRIGHTNESS] * maxlevel / 255)
-            brightness = max(brightness, minlevel)
+            brightness = int(kwargs[ATTR_BRIGHTNESS] * max_level / 255)
+            brightness = max(brightness, min_level)
             attribs["brightness"] = brightness
 
         if ATTR_TRANSITION in kwargs:

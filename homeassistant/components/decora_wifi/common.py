@@ -7,13 +7,14 @@ from decora_wifi.models.iot_switch import IotSwitch
 from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
+from decora_wifi.models.residential_permission import ResidentialPermission
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
+from .const import LIGHT_DOMAIN, PLATFORMS
 
 
 class DecoraWifiError(HomeAssistantError):
@@ -41,13 +42,11 @@ class DecoraWifiPlatform:
 
     def __init__(self, email: str, password: str) -> None:
         """Iniialize session holder."""
-        self._session = DecoraWiFiSession()
+        self._session = None
         self._email = email
         self._name = f"Decora_Wifi - {self._email}"
         self._password = password
-        self._iot_switches: dict[str, IotSwitch] = {
-            platform: [] for platform in PLATFORMS
-        }
+        self._iot_switches: dict[str, IotSwitch] = {}
         self._logged_in = False
 
     @property
@@ -64,7 +63,6 @@ class DecoraWifiPlatform:
         """Log in to decora_wifi session."""
         try:
             user = self._session.login(self._email, self._password)
-
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if user is None:
                 raise LoginFailed
@@ -85,33 +83,43 @@ class DecoraWifiPlatform:
 
     def _api_get_devices(self):
         """Update the device library from the API."""
+        perms: list[ResidentialPermission] = []
+        accounts: list[ResidentialAccount] = []
+        residences: list[Residence] = []
+        switches: list[IotSwitch] = []
 
+        # Gather permissions
         try:
-            # Gather all the available devices into the iot_switches dictionary...
-            perms = self._session.user.get_residential_permissions()
-
-            for permission in perms:
-                if permission.residentialAccountId is not None:
-                    acct = ResidentialAccount(
-                        self._session, permission.residentialAccountId
-                    )
-                    residences = acct.get_residences()
-                    for res in residences:
-                        switches = res.get_iot_switches()
-                        for switch in switches:
-                            # Add the switch to the appropriate list in the iot_switches dictionary.
-                            platform = DecoraWifiPlatform.classifydevice(switch)
-                            self._iot_switches[platform].append(switch)
-                elif permission.residenceId is not None:
-                    residence = Residence(self._session, permission.residenceId)
-                    switches = residence.get_iot_switches()
-                    for switch in switches:
-                        # Add the switch to the appropriate list in the iot_switches dictionary.
-                        platform = DecoraWifiPlatform.classifydevice(switch)
-                        self._iot_switches[platform].append(switch)
+            perms.extend(self._session.user.get_residential_permissions())
         except ValueError as exc:
             self._logged_in = False
             raise CommFailed from exc
+
+        # Gather residences for which the logged in user has permissions
+        for permission in perms:
+            if permission.residentialAccountId is not None:
+                accounts.append(
+                    ResidentialAccount(self._session, permission.residentialAccountId)
+                )
+            elif permission.residenceId is not None:
+                residences.append(Residence(self._session, permission.residenceId))
+        for acct in accounts:
+            try:
+                residences.extend(acct.get_residences())
+            except ValueError as exc:
+                raise CommFailed from exc
+
+        # Gather switches from residences
+        for res in residences:
+            try:
+                switches.extend(res.get_iot_switches())
+            except ValueError as exc:
+                raise CommFailed from exc
+
+        # Add the switches to the appropriate list in the iot_switches dictionary.
+        for switch in switches:
+            platform = DecoraWifiPlatform.classify_device(switch)
+            self._iot_switches[platform].append(switch)
 
     def reauth(self):
         """Reauthenticate this object's session."""
@@ -128,6 +136,8 @@ class DecoraWifiPlatform:
 
     def setup(self):
         """Set up the session after object instantiation."""
+        self._iot_switches = {platform: [] for platform in PLATFORMS}
+        self._session = DecoraWiFiSession()
         self._api_login()
         self._api_get_devices()
 
@@ -167,8 +177,9 @@ class DecoraWifiEntity(Entity):
         """Return device info for the associated device."""
         return {
             "name": self._switch.name,
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self._mac_address)},
-            "identifiers": {(DOMAIN, self._unique_id)},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, self._mac_address)
+            },
             "manufacturer": self._switch.manufacturer,
             "model": self._model,
             "sw_version": self._switch.version,
