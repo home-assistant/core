@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
-import aioshelly
+from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
@@ -40,18 +40,20 @@ async def async_remove_shelly_entity(
 
 def temperature_unit(block_info: dict[str, Any]) -> str:
     """Detect temperature unit."""
-    if block_info[aioshelly.BLOCK_VALUE_UNIT] == "F":
+    if block_info[BLOCK_VALUE_UNIT] == "F":
         return TEMP_FAHRENHEIT
     return TEMP_CELSIUS
 
 
-def get_device_name(device: aioshelly.Device) -> str:
+def get_device_name(device: BlockDevice) -> str:
     """Naming for device."""
     return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
 
 
-def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> int:
+def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     """Get number of channels for block type."""
+    assert isinstance(device.shelly, dict)
+
     channels = None
 
     if block.type == "input":
@@ -71,8 +73,8 @@ def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> 
 
 
 def get_entity_name(
-    device: aioshelly.Device,
-    block: aioshelly.Block,
+    device: BlockDevice,
+    block: Block | None,
     description: str | None = None,
 ) -> str:
     """Naming for switch and sensors."""
@@ -84,10 +86,7 @@ def get_entity_name(
     return channel_name
 
 
-def get_device_channel_name(
-    device: aioshelly.Device,
-    block: aioshelly.Block,
-) -> str:
+def get_device_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
     entity_name = get_device_name(device)
 
@@ -98,8 +97,10 @@ def get_device_channel_name(
     ):
         return entity_name
 
+    assert block.channel
+
     channel_name: str | None = None
-    mode = block.type + "s"
+    mode = cast(str, block.type) + "s"
     if mode in device.settings:
         channel_name = device.settings[mode][int(block.channel)].get("name")
 
@@ -114,7 +115,7 @@ def get_device_channel_name(
     return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
-def is_momentary_input(settings: dict[str, Any], block: aioshelly.Block) -> bool:
+def is_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
     if settings["device"]["type"] in SHBTN_MODELS:
@@ -150,9 +151,7 @@ def get_device_uptime(status: dict[str, Any], last_uptime: str | None) -> str:
     return last_uptime
 
 
-def get_input_triggers(
-    device: aioshelly.Device, block: aioshelly.Block
-) -> list[tuple[str, str]]:
+def get_input_triggers(device: BlockDevice, block: Block) -> list[tuple[str, str]]:
     """Return list of input triggers for block."""
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
@@ -165,6 +164,7 @@ def get_input_triggers(
     if block.type == "device" or get_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
+        assert block.channel
         subtype = f"button{int(block.channel)+1}"
 
     if device.settings["device"]["type"] in SHBTN_MODELS:
@@ -181,9 +181,9 @@ def get_input_triggers(
 
 
 @singleton.singleton("shelly_coap")
-async def get_coap_context(hass: HomeAssistant) -> aioshelly.COAP:
+async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly devices."""
-    context = aioshelly.COAP()
+    context = COAP()
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:

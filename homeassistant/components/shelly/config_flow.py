@@ -7,6 +7,7 @@ from typing import Any, Dict, Final, cast
 
 import aiohttp
 import aioshelly
+from aioshelly.block_device import BlockDevice
 import async_timeout
 import voluptuous as vol
 
@@ -39,13 +40,13 @@ async def validate_input(
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    options = aioshelly.ConnectionOptions(
+    options = aioshelly.common.ConnectionOptions(
         host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
     coap_context = await get_coap_context(hass)
 
     async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-        device = await aioshelly.Device.create(
+        device = await BlockDevice.create(
             aiohttp_client.async_get_clientsession(hass),
             coap_context,
             options,
@@ -82,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._async_get_info(host)
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
-            except aioshelly.FirmwareUnsupported:
+            except aioshelly.exceptions.FirmwareUnsupported:
                 return self.async_abort(reason="unsupported_firmware")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -165,7 +166,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.info = info = await self._async_get_info(discovery_info["host"])
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
-        except aioshelly.FirmwareUnsupported:
+        except aioshelly.exceptions.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(info["mac"])
@@ -206,7 +207,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": aioshelly.MODEL_NAMES.get(
+                "model": aioshelly.const.MODEL_NAMES.get(
                     self.info["type"], self.info["type"]
                 ),
                 "host": self.host,
@@ -219,7 +220,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             return cast(
                 Dict[str, Any],
-                await aioshelly.get_info(
+                await aioshelly.common.get_info(
                     aiohttp_client.async_get_clientsession(self.hass),
                     host,
                 ),

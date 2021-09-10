@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from aioshelly import Block
+from aioshelly.block_device import Block
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

@@ -60,6 +60,8 @@ async def async_validate_trigger_config(
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
+    assert wrapper.device.blocks
+
     for block in wrapper.device.blocks:
         input_triggers = get_input_triggers(wrapper.device, block)
         if trigger in input_triggers:
@@ -92,6 +94,8 @@ async def async_get_triggers(
                 }
             )
         return triggers
+
+    assert wrapper.device.blocks
 
     for block in wrapper.device.blocks:
         input_triggers = get_input_triggers(wrapper.device, block)
