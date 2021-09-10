@@ -79,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     enasolar.max_output = config_entry.data[CONF_MAX_OUTPUT]
 
     _LOGGER.debug("   Polling between %s and %s", enasolar.sun_up, enasolar.sun_down)
-    _LOGGER.info(
+    _LOGGER.debug(
         "   Max Output: %s, DC Strings: %s, Capability: %s",
         enasolar.max_output,
         enasolar.dc_strings,
