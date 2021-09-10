@@ -264,3 +264,32 @@ async def test_setup_integration(hass, mock_conf, cloud_prefs):
     await cloud_prefs.async_update()
     await hass.async_block_till_done()
     assert "google_assistant" in hass.config.components
+
+
+async def test_google_handle_logout(hass, cloud_prefs, mock_cloud_login):
+    """Test Google config responds to logging out."""
+    gconf = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, Mock(is_logged_in=False)
+    )
+
+    await gconf.async_initialize()
+
+    with patch(
+        "homeassistant.components.google_assistant.report_state.async_enable_report_state",
+    ) as mock_enable:
+        gconf.async_enable_report_state()
+
+    assert len(mock_enable.mock_calls) == 1
+
+    # This will trigger a prefs update when we logout.
+    await cloud_prefs.get_cloud_user()
+
+    with patch.object(
+        hass.data["cloud"].auth,
+        "async_check_token",
+        side_effect=AssertionError("Should not be called"),
+    ):
+        await cloud_prefs.async_set_username(None)
+        await hass.async_block_till_done()
+
+    assert len(mock_enable.return_value.mock_calls) == 1

@@ -140,7 +140,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.9.1
+aiomusiccast==0.9.2
 
 # homeassistant.components.notion
 aionotion==3.0.2
@@ -675,7 +675,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.3.2
+pillow==8.2.0
 
 # homeassistant.components.plex
 plexapi==4.7.0

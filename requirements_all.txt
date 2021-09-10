@@ -216,7 +216,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.9.1
+aiomusiccast==0.9.2
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -276,7 +276,7 @@ ambee==0.3.0
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.8.0
+amcrest==1.8.1
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.60
@@ -1194,7 +1194,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.3.2
+pillow==8.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
