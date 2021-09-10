@@ -276,7 +276,7 @@ ambee==0.3.0
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.8.0
+amcrest==1.8.1
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.60
