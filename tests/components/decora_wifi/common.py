@@ -22,18 +22,14 @@ class MockDecoraWifiPlatform(DecoraWifiPlatform):
         self._email = email
         self._password = password
 
-    def __del__(self):
-        """Clean up the session on object deletion."""
-        pass
-
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
         """Set up a mock decora wifi session."""
 
-        def setupplatform():
+        def setup_platform():
             return MockDecoraWifiPlatform(email, password)
 
-        return await hass.async_add_executor_job(setupplatform)
+        return await hass.async_add_executor_job(setup_platform)
 
 
 class FakeDecoraWiFiSession(DecoraWiFiSession):
@@ -111,7 +107,7 @@ class FakeDecoraWiFiResidentialPermission(ResidentialPermission):
 class FakeDecoraWiFiResidence(Residence):
     """Class to simulate the decora_wifi api Residence class."""
 
-    __idcounter = 0
+    __id_counter = 0
 
     def __init__(self, session, model_id=None):
         """Initialize the fake Residence class."""
@@ -131,8 +127,8 @@ class FakeDecoraWiFiResidence(Residence):
     @classmethod
     def nextID(cls):
         """Generate Sequential Ids so the data fed to getdevices is unique."""
-        cls.__idcounter += 1
-        return cls.__idcounter
+        cls.__id_counter += 1
+        return cls.__id_counter
 
 
 class FakeDecoraWiFiResidentialAccount(ResidentialAccount):
@@ -156,7 +152,7 @@ class FakeDecoraWiFiResidentialAccount(ResidentialAccount):
 class FakeDecoraWiFiIotSwitch(IotSwitch):
     """Class to simulate the decora_wifi IotSwitch class."""
 
-    __idcounter = 0
+    __id_counter = 0
 
     def __init__(self, session, model_id=None):
         """Initialize the fake IotSwitch class."""
@@ -181,5 +177,5 @@ class FakeDecoraWiFiIotSwitch(IotSwitch):
     @classmethod
     def nextID(cls):
         """Generate Sequential Ids so the data fed to getdevices is unique."""
-        cls.__idcounter += 1
-        return cls.__idcounter
+        cls.__id_counter += 1
+        return cls.__id_counter

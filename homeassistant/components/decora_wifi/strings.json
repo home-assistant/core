@@ -3,19 +3,19 @@
     "step": {
       "user": {
         "title": "myLeviton Login",
-        "description": "Enter your myLeviton login information.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "description": "Enter your myLeviton login information."
       },
       "reauth": {
         "title": "[%key:component::decora_wifi::config::step::user::title%]",
-        "description": "Re-Enter your myLeviton login information.",
         "data": {
             "username": "[%key:common::config_flow::data::username%]",
             "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "description": "Re-Enter your myLeviton login information."
       }
     },
     "error": {

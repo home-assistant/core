@@ -47,7 +47,7 @@ class DecoraWifiPlatform:
         self._iot_switches: dict[str, IotSwitch] = {
             platform: [] for platform in PLATFORMS
         }
-        self._loggedin = False
+        self._logged_in = False
 
     @property
     def active_platforms(self) -> list[str]:
@@ -67,19 +67,20 @@ class DecoraWifiPlatform:
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if user is None:
                 raise LoginFailed
+            self._logged_in = True
         except ValueError as exc:
-            self._loggedin = False
+            self._logged_in = False
             raise CommFailed from exc
-        self._loggedin = True
+        self._logged_in = True
 
     def _api_logout(self):
         """Log out of decora_wifi session."""
-        if self._loggedin:
+        if self._logged_in:
             try:
                 Person.logout(self._session)
             except ValueError as exc:
                 raise CommFailed from exc
-        self._loggedin = False
+        self._logged_in = False
 
     def _api_get_devices(self):
         """Update the device library from the API."""
@@ -108,9 +109,7 @@ class DecoraWifiPlatform:
                         platform = DecoraWifiPlatform.classifydevice(switch)
                         self._iot_switches[platform].append(switch)
         except ValueError as exc:
-            self._loggedin = False
-            if self.platform:
-                self.schedule_update_ha_state()
+            self._logged_in = False
             raise CommFailed from exc
 
     def reauth(self):
