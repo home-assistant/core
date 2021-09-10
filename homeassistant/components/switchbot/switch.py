@@ -12,9 +12,19 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.const import (
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_SENSOR_TYPE,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -79,11 +89,11 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    bot_device = []
-
     if entry.data[CONF_SENSOR_TYPE] != ATTR_BOT:
         return
-        bot_device.append(
+
+    async_add_entities(
+        [
             SwitchBot(
                 coordinator,
                 entry.unique_id,
@@ -92,15 +102,15 @@ async def async_setup_entry(
                 entry.data.get(CONF_PASSWORD, None),
                 entry.options[CONF_RETRY_COUNT],
             )
-        )
-
-    async_add_entities(bot_device)
+        ]
+    )
 
 
 class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
+    _attr_device_class = DEVICE_CLASS_SWITCH
 
     def __init__(
         self,
@@ -114,15 +124,19 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         """Initialize the Switchbot."""
         super().__init__(coordinator)
         self._idx = idx
-        self._state: bool | None = None
         self._last_run_success: bool | None = None
-        self._model = self.coordinator.data[self._idx]["modelName"]
-        self.switchbot_name = name
         self._mac = mac
         self._device = self.coordinator.switchbot_api.Switchbot(
             mac=mac, password=password, retry_count=retry_count
         )
-        self._device_class = DEVICE_CLASS_SWITCH
+        self._attr_unique_id = self._mac.replace(":", "")
+        self._attr_name = name
+        self._attr_device_info: DeviceInfo = {
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            "name": name,
+            "model": self.coordinator.data[self._idx]["modelName"],
+            "manufacturer": MANUFACTURER,
+        }
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -130,7 +144,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if not last_state:
             return
-        self._state = last_state.state == "on"
+        self._attr_is_on = last_state.state == STATE_ON
         self._last_run_success = last_state.attributes["last_run_success"]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -170,16 +184,6 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         return self.coordinator.data[self._idx]["data"]["isOn"]
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._mac.replace(":", "")
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self.switchbot_name
-
-    @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
@@ -187,18 +191,3 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
             "mac_address": self._mac,
             "switch_mode": self.coordinator.data[self._idx]["data"]["switchMode"],
         }
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self.switchbot_name,
-            "model": self._model,
-            "manufacturer": MANUFACTURER,
-        }
-
-    @property
-    def device_class(self) -> str:
-        """Device class for the sensor."""
-        return self._device_class
