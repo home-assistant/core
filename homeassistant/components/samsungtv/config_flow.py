@@ -88,8 +88,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
         """Get device entry."""
-        if self._bridge is None:
-            raise ConnectionError("Unable to connect to %s" % self._host)
+        assert self._bridge
+
         data = {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
@@ -210,8 +210,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self._async_set_name_host_from_input(user_input)
             await self.hass.async_add_executor_job(self._try_connect)
-            if self._bridge is None:
-                raise ConnectionError("Unable to connect to %s" % self._host)
+            assert self._bridge
             self._async_abort_entries_match({CONF_HOST: self._host})
             if self._bridge.method != METHOD_LEGACY:
                 # Legacy bridge does not provide device info
@@ -317,8 +316,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             await self.hass.async_add_executor_job(self._try_connect)
-            if self._bridge is None:
-                raise ConnectionError("Unable to connect to %s" % self._host)
+            assert self._bridge
             return self._get_entry_from_bridge()
 
         self._set_confirm_only()
