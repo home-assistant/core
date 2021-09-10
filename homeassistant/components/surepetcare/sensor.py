@@ -63,11 +63,6 @@ class SureBattery(SensorEntity, CoordinatorEntity):
         )
         self._update_attr()
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and bool(self.state)
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and update the state."""

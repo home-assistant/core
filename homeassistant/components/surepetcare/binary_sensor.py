@@ -162,10 +162,6 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             f"{self.coordinator.data[self._id].household_id}-{self._id}-connectivity"
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and bool(self._attr_is_on)
 
     @callback
     def _update_attr(self):
