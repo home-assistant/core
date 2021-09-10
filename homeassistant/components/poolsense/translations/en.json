@@ -10,7 +10,8 @@
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Password"
+                    "password": "Password",
+                    "device_id": "Device ID"
                 },
                 "description": "Do you want to start set up?",
                 "title": "PoolSense"

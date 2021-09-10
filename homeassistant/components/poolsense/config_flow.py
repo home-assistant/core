@@ -5,7 +5,7 @@ from poolsense import PoolSense
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_DEVICE_ID, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -26,8 +26,6 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
-            self._abort_if_unique_id_configured()
 
             _LOGGER.debug(
                 "Configuring user: %s - Password hidden", user_input[CONF_EMAIL]
@@ -37,6 +35,7 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 aiohttp_client.async_get_clientsession(self.hass),
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
+                False,
             )
             api_key_valid = await poolsense.test_poolsense_credentials()
 
@@ -44,18 +43,31 @@ class PoolSenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             if not errors:
+
+                if not user_input[CONF_DEVICE_ID]:
+                    await self.async_set_unique_id(api_key_valid)
+                else:
+                    await self.async_set_unique_id(user_input[CONF_DEVICE_ID])
+
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
-                    title=user_input[CONF_EMAIL],
+                    title=self.unique_id,
                     data={
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_DEVICE_ID: self.unique_id,
                     },
                 )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                {
+                    vol.Required(CONF_EMAIL): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_DEVICE_ID, default=""): str,
+                }
             ),
             errors=errors,
         )

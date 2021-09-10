@@ -3,7 +3,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_EMAIL
+from homeassistant.const import CONF_DEVICE_ID
 
 from . import PoolSenseEntity
 from .const import DOMAIN
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for binary_sensor in BINARY_SENSORS:
         binary_sensors_list.append(
             PoolSenseBinarySensor(
-                coordinator, config_entry.data[CONF_EMAIL], binary_sensor
+                coordinator, config_entry.data[CONF_DEVICE_ID], binary_sensor
             )
         )
 
@@ -60,4 +60,4 @@ class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return f"PoolSense {BINARY_SENSORS[self.info_type]['name']}"
+        return f"{self.device_id} PoolSense {BINARY_SENSORS[self.info_type]['name']}"

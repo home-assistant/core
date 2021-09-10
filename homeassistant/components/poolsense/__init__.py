@@ -7,7 +7,7 @@ from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_DEVICE_ID, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         aiohttp_client.async_get_clientsession(hass),
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
+        entry.data[CONF_DEVICE_ID],
     )
     auth_valid = await poolsense.test_poolsense_credentials()
 
@@ -61,11 +62,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PoolSenseEntity(CoordinatorEntity):
     """Implements a common class elements representing the PoolSense component."""
 
-    def __init__(self, coordinator, email, info_type):
+    def __init__(self, coordinator, device_id, info_type):
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
-        self._unique_id = f"{email}-{info_type}"
+        self._unique_id = f"{device_id}-{info_type}"
         self.info_type = info_type
+        self.device_id = device_id
 
     @property
     def unique_id(self):
@@ -82,6 +84,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
             aiohttp_client.async_get_clientsession(hass),
             entry.data[CONF_EMAIL],
             entry.data[CONF_PASSWORD],
+            entry.data[CONF_DEVICE_ID],
         )
         self.hass = hass
         self.entry = entry

@@ -2,7 +2,7 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_EMAIL,
+    CONF_DEVICE_ID,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -21,7 +21,19 @@ SENSORS = {
         "name": "Chlorine",
         "device_class": None,
     },
+    "Chlorine Instant": {
+        "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
+        "icon": "mdi:pool",
+        "name": "Chlorine Instant",
+        "device_class": None,
+    },
     "pH": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
+    "pH Instant": {
+        "unit": None,
+        "icon": "mdi:pool",
+        "name": "pH Instant",
+        "device_class": None,
+    },
     "Battery": {
         "unit": PERCENTAGE,
         "icon": None,
@@ -32,6 +44,12 @@ SENSORS = {
         "unit": TEMP_CELSIUS,
         "icon": "mdi:coolant-temperature",
         "name": "Temperature",
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+    },
+    "Water Temp Instant": {
+        "unit": TEMP_CELSIUS,
+        "icon": "mdi:coolant-temperature",
+        "name": "Temperature Instant",
         "device_class": DEVICE_CLASS_TEMPERATURE,
     },
     "Last Seen": {
@@ -74,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors_list = []
     for sensor in SENSORS:
         sensors_list.append(
-            PoolSenseSensor(coordinator, config_entry.data[CONF_EMAIL], sensor)
+            PoolSenseSensor(coordinator, config_entry.data[CONF_DEVICE_ID], sensor)
         )
 
     async_add_entities(sensors_list, False)
@@ -86,7 +104,7 @@ class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the particular component."""
-        return f"PoolSense {SENSORS[self.info_type]['name']}"
+        return f"{self.device_id} PoolSense {SENSORS[self.info_type]['name']}"
 
     @property
     def native_value(self):
