@@ -9,11 +9,11 @@ from homeassistant.components.decora_wifi.common import (
     LoginFailed,
 )
 from homeassistant.components.decora_wifi.const import CONF_TITLE, DOMAIN
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-from tests.components.decora_wifi.common import USER_ID, MockDecoraWifiPlatform
+from tests.components.decora_wifi.common import MockDecoraWifiPlatform
 
 # Test inputs
 USERNAME = "username@home-assisant.com"
@@ -50,7 +50,6 @@ async def test_import_flow(hass: HomeAssistant):
     assert result["data"] == {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
-        CONF_ID: USER_ID,
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -90,7 +89,6 @@ async def test_user_flow(hass: HomeAssistant):
     assert result2["data"] == {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
-        CONF_ID: USER_ID,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -108,7 +106,6 @@ async def test_reauth_flow(hass: HomeAssistant):
         data={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: INCORRECT_PASSWORD,
-            CONF_ID: USER_ID,
         },
     )
     mock_config.add_to_hass(hass)

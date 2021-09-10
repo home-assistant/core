@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 
 # Test Inputs
 SWITCH_NAME = "Fake Switch"
-USER_ID = "coo1d00d"
 
 
 class MockDecoraWifiPlatform(DecoraWifiPlatform):
@@ -26,11 +25,6 @@ class MockDecoraWifiPlatform(DecoraWifiPlatform):
     def __del__(self):
         """Clean up the session on object deletion."""
         pass
-
-    @property
-    def unique_id(self):
-        """Return unique id for simulated session."""
-        return USER_ID
 
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
@@ -83,10 +77,6 @@ class FakeDecoraWiFiPerson(Person):
         ]
         self._model_id = model_id
         self._session = session
-
-    @property
-    def _id(self):
-        return USER_ID
 
     def get_residential_permissions(self, attribs=None):
         """Return a list of permissions for testing the getdevices code."""

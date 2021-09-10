@@ -1,6 +1,5 @@
 """Test the decora_wifi Common components."""
 
-from datetime import timedelta
 import logging
 from unittest.mock import patch
 
@@ -31,7 +30,6 @@ INCORRECT_PASSWORD = "incoreect-password"
 async def test_DecoraWifiPlatform_init(hass):
     """Check DecoraWifiPlatform initialization and deletion."""
     instance = None
-    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(DEFAULT_SCAN_INTERVAL))
 
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
@@ -50,9 +48,6 @@ async def test_DecoraWifiPlatform_init(hass):
         mock_session_construct.reset_mock()
         mock_apigetdevices.reset_mock()
 
-        # Check addition of object to hass as entity
-        await component.async_add_entities([instance], False)
-
         # Check object reauth
         instance.reauth()
         mock_person_logout.assert_called_once()
@@ -64,10 +59,7 @@ async def test_DecoraWifiPlatform_init(hass):
         mock_apigetdevices.assert_called_once()
 
         # Check object teardown on removal from hass
-        entity = component.get_entity(instance.entity_id)
-        assert entity
-        platform = entity.platform
-        await platform.async_remove_entity(instance.entity_id)
+        instance.teardown()
         mock_person_logout.assert_called_once()
 
 
@@ -165,7 +157,6 @@ async def test_DecoraWifiPlatform_apigetdevices_commfailed(hass):
     """Check DecoraWifiPlatform comm failure during initial getdevices."""
     instance = None
     exception = None
-    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(DEFAULT_SCAN_INTERVAL))
 
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
@@ -182,7 +173,6 @@ async def test_DecoraWifiPlatform_apigetdevices_commfailed(hass):
         # Setup Object
         try:
             instance = DecoraWifiPlatform(USERNAME, PASSWORD)
-            await component.async_add_entities([instance], False)
             instance.setup()
         except CommFailed as ex:
             exception = ex

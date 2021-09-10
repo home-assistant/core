@@ -53,7 +53,6 @@ class DecoraWifiPlatform(BinarySensorEntity):
         self._iot_switches: dict[str, IotSwitch] = {
             platform: [] for platform in PLATFORMS
         }
-        self._user_id = None
         self._loggedin = False
 
     @property
@@ -62,29 +61,9 @@ class DecoraWifiPlatform(BinarySensorEntity):
         return [p for p in PLATFORMS if self._iot_switches[p]]
 
     @property
-    def is_on(self) -> bool | None:
-        """Return BinarySensorEntity State."""
-        return self._loggedin
-
-    @property
     def lights(self) -> list[IotSwitch]:
         """Get the lights."""
         return self._iot_switches[LIGHT_DOMAIN]
-
-    @property
-    def name(self) -> str | None:
-        """Return Entity Friendly Name."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Get whether entity should be polled."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return Entity unique_id."""
-        return self._user_id
 
     def _api_login(self):
         """Log in to decora_wifi session."""
@@ -93,16 +72,11 @@ class DecoraWifiPlatform(BinarySensorEntity):
 
             # If the call to the decora_wifi API's session.login returns None, there was a problem with the credentials.
             if user is None:
-                self._loggedin = False
                 raise LoginFailed
         except ValueError as exc:
             self._loggedin = False
             raise CommFailed from exc
         self._loggedin = True
-        if self.platform:
-            self.schedule_update_ha_state()
-        # Upstream api does not currently provide a way to get the user id without accessing the protected member.
-        self._user_id = user._id  # pylint: disable= protected-access
 
     def _api_logout(self):
         """Log out of decora_wifi session."""
@@ -112,8 +86,6 @@ class DecoraWifiPlatform(BinarySensorEntity):
             except ValueError as exc:
                 raise CommFailed from exc
         self._loggedin = False
-        if self.platform:
-            self.schedule_update_ha_state()
 
     def _api_get_devices(self):
         """Update the device library from the API."""
@@ -168,10 +140,6 @@ class DecoraWifiPlatform(BinarySensorEntity):
     def teardown(self):
         """Clean up the session on object deletion."""
         self._api_logout()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        self.teardown()
 
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
