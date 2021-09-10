@@ -9,16 +9,12 @@ from surepy.enums import EntityType
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from . import SurePetcareAPI
-from .const import (
-    DOMAIN,
-    SPC,
-    SURE_BATT_VOLTAGE_DIFF,
-    SURE_BATT_VOLTAGE_LOW,
-    TOPIC_UPDATE,
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
+
+from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +26,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     entities: list[SurepyEntity] = []
 
-    spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN]
 
-    for surepy_entity in spc.states.values():
+    for surepy_entity in coordinator.data.values():
 
         if surepy_entity.type in [
             EntityType.CAT_FLAP,
@@ -40,23 +36,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             EntityType.FEEDER,
             EntityType.FELAQUA,
         ]:
-            entities.append(SureBattery(surepy_entity.id, spc))
+            entities.append(SureBattery(surepy_entity.id, coordinator))
 
     async_add_entities(entities)
 
 
-class SureBattery(SensorEntity):
+class SureBattery(SensorEntity, CoordinatorEntity):
     """A sensor implementation for Sure Petcare Entities."""
 
-    _attr_should_poll = False
-
-    def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
+    def __init__(self, _id: int, coordinator: DataUpdateCoordinator) -> None:
         """Initialize a Sure Petcare sensor."""
+        super().__init__(coordinator)
 
         self._id = _id
-        self._spc: SurePetcareAPI = spc
 
-        surepy_entity: SurepyEntity = self._spc.states[_id]
+        surepy_entity: SurepyEntity = coordinator.data[_id]
 
         self._attr_device_class = DEVICE_CLASS_BATTERY
         if surepy_entity.name:
@@ -67,14 +61,20 @@ class SureBattery(SensorEntity):
         self._attr_unique_id = (
             f"{surepy_entity.household_id}-{surepy_entity.id}-battery"
         )
+        self._update_attr()
 
     @callback
-    def _async_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Get the latest data and update the state."""
-        surepy_entity = self._spc.states[self._id]
+        self._update_attr()
+        self.async_write_ha_state()
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update the state and attributes."""
+        surepy_entity = self.coordinator.data[self._id]
         state = surepy_entity.raw_data()["status"]
 
-        self._attr_available = bool(state)
         try:
             per_battery_voltage = state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
@@ -92,12 +92,4 @@ class SureBattery(SensorEntity):
             }
         else:
             self._attr_extra_state_attributes = {}
-        self.async_write_ha_state()
         _LOGGER.debug("%s -> state: %s", self.name, state)
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, TOPIC_UPDATE, self._async_update)
-        )
-        self._async_update()
