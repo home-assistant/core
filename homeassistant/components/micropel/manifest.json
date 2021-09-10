@@ -1,0 +1,11 @@
+{
+  "domain": "micropel",
+  "name": "Micropel",
+  "documentation": "https://www.home-assistant.io/integrations/micropel",
+  "requirements": [],
+  "dependencies": [],
+  "iot_class": "local_polling",
+  "codeowners": [
+    "@vkorecky"
+  ]
+}
