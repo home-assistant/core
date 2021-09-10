@@ -64,7 +64,6 @@ from .capabilities import (
     AlexaPlaybackController,
     AlexaPlaybackStateReporter,
     AlexaPowerController,
-    AlexaPowerLevelController,
     AlexaRangeController,
     AlexaSceneController,
     AlexaSecurityPanelController,
@@ -534,7 +533,6 @@ class FanCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield AlexaPercentageController(self.entity)
-            yield AlexaPowerLevelController(self.entity)
         if supported & fan.SUPPORT_OSCILLATE:
             yield AlexaToggleController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"

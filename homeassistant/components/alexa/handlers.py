@@ -122,6 +122,8 @@ async def async_api_turn_on(hass, config, directive, context):
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == fan.DOMAIN:
+        service = fan.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
@@ -156,6 +158,8 @@ async def async_api_turn_off(hass, config, directive, context):
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == fan.DOMAIN:
+        service = fan.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -823,48 +827,6 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
 async def async_api_reportstate(hass, config, directive, context):
     """Process a ReportState request."""
     return directive.response(name="StateReport")
-
-
-@HANDLERS.register(("Alexa.PowerLevelController", "SetPowerLevel"))
-async def async_api_set_power_level(hass, config, directive, context):
-    """Process a SetPowerLevel request."""
-    entity = directive.entity
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        percentage = int(directive.payload["powerLevel"])
-        data[fan.ATTR_PERCENTAGE] = percentage
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
-
-
-@HANDLERS.register(("Alexa.PowerLevelController", "AdjustPowerLevel"))
-async def async_api_adjust_power_level(hass, config, directive, context):
-    """Process an AdjustPowerLevel request."""
-    entity = directive.entity
-    percentage_delta = int(directive.payload["powerLevelDelta"])
-    service = None
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-
-    if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_PERCENTAGE
-        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
-
-        # set percentage
-        percentage = min(100, max(0, percentage_delta + current))
-        data[fan.ATTR_PERCENTAGE] = percentage
-
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
-    )
-
-    return directive.response()
 
 
 @HANDLERS.register(("Alexa.SecurityPanelController", "Arm"))

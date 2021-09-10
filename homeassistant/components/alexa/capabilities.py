@@ -391,6 +391,8 @@ class AlexaPowerController(AlexaCapability):
 
         if self.entity.domain == climate.DOMAIN:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
+        elif self.entity.domain == fan.DOMAIN:
+            is_on = self.entity.state == fan.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
@@ -1154,9 +1156,6 @@ class AlexaPowerLevelController(AlexaCapability):
         """Read and return a property."""
         if name != "powerLevel":
             raise UnsupportedProperty(name)
-
-        if self.entity.domain == fan.DOMAIN:
-            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
 
 class AlexaSecurityPanelController(AlexaCapability):
