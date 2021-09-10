@@ -140,7 +140,7 @@ aiolyric==1.0.7
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.9.1
+aiomusiccast==0.9.2
 
 # homeassistant.components.notion
 aionotion==3.0.2
