@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Any, Final, cast
 
-from aioshelly import Block
+from aioshelly.block_device import Block
 import async_timeout
 
 from homeassistant.components.light import (
@@ -117,7 +117,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             self._supported_features |= SUPPORT_EFFECT
 
         if wrapper.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
-            match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw"))
+            match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw", ""))
             if (
                 match is not None
                 and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE

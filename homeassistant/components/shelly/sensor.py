@@ -40,7 +40,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_BATTERY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
-        available=lambda block: cast(bool, block.battery != -1),
+        available=lambda block: cast(int, block.battery) != -1,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -162,7 +162,7 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(bool, block.extTemp != 999),
+        available=lambda block: cast(int, block.extTemp) != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
@@ -170,14 +170,14 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(bool, block.extTemp != 999),
+        available=lambda block: cast(int, block.extTemp) != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(bool, block.luminosity != -1),
+        available=lambda block: cast(int, block.luminosity) != -1,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
@@ -191,7 +191,7 @@ SENSORS: Final = {
         icon="mdi:progress-wrench",
         value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
         extra_state_attributes=lambda block: {
-            "Operational hours": round(block.totalWorkTime / 3600, 1)
+            "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
     ),
     ("adc", "adc"): BlockAttributeDescription(

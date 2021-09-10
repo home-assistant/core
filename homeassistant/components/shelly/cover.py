@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from aioshelly import Block
+from aioshelly.block_device import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -57,7 +57,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         if self.control_result:
             return cast(bool, self.control_result["current_pos"] == 0)
 
-        return cast(bool, self.block.rollerPos == 0)
+        return cast(int, self.block.rollerPos) == 0
 
     @property
     def current_cover_position(self) -> int:
@@ -73,7 +73,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         if self.control_result:
             return cast(bool, self.control_result["state"] == "close")
 
-        return cast(bool, self.block.roller == "close")
+        return self.block.roller == "close"
 
     @property
     def is_opening(self) -> bool:
@@ -81,7 +81,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         if self.control_result:
             return cast(bool, self.control_result["state"] == "open")
 
-        return cast(bool, self.block.roller == "open")
+        return self.block.roller == "open"
 
     @property
     def supported_features(self) -> int:
