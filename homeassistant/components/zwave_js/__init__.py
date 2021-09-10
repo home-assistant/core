@@ -68,7 +68,11 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import ZwaveDiscoveryInfo, async_discover_values
+from .discovery import (
+    ZwaveDiscoveryInfo,
+    async_discover_node_values,
+    async_discover_single_value,
+)
 from .helpers import async_enable_statistics, get_device_id, get_unique_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
@@ -129,13 +133,60 @@ async def async_setup_entry(  # noqa: C901
     entry_hass_data[DATA_PLATFORM_SETUP] = {}
 
     registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(dict)
+    discovered_value_ids: dict[str, set[str]] = defaultdict(set)
+
+    async def async_handle_discovery_info(
+        device: device_registry.DeviceEntry,
+        disc_info: ZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+    ) -> None:
+        """Handle discovery info and all dependent tasks."""
+        # This migration logic was added in 2021.3 to handle a breaking change to
+        # the value_id format. Some time in the future, this call (as well as the
+        # helper functions) can be removed.
+        async_migrate_discovered_value(
+            hass,
+            ent_reg,
+            registered_unique_ids[device.id][disc_info.platform],
+            device,
+            client,
+            disc_info,
+        )
+
+        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
+        platform = disc_info.platform
+        if platform not in platform_setup_tasks:
+            platform_setup_tasks[platform] = hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+        await platform_setup_tasks[platform]
+
+        LOGGER.debug("Discovered entity: %s", disc_info)
+        async_dispatcher_send(
+            hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
+        )
+
+        # If we don't need to watch for updates return early
+        if not disc_info.assumed_state:
+            return
+        value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
+        # If this is the first time we found a value we want to watch for updates,
+        # return early
+        if len(value_updates_disc_info) != 1:
+            return
+        # add listener for value updated events
+        entry.async_on_unload(
+            disc_info.node.on(
+                "value updated",
+                lambda event: async_on_value_updated_fire_event(
+                    value_updates_disc_info, event["value"]
+                ),
+            )
+        )
 
     async def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
-
-        platform_setup_tasks = entry_hass_data[DATA_PLATFORM_SETUP]
-
         # register (or update) node in device registry
         device = register_node_in_dev_reg(hass, entry, dev_reg, client, node)
         # We only want to create the defaultdict once, even on reinterviews
@@ -145,44 +196,22 @@ async def async_setup_entry(  # noqa: C901
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_values(node, device):
-            platform = disc_info.platform
-
-            # This migration logic was added in 2021.3 to handle a breaking change to
-            # the value_id format. Some time in the future, this call (as well as the
-            # helper functions) can be removed.
-            async_migrate_discovered_value(
-                hass,
-                ent_reg,
-                registered_unique_ids[device.id][platform],
-                device,
-                client,
-                disc_info,
-            )
-
-            if platform not in platform_setup_tasks:
-                platform_setup_tasks[platform] = hass.async_create_task(
-                    hass.config_entries.async_forward_entry_setup(entry, platform)
+        await asyncio.gather(
+            *(
+                async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+                for disc_info in async_discover_node_values(
+                    node, device, discovered_value_ids
                 )
-
-            await platform_setup_tasks[platform]
-
-            LOGGER.debug("Discovered entity: %s", disc_info)
-            async_dispatcher_send(
-                hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
             )
+        )
 
-            # Capture discovery info for values we want to watch for updates
-            if disc_info.assumed_state:
-                value_updates_disc_info[disc_info.primary_value.value_id] = disc_info
-
-        # add listener for value updated events if necessary
-        if value_updates_disc_info:
+        # add listeners to handle new values that get added later
+        for event in ("value added", "value updated", "metadata updated"):
             entry.async_on_unload(
                 node.on(
-                    "value updated",
-                    lambda event: async_on_value_updated(
-                        value_updates_disc_info, event["value"]
+                    event,
+                    lambda event: hass.async_create_task(
+                        async_on_value_added(value_updates_disc_info, event["value"])
                     ),
                 )
             )
@@ -238,6 +267,31 @@ async def async_setup_entry(  # noqa: C901
         # some visual feedback that something is (in the process of) being added
         register_node_in_dev_reg(hass, entry, dev_reg, client, node)
 
+    async def async_on_value_added(
+        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+    ) -> None:
+        """Fire value updated event."""
+        # If node isn't ready or a device for this node doesn't already exist, we can
+        # let the node ready event handler perform discovery. If a value has already
+        # been processed, we don't need to do it again
+        device_id = get_device_id(client, value.node)
+        if (
+            not value.node.ready
+            or not (device := dev_reg.async_get_device({device_id}))
+            or value.value_id in discovered_value_ids[device.id]
+        ):
+            return
+
+        LOGGER.debug("Processing node %s added value %s", value.node, value)
+        await asyncio.gather(
+            *(
+                async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+                for disc_info in async_discover_single_value(
+                    value, device, discovered_value_ids
+                )
+            )
+        )
+
     @callback
     def async_on_node_removed(node: ZwaveNode) -> None:
         """Handle node removed event."""
@@ -247,6 +301,7 @@ async def async_setup_entry(  # noqa: C901
         # note: removal of entity registry entry is handled by core
         dev_reg.async_remove_device(device.id)  # type: ignore
         registered_unique_ids.pop(device.id, None)  # type: ignore
+        discovered_value_ids.pop(device.id, None)  # type: ignore
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
@@ -313,7 +368,7 @@ async def async_setup_entry(  # noqa: C901
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
     @callback
-    def async_on_value_updated(
+    def async_on_value_updated_fire_event(
         value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
     ) -> None:
         """Fire value updated event."""
