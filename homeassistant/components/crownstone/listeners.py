@@ -67,17 +67,19 @@ def update_crwn_ability(manager: CrownstoneEntryManager, ha_event: Event) -> Non
     ability_type = ability_event.ability_type
     ability_enabled = ability_event.ability_enabled
     # only update on a change in state
-    if updated_crownstone.abilities[ability_type].is_enabled != ability_enabled:
-        # write the change to the crownstone entity.
-        updated_crownstone.abilities[ability_type].is_enabled = ability_enabled
+    if updated_crownstone.abilities[ability_type].is_enabled == ability_enabled:
+        return
 
-        if ability_event.sub_type == EVENT_ABILITY_CHANGE_DIMMING:
-            # reload the config entry because dimming is part of supported features
-            manager.hass.async_create_task(
-                manager.hass.config_entries.async_reload(manager.config_entry.entry_id)
-            )
-        else:
-            async_dispatcher_send(manager.hass, SIG_CROWNSTONE_STATE_UPDATE)
+    # write the change to the crownstone entity.
+    updated_crownstone.abilities[ability_type].is_enabled = ability_enabled
+
+    if ability_event.sub_type == EVENT_ABILITY_CHANGE_DIMMING:
+        # reload the config entry because dimming is part of supported features
+        manager.hass.async_create_task(
+            manager.hass.config_entries.async_reload(manager.config_entry.entry_id)
+        )
+    else:
+        async_dispatcher_send(manager.hass, SIG_CROWNSTONE_STATE_UPDATE)
 
 
 def update_uart_state(manager: CrownstoneEntryManager, _: bool | None) -> None:
