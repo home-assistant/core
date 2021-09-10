@@ -160,7 +160,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, async_enasolar_meters, SCAN_METERS_MIN_INTERVAL
             )
         )
-        listeners.append(
+        config_entry.async_on_unload(
             async_track_time_interval_backoff(
                 hass, async_enasolar_data, SCAN_DATA_MIN_INTERVAL
             )
