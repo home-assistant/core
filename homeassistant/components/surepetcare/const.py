@@ -1,14 +1,9 @@
 """Constants for the Sure Petcare component."""
 DOMAIN = "surepetcare"
 
-SPC = "spc"
-
 CONF_FEEDERS = "feeders"
 CONF_FLAPS = "flaps"
 CONF_PETS = "pets"
-
-# platforms
-TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 # sure petcare api
 SURE_API_TIMEOUT = 60
