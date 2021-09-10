@@ -155,7 +155,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def start_update_interval(event):
         """Start the update interval scheduling."""
-        listeners.append(
+        config_entry.async_on_unload(
             async_track_time_interval_backoff(
                 hass, async_enasolar_meters, SCAN_METERS_MIN_INTERVAL
             )
