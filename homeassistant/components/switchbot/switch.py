@@ -192,7 +192,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         return {
-            "identifiers": {(DOMAIN, self._mac.replace(":", ""))},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "name": self.switchbot_name,
             "model": self._model,
             "manufacturer": MANUFACTURER,
