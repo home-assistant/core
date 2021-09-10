@@ -679,15 +679,15 @@ def async_discover_node_values(
         # We don't need to rediscover an already processed value_id
         if value.value_id in discovered_value_ids[device.id]:
             continue
-        discovered_value_ids[device.id].add(value.value_id)
-        yield from async_discover_single_value(value, device)
+        yield from async_discover_single_value(value, device, discovered_value_ids)
 
 
 @callback
 def async_discover_single_value(
-    value: ZwaveValue, device: DeviceEntry
+    value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
 ) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on a single ZWave value and return matching schema info."""
+    discovered_value_ids[device.id].add(value.value_id)
     for schema in DISCOVERY_SCHEMAS:
         # check manufacturer_id
         if (

@@ -283,12 +283,12 @@ async def async_setup_entry(  # noqa: C901
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-
-        discovered_value_ids[device.id].add(value.value_id)
         await asyncio.gather(
             *(
                 async_handle_discovery_info(device, disc_info, value_updates_disc_info)
-                for disc_info in async_discover_single_value(value, device)
+                for disc_info in async_discover_single_value(
+                    value, device, discovered_value_ids
+                )
             )
         )
 
