@@ -8,10 +8,6 @@ from decora_wifi.models.person import Person
 from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorEntity,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
@@ -39,10 +35,8 @@ class LoginMismatch(DecoraWifiError):
     """Raised if the userid returned on reauth does not match the userid cached when the integration was originally set up."""
 
 
-class DecoraWifiPlatform(BinarySensorEntity):
+class DecoraWifiPlatform():
     """Class to hold decora_wifi platform sessions and related methods."""
-
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
 
     def __init__(self, email: str, password: str) -> None:
         """Iniialize session holder."""
