@@ -7,6 +7,7 @@ import logging
 from typing import Any, Final, cast
 
 import aioshelly
+from aioshelly.block_device import BlockDevice
 import async_timeout
 import voluptuous as vol
 
@@ -89,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     temperature_unit = "C" if hass.config.units.is_metric else "F"
 
-    options = aioshelly.ConnectionOptions(
+    options = aioshelly.common.ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
@@ -98,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coap_context = await get_coap_context(hass)
 
-    device = await aioshelly.Device.create(
+    device = await BlockDevice.create(
         aiohttp_client.async_get_clientsession(hass),
         coap_context,
         options,
@@ -134,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Setting up online device %s", entry.title)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await device.initialize(True)
+                await device.initialize()
         except (asyncio.TimeoutError, OSError) as err:
             raise ConfigEntryNotReady from err
 
@@ -146,7 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Setup for device %s will resume when device is online", entry.title
         )
         device.subscribe_updates(_async_device_online)
-        await device.coap_request("s")
     else:
         # Restore sensors for sleeping device
         _LOGGER.debug("Setting up offline device %s", entry.title)
@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_device_setup(
-    hass: HomeAssistant, entry: ConfigEntry, device: aioshelly.Device
+    hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice
 ) -> None:
     """Set up a device that is online."""
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
@@ -179,7 +179,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     """Wrapper for a Shelly device with Home Assistant specific functions."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, device: aioshelly.Device
+        self, hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice
     ) -> None:
         """Initialize the Shelly device wrapper."""
         self.device_id: str | None = None
@@ -208,13 +208,17 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self._last_input_events_count: dict = {}
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
+        )
 
     @callback
     def _async_device_updates_handler(self) -> None:
         """Handle device updates."""
         if not self.device.initialized:
             return
+
+        assert self.device.blocks
 
         # For buttons which are battery powered - set initial value for last_event_count
         if self.model in SHBTN_MODELS and self._last_input_events_count.get(1) is None:
@@ -298,7 +302,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             # This is duplicate but otherwise via_device can't work
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=aioshelly.MODEL_NAMES.get(self.model, self.model),
+            model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
         )
         self.device_id = entry.id
@@ -306,10 +310,8 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     def shutdown(self) -> None:
         """Shutdown the wrapper."""
-        if self.device:
-            self.device.shutdown()
-            self._async_remove_device_updates_handler()
-            self.device = None
+        self.device.shutdown()
+        self._async_remove_device_updates_handler()
 
     @callback
     def _handle_ha_stop(self, _event: Event) -> None:
@@ -321,7 +323,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass: HomeAssistant, device: aioshelly.Device) -> None:
+    def __init__(self, hass: HomeAssistant, device: BlockDevice) -> None:
         """Initialize the Shelly device wrapper."""
         if (
             device.settings["device"]["type"]

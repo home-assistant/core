@@ -48,7 +48,7 @@ SENSORS: Final = {
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
         name="Door",
         device_class=DEVICE_CLASS_OPENING,
-        available=lambda block: cast(bool, block.dwIsOpened != -1),
+        available=lambda block: cast(int, block.dwIsOpened) != -1,
     ),
     ("sensor", "flood"): BlockAttributeDescription(
         name="Flood", device_class=DEVICE_CLASS_MOISTURE
