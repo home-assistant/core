@@ -52,7 +52,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class SurePetcareBinarySensor(BinarySensorEntity, CoordinatorEntity):
+class SurePetcareBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(

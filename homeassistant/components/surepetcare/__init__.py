@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     hass.data[DOMAIN] = coordinator
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
 
     # load platforms
     for platform in PLATFORMS:
