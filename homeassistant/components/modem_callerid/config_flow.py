@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({"name": str, "device": str})
 
 
-def _generate_unique_id(port: Any):
+def _generate_unique_id(port: Any) -> str:
     """Generate unique id from usb attributes."""
     return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
 
@@ -43,8 +43,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
-        _, errors = await self.validate_input(dev_path=dev_path, unique_id=unique_id)
-        if errors is None:
+        if await self.validate_input(dev_path=dev_path, unique_id=unique_id) is None:
             self._device = dev_path
             return await self.async_step_usb_confirm()
         return self.async_abort(reason="cannot_connect")
@@ -67,18 +66,22 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
-        errors = {}
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         if self.source == config_entries.SOURCE_IMPORT and user_input is not None:
             for port in ports:
                 if port.device == user_input[CONF_DEVICE]:
-                    entry, errors = await self.validate_input(
-                        user_input=user_input,
-                        dev_path=port.device,
-                        unique_id=_generate_unique_id(port),
-                    )
-                    if errors is None:
-                        return entry
+                    if (
+                        await self.validate_input(
+                            user_input=user_input,
+                            dev_path=port.device,
+                            unique_id=_generate_unique_id(port),
+                        )
+                        is None
+                    ):
+                        return self.async_create_entry(
+                            title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                            data={CONF_DEVICE: port.device},
+                        )
         existing_devices = [
             entry.data[CONF_DEVICE] for entry in self._async_current_entries()
         ]
@@ -102,14 +105,19 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             dev_path = await self.hass.async_add_executor_job(
                 usb.get_serial_by_id, port.device
             )
-            entry, errors = await self.validate_input(
+            errors: dict | None = await self.validate_input(
                 dev_path=dev_path, unique_id=_generate_unique_id(port)
             )
             if errors is None:
-                return entry
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    data={CONF_DEVICE: dev_path},
+                )
         user_input = user_input or {}
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(unused_ports)})
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=schema, errors=errors or {}
+        )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
@@ -122,7 +130,9 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(config)
 
-    async def validate_input(self, user_input=None, dev_path=None, unique_id=None):
+    async def validate_input(
+        self, user_input=None, dev_path=None, unique_id=None
+    ) -> dict[str, str] | None:
         """Handle common flow input validation."""
         user_input = user_input or {}
         errors = {}
@@ -132,11 +142,8 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             api = PhoneModem()
             await api.test(dev_path)
-            entry = self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                data={CONF_DEVICE: dev_path},
-            )
-            return entry, None
         except EXCEPTIONS:
             errors["base"] = "cannot_connect"
-            return None, errors
+            return errors
+        else:
+            return None

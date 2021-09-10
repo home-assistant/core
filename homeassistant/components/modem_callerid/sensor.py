@@ -119,7 +119,7 @@ class ModemCalleridSensor(SensorEntity):
             }
         self._attr_extra_state_attributes[CID.CID_TIME] = self.api.cid_time
         self._attr_native_value = self.api.state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def reject_call(self) -> None:
         """Reject Incoming Call."""
