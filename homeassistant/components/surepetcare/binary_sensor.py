@@ -162,7 +162,6 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             f"{self.coordinator.data[self._id].household_id}-{self._id}-connectivity"
         )
 
-
     @callback
     def _update_attr(self):
         surepy_entity = self.coordinator.data[self._id]
