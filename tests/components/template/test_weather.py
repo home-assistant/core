@@ -27,7 +27,7 @@ async def test_template_state_text(hass):
                     "attribution_template": "{{ states('sensor.attribution') }}",
                     "condition_template": "sunny",
                     "forecast_template": "{{ states.weather.demo.attributes.forecast }}",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
+                    "temperature_template": "{{ states('sensor.temperature') | float(0) }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
                     "pressure_template": "{{ states('sensor.pressure') }}",
                     "wind_speed_template": "{{ states('sensor.windspeed') }}",
