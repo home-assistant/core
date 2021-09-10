@@ -30,12 +30,13 @@ async def test_import_flow(hass):
         DecoraWifiPlatform,
         "async_setup_decora_wifi",
         MockDecoraWifiPlatform.async_setup_decora_wifi,
-    ), patch.dict(hass.data[DOMAIN]), patch(
+    ), patch.dict(hass.data), patch(
         "homeassistant.components.decora_wifi.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        hass.data[DOMAIN] = {}
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -66,12 +67,13 @@ async def test_user_flow(hass):
         DecoraWifiPlatform,
         "async_setup_decora_wifi",
         MockDecoraWifiPlatform.async_setup_decora_wifi,
-    ), patch.dict(hass.data[DOMAIN]), patch(
+    ), patch.dict(hass.data), patch(
         "homeassistant.components.decora_wifi.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
+        hass.data[DOMAIN] = {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -124,7 +126,8 @@ async def test_reauth_flow(hass):
         DecoraWifiPlatform,
         "async_setup_decora_wifi",
         MockDecoraWifiPlatform.async_setup_decora_wifi,
-    ), patch.dict(hass.data[DOMAIN]):
+    ), patch.dict(hass.data):
+        hass.data[DOMAIN] = {}
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

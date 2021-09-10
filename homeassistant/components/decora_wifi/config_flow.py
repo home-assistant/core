@@ -63,7 +63,6 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=vol.Schema(data_schema), errors=errors
             )
-        self.hass.data[DOMAIN].update({self.entry.entry_id: self.session})
 
         # Normal config entry setup
         return self.async_create_entry(

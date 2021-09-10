@@ -8,7 +8,6 @@ from homeassistant.components.decora_wifi.common import (
     DecoraWifiPlatform,
     LoginFailed,
 )
-from homeassistant.components.decora_wifi.const import LIGHT_DOMAIN
 
 from tests.components.decora_wifi.common import (
     FakeDecoraWiFiIotSwitch,
@@ -126,7 +125,7 @@ def test_DecoraWifiPlatform_getdevices():
         instance.setup()
         assert isinstance(instance, DecoraWifiPlatform)
         # Check that getdevices left platform object in expected state
-        assert len(instance._iot_switches[LIGHT_DOMAIN]) == 6
+        assert len(instance.lights) == 6
         # Check object teardown
         instance.teardown()
         mock_apilogout.assert_called_once()

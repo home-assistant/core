@@ -12,10 +12,9 @@ from decora_wifi.models.residential_account import ResidentialAccount
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, LIGHT_DOMAIN, PLATFORMS
+from .const import LIGHT_DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,9 +153,3 @@ class DecoraWifiEntity(Entity):
         """Initialize Decora Wifi device base class."""
         self._switch = device
         self._unique_id = device.mac
-
-    async def async_added_to_hass(self):
-        """Run on addition of device to hass."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )
