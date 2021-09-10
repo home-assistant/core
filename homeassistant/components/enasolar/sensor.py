@@ -58,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     host = config_entry.data[CONF_HOST]
 
-    _LOGGER.info("Instantiate an EnaSolar Inverter at '%s'", host)
+    _LOGGER.debug("Instantiate an EnaSolar Inverter at '%s'", host)
     enasolar = pyenasolar.EnaSolar()
 
     try:
