@@ -148,7 +148,6 @@ def create_rest_data_from_config(hass, config):
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
-    payload_template = config.get(CONF_PAYLOAD_TEMPLATE)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -163,9 +162,12 @@ def create_rest_data_from_config(hass, config):
         except:
             resource = config.get(CONF_RESOURCE)
 
-    if payload_template is not None:
-        payload_template.hass = hass
-        payload = payload_template.async_render(parse_result=False)
+    if payload is not None:
+        payload.hass = hass
+        try:
+            payload = payload.async_render(parse_result=False)
+        except:
+            payload = config.get(CONF_PAYLOAD)
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
