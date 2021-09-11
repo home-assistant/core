@@ -2,41 +2,15 @@
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 
 from .common import CommFailed, DecoraWifiPlatform, LoginFailed, LoginMismatch
 from .const import CONF_OPTIONS, CONF_TITLE, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-DECORAWIFI_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_SCAN_INTERVAL, default=120): cv.positive_int,
-                },
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass: HomeAssistant, config):
