@@ -4,16 +4,17 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pyfronius import Fronius
+from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, SolarNetId
 from .coordinator import FroniusMeterUpdateCoordinator, FroniusStorageUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +56,8 @@ class FroniusSolarNet:
         self.url: str = entry.data[CONF_HOST]
         self._has_logger: bool = entry.data["is_logger"]
 
+        self.inverter_infos: dict[SolarNetId, DeviceInfo] = {}
+
         self.bridge: Fronius = self._init_bridge()
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
@@ -67,50 +70,49 @@ class FroniusSolarNet:
 
     async def init_devices(self):
         """Initialize DataUpdateCoordinators for SolarNet devices."""
-        # inverter_count = await self._get_inverter_unique_ids()
-        self.meter_coordinator = await self.init_optional_coordinator(
+        await self._get_inverter_unique_ids()
+        self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
                 hass=self.hass,
+                fronius=self.bridge,
                 logger=_LOGGER,
-                name=f"{DOMAIN}_meters",
+                name=f"{DOMAIN}_meters_{self.url}",
                 update_interval=self.update_interval,
-                update_method=self.bridge.current_system_meter_data,
             )
         )
-        self.storage_coordinator = await self.init_optional_coordinator(
+        self.storage_coordinator = await self._init_optional_coordinator(
             FroniusStorageUpdateCoordinator(
                 hass=self.hass,
+                fronius=self.bridge,
                 logger=_LOGGER,
-                name=f"{DOMAIN}_storages",
+                name=f"{DOMAIN}_storages_{self.url}",
                 update_interval=self.update_interval,
-                update_method=self.bridge.current_system_storage_data,
             )
         )
 
         # power_flow
         # logger_info
 
-    # async def _get_inverter_unique_ids(self) -> int:
-    #     try:
-    #         inverters = await self.bridge.inverter_info()
-    #     except FroniusError as err:
-    #         _LOGGER.warning(err)
-    #     else:
-    #         for solar_net_id, inverter in inverters["inverters"].items():
-    #             device = SolarNetDevice(
-    #                 device_type=SolarNetDeviceType.INVERTER,
-    #                 manufacturer="Fronius",
-    #                 model=inverter["custom_name"]["value"],
-    #                 solar_net_id=inverter["device_id"]["value"],
-    #                 unique_id=inverter["unique_id"]["value"],
-    #             )
-    #             self.solar_net_devices.append(device)
-    #             self.adapters.append(FroniusInverterDevice(self, device))
-    #         return len(inverters["inverters"])
-    #     print(f"solar_net\n{self.solar_net_devices}")
+    async def _get_inverter_unique_ids(self) -> None:
+        try:
+            inverter_info = await self.bridge.inverter_info()
+        except FroniusError as err:
+            _LOGGER.error(err)
+        else:
+            for inverter in inverter_info["inverters"]:
+                self.inverter_infos[inverter["device_id"]["value"]] = DeviceInfo(
+                    name=inverter.get("custom_name", {}).get("value"),
+                    identifiers={(DOMAIN, inverter["unique_id"]["value"])},
+                    manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
+                    model=inverter["device_type"].get(
+                        "model", inverter["device_type"]["value"]
+                    ),
+                    # TODO: via_device? entry_type?
+                )
+        print(f"inverter infos\n{self.inverter_infos}")
 
     @staticmethod
-    async def init_optional_coordinator(
+    async def _init_optional_coordinator(
         coordinator: DataUpdateCoordinator,
     ) -> DataUpdateCoordinator | None:
         """Initialize an update coordinator and return it if devices are found."""

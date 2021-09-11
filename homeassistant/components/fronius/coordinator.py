@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any, Dict, Mapping
 
+from pyfronius import Fronius, FroniusError
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import SolarNetId
@@ -22,23 +25,24 @@ class _FroniusSystemUpdateCoordinator(
 
     valid_descriptions: Mapping[str, EntityDescription]
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, fronius: Fronius, **kwargs) -> None:
         """Set up the FroniusMeterUpdateCoordinator class."""
+        self.fronius = fronius
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
         super().__init__(*args, **kwargs)
 
-    @staticmethod
-    def _get_fronius_device_data(data: dict[str, Any]) -> dict[SolarNetId, Any]:
-        """Return data per solar net id from raw data."""
-        raise NotImplementedError("_get_fronius_device_data not implemented")
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        raise NotImplementedError("Fronius update method not implemented")
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[SolarNetId, Any]:
         """Fetch the latest data from the source."""
-        if self.update_method is None:
-            raise NotImplementedError("Update method not implemented")
-        raw_data = await self.update_method()
-        data = self._get_fronius_device_data(raw_data)
+        try:
+            data = await self._update_method()
+        except FroniusError as err:
+            raise UpdateFailed from err
+
         for solar_net_id in data:
             if solar_net_id not in self.unregistered_keys:
                 # id seen for the first time
@@ -83,9 +87,9 @@ class FroniusMeterUpdateCoordinator(_FroniusSystemUpdateCoordinator):
 
     valid_descriptions = METER_ENTITY_DESCRIPTIONS
 
-    @staticmethod
-    def _get_fronius_device_data(data: dict[str, Any]) -> dict[SolarNetId, Any]:
-        """Return data per solar net id from raw data."""
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.fronius.current_system_meter_data()
         return data["meters"]
 
 
@@ -94,9 +98,9 @@ class FroniusStorageUpdateCoordinator(_FroniusSystemUpdateCoordinator):
 
     valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
 
-    @staticmethod
-    def _get_fronius_device_data(data: dict[str, Any]) -> dict[SolarNetId, Any]:
-        """Return data per solar net id from raw data."""
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.fronius.current_system_storage_data()
         return data["storages"]
 
 
