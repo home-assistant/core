@@ -1,6 +1,13 @@
 """The test for sensor device automation."""
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_DATE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TIMESTAMP,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -60,3 +67,51 @@ async def test_deprecated_unit_of_measurement(hass, caplog, enable_custom_integr
         "tests.components.sensor.test_init is setting 'unit_of_measurement' on an "
         "instance of SensorEntityDescription"
     ) in caplog.text
+
+
+async def test_iso8601_values(hass, caplog, enable_custom_integrations):
+    """Test values for iso8601."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="test1", device_class=DEVICE_CLASS_TIMESTAMP, native_value="invalid"
+    )
+    platform.ENTITIES["1"] = platform.MockSensor(
+        name="test2", device_class=DEVICE_CLASS_DATE, native_value="invalid"
+    )
+    platform.ENTITIES["2"] = platform.MockSensor(
+        name="test3",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        native_value="1970-01-01T00:00:00Z",
+    )
+    platform.ENTITIES["3"] = platform.MockSensor(
+        name="test4", device_class=DEVICE_CLASS_DATE, native_value="1970-01-01"
+    )
+    platform.ENTITIES["4"] = platform.MockSensor(
+        name="test5", device_class=DEVICE_CLASS_POWER, native_value=22
+    )
+    platform.ENTITIES["5"] = platform.MockSensor(
+        name="test6", device_class=DEVICE_CLASS_TIMESTAMP, native_value=None
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Entity sensor.test1 (<class 'custom_components.test.sensor.MockSensor'>) with device_class (timestamp) reports an invalid value: invalid"
+    ) in caplog.text
+    assert (
+        "Entity sensor.test2 (<class 'custom_components.test.sensor.MockSensor'>) with device_class (date) reports an invalid value: invalid"
+    ) in caplog.text
+    assert (
+        "Entity sensor.test3 (<class 'custom_components.test.sensor.MockSensor'>) with device_class (timestamp) reports an invalid value: invalid"
+    ) not in caplog.text
+    assert (
+        "Entity sensor.test4 (<class 'custom_components.test.sensor.MockSensor'>) with device_class (date) reports an invalid value: invalid"
+    ) not in caplog.text
+    assert (
+        "Entity sensor.test5 (<class 'custom_components.test.sensor.MockSensor'>) with device_class (power) reports an invalid value: invalid"
+    ) not in caplog.text
+    assert (
+        "Entity sensor.test6 (<class 'custom_components.test.sensor.MockSensor'>) with device_class (timestamp) reports an invalid value: invalid"
+    ) not in caplog.text

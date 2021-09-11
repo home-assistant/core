@@ -9,6 +9,7 @@ import inspect
 import logging
 from typing import Any, Final, cast, final
 
+import ciso8601
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -270,6 +271,7 @@ class SensorEntity(Entity):
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         unit_of_measurement = self.native_unit_of_measurement
+        device_class = self.device_class
         value = self.native_value
 
         units = self.hass.config.units
@@ -304,6 +306,23 @@ class SensorEntity(Entity):
             with suppress(ValueError):
                 temp = units.temperature(float(value), unit_of_measurement)
                 value = round(temp) if prec == 0 else round(temp, prec)
+
+        if value is not None and device_class in (
+            DEVICE_CLASS_TIMESTAMP,
+            DEVICE_CLASS_DATE,
+        ):
+            try:
+                ciso8601.parse_datetime(str(value))
+            except (ValueError, IndexError):
+                _LOGGER.warning(
+                    "Entity %s (%s) with device_class (%s) reports an invalid "
+                    "value: %s",
+                    self.entity_id,
+                    type(self),
+                    device_class,
+                    value,
+                )
+                value = None
 
         return value
 
