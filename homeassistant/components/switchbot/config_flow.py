@@ -57,7 +57,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # asyncio.lock prevents btle adapter exceptions if there are multiple calls to this method.
         # store asyncio.lock in hass data if not present.
-        if not self.hass.data.get(DOMAIN):
+        if DOMAIN not in self.hass.data:
             self.hass.data.setdefault(DOMAIN, {})
             self.hass.data[DOMAIN][BTLE_LOCK] = Lock()
 
