@@ -10,7 +10,7 @@ import logging
 from typing import Any, Callable, Mapping
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.const import DeviceOrServiceType, SsdpSource
+from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
 from async_upnp_client.description_cache import DescriptionCache
 from async_upnp_client.ssdp import SSDP_PORT
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpListener
@@ -314,14 +314,13 @@ class Scanner:
     @core_callback
     def _async_get_matching_callbacks(
         self,
-        ssdp_device: SsdpDevice,
-        dst: DeviceOrServiceType,
+        combined_headers: SsdpHeaders,
     ) -> list[SsdpCallback]:
         """Return a list of callbacks that match."""
         return [
             callback
             for callback, match_dict in self._callbacks
-            if _async_headers_match(ssdp_device.combined_headers(dst), match_dict)
+            if _async_headers_match(combined_headers, match_dict)
         ]
 
     @core_callback
@@ -344,25 +343,16 @@ class Scanner:
 
         location = ssdp_device.location
         info_desc = await self._async_get_description_dict(location) or {}
-        info_with_desc = CaseInsensitiveDict(
-            ssdp_device.combined_headers(dst), **info_desc
-        )
-        discovery_info: dict[str, Any] | None = None
-        callbacks = self._async_get_matching_callbacks(ssdp_device, dst)
+        combined_headers = ssdp_device.combined_headers(dst)
+        info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
+        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
+
+        callbacks = self._async_get_matching_callbacks(combined_headers)
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
-        if callbacks:
-            if discovery_info is None:
-                discovery_info = discovery_info_from_headers_and_description(
-                    info_with_desc
-                )
-            await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
+        await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
         for domain in self._async_matching_domains(info_with_desc):
             _LOGGER.debug("Discovered %s at %s", domain, location)
-            if discovery_info is None:
-                discovery_info = discovery_info_from_headers_and_description(
-                    info_with_desc
-                )
 
             flow: SSDPFlow = {
                 "domain": domain,
