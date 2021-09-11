@@ -416,7 +416,10 @@ def discovery_info_from_headers_and_description(
     info_with_desc: CaseInsensitiveDict,
 ) -> dict[str, Any]:
     """Convert headers and description to discovery_info."""
-    info = {DISCOVERY_MAPPING.get(k.lower(), k): v for k, v in info_with_desc.items()}
+    info = {
+        DISCOVERY_MAPPING.get(k.lower(), k): v
+        for k, v in info_with_desc.as_dict().items()
+    }
 
     if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
         if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
