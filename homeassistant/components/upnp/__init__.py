@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from ipaddress import ip_address
 from typing import Any
 
 import voluptuous as vol
@@ -13,13 +12,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -27,7 +25,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_LOCAL_IP,
     CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
@@ -36,7 +33,6 @@ from .const import (
     DOMAIN,
     DOMAIN_CONFIG,
     DOMAIN_DEVICES,
-    DOMAIN_LOCAL_IP,
     LOGGER,
 )
 from .device import Device
@@ -49,9 +45,7 @@ PLATFORMS = ["binary_sensor", "sensor"]
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-            },
+            {},
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -63,11 +57,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     LOGGER.debug("async_setup, config: %s", config)
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config.get(DOMAIN, conf_default)
-    local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
     hass.data[DOMAIN] = {
         DOMAIN_CONFIG: conf,
         DOMAIN_DEVICES: {},
-        DOMAIN_LOCAL_IP: conf.get(CONF_LOCAL_IP, local_ip),
     }
 
     # Only start if set up via configuration.yaml.
@@ -93,16 +85,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_discovered_event = asyncio.Event()
     discovery_info: Mapping[str, Any] | None = None
 
-    @callback
-    def device_discovered(info: Mapping[str, Any]) -> None:
+    async def device_discovered(headers: Mapping[str, Any], change: SsdpChange) -> None:
+        if change == SsdpChange.BYEBYE:
+            return
+
         nonlocal discovery_info
         LOGGER.debug(
-            "Device discovered: %s, at: %s", usn, info[ssdp.ATTR_SSDP_LOCATION]
+            "Device discovered: %s, at: %s", usn, headers[ssdp.ATTR_SSDP_LOCATION]
         )
-        discovery_info = info
+        discovery_info = headers
         device_discovered_event.set()
 
-    cancel_discovered_callback = ssdp.async_register_callback(
+    cancel_discovered_callback = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
@@ -177,18 +171,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Enabling sensors")
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    # Start device updater.
-    await device.async_start()
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
-
-    if coordinator := hass.data[DOMAIN].pop(config_entry.entry_id, None):
-        await coordinator.device.async_stop()
 
     LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
@@ -228,10 +216,10 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             self.device.async_get_status(),
         )
 
-        data = dict(update_values[0])
-        data.update(update_values[1])
-
-        return data
+        return {
+            **update_values[0],
+            **update_values[1],
+        }
 
 
 class UpnpEntity(CoordinatorEntity):
