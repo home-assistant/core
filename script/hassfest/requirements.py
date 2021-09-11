@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 import homeassistant.util.package as pkg_util
-from script.gen_requirements_all import COMMENT_REQUIREMENTS
+from script.gen_requirements_all import COMMENT_REQUIREMENTS, normalize_package_name
 
 from .model import Config, Integration
 
@@ -46,18 +46,6 @@ IGNORE_VIOLATIONS = {
     "slide",
     "suez_water",
 }
-
-
-def normalize_package_name(requirement: str) -> str:
-    """Return a normalized package name from a requirement string."""
-    match = PACKAGE_REGEX.search(requirement)
-    if not match:
-        return ""
-
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
 
 
 def validate(integrations: dict[str, Integration], config: Config):
@@ -134,7 +122,7 @@ def validate_requirements(integration: Integration):
                 f"Failed to normalize package name from requirement {req}",
             )
             return
-        if package in IGNORE_PACKAGES:
+        if (package == ign for ign in IGNORE_PACKAGES):
             continue
         integration_requirements.add(req)
         integration_packages.add(package)

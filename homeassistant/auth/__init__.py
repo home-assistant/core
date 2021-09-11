@@ -466,7 +466,7 @@ class AuthManager:
             },
             refresh_token.jwt_key,
             algorithm="HS256",
-        ).decode()
+        )
 
     @callback
     def _async_resolve_provider(
@@ -507,7 +507,9 @@ class AuthManager:
     ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
-            unverif_claims = jwt.decode(token, verify=False)
+            unverif_claims = jwt.decode(
+                token, algorithms=["HS256"], options={"verify_signature": False}
+            )
         except jwt.InvalidTokenError:
             return None
 

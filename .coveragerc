@@ -989,7 +989,6 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
-    homeassistant/components/ssdp/util.py
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
@@ -1031,6 +1030,8 @@ omit =
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
+    homeassistant/components/tautulli/const.py
+    homeassistant/components/tautulli/coordinator.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py
     homeassistant/components/telegram/notify.py
@@ -1046,14 +1047,6 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
-    homeassistant/components/tesla/__init__.py
-    homeassistant/components/tesla/binary_sensor.py
-    homeassistant/components/tesla/climate.py
-    homeassistant/components/tesla/const.py
-    homeassistant/components/tesla/device_tracker.py
-    homeassistant/components/tesla/lock.py
-    homeassistant/components/tesla/sensor.py
-    homeassistant/components/tesla/switch.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
@@ -1092,7 +1085,6 @@ omit =
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py
-    homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
     homeassistant/components/tractive/entity.py
@@ -1282,5 +1274,6 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
 
-    # TYPE_CHECKING block is never executed during pytest run
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
     if TYPE_CHECKING:
+    @overload

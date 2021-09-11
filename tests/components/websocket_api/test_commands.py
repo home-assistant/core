@@ -459,12 +459,14 @@ async def test_ping(websocket_client):
     assert msg["type"] == "pong"
 
 
-async def test_call_service_context_with_user(hass, aiohttp_client, hass_access_token):
+async def test_call_service_context_with_user(
+    hass, hass_client_no_auth, hass_access_token
+):
     """Test that the user is set in the service call context."""
     assert await async_setup_component(hass, "websocket_api", {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()

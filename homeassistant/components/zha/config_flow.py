@@ -25,18 +25,18 @@ SUPPORTED_PORT_SETTINGS = (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
 )
+DECONZ_DOMAIN = "deconz"
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self):
         """Initialize flow instance."""
         self._device_path = None
         self._radio_type = None
-        self._auto_detected_data = None
         self._title = None
 
     async def async_step_user(self, user_input=None):
@@ -108,7 +108,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: dev_path,
                     },
                 }
@@ -121,18 +121,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # we ignore the usb discovery as they probably
         # want to use it there instead
         for flow in self.hass.config_entries.flow.async_progress():
-            if flow["handler"] == "deconz":
+            if flow["handler"] == DECONZ_DOMAIN:
+                return self.async_abort(reason="not_zha_device")
+        for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
+            if entry.source != config_entries.SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
 
-        # The Nortek sticks are a special case since they
-        # have a Z-Wave and a Zigbee radio. We need to reject
-        # the Z-Wave radio.
-        if vid == "10C4" and pid == "8A2A" and "ZigBee" not in description:
-            return self.async_abort(reason="not_zha_device")
-
-        self._auto_detected_data = await detect_radios(dev_path)
-        if self._auto_detected_data is None:
-            return self.async_abort(reason="not_zha_device")
         self._device_path = dev_path
         self._title = usb.human_readable_device_name(
             dev_path,
@@ -149,9 +143,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(self, user_input=None):
         """Confirm a discovery."""
         if user_input is not None:
+            auto_detected_data = await detect_radios(self._device_path)
+            if auto_detected_data is None:
+                # This path probably will not happen now that we have
+                # more precise USB matching unless there is a problem
+                # with the device
+                return self.async_abort(reason="usb_probe_failed")
             return self.async_create_entry(
                 title=self._title,
-                data=self._auto_detected_data,
+                data=auto_detected_data,
             )
 
         return self.async_show_form(
@@ -172,7 +172,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
-                        **current_entry.data[CONF_DEVICE],
+                        **current_entry.data.get(CONF_DEVICE, {}),
                         CONF_DEVICE_PATH: device_path,
                     },
                 }

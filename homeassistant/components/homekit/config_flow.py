@@ -84,6 +84,7 @@ SUPPORTED_DOMAINS = [
     "fan",
     "humidifier",
     "input_boolean",
+    "input_select",
     "light",
     "lock",
     MEDIA_PLAYER_DOMAIN,
@@ -91,6 +92,7 @@ SUPPORTED_DOMAINS = [
     REMOTE_DOMAIN,
     "scene",
     "script",
+    "select",
     "sensor",
     "switch",
     "vacuum",
@@ -170,9 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         if user_input is not None:
-            port = await async_find_next_available_port(
-                self.hass, DEFAULT_CONFIG_FLOW_PORT
-            )
+            port = async_find_next_available_port(self.hass, DEFAULT_CONFIG_FLOW_PORT)
             await self._async_add_entries_for_accessory_mode_entities(port)
             self.hk_data[CONF_PORT] = port
             include_domains_filter = self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
@@ -203,7 +203,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entity_id in accessory_mode_entity_ids:
             if entity_id in exiting_entity_ids_accessory_mode:
                 continue
-            port = await async_find_next_available_port(self.hass, next_port_to_check)
+            port = async_find_next_available_port(self.hass, next_port_to_check)
             next_port_to_check = port + 1
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
@@ -498,7 +498,10 @@ async def _async_get_supported_devices(hass):
     """Return all supported devices."""
     results = await device_automation.async_get_device_automations(hass, "trigger")
     dev_reg = device_registry.async_get(hass)
-    unsorted = {device_id: dev_reg.async_get(device_id).name for device_id in results}
+    unsorted = {
+        device_id: dev_reg.async_get(device_id).name or device_id
+        for device_id in results
+    }
     return dict(sorted(unsorted.items(), key=lambda item: item[1]))
 
 

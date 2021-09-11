@@ -8,7 +8,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.device_tracker.const import CONF_SCAN_INTERVAL
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_CONSIDER_HOME,
+)
 from homeassistant.components.network.const import MDNS_TARGET_IP
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
@@ -24,6 +28,8 @@ from .const import (
     TRACKER_SCAN_INTERVAL,
 )
 
+MAX_SCAN_INTERVAL = 3600
+MAX_CONSIDER_HOME = MAX_SCAN_INTERVAL * 6
 DEFAULT_NETWORK_PREFIX = 24
 
 
@@ -116,7 +122,12 @@ async def _async_build_schema_with_user_input(
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
-                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=MAX_SCAN_INTERVAL)),
+                vol.Optional(
+                    CONF_CONSIDER_HOME,
+                    default=user_input.get(CONF_CONSIDER_HOME)
+                    or DEFAULT_CONSIDER_HOME.total_seconds(),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_CONSIDER_HOME)),
             }
         )
     return vol.Schema(schema)

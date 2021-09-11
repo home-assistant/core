@@ -22,7 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, METRIC_KEY_MODE, SIGNAL_VALLOX_STATE_UPDATE, ValloxStateProxy
+from . import ValloxStateProxy
+from .const import DOMAIN, METRIC_KEY_MODE, MODE_ON, SIGNAL_VALLOX_STATE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,11 +67,13 @@ class ValloxSensor(SensorEntity):
             self._attr_native_value = self._state_proxy.fetch_metric(
                 self.entity_description.metric_key
             )
-            self._attr_available = True
 
         except (OSError, KeyError) as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
+            return
+
+        self._attr_available = True
 
 
 class ValloxProfileSensor(ValloxSensor):
@@ -80,11 +83,13 @@ class ValloxProfileSensor(ValloxSensor):
         """Fetch state from the ventilation unit."""
         try:
             self._attr_native_value = self._state_proxy.get_profile()
-            self._attr_available = True
 
         except OSError as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
+            return
+
+        self._attr_available = True
 
 
 # There seems to be a quirk with respect to the fan speed reporting. The device
@@ -100,17 +105,19 @@ class ValloxFanSpeedSensor(ValloxSensor):
     async def async_update(self):
         """Fetch state from the ventilation unit."""
         try:
-            # If device is in regular operation, continue.
-            if self._state_proxy.fetch_metric(METRIC_KEY_MODE) == 0:
-                await super().async_update()
-            else:
-                # Report zero percent otherwise.
-                self._attr_native_value = 0
-                self._attr_available = True
+            fan_on = self._state_proxy.fetch_metric(METRIC_KEY_MODE) == MODE_ON
 
         except (OSError, KeyError) as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
+            return
+
+        if fan_on:
+            await super().async_update()
+        else:
+            # Report zero percent otherwise.
+            self._attr_native_value = 0
+            self._attr_available = True
 
 
 class ValloxFilterRemainingSensor(ValloxSensor):
@@ -122,18 +129,20 @@ class ValloxFilterRemainingSensor(ValloxSensor):
             days_remaining = int(
                 self._state_proxy.fetch_metric(self.entity_description.metric_key)
             )
-            days_remaining_delta = timedelta(days=days_remaining)
-
-            # Since only a delta of days is received from the device, fix the
-            # time so the timestamp does not change with every update.
-            now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
-
-            self._attr_native_value = (now + days_remaining_delta).isoformat()
-            self._attr_available = True
 
         except (OSError, KeyError) as err:
             self._attr_available = False
             _LOGGER.error("Error updating sensor: %s", err)
+            return
+
+        days_remaining_delta = timedelta(days=days_remaining)
+
+        # Since only a delta of days is received from the device, fix the
+        # time so the timestamp does not change with every update.
+        now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
+
+        self._attr_native_value = (now + days_remaining_delta).isoformat()
+        self._attr_available = True
 
 
 @dataclass
