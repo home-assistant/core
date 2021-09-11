@@ -347,14 +347,22 @@ class Scanner:
         info_with_desc = CaseInsensitiveDict(
             ssdp_device.combined_headers(dst), **info_desc
         )
-        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
-
+        discovery_info: dict[str, Any] | None = None
         callbacks = self._async_get_matching_callbacks(ssdp_device, dst)
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
-        await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
+        if callbacks:
+            if discovery_info is None:
+                discovery_info = discovery_info_from_headers_and_description(
+                    info_with_desc
+                )
+            await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
         for domain in self._async_matching_domains(info_with_desc):
             _LOGGER.debug("Discovered %s at %s", domain, location)
+            if discovery_info is None:
+                discovery_info = discovery_info_from_headers_and_description(
+                    info_with_desc
+                )
 
             flow: SSDPFlow = {
                 "domain": domain,
