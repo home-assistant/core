@@ -1,5 +1,7 @@
 """Constants for the Fronius integration."""
-from typing import Final, TypedDict
+from typing import Final, NamedTuple, TypedDict
+
+from homeassistant.helpers.entity import DeviceInfo
 
 DOMAIN: Final = "fronius"
 
@@ -12,3 +14,11 @@ class FroniusConfigEntryData(TypedDict):
 
     host: str
     is_logger: bool
+
+
+class FroniusInverterInfo(NamedTuple):
+    """Information about a Fronius inverter device."""
+
+    device_info: DeviceInfo
+    solar_net_id: SolarNetId
+    unique_id: str

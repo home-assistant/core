@@ -14,8 +14,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SolarNetId
-from .coordinator import FroniusMeterUpdateCoordinator, FroniusStorageUpdateCoordinator
+from .const import DOMAIN, FroniusInverterInfo
+from .coordinator import (
+    FroniusInverterUpdateCoordinator,
+    FroniusMeterUpdateCoordinator,
+    FroniusStorageUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = ["sensor"]
@@ -56,9 +60,8 @@ class FroniusSolarNet:
         self.url: str = entry.data[CONF_HOST]
         self._has_logger: bool = entry.data["is_logger"]
 
-        self.inverter_infos: dict[SolarNetId, DeviceInfo] = {}
-
         self.bridge: Fronius = self._init_bridge()
+        self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
 
@@ -70,7 +73,18 @@ class FroniusSolarNet:
 
     async def init_devices(self):
         """Initialize DataUpdateCoordinators for SolarNet devices."""
-        await self._get_inverter_unique_ids()
+        for inverter_info in await self._get_inverter_infos():
+            coordinator = FroniusInverterUpdateCoordinator(
+                hass=self.hass,
+                fronius=self.bridge,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.url}",
+                update_interval=self.update_interval,
+                inverter_info=inverter_info,
+            )
+            await coordinator.async_config_entry_first_refresh()
+            self.inverter_coordinators.append(coordinator)
+
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
                 hass=self.hass,
@@ -93,23 +107,34 @@ class FroniusSolarNet:
         # power_flow
         # logger_info
 
-    async def _get_inverter_unique_ids(self) -> None:
+    async def _get_inverter_infos(self) -> list[FroniusInverterInfo]:
+        """Get information about the inverters in the SolarNet system."""
         try:
-            inverter_info = await self.bridge.inverter_info()
+            _inverter_info = await self.bridge.inverter_info()
         except FroniusError as err:
-            _LOGGER.error(err)
-        else:
-            for inverter in inverter_info["inverters"]:
-                self.inverter_infos[inverter["device_id"]["value"]] = DeviceInfo(
-                    name=inverter.get("custom_name", {}).get("value"),
-                    identifiers={(DOMAIN, inverter["unique_id"]["value"])},
-                    manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
-                    model=inverter["device_type"].get(
-                        "model", inverter["device_type"]["value"]
-                    ),
-                    # TODO: via_device? entry_type?
+            raise ConfigEntryNotReady from err
+
+        inverter_infos: list[FroniusInverterInfo] = []
+        for inverter in _inverter_info["inverters"]:
+            solar_net_id = inverter["device_id"]["value"]
+            unique_id = inverter["unique_id"]["value"]
+            device_info = DeviceInfo(
+                name=inverter.get("custom_name", {}).get("value"),
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer=inverter["device_type"].get("manufacturer", "Fronius"),
+                model=inverter["device_type"].get(
+                    "model", inverter["device_type"]["value"]
+                ),
+                # TODO: via_device? entry_type?
+            )
+            inverter_infos.append(
+                FroniusInverterInfo(
+                    device_info=device_info,
+                    solar_net_id=solar_net_id,
+                    unique_id=unique_id,
                 )
-        print(f"inverter infos\n{self.inverter_infos}")
+            )
+        return inverter_infos
 
     @staticmethod
     async def _init_optional_coordinator(

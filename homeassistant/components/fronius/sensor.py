@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import FroniusSolarNet
 from .const import DOMAIN
-from .coordinator import FroniusEntity
+from .coordinator import FroniusEntity, FroniusInverterUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +53,10 @@ async def async_setup_entry(
 ):
     """Set up Fronius sensor entities based on a config entry."""
     fronius: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
+    for inverter_coordinator in fronius.inverter_coordinators:
+        inverter_coordinator.add_entities_for_seen_keys(
+            async_add_entities, InverterSensor
+        )
     if fronius.meter_coordinator is not None:
         fronius.meter_coordinator.add_entities_for_seen_keys(
             async_add_entities, MeterSensor
@@ -60,6 +64,24 @@ async def async_setup_entry(
     if fronius.storage_coordinator is not None:
         fronius.storage_coordinator.add_entities_for_seen_keys(
             async_add_entities, StorageSensor
+        )
+
+
+class InverterSensor(FroniusEntity, SensorEntity):
+    """Defines a Fronius inverter device sensor entity."""
+
+    coordinator: FroniusInverterUpdateCoordinator
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Set up an individual Fronius inverter sensor."""
+        super().__init__(*args, **kwargs)
+        # device_info created in __init__ from a `GetInverterInfo` request
+        self._attr_device_info = self.coordinator.inverter_info.device_info
+        self._attr_native_value = self._device_data[self.entity_description.key][
+            "value"
+        ]
+        self._attr_unique_id = (
+            f"{self.coordinator.inverter_info.unique_id}-{self.entity_description.key}"
         )
 
 

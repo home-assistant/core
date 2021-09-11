@@ -14,11 +14,15 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import SolarNetId
-from .descriptions import METER_ENTITY_DESCRIPTIONS, STORAGE_ENTITY_DESCRIPTIONS
+from .const import FroniusInverterInfo, SolarNetId
+from .descriptions import (
+    INVERTER_ENTITY_DESCRIPTIONS,
+    METER_ENTITY_DESCRIPTIONS,
+    STORAGE_ENTITY_DESCRIPTIONS,
+)
 
 
-class _FroniusSystemUpdateCoordinator(
+class _FroniusUpdateCoordinator(
     DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
@@ -26,7 +30,7 @@ class _FroniusSystemUpdateCoordinator(
     valid_descriptions: Mapping[str, EntityDescription]
 
     def __init__(self, *args, fronius: Fronius, **kwargs) -> None:
-        """Set up the FroniusMeterUpdateCoordinator class."""
+        """Set up the _FroniusUpdateCoordinator class."""
         self.fronius = fronius
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
@@ -82,7 +86,25 @@ class _FroniusSystemUpdateCoordinator(
         self.async_add_listener(_add_entities_for_unregistered_keys)
 
 
-class FroniusMeterUpdateCoordinator(_FroniusSystemUpdateCoordinator):
+class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
+    """Query Fronius device inverter endpoint and keep track of seen conditions."""
+
+    valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
+
+    def __init__(self, *args, inverter_info: FroniusInverterInfo, **kwargs) -> None:
+        """Set up a Fronius inverter device scope coordinator."""
+        super().__init__(*args, **kwargs)
+        self.inverter_info = inverter_info
+
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.fronius.current_inverter_data(self.inverter_info.solar_net_id)
+        # wrap a single devices data in a dict with solar_net_id key for
+        # _FroniusUpdateCoordinator _async_update_data and add_entities_for_seen_keys
+        return {self.inverter_info.solar_net_id: data}
+
+
+class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
     """Query Fronius system meter endpoint and keep track of seen conditions."""
 
     valid_descriptions = METER_ENTITY_DESCRIPTIONS
@@ -93,7 +115,7 @@ class FroniusMeterUpdateCoordinator(_FroniusSystemUpdateCoordinator):
         return data["meters"]
 
 
-class FroniusStorageUpdateCoordinator(_FroniusSystemUpdateCoordinator):
+class FroniusStorageUpdateCoordinator(_FroniusUpdateCoordinator):
     """Query Fronius system storage endpoint and keep track of seen conditions."""
 
     valid_descriptions = STORAGE_ENTITY_DESCRIPTIONS
@@ -104,32 +126,12 @@ class FroniusStorageUpdateCoordinator(_FroniusSystemUpdateCoordinator):
         return data["storages"]
 
 
-# class FroniusInverterUpdateCoordinator(DataUpdateCoordinator):
-#     """Query Fronius endpoint and keep track of seen conditions."""
-
-#     def __init__(self, *args, **kwargs) -> None:
-#         """Set up the FroniusInverterUpdateCoordinator class."""
-#         self.seen_conditions: dict[SolarNetId, set[str]] = {}
-#         self.device_infos: dict[SolarNetId, DeviceInfo] = {}
-#         super().__init__(*args, **kwargs)
-
-#     async def async_config_entry_first_refresh(self) -> None:
-#         """Refresh data for the first time when a config entry is setup."""
-#         await super().async_config_entry_first_refresh()
-#         for solar_net_id, meter in self.data["meters"].items():
-#             self.device_infos[solar_net_id] = DeviceInfo(
-#                 name=meter["model"]["value"],
-#                 identifiers={(DOMAIN, meter["serial"]["value"])},
-#                 manufacturer=meter["manufacturer"]["value"],
-#             )
-
-
 class FroniusEntity(CoordinatorEntity):
     """Defines a Fronius coordinator entity."""
 
     def __init__(
         self,
-        coordinator: _FroniusSystemUpdateCoordinator,
+        coordinator: _FroniusUpdateCoordinator,
         entity_description: EntityDescription,
         solar_net_id: str,
     ) -> None:

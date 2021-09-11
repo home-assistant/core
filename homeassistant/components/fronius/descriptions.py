@@ -30,6 +30,85 @@ VOLTAMPEREREACTIVE = "VAr"
 VOLTAMPEREREACTIVE_HOUR = "VArh"
 
 # TODO: add entity_registry_enabled_default
+INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "energy_day": SensorEntityDescription(
+        key="energy_day",
+        name="Energy day",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "energy_year": SensorEntityDescription(
+        key="energy_year",
+        name="Energy year",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "energy_total": SensorEntityDescription(
+        key="energy_total",
+        name="Energy total",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "frequency_ac": SensorEntityDescription(
+        key="frequency_ac",
+        name="Frequency AC",
+        native_unit_of_measurement=FREQUENCY_HERTZ,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "current_ac": SensorEntityDescription(
+        key="current_ac",
+        name="AC Current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "current_dc": SensorEntityDescription(
+        key="current_dc",
+        name="DC current",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "current_dc_2": SensorEntityDescription(
+        key="current_dc_2",
+        name="DC Current 2",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        device_class=DEVICE_CLASS_CURRENT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "power_ac": SensorEntityDescription(
+        key="power_ac",
+        name="AC power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage_ac": SensorEntityDescription(
+        key="voltage_ac",
+        name="AC voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage_dc": SensorEntityDescription(
+        key="voltage_dc",
+        name="DC voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage_dc_2": SensorEntityDescription(
+        key="voltage_dc_2",
+        name="DC voltage 2",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=DEVICE_CLASS_VOLTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+}
+
 METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "current_ac_phase_1": SensorEntityDescription(
         key="current_ac_phase_1",
