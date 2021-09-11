@@ -5,7 +5,12 @@ from bond_api import Action, DeviceType
 import pytest
 
 from homeassistant import core
-from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond.const import (
+    ATTR_POWER_STATE,
+    DOMAIN,
+    SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+    SERVICE_SET_LIGHT_POWER_BELIEF,
+)
 from homeassistant.components.bond.light import (
     SERVICE_START_DECREASING_BRIGHTNESS,
     SERVICE_START_INCREASING_BRIGHTNESS,
@@ -31,6 +36,7 @@ from homeassistant.util import utcnow
 from .common import (
     help_test_entity_available,
     patch_bond_action,
+    patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
     setup_platform,
 )
@@ -44,6 +50,15 @@ def light(name: str):
         "name": name,
         "type": DeviceType.LIGHT,
         "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
+    }
+
+
+def light_no_brightness(name: str):
+    """Create a light with a given name."""
+    return {
+        "name": name,
+        "type": DeviceType.LIGHT,
+        "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF],
     }
 
 
@@ -102,6 +117,21 @@ def fireplace_with_light(name: str):
             Action.TURN_OFF,
             Action.TURN_LIGHT_ON,
             Action.TURN_LIGHT_OFF,
+        ],
+    }
+
+
+def fireplace_with_light_supports_brightness(name: str):
+    """Create a fireplace with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.FIREPLACE,
+        "actions": [
+            Action.TURN_ON,
+            Action.TURN_OFF,
+            Action.TURN_LIGHT_ON,
+            Action.TURN_LIGHT_OFF,
+            Action.SET_BRIGHTNESS,
         ],
     }
 
@@ -252,6 +282,270 @@ async def test_no_trust_state(hass: core.HomeAssistant):
     )
     device = hass.states.get("light.name_1")
     assert device.attributes.get(ATTR_ASSUMED_STATE) is not True
+
+
+async def test_light_set_brightness_belief_full(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_brightness_belief(brightness=100)
+    )
+
+
+async def test_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_fp_light_set_brightness_belief_full(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light_supports_brightness("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_brightness_belief(brightness=100)
+    )
+
+
+async def test_fp_light_set_brightness_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light_supports_brightness("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_light_set_brightness_belief_brightnes_not_supported(
+    hass: core.HomeAssistant,
+):
+    """Tests that the set brightness belief function of a light that doesn't support setting brightness returns an error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_no_brightness("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(HomeAssistantError), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_light_set_brightness_belief_zero(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_light_state_belief(False)
+    )
+
+
+async def test_fp_light_set_brightness_belief_zero(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light_supports_brightness("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_power_state_belief(False)
+    )
+
+
+async def test_light_set_power_belief(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_light_state_belief(False)
+    )
+
+
+async def test_light_set_power_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_fp_light_set_power_belief(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_bond_action, patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_bond_action.assert_called_once_with(
+        "test-device-id", Action.set_power_state_belief(False)
+    )
+
+
+async def test_fp_light_set_power_belief_api_error(hass: core.HomeAssistant):
+    """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_fp_light_set_brightness_belief_brightnes_not_supported(
+    hass: core.HomeAssistant,
+):
+    """Tests that the set brightness belief function of a fireplace light that doesn't support setting brightness returns an error."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with pytest.raises(HomeAssistantError), patch_bond_device_state():
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_BRIGHTNESS_BELIEF,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_light_start_increasing_brightness(hass: core.HomeAssistant):

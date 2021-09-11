@@ -210,7 +210,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
             self._available_modes = AVAILABLE_MODES_MJJSQ
             self._min_humidity = 30
             self._max_humidity = 80
-            self._humidity_steps = 10
+            self._humidity_steps = 100
         else:
             self._available_modes = AVAILABLE_MODES_OTHER
             self._min_humidity = 30

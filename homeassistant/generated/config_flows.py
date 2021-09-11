@@ -273,7 +273,6 @@ FLOWS = [
     "tasmota",
     "tellduslive",
     "terncy",
-    "tesla",
     "tibber",
     "tile",
     "toon",

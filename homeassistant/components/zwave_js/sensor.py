@@ -15,7 +15,7 @@ from zwave_js_server.const.command_class.meter import (
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
-from zwave_js_server.util.command_class import get_meter_type
+from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
@@ -105,7 +105,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT: ZwaveSensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
