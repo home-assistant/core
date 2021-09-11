@@ -195,7 +195,7 @@ class VizioDevice(MediaPlayerEntity):
 
         if not self._attr_device_info:
             self._attr_device_info = {
-                "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+                "identifiers": {(DOMAIN, self._attr_unique_id)},
                 "name": self._attr_name,
                 "manufacturer": "VIZIO",
                 "model": await self._device.get_model_name(log_api_exception=False),
