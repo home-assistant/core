@@ -124,7 +124,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="cannot_connect")
 
     async def validate_input(
-        self, dev_path=None, unique_id=None
+        self, dev_path: str, unique_id: str
     ) -> dict[str, str] | None:
         """Handle common flow input validation."""
         self._async_abort_entries_match({CONF_DEVICE: dev_path})
