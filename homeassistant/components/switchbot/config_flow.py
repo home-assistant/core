@@ -70,7 +70,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _btle_connect, data[CONF_MAC]
             )
 
-
         if _btle_adv_data["modelName"] == "WoHand":
             data[CONF_SENSOR_TYPE] = ATTR_BOT
             return self.async_create_entry(title=data[CONF_NAME], data=data)
