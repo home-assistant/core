@@ -4,21 +4,21 @@ import logging
 from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
-    ELECTRICAL_CURRENT_AMPERE,
-    ELECTRICAL_VOLT_AMPERE,
+    DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     FREQUENCY_HERTZ,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -26,72 +26,72 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_PREFIX = "UPS "
 SENSOR_TYPES = {
-    "alarmdel": ["Alarm Delay", "", "mdi:alarm"],
-    "ambtemp": ["Ambient Temperature", "", "mdi:thermometer"],
-    "apc": ["Status Data", "", "mdi:information-outline"],
-    "apcmodel": ["Model", "", "mdi:information-outline"],
-    "badbatts": ["Bad Batteries", "", "mdi:information-outline"],
-    "battdate": ["Battery Replaced", "", "mdi:calendar-clock"],
-    "battstat": ["Battery Status", "", "mdi:information-outline"],
-    "battv": ["Battery Voltage", VOLT, "mdi:flash"],
-    "bcharge": ["Battery", PERCENTAGE, "mdi:battery"],
-    "cable": ["Cable Type", "", "mdi:ethernet-cable"],
-    "cumonbatt": ["Total Time on Battery", "", "mdi:timer-outline"],
-    "date": ["Status Date", "", "mdi:calendar-clock"],
-    "dipsw": ["Dip Switch Settings", "", "mdi:information-outline"],
-    "dlowbatt": ["Low Battery Signal", "", "mdi:clock-alert"],
-    "driver": ["Driver", "", "mdi:information-outline"],
-    "dshutd": ["Shutdown Delay", "", "mdi:timer-outline"],
-    "dwake": ["Wake Delay", "", "mdi:timer-outline"],
-    "endapc": ["Date and Time", "", "mdi:calendar-clock"],
-    "extbatts": ["External Batteries", "", "mdi:information-outline"],
-    "firmware": ["Firmware Version", "", "mdi:information-outline"],
-    "hitrans": ["Transfer High", VOLT, "mdi:flash"],
-    "hostname": ["Hostname", "", "mdi:information-outline"],
-    "humidity": ["Ambient Humidity", PERCENTAGE, "mdi:water-percent"],
-    "itemp": ["Internal Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "lastxfer": ["Last Transfer", "", "mdi:transfer"],
-    "linefail": ["Input Voltage Status", "", "mdi:information-outline"],
-    "linefreq": ["Line Frequency", FREQUENCY_HERTZ, "mdi:information-outline"],
-    "linev": ["Input Voltage", VOLT, "mdi:flash"],
-    "loadpct": ["Load", PERCENTAGE, "mdi:gauge"],
-    "loadapnt": ["Load Apparent Power", PERCENTAGE, "mdi:gauge"],
-    "lotrans": ["Transfer Low", VOLT, "mdi:flash"],
-    "mandate": ["Manufacture Date", "", "mdi:calendar"],
-    "masterupd": ["Master Update", "", "mdi:information-outline"],
-    "maxlinev": ["Input Voltage High", VOLT, "mdi:flash"],
-    "maxtime": ["Battery Timeout", "", "mdi:timer-off-outline"],
-    "mbattchg": ["Battery Shutdown", PERCENTAGE, "mdi:battery-alert"],
-    "minlinev": ["Input Voltage Low", VOLT, "mdi:flash"],
-    "mintimel": ["Shutdown Time", "", "mdi:timer-outline"],
-    "model": ["Model", "", "mdi:information-outline"],
-    "nombattv": ["Battery Nominal Voltage", VOLT, "mdi:flash"],
-    "nominv": ["Nominal Input Voltage", VOLT, "mdi:flash"],
-    "nomoutv": ["Nominal Output Voltage", VOLT, "mdi:flash"],
-    "nompower": ["Nominal Output Power", POWER_WATT, "mdi:flash"],
-    "nomapnt": ["Nominal Apparent Power", ELECTRICAL_VOLT_AMPERE, "mdi:flash"],
-    "numxfers": ["Transfer Count", "", "mdi:counter"],
-    "outcurnt": ["Output Current", ELECTRICAL_CURRENT_AMPERE, "mdi:flash"],
-    "outputv": ["Output Voltage", VOLT, "mdi:flash"],
-    "reg1": ["Register 1 Fault", "", "mdi:information-outline"],
-    "reg2": ["Register 2 Fault", "", "mdi:information-outline"],
-    "reg3": ["Register 3 Fault", "", "mdi:information-outline"],
-    "retpct": ["Restore Requirement", PERCENTAGE, "mdi:battery-alert"],
-    "selftest": ["Last Self Test", "", "mdi:calendar-clock"],
-    "sense": ["Sensitivity", "", "mdi:information-outline"],
-    "serialno": ["Serial Number", "", "mdi:information-outline"],
-    "starttime": ["Startup Time", "", "mdi:calendar-clock"],
-    "statflag": ["Status Flag", "", "mdi:information-outline"],
-    "status": ["Status", "", "mdi:information-outline"],
-    "stesti": ["Self Test Interval", "", "mdi:information-outline"],
-    "timeleft": ["Time Left", "", "mdi:clock-alert"],
-    "tonbatt": ["Time on Battery", "", "mdi:timer-outline"],
-    "upsmode": ["Mode", "", "mdi:information-outline"],
-    "upsname": ["Name", "", "mdi:information-outline"],
-    "version": ["Daemon Info", "", "mdi:information-outline"],
-    "xoffbat": ["Transfer from Battery", "", "mdi:transfer"],
-    "xoffbatt": ["Transfer from Battery", "", "mdi:transfer"],
-    "xonbatt": ["Transfer to Battery", "", "mdi:transfer"],
+    "alarmdel": ["Alarm Delay", None, "mdi:alarm", None],
+    "ambtemp": ["Ambient Temperature", None, "mdi:thermometer", None],
+    "apc": ["Status Data", None, "mdi:information-outline", None],
+    "apcmodel": ["Model", None, "mdi:information-outline", None],
+    "badbatts": ["Bad Batteries", None, "mdi:information-outline", None],
+    "battdate": ["Battery Replaced", None, "mdi:calendar-clock", None],
+    "battstat": ["Battery Status", None, "mdi:information-outline", None],
+    "battv": ["Battery Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "bcharge": ["Battery", PERCENTAGE, "mdi:battery", None],
+    "cable": ["Cable Type", None, "mdi:ethernet-cable", None],
+    "cumonbatt": ["Total Time on Battery", None, "mdi:timer-outline", None],
+    "date": ["Status Date", None, "mdi:calendar-clock", None],
+    "dipsw": ["Dip Switch Settings", None, "mdi:information-outline", None],
+    "dlowbatt": ["Low Battery Signal", None, "mdi:clock-alert", None],
+    "driver": ["Driver", None, "mdi:information-outline", None],
+    "dshutd": ["Shutdown Delay", None, "mdi:timer-outline", None],
+    "dwake": ["Wake Delay", None, "mdi:timer-outline", None],
+    "endapc": ["Date and Time", None, "mdi:calendar-clock", None],
+    "extbatts": ["External Batteries", None, "mdi:information-outline", None],
+    "firmware": ["Firmware Version", None, "mdi:information-outline", None],
+    "hitrans": ["Transfer High", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "hostname": ["Hostname", None, "mdi:information-outline", None],
+    "humidity": ["Ambient Humidity", PERCENTAGE, "mdi:water-percent", None],
+    "itemp": ["Internal Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "lastxfer": ["Last Transfer", None, "mdi:transfer", None],
+    "linefail": ["Input Voltage Status", None, "mdi:information-outline", None],
+    "linefreq": ["Line Frequency", FREQUENCY_HERTZ, "mdi:information-outline", None],
+    "linev": ["Input Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "loadpct": ["Load", PERCENTAGE, "mdi:gauge", None],
+    "loadapnt": ["Load Apparent Power", PERCENTAGE, "mdi:gauge", None],
+    "lotrans": ["Transfer Low", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "mandate": ["Manufacture Date", None, "mdi:calendar", None],
+    "masterupd": ["Master Update", None, "mdi:information-outline", None],
+    "maxlinev": ["Input Voltage High", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "maxtime": ["Battery Timeout", None, "mdi:timer-off-outline", None],
+    "mbattchg": ["Battery Shutdown", PERCENTAGE, "mdi:battery-alert", None],
+    "minlinev": ["Input Voltage Low", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "mintimel": ["Shutdown Time", None, "mdi:timer-outline", None],
+    "model": ["Model", None, "mdi:information-outline", None],
+    "nombattv": ["Battery Nominal Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "nominv": ["Nominal Input Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "nomoutv": ["Nominal Output Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "nompower": ["Nominal Output Power", POWER_WATT, "mdi:flash", None],
+    "nomapnt": ["Nominal Apparent Power", POWER_VOLT_AMPERE, "mdi:flash", None],
+    "numxfers": ["Transfer Count", None, "mdi:counter", None],
+    "outcurnt": ["Output Current", ELECTRIC_CURRENT_AMPERE, "mdi:flash", None],
+    "outputv": ["Output Voltage", ELECTRIC_POTENTIAL_VOLT, "mdi:flash", None],
+    "reg1": ["Register 1 Fault", None, "mdi:information-outline", None],
+    "reg2": ["Register 2 Fault", None, "mdi:information-outline", None],
+    "reg3": ["Register 3 Fault", None, "mdi:information-outline", None],
+    "retpct": ["Restore Requirement", PERCENTAGE, "mdi:battery-alert", None],
+    "selftest": ["Last Self Test", None, "mdi:calendar-clock", None],
+    "sense": ["Sensitivity", None, "mdi:information-outline", None],
+    "serialno": ["Serial Number", None, "mdi:information-outline", None],
+    "starttime": ["Startup Time", None, "mdi:calendar-clock", None],
+    "statflag": ["Status Flag", None, "mdi:information-outline", None],
+    "status": ["Status", None, "mdi:information-outline", None],
+    "stesti": ["Self Test Interval", None, "mdi:information-outline", None],
+    "timeleft": ["Time Left", None, "mdi:clock-alert", None],
+    "tonbatt": ["Time on Battery", None, "mdi:timer-outline", None],
+    "upsmode": ["Mode", None, "mdi:information-outline", None],
+    "upsname": ["Name", None, "mdi:information-outline", None],
+    "version": ["Daemon Info", None, "mdi:information-outline", None],
+    "xoffbat": ["Transfer from Battery", None, "mdi:transfer", None],
+    "xoffbatt": ["Transfer from Battery", None, "mdi:transfer", None],
+    "xonbatt": ["Transfer to Battery", None, "mdi:transfer", None],
 }
 
 SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
@@ -99,9 +99,9 @@ INFERRED_UNITS = {
     " Minutes": TIME_MINUTES,
     " Seconds": TIME_SECONDS,
     " Percent": PERCENTAGE,
-    " Volts": VOLT,
-    " Ampere": ELECTRICAL_CURRENT_AMPERE,
-    " Volt-Ampere": ELECTRICAL_VOLT_AMPERE,
+    " Volts": ELECTRIC_POTENTIAL_VOLT,
+    " Ampere": ELECTRIC_CURRENT_AMPERE,
+    " Volt-Ampere": POWER_VOLT_AMPERE,
     " Watts": POWER_WATT,
     " Hz": FREQUENCY_HERTZ,
     " C": TEMP_CELSIUS,
@@ -156,46 +156,25 @@ def infer_unit(value):
     return value, None
 
 
-class APCUPSdSensor(Entity):
+class APCUPSdSensor(SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
     def __init__(self, data, sensor_type):
         """Initialize the sensor."""
         self._data = data
         self.type = sensor_type
-        self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
-        self._unit = SENSOR_TYPES[sensor_type][1]
-        self._inferred_unit = None
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def state(self):
-        """Return true if the UPS is online, else False."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        if not self._unit:
-            return self._inferred_unit
-        return self._unit
+        self._attr_name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
+        self._attr_icon = SENSOR_TYPES[self.type][2]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_device_class = SENSOR_TYPES[sensor_type][3]
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
         if self.type.upper() not in self._data.status:
-            self._state = None
-            self._inferred_unit = None
+            self._attr_native_value = None
         else:
-            self._state, self._inferred_unit = infer_unit(
+            self._attr_native_value, inferred_unit = infer_unit(
                 self._data.status[self.type.upper()]
             )
+            if not self._attr_native_unit_of_measurement:
+                self._attr_native_unit_of_measurement = inferred_unit

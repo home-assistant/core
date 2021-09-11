@@ -1,11 +1,13 @@
 """Device for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
 import random
 import time
-from typing import Any, Dict
+from typing import Any
 
 from zigpy import types
 import zigpy.exceptions
@@ -14,13 +16,13 @@ import zigpy.quirks
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
-from homeassistant.core import callback
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import channels, typing as zha_typing
 from .const import (
@@ -28,7 +30,6 @@ from .const import (
     ATTR_ATTRIBUTE,
     ATTR_AVAILABLE,
     ATTR_CLUSTER_ID,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
@@ -40,7 +41,6 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
     ATTR_MODEL,
-    ATTR_NAME,
     ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
@@ -55,6 +55,11 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+    CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+    CONF_ENABLE_IDENTIFY_ON_JOIN,
     EFFECT_DEFAULT_VARIANT,
     EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
@@ -64,12 +69,11 @@ from .const import (
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
+    ZHA_OPTIONS,
 )
-from .helpers import LogMixin
+from .helpers import LogMixin, async_get_zha_config_value
 
 _LOGGER = logging.getLogger(__name__)
-CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
-CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
@@ -86,10 +90,10 @@ class ZHADevice(LogMixin):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         zigpy_device: zha_typing.ZigpyDeviceType,
         zha_gateway: zha_typing.ZhaGatewayType,
-    ):
+    ) -> None:
         """Initialize the gateway."""
         self.hass = hass
         self._zigpy_device = zigpy_device
@@ -105,9 +109,20 @@ class ZHADevice(LogMixin):
         )
 
         if self.is_mains_powered:
-            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_MAINS
+            self.consider_unavailable_time = async_get_zha_config_value(
+                self._zha_gateway.config_entry,
+                ZHA_OPTIONS,
+                CONF_CONSIDER_UNAVAILABLE_MAINS,
+                CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
+            )
         else:
-            self._consider_unavailable_time = CONSIDER_UNAVAILABLE_BATTERY
+            self.consider_unavailable_time = async_get_zha_config_value(
+                self._zha_gateway.config_entry,
+                ZHA_OPTIONS,
+                CONF_CONSIDER_UNAVAILABLE_BATTERY,
+                CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
+            )
+
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self.unsubs.append(
             async_track_time_interval(
@@ -168,11 +183,12 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.model
 
     @property
-    def manufacturer_code(self):
+    def manufacturer_code(self) -> int | None:
         """Return the manufacturer code for the device."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.manufacturer_code
-        return None
+        if self._zigpy_device.node_desc is None:
+            return None
+
+        return self._zigpy_device.node_desc.manufacturer_code
 
     @property
     def nwk(self):
@@ -195,17 +211,20 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.last_seen
 
     @property
-    def is_mains_powered(self):
+    def is_mains_powered(self) -> bool | None:
         """Return true if device is mains powered."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_mains_powered
 
     @property
-    def device_type(self):
+    def device_type(self) -> str:
         """Return the logical device type for the device."""
-        node_descriptor = self._zigpy_device.node_desc
-        return (
-            node_descriptor.logical_type.name if node_descriptor.is_valid else UNKNOWN
-        )
+        if self._zigpy_device.node_desc is None:
+            return UNKNOWN
+
+        return self._zigpy_device.node_desc.logical_type.name
 
     @property
     def power_source(self):
@@ -215,18 +234,27 @@ class ZHADevice(LogMixin):
         )
 
     @property
-    def is_router(self):
+    def is_router(self) -> bool | None:
         """Return true if this is a routing capable device."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_router
 
     @property
-    def is_coordinator(self):
+    def is_coordinator(self) -> bool | None:
         """Return true if this device represents the coordinator."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_coordinator
 
     @property
-    def is_end_device(self):
+    def is_end_device(self) -> bool | None:
         """Return true if this device is an end device."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_end_device
 
     @property
@@ -276,7 +304,7 @@ class ZHADevice(LogMixin):
         self._available = new_availability
 
     @property
-    def zigbee_signature(self) -> Dict[str, Any]:
+    def zigbee_signature(self) -> dict[str, Any]:
         """Get zigbee signature for this device."""
         return {
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
@@ -286,7 +314,7 @@ class ZHADevice(LogMixin):
     @classmethod
     def new(
         cls,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         zigpy_dev: zha_typing.ZigpyDeviceType,
         gateway: zha_typing.ZhaGatewayType,
         restored: bool = False,
@@ -318,7 +346,7 @@ class ZHADevice(LogMixin):
             return
 
         difference = time.time() - self.last_seen
-        if difference < self._consider_unavailable_time:
+        if difference < self.consider_unavailable_time:
             self.update_available(True)
             self._checkins_missed_count = 0
             return
@@ -394,13 +422,23 @@ class ZHADevice(LogMixin):
 
     async def async_configure(self):
         """Configure the device."""
+        should_identify = async_get_zha_config_value(
+            self._zha_gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_IDENTIFY_ON_JOIN,
+            True,
+        )
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
         entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
-        if self._channels.identify_ch is not None and not self.skip_configuration:
+        if (
+            should_identify
+            and self._channels.identify_ch is not None
+            and not self.skip_configuration
+        ):
             await self._channels.identify_ch.trigger_effect(
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )
@@ -465,7 +503,7 @@ class ZHADevice(LogMixin):
                 names.append(
                     {
                         ATTR_NAME: f"unknown {endpoint.device_type} device_type "
-                        "of 0x{endpoint.profile_id:04x} profile id"
+                        f"of 0x{endpoint.profile_id:04x} profile id"
                     }
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names

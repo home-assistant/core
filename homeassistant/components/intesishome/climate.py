@@ -212,7 +212,7 @@ class IntesisAC(ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {}
         if self._outdoor_temp:

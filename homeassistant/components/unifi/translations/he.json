@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u05d4\u05d0\u05d9\u05de\u05d5\u05ea \u05de\u05d7\u05d3\u05e9 \u05d4\u05e6\u05dc\u05d9\u05d7"
+        },
+        "error": {
+            "faulty_credentials": "\u05d0\u05d9\u05de\u05d5\u05ea \u05dc\u05d0 \u05d7\u05d5\u05e7\u05d9",
+            "service_unavailable": "\u05d4\u05d4\u05ea\u05d7\u05d1\u05e8\u05d5\u05ea \u05e0\u05db\u05e9\u05dc\u05d4"
+        },
+        "flow_title": "{site} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u05de\u05d0\u05e8\u05d7",
+                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4",
+                    "port": "\u05e4\u05ea\u05d7\u05d4",
+                    "username": "\u05e9\u05dd \u05de\u05e9\u05ea\u05de\u05e9",
+                    "verify_ssl": "\u05d0\u05d9\u05de\u05d5\u05ea \u05d0\u05d9\u05e9\u05d5\u05e8 SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "\u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05de\u05d1\u05d5\u05e7\u05e8\u05d9\u05dd \u05e9\u05dc \u05d2\u05d9\u05e9\u05d4 \u05dc\u05e8\u05e9\u05ea"
+                }
+            },
+            "device_tracker": {
+                "data": {
+                    "track_clients": "\u05de\u05e2\u05e7\u05d1 \u05d0\u05d7\u05e8 \u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05e8\u05e9\u05ea",
+                    "track_devices": "\u05de\u05e2\u05e7\u05d1 \u05d0\u05d7\u05e8 \u05d4\u05ea\u05e7\u05e0\u05d9 \u05e8\u05e9\u05ea (\u05d4\u05ea\u05e7\u05e0\u05d9 Ubiquiti)"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "\u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05de\u05d1\u05d5\u05e7\u05e8\u05d9\u05dd \u05e9\u05dc \u05d2\u05d9\u05e9\u05d4 \u05dc\u05e8\u05e9\u05ea",
+                    "track_clients": "\u05de\u05e2\u05e7\u05d1 \u05d0\u05d7\u05e8 \u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05e8\u05e9\u05ea",
+                    "track_devices": "\u05de\u05e2\u05e7\u05d1 \u05d0\u05d7\u05e8 \u05d4\u05ea\u05e7\u05e0\u05d9 \u05e8\u05e9\u05ea (\u05d4\u05ea\u05e7\u05e0\u05d9 Ubiquiti)"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "\u05d7\u05d9\u05d9\u05e9\u05e0\u05d9 \u05e9\u05d9\u05de\u05d5\u05e9 \u05d1\u05e8\u05d5\u05d7\u05d1 \u05e4\u05e1 \u05dc\u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05e8\u05e9\u05ea"
+                }
+            }
+        }
+    }
+}

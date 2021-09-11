@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "bad_host": "Ge\u00e7ersiz, Ge\u00e7ersiz K\u0131lma API ana makine url'si"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "A\u00e7\u0131k / kapal\u0131 durumunu tersine \u00e7evirin"
+                }
+            },
+            "options_io": {
+                "data": {
+                    "3": "B\u00f6lge 3",
+                    "4": "B\u00f6lge 4",
+                    "5": "B\u00f6lge 5",
+                    "6": "B\u00f6lge 6",
+                    "7": "B\u00f6lge 7",
+                    "out": "OUT"
+                }
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "B\u00f6lge 10",
+                    "11": "B\u00f6lge 11",
+                    "12": "B\u00f6lge 12",
+                    "8": "B\u00f6lge 8",
+                    "9": "B\u00f6lge 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2/ALARM2",
+                    "out1": "OUT1"
+                }
+            },
+            "options_misc": {
+                "data": {
+                    "api_host": "API ana makine URL'sini ge\u00e7ersiz k\u0131l (iste\u011fe ba\u011fl\u0131)",
+                    "override_api_host": "Varsay\u0131lan Home Assistant API ana bilgisayar paneli URL'sini ge\u00e7ersiz k\u0131l"
+                }
+            }
+        }
+    }
+}

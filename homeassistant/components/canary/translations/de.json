@@ -1,18 +1,20 @@
 {
     "config": {
         "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "Canary: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Mit Canary verbinden"
             }
         }
     },
@@ -20,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ffmpeg_arguments": "An ffmpeg \u00fcbergebene Argumente f\u00fcr Kameras",
                     "timeout": "Anfrage-Timeout (Sekunden)"
                 }
             }

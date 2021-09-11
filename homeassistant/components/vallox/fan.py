@@ -6,12 +6,14 @@ from homeassistant.components.fan import FanEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
+from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
+    MODE_OFF,
+    MODE_ON,
     SIGNAL_VALLOX_STATE_UPDATE,
 )
 
@@ -83,7 +85,7 @@ class ValloxFan(FanEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_PROFILE_FAN_SPEED_HOME["description"]: self._fan_speed_home,
@@ -109,7 +111,7 @@ class ValloxFan(FanEntity):
         try:
             # Fetch if the whole device is in regular operation state.
             mode = self._state_proxy.fetch_metric(METRIC_KEY_MODE)
-            if mode == 0:
+            if mode == MODE_ON:
                 self._state = True
             else:
                 self._state = False
@@ -137,7 +139,20 @@ class ValloxFan(FanEntity):
             self._available = False
             _LOGGER.error("Error updating fan: %s", err)
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn the device on."""
         _LOGGER.debug("Turn on: %s", speed)
 
@@ -148,7 +163,7 @@ class ValloxFan(FanEntity):
 
         if self._state is False:
             try:
-                await self._client.set_values({METRIC_KEY_MODE: 0})
+                await self._client.set_values({METRIC_KEY_MODE: MODE_ON})
 
                 # This state change affects other entities like sensors. Force
                 # an immediate update that can be observed by all parties
@@ -165,7 +180,7 @@ class ValloxFan(FanEntity):
         """Turn the device off."""
         if self._state is True:
             try:
-                await self._client.set_values({METRIC_KEY_MODE: 5})
+                await self._client.set_values({METRIC_KEY_MODE: MODE_OFF})
 
                 # Same as for turn_on method.
                 await self._state_proxy.async_update(None)

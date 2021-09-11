@@ -26,7 +26,7 @@ from epson_projector.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -36,12 +36,12 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
+from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,24 +55,20 @@ SUPPORT_EPSON = (
     | SUPPORT_PREVIOUS_TRACK
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-    }
-)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Epson projector from a config entry."""
-    unique_id = config_entry.entry_id
-    projector = hass.data[DOMAIN][unique_id]
+    entry_id = config_entry.entry_id
+    unique_id = config_entry.unique_id
+    projector = hass.data[DOMAIN][entry_id]
     projector_entity = EpsonProjectorMediaPlayer(
-        projector, config_entry.title, unique_id
+        projector=projector,
+        name=config_entry.title,
+        unique_id=unique_id,
+        entry=config_entry,
     )
     async_add_entities([projector_entity], True)
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SELECT_CMODE,
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
@@ -80,22 +76,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Epson projector."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, projector, name, unique_id):
+    def __init__(self, projector, name, unique_id, entry):
         """Initialize entity to control Epson projector."""
-        self._name = name
         self._projector = projector
+        self._entry = entry
+        self._name = name
         self._available = False
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
@@ -104,9 +92,28 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         self._state = None
         self._unique_id = unique_id
 
+    async def set_unique_id(self):
+        """Set unique id for projector config entry."""
+        _LOGGER.debug("Setting unique_id for projector")
+        if self._unique_id:
+            return False
+        uid = await self._projector.get_serial_number()
+        if uid:
+            self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
+            registry = async_get_entity_registry(self.hass)
+            old_entity_id = registry.async_get_entity_id(
+                "media_player", DOMAIN, self._entry.entry_id
+            )
+            if old_entity_id is not None:
+                registry.async_update_entity(old_entity_id, new_unique_id=uid)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._entry.entry_id)
+            )
+            return True
+
     async def async_update(self):
         """Update state of device."""
-        power_state = await self._projector.get_property(POWER)
+        power_state = await self._projector.get_power()
         _LOGGER.debug("Projector status: %s", power_state)
         if not power_state or power_state == EPSON_STATE_UNAVAILABLE:
             self._available = False
@@ -114,6 +121,8 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         self._available = True
         if power_state == EPSON_CODES[POWER]:
             self._state = STATE_ON
+            if await self.set_unique_id():
+                return
             self._source_list = list(DEFAULT_SOURCES.values())
             cmode = await self._projector.get_property(CMODE)
             self._cmode = CMODE_LIST.get(cmode, self._cmode)
@@ -126,6 +135,19 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
+
+    @property
+    def device_info(self):
+        """Get attributes about the device."""
+        if not self._unique_id:
+            return None
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "manufacturer": "Epson",
+            "name": "Epson projector",
+            "model": "Epson",
+            "via_hub": (DOMAIN, self._unique_id),
+        }
 
     @property
     def name(self):
@@ -215,7 +237,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         await self._projector.send_command(BACK)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if self._cmode is None:
             return {}

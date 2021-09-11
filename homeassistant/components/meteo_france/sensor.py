@@ -6,9 +6,10 @@ from meteofrance_api.helpers import (
     readeable_phenomenoms_dict,
 )
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
@@ -55,7 +56,7 @@ async def async_setup_entry(
             if coordinator_alert:
                 entities.append(MeteoFranceAlertSensor(sensor_type, coordinator_alert))
 
-        elif sensor_type in ["rain_chance", "freeze_chance", "snow_chance"]:
+        elif sensor_type in ("rain_chance", "freeze_chance", "snow_chance"):
             if coordinator_forecast.data.probability_forecast:
                 entities.append(MeteoFranceSensor(sensor_type, coordinator_forecast))
             else:
@@ -74,10 +75,10 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceSensor(CoordinatorEntity):
+class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteo-France sensor."""
 
-    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
+    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator)
         self._type = sensor_type
@@ -108,7 +109,7 @@ class MeteoFranceSensor(CoordinatorEntity):
         }
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
         data = getattr(self.coordinator.data, path[0])
@@ -128,13 +129,13 @@ class MeteoFranceSensor(CoordinatorEntity):
             else:
                 value = data[path[1]]
 
-        if self._type in ["wind_speed", "wind_gust"]:
+        if self._type in ("wind_speed", "wind_gust"):
             # convert API wind speed from m/s to km/h
             value = round(value * 3.6)
         return value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return SENSOR_TYPES[self._type][ENTITY_UNIT]
 
@@ -154,7 +155,7 @@ class MeteoFranceSensor(CoordinatorEntity):
         return SENSOR_TYPES[self._type][ENTITY_ENABLE]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -163,7 +164,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     """Representation of a Meteo-France rain sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         # search first cadran with rain
         next_rain = next(
@@ -177,7 +178,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
@@ -193,8 +194,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
 
-    # pylint: disable=super-init-not-called
-    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
+    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the Meteo-France sensor."""
         super().__init__(sensor_type, coordinator)
         dept_code = self.coordinator.data.domain_id
@@ -202,14 +202,14 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         self._unique_id = self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return get_warning_text_status_from_indice_color(
             self.coordinator.data.get_domain_max_color()
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),

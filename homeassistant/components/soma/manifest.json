@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/soma",
   "codeowners": ["@ratsept"],
-  "requirements": ["pysoma==0.0.10"]
+  "requirements": ["pysoma==0.0.10"],
+  "iot_class": "local_polling"
 }

@@ -1,7 +1,9 @@
 """Smart energy channels module for Zigbee Home Automation."""
-from typing import Coroutine, Union
+from __future__ import annotations
 
-import zigpy.zcl.clusters.smartenergy as smartenergy
+from collections.abc import Coroutine
+
+from zigpy.zcl.clusters import smartenergy
 
 from homeassistant.const import (
     POWER_WATT,
@@ -139,7 +141,7 @@ class Metering(ZigbeeChannel):
         else:
             self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
 
-    def formatter_function(self, value: int) -> Union[int, float]:
+    def formatter_function(self, value: int) -> int | float:
         """Return formatted value for display."""
         value = value * self.multiplier / self.divisor
         if self.unit_of_measurement == POWER_WATT:

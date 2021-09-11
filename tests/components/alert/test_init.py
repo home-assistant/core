@@ -120,7 +120,7 @@ async def test_is_on(hass):
 async def test_setup(hass):
     """Test setup method."""
     assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
-    assert STATE_IDLE == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
 
 async def test_fire(hass, mock_notifier):
@@ -128,7 +128,7 @@ async def test_fire(hass, mock_notifier):
     assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
-    assert STATE_ON == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_silence(hass, mock_notifier):
@@ -138,15 +138,15 @@ async def test_silence(hass, mock_notifier):
     await hass.async_block_till_done()
     async_turn_off(hass, ENTITY_ID)
     await hass.async_block_till_done()
-    assert STATE_OFF == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     # alert should not be silenced on next fire
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
-    assert STATE_IDLE == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
-    assert STATE_ON == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_reset(hass, mock_notifier):
@@ -156,10 +156,10 @@ async def test_reset(hass, mock_notifier):
     await hass.async_block_till_done()
     async_turn_off(hass, ENTITY_ID)
     await hass.async_block_till_done()
-    assert STATE_OFF == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     async_turn_on(hass, ENTITY_ID)
     await hass.async_block_till_done()
-    assert STATE_ON == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_toggle(hass, mock_notifier):
@@ -167,13 +167,13 @@ async def test_toggle(hass, mock_notifier):
     assert await async_setup_component(hass, alert.DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
-    assert STATE_ON == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
     async_toggle(hass, ENTITY_ID)
     await hass.async_block_till_done()
-    assert STATE_OFF == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_OFF
     async_toggle(hass, ENTITY_ID)
     await hass.async_block_till_done()
-    assert STATE_ON == hass.states.get(ENTITY_ID).state
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 async def test_notification_no_done_message(hass):

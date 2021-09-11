@@ -2,27 +2,26 @@
 import asyncio
 from datetime import timedelta
 import logging
+import math
 
-from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
 
-from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    int_states_in_range,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from .const import (
     DOMAIN as WEMO_DOMAIN,
     SERVICE_RESET_FILTER_LIFE,
     SERVICE_SET_HUMIDITY,
 )
-from .entity import WemoSubscriptionEntity
+from .entity import WemoEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -48,37 +47,17 @@ WEMO_HUMIDITY_100 = 4
 
 WEMO_FAN_OFF = 0
 WEMO_FAN_MINIMUM = 1
-WEMO_FAN_LOW = 2  # Not used due to limitations of the base fan implementation
-WEMO_FAN_MEDIUM = 3
-WEMO_FAN_HIGH = 4  # Not used due to limitations of the base fan implementation
+WEMO_FAN_MEDIUM = 4
 WEMO_FAN_MAXIMUM = 5
+
+SPEED_RANGE = (WEMO_FAN_MINIMUM, WEMO_FAN_MAXIMUM)  # off is not included
 
 WEMO_WATER_EMPTY = 0
 WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
-SUPPORTED_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
-# Since the base fan object supports a set list of fan speeds,
-# we have to reuse some of them when mapping to the 5 WeMo speeds
-WEMO_FAN_SPEED_TO_HASS = {
-    WEMO_FAN_OFF: SPEED_OFF,
-    WEMO_FAN_MINIMUM: SPEED_LOW,
-    WEMO_FAN_LOW: SPEED_LOW,  # Reusing SPEED_LOW
-    WEMO_FAN_MEDIUM: SPEED_MEDIUM,
-    WEMO_FAN_HIGH: SPEED_HIGH,  # Reusing SPEED_HIGH
-    WEMO_FAN_MAXIMUM: SPEED_HIGH,
-}
-
-# Because we reused mappings in the previous dict, we have to filter them
-# back out in this dict, or else we would have duplicate keys
-HASS_FAN_SPEED_TO_WEMO = {
-    v: k
-    for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()
-    if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]
-}
 
 SET_HUMIDITY_SCHEMA = {
     vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
@@ -90,20 +69,20 @@ SET_HUMIDITY_SCHEMA = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator):
         """Handle a discovered Wemo device."""
-        async_add_entities([WemoHumidifier(device)])
+        async_add_entities([WemoHumidifier(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
     await asyncio.gather(
-        *[
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        ]
+        *(
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
+        )
     )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     # This will call WemoHumidifier.set_humidity(target_humidity=VALUE)
     platform.async_register_entity_service(
@@ -116,19 +95,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
+class WemoHumidifier(WemoEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    def __init__(self, device):
+    def __init__(self, coordinator):
         """Initialize the WeMo switch."""
-        super().__init__(device)
-        self._fan_mode = None
-        self._target_humidity = None
-        self._current_humidity = None
-        self._water_level = None
-        self._filter_life = None
-        self._filter_expired = None
-        self._last_fan_on_mode = WEMO_FAN_MEDIUM
+        super().__init__(coordinator)
+        if self.wemo.fan_mode != WEMO_FAN_OFF:
+            self._last_fan_on_mode = self.wemo.fan_mode
+        else:
+            self._last_fan_on_mode = WEMO_FAN_MEDIUM
 
     @property
     def icon(self):
@@ -136,87 +112,72 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return "mdi:water-percent"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            ATTR_CURRENT_HUMIDITY: self._current_humidity,
-            ATTR_TARGET_HUMIDITY: self._target_humidity,
-            ATTR_FAN_MODE: self._fan_mode,
-            ATTR_WATER_LEVEL: self._water_level,
-            ATTR_FILTER_LIFE: self._filter_life,
-            ATTR_FILTER_EXPIRED: self._filter_expired,
+            ATTR_CURRENT_HUMIDITY: self.wemo.current_humidity_percent,
+            ATTR_TARGET_HUMIDITY: self.wemo.desired_humidity_percent,
+            ATTR_FAN_MODE: self.wemo.fan_mode_string,
+            ATTR_WATER_LEVEL: self.wemo.water_level_string,
+            ATTR_FILTER_LIFE: self.wemo.filter_life_percent,
+            ATTR_FILTER_EXPIRED: self.wemo.filter_expired,
         }
 
     @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return WEMO_FAN_SPEED_TO_HASS.get(self._fan_mode)
+    def percentage(self) -> int:
+        """Return the current speed percentage."""
+        return ranged_value_to_percentage(SPEED_RANGE, self.wemo.fan_mode)
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return SUPPORTED_SPEEDS
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORTED_FEATURES
 
-    def _update(self, force_update=True):
-        """Update the device state."""
-        try:
-            self._state = self.wemo.get_state(force_update)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.wemo.fan_mode != WEMO_FAN_OFF:
+            self._last_fan_on_mode = self.wemo.fan_mode
+        super()._handle_coordinator_update()
 
-            self._fan_mode = self.wemo.fan_mode_string
-            self._target_humidity = self.wemo.desired_humidity_percent
-            self._current_humidity = self.wemo.current_humidity_percent
-            self._water_level = self.wemo.water_level_string
-            self._filter_life = self.wemo.filter_life_percent
-            self._filter_expired = self.wemo.filter_expired
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on."""
+        return self.wemo.get_state()
 
-            if self.wemo.fan_mode != WEMO_FAN_OFF:
-                self._last_fan_on_mode = self.wemo.fan_mode
-
-            if not self._available:
-                _LOGGER.info("Reconnected to %s", self.name)
-                self._available = True
-        except (AttributeError, ActionException) as err:
-            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
-            self._available = False
-            self.wemo.reconnect_with_device()
-
-    def turn_on(self, speed: str = None, **kwargs) -> None:
-        """Turn the switch on."""
-        if speed is None:
-            try:
-                self.wemo.set_state(self._last_fan_on_mode)
-            except ActionException as err:
-                _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
-                self._available = False
-        else:
-            self.set_speed(speed)
-
-        self.schedule_update_ha_state()
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
+        """Turn the fan on."""
+        self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        try:
+        with self._wemo_exception_handler("turn off"):
             self.wemo.set_state(WEMO_FAN_OFF)
-        except ActionException as err:
-            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
-            self._available = False
 
         self.schedule_update_ha_state()
 
-    def set_speed(self, speed: str) -> None:
+    def set_percentage(self, percentage: int) -> None:
         """Set the fan_mode of the Humidifier."""
-        try:
-            self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
-        except ActionException as err:
-            _LOGGER.warning(
-                "Error while setting speed of device %s (%s)", self.name, err
-            )
-            self._available = False
+        if percentage is None:
+            named_speed = self._last_fan_on_mode
+        elif percentage == 0:
+            named_speed = WEMO_FAN_OFF
+        else:
+            named_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+
+        with self._wemo_exception_handler("set speed"):
+            self.wemo.set_state(named_speed)
 
         self.schedule_update_ha_state()
 
@@ -233,24 +194,14 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         elif target_humidity >= 100:
             pywemo_humidity = WEMO_HUMIDITY_100
 
-        try:
+        with self._wemo_exception_handler("set humidity"):
             self.wemo.set_humidity(pywemo_humidity)
-        except ActionException as err:
-            _LOGGER.warning(
-                "Error while setting humidity of device: %s (%s)", self.name, err
-            )
-            self._available = False
 
         self.schedule_update_ha_state()
 
     def reset_filter_life(self) -> None:
         """Reset the filter life to 100%."""
-        try:
+        with self._wemo_exception_handler("reset filter life"):
             self.wemo.reset_filter_life()
-        except ActionException as err:
-            _LOGGER.warning(
-                "Error while resetting filter life on device: %s (%s)", self.name, err
-            )
-            self._available = False
 
         self.schedule_update_ha_state()

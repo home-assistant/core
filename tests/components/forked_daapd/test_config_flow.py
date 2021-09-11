@@ -11,11 +11,7 @@ from homeassistant.components.forked_daapd.const import (
     CONF_TTS_VOLUME,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
-    SOURCE_USER,
-    SOURCE_ZEROCONF,
-)
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -50,9 +46,7 @@ def config_entry_fixture():
         title="",
         data=data,
         options={},
-        system_options={},
         source=SOURCE_USER,
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         entry_id=1,
     )
 

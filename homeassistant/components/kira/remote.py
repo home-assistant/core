@@ -6,11 +6,9 @@ from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = "kira"
+from . import CONF_REMOTE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_REMOTE = "remote"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

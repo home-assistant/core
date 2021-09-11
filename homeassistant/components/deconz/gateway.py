@@ -6,7 +6,7 @@ from pydeconz import DeconzSession, errors
 
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,13 +19,13 @@ from .const import (
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
-    DOMAIN,
+    DOMAIN as DECONZ_DOMAIN,
     LOGGER,
     NEW_GROUP,
     NEW_LIGHT,
     NEW_SCENE,
     NEW_SENSOR,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
 )
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
@@ -33,8 +33,8 @@ from .errors import AuthenticationRequired, CannotConnect
 
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
-    """Return gateway with a matching bridge id."""
-    return hass.data[DOMAIN][config_entry.unique_id]
+    """Return gateway with a matching config entry ID."""
+    return hass.data[DECONZ_DOMAIN][config_entry.entry_id]
 
 
 class DeconzGateway:
@@ -53,7 +53,6 @@ class DeconzGateway:
         self.deconz_ids = {}
         self.entities = {}
         self.events = []
-        self.listeners = []
 
     @property
     def bridgeid(self) -> str:
@@ -152,7 +151,7 @@ class DeconzGateway:
         # Gateway service
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.api.config.bridgeid)},
+            identifiers={(DECONZ_DOMAIN, self.api.config.bridgeid)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.modelid,
             name=self.api.config.name,
@@ -173,16 +172,10 @@ class DeconzGateway:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error connecting with deCONZ gateway: %s", err, exc_info=True)
-            return False
+        except AuthenticationRequired as err:
+            raise ConfigEntryAuthFailed from err
 
-        for component in SUPPORTED_PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, component
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         await async_setup_events(self)
 
@@ -252,14 +245,9 @@ class DeconzGateway:
         self.api.async_connection_status_callback = None
         self.api.close()
 
-        for component in SUPPORTED_PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, component
-            )
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
+        await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
+        )
 
         async_unload_events(self)
 

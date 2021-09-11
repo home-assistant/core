@@ -1,6 +1,5 @@
 """Binary sensors on Zigbee Home Automation networks."""
 import functools
-import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -31,8 +30,6 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Zigbee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {

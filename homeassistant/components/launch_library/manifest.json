@@ -3,5 +3,6 @@
   "name": "Launch Library",
   "documentation": "https://www.home-assistant.io/integrations/launch_library",
   "requirements": ["pylaunches==1.0.0"],
-  "codeowners": ["@ludeeus"]
+  "codeowners": ["@ludeeus"],
+  "iot_class": "cloud_polling"
 }

@@ -112,7 +112,7 @@ async def websocket_update(hass, connection, msg):
         )
         return
 
-    if user.is_owner and msg["is_active"] is False:
+    if user.is_owner and msg.get("is_active") is False:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"],

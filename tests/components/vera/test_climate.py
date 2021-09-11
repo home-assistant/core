@@ -20,9 +20,10 @@ async def test_climate(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
+    vera_device: pv.VeraThermostat = MagicMock(spec=pv.VeraThermostat)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
@@ -130,9 +131,10 @@ async def test_climate_f(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
+    vera_device: pv.VeraThermostat = MagicMock(spec=pv.VeraThermostat)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10

@@ -5,10 +5,9 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
-    CONF_REGION,
     CONF_USE_LOCATION,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -30,9 +29,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
     },
     "options": {CONF_READ_ONLY: False, CONF_USE_LOCATION: False},
-    "system_options": {"disable_new_entities": False},
-    "source": "user",
-    "connection_class": config_entries.CONN_CLASS_CLOUD_POLL,
+    "source": config_entries.SOURCE_USER,
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }
 

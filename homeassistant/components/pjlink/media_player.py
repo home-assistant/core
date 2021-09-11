@@ -157,15 +157,13 @@ class PjLinkDevice(MediaPlayerEntity):
 
     def turn_off(self):
         """Turn projector off."""
-        if self._pwstate == STATE_ON:
-            with self.projector() as projector:
-                projector.set_power("off")
+        with self.projector() as projector:
+            projector.set_power("off")
 
     def turn_on(self):
         """Turn projector on."""
-        if self._pwstate == STATE_OFF:
-            with self.projector() as projector:
-                projector.set_power("on")
+        with self.projector() as projector:
+            projector.set_power("on")
 
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""

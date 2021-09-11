@@ -7,7 +7,7 @@
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Vols configurar {name} ({host})?",

@@ -1,6 +1,8 @@
 """ONVIF models."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 
 @dataclass
@@ -37,7 +39,7 @@ class PTZ:
     continuous: bool
     relative: bool
     absolute: bool
-    presets: List[str] = None
+    presets: list[str] = None
 
 
 @dataclass

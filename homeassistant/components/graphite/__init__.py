@@ -1,4 +1,5 @@
 """Support for sending data to a Graphite installation."""
+from contextlib import suppress
 import logging
 import queue
 import socket
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     CONF_PREFIX,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -20,8 +22,11 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+PROTOCOL_TCP = "tcp"
+PROTOCOL_UDP = "udp"
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 2003
+DEFAULT_PROTOCOL = PROTOCOL_TCP
 DEFAULT_PREFIX = "ha"
 DOMAIN = "graphite"
 
@@ -31,6 +36,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.Any(
+                    PROTOCOL_TCP, PROTOCOL_UDP
+                ),
                 vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
             }
         )
@@ -45,29 +53,34 @@ def setup(hass, config):
     host = conf.get(CONF_HOST)
     prefix = conf.get(CONF_PREFIX)
     port = conf.get(CONF_PORT)
+    protocol = conf.get(CONF_PROTOCOL)
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((host, port))
-        sock.shutdown(2)
-        _LOGGER.debug("Connection to Graphite possible")
-    except OSError:
-        _LOGGER.error("Not able to connect to Graphite")
-        return False
+    if protocol == PROTOCOL_TCP:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.connect((host, port))
+            sock.shutdown(2)
+            _LOGGER.debug("Connection to Graphite possible")
+        except OSError:
+            _LOGGER.error("Not able to connect to Graphite")
+            return False
+    else:
+        _LOGGER.debug("No connection check for UDP possible")
 
-    GraphiteFeeder(hass, host, port, prefix)
+    GraphiteFeeder(hass, host, port, protocol, prefix)
     return True
 
 
 class GraphiteFeeder(threading.Thread):
     """Feed data to Graphite."""
 
-    def __init__(self, hass, host, port, prefix):
+    def __init__(self, hass, host, port, protocol, prefix):
         """Initialize the feeder."""
         super().__init__(daemon=True)
         self._hass = hass
         self._host = host
         self._port = port
+        self._protocol = protocol
         # rstrip any trailing dots in case they think they need it
         self._prefix = prefix.rstrip(".")
         self._queue = queue.Queue()
@@ -100,21 +113,23 @@ class GraphiteFeeder(threading.Thread):
 
     def _send_to_graphite(self, data):
         """Send data to Graphite."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(10)
-        sock.connect((self._host, self._port))
-        sock.sendall(data.encode("ascii"))
-        sock.send(b"\n")
-        sock.close()
+        if self._protocol == PROTOCOL_TCP:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect((self._host, self._port))
+            sock.sendall(data.encode("ascii"))
+            sock.send(b"\n")
+            sock.close()
+        else:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.sendto(data.encode("ascii") + b"\n", (self._host, self._port))
 
     def _report_attributes(self, entity_id, new_state):
         """Report the attributes."""
         now = time.time()
         things = dict(new_state.attributes)
-        try:
+        with suppress(ValueError):
             things["state"] = state.state_as_number(new_state)
-        except ValueError:
-            pass
         lines = [
             "%s.%s.%s %f %i"
             % (self._prefix, entity_id, key.replace(" ", "_"), value, now)

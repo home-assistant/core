@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "cannot_retrieve_device_info": "Connessione riuscita, ma impossibile recuperare le informazioni sul dispositivo",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "group": "Gruppo",
+                    "host": "Host",
+                    "password": "Password",
+                    "ssl": "Utilizza un certificato SSL",
+                    "verify_ssl": "Verificare il certificato SSL"
+                },
+                "description": "Inserisci le informazioni sul tuo dispositivo SMA.",
+                "title": "Configurare SMA Solar"
+            }
+        }
+    }
+}

@@ -10,7 +10,7 @@
       },
       "authorize": {
         "title": "Authorize app on ecobee.com",
-        "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with pin code:\n\n{pin}\n\nThen, press Submit."
+        "description": "Please authorize this app at https://www.ecobee.com/consumerportal/index.html with PIN code:\n\n{pin}\n\nThen, press Submit."
       }
     },
     "error": {

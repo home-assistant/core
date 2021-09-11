@@ -1,7 +1,9 @@
 """Support for Nanoleaf Lights."""
+from __future__ import annotations
+
 import logging
 
-from pynanoleaf import Nanoleaf, Unavailable
+from pynanoleaf import Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -18,21 +20,22 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
-from homeassistant.util.json import load_json, save_json
+
+from .const import DEVICE, DOMAIN, NAME, SERIAL_NO
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Nanoleaf"
-
-DATA_NANOLEAF = "nanoleaf"
-
-CONFIG_FILE = ".nanoleaf.conf"
 
 ICON = "mdi:triangle-outline"
 
@@ -53,61 +56,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import Nanoleaf light platform."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: config[CONF_HOST], CONF_TOKEN: config[CONF_TOKEN]},
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Nanoleaf light."""
-
-    if DATA_NANOLEAF not in hass.data:
-        hass.data[DATA_NANOLEAF] = {}
-
-    token = ""
-    if discovery_info is not None:
-        host = discovery_info["host"]
-        name = discovery_info["hostname"]
-        # if device already exists via config, skip discovery setup
-        if host in hass.data[DATA_NANOLEAF]:
-            return
-        _LOGGER.info("Discovered a new Nanoleaf: %s", discovery_info)
-        conf = load_json(hass.config.path(CONFIG_FILE))
-        if conf.get(host, {}).get("token"):
-            token = conf[host]["token"]
-    else:
-        host = config[CONF_HOST]
-        name = config[CONF_NAME]
-        token = config[CONF_TOKEN]
-
-    nanoleaf_light = Nanoleaf(host)
-
-    if not token:
-        token = nanoleaf_light.request_token()
-        if not token:
-            _LOGGER.error(
-                "Could not generate the auth token, did you press "
-                "and hold the power button on %s"
-                "for 5-7 seconds?",
-                name,
-            )
-            return
-        conf = load_json(hass.config.path(CONFIG_FILE))
-        conf[host] = {"token": token}
-        save_json(hass.config.path(CONFIG_FILE), conf)
-
-    nanoleaf_light.token = token
-
-    try:
-        nanoleaf_light.available
-    except Unavailable:
-        _LOGGER.error("Could not connect to Nanoleaf Light: %s on %s", name, host)
-        return
-
-    hass.data[DATA_NANOLEAF][host] = nanoleaf_light
-    add_entities([NanoleafLight(nanoleaf_light, name)], True)
+    data = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafLight(data[DEVICE], data[NAME], data[SERIAL_NO])], True)
 
 
 class NanoleafLight(LightEntity):
     """Representation of a Nanoleaf Light."""
 
-    def __init__(self, light, name):
+    def __init__(self, light, name, unique_id):
         """Initialize an Nanoleaf light."""
+        self._unique_id = unique_id
         self._available = True
         self._brightness = None
         self._color_temp = None
@@ -156,6 +134,11 @@ class NanoleafLight(LightEntity):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 833
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -226,7 +209,6 @@ class NanoleafLight(LightEntity):
 
     def update(self):
         """Fetch new state data for this light."""
-
         try:
             self._available = self._light.available
             self._brightness = self._light.brightness

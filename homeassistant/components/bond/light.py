@@ -1,8 +1,10 @@
 """Support for Bond lights."""
-import logging
-from typing import Any, Callable, List, Optional
+from __future__ import annotations
 
-from bond_api import Action, DeviceType
+import logging
+from typing import Any
+
+from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,80 +12,117 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BondHub
-from .const import DOMAIN
+from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_START_INCREASING_BRIGHTNESS = "start_increasing_brightness"
+SERVICE_START_DECREASING_BRIGHTNESS = "start_decreasing_brightness"
+SERVICE_STOP = "stop"
+
+ENTITY_SERVICES = [
+    SERVICE_START_INCREASING_BRIGHTNESS,
+    SERVICE_START_DECREASING_BRIGHTNESS,
+    SERVICE_STOP,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond light devices."""
-    hub: BondHub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: BondHub = data[HUB]
+    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    fan_lights: List[Entity] = [
-        BondLight(hub, device)
+    platform = entity_platform.async_get_current_platform()
+    for service in ENTITY_SERVICES:
+        platform.async_register_entity_service(
+            service,
+            {},
+            f"async_{service}",
+        )
+
+    fan_lights: list[Entity] = [
+        BondLight(hub, device, bpup_subs)
         for device in hub.devices
-        if DeviceType.is_fan(device.type) and device.supports_light()
+        if DeviceType.is_fan(device.type)
+        and device.supports_light()
+        and not (device.supports_up_light() and device.supports_down_light())
     ]
 
-    fireplaces: List[Entity] = [
-        BondFireplace(hub, device)
+    fan_up_lights: list[Entity] = [
+        BondUpLight(hub, device, bpup_subs, "up_light")
+        for device in hub.devices
+        if DeviceType.is_fan(device.type) and device.supports_up_light()
+    ]
+
+    fan_down_lights: list[Entity] = [
+        BondDownLight(hub, device, bpup_subs, "down_light")
+        for device in hub.devices
+        if DeviceType.is_fan(device.type) and device.supports_down_light()
+    ]
+
+    fireplaces: list[Entity] = [
+        BondFireplace(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_fireplace(device.type)
     ]
 
-    fp_lights: List[Entity] = [
-        BondLight(hub, device, "light")
+    fp_lights: list[Entity] = [
+        BondLight(hub, device, bpup_subs, "light")
         for device in hub.devices
         if DeviceType.is_fireplace(device.type) and device.supports_light()
     ]
 
-    async_add_entities(fan_lights + fireplaces + fp_lights, True)
+    lights: list[Entity] = [
+        BondLight(hub, device, bpup_subs)
+        for device in hub.devices
+        if DeviceType.is_light(device.type)
+    ]
+
+    async_add_entities(
+        fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,
+        True,
+    )
 
 
-class BondLight(BondEntity, LightEntity):
+class BondBaseLight(BondEntity, LightEntity):
+    """Representation of a Bond light."""
+
+    _attr_supported_features = 0
+
+
+class BondLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
     def __init__(
-        self, hub: BondHub, device: BondDevice, sub_device: Optional[str] = None
-    ):
-        """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, sub_device)
-        self._brightness: Optional[int] = None
-        self._light: Optional[int] = None
+        self,
+        hub: BondHub,
+        device: BondDevice,
+        bpup_subs: BPUPSubscriptions,
+        sub_device: str | None = None,
+    ) -> None:
+        """Create HA entity representing Bond light."""
+        super().__init__(hub, device, bpup_subs, sub_device)
+        if device.supports_set_brightness():
+            self._attr_supported_features = SUPPORT_BRIGHTNESS
 
-    def _apply_state(self, state: dict):
-        self._light = state.get("light")
-        self._brightness = state.get("brightness")
-
-    @property
-    def supported_features(self) -> Optional[int]:
-        """Flag supported features."""
-        if self._device.supports_set_brightness():
-            return SUPPORT_BRIGHTNESS
-        return 0
-
-    @property
-    def is_on(self) -> bool:
-        """Return if light is currently on."""
-        return self._light == 1
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 1..255."""
-        brightness_value = (
-            round(self._brightness * 255 / 100) if self._brightness else None
-        )
-        return brightness_value
+    def _apply_state(self, state: dict) -> None:
+        self._attr_is_on = state.get("light") == 1
+        brightness = state.get("brightness")
+        self._attr_brightness = round(brightness * 255 / 100) if brightness else None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -100,31 +139,81 @@ class BondLight(BondEntity, LightEntity):
         """Turn off the light."""
         await self._hub.bond.action(self._device.device_id, Action.turn_light_off())
 
+    @callback
+    def _async_has_action_or_raise(self, action: str) -> None:
+        """Raise HomeAssistantError if the device does not support an action."""
+        if not self._device.has_action(action):
+            raise HomeAssistantError(f"{self.entity_id} does not support {action}")
+
+    async def async_start_increasing_brightness(self) -> None:
+        """Start increasing the light brightness."""
+        self._async_has_action_or_raise(Action.START_INCREASING_BRIGHTNESS)
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.START_INCREASING_BRIGHTNESS)
+        )
+
+    async def async_start_decreasing_brightness(self) -> None:
+        """Start decreasing the light brightness."""
+        self._async_has_action_or_raise(Action.START_DECREASING_BRIGHTNESS)
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.START_DECREASING_BRIGHTNESS)
+        )
+
+    async def async_stop(self) -> None:
+        """Stop all actions and clear the queue."""
+        self._async_has_action_or_raise(Action.STOP)
+        await self._hub.bond.action(self._device.device_id, Action(Action.STOP))
+
+
+class BondDownLight(BondBaseLight, BondEntity, LightEntity):
+    """Representation of a Bond light."""
+
+    def _apply_state(self, state: dict) -> None:
+        self._attr_is_on = bool(state.get("down_light") and state.get("light"))
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_DOWN_LIGHT_ON)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_DOWN_LIGHT_OFF)
+        )
+
+
+class BondUpLight(BondBaseLight, BondEntity, LightEntity):
+    """Representation of a Bond light."""
+
+    def _apply_state(self, state: dict) -> None:
+        self._attr_is_on = bool(state.get("up_light") and state.get("light"))
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_UP_LIGHT_ON)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_UP_LIGHT_OFF)
+        )
+
 
 class BondFireplace(BondEntity, LightEntity):
     """Representation of a Bond-controlled fireplace."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
-        """Create HA entity representing Bond fireplace."""
-        super().__init__(hub, device)
+    _attr_supported_features = SUPPORT_BRIGHTNESS
 
-        self._power: Optional[bool] = None
-        # Bond flame level, 0-100
-        self._flame: Optional[int] = None
-
-    def _apply_state(self, state: dict):
-        self._power = state.get("power")
-        self._flame = state.get("flame")
-
-    @property
-    def supported_features(self) -> Optional[int]:
-        """Flag brightness as supported feature to represent flame level."""
-        return SUPPORT_BRIGHTNESS
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if power is on."""
-        return self._power == 1
+    def _apply_state(self, state: dict) -> None:
+        power = state.get("power")
+        flame = state.get("flame")
+        self._attr_is_on = power == 1
+        self._attr_brightness = round(flame * 255 / 100) if flame else None
+        self._attr_icon = "mdi:fireplace" if power == 1 else "mdi:fireplace-off"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
@@ -142,13 +231,3 @@ class BondFireplace(BondEntity, LightEntity):
         _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)
 
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
-
-    @property
-    def brightness(self):
-        """Return the flame of this fireplace converted to HA brightness between 0..255."""
-        return round(self._flame * 255 / 100) if self._flame else None
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Show fireplace icon for the entity."""
-        return "mdi:fireplace" if self._power == 1 else "mdi:fireplace-off"

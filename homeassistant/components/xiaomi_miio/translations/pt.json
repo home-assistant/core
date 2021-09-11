@@ -7,6 +7,12 @@
             "cannot_connect": "Falha na liga\u00e7\u00e3o"
         },
         "step": {
+            "device": {
+                "data": {
+                    "host": "Endere\u00e7o IP",
+                    "token": "API Token"
+                }
+            },
             "gateway": {
                 "data": {
                     "host": "Endere\u00e7o IP",

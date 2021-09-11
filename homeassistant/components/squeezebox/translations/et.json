@@ -10,7 +10,7 @@
             "no_server_found": "Serverit ei \u00f5nnestunud automaatselt tuvastada.",
             "unknown": "Tundmatu viga"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {

@@ -1,4 +1,21 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                }
+            }
+        }
+    },
     "system_health": {
         "info": {
             "can_reach_server": "Airly sunucusuna eri\u015fin"

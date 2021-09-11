@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_pin": "Ugyldig PIN",
+            "pairing_failure": "Kan ikke parre: {error_id}",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN kode"
+                },
+                "description": "Angi PIN-koden som vises p\u00e5 TV-en",
+                "title": "Par"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API-versjon",
+                    "host": "Vert"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Enheten blir bedt om \u00e5 sl\u00e5 p\u00e5"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Tillat bruk av datavarslingstjeneste."
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
@@ -9,8 +10,14 @@
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_zone": "\u5340\u57df\u7121\u6548"
         },
-        "flow_title": "Cloudflare\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API \u6b0a\u6756",
+                    "description": "\u91cd\u65b0\u8a8d\u8b49 Cloudflare \u5e33\u865f\u3002"
+                }
+            },
             "records": {
                 "data": {
                     "records": "\u8a18\u9304"
@@ -19,9 +26,9 @@
             },
             "user": {
                 "data": {
-                    "api_token": "API \u5bc6\u9470"
+                    "api_token": "API \u6b0a\u6756"
                 },
-                "description": "\u6b64\u6574\u5408\u9700\u8981\u5e33\u865f\u4e2d\u6240\u6709\u5340\u57df Zone:Zone:Read \u8207 Zone:DNS:Edit \u6b0a\u9650 API \u5bc6\u9470\u3002",
+                "description": "\u6b64\u6574\u5408\u9700\u8981\u5e33\u865f\u4e2d\u6240\u6709\u5340\u57df Zone:Zone:Read \u8207 Zone:DNS:Edit \u6b0a\u9650 API \u6b0a\u6756\u3002",
                 "title": "\u9023\u7dda\u81f3 Cloudflare"
             },
             "zone": {

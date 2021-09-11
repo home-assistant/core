@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 async def test_constructor_loads_info_from_config(hass):
     """Test non-dev mode loads info from SERVERS constant."""
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
             "cloud",
@@ -109,7 +109,7 @@ async def test_setup_existing_cloud_user(hass, hass_storage):
     """Test setup with API push default data."""
     user = await hass.auth.async_create_system_user("Cloud test")
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": user.id}}
-    with patch("hass_nabucasa.Cloud.start"):
+    with patch("hass_nabucasa.Cloud.initialize"):
         result = await async_setup_component(
             hass,
             "cloud",

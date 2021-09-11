@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
 from homeassistant.components.auth import RESULT_TYPE_USER
@@ -11,6 +12,24 @@ from homeassistant.util.dt import utcnow
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+
+
+async def async_setup_user_refresh_token(hass):
+    """Create a testing user with a connected credential."""
+    user = await hass.auth.async_create_user("Test User")
+
+    credential = Credentials(
+        id="mock-credential-id",
+        auth_provider_type="insecure_example",
+        auth_provider_id=None,
+        data={"username": "test-user"},
+        is_new=False,
+    )
+    user.credentials.append(credential)
+
+    return await hass.auth.async_create_refresh_token(
+        user, CLIENT_ID, credential=credential
+    )
 
 
 async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
@@ -107,12 +126,6 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
     user = refresh_token.user
-    credential = Credentials(
-        auth_provider_type="homeassistant", auth_provider_id=None, data={}, id="test-id"
-    )
-    user.credentials.append(credential)
-    assert len(user.credentials) == 1
-
     client = await hass_ws_client(hass, hass_access_token)
 
     await client.send_json({"id": 5, "type": auth.WS_TYPE_CURRENT_USER})
@@ -185,8 +198,7 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
 async def test_refresh_token_different_client_id(hass, aiohttp_client):
     """Test that we verify client ID."""
     client = await async_setup_auth(hass, aiohttp_client)
-    user = await hass.auth.async_create_user("Test User")
-    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
+    refresh_token = await async_setup_user_refresh_token(hass)
 
     # No client ID
     resp = await client.post(
@@ -229,11 +241,37 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
     )
 
 
+async def test_refresh_token_provider_rejected(
+    hass, aiohttp_client, hass_admin_user, hass_admin_credential
+):
+    """Test that we verify client ID."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    refresh_token = await async_setup_user_refresh_token(hass)
+
+    # Rejected by provider
+    with patch(
+        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
+        side_effect=InvalidAuthError("Invalid access"),
+    ):
+        resp = await client.post(
+            "/auth/token",
+            data={
+                "client_id": CLIENT_ID,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token.token,
+            },
+        )
+
+    assert resp.status == 403
+    result = await resp.json()
+    assert result["error"] == "access_denied"
+    assert result["error_description"] == "Invalid access"
+
+
 async def test_revoking_refresh_token(hass, aiohttp_client):
     """Test that we can revoke refresh tokens."""
     client = await async_setup_auth(hass, aiohttp_client)
-    user = await hass.auth.async_create_user("Test User")
-    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
+    refresh_token = await async_setup_user_refresh_token(hass)
 
     # Test that we can create an access token
     resp = await client.post(

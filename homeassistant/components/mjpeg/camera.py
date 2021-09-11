@@ -1,4 +1,6 @@
 """Support for IP Cameras."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import closing
 import logging
@@ -98,12 +100,17 @@ class MjpegCamera(Camera):
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
 
         self._auth = None
-        if self._username and self._password:
-            if self._authentication == HTTP_BASIC_AUTHENTICATION:
-                self._auth = aiohttp.BasicAuth(self._username, password=self._password)
+        if (
+            self._username
+            and self._password
+            and self._authentication == HTTP_BASIC_AUTHENTICATION
+        ):
+            self._auth = aiohttp.BasicAuth(self._username, password=self._password)
         self._verify_ssl = device_info.get(CONF_VERIFY_SSL)
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         # DigestAuth is not supported
         if (
@@ -127,11 +134,17 @@ class MjpegCamera(Camera):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
 
-    def camera_image(self):
+        return None
+
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         if self._username and self._password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                auth = HTTPDigestAuth(self._username, self._password)
+                auth: HTTPDigestAuth | HTTPBasicAuth = HTTPDigestAuth(
+                    self._username, self._password
+                )
             else:
                 auth = HTTPBasicAuth(self._username, self._password)
             req = requests.get(
@@ -144,8 +157,6 @@ class MjpegCamera(Camera):
         else:
             req = requests.get(self._mjpeg_url, stream=True, timeout=10)
 
-        # https://github.com/PyCQA/pylint/issues/1437
-        # pylint: disable=no-member
         with closing(req) as response:
             return extract_image_from_mjpeg(response.iter_content(102400))
 

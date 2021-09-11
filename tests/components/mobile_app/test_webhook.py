@@ -9,7 +9,6 @@ from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
@@ -109,7 +108,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
 
     @callback
     def store_event(event):
-        """Helepr to store events."""
+        """Help store events."""
         events.append(event)
 
     hass.bus.async_listen("test_event", store_event)
@@ -152,11 +151,29 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
 
 async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
     """Test that we can get zones properly."""
-    await async_setup_component(
-        hass,
-        ZONE_DOMAIN,
-        {ZONE_DOMAIN: {}},
-    )
+    # Zone is already loaded as part of the fixture,
+    # so we just trigger a reload.
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            ZONE_DOMAIN: [
+                {
+                    "name": "School",
+                    "latitude": 32.8773367,
+                    "longitude": -117.2494053,
+                    "radius": 250,
+                    "icon": "mdi:school",
+                },
+                {
+                    "name": "Work",
+                    "latitude": 33.8773367,
+                    "longitude": -118.2494053,
+                },
+            ]
+        },
+    ):
+        await hass.services.async_call(ZONE_DOMAIN, "reload", blocking=True)
 
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
@@ -166,9 +183,20 @@ async def test_webhook_handle_get_zones(hass, create_registrations, webhook_clie
     assert resp.status == 200
 
     json = await resp.json()
-    assert len(json) == 1
+    assert len(json) == 3
     zones = sorted(json, key=lambda entry: entry["entity_id"])
     assert zones[0]["entity_id"] == "zone.home"
+
+    assert zones[1]["entity_id"] == "zone.school"
+    assert zones[1]["attributes"]["icon"] == "mdi:school"
+    assert zones[1]["attributes"]["latitude"] == 32.8773367
+    assert zones[1]["attributes"]["longitude"] == -117.2494053
+    assert zones[1]["attributes"]["radius"] == 250
+
+    assert zones[2]["entity_id"] == "zone.work"
+    assert "icon" not in zones[2]["attributes"]
+    assert zones[2]["attributes"]["latitude"] == 33.8773367
+    assert zones[2]["attributes"]["longitude"] == -118.2494053
 
 
 async def test_webhook_handle_get_config(hass, create_registrations, webhook_client):

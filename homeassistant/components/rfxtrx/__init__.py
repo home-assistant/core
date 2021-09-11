@@ -1,8 +1,8 @@
 """Support for RFXtrx devices."""
 import asyncio
 import binascii
-from collections import OrderedDict
 import copy
+import functools
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -21,20 +21,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_PORT,
-    DEGREE,
-    ELECTRICAL_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_STOP,
-    LENGTH_MILLIMETERS,
-    PERCENTAGE,
-    POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_HPA,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    UV_INDEX,
-    VOLT,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -43,6 +30,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_EVENT,
+    COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_DEBUG,
@@ -63,38 +51,6 @@ DOMAIN = "rfxtrx"
 DEFAULT_SIGNAL_REPETITIONS = 1
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
-
-DATA_TYPES = OrderedDict(
-    [
-        ("Temperature", TEMP_CELSIUS),
-        ("Temperature2", TEMP_CELSIUS),
-        ("Humidity", PERCENTAGE),
-        ("Barometer", PRESSURE_HPA),
-        ("Wind direction", DEGREE),
-        ("Rain rate", PRECIPITATION_MILLIMETERS_PER_HOUR),
-        ("Energy usage", POWER_WATT),
-        ("Total usage", ENERGY_KILO_WATT_HOUR),
-        ("Sound", None),
-        ("Sensor Status", None),
-        ("Counter value", "count"),
-        ("UV", UV_INDEX),
-        ("Humidity status", None),
-        ("Forecast", None),
-        ("Forecast numeric", None),
-        ("Rain total", LENGTH_MILLIMETERS),
-        ("Wind average speed", SPEED_METERS_PER_SECOND),
-        ("Wind gust", SPEED_METERS_PER_SECOND),
-        ("Chill", TEMP_CELSIUS),
-        ("Count", "count"),
-        ("Current Ch. 1", ELECTRICAL_CURRENT_AMPERE),
-        ("Current Ch. 2", ELECTRICAL_CURRENT_AMPERE),
-        ("Current Ch. 3", ELECTRICAL_CURRENT_AMPERE),
-        ("Voltage", VOLT),
-        ("Current", ELECTRICAL_CURRENT_AMPERE),
-        ("Battery numeric", PERCENTAGE),
-        ("Rssi numeric", SIGNAL_STRENGTH_DECIBELS_MILLIWATT),
-    ]
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +106,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
 
 
 async def async_setup(hass, config):
@@ -201,24 +157,14 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         )
         return False
 
-    for domain in DOMAINS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
     """Unload RFXtrx component."""
-    if not all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in DOMAINS
-            ]
-        )
-    ):
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
@@ -311,7 +257,6 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
 
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, *device_id)},
-            connections=set(),
         )
         if device_entry:
             event_data[ATTR_DEVICE_ID] = device_entry.id
@@ -428,7 +373,7 @@ def find_possible_pt2262_device(device_ids, device_id):
             if size is not None:
                 size = len(dev_id) - size - 1
                 _LOGGER.info(
-                    "rfxtrx: found possible device %s for %s "
+                    "Found possible device %s for %s "
                     "with the following configuration:\n"
                     "data_bits=%d\n"
                     "command_on=0x%s\n"
@@ -475,6 +420,9 @@ class RfxtrxEntity(RestoreEntity):
         self._event = event
         self._device_id = device_id
         self._unique_id = "_".join(x for x in self._device_id)
+        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
+        # group events regardless of their group indices.
+        (self._group_id, _, _) = device.id_string.partition(":")
 
     async def async_added_to_hass(self):
         """Restore RFXtrx device state (ON/OFF)."""
@@ -489,7 +437,8 @@ class RfxtrxEntity(RestoreEntity):
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}",
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
@@ -504,7 +453,7 @@ class RfxtrxEntity(RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._event:
             return None
@@ -528,6 +477,15 @@ class RfxtrxEntity(RestoreEntity):
             "name": f"{self._device.type_string} {self._device.id_string}",
             "model": self._device.type_string,
         }
+
+    def _event_applies(self, event, device_id):
+        """Check if event applies to me."""
+        if "Command" in event.values and event.values["Command"] in COMMAND_GROUP_LIST:
+            (group_id, _, _) = event.device.id_string.partition(":")
+            return group_id == self._group_id
+
+        # Otherwise, the event only applies to the matching device.
+        return device_id == self._device_id
 
     def _apply_event(self, event):
         """Apply a received event."""

@@ -1,16 +1,45 @@
 """Threading util helpers."""
 import ctypes
 import inspect
+import logging
 import threading
 from typing import Any
 
+THREADING_SHUTDOWN_TIMEOUT = 10
 
-def _async_raise(tid: int, exctype: Any) -> None:
+_LOGGER = logging.getLogger(__name__)
+
+
+def deadlock_safe_shutdown() -> None:
+    """Shutdown that will not deadlock."""
+    # threading._shutdown can deadlock forever
+    # see https://github.com/justengel/continuous_threading#shutdown-update
+    # for additional detail
+    remaining_threads = [
+        thread
+        for thread in threading.enumerate()
+        if thread is not threading.main_thread()
+        and not thread.daemon
+        and thread.is_alive()
+    ]
+
+    if not remaining_threads:
+        return
+
+    timeout_per_thread = THREADING_SHUTDOWN_TIMEOUT / len(remaining_threads)
+    for thread in remaining_threads:
+        try:
+            thread.join(timeout_per_thread)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning("Failed to join thread: %s", err)
+
+
+def async_raise(tid: int, exctype: Any) -> None:
     """Raise an exception in the threads with id tid."""
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
 
-    c_tid = ctypes.c_long(tid)
+    c_tid = ctypes.c_ulong(tid)  # changed in python 3.7+
     res = ctypes.pythonapi.PyThreadState_SetAsyncExc(c_tid, ctypes.py_object(exctype))
 
     if res == 1:
@@ -33,4 +62,4 @@ class ThreadWithException(threading.Thread):
     def raise_exc(self, exctype: Any) -> None:
         """Raise the given exception type in the context of this thread."""
         assert self.ident
-        _async_raise(self.ident, exctype)
+        async_raise(self.ident, exctype)

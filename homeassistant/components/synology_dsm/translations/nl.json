@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is al geconfigureerd."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "reconfigure_successful": "Herconfiguratie was succesvol"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -10,7 +12,7 @@
             "otp_failed": "Tweestapsverificatie is mislukt, probeer het opnieuw met een nieuwe toegangscode",
             "unknown": "Onbekende fout: controleer de logs voor meer informatie"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {
@@ -21,20 +23,28 @@
             "link": {
                 "data": {
                     "password": "Wachtwoord",
-                    "port": "Poort (optioneel)",
-                    "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
+                    "port": "Poort",
+                    "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Controleer het SSL-certificaat"
                 },
                 "description": "Wil je {name} ({host}) instellen?",
                 "title": "Synology DSM"
             },
+            "reauth": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Reden: {details}",
+                "title": "Synology DSM Verifieer de integratie opnieuw"
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Wachtwoord",
-                    "port": "Poort (optioneel)",
-                    "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
+                    "port": "Poort",
+                    "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Controleer het SSL-certificaat"
                 },

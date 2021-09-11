@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -10,7 +12,7 @@
             "otp_failed": "Two-step authentication failed, retry with a new pass code",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {
@@ -28,6 +30,14 @@
                 },
                 "description": "Do you want to setup {name} ({host})?",
                 "title": "Synology DSM"
+            },
+            "reauth": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Reason: {details}",
+                "title": "Synology DSM Reauthenticate Integration"
             },
             "user": {
                 "data": {

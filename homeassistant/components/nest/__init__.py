@@ -1,6 +1,5 @@
 """Support for Nest devices."""
 
-import asyncio
 import logging
 
 from google_nest_sdm.event import EventMessage
@@ -12,7 +11,7 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -22,19 +21,19 @@ from homeassistant.const import (
     CONF_STRUCTURE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
 from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PROJECT_ID = "project_id"
@@ -71,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "camera", "climate"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
     hass.data[DOMAIN] = {}
 
@@ -107,11 +106,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize EventCallback."""
         self._hass = hass
 
-    async def async_handle_event(self, event_message: EventMessage):
+    async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
         if not event_message.resource_update_name:
             return
@@ -121,7 +120,7 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
         for event in events:
@@ -136,7 +135,7 @@ class SignalUpdateCallback:
             self._hass.bus.async_fire(NEST_EVENT, message)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
 
     if DATA_SDM not in entry.data:
@@ -167,14 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await subscriber.start_async()
     except AuthException as err:
         _LOGGER.debug("Subscriber authentication error: %s", err)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        return False
+        raise ConfigEntryAuthFailed from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
@@ -198,30 +190,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if DATA_SDM not in entry.data:
         # Legacy API
         return True
-
+    _LOGGER.debug("Stopping nest subscriber")
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
         hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)

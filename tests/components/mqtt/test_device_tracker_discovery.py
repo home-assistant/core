@@ -2,10 +2,21 @@
 
 import pytest
 
+from homeassistant.components import device_tracker
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 
+from .test_common import help_test_setting_blocked_attribute_via_mqtt_json_message
+
 from tests.common import async_fire_mqtt_message, mock_device_registry, mock_registry
+
+DEFAULT_CONFIG = {
+    device_tracker.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "test-topic",
+    }
+}
 
 
 @pytest.fixture
@@ -184,7 +195,7 @@ async def test_cleanup_device_tracker(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_reg.async_get("device_tracker.mqtt_unique")
     assert entity_entry is not None
@@ -194,9 +205,10 @@ async def test_cleanup_device_tracker(hass, device_reg, entity_reg, mqtt_mock):
 
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_reg.async_get("device_tracker.mqtt_unique")
     assert entity_entry is None
@@ -358,4 +370,11 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     async_fire_mqtt_message(hass, "attributes-topic", '{"latitude":32.87336}')
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
-    assert state.state == STATE_NOT_HOME
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, device_tracker.DOMAIN, DEFAULT_CONFIG, None
+    )

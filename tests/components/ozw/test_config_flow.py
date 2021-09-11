@@ -79,14 +79,11 @@ def mock_start_addon():
         yield start_addon
 
 
-async def test_user_not_supervisor_create_entry(hass):
+async def test_user_not_supervisor_create_entry(hass, mqtt):
     """Test the user step creates an entry not on Supervisor."""
-    hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -103,7 +100,6 @@ async def test_user_not_supervisor_create_entry(hass):
         "use_addon": False,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -128,9 +124,8 @@ async def test_one_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_not_addon(hass, supervisor):
+async def test_not_addon(hass, supervisor, mqtt):
     """Test opting out of add-on on Supervisor."""
-    hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -138,8 +133,6 @@ async def test_not_addon(hass, supervisor):
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -156,7 +149,6 @@ async def test_not_addon(hass, supervisor):
         "use_addon": False,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -171,8 +163,6 @@ async def test_addon_running(hass, supervisor, addon_running, addon_options):
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -189,7 +179,6 @@ async def test_addon_running(hass, supervisor, addon_running, addon_options):
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -224,8 +213,6 @@ async def test_addon_installed(
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -242,7 +229,6 @@ async def test_addon_installed(
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -321,8 +307,6 @@ async def test_addon_not_installed(
     assert result["step_id"] == "start_addon"
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -339,7 +323,6 @@ async def test_addon_not_installed(
         "use_addon": True,
         "integration_created_addon": True,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -381,8 +364,6 @@ async def test_supervisor_discovery(hass, supervisor, addon_running, addon_optio
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -397,7 +378,6 @@ async def test_supervisor_discovery(hass, supervisor, addon_running, addon_optio
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -423,8 +403,6 @@ async def test_clean_discovery_on_user_create(
     )
 
     with patch(
-        "homeassistant.components.ozw.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ozw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -442,7 +420,6 @@ async def test_clean_discovery_on_user_create(
         "use_addon": False,
         "integration_created_addon": False,
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -535,3 +512,49 @@ async def test_discovery_addon_not_installed(
 
     assert result["type"] == "form"
     assert result["step_id"] == "start_addon"
+
+
+async def test_import_addon_installed(
+    hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
+):
+    """Test add-on already installed but not running on Supervisor."""
+    hass.config.components.add("mqtt")
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={"usb_path": "/test/imported", "network_key": "imported123"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "start_addon"
+
+    # the default input should be the imported data
+    default_input = result["data_schema"]({})
+
+    with patch(
+        "homeassistant.components.ozw.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], default_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "usb_path": "/test/imported",
+        "network_key": "imported123",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

@@ -5,14 +5,31 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "connection_error": "Impossibile connettersi"
         },
+        "error": {
+            "discovery_error": "Impossibile rilevare un Motion Gateway"
+        },
         "flow_title": "Tende Motion",
         "step": {
+            "connect": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Avrai bisogno della chiave API di 16 caratteri, consulta https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key per le istruzioni",
+                "title": "Motion Blinds"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "Indirizzo IP"
+                },
+                "description": "Esegui nuovamente l'installazione se desideri collegare altri Motion Gateway",
+                "title": "Seleziona il Motion Gateway che vorresti collegare"
+            },
             "user": {
                 "data": {
                     "api_key": "Chiave API",
                     "host": "Indirizzo IP"
                 },
-                "description": "Avrai bisogno della chiave API di 16 caratteri, consulta https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key per le istruzioni",
+                "description": "Connetti il tuo Motion Gateway, se l'indirizzo IP non \u00e8 impostato, sar\u00e0 utilizzato il rilevamento automatico",
                 "title": "Tende Motion"
             }
         }

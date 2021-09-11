@@ -1,5 +1,6 @@
 """Test Media Source initialization."""
 from unittest.mock import patch
+from urllib.parse import quote
 
 import pytest
 
@@ -45,7 +46,7 @@ async def test_async_browse_media(hass):
     media = await media_source.async_browse_media(hass, "")
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert media.title == "media/"
-    assert len(media.children) == 1
+    assert len(media.children) == 2
 
     # Test invalid media content
     with pytest.raises(ValueError):
@@ -133,14 +134,15 @@ async def test_websocket_browse_media(hass, hass_ws_client):
     assert msg["error"]["message"] == "test"
 
 
-async def test_websocket_resolve_media(hass, hass_ws_client):
+@pytest.mark.parametrize("filename", ["test.mp3", "Epic Sax Guy 10 Hours.mp4"])
+async def test_websocket_resolve_media(hass, hass_ws_client, filename):
     """Test browse media websocket."""
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
 
-    media = media_source.models.PlayMedia("/media/local/test.mp3", "audio/mpeg")
+    media = media_source.models.PlayMedia(f"/media/local/{filename}", "audio/mpeg")
 
     with patch(
         "homeassistant.components.media_source.async_resolve_media",
@@ -150,7 +152,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client):
             {
                 "id": 1,
                 "type": "media_source/resolve_media",
-                "media_content_id": f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3",
+                "media_content_id": f"{const.URI_SCHEME}{const.DOMAIN}/local/{filename}",
             }
         )
 
@@ -158,7 +160,7 @@ async def test_websocket_resolve_media(hass, hass_ws_client):
 
     assert msg["success"]
     assert msg["id"] == 1
-    assert msg["result"]["url"].startswith(media.url)
+    assert msg["result"]["url"].startswith(quote(media.url))
     assert msg["result"]["mime_type"] == media.mime_type
 
     with patch(

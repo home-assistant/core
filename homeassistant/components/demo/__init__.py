@@ -2,7 +2,11 @@
 import asyncio
 
 from homeassistant import bootstrap, config_entries
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
+    SOUND_PRESSURE_DB,
+)
 import homeassistant.core as ha
 
 DOMAIN = "demo"
@@ -20,7 +24,9 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "lock",
     "media_player",
     "number",
+    "select",
     "sensor",
+    "siren",
     "switch",
     "vacuum",
     "water_heater",
@@ -50,9 +56,9 @@ async def async_setup(hass, config):
         )
 
     # Set up demo platforms
-    for component in COMPONENTS_WITH_DEMO_PLATFORM:
+    for platform in COMPONENTS_WITH_DEMO_PLATFORM:
         hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
+            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
         )
 
     config.setdefault(ha.DOMAIN, {})
@@ -117,7 +123,7 @@ async def async_setup(hass, config):
                         "min": 0,
                         "max": 10,
                         "name": "Allowed Noise",
-                        "unit_of_measurement": "dB",
+                        "unit_of_measurement": SOUND_PRESSURE_DB,
                     }
                 }
             },
@@ -146,9 +152,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     # Set up demo platforms with config entry
-    for component in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
+    for platform in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
     return True
 

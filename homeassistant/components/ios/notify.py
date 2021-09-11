@@ -38,7 +38,7 @@ def log_rate_limits(hass, target, resp, level=20):
         rate_limits["successful"],
         rate_limits["maximum"],
         rate_limits["errors"],
-        str(resetsAtTime).split(".")[0],
+        str(resetsAtTime).split(".", maxsplit=1)[0],
     )
 
 
@@ -69,10 +69,12 @@ class iOSNotificationService(BaseNotificationService):
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
-        if kwargs.get(ATTR_TITLE) is not None:
-            # Remove default title from notifications.
-            if kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT:
-                data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
+        # Remove default title from notifications.
+        if (
+            kwargs.get(ATTR_TITLE) is not None
+            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
+        ):
+            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
         targets = kwargs.get(ATTR_TARGET)
 

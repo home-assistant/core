@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 from homeassistant.const import STATE_OFF
 from homeassistant.setup import async_setup_component
 
@@ -45,6 +46,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -644,8 +646,8 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     )
 
 
-async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
-    """Test setting of temperature high/low templates."""
+async def test_get_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
+    """Test getting temperature high/low with templates."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["climate"]["temperature_low_state_topic"] = "temperature-state"
     config["climate"]["temperature_high_state_topic"] = "temperature-state"
@@ -678,8 +680,8 @@ async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, c
     assert state.attributes.get("target_temp_high") == 1032
 
 
-async def test_set_with_templates(hass, mqtt_mock, caplog):
-    """Test setting of new fan mode in pessimistic mode."""
+async def test_get_with_templates(hass, mqtt_mock, caplog):
+    """Test getting various attributes with templates."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     # By default, just unquote the JSON-strings
     config["climate"]["value_template"] = "{{ value_json }}"
@@ -782,6 +784,80 @@ async def test_set_with_templates(hass, mqtt_mock, caplog):
     assert state.attributes.get("hvac_action") == "cool"
 
 
+async def test_set_with_templates(hass, mqtt_mock, caplog):
+    """Test setting various attributes with templates."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    # Create simple templates
+    config["climate"]["fan_mode_command_template"] = "fan_mode: {{ value }}"
+    config["climate"]["hold_command_template"] = "hold: {{ value }}"
+    config["climate"]["mode_command_template"] = "mode: {{ value }}"
+    config["climate"]["swing_mode_command_template"] = "swing_mode: {{ value }}"
+    config["climate"]["temperature_command_template"] = "temp: {{ value }}"
+    config["climate"]["temperature_high_command_template"] = "temp_hi: {{ value }}"
+    config["climate"]["temperature_low_command_template"] = "temp_lo: {{ value }}"
+
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Fan Mode
+    await common.async_set_fan_mode(hass, "high", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "fan-mode-topic", "fan_mode: high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("fan_mode") == "high"
+
+    # Hold Mode
+    await common.async_set_preset_mode(hass, PRESET_ECO, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("hold-topic", "hold: eco", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == PRESET_ECO
+
+    # Mode
+    await common.async_set_hvac_mode(hass, "cool", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "mode-topic", "mode: cool", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == "cool"
+
+    # Swing Mode
+    await common.async_set_swing_mode(hass, "on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "swing-mode-topic", "swing_mode: on", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_mode") == "on"
+
+    # Temperature
+    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "temperature-topic", "temp: 47.0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("temperature") == 47
+
+    # Temperature Low/High
+    await common.async_set_temperature(
+        hass, target_temp_low=20, target_temp_high=23, entity_id=ENTITY_CLIMATE
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "temperature-low-topic", "temp_lo: 20.0", 0, False
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "temperature-high-topic", "temp_hi: 23.0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("target_temp_low") == 20
+    assert state.attributes.get("target_temp_high") == 23
+
+
 async def test_min_temp_custom(hass, mqtt_mock):
     """Test a custom min temp."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -846,6 +922,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG, MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     )
 
 

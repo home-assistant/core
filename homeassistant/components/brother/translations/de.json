@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser Drucker ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "unsupported_model": "Dieses Druckermodell wird nicht unterst\u00fctzt."
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "snmp_error": "SNMP-Server deaktiviert oder Drucker nicht unterst\u00fctzt.",
-            "wrong_host": " Ung\u00fcltiger Hostname oder IP-Adresse"
+            "wrong_host": "Ung\u00fcltiger Hostname oder IP-Adresse"
         },
-        "flow_title": "Brother-Drucker: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {
@@ -22,7 +22,7 @@
                 "data": {
                     "type": "Typ des Druckers"
                 },
-                "description": "M\u00f6chten Sie den Brother Drucker {model} mit der Seriennummer `{serial_number}` zum Home Assistant hinzuf\u00fcgen?",
+                "description": "M\u00f6chtest du den Brother Drucker {model} mit der Seriennummer `{serial_number}` zum Home Assistant hinzuf\u00fcgen?",
                 "title": "Brother-Drucker entdeckt"
             }
         }

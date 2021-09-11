@@ -14,3 +14,5 @@ ATTR_HAZARDS = "hazards"
 DEFAULT_ICON = "mdi:image-filter-hdr"
 DEFAULT_RADIUS = 50.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+
+PLATFORMS = ["sensor"]

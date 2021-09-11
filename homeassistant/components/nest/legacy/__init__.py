@@ -9,6 +9,7 @@ from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -17,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -27,6 +28,8 @@ from .const import DATA_NEST, DATA_NEST_CONFIG, DOMAIN, SIGNAL_NEST_UPDATE
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = ["climate", "camera", "sensor", "binary_sensor"]
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -94,7 +97,7 @@ def nest_update_event_broker(hass, nest):
     _LOGGER.debug("Stop listening for nest.update_event")
 
 
-async def async_setup_legacy(hass, config):
+async def async_setup_legacy(hass: HomeAssistant, config: dict) -> bool:
     """Set up Nest components using the legacy nest API."""
     if DOMAIN not in config:
         return True
@@ -120,7 +123,7 @@ async def async_setup_legacy(hass, config):
     return True
 
 
-async def async_setup_legacy_entry(hass, entry):
+async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from legacy config entry."""
 
     nest = Nest(access_token=entry.data["tokens"]["access_token"])
@@ -131,9 +134,9 @@ async def async_setup_legacy_entry(hass, entry):
     if not await hass.async_add_executor_job(hass.data[DATA_NEST].initialize):
         return False
 
-    for component in "climate", "camera", "sensor", "binary_sensor":
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def validate_structures(target_structures):
@@ -247,7 +250,9 @@ async def async_setup_legacy_entry(hass, entry):
         """Stop Nest update event listener."""
         nest.update_event.set()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     _LOGGER.debug("async_setup_nest is done")
 
@@ -360,11 +365,6 @@ class NestSensorDevice(Entity):
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
 
     @property
     def should_poll(self):

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Alamat IP",
+                    "port": "Port"
+                },
+                "description": "Konfigurasikan perangkat Elexa Guardian lokal."
+            },
+            "zeroconf_confirm": {
+                "description": "Ingin menyiapkan perangkat Guardian ini?"
+            }
+        }
+    }
+}

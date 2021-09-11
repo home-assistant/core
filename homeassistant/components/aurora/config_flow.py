@@ -1,6 +1,7 @@
 """Config flow for SpaceX Launches and Starman."""
 import logging
 
+from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 import voluptuous as vol
 
@@ -18,7 +19,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NOAA Aurora Integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -40,14 +40,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await api.get_forecast_data(longitude, latitude)
-            except ConnectionError:
+            except ClientError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    f"{DOMAIN}_{user_input[CONF_LONGITUDE]}_{user_input[CONF_LATITUDE]}"
+                    f"{user_input[CONF_LONGITUDE]}_{user_input[CONF_LATITUDE]}"
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

@@ -1,26 +1,36 @@
 """Support for Sonarr sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
+from sonarr.models import (
+    CommandItem,
+    Disk,
+    Episode,
+    QueueItem,
+    SeriesItem,
+    WantedResults,
+)
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import SonarrEntity
 from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DATA_SONARR, DOMAIN
+from .entity import SonarrEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
     options = entry.options
@@ -63,7 +73,7 @@ def sonarr_exception_handler(func):
     return handler
 
 
-class SonarrSensor(SonarrEntity):
+class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
 
     def __init__(
@@ -75,37 +85,27 @@ class SonarrSensor(SonarrEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize Sonarr sensor."""
-        self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = f"{entry_id}_{key}"
+        self._attr_name = name
+        self._attr_icon = icon
+        self._attr_unique_id = f"{entry_id}_{key}"
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_entity_registry_enabled_default = enabled_default
         self.last_update_success = False
 
         super().__init__(
             sonarr=sonarr,
             entry_id=entry_id,
             device_id=entry_id,
-            name=name,
-            icon=icon,
-            enabled_default=enabled_default,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:
         """Return sensor availability."""
         return self.last_update_success
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class SonarrCommandsSensor(SonarrSensor):
@@ -113,7 +113,7 @@ class SonarrCommandsSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Commands sensor."""
-        self._commands = []
+        self._commands: list[CommandItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -131,7 +131,7 @@ class SonarrCommandsSensor(SonarrSensor):
         self._commands = await self.sonarr.commands()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -141,7 +141,7 @@ class SonarrCommandsSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._commands)
 
@@ -151,7 +151,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Disk Space sensor."""
-        self._disks = []
+        self._disks: list[Disk] = []
         self._total_free = 0
 
         super().__init__(
@@ -169,10 +169,10 @@ class SonarrDiskspaceSensor(SonarrSensor):
         """Update entity."""
         app = await self.sonarr.update()
         self._disks = app.disks
-        self._total_free = sum([disk.free for disk in self._disks])
+        self._total_free = sum(disk.free for disk in self._disks)
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -183,12 +183,12 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
             attrs[
                 disk.path
-            ] = f"{free:.2f}/{total:.2f}{self._unit_of_measurement} ({usage:.2f}%)"
+            ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
 
         return attrs
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         free = self._total_free / 1024 ** 3
         return f"{free:.2f}"
@@ -199,7 +199,7 @@ class SonarrQueueSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Queue sensor."""
-        self._queue = []
+        self._queue: list[QueueItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -217,7 +217,7 @@ class SonarrQueueSensor(SonarrSensor):
         self._queue = await self.sonarr.queue()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -230,7 +230,7 @@ class SonarrQueueSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._queue)
 
@@ -240,7 +240,7 @@ class SonarrSeriesSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Series sensor."""
-        self._items = []
+        self._items: list[SeriesItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -258,7 +258,7 @@ class SonarrSeriesSensor(SonarrSensor):
         self._items = await self.sonarr.series()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -268,7 +268,7 @@ class SonarrSeriesSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._items)
 
@@ -279,7 +279,7 @@ class SonarrUpcomingSensor(SonarrSensor):
     def __init__(self, sonarr: Sonarr, entry_id: str, days: int = 1) -> None:
         """Initialize Sonarr Upcoming sensor."""
         self._days = days
-        self._upcoming = []
+        self._upcoming: list[Episode] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -301,7 +301,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -311,7 +311,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return len(self._upcoming)
 
@@ -322,8 +322,8 @@ class SonarrWantedSensor(SonarrSensor):
     def __init__(self, sonarr: Sonarr, entry_id: str, max_items: int = 10) -> None:
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
-        self._results = None
-        self._total: Optional[int] = None
+        self._results: WantedResults | None = None
+        self._total: int | None = None
 
         super().__init__(
             sonarr=sonarr,
@@ -342,9 +342,9 @@ class SonarrWantedSensor(SonarrSensor):
         self._total = self._results.total
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
-        attrs = {}
+        attrs: dict[str, str] = {}
 
         if self._results is not None:
             for episode in self._results.episodes:
@@ -354,6 +354,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Optional[int]:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._total

@@ -19,7 +19,7 @@
                 "data": {
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end"
                 },
-                "description": "Sisesta SmartThingsi [isiklik juurdep\u00e4\u00e4suluba] ( {token_url} ), mis on loodud vastavalt [juhistele] ( {component_url} ). Seda kasutatakse Home Assistanti sidumise loomiseks teie SmartThingsi kontol.",
+                "description": "Sisesta SmartThingsi [isiklik juurdep\u00e4\u00e4suluba] ( {token_url} ), mis on loodud vastavalt [juhistele] ( {component_url} ). Seda kasutatakse Home Assistanti sidumise loomiseks SmartThingsi kontol.",
                 "title": "Sisesta isiklik juurdep\u00e4\u00e4suluba (PAT)"
             },
             "select_location": {

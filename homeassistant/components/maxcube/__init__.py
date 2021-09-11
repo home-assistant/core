@@ -4,13 +4,13 @@ from socket import timeout
 from threading import Lock
 import time
 
-from maxcube.connection import MaxCubeConnection
 from maxcube.cube import MaxCube
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def setup(hass, config):
         scan_interval = gateway[CONF_SCAN_INTERVAL].total_seconds()
 
         try:
-            cube = MaxCube(MaxCubeConnection(host, port))
+            cube = MaxCube(host, port, now=now)
             hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
         except timeout as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
@@ -86,6 +86,7 @@ class MaxCubeHandle:
     def __init__(self, cube, scan_interval):
         """Initialize the Cube Handle."""
         self.cube = cube
+        self.cube.use_persistent_connection = scan_interval <= 300  # seconds
         self.scan_interval = scan_interval
         self.mutex = Lock()
         self._updatets = time.monotonic()

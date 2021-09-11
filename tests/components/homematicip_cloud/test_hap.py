@@ -18,7 +18,7 @@ from homeassistant.components.homematicip_cloud.hap import (
     HomematicipAuth,
     HomematicipHAP,
 )
-from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN
@@ -82,15 +82,7 @@ async def test_hap_setup_works():
         assert await hap.async_setup()
 
     assert hap.home is home
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 8
-    assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == (
-        entry,
-        "alarm_control_panel",
-    )
-    assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == (
-        entry,
-        "binary_sensor",
-    )
+    assert len(hass.config_entries.async_setup_platforms.mock_calls) == 1
 
 
 async def test_hap_setup_connection_error():
@@ -117,7 +109,7 @@ async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap_factory):
     # hap_reset is called during unload
     await hass.config_entries.async_unload(config_entries[0].entry_id)
     # entry is unloaded
-    assert config_entries[0].state == ENTRY_STATE_NOT_LOADED
+    assert config_entries[0].state is ConfigEntryState.NOT_LOADED
     assert hass.data[HMIPC_DOMAIN] == {}
 
 

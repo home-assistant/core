@@ -1,15 +1,18 @@
 """Platform for sensor integration."""
-import asyncio
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from ondilo import OndiloError
 
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -21,28 +24,60 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-SENSOR_TYPES = {
-    "temperature": [
-        "Temperature",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "orp": ["Oxydo Reduction Potential", "mV", "mdi:pool", None],
-    "ph": ["pH", "", "mdi:pool", None],
-    "tds": ["TDS", CONCENTRATION_PARTS_PER_MILLION, "mdi:pool", None],
-    "battery": ["Battery", PERCENTAGE, "mdi:battery", DEVICE_CLASS_BATTERY],
-    "rssi": [
-        "RSSI",
-        PERCENTAGE,
-        "mdi:wifi-strength-2",
-        DEVICE_CLASS_SIGNAL_STRENGTH,
-    ],
-    "salt": ["Salt", "mg/L", "mdi:pool", None],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon=None,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="orp",
+        name="Oxydo Reduction Potential",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
+        icon="mdi:pool",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="ph",
+        name="pH",
+        native_unit_of_measurement=None,
+        icon="mdi:pool",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="tds",
+        name="TDS",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        icon="mdi:pool",
+        device_class=None,
+    ),
+    SensorEntityDescription(
+        key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        icon=None,
+        device_class=DEVICE_CLASS_BATTERY,
+    ),
+    SensorEntityDescription(
+        key="rssi",
+        name="RSSI",
+        native_unit_of_measurement=PERCENTAGE,
+        icon=None,
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+    ),
+    SensorEntityDescription(
+        key="salt",
+        name="Salt",
+        native_unit_of_measurement="mg/L",
+        icon="mdi:pool",
+        device_class=None,
+    ),
+)
+
 
 SCAN_INTERVAL = timedelta(hours=1)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -51,13 +86,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     api = hass.data[DOMAIN][entry.entry_id]
 
-    def get_all_pool_data(pool):
-        """Add pool details and last measures to pool data."""
-        pool["ICO"] = api.get_ICO_details(pool["id"])
-        pool["sensors"] = api.get_last_pool_measures(pool["id"])
-
-        return pool
-
     async def async_update_data():
         """Fetch data from API endpoint.
 
@@ -65,14 +93,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         so entities can quickly look up their data.
         """
         try:
-            pools = await hass.async_add_executor_job(api.get_pools)
-
-            return await asyncio.gather(
-                *[
-                    hass.async_add_executor_job(get_all_pool_data, pool)
-                    for pool in pools
-                ]
-            )
+            return await hass.async_add_executor_job(api.get_all_pools_data)
 
         except OndiloError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
@@ -92,32 +113,37 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
     for poolidx, pool in enumerate(coordinator.data):
-        for sensor_idx, sensor in enumerate(pool["sensors"]):
-            if sensor["data_type"] in SENSOR_TYPES:
-                entities.append(OndiloICO(coordinator, poolidx, sensor_idx))
+        entities.extend(
+            [
+                OndiloICO(coordinator, poolidx, description)
+                for sensor in pool["sensors"]
+                for description in SENSOR_TYPES
+                if description.key == sensor["data_type"]
+            ]
+        )
 
     async_add_entities(entities)
 
 
-class OndiloICO(CoordinatorEntity):
+class OndiloICO(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, poolidx: int, sensor_idx: int
-    ):
+        self,
+        coordinator: DataUpdateCoordinator,
+        poolidx: int,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize sensor entity with data from coordinator."""
         super().__init__(coordinator)
+        self.entity_description = description
 
         self._poolid = self.coordinator.data[poolidx]["id"]
 
         pooldata = self._pooldata()
-        self._data_type = pooldata["sensors"][sensor_idx]["data_type"]
-        self._unique_id = f"{pooldata['ICO']['serial_number']}-{self._data_type}"
+        self._attr_unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
         self._device_name = pooldata["name"]
-        self._name = f"{self._device_name} {SENSOR_TYPES[self._data_type][0]}"
-        self._device_class = SENSOR_TYPES[self._data_type][3]
-        self._icon = SENSOR_TYPES[self._data_type][2]
-        self._unit = SENSOR_TYPES[self._data_type][1]
+        self._attr_name = f"{self._device_name} {description.name}"
 
     def _pooldata(self):
         """Get pool data dict."""
@@ -132,45 +158,15 @@ class OndiloICO(CoordinatorEntity):
             (
                 data_type
                 for data_type in self._pooldata()["sensors"]
-                if data_type["data_type"] == self._data_type
+                if data_type["data_type"] == self.entity_description.key
             ),
             None,
         )
 
     @property
-    def name(self):
-        """Name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self):
         """Last value of the sensor."""
-        _LOGGER.debug(
-            "Retrieving Ondilo sensor %s state value: %s",
-            self._name,
-            self._devdata()["value"],
-        )
         return self._devdata()["value"]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self):
-        """Return the Unit of the sensor's measurement."""
-        return self._unit
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this entity."""
-        return self._unique_id
 
     @property
     def device_info(self):

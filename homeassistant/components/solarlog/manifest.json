@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solarlog",
   "codeowners": ["@Ernst79"],
-  "requirements": ["sunwatcher==0.2.1"]
+  "requirements": ["sunwatcher==0.2.1"],
+  "iot_class": "local_polling"
 }

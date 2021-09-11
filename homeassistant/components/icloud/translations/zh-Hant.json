@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "send_verification_code": "\u50b3\u9001\u9a57\u8b49\u78bc\u5931\u6557",
-            "validate_verification_code": "\u7121\u6cd5\u9a57\u8b49\u8f38\u5165\u9a57\u8b49\u78bc\uff0c\u9078\u64c7\u4e00\u90e8\u4fe1\u4efb\u88dd\u7f6e\u3001\u7136\u5f8c\u91cd\u65b0\u57f7\u884c\u9a57\u8b49\u3002"
+            "validate_verification_code": "\u9a57\u8b49\u8f38\u5165\u9a57\u8b49\u78bc\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
         },
         "step": {
             "reauth": {

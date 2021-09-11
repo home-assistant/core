@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "insufficient_permissions": "Kullan\u0131c\u0131, AVM FRITZ! Box ayarlar\u0131na ve telefon defterlerine eri\u015fmek i\u00e7in yeterli izne sahip de\u011fil.",
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "flow_title": "AVM FRITZ! Box \u00e7a\u011fr\u0131 monit\u00f6r\u00fc: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Telefon rehberi"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "password": "\u015eifre",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "\u00d6nekler yanl\u0131\u015f bi\u00e7imlendirilmi\u015ftir, l\u00fctfen bi\u00e7imlerini kontrol edin."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "\u00d6nekler (virg\u00fclle ayr\u0131lm\u0131\u015f liste)"
+                },
+                "title": "\u00d6nekleri Yap\u0131land\u0131r"
+            }
+        }
+    }
+}
