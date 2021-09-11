@@ -317,6 +317,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         @callback
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
+            source_state = self.hass.states.get(self._sensor_source_id)
+            if self._unit_of_measurement is None and source_state:
+                self._unit_of_measurement = source_state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT
+                )
+                self.async_write_ha_state()
             if self._tariff_entity is not None:
                 _LOGGER.debug(
                     "<%s> tracks utility meter %s", self.name, self._tariff_entity
@@ -329,7 +335,12 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self._change_status(tariff_entity_state.state)
                 return
 
-            _LOGGER.debug("<%s> collecting from %s", self.name, self._sensor_source_id)
+            _LOGGER.debug(
+                "<%s> collecting %s from %s",
+                self.name,
+                self._unit_of_measurement,
+                self._sensor_source_id,
+            )
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
