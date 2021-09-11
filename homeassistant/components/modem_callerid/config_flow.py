@@ -38,7 +38,10 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
         unique_id = f"{discovery_info['vid']}:{discovery_info['pid']}_{discovery_info['serial_number']}_{discovery_info['manufacturer']}_{discovery_info['description']}"
-        if await self.validate_input(dev_path=dev_path, unique_id=unique_id) is None:
+        if (
+            await self.validate_device_errors(dev_path=dev_path, unique_id=unique_id)
+            is None
+        ):
             self._device = dev_path
             return await self.async_step_usb_confirm()
         return self.async_abort(reason="cannot_connect")
@@ -85,7 +88,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             dev_path = await self.hass.async_add_executor_job(
                 usb.get_serial_by_id, port.device
             )
-            errors: dict | None = await self.validate_input(
+            errors: dict | None = await self.validate_device_errors(
                 dev_path=dev_path, unique_id=_generate_unique_id(port)
             )
             if errors is None:
@@ -111,7 +114,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for port in ports:
             if port.device == config[CONF_DEVICE]:
                 if (
-                    await self.validate_input(
+                    await self.validate_device_errors(
                         dev_path=port.device,
                         unique_id=_generate_unique_id(port),
                     )
@@ -123,7 +126,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     )
         return self.async_abort(reason="cannot_connect")
 
-    async def validate_input(
+    async def validate_device_errors(
         self, dev_path: str, unique_id: str
     ) -> dict[str, str] | None:
         """Handle common flow input validation."""
