@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Check if asyncio.lock is stored in hass data.
         # BTLE has issues with multiple connections,
         # so we use a lock to ensure that only one API request is reaching it at a time:
-        if not hass.data[DOMAIN].get(BTLE_LOCK):
+        if BTLE_LOCK not in hass.data[DOMAIN]:
             hass.data[DOMAIN][BTLE_LOCK] = Lock()
 
         switchbot.DEFAULT_RETRY_TIMEOUT = entry.options[CONF_RETRY_TIMEOUT]
