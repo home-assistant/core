@@ -221,8 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # Only communicate changes to the state or attribute tracked
             if (
-                "old_state" in event.data
-                and event.data["old_state"] is not None
+                event.data.get("old_state") is not None
                 and "new_state" in event.data
                 and (
                     (
