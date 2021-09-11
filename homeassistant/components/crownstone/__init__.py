@@ -12,10 +12,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Initiate setup for a Crownstone config entry."""
     manager = CrownstoneEntryManager(hass, entry)
 
-    if not await manager.async_setup():
-        return False
-
-    return True
+    return await manager.async_setup()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

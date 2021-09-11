@@ -2,7 +2,7 @@
 Listeners for updating data in the Crownstone integration.
 
 For data updates, Cloud Push is used in form of an SSE server that sends out events.
-For fast device switching Local Push is used in form of UART USB with Bluetooth.
+For fast device switching Local Push is used in form of a USB dongle that hooks into a BLE mesh.
 """
 from __future__ import annotations
 
@@ -41,7 +41,9 @@ if TYPE_CHECKING:
 
 
 @callback
-def update_crwn_state_sse(manager: CrownstoneEntryManager, ha_event: Event) -> None:
+def async_update_crwn_state_sse(
+    manager: CrownstoneEntryManager, ha_event: Event
+) -> None:
     """Update the state of a Crownstone when switched externally."""
     switch_event = SwitchStateUpdateEvent(ha_event.data)
     try:
@@ -56,7 +58,7 @@ def update_crwn_state_sse(manager: CrownstoneEntryManager, ha_event: Event) -> N
 
 
 @callback
-def update_crwn_ability(manager: CrownstoneEntryManager, ha_event: Event) -> None:
+def async_update_crwn_ability(manager: CrownstoneEntryManager, ha_event: Event) -> None:
     """Update the ability information of a Crownstone."""
     ability_event = AbilityChangeEvent(ha_event.data)
     try:
@@ -117,11 +119,11 @@ def setup_sse_listeners(manager: CrownstoneEntryManager) -> None:
     manager.listeners[SSE_LISTENERS] = [
         manager.hass.bus.async_listen(
             f"{DOMAIN}_{EVENT_SWITCH_STATE_UPDATE}",
-            partial(update_crwn_state_sse, manager),
+            partial(async_update_crwn_state_sse, manager),
         ),
         manager.hass.bus.async_listen(
             f"{DOMAIN}_{EVENT_ABILITY_CHANGE}",
-            partial(update_crwn_ability, manager),
+            partial(async_update_crwn_ability, manager),
         ),
     ]
 

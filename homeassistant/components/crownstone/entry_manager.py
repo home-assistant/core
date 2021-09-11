@@ -1,4 +1,4 @@
-"""Code to set up all communications with Crownstones."""
+"""Manager to set up IO with Crownstone devices for a config entry."""
 from __future__ import annotations
 
 import asyncio
@@ -53,7 +53,6 @@ class CrownstoneEntryManager:
         """
         Set up a Crownstone config entry.
 
-        This class is a combination of Crownstone cloud, Crownstone SSE and Crownstone uart.
         Returns True if the setup was successful.
         """
         email = self.config_entry.data[CONF_EMAIL]
