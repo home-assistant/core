@@ -6,11 +6,9 @@ from homeassistant.const import TIME_SECONDS
 
 LOGGER = logging.getLogger(__package__)
 
-CONF_LOCAL_IP = "local_ip"
 DOMAIN = "upnp"
 DOMAIN_CONFIG = "config"
 DOMAIN_DEVICES = "devices"
-DOMAIN_LOCAL_IP = "local_ip"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"
