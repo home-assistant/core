@@ -1,0 +1,17 @@
+{
+  "domain": "watttime",
+  "name": "WattTime",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/watttime",
+  "requirements": [
+    "aiowatttime==0.1.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@bachya"
+  ],
+  "iot_class": "cloud_polling"
+}

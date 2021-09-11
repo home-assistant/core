@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "coordinates": {
+        "title": "Input your latitude and longitude",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "login": {
+        "title": "Login to WattTime",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "register": {
+        "title": "Register for a WattTime Account",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "email": "[%key:common::config_flow::data::email%]",
+          "organization": "Organization Name"
+        }
+      },
+      "user": {
+        "title": "Configure WattTime",
+        "description": "How you would like to authenticate with WattTime?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_coordinates": "No data for latitude/longitude",
+      "username_taken": "Username already registered"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

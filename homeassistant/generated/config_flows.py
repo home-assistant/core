@@ -298,6 +298,7 @@ FLOWS = [
     "vizio",
     "volumio",
     "wallbox",
+    "watttime",
     "waze_travel_time",
     "wemo",
     "wiffi",
