@@ -149,6 +149,9 @@ class TerncyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Daikin device."""
         identifier = discovery_info["name"]
         identifier = identifier.replace("." + TERNCY_HUB_SVC_NAME, "")
+        await self.async_set_unique_id(identifier)
+        self._abort_if_unique_id_configured()
+
         properties = discovery_info["properties"]
         name = properties[CONF_NAME]
         self.context["identifier"] = self.unique_id
