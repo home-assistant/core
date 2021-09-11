@@ -131,7 +131,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for (key, value) in CONF_PRESETS.items():
         if value in config:
             presets[key] = config.get(value)
-    print(f"presets={presets}")
     precision = config.get(CONF_PRECISION)
     unit = hass.config.units.temperature_unit
     unique_id = config.get(CONF_UNIQUE_ID)
