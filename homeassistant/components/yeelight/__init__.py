@@ -8,7 +8,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 from urllib.parse import urlparse
 
-from async_upnp_client.search import SSDPListener
+from async_upnp_client.search import SsdpSearchListener
 import voluptuous as vol
 from yeelight import BulbException
 from yeelight.aio import KEY_CONNECTED, AsyncBulb
@@ -395,7 +395,7 @@ class YeelightScanner:
                 return _async_connected
 
             self._listeners.append(
-                SSDPListener(
+                SsdpSearchListener(
                     async_callback=self._async_process_entry,
                     service_type=SSDP_ST,
                     target=SSDP_TARGET,
