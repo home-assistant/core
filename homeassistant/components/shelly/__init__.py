@@ -46,7 +46,11 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
-from .utils import get_coap_context, get_device_name, get_device_sleep_period
+from .utils import (
+    get_block_device_name,
+    get_block_device_sleep_period,
+    get_coap_context,
+)
 
 PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
 SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
@@ -84,6 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.title,
         )
         return False
+
+    if entry.data.get("gen") == 2:
+        return True
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
@@ -124,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if sleep_period is None:
             data = {**entry.data}
-            data["sleep_period"] = get_device_sleep_period(device.settings)
+            data["sleep_period"] = get_block_device_sleep_period(device.settings)
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
@@ -192,7 +199,9 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 UPDATE_PERIOD_MULTIPLIER * device.settings["coiot"]["update_period"]
             )
 
-        device_name = get_device_name(device) if device.initialized else entry.title
+        device_name = (
+            get_block_device_name(device) if device.initialized else entry.title
+        )
         super().__init__(
             hass,
             _LOGGER,
@@ -338,7 +347,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=get_device_name(device),
+            name=get_block_device_name(device),
             update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
@@ -360,6 +369,9 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    if entry.data.get("gen") == 2:
+        return True
+
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id].get(DEVICE)
     if device is not None:
         # If device is present, device wrapper is not setup yet
