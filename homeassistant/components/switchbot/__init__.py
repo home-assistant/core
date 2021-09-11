@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Use same coordinator instance for all entities.
     # Uses BTLE advertisement data, all Switchbot devices in range is stored here.
-    if not hass.data[DOMAIN].get(DATA_COORDINATOR):
+    if DATA_COORDINATOR not in hass.data[DOMAIN]:
 
         # Check if asyncio.lock is stored in hass data.
         # BTLE has issues with multiple connections,
