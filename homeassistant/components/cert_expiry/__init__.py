@@ -6,8 +6,8 @@ import logging
 from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -35,7 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    @callback
+    def async_finish_startup():
+        _LOGGER.warning("CERT EXPIRY STARTING")
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, async_finish_startup())
+    )
 
     return True
 
