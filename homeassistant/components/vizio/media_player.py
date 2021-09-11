@@ -33,7 +33,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -154,8 +153,6 @@ class VizioDevice(MediaPlayerEntity):
         )
         self._device = device
         self._max_volume = float(self._device.get_max_volume())
-        self._model = None
-        self._sw_version = None
 
         # Entity class attributes that will change with each update
         self._attr_available = True
@@ -201,11 +198,14 @@ class VizioDevice(MediaPlayerEntity):
             )
             self._attr_available = True
 
-        if not self._model:
-            self._model = await self._device.get_model_name(log_api_exception=False)
-
-        if not self._sw_version:
-            self._sw_version = await self._device.get_version(log_api_exception=False)
+        if not self._attr_device_info:
+            self._attr_device_info = {
+                "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+                "name": self._attr_name,
+                "manufacturer": "VIZIO",
+                "model": await self._device.get_model_name(log_api_exception=False),
+                "sw_version": await self._device.get_version(log_api_exception=False),
+            }
 
         if not is_on:
             self._attr_state = STATE_OFF
@@ -382,17 +382,6 @@ class VizioDevice(MediaPlayerEntity):
             }
 
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information."""
-        return {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "name": self.name,
-            "manufacturer": "VIZIO",
-            "model": self._model,
-            "sw_version": self._sw_version,
-        }
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
