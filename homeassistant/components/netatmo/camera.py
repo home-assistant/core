@@ -83,7 +83,7 @@ async def async_setup_entry(
         for camera in all_cameras
     ]
 
-    for home_id in data_class.homes.values():
+    for home in data_class.homes.values():
         if home.get("id") is None:
             continue
         for person_id, person_data in (
