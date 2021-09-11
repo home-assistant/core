@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.decora_wifi.common import CommFailed
 from homeassistant.components.decora_wifi.const import CONF_TITLE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -23,7 +23,6 @@ UPDATED_SCAN_INTERVAL = 60
 
 async def test_import_flow(hass: HomeAssistant):
     """Check import flow."""
-
     with patch(
         "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
         side_effect=FakeDecoraWiFiSession,
@@ -72,7 +71,6 @@ async def test_user_flow(hass: HomeAssistant):
 
 async def test_reauth_flow(hass: HomeAssistant):
     """Test the reauth flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id=USERNAME,
@@ -158,7 +156,6 @@ async def test_user_flow_invalid_login(hass: HomeAssistant):
 
 async def test_user_flow_no_internet_connection(hass: HomeAssistant):
     """Test user flow with no internet connection."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -178,8 +175,6 @@ async def test_user_flow_no_internet_connection(hass: HomeAssistant):
 
 async def test_reauth_flow_no_internet_connection(hass: HomeAssistant):
     """Test reauth flow with no internet connection."""
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id=USERNAME,

@@ -148,7 +148,7 @@ class FakeDecoraWiFiIotSwitch(IotSwitch):
         """Override the mac property."""
         digits1 = self._number // 256
         digits2 = self._number % 256
-        return f"DE-AD-BE-EF-{digits1}-{digits2}"
+        return f"DE-AD-BE-EF-{digits1:x}-{digits2:x}"
 
     @property
     def manufacturer(self):
