@@ -86,12 +86,13 @@ async def async_setup_entry(
     for home in data_class.homes.values():
         if home.get("id") is None:
             continue
-        for person_id, person_data in (
-            data_handler.data[CAMERA_DATA_CLASS_NAME].persons[home["id"]].items()
-        ):
-            hass.data[DOMAIN][DATA_PERSONS][home["id"]][person_id] = person_data.get(
-                ATTR_PSEUDO
-            )
+
+        hass.data[DOMAIN][DATA_PERSONS][home["id"]] = {
+            person_id: person_data.get(ATTR_PSEUDO)
+            for person_id, person_data in data_handler.data[CAMERA_DATA_CLASS_NAME]
+            .persons[home["id"]]
+            .items()
+        }
 
     _LOGGER.debug("Adding cameras %s", entities)
     async_add_entities(entities, True)
