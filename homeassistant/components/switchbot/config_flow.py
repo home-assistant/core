@@ -65,14 +65,11 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         connect_lock = self.hass.data[DOMAIN][BTLE_LOCK]
 
         # Validate bluetooth device mac.
-        try:
-            async with connect_lock:
-                _btle_adv_data = await self.hass.async_add_executor_job(
-                    _btle_connect, data[CONF_MAC]
-                )
+        async with connect_lock:
+            _btle_adv_data = await self.hass.async_add_executor_job(
+                _btle_connect, data[CONF_MAC]
+            )
 
-        except NotConnectedError as err:
-            raise NotConnectedError(err) from err
 
         if _btle_adv_data["modelName"] == "WoHand":
             data[CONF_SENSOR_TYPE] = ATTR_BOT
