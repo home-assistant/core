@@ -59,6 +59,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         # store asyncio.lock in hass data if not present.
         if DOMAIN not in self.hass.data:
             self.hass.data.setdefault(DOMAIN, {})
+        if BTLE_LOCK not in self.hass.data[DOMAIN]:
             self.hass.data[DOMAIN][BTLE_LOCK] = Lock()
 
         connect_lock = self.hass.data[DOMAIN][BTLE_LOCK]
