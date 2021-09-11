@@ -154,14 +154,9 @@ class VizioDevice(MediaPlayerEntity):
         self._device = device
         self._max_volume = float(self._device.get_max_volume())
 
-        # Entity class attributes that will change with each update
-        self._attr_available = True
-        self._attr_volume_level = None
-        self._attr_state = None
-        self._attr_sound_mode = None
+        # Entity class attributes that will change with each update (we only include
+        # the ones that are initialized differently from the defaults)
         self._attr_sound_mode_list = []
-        self._attr_app_name = None
-        self._attr_is_volume_muted = None
         self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
 
         # Entity class attributes that will not change
