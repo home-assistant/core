@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -319,10 +319,21 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Service to change current home schedule."""
         persons = kwargs.get(ATTR_PERSONS, {})
         person_ids = []
+        person_id_errors = []
+
         for person in persons:
+            person_id = None
             for pid, data in self._data.persons[self._home_id].items():
                 if data.get("pseudo") == person:
                     person_ids.append(pid)
+                    person_id = pid
+
+            if person_id is None:
+                person_id_errors.append(person)
+
+        if person_id_errors:
+            _LOGGER.debug("%s not registered", person_id_errors)
+            raise HomeAssistantError("Person is not registered")
 
         await self._data.async_set_persons_home(
             person_ids=person_ids, home_id=self._home_id
@@ -337,6 +348,10 @@ class NetatmoCamera(NetatmoBase, Camera):
             for pid, data in self._data.persons[self._home_id].items():
                 if data.get("pseudo") == person:
                     person_id = pid
+
+            if person_id is None:
+                _LOGGER.debug('"%s" is not registered', person)
+                raise HomeAssistantError("Person is not registered")
 
         if person_id:
             await self._data.async_set_persons_away(
