@@ -331,6 +331,71 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
+POWER_FLOW_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    # TODO: add battery_standby as BinarySensor entity
+    "energy_day": SensorEntityDescription(
+        key="energy_day",
+        name="Energy day",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "energy_year": SensorEntityDescription(
+        key="energy_year",
+        name="Energy year",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "energy_total": SensorEntityDescription(
+        key="energy_total",
+        name="Energy total",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "power_battery": SensorEntityDescription(
+        key="power_battery",
+        name="Power battery",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "power_grid": SensorEntityDescription(
+        key="power_grid",
+        name="Power grid",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "power_load": SensorEntityDescription(
+        key="power_load",
+        name="Power load",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "power_photovoltaics": SensorEntityDescription(
+        key="power_photovoltaics",
+        name="Power photovoltaics",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "relative_autonomy": SensorEntityDescription(
+        key="relative_autonomy",
+        name="Relative autonomy",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "relative_self_consumption": SensorEntityDescription(
+        key="relative_self_consumption",
+        name="Relative self consumption",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+}
+
 STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "capacity_maximum": SensorEntityDescription(
         key="capacity_maximum",

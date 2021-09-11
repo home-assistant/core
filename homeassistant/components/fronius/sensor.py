@@ -16,7 +16,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import FroniusSolarNet
 from .const import DOMAIN
-from .coordinator import FroniusEntity, FroniusInverterUpdateCoordinator
+from .coordinator import (
+    FroniusEntity,
+    FroniusInverterUpdateCoordinator,
+    FroniusMeterUpdateCoordinator,
+    FroniusPowerFlowUpdateCoordinator,
+    FroniusStorageUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +67,10 @@ async def async_setup_entry(
         fronius.meter_coordinator.add_entities_for_seen_keys(
             async_add_entities, MeterSensor
         )
+    if fronius.power_flow_coordinator is not None:
+        fronius.power_flow_coordinator.add_entities_for_seen_keys(
+            async_add_entities, PowerFlowSensor
+        )
     if fronius.storage_coordinator is not None:
         fronius.storage_coordinator.add_entities_for_seen_keys(
             async_add_entities, StorageSensor
@@ -88,6 +98,8 @@ class InverterSensor(FroniusEntity, SensorEntity):
 class MeterSensor(FroniusEntity, SensorEntity):
     """Defines a Fronius meter device sensor entity."""
 
+    coordinator: FroniusMeterUpdateCoordinator
+
     def __init__(self, *args, **kwargs) -> None:
         """Set up an individual Fronius meter sensor."""
         super().__init__(*args, **kwargs)
@@ -112,8 +124,29 @@ class MeterSensor(FroniusEntity, SensorEntity):
         )
 
 
+class PowerFlowSensor(FroniusEntity, SensorEntity):
+    """Defines a Fronius power flow sensor entity."""
+
+    coordinator: FroniusPowerFlowUpdateCoordinator
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Set up an individual Fronius power flow sensor."""
+        super().__init__(*args, **kwargs)
+        # device_info created in __init__ from a `GetLoggerInfo` or `GetInverterInfo` request
+        self._attr_device_info = self.coordinator.power_flow_info.device_info
+        self._attr_native_value = self._device_data[self.entity_description.key][
+            "value"
+        ]
+        self._attr_unique_id = (
+            f"{self.coordinator.power_flow_info.unique_id}"
+            f"-power_flow-{self.entity_description.key}"
+        )
+
+
 class StorageSensor(FroniusEntity, SensorEntity):
     """Defines a Fronius storage device sensor entity."""
+
+    coordinator: FroniusStorageUpdateCoordinator
 
     def __init__(self, *args, **kwargs) -> None:
         """Set up an individual Fronius storage sensor."""

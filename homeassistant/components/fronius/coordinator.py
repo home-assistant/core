@@ -14,10 +14,11 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import FroniusInverterInfo, SolarNetId
+from .const import SOLAR_NET_ID_POWER_FLOW, FroniusDeviceInfo, SolarNetId
 from .descriptions import (
     INVERTER_ENTITY_DESCRIPTIONS,
     METER_ENTITY_DESCRIPTIONS,
+    POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
 )
 
@@ -91,7 +92,7 @@ class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
 
     valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
-    def __init__(self, *args, inverter_info: FroniusInverterInfo, **kwargs) -> None:
+    def __init__(self, *args, inverter_info: FroniusDeviceInfo, **kwargs) -> None:
         """Set up a Fronius inverter device scope coordinator."""
         super().__init__(*args, **kwargs)
         self.inverter_info = inverter_info
@@ -113,6 +114,22 @@ class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
         """Return data per solar net id from pyfronius."""
         data = await self.fronius.current_system_meter_data()
         return data["meters"]
+
+
+class FroniusPowerFlowUpdateCoordinator(_FroniusUpdateCoordinator):
+    """Query Fronius power flow endpoint and keep track of seen conditions."""
+
+    valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
+
+    def __init__(self, *args, power_flow_info: FroniusDeviceInfo, **kwargs) -> None:
+        """Set up a Fronius power flow coordinator."""
+        super().__init__(*args, **kwargs)
+        self.power_flow_info = power_flow_info
+
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.fronius.current_power_flow()
+        return {SOLAR_NET_ID_POWER_FLOW: data}
 
 
 class FroniusStorageUpdateCoordinator(_FroniusUpdateCoordinator):

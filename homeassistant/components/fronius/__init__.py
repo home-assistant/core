@@ -14,10 +14,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, FroniusInverterInfo
+from .const import DOMAIN, FroniusDeviceInfo
 from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
+    FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
 
@@ -63,6 +64,7 @@ class FroniusSolarNet:
         self.bridge: Fronius = self._init_bridge()
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
+        self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
 
     @callback
@@ -73,7 +75,8 @@ class FroniusSolarNet:
 
     async def init_devices(self):
         """Initialize DataUpdateCoordinators for SolarNet devices."""
-        for inverter_info in await self._get_inverter_infos():
+        _inverter_infos = await self._get_inverter_infos()
+        for inverter_info in _inverter_infos:
             coordinator = FroniusInverterUpdateCoordinator(
                 hass=self.hass,
                 fronius=self.bridge,
@@ -94,6 +97,19 @@ class FroniusSolarNet:
                 update_interval=self.update_interval,
             )
         )
+        # TODO: use logger as device if available or create SolarNet device
+        # instead of adding to first inverter
+        power_flow_info = _inverter_infos[0]
+        self.power_flow_coordinator = FroniusPowerFlowUpdateCoordinator(
+            hass=self.hass,
+            fronius=self.bridge,
+            logger=_LOGGER,
+            name=f"{DOMAIN}_power_flow_{self.url}",
+            update_interval=self.update_interval,
+            power_flow_info=power_flow_info,
+        )
+        await self.power_flow_coordinator.async_config_entry_first_refresh()
+
         self.storage_coordinator = await self._init_optional_coordinator(
             FroniusStorageUpdateCoordinator(
                 hass=self.hass,
@@ -103,18 +119,16 @@ class FroniusSolarNet:
                 update_interval=self.update_interval,
             )
         )
-
-        # power_flow
         # logger_info
 
-    async def _get_inverter_infos(self) -> list[FroniusInverterInfo]:
+    async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
         try:
             _inverter_info = await self.bridge.inverter_info()
         except FroniusError as err:
             raise ConfigEntryNotReady from err
 
-        inverter_infos: list[FroniusInverterInfo] = []
+        inverter_infos: list[FroniusDeviceInfo] = []
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
             unique_id = inverter["unique_id"]["value"]
@@ -128,7 +142,7 @@ class FroniusSolarNet:
                 # TODO: via_device? entry_type?
             )
             inverter_infos.append(
-                FroniusInverterInfo(
+                FroniusDeviceInfo(
                     device_info=device_info,
                     solar_net_id=solar_net_id,
                     unique_id=unique_id,
