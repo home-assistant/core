@@ -60,10 +60,8 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 brother = Brother(user_input[CONF_HOST], snmp_engine=snmp_engine)
                 await brother.async_update()
-
                 await self.async_set_unique_id(brother.serial.lower())
                 self._abort_if_unique_id_configured()
-
                 title = f"{brother.model} {brother.serial}"
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
@@ -90,9 +88,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         snmp_engine = get_snmp_engine(self.hass)
+        model = discovery_info["properties"]["product"]
 
-        self.brother = Brother(self.host, snmp_engine=snmp_engine)
         try:
+            self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel):
             return self.async_abort(reason="cannot_connect")
