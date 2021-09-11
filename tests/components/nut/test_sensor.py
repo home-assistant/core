@@ -21,7 +21,6 @@ async def test_pr3000rt2u(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -47,7 +46,6 @@ async def test_cp1350c(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -72,7 +70,6 @@ async def test_5e850i(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -97,7 +94,6 @@ async def test_5e650i(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online Battery Charging",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -125,7 +121,6 @@ async def test_backupsses600m1(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -152,7 +147,6 @@ async def test_cp1500pfclcd(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -177,7 +171,6 @@ async def test_dl650elcd(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
@@ -202,7 +195,6 @@ async def test_blazer_usb(hass):
     expected_attributes = {
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
-        "state": "Online",
         "unit_of_measurement": PERCENTAGE,
     }
     # Only test for a subset of attributes in case
