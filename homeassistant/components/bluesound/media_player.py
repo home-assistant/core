@@ -193,8 +193,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for player in target_players:
             await getattr(player, method["method"])(**params)
 
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
+    for service, method in SERVICE_TO_METHOD.items():
+        schema = method["schema"]
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=schema
         )
@@ -850,7 +850,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             _LOGGER.error("Master not found %s", master_device)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """List members in group."""
         attributes = {}
         if self._group_list:

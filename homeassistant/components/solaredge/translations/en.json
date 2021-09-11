@@ -1,14 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "site_exists": "This site_id is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
             "already_configured": "Device is already configured",
             "could_not_connect": "Could not connect to the solaredge API",
             "invalid_api_key": "Invalid API key",
-            "site_exists": "This site_id is already configured",
             "site_not_active": "The site is not active"
         },
         "step": {

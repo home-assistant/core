@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -12,7 +12,7 @@
                 "data": {
                     "resources": "Ressourcen"
                 },
-                "title": "W\u00e4hlen Sie die zu \u00fcberwachenden Ressourcen aus"
+                "title": "W\u00e4hle die zu \u00fcberwachenden Ressourcen aus"
             },
             "ups": {
                 "data": {
@@ -28,18 +28,22 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "title": "Stellen Sie eine Verbindung zum NUT-Server her"
+                "title": "Stelle eine Verbindung zum NUT-Server her"
             }
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "init": {
                 "data": {
                     "resources": "Ressourcen",
                     "scan_interval": "Scan-Intervall (Sekunden)"
                 },
-                "description": "W\u00e4hlen Sie Sensorressourcen."
+                "description": "W\u00e4hle Sensorressourcen."
             }
         }
     }

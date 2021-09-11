@@ -1,0 +1,108 @@
+{
+  "accountId": "account-id-1",
+  "country": "LU",
+  "vehicleLinks": [
+    {
+      "brand": "RENAULT",
+      "vin": "VF1AAAAA555777123",
+      "status": "ACTIVE",
+      "linkType": "USER",
+      "garageBrand": "RENAULT",
+      "mileage": 346,
+      "startDate": "2020-06-12",
+      "createdDate": "2020-06-12T15:02:00.555432Z",
+      "lastModifiedDate": "2020-06-15T06:21:43.762467Z",
+      "cancellationReason": {},
+      "connectedDriver": {
+        "role": "MAIN_DRIVER",
+        "createdDate": "2020-06-15T06:20:39.107794Z",
+        "lastModifiedDate": "2020-06-15T06:20:39.107794Z"
+      },
+      "vehicleDetails": {
+        "vin": "VF1AAAAA555777123",
+        "engineType": "H5H",
+        "engineRatio": "470",
+        "modelSCR": "CP1",
+        "deliveryCountry": {
+          "code": "BE",
+          "label": "BELGIQUE"
+        },
+        "family": {
+          "code": "XJB",
+          "label": "FAMILLE B+X OVER",
+          "group": "007"
+        },
+        "tcu": {
+          "code": "AIVCT",
+          "label": "AVEC BOITIER CONNECT AIVC",
+          "group": "E70"
+        },
+        "navigationAssistanceLevel": {
+          "code": "",
+          "label": "",
+          "group": ""
+        },
+        "battery": {
+          "code": "SANBAT",
+          "label": "SANS BATTERIE",
+          "group": "968"
+        },
+        "radioType": {
+          "code": "NA406",
+          "label": "A-IVIMINDL, 2BO + 2BI + 2T, MICRO-DOUBLE, FM1/DAB+FM2",
+          "group": "425"
+        },
+        "registrationCountry": {
+          "code": "BE"
+        },
+        "brand": {
+          "label": "RENAULT"
+        },
+        "model": {
+          "code": "XJB1SU",
+          "label": "CAPTUR II",
+          "group": "971"
+        },
+        "gearbox": {
+          "code": "BVA7",
+          "label": "BOITE DE VITESSE AUTOMATIQUE 7 RAPPORTS",
+          "group": "427"
+        },
+        "version": {
+          "code": "ITAMFHA 6TH"
+        },
+        "energy": {
+          "code": "ESS",
+          "label": "ESSENCE",
+          "group": "019"
+        },
+        "registrationNumber": "REG-NUMBER",
+        "vcd": "ADR00/DLIGM2/PGPRT2/FEUAR3/CDVIT1/SKTPOU/SKTPGR/SSCCPC/SSPREM/FDIU2/MAPSTD/RCALL/MET04/DANGMO/ECOMOD/SSRCAR/AIVCT/AVGSI/TPRPE/TSGNE/2TON/ITPK7/MLEXP1/SPERTA/SSPERG/SPERTP/VOLCHA/SREACT/AVOSP1/SWALBO/DWGE01/AVC1A/1234Y/AEBS07/PRAHL/AVCAM/STANDA/XJB/HJB/EA3/MF/ESS/DG/TEMP/TR4X2/AFURGE/RVDIST/ABS/SBARTO/CA02/TOPAN/PBNCH/LAC/VSTLAR/CPE/RET04/2RVLG/RALU17/CEAVRH/AIRBA2/SERIE/DRA/DRAP05/HARM01/ATAR03/SGAV02/SGAR02/BIXPE/BANAL/KM/TPRM3/AVREPL/SSDECA/SFIRBA/ABLAVI/ESPHSA/FPAS2/ALEVA/SCACBA/SOP03C/SSADPC/STHPLG/SKTGRV/VLCUIR/RETIN2/TRSEV1/REPNTC/LVAVIP/LVAREI/SASURV/KTGREP/SGACHA/BEL01/APL03/FSTPO/ALOUC5/CMAR3P/FIPOU2/NA406/BVA7/ECLHB4/RDIF10/PNSTRD/ISOFIX/ENPH01/HRGM01/SANFLT/CSRGAC/SANACF/SDPCLV/TLRP00/SPRODI/SAN613/AVFAP/AIRBDE/CHC03/E06T/SAN806/SSPTLP/SANCML/SSFLEX/SDRQAR/SEXTIN/M2019/PHAS1/SPRTQT/SAN913/STHABT/SSTYAD/HYB01/SSCABA/SANBAT/VEC012/XJB1SU/SSNBT/H5H",
+        "assets": [
+          {
+            "assetType": "PICTURE",
+            "renditions": [
+              {
+                "resolutionType": "ONE_MYRENAULT_LARGE",
+                "url": "https: //3dv2.renault.com/ImageFromBookmark?configuration=ADR00%2FDLIGM2%2FPGPRT2%2FFEUAR3%2FCDVIT1%2FSSCCPC%2FRCALL%2FMET04%2FDANGMO%2FSSRCAR%2FAVGSI%2FITPK7%2FMLEXP1%2FSPERTA%2FSSPERG%2FSPERTP%2FVOLCHA%2FSREACT%2FDWGE01%2FAVCAM%2FHJB%2FEA3%2FESS%2FDG%2FTEMP%2FTR4X2%2FRVDIST%2FSBARTO%2FCA02%2FTOPAN%2FPBNCH%2FVSTLAR%2FCPE%2FRET04%2FRALU17%2FDRA%2FDRAP05%2FHARM01%2FBIXPE%2FKM%2FSSDECA%2FESPHSA%2FFPAS2%2FALEVA%2FSOP03C%2FSSADPC%2FVLCUIR%2FRETIN2%2FREPNTC%2FLVAVIP%2FLVAREI%2FSGACHA%2FALOUC5%2FNA406%2FBVA7%2FECLHB4%2FRDIF10%2FCSRGAC%2FSANACF%2FTLRP00%2FAIRBDE%2FCHC03%2FSSPTLP%2FSPRTQT%2FSAN913%2FHYB01%2FH5H&databaseId=3e814da7-766d-4039-ac69-f001a1f738c8&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_LARGE"
+              },
+              {
+                "resolutionType": "ONE_MYRENAULT_SMALL",
+                "url": "https: //3dv2.renault.com/ImageFromBookmark?configuration=ADR00%2FDLIGM2%2FPGPRT2%2FFEUAR3%2FCDVIT1%2FSSCCPC%2FRCALL%2FMET04%2FDANGMO%2FSSRCAR%2FAVGSI%2FITPK7%2FMLEXP1%2FSPERTA%2FSSPERG%2FSPERTP%2FVOLCHA%2FSREACT%2FDWGE01%2FAVCAM%2FHJB%2FEA3%2FESS%2FDG%2FTEMP%2FTR4X2%2FRVDIST%2FSBARTO%2FCA02%2FTOPAN%2FPBNCH%2FVSTLAR%2FCPE%2FRET04%2FRALU17%2FDRA%2FDRAP05%2FHARM01%2FBIXPE%2FKM%2FSSDECA%2FESPHSA%2FFPAS2%2FALEVA%2FSOP03C%2FSSADPC%2FVLCUIR%2FRETIN2%2FREPNTC%2FLVAVIP%2FLVAREI%2FSGACHA%2FALOUC5%2FNA406%2FBVA7%2FECLHB4%2FRDIF10%2FCSRGAC%2FSANACF%2FTLRP00%2FAIRBDE%2FCHC03%2FSSPTLP%2FSPRTQT%2FSAN913%2FHYB01%2FH5H&databaseId=3e814da7-766d-4039-ac69-f001a1f738c8&bookmarkSet=RSITE&bookmark=EXT_34_DESSUS&profile=HELIOS_OWNERSERVICES_SMALL_V2"
+              }
+            ]
+          }
+        ],
+        "yearsOfMaintenance": 12,
+        "connectivityTechnology": "NONE",
+        "easyConnectStore": false,
+        "electrical": false,
+        "rlinkStore": false,
+        "deliveryDate": "2020-06-17",
+        "retrievedFromDhs": false,
+        "engineEnergyType": "OTHER",
+        "radioCode": "1234"
+      }
+    }
+  ]
+}

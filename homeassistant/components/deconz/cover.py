@@ -2,7 +2,8 @@
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_WINDOW,
+    DEVICE_CLASS_DAMPER,
+    DEVICE_CLASS_SHADE,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
@@ -17,9 +18,21 @@ from homeassistant.components.cover import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import COVER_TYPES, DAMPERS, NEW_LIGHT, WINDOW_COVERS
+from .const import (
+    COVER_TYPES,
+    LEVEL_CONTROLLABLE_OUTPUT,
+    NEW_LIGHT,
+    WINDOW_COVERING_CONTROLLER,
+    WINDOW_COVERING_DEVICE,
+)
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
+
+DEVICE_CLASS = {
+    LEVEL_CONTROLLABLE_OUTPUT: DEVICE_CLASS_DAMPER,
+    WINDOW_COVERING_CONTROLLER: DEVICE_CLASS_SHADE,
+    WINDOW_COVERING_DEVICE: DEVICE_CLASS_SHADE,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -42,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_cover
         )
@@ -60,29 +73,18 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Set up cover device."""
         super().__init__(device, gateway)
 
-        self._features = SUPPORT_OPEN
-        self._features |= SUPPORT_CLOSE
-        self._features |= SUPPORT_STOP
-        self._features |= SUPPORT_SET_POSITION
+        self._attr_supported_features = SUPPORT_OPEN
+        self._attr_supported_features |= SUPPORT_CLOSE
+        self._attr_supported_features |= SUPPORT_STOP
+        self._attr_supported_features |= SUPPORT_SET_POSITION
 
         if self._device.tilt is not None:
-            self._features |= SUPPORT_OPEN_TILT
-            self._features |= SUPPORT_CLOSE_TILT
-            self._features |= SUPPORT_STOP_TILT
-            self._features |= SUPPORT_SET_TILT_POSITION
+            self._attr_supported_features |= SUPPORT_OPEN_TILT
+            self._attr_supported_features |= SUPPORT_CLOSE_TILT
+            self._attr_supported_features |= SUPPORT_STOP_TILT
+            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
-
-    @property
-    def device_class(self):
-        """Return the class of the cover."""
-        if self._device.type in DAMPERS:
-            return "damper"
-        if self._device.type in WINDOW_COVERS:
-            return DEVICE_CLASS_WINDOW
+        self._attr_device_class = DEVICE_CLASS.get(self._device.type)
 
     @property
     def current_cover_position(self):

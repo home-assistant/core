@@ -3,5 +3,6 @@
   "name": "Ombi",
   "documentation": "https://www.home-assistant.io/integrations/ombi/",
   "codeowners": ["@larssont"],
-  "requirements": ["pyombi==0.1.10"]
+  "requirements": ["pyombi==0.1.10"],
+  "iot_class": "local_polling"
 }

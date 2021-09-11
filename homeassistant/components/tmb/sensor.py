@@ -6,10 +6,9 @@ from requests import HTTPError
 from tmb import IBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class TMBSensor(Entity):
+class TMBSensor(SensorEntity):
     """Implementation of a TMB line/stop Sensor."""
 
     def __init__(self, ibus_client, stop, line, name):
@@ -86,7 +85,7 @@ class TMBSensor(Entity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
@@ -96,12 +95,12 @@ class TMBSensor(Entity):
         return f"{self._stop}_{self._line}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

@@ -6,13 +6,7 @@ import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get_registry as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -283,143 +277,6 @@ async def test_setup_serial_manual_fail(com_mock, hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.connect",
-    serial_connect,
-)
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PySerialTransport.close",
-    return_value=None,
-)
-async def test_import_serial(connect_mock, hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "RFXTRX"
-    assert result["data"] == {
-        "host": None,
-        "port": None,
-        "device": "/dev/tty123",
-        "debug": False,
-    }
-
-
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    return_value=None,
-)
-async def test_import_network(connect_mock, hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "localhost", "port": 1234, "device": None, "debug": False},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "RFXTRX"
-    assert result["data"] == {
-        "host": "localhost",
-        "port": 1234,
-        "device": None,
-        "debug": False,
-    }
-
-
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    side_effect=OSError,
-)
-async def test_import_network_connection_fail(connect_mock, hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "localhost", "port": 1234, "device": None, "debug": False},
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_import_update(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": False,
-            "devices": {},
-        },
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            "host": None,
-            "port": None,
-            "device": "/dev/tty123",
-            "debug": True,
-            "devices": {},
-        },
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_import_migrate(hass):
-    """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"host": None, "port": None, "device": "/dev/tty123", "debug": False},
-        unique_id=DOMAIN,
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": None,
-                "port": None,
-                "device": "/dev/tty123",
-                "debug": True,
-                "automatic_add": True,
-                "devices": {},
-            },
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-    assert entry.data["devices"] == {}
-
-
 async def test_options_global(hass):
     """Test if we can set global options."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -610,8 +467,8 @@ async def test_options_add_remove_device(hass):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
 
@@ -704,8 +561,8 @@ async def test_options_replace_sensor_device(hass):
     )
     assert state
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     old_device = next(
         (
@@ -751,7 +608,7 @@ async def test_options_replace_sensor_device(hass):
 
     await hass.async_block_till_done()
 
-    entity_registry = await async_get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
@@ -843,8 +700,8 @@ async def test_options_replace_control_device(hass):
     state = hass.states.get("switch.ac_1118cdea_2")
     assert state
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     old_device = next(
         (
@@ -890,7 +747,7 @@ async def test_options_replace_control_device(hass):
 
     await hass.async_block_till_done()
 
-    entity_registry = await async_get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("binary_sensor.ac_118cdea_2")
     assert entry
@@ -941,8 +798,8 @@ async def test_options_remove_multiple_devices(hass):
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert state
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert len(device_entries) == 3
 
@@ -1061,8 +918,8 @@ async def test_options_add_and_configure_device(hass):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
 
@@ -1151,8 +1008,8 @@ async def test_options_configure_rfy_cover_device(hass):
 
     assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
 

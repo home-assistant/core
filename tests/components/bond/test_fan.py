@@ -1,11 +1,17 @@
 """Tests for the Bond fan device."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 from bond_api import Action, DeviceType, Direction
+import pytest
 
 from homeassistant import core
 from homeassistant.components import fan
+from homeassistant.components.bond.const import (
+    DOMAIN as BOND_DOMAIN,
+    SERVICE_SET_FAN_SPEED_BELIEF,
+)
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_SPEED,
@@ -18,12 +24,15 @@ from homeassistant.components.fan import (
     SPEED_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
     help_test_entity_available,
     patch_bond_action,
+    patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
     setup_platform,
 )
@@ -41,12 +50,17 @@ def ceiling_fan(name: str):
 
 
 async def turn_fan_on(
-    hass: core.HomeAssistant, fan_id: str, speed: Optional[str] = None
+    hass: core.HomeAssistant,
+    fan_id: str,
+    speed: str | None = None,
+    percentage: int | None = None,
 ) -> None:
     """Turn the fan on at the specified speed."""
     service_data = {ATTR_ENTITY_ID: fan_id}
     if speed:
         service_data[fan.ATTR_SPEED] = speed
+    if percentage:
+        service_data[fan.ATTR_PERCENTAGE] = percentage
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
@@ -66,7 +80,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
@@ -93,13 +107,13 @@ async def test_non_standard_speed_list(hass: core.HomeAssistant):
         with patch_bond_action() as mock_set_speed_low:
             await turn_fan_on(hass, "fan.name_1", fan.SPEED_LOW)
         mock_set_speed_low.assert_called_once_with(
-            "test-device-id", Action.set_speed(1)
+            "test-device-id", Action.set_speed(2)
         )
 
         with patch_bond_action() as mock_set_speed_medium:
             await turn_fan_on(hass, "fan.name_1", fan.SPEED_MEDIUM)
         mock_set_speed_medium.assert_called_once_with(
-            "test-device-id", Action.set_speed(3)
+            "test-device-id", Action.set_speed(4)
         )
 
         with patch_bond_action() as mock_set_speed_high:
@@ -133,6 +147,58 @@ async def test_turn_on_fan_with_speed(hass: core.HomeAssistant):
         await turn_fan_on(hass, "fan.name_1", fan.SPEED_LOW)
 
     mock_set_speed.assert_called_with("test-device-id", Action.set_speed(1))
+
+
+async def test_turn_on_fan_with_percentage_3_speeds(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to set speed API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=10)
+
+    mock_set_speed.assert_called_with("test-device-id", Action.set_speed(1))
+
+    mock_set_speed.reset_mock()
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=50)
+
+    mock_set_speed.assert_called_with("test-device-id", Action.set_speed(2))
+
+    mock_set_speed.reset_mock()
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=100)
+
+    mock_set_speed.assert_called_with("test-device-id", Action.set_speed(3))
+
+
+async def test_turn_on_fan_with_percentage_6_speeds(hass: core.HomeAssistant):
+    """Tests that turn on command delegates to set speed API."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+        props={"max_speed": 6},
+    )
+
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=10)
+
+    mock_set_speed.assert_called_with("test-device-id", Action.set_speed(1))
+
+    mock_set_speed.reset_mock()
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=50)
+
+    mock_set_speed.assert_called_with("test-device-id", Action.set_speed(3))
+
+    mock_set_speed.reset_mock()
+    with patch_bond_action() as mock_set_speed, patch_bond_device_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=100)
+
+    mock_set_speed.assert_called_with("test-device-id", Action.set_speed(6))
 
 
 async def test_turn_on_fan_without_speed(hass: core.HomeAssistant):
@@ -193,6 +259,63 @@ async def test_turn_off_fan(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     mock_turn_off.assert_called_once_with("test-device-id", Action.turn_off())
+
+
+async def test_set_speed_belief_speed_zero(hass: core.HomeAssistant):
+    """Tests that set power belief service delegates to API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_FAN_SPEED_BELIEF,
+            {ATTR_ENTITY_ID: "fan.name_1", ATTR_SPEED: 0},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with(
+        "test-device-id", Action.set_power_state_belief(False)
+    )
+
+
+async def test_set_speed_belief_speed_api_error(hass: core.HomeAssistant):
+    """Tests that set power belief service delegates to API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with pytest.raises(
+        HomeAssistantError
+    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_FAN_SPEED_BELIEF,
+            {ATTR_ENTITY_ID: "fan.name_1", ATTR_SPEED: 100},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
+async def test_set_speed_belief_speed_100(hass: core.HomeAssistant):
+    """Tests that set power belief service delegates to API."""
+    await setup_platform(
+        hass, FAN_DOMAIN, ceiling_fan("name-1"), bond_device_id="test-device-id"
+    )
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BOND_DOMAIN,
+            SERVICE_SET_FAN_SPEED_BELIEF,
+            {ATTR_ENTITY_ID: "fan.name_1", ATTR_SPEED: 100},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_any_call("test-device-id", Action.set_power_state_belief(True))
+    mock_action.assert_called_with("test-device-id", Action.set_speed_belief(3))
 
 
 async def test_update_reports_fan_on(hass: core.HomeAssistant):

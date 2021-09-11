@@ -24,11 +24,6 @@ class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
 
 
-async def async_setup(hass, config):
-    """Set up the Dialogflow component."""
-    return True
-
-
 async def handle_webhook(hass, webhook_id, request):
     """Handle incoming webhook with Dialogflow requests."""
     message = await request.json()

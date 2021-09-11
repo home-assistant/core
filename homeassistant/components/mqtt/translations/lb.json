@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Entdeckung aktiv\u00e9ieren"
                 },
-                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam MQTT broker ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
-                "title": "MQTT Broker via Hass.io add-on"
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam MQTT broker ze verbannen dee vum Supervisor add-on {addon} bereet gestallt g\u00ebtt?",
+                "title": "MQTT Broker via Supervisor add-on"
             }
         }
     },

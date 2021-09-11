@@ -1,5 +1,6 @@
 """The ozw integration."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 
@@ -18,11 +19,10 @@ from openzwavemqtt.const import (
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 from openzwavemqtt.util.mqtt_client import MQTTClient
-import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -36,6 +36,7 @@ from .const import (
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
+    NODES_VALUES,
     PLATFORMS,
     TOPIC_OPENZWAVE,
 )
@@ -51,24 +52,20 @@ from .websocket_api import async_register_api
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Initialize basic config of ozw component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up ozw from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
     ozw_data[DATA_UNSUBSCRIBE] = []
 
     data_nodes = {}
-    data_values = {}
+    hass.data[DOMAIN][NODES_VALUES] = data_values = {}
     removed_nodes = []
     manager_options = {"topic_prefix": f"{TOPIC_OPENZWAVE}/"}
 
@@ -96,12 +93,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         manager_options["send_message"] = mqtt_client.send_message
 
     else:
-        if "mqtt" not in hass.config.components:
+        mqtt_entries = hass.config_entries.async_entries("mqtt")
+        if not mqtt_entries or mqtt_entries[0].state is not ConfigEntryState.LOADED:
             _LOGGER.error("MQTT integration is not set up")
             return False
 
+        mqtt_entry = mqtt_entries[0]  # MQTT integration only has one entry.
+
         @callback
         def send_message(topic, payload):
+            if mqtt_entry.state is not ConfigEntryState.LOADED:
+                _LOGGER.error("MQTT integration is not set up")
+                return
+
             mqtt.async_publish(hass, topic, json.dumps(payload))
 
         manager_options["send_message"] = send_message
@@ -146,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # The actual removal action of a Z-Wave node is reported as instance event
         # Only when this event is detected we cleanup the device and entities from hass
         # Note: Find a more elegant way of doing this, e.g. a notification of this event from OZW
-        if event in ["removenode", "removefailednode"] and "Node" in event_data:
+        if event in ("removenode", "removefailednode") and "Node" in event_data:
             removed_nodes.append(event_data["Node"])
 
     @callback
@@ -156,9 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         node_id = value.node.node_id
 
         # Filter out CommandClasses we're definitely not interested in.
-        if value.command_class in [
-            CommandClass.MANUFACTURER_SPECIFIC,
-        ]:
+        if value.command_class in (CommandClass.MANUFACTURER_SPECIFIC,):
             return
 
         _LOGGER.debug(
@@ -209,10 +211,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             value.command_class,
         )
         # Handle a scene activation message
-        if value.command_class in [
+        if value.command_class in (
             CommandClass.SCENE_ACTIVATION,
             CommandClass.CENTRAL_SCENE,
-        ]:
+        ):
             async_handle_scene_activated(hass, value)
             return
 
@@ -260,10 +262,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def start_platforms():
         await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
-            ]
+            *(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
+            )
         )
         if entry.data.get(CONF_USE_ADDON):
             mqtt_client_task = asyncio.create_task(mqtt_client.start_client(manager))
@@ -274,10 +276,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 Do not unsubscribe the manager topic.
                 """
                 mqtt_client_task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await mqtt_client_task
-                except asyncio.CancelledError:
-                    pass
 
             ozw_data[DATA_UNSUBSCRIBE].append(
                 hass.bus.async_listen_once(
@@ -298,17 +298,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # cleanup platforms
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
 
@@ -348,7 +341,7 @@ async def async_handle_remove_node(hass: HomeAssistant, node: OZWNode):
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
     dev_id = create_device_id(node)
-    device = dev_registry.async_get_device({(DOMAIN, dev_id)}, set())
+    device = dev_registry.async_get_device({(DOMAIN, dev_id)})
     if not device:
         return
     devices_to_remove = [device.id]
@@ -372,7 +365,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
     dev_id = create_device_id(node)
-    device = dev_registry.async_get_device({(DOMAIN, dev_id)}, set())
+    device = dev_registry.async_get_device({(DOMAIN, dev_id)})
     if not device:
         return
     # update device in device registry with (updated) info

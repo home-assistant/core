@@ -4,6 +4,8 @@ AUTHENTICATE_TIMEOUT = 5
 
 DOMAIN = "roon"
 
+CONF_ROON_ID = "roon_server_id"
+
 DATA_CONFIGS = "roon_configs"
 
 DEFAULT_NAME = "Roon Labs Music Player"

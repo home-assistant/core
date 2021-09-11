@@ -9,14 +9,13 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     ImageProcessingFaceEntity,
 )
+from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import split_entity_id
 
 # pylint: disable=unused-import
 from homeassistant.components.image_processing import (  # noqa: F401, isort:skip
     PLATFORM_SCHEMA,
 )
-
-ATTR_LOCATION = "location"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

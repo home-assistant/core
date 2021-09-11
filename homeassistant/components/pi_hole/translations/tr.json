@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "host": "Ana Bilgisayar",
+                    "location": "Konum",
+                    "port": "Port",
+                    "statistics_only": "Yaln\u0131zca \u0130statistikler"
+                }
+            }
+        }
+    }
+}

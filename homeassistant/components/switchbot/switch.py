@@ -1,7 +1,9 @@
 """Support for Switchbot."""
-from typing import Any, Dict
+from __future__ import annotations
 
-# pylint: disable=import-error, no-member
+from typing import Any
+
+# pylint: disable=import-error
 import switchbot
 import voluptuous as vol
 
@@ -35,8 +37,8 @@ class SwitchBot(SwitchEntity, RestoreEntity):
     def __init__(self, mac, name, password) -> None:
         """Initialize the Switchbot."""
 
-        self._state = None
-        self._last_run_success = None
+        self._state: bool | None = None
+        self._last_run_success: bool | None = None
         self._name = name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac, password=password)
@@ -73,7 +75,7 @@ class SwitchBot(SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._state
+        return bool(self._state)
 
     @property
     def unique_id(self) -> str:
@@ -86,6 +88,6 @@ class SwitchBot(SwitchEntity, RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}

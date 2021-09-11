@@ -1,12 +1,11 @@
 """deCONZ binary sensor platform tests."""
 
-from copy import deepcopy
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_VIBRATION,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -14,121 +13,185 @@ from homeassistant.components.deconz.const import (
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
-from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-SENSORS = {
-    "1": {
-        "id": "Presence sensor id",
-        "name": "Presence sensor",
-        "type": "ZHAPresence",
-        "state": {"dark": False, "presence": False},
-        "config": {"on": True, "reachable": True, "temperature": 10},
-        "uniqueid": "00:00:00:00:00:00:00:00-00",
-    },
-    "2": {
-        "id": "Temperature sensor id",
-        "name": "Temperature sensor",
-        "type": "ZHATemperature",
-        "state": {"temperature": False},
-        "config": {},
-        "uniqueid": "00:00:00:00:00:00:00:01-00",
-    },
-    "3": {
-        "id": "CLIP presence sensor id",
-        "name": "CLIP presence sensor",
-        "type": "CLIPPresence",
-        "state": {"presence": False},
-        "config": {},
-        "uniqueid": "00:00:00:00:00:00:00:02-00",
-    },
-    "4": {
-        "id": "Vibration sensor id",
-        "name": "Vibration sensor",
-        "type": "ZHAVibration",
-        "state": {
-            "orientation": [1, 2, 3],
-            "tiltangle": 36,
-            "vibration": True,
-            "vibrationstrength": 10,
-        },
-        "config": {"on": True, "reachable": True, "temperature": 10},
-        "uniqueid": "00:00:00:00:00:00:00:03-00",
-    },
-}
+from .test_gateway import (
+    DECONZ_WEB_REQUEST,
+    mock_deconz_request,
+    setup_deconz_integration,
+)
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, BINARY_SENSOR_DOMAIN, {"binary_sensor": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
-
-
-async def test_no_binary_sensors(hass):
+async def test_no_binary_sensors(hass, aioclient_mock):
     """Test that no sensors in deconz results in no sensor entities."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     """Test successful creation of binary sensor entities."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Presence sensor",
+                "type": "ZHAPresence",
+                "state": {"dark": False, "presence": False},
+                "config": {"on": True, "reachable": True, "temperature": 10},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+            "2": {
+                "name": "Temperature sensor",
+                "type": "ZHATemperature",
+                "state": {"temperature": False},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "3": {
+                "name": "CLIP presence sensor",
+                "type": "CLIPPresence",
+                "state": {"presence": False},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+            "4": {
+                "name": "Vibration sensor",
+                "type": "ZHAVibration",
+                "state": {
+                    "orientation": [1, 2, 3],
+                    "tiltangle": 36,
+                    "vibration": True,
+                    "vibrationstrength": 10,
+                },
+                "config": {"on": True, "reachable": True, "temperature": 10},
+                "uniqueid": "00:00:00:00:00:00:00:03-00",
+            },
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 5
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == STATE_OFF
-    assert presence_sensor.attributes["device_class"] == DEVICE_CLASS_MOTION
+    assert presence_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MOTION
+    presence_temp = hass.states.get("sensor.presence_sensor_temperature")
+    assert presence_temp.state == "0.1"
+    assert presence_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
     assert hass.states.get("binary_sensor.temperature_sensor") is None
     assert hass.states.get("binary_sensor.clip_presence_sensor") is None
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == STATE_ON
-    assert vibration_sensor.attributes["device_class"] == DEVICE_CLASS_VIBRATION
+    assert vibration_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_VIBRATION
+    vibration_temp = hass.states.get("sensor.vibration_sensor_temperature")
+    assert vibration_temp.state == "0.1"
+    assert vibration_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
 
-    state_changed_event = {
+    event_changed_sensor = {
         "t": "event",
         "e": "changed",
         "r": "sensors",
         "id": "1",
         "state": {"presence": True},
     }
-    gateway.api.event_handler(state_changed_event)
+    await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_ON
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
+    assert hass.states.get("binary_sensor.presence_sensor").state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensor(hass):
-    """Test that CLIP sensors can be allowed."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(
-        hass,
-        options={CONF_ALLOW_CLIP_SENSOR: True},
-        get_state_response=data,
+async def test_tampering_sensor(hass, aioclient_mock, mock_deconz_websocket):
+    """Verify tampering sensor works."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Presence sensor",
+                "type": "ZHAPresence",
+                "state": {"dark": False, "presence": False, "tampered": False},
+                "config": {"on": True, "reachable": True, "temperature": 10},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 3
+    presence_tamper = hass.states.get("binary_sensor.presence_sensor_tampered")
+    assert presence_tamper.state == STATE_OFF
+    assert presence_tamper.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_PROBLEM
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"tampered": True},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.presence_sensor_tampered").state == STATE_ON
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    assert (
+        hass.states.get("binary_sensor.presence_sensor_tampered").state
+        == STATE_UNAVAILABLE
     )
 
-    assert len(hass.states.async_all()) == 4
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_allow_clip_sensor(hass, aioclient_mock):
+    """Test that CLIP sensors can be allowed."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Presence sensor",
+                "type": "ZHAPresence",
+                "state": {"presence": False},
+                "config": {"on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+            "2": {
+                "name": "CLIP presence sensor",
+                "type": "CLIPPresence",
+                "state": {"presence": False},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+        }
+    }
+
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(
+            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
+        )
+
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
-    assert hass.states.get("binary_sensor.temperature_sensor") is None
     assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
-    assert hass.states.get("binary_sensor.vibration_sensor").state == STATE_ON
 
     # Disallow clip sensors
 
@@ -137,8 +200,8 @@ async def test_allow_clip_sensor(hass):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
-    assert hass.states.get("binary_sensor.clip_presence_sensor") is None
+    assert len(hass.states.async_all()) == 1
+    assert not hass.states.get("binary_sensor.clip_presence_sensor")
 
     # Allow clip sensors
 
@@ -147,67 +210,81 @@ async def test_allow_clip_sensor(hass):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("binary_sensor.clip_presence_sensor").state == STATE_OFF
 
 
-async def test_add_new_binary_sensor(hass):
+async def test_add_new_binary_sensor(hass, aioclient_mock, mock_deconz_websocket):
     """Test that adding a new binary sensor works."""
-    config_entry = await setup_deconz_integration(hass)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    assert len(hass.states.async_all()) == 0
-
-    state_added_event = {
+    event_added_sensor = {
         "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
-        "sensor": deepcopy(SENSORS["1"]),
+        "sensor": {
+            "id": "Presence sensor id",
+            "name": "Presence sensor",
+            "type": "ZHAPresence",
+            "state": {"presence": False},
+            "config": {"on": True, "reachable": True},
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
+        },
     }
-    gateway.api.event_handler(state_added_event)
+
+    await setup_deconz_integration(hass, aioclient_mock)
+    assert len(hass.states.async_all()) == 0
+
+    await mock_deconz_websocket(data=event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_OFF
 
 
-async def test_add_new_binary_sensor_ignored(hass):
+async def test_add_new_binary_sensor_ignored(
+    hass, aioclient_mock, mock_deconz_websocket
+):
     """Test that adding a new binary sensor is not allowed."""
-    config_entry = await setup_deconz_integration(
-        hass,
-        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
-    )
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    assert len(hass.states.async_all()) == 0
-
-    state_added_event = {
+    sensor = {
+        "name": "Presence sensor",
+        "type": "ZHAPresence",
+        "state": {"presence": False},
+        "config": {"on": True, "reachable": True},
+        "uniqueid": "00:00:00:00:00:00:00:00-00",
+    }
+    event_added_sensor = {
         "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
-        "sensor": deepcopy(SENSORS["1"]),
+        "sensor": sensor,
     }
-    gateway.api.event_handler(state_added_event)
+
+    config_entry = await setup_deconz_integration(
+        hass,
+        aioclient_mock,
+        options={CONF_MASTER_GATEWAY: True, CONF_ALLOW_NEW_DEVICES: False},
+    )
+
+    assert len(hass.states.async_all()) == 0
+
+    await mock_deconz_websocket(data=event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )
 
-    with patch(
-        "pydeconz.DeconzSession.request",
-        return_value={
-            "groups": {},
-            "lights": {},
-            "sensors": {"1": deepcopy(SENSORS["1"])},
-        },
-    ):
-        await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
-        await hass.async_block_till_done()
+    aioclient_mock.clear_requests()
+    data = {"groups": {}, "lights": {}, "sensors": {"1": sensor}}
+    mock_deconz_request(aioclient_mock, config_entry.data, data)
+
+    await hass.services.async_call(DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("binary_sensor.presence_sensor")

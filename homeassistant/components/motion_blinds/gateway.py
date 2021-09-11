@@ -30,7 +30,7 @@ class ConnectMotionGateway:
 
     async def async_connect_gateway(self, host, key):
         """Connect to the Motion Gateway."""
-        _LOGGER.debug("Initializing with host %s (key %s...)", host, key[:3])
+        _LOGGER.debug("Initializing with host %s (key %s)", host, key[:3])
         self._gateway_device = MotionGateway(
             ip=host, key=key, multicast=self._multicast
         )

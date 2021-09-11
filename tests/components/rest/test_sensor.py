@@ -1,7 +1,7 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from os import path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import respx
@@ -41,9 +41,11 @@ async def test_setup_missing_schema(hass):
 
 
 @respx.mock
-async def test_setup_failed_connect(hass):
+async def test_setup_failed_connect(hass, caplog):
     """Test setup when connection error occurs."""
-    respx.get("http://localhost").mock(side_effect=httpx.RequestError)
+    respx.get("http://localhost").mock(
+        side_effect=httpx.RequestError("server offline", request=MagicMock())
+    )
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
@@ -57,6 +59,7 @@ async def test_setup_failed_connect(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    assert "server offline" in caplog.text
 
 
 @respx.mock
@@ -89,6 +92,38 @@ async def test_setup_minimum(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
+
+
+@respx.mock
+async def test_manual_update(hass):
+    """Test setup with minimum configuration."""
+    await async_setup_component(hass, "homeassistant", {})
+    respx.get("http://localhost").respond(status_code=200, json={"data": "first"})
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "name": "mysensor",
+                "value_template": "{{ value_json.data }}",
+                "platform": "rest",
+                "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("sensor.mysensor").state == "first"
+
+    respx.get("http://localhost").respond(status_code=200, json={"data": "second"})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.mysensor"]},
+        blocking=True,
+    )
+    assert hass.states.get("sensor.mysensor").state == "second"
 
 
 @respx.mock

@@ -1,4 +1,5 @@
 """Test config validators."""
+from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
 import os
@@ -114,6 +115,25 @@ def test_url():
         "https://localhost/test/index.html",
         "http://home-assistant.io",
         "http://home-assistant.io/test/",
+        "https://community.home-assistant.io/",
+    ):
+        assert schema(value)
+
+
+def test_url_no_path():
+    """Test URL."""
+    schema = vol.Schema(cv.url_no_path)
+
+    for value in (
+        "https://localhost/test/index.html",
+        "http://home-assistant.io/test/",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "http://home-assistant.io",
         "https://community.home-assistant.io/",
     ):
         assert schema(value)
@@ -358,9 +378,42 @@ def test_service_schema():
             "service": "homeassistant.turn_on",
             "entity_id": ["light.kitchen", "light.ceiling"],
         },
+        {
+            "service": "light.turn_on",
+            "entity_id": "all",
+            "alias": "turn on kitchen lights",
+        },
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
+
+
+def test_entity_service_schema():
+    """Test make_entity_service_schema validation."""
+    schema = cv.make_entity_service_schema(
+        {vol.Required("required"): cv.positive_int, vol.Optional("optional"): cv.string}
+    )
+
+    options = (
+        {},
+        None,
+        {"entity_id": "light.kitchen"},
+        {"optional": "value", "entity_id": "light.kitchen"},
+        {"required": 1},
+        {"required": 2, "area_id": "kitchen", "foo": "bar"},
+        {"required": "str", "area_id": "kitchen"},
+    )
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            cv.SERVICE_SCHEMA(value)
+
+    options = (
+        {"required": 1, "entity_id": "light.kitchen"},
+        {"required": 2, "optional": "value", "device_id": "a_device"},
+        {"required": 3, "area_id": "kitchen"},
+    )
+    for value in options:
+        schema(value)
 
 
 def test_slug():
@@ -794,6 +847,77 @@ def test_deprecated_cant_find_module():
         )
 
 
+def test_deprecated_logger_with_config_attributes(caplog):
+    """Test if the logger outputs the correct message if the line and file attribute is available in config."""
+    file: str = "configuration.yaml"
+    line: int = 54
+    replacement = f"'mars' option near {file}:{line} is deprecated"
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__config_file__", file)
+    setattr(config, "__line__", line)
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+
+def test_deprecated_logger_with_one_config_attribute(caplog):
+    """Test if the logger outputs the correct message if only one of line and file attribute is available in config."""
+    file: str = "configuration.yaml"
+    line: int = 54
+    replacement = f"'mars' option near {file}:{line} is deprecated"
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__config_file__", file)
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement not in caplog.text
+    assert (
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+    config = OrderedDict([("mars", "blah")])
+    setattr(config, "__line__", line)
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement not in caplog.text
+    assert (
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+
+def test_deprecated_logger_without_config_attributes(caplog):
+    """Test if the logger outputs the correct message if the line and file attribute is not available in config."""
+    file: str = "configuration.yaml"
+    line: int = 54
+    replacement = f"'mars' option near {file}:{line} is deprecated"
+    config = OrderedDict([("mars", "blah")])
+
+    cv.deprecated("mars", replacement_key="jupiter", default=False)(config)
+
+    assert len(caplog.records) == 1
+    assert replacement not in caplog.text
+    assert (
+        "The 'mars' option is deprecated, please replace it with 'jupiter'"
+    ) in caplog.text
+
+    caplog.clear()
+    assert len(caplog.records) == 0
+
+
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency("beer", "soda"))
@@ -816,7 +940,7 @@ def test_has_at_most_one_key():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ({}, {"beer": None}, {"soda": None}):
+    for value in ({}, {"beer": None}, {"soda": None}, {vol.Optional("soda"): None}):
         schema(value)
 
 
@@ -828,7 +952,7 @@ def test_has_at_least_one_key():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in ({"beer": None}, {"soda": None}):
+    for value in ({"beer": None}, {"soda": None}, {vol.Required("soda"): None}):
         schema(value)
 
 
@@ -857,7 +981,7 @@ def test_socket_timeout():  # pylint: disable=invalid-name
     with pytest.raises(vol.Invalid):
         schema(-1)
 
-    assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
+    assert schema(None) == _GLOBAL_DEFAULT_TIMEOUT
 
     assert schema(1) == 1.0
 
@@ -947,7 +1071,7 @@ def test_key_value_schemas():
         schema(True)
         assert str(excinfo.value) == "Expected a dictionary"
 
-    for mode in None, "invalid":
+    for mode in None, {"a": "dict"}, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
         assert (
@@ -1007,4 +1131,19 @@ def test_whitespace():
             schema(value)
 
     for value in ("  ", "   "):
+        assert schema(value)
+
+
+def test_currency():
+    """Test currency validator."""
+    schema = vol.Schema(cv.currency)
+
+    for value in (
+        None,
+        "BTC",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ("EUR", "USD"):
         assert schema(value)

@@ -1,4 +1,9 @@
 """Constants for AccuWeather integration."""
+from __future__ import annotations
+
+from typing import Final
+
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -16,7 +21,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
 )
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     DEVICE_CLASS_TEMPERATURE,
     LENGTH_FEET,
@@ -32,19 +36,19 @@ from homeassistant.const import (
     UV_INDEX,
 )
 
-ATTRIBUTION = "Data provided by AccuWeather"
-ATTR_ICON = "icon"
-ATTR_FORECAST = CONF_FORECAST = "forecast"
-ATTR_LABEL = "label"
-ATTR_UNIT_IMPERIAL = "Imperial"
-ATTR_UNIT_METRIC = "Metric"
-COORDINATOR = "coordinator"
-DOMAIN = "accuweather"
-MANUFACTURER = "AccuWeather, Inc."
-NAME = "AccuWeather"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
+from .model import AccuWeatherSensorDescription
 
-CONDITION_CLASSES = {
+API_IMPERIAL: Final = "Imperial"
+API_METRIC: Final = "Metric"
+ATTRIBUTION: Final = "Data provided by AccuWeather"
+ATTR_FORECAST: Final = "forecast"
+CONF_FORECAST: Final = "forecast"
+DOMAIN: Final = "accuweather"
+MANUFACTURER: Final = "AccuWeather, Inc."
+MAX_FORECAST_DAYS: Final = 4
+NAME: Final = "AccuWeather"
+
+CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [33, 34, 37],
     ATTR_CONDITION_CLOUDY: [7, 8, 38],
     ATTR_CONDITION_EXCEPTIONAL: [24, 30, 31],
@@ -61,255 +65,263 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_WINDY: [32],
 }
 
-FORECAST_DAYS = [0, 1, 2, 3, 4]
-
-FORECAST_SENSOR_TYPES = {
-    "CloudCoverDay": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-cloudy",
-        ATTR_LABEL: "Cloud Cover Day",
-        ATTR_UNIT_METRIC: PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: PERCENTAGE,
-    },
-    "CloudCoverNight": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-cloudy",
-        ATTR_LABEL: "Cloud Cover Night",
-        ATTR_UNIT_METRIC: PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: PERCENTAGE,
-    },
-    "Grass": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:grass",
-        ATTR_LABEL: "Grass Pollen",
-        ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
-        ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
-    },
-    "HoursOfSun": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-partly-cloudy",
-        ATTR_LABEL: "Hours Of Sun",
-        ATTR_UNIT_METRIC: TIME_HOURS,
-        ATTR_UNIT_IMPERIAL: TIME_HOURS,
-    },
-    "Mold": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_LABEL: "Mold Pollen",
-        ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
-        ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
-    },
-    "Ozone": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:vector-triangle",
-        ATTR_LABEL: "Ozone",
-        ATTR_UNIT_METRIC: None,
-        ATTR_UNIT_IMPERIAL: None,
-    },
-    "Ragweed": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:sprout",
-        ATTR_LABEL: "Ragweed Pollen",
-        ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
-        ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
-    },
-    "RealFeelTemperatureMax": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "RealFeel Temperature Max",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "RealFeelTemperatureMin": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "RealFeel Temperature Min",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "RealFeelTemperatureShadeMax": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "RealFeel Temperature Shade Max",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "RealFeelTemperatureShadeMin": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "RealFeel Temperature Shade Min",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "ThunderstormProbabilityDay": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-lightning",
-        ATTR_LABEL: "Thunderstorm Probability Day",
-        ATTR_UNIT_METRIC: PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: PERCENTAGE,
-    },
-    "ThunderstormProbabilityNight": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-lightning",
-        ATTR_LABEL: "Thunderstorm Probability Night",
-        ATTR_UNIT_METRIC: PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: PERCENTAGE,
-    },
-    "Tree": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:tree-outline",
-        ATTR_LABEL: "Tree Pollen",
-        ATTR_UNIT_METRIC: CONCENTRATION_PARTS_PER_CUBIC_METER,
-        ATTR_UNIT_IMPERIAL: CONCENTRATION_PARTS_PER_CUBIC_METER,
-    },
-    "UVIndex": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-sunny",
-        ATTR_LABEL: "UV Index",
-        ATTR_UNIT_METRIC: UV_INDEX,
-        ATTR_UNIT_IMPERIAL: UV_INDEX,
-    },
-    "WindGustDay": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-windy",
-        ATTR_LABEL: "Wind Gust Day",
-        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
-    },
-    "WindGustNight": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-windy",
-        ATTR_LABEL: "Wind Gust Night",
-        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
-    },
-    "WindDay": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-windy",
-        ATTR_LABEL: "Wind Day",
-        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
-    },
-    "WindNight": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-windy",
-        ATTR_LABEL: "Wind Night",
-        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
-    },
-}
-
-OPTIONAL_SENSORS = (
-    "ApparentTemperature",
-    "CloudCover",
-    "CloudCoverDay",
-    "CloudCoverNight",
-    "DewPoint",
-    "Grass",
-    "Mold",
-    "Ozone",
-    "Ragweed",
-    "RealFeelTemperatureShade",
-    "RealFeelTemperatureShadeMax",
-    "RealFeelTemperatureShadeMin",
-    "Tree",
-    "WetBulbTemperature",
-    "WindChillTemperature",
-    "WindGust",
-    "WindGustDay",
-    "WindGustNight",
+FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
+    AccuWeatherSensorDescription(
+        key="CloudCoverDay",
+        icon="mdi:weather-cloudy",
+        name="Cloud Cover Day",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="CloudCoverNight",
+        icon="mdi:weather-cloudy",
+        name="Cloud Cover Night",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="Grass",
+        icon="mdi:grass",
+        name="Grass Pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="HoursOfSun",
+        icon="mdi:weather-partly-cloudy",
+        name="Hours Of Sun",
+        unit_metric=TIME_HOURS,
+        unit_imperial=TIME_HOURS,
+    ),
+    AccuWeatherSensorDescription(
+        key="Mold",
+        icon="mdi:blur",
+        name="Mold Pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="Ozone",
+        icon="mdi:vector-triangle",
+        name="Ozone",
+        unit_metric=None,
+        unit_imperial=None,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="Ragweed",
+        icon="mdi:sprout",
+        name="Ragweed Pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureMax",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="RealFeel Temperature Max",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureMin",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="RealFeel Temperature Min",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureShadeMax",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="RealFeel Temperature Shade Max",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureShadeMin",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="RealFeel Temperature Shade Min",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="ThunderstormProbabilityDay",
+        icon="mdi:weather-lightning",
+        name="Thunderstorm Probability Day",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+    ),
+    AccuWeatherSensorDescription(
+        key="ThunderstormProbabilityNight",
+        icon="mdi:weather-lightning",
+        name="Thunderstorm Probability Night",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+    ),
+    AccuWeatherSensorDescription(
+        key="Tree",
+        icon="mdi:tree-outline",
+        name="Tree Pollen",
+        unit_metric=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        unit_imperial=CONCENTRATION_PARTS_PER_CUBIC_METER,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="UVIndex",
+        icon="mdi:weather-sunny",
+        name="UV Index",
+        unit_metric=UV_INDEX,
+        unit_imperial=UV_INDEX,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindGustDay",
+        icon="mdi:weather-windy",
+        name="Wind Gust Day",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindGustNight",
+        icon="mdi:weather-windy",
+        name="Wind Gust Night",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        entity_registry_enabled_default=False,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindDay",
+        icon="mdi:weather-windy",
+        name="Wind Day",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindNight",
+        icon="mdi:weather-windy",
+        name="Wind Night",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+    ),
 )
 
-SENSOR_TYPES = {
-    "ApparentTemperature": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "Apparent Temperature",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "Ceiling": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-fog",
-        ATTR_LABEL: "Cloud Ceiling",
-        ATTR_UNIT_METRIC: LENGTH_METERS,
-        ATTR_UNIT_IMPERIAL: LENGTH_FEET,
-    },
-    "CloudCover": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-cloudy",
-        ATTR_LABEL: "Cloud Cover",
-        ATTR_UNIT_METRIC: PERCENTAGE,
-        ATTR_UNIT_IMPERIAL: PERCENTAGE,
-    },
-    "DewPoint": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "Dew Point",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "RealFeelTemperature": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "RealFeel Temperature",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "RealFeelTemperatureShade": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "RealFeel Temperature Shade",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "Precipitation": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-rainy",
-        ATTR_LABEL: "Precipitation",
-        ATTR_UNIT_METRIC: LENGTH_MILLIMETERS,
-        ATTR_UNIT_IMPERIAL: LENGTH_INCHES,
-    },
-    "PressureTendency": {
-        ATTR_DEVICE_CLASS: "accuweather__pressure_tendency",
-        ATTR_ICON: "mdi:gauge",
-        ATTR_LABEL: "Pressure Tendency",
-        ATTR_UNIT_METRIC: None,
-        ATTR_UNIT_IMPERIAL: None,
-    },
-    "UVIndex": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-sunny",
-        ATTR_LABEL: "UV Index",
-        ATTR_UNIT_METRIC: UV_INDEX,
-        ATTR_UNIT_IMPERIAL: UV_INDEX,
-    },
-    "WetBulbTemperature": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "Wet Bulb Temperature",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "WindChillTemperature": {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_LABEL: "Wind Chill Temperature",
-        ATTR_UNIT_METRIC: TEMP_CELSIUS,
-        ATTR_UNIT_IMPERIAL: TEMP_FAHRENHEIT,
-    },
-    "Wind": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-windy",
-        ATTR_LABEL: "Wind",
-        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
-    },
-    "WindGust": {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:weather-windy",
-        ATTR_LABEL: "Wind Gust",
-        ATTR_UNIT_METRIC: SPEED_KILOMETERS_PER_HOUR,
-        ATTR_UNIT_IMPERIAL: SPEED_MILES_PER_HOUR,
-    },
-}
+SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
+    AccuWeatherSensorDescription(
+        key="ApparentTemperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="Apparent Temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="Ceiling",
+        icon="mdi:weather-fog",
+        name="Cloud Ceiling",
+        unit_metric=LENGTH_METERS,
+        unit_imperial=LENGTH_FEET,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="CloudCover",
+        icon="mdi:weather-cloudy",
+        name="Cloud Cover",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="DewPoint",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="Dew Point",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="RealFeel Temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="RealFeelTemperatureShade",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="RealFeel Temperature Shade",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="Precipitation",
+        icon="mdi:weather-rainy",
+        name="Precipitation",
+        unit_metric=LENGTH_MILLIMETERS,
+        unit_imperial=LENGTH_INCHES,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="PressureTendency",
+        device_class="accuweather__pressure_tendency",
+        icon="mdi:gauge",
+        name="Pressure Tendency",
+        unit_metric=None,
+        unit_imperial=None,
+    ),
+    AccuWeatherSensorDescription(
+        key="UVIndex",
+        icon="mdi:weather-sunny",
+        name="UV Index",
+        unit_metric=UV_INDEX,
+        unit_imperial=UV_INDEX,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="WetBulbTemperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="Wet Bulb Temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindChillTemperature",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="Wind Chill Temperature",
+        unit_metric=TEMP_CELSIUS,
+        unit_imperial=TEMP_FAHRENHEIT,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="Wind",
+        icon="mdi:weather-windy",
+        name="Wind",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    AccuWeatherSensorDescription(
+        key="WindGust",
+        icon="mdi:weather-windy",
+        name="Wind Gust",
+        unit_metric=SPEED_KILOMETERS_PER_HOUR,
+        unit_imperial=SPEED_MILES_PER_HOUR,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+)

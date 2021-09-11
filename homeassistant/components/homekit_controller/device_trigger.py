@@ -1,5 +1,7 @@
 """Provides device automations for homekit devices."""
-from typing import List
+from __future__ import annotations
+
+from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
@@ -7,8 +9,11 @@ from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
@@ -16,6 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, KNOWN_DEVICES, TRIGGERS
 
 TRIGGER_TYPES = {
+    "doorbell",
     "button1",
     "button2",
     "button3",
@@ -32,7 +38,7 @@ TRIGGER_SUBTYPES = {"single_press", "double_press", "long_press"}
 CONF_IID = "iid"
 CONF_SUBTYPE = "subtype"
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
         vol.Required(CONF_SUBTYPE): vol.In(TRIGGER_SUBTYPES),
@@ -72,14 +78,17 @@ class TriggerSource:
         self,
         config: TRIGGER_SCHEMA,
         action: AutomationActionType,
-        automation_info: dict,
+        automation_info: AutomationTriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
+        trigger_data = automation_info["trigger_data"]
 
         def event_handler(char):
             if config[CONF_SUBTYPE] != HK_TO_HA_INPUT_EVENT_VALUES[char["value"]]:
                 return
-            self._hass.async_create_task(action({"trigger": config}))
+            self._hass.async_create_task(
+                action({"trigger": {**trigger_data, **config}})
+            )
 
         trigger = self._triggers[config[CONF_TYPE], config[CONF_SUBTYPE]]
         iid = trigger["characteristic"]
@@ -99,9 +108,11 @@ def enumerate_stateless_switch(service):
 
     # A stateless switch that has a SERVICE_LABEL_INDEX is part of a group
     # And is handled separately
-    if service.has(CharacteristicsTypes.SERVICE_LABEL_INDEX):
-        if len(service.linked) > 0:
-            return []
+    if (
+        service.has(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+        and len(service.linked) > 0
+    ):
+        return []
 
     char = service[CharacteristicsTypes.INPUT_EVENT]
 
@@ -109,17 +120,15 @@ def enumerate_stateless_switch(service):
     # manufacturer might not - clamp options to what they say.
     all_values = clamp_enum_to_char(InputEventValues, char)
 
-    results = []
-    for event_type in all_values:
-        results.append(
-            {
-                "characteristic": char.iid,
-                "value": event_type,
-                "type": "button1",
-                "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
-            }
-        )
-    return results
+    return [
+        {
+            "characteristic": char.iid,
+            "value": event_type,
+            "type": "button1",
+            "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
+        }
+        for event_type in all_values
+    ]
 
 
 def enumerate_stateless_switch_group(service):
@@ -226,7 +235,9 @@ def async_fire_triggers(conn, events):
                 source.fire(iid, ev)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for homekit devices."""
 
     if device_id not in hass.data.get(TRIGGERS, {}):
@@ -234,31 +245,25 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
 
     device = hass.data[TRIGGERS][device_id]
 
-    triggers = []
-
-    for trigger, subtype in device.async_get_triggers():
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: trigger,
-                CONF_SUBTYPE: subtype,
-            }
-        )
-
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: trigger,
+            CONF_SUBTYPE: subtype,
+        }
+        for trigger, subtype in device.async_get_triggers()
+    ]
 
 
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     device_id = config[CONF_DEVICE_ID]
     device = hass.data[TRIGGERS][device_id]
     return await device.async_attach_trigger(config, action, automation_info)

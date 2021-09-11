@@ -1,5 +1,5 @@
 """Sensor to indicate whether the current day is a workday."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_name = config[CONF_NAME]
     workdays = config[CONF_WORKDAYS]
 
-    year = (get_date(datetime.today()) + timedelta(days=days_offset)).year
+    year = (get_date(dt.now()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
@@ -102,7 +103,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Remove holidays
     try:
         for date in remove_holidays:
-            obj_holidays.pop(date)
+            try:
+                # is this formatted as a date?
+                if dt.parse_date(date):
+                    # remove holiday by date
+                    removed = obj_holidays.pop(date)
+                    _LOGGER.debug("Removed %s", date)
+                else:
+                    # remove holiday by name
+                    _LOGGER.debug("Treating '%s' as named holiday", date)
+                    removed = obj_holidays.pop_named(date)
+                    for holiday in removed:
+                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+            except KeyError as unmatched:
+                _LOGGER.warning("No holiday found matching %s", unmatched)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
@@ -170,7 +184,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         return False
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the entity."""
         # return self._attributes
         return {
@@ -185,7 +199,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         self._state = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        date = get_date(datetime.today()) + timedelta(days=self._days_offset)
+        date = get_date(dt.now()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)
 

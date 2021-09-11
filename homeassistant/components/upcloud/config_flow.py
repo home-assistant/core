@@ -1,6 +1,9 @@
 """Config flow for UpCloud."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import requests.exceptions
 import upcloud_api
@@ -9,8 +12,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-# pylint: disable=unused-import # for DOMAIN https://github.com/PyCQA/pylint/issues/3202
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,12 +23,13 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """UpCloud config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     username: str
     password: str
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle user initiated flow."""
         if user_input is None:
             return self._async_show_form(step_id="user")
@@ -53,15 +57,13 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
 
-    async def async_step_import(self, user_input=None):
-        """Handle import initiated flow."""
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_user(user_input=user_input)
-
     @callback
-    def _async_show_form(self, step_id, user_input=None, errors=None):
+    def _async_show_form(
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> FlowResult:
         """Show our form."""
         if user_input is None:
             user_input = {}
@@ -82,7 +84,9 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> UpCloudOptionsFlow:
         """Get options flow."""
         return UpCloudOptionsFlow(config_entry)
 
@@ -90,11 +94,13 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class UpCloudOptionsFlow(config_entries.OptionsFlow):
     """UpCloud options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
 
         if user_input is not None:
@@ -105,7 +111,7 @@ class UpCloudOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(CONF_SCAN_INTERVAL)
-                    or DEFAULT_SCAN_INTERVAL.seconds,
+                    or DEFAULT_SCAN_INTERVAL.total_seconds(),
                 ): vol.All(vol.Coerce(int), vol.Range(min=30)),
             }
         )

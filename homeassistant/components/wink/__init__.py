@@ -1,9 +1,12 @@
 """Support for Wink hubs."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
 import os
 import time
+from typing import Any
 
 from aiohttp.web import Response
 from pubnubsubhandler import PubNubSubscriptionHandler
@@ -111,25 +114,28 @@ CHIME_TONES = TONES + ["inactive"]
 AUTO_SHUTOFF_TIMES = [None, -1, 30, 60, 120]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Inclusive(
-                    CONF_EMAIL, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_PASSWORD, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_CLIENT_ID, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Inclusive(
-                    CONF_CLIENT_SECRET, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
-                ): cv.string,
-                vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Inclusive(
+                        CONF_EMAIL, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                    ): cv.string,
+                    vol.Inclusive(
+                        CONF_PASSWORD, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                    ): cv.string,
+                    vol.Inclusive(
+                        CONF_CLIENT_ID, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                    ): cv.string,
+                    vol.Inclusive(
+                        CONF_CLIENT_SECRET, CONF_OAUTH, msg=CONF_MISSING_OAUTH_MSG
+                    ): cv.string,
+                    vol.Optional(CONF_LOCAL_CONTROL, default=False): cv.boolean,
+                }
+            ),
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -205,7 +211,7 @@ WINK_COMPONENTS = [
     "water_heater",
 ]
 
-WINK_HUBS = []
+WINK_HUBS: list[Any] = []
 
 
 def _request_app_setup(hass, config):
@@ -280,8 +286,12 @@ def _request_oauth_completion(hass, config):
     )
 
 
-def setup(hass, config):
+def setup(hass, config):  # noqa: C901
     """Set up the Wink component."""
+    _LOGGER.warning(
+        "The Wink integration has been deprecated and is pending removal in "
+        "Home Assistant Core 2021.11"
+    )
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
@@ -778,7 +788,7 @@ class WinkDevice(Entity):
         return self.wink.pubnub_channel is None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
         battery = self._battery_level
@@ -855,9 +865,9 @@ class WinkSirenDevice(WinkDevice):
         return "mdi:bell-ring"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
@@ -913,9 +923,9 @@ class WinkNimbusDialDevice(WinkDevice):
         return f"{self.parent.name()} dial {self.wink.index() + 1}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         dial_attributes = self.dial_attributes()
 
         return {**attributes, **dial_attributes}

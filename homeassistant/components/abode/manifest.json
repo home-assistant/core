@@ -7,5 +7,6 @@
   "codeowners": ["@shred86"],
   "homekit": {
     "models": ["Abode", "Iota"]
-  }
+  },
+  "iot_class": "cloud_push"
 }

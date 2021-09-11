@@ -344,7 +344,9 @@ class OptionsFlow(config_entries.OptionsFlow):
         new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
 
         entity_registry = await async_get_entity_registry(self.hass)
-        entity_entries = async_entries_for_device(entity_registry, old_device)
+        entity_entries = async_entries_for_device(
+            entity_registry, old_device, include_disabled_entities=True
+        )
         entity_migration_map = {}
         for entry in entity_entries:
             unique_id = entry.unique_id
@@ -442,7 +444,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
@@ -545,30 +546,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             errors=errors,
         )
-
-    async def async_step_import(self, import_config=None):
-        """Handle the initial step."""
-        entry = await self.async_set_unique_id(DOMAIN)
-        if entry:
-            if CONF_DEVICES not in entry.data:
-                # In version 0.113, devices key was not written to config entry. Update the entry with import data
-                self._abort_if_unique_id_configured(import_config)
-            else:
-                self._abort_if_unique_id_configured()
-
-        host = import_config[CONF_HOST]
-        port = import_config[CONF_PORT]
-        device = import_config[CONF_DEVICE]
-
-        try:
-            if host is not None:
-                await self.async_validate_rfx(host=host, port=port)
-            else:
-                await self.async_validate_rfx(device=device)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-
-        return self.async_create_entry(title="RFXTRX", data=import_config)
 
     async def async_validate_rfx(self, host=None, port=None, device=None):
         """Create data for rfxtrx entry."""

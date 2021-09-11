@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave API"
+                },
+                "description": "Ingresa la clave API obtenida de https://home.freedompro.eu",
+                "title": "Clave API de Freedompro"
+            }
+        }
+    }
+}

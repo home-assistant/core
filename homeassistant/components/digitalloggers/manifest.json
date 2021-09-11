@@ -3,5 +3,6 @@
   "name": "Digital Loggers",
   "documentation": "https://www.home-assistant.io/integrations/digitalloggers",
   "requirements": ["dlipower==0.7.165"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

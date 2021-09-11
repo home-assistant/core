@@ -1,5 +1,6 @@
 """Support for PlayStation 4 consoles."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
@@ -142,10 +143,8 @@ class PS4Device(MediaPlayerEntity):
                 and not self._ps4.is_standby
                 and self._ps4.is_available
             ):
-                try:
+                with suppress(NotReady):
                     await self._ps4.async_connect()
-                except NotReady:
-                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:

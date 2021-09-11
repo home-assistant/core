@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "invalid_pin": "Ogiltig PIN-kod"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN-kod"
+                },
+                "title": "Para ihop"
+            }
+        }
+    }
+}

@@ -9,7 +9,7 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
-        "flow_title": "Sonarr: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}",

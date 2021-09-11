@@ -13,7 +13,7 @@
             "cannot_connect": "Impossibile connettersi",
             "connection_upgrade": "Impossibile connettersi alla stampante. Riprovare selezionando l'opzione SSL/TLS."
         },
-        "flow_title": "Stampante: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

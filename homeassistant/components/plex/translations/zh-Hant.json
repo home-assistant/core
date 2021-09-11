@@ -5,12 +5,12 @@
             "already_configured": "Plex \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
-            "token_request_timeout": "\u53d6\u5f97\u5bc6\u9470\u903e\u6642",
+            "token_request_timeout": "\u53d6\u5f97\u6b0a\u6756\u903e\u6642",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
-            "faulty_credentials": "\u9a57\u8b49\u5931\u6557\u3001\u78ba\u8a8d\u5bc6\u9470",
-            "host_or_token": "\u5fc5\u9808\u81f3\u5c11\u63d0\u4f9b\u4e3b\u6a5f\u7aef\u6216\u5bc6\u9470",
+            "faulty_credentials": "\u9a57\u8b49\u5931\u6557\u3001\u78ba\u8a8d\u6b0a\u6756",
+            "host_or_token": "\u5fc5\u9808\u81f3\u5c11\u63d0\u4f9b\u4e3b\u6a5f\u7aef\u6216\u6b0a\u6756",
             "no_servers": "Plex \u5e33\u865f\u672a\u7d81\u5b9a\u4efb\u4f55\u4f3a\u670d\u5668",
             "not_found": "\u627e\u4e0d\u5230 Plex \u4f3a\u670d\u5668",
             "ssl_error": "SSL \u8a8d\u8b49\u554f\u984c"
@@ -22,7 +22,7 @@
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0",
                     "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
-                    "token": "\u5bc6\u9470\uff08\u9078\u9805\uff09",
+                    "token": "\u6b0a\u6756\uff08\u9078\u9805\uff09",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },
                 "title": "Plex \u624b\u52d5\u8a2d\u5b9a"

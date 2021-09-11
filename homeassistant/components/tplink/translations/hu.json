@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "step": {
+            "confirm": {
+                "description": "Be szeretn\u00e9 \u00e1ll\u00edtani a TP-Link intelligens eszk\u00f6z\u00f6ket?"
+            }
+        }
+    }
+}

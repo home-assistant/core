@@ -14,7 +14,7 @@
                 "data": {
                     "country_code": "Prefisso internazionale del tuo account (ad es. 1 per gli Stati Uniti o 86 per la Cina)",
                     "password": "Password",
-                    "platform": "L'app in cui si registra il tuo account",
+                    "platform": "L'app in cui \u00e8 registrato il tuo account",
                     "username": "Nome utente"
                 },
                 "description": "Inserisci le tue credenziali Tuya.",
@@ -40,8 +40,10 @@
                     "max_temp": "Temperatura di destinazione massima (utilizzare min e max = 0 per impostazione predefinita)",
                     "min_kelvin": "Temperatura colore minima supportata in kelvin",
                     "min_temp": "Temperatura di destinazione minima (utilizzare min e max = 0 per impostazione predefinita)",
+                    "set_temp_divided": "Utilizzare il valore temperatura diviso per impostare il comando temperatura",
                     "support_color": "Forza il supporto del colore",
                     "temp_divider": "Divisore dei valori di temperatura (0 = utilizzare il valore predefinito)",
+                    "temp_step_override": "Passo della temperatura da raggiungere",
                     "tuya_max_coltemp": "Temperatura di colore massima riportata dal dispositivo",
                     "unit_of_measurement": "Unit\u00e0 di temperatura utilizzata dal dispositivo"
                 },

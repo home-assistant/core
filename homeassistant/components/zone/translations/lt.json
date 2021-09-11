@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Pavadinimas"
+                }
+            }
+        },
+        "title": "Zona"
+    }
+}

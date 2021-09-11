@@ -12,8 +12,7 @@
                     "network_key": "Netv\u00e6rksn\u00f8gle (efterlad blank for autogenerering)",
                     "usb_path": "Sti til USB-enhed"
                 },
-                "description": "Se https://www.home-assistant.io/docs/z-wave/installation/ for oplysninger om konfigurationsvariabler",
-                "title": "Ops\u00e6t Z-Wave"
+                "description": "Se https://www.home-assistant.io/docs/z-wave/installation/ for oplysninger om konfigurationsvariabler"
             }
         }
     },

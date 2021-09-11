@@ -15,6 +15,7 @@ from .const import (
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,
+    DOMAIN,
     KEY_SECURITY_CODE,
 )
 
@@ -28,8 +29,7 @@ class AuthError(Exception):
         self.code = code
 
 
-@config_entries.HANDLERS.register("tradfri")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -106,9 +106,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == user_input["host"]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: user_input["host"]})
 
         # Happens if user has host directly in configuration.yaml
         if "key" not in user_input:

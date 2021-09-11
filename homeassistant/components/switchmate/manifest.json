@@ -3,5 +3,6 @@
   "name": "Switchmate SimplySmart Home",
   "documentation": "https://www.home-assistant.io/integrations/switchmate",
   "requirements": ["pySwitchmate==0.4.6"],
-  "codeowners": ["@danielhiversen"]
+  "codeowners": ["@danielhiversen"],
+  "iot_class": "local_polling"
 }

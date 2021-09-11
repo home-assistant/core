@@ -6,7 +6,11 @@ import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_TEMPERATURE,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -29,7 +33,6 @@ from homeassistant.const import (
     UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -544,7 +547,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class DarkSkySensor(Entity):
+class DarkSkySensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
     def __init__(
@@ -571,12 +574,12 @@ class DarkSkySensor(Entity):
         return f"{self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
@@ -620,7 +623,7 @@ class DarkSkySensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -708,7 +711,7 @@ class DarkSkySensor(Entity):
         return state
 
 
-class DarkSkyAlertSensor(Entity):
+class DarkSkyAlertSensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
     def __init__(self, forecast_data, sensor_type, name):
@@ -727,7 +730,7 @@ class DarkSkyAlertSensor(Entity):
         return f"{self.client_name} {self._name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -739,7 +742,7 @@ class DarkSkyAlertSensor(Entity):
         return "mdi:alert-circle-outline"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._alerts
 

@@ -40,8 +40,10 @@
                     "max_temp": "Temperatura objetivo m\u00e1xima (usa m\u00edn. y m\u00e1x. = 0 por defecto)",
                     "min_kelvin": "Temperatura de color m\u00ednima soportada en kelvin",
                     "min_temp": "Temperatura objetivo m\u00ednima (usa m\u00edn. y m\u00e1x. = 0 por defecto)",
+                    "set_temp_divided": "Use el valor de temperatura dividido para el comando de temperatura establecida",
                     "support_color": "Forzar soporte de color",
                     "temp_divider": "Divisor de los valores de temperatura (0 = usar valor por defecto)",
+                    "temp_step_override": "Temperatura deseada",
                     "tuya_max_coltemp": "Temperatura de color m\u00e1xima notificada por dispositivo",
                     "unit_of_measurement": "Unidad de temperatura utilizada por el dispositivo"
                 },

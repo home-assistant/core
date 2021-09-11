@@ -15,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "a fora",
+            "hg": "protecci\u00f3 contra gelades",
+            "schedule": "programaci\u00f3"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} ha detectat una alarma",
+            "animal": "{entity_name} ha detectat un animal",
+            "cancel_set_point": "{entity_name} ha repr\u00e8s la programaci\u00f3",
+            "human": "{entity_name} ha detectat un hum\u00e0",
+            "movement": "{entity_name} ha detectat moviment",
+            "outdoor": "{entity_name} ha detectat un esdeveniment a fora",
+            "person": "{entity_name} ha detectat una persona",
+            "person_away": "{entity_name} ha detectat una marxant",
+            "set_point": "Temperatura objectiu {entity_name} configurada manualment",
+            "therm_mode": "{entity_name} ha canviar a \"{subtype}\"",
+            "turned_off": "{entity_name} s'ha apagat",
+            "turned_on": "{entity_name} s'ha engegat",
+            "vehicle": "{entity_name} ha detectat un vehicle"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

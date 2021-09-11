@@ -14,8 +14,9 @@ import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, recorder
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -38,6 +39,8 @@ from tests.common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_home_assistant,
+    init_recorder_component,
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
@@ -97,6 +100,21 @@ def verify_cleanup():
     assert not threads
 
 
+@pytest.fixture(autouse=True)
+def bcrypt_cost():
+    """Run with reduced rounds during tests, to speed up uses."""
+    import bcrypt
+
+    gensalt_orig = bcrypt.gensalt
+
+    def gensalt_mock(rounds=12, prefix=b"2b"):
+        return gensalt_orig(4, prefix)
+
+    bcrypt.gensalt = gensalt_mock
+    yield
+    bcrypt.gensalt = gensalt_orig
+
+
 @pytest.fixture
 def hass_storage():
     """Fixture to mock storage."""
@@ -105,7 +123,17 @@ def hass_storage():
 
 
 @pytest.fixture
-def hass(loop, hass_storage, request):
+def load_registries():
+    """Fixture to control the loading of registries when setting up the hass fixture.
+
+    To avoid loading the registries, tests can be marked with:
+    @pytest.mark.parametrize("load_registries", [False])
+    """
+    return True
+
+
+@pytest.fixture
+def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
     def exc_handle(loop, context):
@@ -125,7 +153,7 @@ def hass(loop, hass_storage, request):
         orig_exception_handler(loop, context)
 
     exceptions = []
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -201,10 +229,24 @@ def mock_device_tracker_conf():
 
 
 @pytest.fixture
-def hass_access_token(hass, hass_admin_user):
+async def hass_admin_credential(hass, local_auth):
+    """Provide credentials for admin user."""
+    return Credentials(
+        id="mock-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "admin"},
+        is_new=False,
+    )
+
+
+@pytest.fixture
+async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
     """Return an access token to access Home Assistant."""
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID)
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -234,10 +276,21 @@ def hass_read_only_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_read_only_access_token(hass, hass_read_only_user):
+def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
     """Return a Home Assistant read only user."""
+    credential = Credentials(
+        id="mock-readonly-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "readonly"},
+        is_new=False,
+    )
+    hass_read_only_user.credentials.append(credential)
+
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID)
+        hass.auth.async_create_refresh_token(
+            hass_read_only_user, CLIENT_ID, credential=credential
+        )
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -260,6 +313,7 @@ def local_auth(hass):
     prv = homeassistant.HassAuthProvider(
         hass, hass.auth._store, {"type": "homeassistant"}
     )
+    hass.loop.run_until_complete(prv.async_initialize())
     hass.auth._providers[(prv.type, prv.id)] = prv
     return prv
 
@@ -275,6 +329,17 @@ def hass_client(hass, aiohttp_client, hass_access_token):
         )
 
     return auth_client
+
+
+@pytest.fixture
+def hass_client_no_auth(hass, aiohttp_client):
+    """Return an unauthenticated HTTP client."""
+
+    async def client():
+        """Return an authenticated client."""
+        return await aiohttp_client(hass.http.app)
+
+    return client
 
 
 @pytest.fixture
@@ -424,10 +489,22 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
+def mock_get_source_ip():
+    """Mock network util's async_get_source_ip."""
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
-        yield mock_zc.return_value
+    with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
+        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+    ):
+        yield
 
 
 @pytest.fixture
@@ -543,3 +620,36 @@ def legacy_patchable_time():
 def enable_custom_integrations(hass):
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
+
+
+@pytest.fixture
+def enable_statistics():
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_statistics, hass_storage):
+    """Home Assistant fixture with in-memory recorder."""
+    hass = get_test_home_assistant()
+    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        side_effect=stats,
+        autospec=True,
+    ):
+
+        def setup_recorder(config=None):
+            """Set up with params."""
+            init_recorder_component(hass, config)
+            hass.start()
+            hass.block_till_done()
+            hass.data[recorder.DATA_INSTANCE].block_till_done()
+            return hass
+
+        yield setup_recorder
+        hass.stop()

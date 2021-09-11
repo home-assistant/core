@@ -8,6 +8,7 @@ from homeassistant.components.risco import (
     UnauthorizedError,
 )
 from homeassistant.components.risco.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
@@ -120,7 +121,7 @@ async def test_cannot_connect(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     for id in ENTITY_IDS.values():
         assert not registry.async_is_registered(id)
 
@@ -137,7 +138,7 @@ async def test_unauthorized(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     for id in ENTITY_IDS.values():
         assert not registry.async_is_registered(id)
 
@@ -167,7 +168,7 @@ def _check_state(hass, category, entity_id):
 
 async def test_setup(hass, two_zone_alarm):  # noqa: F811
     """Test entity setup."""
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     for id in ENTITY_IDS.values():
         assert not registry.async_is_registered(id)

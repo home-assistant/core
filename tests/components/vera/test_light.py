@@ -13,9 +13,10 @@ async def test_light(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraDimmer)  # type: pv.VeraDimmer
+    vera_device: pv.VeraDimmer = MagicMock(spec=pv.VeraDimmer)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_DIMMER
     vera_device.is_switched_on = MagicMock(return_value=False)

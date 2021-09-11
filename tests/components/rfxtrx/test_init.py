@@ -5,60 +5,10 @@ from unittest.mock import call
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import (
-    DeviceRegistry,
-    async_get_registry as async_get_device_registry,
-)
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 from tests.components.rfxtrx.conftest import create_rfx_test_cfg
-
-
-async def test_valid_config(hass):
-    """Test configuration."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-            }
-        },
-    )
-
-
-async def test_valid_config2(hass):
-    """Test configuration."""
-    assert await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "debug": True,
-            }
-        },
-    )
-
-
-async def test_invalid_config(hass):
-    """Test configuration."""
-    assert not await async_setup_component(hass, "rfxtrx", {"rfxtrx": {}})
-
-    assert not await async_setup_component(
-        hass,
-        "rfxtrx",
-        {
-            "rfxtrx": {
-                "device": "/dev/serial/by-id/usb"
-                + "-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
-                "invalid_key": True,
-            }
-        },
-    )
 
 
 async def test_fire_event(hass, rfxtrx):
@@ -79,7 +29,7 @@ async def test_fire_event(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
-    device_registry: DeviceRegistry = await async_get_device_registry(hass)
+    device_registry: dr.DeviceRegistry = dr.async_get(hass)
 
     calls = []
 
@@ -95,12 +45,12 @@ async def test_fire_event(hass, rfxtrx):
     await rfxtrx.signal("0716000100900970")
 
     device_id_1 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}, connections=set()
+        identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
     )
     assert device_id_1
 
     device_id_2 = device_registry.async_get_device(
-        identifiers={("rfxtrx", "16", "0", "00:90")}, connections=set()
+        identifiers={("rfxtrx", "16", "0", "00:90")}
     )
     assert device_id_2
 
@@ -120,7 +70,7 @@ async def test_fire_event(hass, rfxtrx):
             "type_string": "Byron SX",
             "id_string": "00:90",
             "data": "0716000100900970",
-            "values": {"Command": "Chime", "Rssi numeric": 7, "Sound": 9},
+            "values": {"Command": "Sound 9", "Rssi numeric": 7, "Sound": 9},
             "device_id": device_id_2.id,
         },
     ]

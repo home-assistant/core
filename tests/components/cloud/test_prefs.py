@@ -39,6 +39,18 @@ async def test_set_username_migration(hass):
     assert not prefs.google_enabled
 
 
+async def test_set_new_username(hass, hass_storage):
+    """Test if setting new username returns true."""
+    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"username": "old-user"}}
+
+    prefs = CloudPreferences(hass)
+    await prefs.async_initialize()
+
+    assert not await prefs.async_set_username("old-user")
+
+    assert await prefs.async_set_username("new-user")
+
+
 async def test_load_invalid_cloud_user(hass, hass_storage):
     """Test loading cloud user with invalid storage."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": "non-existing"}}

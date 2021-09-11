@@ -1,9 +1,10 @@
 """Validate integration translation files."""
+from __future__ import annotations
+
 from functools import partial
 from itertools import chain
 import json
 import re
-from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -19,6 +20,20 @@ REQUIRED = 1
 REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
+
+# Only allow translatino of integration names if they contain non-brand names
+ALLOW_NAME_TRANSLATION = {
+    "cert_expiry",
+    "emulated_roku",
+    "garages_amsterdam",
+    "google_travel_time",
+    "homekit_controller",
+    "islamic_prayer_times",
+    "local_ip",
+    "nmap_tracker",
+    "rpi_power",
+    "waze_travel_time",
+}
 
 REMOVED_TITLE_MSG = (
     "config.title key has been moved out of config and into the root of strings.json. "
@@ -141,6 +156,12 @@ def gen_strings_schema(config: Config, integration: Integration):
             vol.Optional("system_health"): {
                 vol.Optional("info"): {str: cv.string_with_no_html}
             },
+            vol.Optional("config_panel"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=lowercase_validator
+                ),
+                slug_validator=vol.Any("_", cv.slug),
+            ),
         }
     )
 
@@ -250,6 +271,20 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             if strings_file.name == "strings.json":
                 find_references(strings, name, references)
 
+                if (
+                    integration.domain not in ALLOW_NAME_TRANSLATION
+                    # Only enforce for core because custom integratinos can't be
+                    # added to allow list.
+                    and integration.core
+                    and strings.get("title") == integration.name
+                    and integration.quality_scale != "internal"
+                ):
+                    integration.add_error(
+                        "translations",
+                        "Don't specify title in translation strings if it's a brand name "
+                        "or add exception to ALLOW_NAME_TRANSLATION",
+                    )
+
     platform_string_schema = gen_platform_strings_schema(config, integration)
     platform_strings = [integration.path.glob("strings.*.json")]
 
@@ -295,7 +330,7 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             )
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Handle JSON files inside integrations."""
     if config.specific_integrations:
         all_strings = None

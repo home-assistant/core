@@ -16,7 +16,7 @@ async def setup_platform(hass, platform):
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.abode.ABODE_PLATFORMS", [platform]), patch(
+    with patch("homeassistant.components.abode.PLATFORMS", [platform]), patch(
         "abodepy.event_controller.sio"
     ), patch("abodepy.utils.save_cache"):
         assert await async_setup_component(hass, ABODE_DOMAIN, {})

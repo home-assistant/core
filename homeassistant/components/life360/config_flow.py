@@ -16,12 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 DOCS_URL = "https://www.home-assistant.io/integrations/life360"
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class Life360ConfigFlow(config_entries.ConfigFlow):
+class Life360ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Life360 integration config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize."""
@@ -32,7 +30,7 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
     @property
     def configured_usernames(self):
         """Return tuple of configured usernames."""
-        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entries = self._async_current_entries()
         if entries:
             return (entry.data[CONF_USERNAME] for entry in entries)
         return ()

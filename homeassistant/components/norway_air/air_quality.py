@@ -67,7 +67,7 @@ def round_state(func):
 
 
 class AirSensor(AirQualityEntity):
-    """Representation of an Yr.no sensor."""
+    """Representation of an air quality sensor."""
 
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
@@ -80,7 +80,7 @@ class AirSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return {
             "level": self._api.data.get("level"),
@@ -92,31 +92,31 @@ class AirSensor(AirQualityEntity):
         """Return the name of the sensor."""
         return self._name
 
-    @property
+    @property  # type: ignore
     @round_state
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._api.data.get("aqi")
 
-    @property
+    @property  # type: ignore
     @round_state
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
         return self._api.data.get("no2_concentration")
 
-    @property
+    @property  # type: ignore
     @round_state
     def ozone(self):
         """Return the O3 (ozone) level."""
         return self._api.data.get("o3_concentration")
 
-    @property
+    @property  # type: ignore
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._api.data.get("pm25_concentration")
 
-    @property
+    @property  # type: ignore
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""

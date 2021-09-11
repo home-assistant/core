@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Kinnituse URLi ajal\u00f5pp",
-            "missing_configuration": "Spotify sidumine pole h\u00e4\u00e4lestatud. Palun j\u00e4rgige dokumentatsiooni.",
+            "missing_configuration": "Spotify sidumine pole h\u00e4\u00e4lestatud. Palun j\u00e4rgi dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})",
             "reauth_account_mismatch": "Spotify konto mida autenditi ei vasta kontole mis vajas uuesti autentimist."
         },

@@ -12,12 +12,14 @@ STATIONS = [
 ]
 
 
-async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
+async def init_integration(
+    hass, incomplete_data=False, invalid_indexes=False
+) -> MockConfigEntry:
     """Set up the GIOS integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id=123,
+        unique_id="123",
         data={"station_id": 123, "name": "Home"},
     )
 
@@ -26,8 +28,10 @@ async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
     sensors = json.loads(load_fixture("gios/sensors.json"))
     if incomplete_data:
         indexes["stIndexLevel"]["indexLevelName"] = "foo"
-        sensors["PM10"]["values"][0]["value"] = None
-        sensors["PM10"]["values"][1]["value"] = None
+        sensors["pm10"]["values"][0]["value"] = None
+        sensors["pm10"]["values"][1]["value"] = None
+    if invalid_indexes:
+        indexes = {}
 
     with patch(
         "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS

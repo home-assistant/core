@@ -1,124 +1,86 @@
 """Classes shared among Wemo entities."""
-import asyncio
+from __future__ import annotations
+
+from collections.abc import Generator
+import contextlib
 import logging
-from typing import Any, Dict, Optional
 
-import async_timeout
-from pywemo import WeMoDevice
+from pywemo.exceptions import ActionException
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN as WEMO_DOMAIN
+from .wemo_device import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class WemoEntity(Entity):
-    """Common methods for Wemo entities.
+class WemoEntity(CoordinatorEntity):
+    """Common methods for Wemo entities."""
 
-    Requires that subclasses implement the _update method.
-    """
+    # Most pyWeMo devices are associated with a single Home Assistant entity. When
+    # that is not the case, name_suffix & unique_id_suffix can be used to provide
+    # names and unique ids for additional Home Assistant entities.
+    _name_suffix: str | None = None
+    _unique_id_suffix: str | None = None
 
-    def __init__(self, device: WeMoDevice) -> None:
+    def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo device."""
-        self.wemo = device
-        self._state = None
+        super().__init__(coordinator)
+        self.wemo = coordinator.wemo
+        self._device_info = coordinator.device_info
         self._available = True
-        self._update_lock = None
+
+    @property
+    def name_suffix(self):
+        """Suffix to append to the WeMo device name."""
+        return self._name_suffix
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
+        suffix = self.name_suffix
+        if suffix:
+            return f"{self.wemo.name} {suffix}"
         return self.wemo.name
 
     @property
     def available(self) -> bool:
-        """Return true if switch is available."""
-        return self._available
+        """Return true if the device is available."""
+        return super().available and self._available
 
-    def _update(self, force_update: Optional[bool] = True):
-        """Update the device state."""
-        raise NotImplementedError()
-
-    async def async_added_to_hass(self) -> None:
-        """Wemo device added to Home Assistant."""
-        # Define inside async context so we know our event loop
-        self._update_lock = asyncio.Lock()
-
-    async def async_update(self) -> None:
-        """Update WeMo state.
-
-        Wemo has an aggressive retry logic that sometimes can take over a
-        minute to return. If we don't get a state after 5 seconds, assume the
-        Wemo switch is unreachable. If update goes through, it will be made
-        available again.
-        """
-        # If an update is in progress, we don't do anything
-        if self._update_lock.locked():
-            return
-
-        try:
-            with async_timeout.timeout(5):
-                await asyncio.shield(self._async_locked_update(True))
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Lost connection to %s", self.name)
-            self._available = False
-
-    async def _async_locked_update(self, force_update: bool) -> None:
-        """Try updating within an async lock."""
-        async with self._update_lock:
-            await self.hass.async_add_executor_job(self._update, force_update)
-
-
-class WemoSubscriptionEntity(WemoEntity):
-    """Common methods for Wemo devices that register for update callbacks."""
+    @property
+    def unique_id_suffix(self):
+        """Suffix to append to the WeMo device's unique ID."""
+        if self._unique_id_suffix is None and self.name_suffix is not None:
+            return self._name_suffix.lower()
+        return self._unique_id_suffix
 
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
+        suffix = self.unique_id_suffix
+        if suffix:
+            return f"{self.wemo.serialnumber}_{suffix}"
         return self.wemo.serialnumber
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(WEMO_DOMAIN, self.unique_id)},
-            "model": self.wemo.model_name,
-            "manufacturer": "Belkin",
-        }
+        return self._device_info
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on. Standby is on."""
-        return self._state
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._available = True
+        super()._handle_coordinator_update()
 
-    async def async_added_to_hass(self) -> None:
-        """Wemo device added to Home Assistant."""
-        await super().async_added_to_hass()
-
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.register, self.wemo)
-        registry.on(self.wemo, None, self._subscription_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Wemo device removed from hass."""
-        registry = self.hass.data[WEMO_DOMAIN]["registry"]
-        await self.hass.async_add_executor_job(registry.unregister, self.wemo)
-
-    def _subscription_callback(
-        self, _device: WeMoDevice, _type: str, _params: str
-    ) -> None:
-        """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for %s", self.name)
-        updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(self._async_locked_subscription_callback(not updated))
-
-    async def _async_locked_subscription_callback(self, force_update: bool) -> None:
-        """Handle an update from a subscription."""
-        # If an update is in progress, we don't do anything
-        if self._update_lock.locked():
-            return
-
-        await self._async_locked_update(force_update)
-        self.async_write_ha_state()
+    @contextlib.contextmanager
+    def _wemo_exception_handler(self, message: str) -> Generator[None, None, None]:
+        """Wrap device calls to set `_available` when wemo exceptions happen."""
+        try:
+            yield
+        except ActionException as err:
+            _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
+            self._available = False

@@ -8,17 +8,14 @@ from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.components.homeassistant.scene import EVENT_SCENE_RELOADED
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 
 async def test_reload_config_service(hass):
     """Test the reload config service."""
     assert await async_setup_component(hass, "scene", {})
 
-    test_reloaded_event = []
-    hass.bus.async_listen(
-        EVENT_SCENE_RELOADED, lambda event: test_reloaded_event.append(event)
-    )
+    test_reloaded_event = async_capture_events(hass, EVENT_SCENE_RELOADED)
 
     with patch(
         "homeassistant.config.load_yaml_config_file",

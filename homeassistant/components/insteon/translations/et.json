@@ -76,7 +76,7 @@
                     "port": "",
                     "username": "Kasutajanimi"
                 },
-                "description": "Muutda Insteon Hubi \u00fchenduse teavet. P\u00e4rast selle muudatuse tegemist pead Home Assistanti taask\u00e4ivitama. See ei muuda jaoturi enda konfiguratsiooni. Hubis muudatuste tegemiseks kasutage rakendust Hub.",
+                "description": "Muutda Insteon Hubi \u00fchenduse teavet. P\u00e4rast selle muudatuse tegemist pead Home Assistanti taask\u00e4ivitama. See ei muuda jaoturi enda konfiguratsiooni. Hubis muudatuste tegemiseks kasuta rakendust Hub.",
                 "title": ""
             },
             "init": {
