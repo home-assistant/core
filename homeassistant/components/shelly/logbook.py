@@ -15,7 +15,7 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
-from .utils import get_device_name
+from .utils import get_block_device_name
 
 
 @callback
@@ -30,7 +30,7 @@ def async_describe_events(
         """Describe shelly.click logbook event."""
         wrapper = get_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
         if wrapper and wrapper.device.initialized:
-            device_name = get_device_name(wrapper.device)
+            device_name = get_block_device_name(wrapper.device)
         else:
             device_name = event.data[ATTR_DEVICE]
 

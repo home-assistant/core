@@ -6,6 +6,8 @@ import logging
 from typing import Any, Final, cast
 
 from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
+from aioshelly.const import MODEL_NAMES
+from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
@@ -45,9 +47,16 @@ def temperature_unit(block_info: dict[str, Any]) -> str:
     return TEMP_CELSIUS
 
 
-def get_device_name(device: BlockDevice) -> str:
+def get_block_device_name(device: BlockDevice) -> str:
     """Naming for device."""
     return cast(str, device.settings["name"] or device.settings["device"]["hostname"])
+
+
+def get_rpc_device_name(device: RpcDevice) -> str:
+    """Naming for device."""
+    # Gen2 does not support setting device name
+    # AP SSID name is used as a nicely formatted device name
+    return cast(str, device.config["wifi"]["ap"]["ssid"] or device.hostname)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
@@ -88,7 +97,7 @@ def get_entity_name(
 
 def get_device_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
-    entity_name = get_device_name(device)
+    entity_name = get_block_device_name(device)
 
     if (
         not block
@@ -200,7 +209,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     return context
 
 
-def get_device_sleep_period(settings: dict[str, Any]) -> int:
+def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
     """Return the device sleep period in seconds or 0 for non sleeping devices."""
     sleep_period = 0
 
@@ -210,3 +219,21 @@ def get_device_sleep_period(settings: dict[str, Any]) -> int:
             sleep_period *= 60  # hours to minutes
 
     return sleep_period * 60  # minutes to seconds
+
+
+def get_info_auth(info: dict[str, Any]) -> bool:
+    """Return true if device has authorization enabled."""
+    return cast(bool, info.get("auth") or info.get("auth_en"))
+
+
+def get_info_gen(info: dict[str, Any]) -> int:
+    """Return the device generation from shelly info."""
+    return int(info.get("gen", 1))
+
+
+def get_model_name(info: dict[str, Any]) -> str:
+    """Return the device model name."""
+    if get_info_gen(info) == 2:
+        return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
+
+    return cast(str, MODEL_NAMES.get(info["type"], info["type"]))

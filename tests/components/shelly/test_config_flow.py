@@ -20,9 +20,13 @@ DISCOVERY_INFO = {
     "name": "shelly1pm-12345",
     "properties": {"id": "shelly1pm-12345"},
 }
+MOCK_CONFIG = {
+    "wifi": {"ap": {"ssid": "Test name"}},
+}
 
 
-async def test_form(hass):
+@pytest.mark.parametrize("gen", [1, 2])
+async def test_form(hass, gen):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -33,12 +37,22 @@ async def test_form(hass):
 
     with patch(
         "aioshelly.common.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False, "gen": gen},
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
+            )
+        ),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                model="SHSW-1",
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
             )
         ),
     ), patch(
@@ -59,6 +73,7 @@ async def test_form(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": gen,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -84,6 +99,7 @@ async def test_title_without_name(hass):
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=settings,
             )
         ),
@@ -105,6 +121,7 @@ async def test_title_without_name(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -134,6 +151,7 @@ async def test_form_auth(hass):
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -155,6 +173,7 @@ async def test_form_auth(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
         "username": "test username",
         "password": "test password",
     }
@@ -260,6 +279,7 @@ async def test_user_setup_ignored_device(hass):
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=settings,
             )
         ),
@@ -350,6 +370,7 @@ async def test_zeroconf(hass):
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -386,6 +407,7 @@ async def test_zeroconf(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -407,6 +429,7 @@ async def test_zeroconf_sleeping_device(hass):
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings={
                     "name": "Test name",
                     "device": {
@@ -450,6 +473,7 @@ async def test_zeroconf_sleeping_device(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 600,
+        "gen": 1,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -560,6 +584,7 @@ async def test_zeroconf_require_auth(hass):
         "aioshelly.block_device.BlockDevice.create",
         new=AsyncMock(
             return_value=Mock(
+                model="SHSW-1",
                 settings=MOCK_SETTINGS,
             )
         ),
@@ -581,6 +606,7 @@ async def test_zeroconf_require_auth(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
+        "gen": 1,
         "username": "test username",
         "password": "test password",
     }
