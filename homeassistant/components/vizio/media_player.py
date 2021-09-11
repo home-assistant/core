@@ -162,7 +162,7 @@ class VizioDevice(MediaPlayerEntity):
         self._attr_sound_mode_list = []
         self._attr_app_name = None
         self._attr_is_volume_muted = None
-        self._attr_supported_commands = SUPPORTED_COMMANDS[device_class]
+        self._attr_supported_features = SUPPORTED_COMMANDS[device_class]
 
         # Entity class attributes that will not change
         self._attr_name = name
@@ -235,7 +235,7 @@ class VizioDevice(MediaPlayerEntity):
                 self._attr_is_volume_muted = None
 
             if VIZIO_SOUND_MODE in audio_settings:
-                self._attr_supported_commands |= SUPPORT_SELECT_SOUND_MODE
+                self._attr_supported_features |= SUPPORT_SELECT_SOUND_MODE
                 self._attr_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if not self._attr_sound_mode_list:
                     self._attr_sound_mode_list = await self._device.get_setting_options(
@@ -245,7 +245,7 @@ class VizioDevice(MediaPlayerEntity):
                     )
             else:
                 # Explicitly remove SUPPORT_SELECT_SOUND_MODE from supported features
-                self._attr_supported_commands &= ~SUPPORT_SELECT_SOUND_MODE
+                self._attr_supported_features &= ~SUPPORT_SELECT_SOUND_MODE
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_:
@@ -353,7 +353,7 @@ class VizioDevice(MediaPlayerEntity):
     def source_list(self) -> list[str]:
         """Return list of available inputs of the device."""
         # If Smartcast app is in input list, and the app list has been retrieved,
-        # show the combination with , otherwise just return inputs
+        # show the combination with, otherwise just return inputs
         if self._available_apps:
             return [
                 *(
