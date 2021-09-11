@@ -1,13 +1,13 @@
 """Config flow for WattTime integration."""
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from aiowatttime import Client
 from aiowatttime.errors import (
     CoordinatesNotFoundError,
     InvalidCredentialsError,
-    RequestError,
     UsernameTakenError,
 )
 import voluptuous as vol
@@ -80,90 +80,103 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the latitude/longitude step."""
-        if user_input is None:
+        if not user_input:
             return self.async_show_form(
                 step_id="coordinates", data_schema=self.coordinates_schema
             )
 
+        if TYPE_CHECKING:
+            assert self._client
+
         unique_id = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-
-        errors = {}
-
-        if TYPE_CHECKING:
-            assert self._client
 
         try:
             await self._client.emissions.async_get_grid_region(
                 user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
             )
         except CoordinatesNotFoundError:
-            errors["base"] = "unknown_coordinates"
-        except RequestError as err:
-            LOGGER.exception("Unexpected request error while getting region: %s", err)
-            errors["base"] = "unknown"
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception while getting region: %s", err)
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(
-                title=unique_id,
-                data={
-                    CONF_USERNAME: self._username,
-                    CONF_PASSWORD: self._password,
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                },
+            return self.async_show_form(
+                step_id="coordinates",
+                data_schema=self.coordinates_schema,
+                errors={CONF_LATITUDE: "unknown_coordinates"},
             )
 
-        return self.async_show_form(
-            step_id="coordinates", data_schema=self.coordinates_schema, errors=errors
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected exception while getting region: %s", err)
+            return self.async_show_form(
+                step_id="coordinates",
+                data_schema=self.coordinates_schema,
+                errors={"base": "unknown"},
+            )
+
+        return self.async_create_entry(
+            title=unique_id,
+            data={
+                CONF_USERNAME: self._username,
+                CONF_PASSWORD: self._password,
+                CONF_LATITUDE: user_input[CONF_LATITUDE],
+                CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+            },
         )
 
     async def async_step_login(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the login step."""
-        if user_input is None:
+        if not user_input:
             return self.async_show_form(
                 step_id="login", data_schema=STEP_LOGIN_DATA_SCHEMA
             )
 
-        errors = {}
+        # If this is the first time we've seen these credentials, check that they're
+        # valid – this allows a user to configure multiple config entries without
+        # rechecking the credentials each time:
+        valid_creds = self.hass.data.setdefault(f"{DOMAIN}_checked_creds", set())
+        valid_creds_lock = self.hass.data.setdefault(
+            f"{DOMAIN}_checked_creds_lock", asyncio.Lock()
+        )
+
         session = aiohttp_client.async_get_clientsession(self.hass)
 
-        try:
-            self._client = await Client.async_login(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session=session
-            )
-        except InvalidCredentialsError:
-            errors["base"] = "invalid_auth"
-        except RequestError as err:
-            LOGGER.exception("Unexpected request error while logging in: %s", err)
-            errors["base"] = "unknown"
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception while logging in: %s", err)
-            errors["base"] = "unknown"
-        else:
-            self._username = user_input[CONF_USERNAME]
-            self._password = user_input[CONF_PASSWORD]
-            return await self.async_step_coordinates()
+        async with valid_creds_lock:
+            if user_input[CONF_USERNAME] not in valid_creds:
+                try:
+                    self._client = await Client.async_login(
+                        user_input[CONF_USERNAME],
+                        user_input[CONF_PASSWORD],
+                        session=session,
+                    )
+                except InvalidCredentialsError:
+                    return self.async_show_form(
+                        step_id="login",
+                        data_schema=STEP_LOGIN_DATA_SCHEMA,
+                        errors={CONF_USERNAME: "invalid_auth"},
+                    )
+                except Exception as err:  # pylint: disable=broad-except
+                    LOGGER.exception("Unexpected exception while logging in: %s", err)
+                    return self.async_show_form(
+                        step_id="login",
+                        data_schema=STEP_LOGIN_DATA_SCHEMA,
+                        errors={"base": "unknown"},
+                    )
+                else:
+                    valid_creds.add(user_input[CONF_USERNAME])
 
-        return self.async_show_form(
-            step_id="login", data_schema=STEP_LOGIN_DATA_SCHEMA, errors=errors
-        )
+        self._username = user_input[CONF_USERNAME]
+        self._password = user_input[CONF_PASSWORD]
+        return await self.async_step_coordinates()
 
     async def async_step_register(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the user registration step."""
-        if user_input is None:
+        if not user_input:
             return self.async_show_form(
                 step_id="register", data_schema=STEP_REGISTER_DATA_SCHEMA
             )
 
-        errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
@@ -175,30 +188,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 session=session,
             )
         except UsernameTakenError:
-            errors["base"] = "username_taken"
-        except RequestError as err:
-            LOGGER.exception("Unexpected request error while registering: %s", err)
-            errors["base"] = "unknown"
+            return self.async_show_form(
+                step_id="register",
+                data_schema=STEP_REGISTER_DATA_SCHEMA,
+                errors={CONF_USERNAME: "username_taken"},
+            )
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception while registering: %s", err)
-            errors["base"] = "unknown"
-        else:
-            return await self.async_step_login(
-                {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                }
+            return self.async_show_form(
+                step_id="register",
+                data_schema=STEP_REGISTER_DATA_SCHEMA,
+                errors={"base": "unknown"},
             )
 
-        return self.async_show_form(
-            step_id="register", data_schema=STEP_REGISTER_DATA_SCHEMA, errors=errors
+        return await self.async_step_login(
+            {
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
+        if not user_input:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
