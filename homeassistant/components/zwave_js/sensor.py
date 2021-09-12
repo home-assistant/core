@@ -9,6 +9,7 @@ from typing import cast
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, ConfigurationValueType
+from zwave_js_server.const import NodeStatus
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
@@ -80,13 +81,13 @@ from .helpers import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 
-STATUS = {
-    "alive": "mdi:heart-pulse",
-    "asleep": "mdi:sleep",
-    "awake": "mdi:eye",
-    "dead": "mdi:robot-dead",
-    "unknown": "mdi:help-rhombus",
+STATUS_ICON_MAP: dict[NodeStatus, str] = {
+    NodeStatus.ALIVE: "mdi:heart-pulse",
+    NodeStatus.ASLEEP: "mdi:sleep",
+    NodeStatus.AWAKE: "mdi:eye",
+    NodeStatus.DEAD: "mdi:robot-dead",
 }
+DEFAULT_STATUS_ICON = "mdi:help-rhombus"
 
 
 @dataclass
@@ -95,7 +96,12 @@ class ZwaveSensorEntityDescription(SensorEntityDescription):
 
     info: ZwaveDiscoveryInfo | None = None
 
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return STATUS_ICON_MAP.get(self.node.status, DEFAULT_STATUS_ICON)
 
+    
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
@@ -475,7 +481,6 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_device_info = {
             "identifiers": {get_device_id(self.client, self.node)},
         }
-        self._attr_icon = STATUS[node.status.name.lower()]
         self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:
