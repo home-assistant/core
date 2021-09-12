@@ -2,6 +2,8 @@
   "config": {
     "step": {
       "user": {
+        "title": "Fronius SolarNet",
+        "description": "Configure the IP address or local hostname of your Fronius device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -12,7 +14,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "entry_update_successful": "Config entry updated"
     }
   }
 }

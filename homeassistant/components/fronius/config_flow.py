@@ -59,11 +59,11 @@ async def validate_input(
             host=host,
             is_logger=False,
         )
-    raise
+    raise CannotConnect("No supported Fronius SolarNet device found.")
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for fronius."""
+    """Handle a config flow for Fronius."""
 
     VERSION = 1
 
@@ -90,12 +90,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 f"SolarNet {'Datalogger' if info['is_logger'] else 'Inverter'}"
                 f" at {info['host']}"
             )
-            # TODO: unsure about raise_on_progress
             entry = await self.async_set_unique_id(unique_id, raise_on_progress=False)
             if entry is not None:
+                if info.items() <= entry.data.items():
+                    return self.async_abort(reason="already_configured")
                 self.hass.config_entries.async_update_entry(
                     entry, title=title, data=info  # type: ignore[arg-type]
                 )
+                await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="entry_update_successful")
 
             return self.async_create_entry(title=title, data=info)

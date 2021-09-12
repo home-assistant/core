@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "entry_update_successful": "Config entry updated"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
-                }
+                    "host": "Host"
+                },
+                "description": "Configure the IP address or local hostname of your Fronius device.",
+                "title": "Fronius SolarNet"
             }
         }
     }
