@@ -1,5 +1,6 @@
 """Test different accessory types: Camera."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
@@ -45,6 +46,7 @@ PID_THAT_WILL_NEVER_BE_ALIVE = 2147483647
 async def _async_start_streaming(hass, acc):
     """Start streaming a camera."""
     acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
+    await hass.async_block_till_done()
     await acc.run()
     await hass.async_block_till_done()
 
@@ -92,6 +94,18 @@ def run_driver(hass):
         )
 
 
+def _mock_reader():
+    """Mock ffmpeg reader."""
+
+    async def _readline(*args, **kwargs):
+        await asyncio.sleep(0.1)
+
+    async def _get_reader(*args, **kwargs):
+        return AsyncMock(readline=_readline)
+
+    return _get_reader
+
+
 def _get_exits_after_startup_mock_ffmpeg():
     """Return a ffmpeg that will have an invalid pid."""
     ffmpeg = MagicMock()
@@ -99,7 +113,7 @@ def _get_exits_after_startup_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=True)
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
-    ffmpeg.get_reader = AsyncMock()
+    ffmpeg.get_reader = _mock_reader()
     return ffmpeg
 
 
@@ -109,7 +123,7 @@ def _get_working_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=True)
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
-    ffmpeg.get_reader = AsyncMock()
+    ffmpeg.get_reader = _mock_reader()
     return ffmpeg
 
 
@@ -120,7 +134,7 @@ def _get_failing_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=False)
     ffmpeg.close = AsyncMock(side_effect=OSError)
     ffmpeg.kill = AsyncMock(side_effect=OSError)
-    ffmpeg.get_reader = AsyncMock()
+    ffmpeg.get_reader = _mock_reader()
     return ffmpeg
 
 

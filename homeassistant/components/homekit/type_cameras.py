@@ -438,12 +438,11 @@ class Camera(HomeAccessory, PyhapCamera):
         self.sessions[session_id].pop(FFMPEG_WATCHER)()
         self.sessions[session_id].pop(FFMPEG_LOGGER).cancel()
 
-    @callback
-    def async_stop(self):
+    async def stop(self):
         """Stop any streams when the accessory is stopped."""
         for session_info in self.sessions.values():
             asyncio.create_task(self.stop_stream(session_info))
-        super().async_stop()
+        await super().stop()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
