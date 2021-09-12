@@ -321,8 +321,6 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
             )
-        if stream_source:
-            self.config[CONF_STREAM_SOURCE] = stream_source
         return stream_source
 
     async def start_stream(self, session_info, stream_config):
