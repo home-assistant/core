@@ -364,9 +364,9 @@ async def test_icon_template(hass):
                     "unique_id": "b",
                     "number": {
                         "state": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
-                        "step": 1,  # f"{{{{ states('{_STEP_INPUT_NUMBER}') }}}}",
-                        "min": 0,  # f"{{{{ states('{_MINIMUM_INPUT_NUMBER}') }}}}",
-                        "max": 100,  # f"{{{{ states('{_MAXIMUM_INPUT_NUMBER}') }}}}",
+                        "step": 1,
+                        "min": 0,
+                        "max": 100,
                         "set_value": {
                             "service": "input_number.set_value",
                             "data_template": {
@@ -375,8 +375,6 @@ async def test_icon_template(hass):
                             },
                         },
                         "icon": "{% if ((states.input_number.value.state or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
-                        # "optimistic": True,
-                        # "unique_id": "a",
                     },
                 }
             },
