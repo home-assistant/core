@@ -39,13 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.config_entries.async_update_entry(entry, options=options)
 
-    if CONF_RETRY_TIMEOUT in hass.data[DOMAIN]:
-
-        options = {**entry.options}
-        options[CONF_RETRY_TIMEOUT] = hass.data[DOMAIN][CONF_RETRY_TIMEOUT]
-
-        hass.config_entries.async_update_entry(entry, options=options)
-
     # Use same coordinator instance for all entities.
     # Uses BTLE advertisement data, all Switchbot devices in range is stored here.
     if DATA_COORDINATOR not in hass.data[DOMAIN]:
@@ -56,7 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if BTLE_LOCK not in hass.data[DOMAIN]:
             hass.data[DOMAIN][BTLE_LOCK] = Lock()
 
-        hass.data[DOMAIN][CONF_RETRY_TIMEOUT] = entry.options[CONF_RETRY_TIMEOUT]
+        if CONF_RETRY_TIMEOUT not in hass.data[DOMAIN]:
+            hass.data[DOMAIN][CONF_RETRY_TIMEOUT] = entry.options[CONF_RETRY_TIMEOUT]
 
         switchbot.DEFAULT_RETRY_TIMEOUT = hass.data[DOMAIN][CONF_RETRY_TIMEOUT]
 
@@ -94,7 +88,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
+        # Update entry options if CONF_RETRY_TIMEOUT changed.
+        if entry.options[CONF_RETRY_TIMEOUT] != hass.data[DOMAIN][CONF_RETRY_TIMEOUT]:
+            options = {**entry.options}
+            options[CONF_RETRY_TIMEOUT] = hass.data[DOMAIN][CONF_RETRY_TIMEOUT]
+            hass.config_entries.async_update_entry(entry, options=options)
+
         hass.data[DOMAIN].pop(entry.entry_id)
+
         if len(hass.config_entries.async_entries(DOMAIN)) == 0:
             hass.data.pop(DOMAIN)
 
@@ -104,6 +105,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
 
+    # If CONF_RETRY_TIMEOUT changed,
+    # Update hass data and reload all entries.
     if entry.options[CONF_RETRY_TIMEOUT] != hass.data[DOMAIN][CONF_RETRY_TIMEOUT]:
         hass.data[DOMAIN][CONF_RETRY_TIMEOUT] = entry.options[CONF_RETRY_TIMEOUT]
         hass.data[DOMAIN].pop(DATA_COORDINATOR)
