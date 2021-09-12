@@ -26,7 +26,7 @@ set_fan_speed_tracked_state:
           mode: slider
 
 set_switch_power_tracked_state:
-  name: Set tracked switch power state
+  name: Set switch power tracked state
   description: Sets the tracked power state of a bond switch
   fields:
     entity_id:
@@ -47,7 +47,7 @@ set_switch_power_tracked_state:
         boolean:
 
 set_light_power_tracked_state:
-  name: Set tracked light power state
+  name: Set light power tracked state
   description: Sets the tracked power state of a bond light
   fields:
     entity_id:
@@ -68,7 +68,7 @@ set_light_power_tracked_state:
         boolean:
 
 set_light_brightness_tracked_state:
-  name: Set tracked light brightness state
+  name: Set light brightness tracked state
   description: Sets the tracked brightness state of a bond light
   fields:
     entity_id:
