@@ -4,7 +4,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
@@ -52,6 +56,7 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
         name="Marginal Operating Emissions Rate",
         icon="mdi:blur",
         native_unit_of_measurement="lbs CO2/MWh",
+        state_class=STATE_CLASS_MEASUREMENT,
         data_key="moer",
     ),
     RealtimeEmissionsSensorEntityDescription(
@@ -59,6 +64,7 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
         name="Relative Marginal Emissions Intensity",
         icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=STATE_CLASS_MEASUREMENT,
         data_key="percent",
     ),
 )
