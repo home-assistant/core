@@ -25,9 +25,9 @@ from homeassistant.const import (
 )
 
 # TODO: [homeassistant.components.sensor.recorder] sensor.power_reactive_phase_1 has unknown unit VAr
-AMPERE_HOURS = "Ah"
-VOLTAMPEREREACTIVE = "VAr"
-VOLTAMPEREREACTIVE_HOUR = "VArh"
+ELECTRIC_CHARGE_AMPERE_HOURS = "Ah"
+ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
+POWER_VOLT_AMPERE_REACTIVE = "var"
 
 # TODO: add entity_registry_enabled_default
 INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
@@ -134,16 +134,16 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "energy_reactive_ac_consumed": SensorEntityDescription(
         key="energy_reactive_ac_consumed",
         name="Energy Reactive AC consumed",
-        native_unit_of_measurement=VOLTAMPEREREACTIVE_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:lightning-bolt-outline",
     ),
     "energy_reactive_ac_produced": SensorEntityDescription(
         key="energy_reactive_ac_produced",
         name="Energy Reactive AC produced",
-        native_unit_of_measurement=VOLTAMPEREREACTIVE_HOUR,
-        device_class=DEVICE_CLASS_ENERGY,
+        native_unit_of_measurement=ENERGY_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
+        icon="mdi:lightning-bolt-outline",
     ),
     "energy_real_ac_minus": SensorEntityDescription(
         key="energy_real_ac_minus",
@@ -183,29 +183,29 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="power_apparent_phase_1",
         name="Power apparent phase 1",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_apparent_phase_2": SensorEntityDescription(
         key="power_apparent_phase_2",
         name="Power apparent phase 2",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_apparent_phase_3": SensorEntityDescription(
         key="power_apparent_phase_3",
         name="Power apparent phase 3",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_apparent": SensorEntityDescription(
         key="power_apparent",
         name="Power apparent",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_factor_phase_1": SensorEntityDescription(
         key="power_factor_phase_1",
@@ -234,30 +234,30 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "power_reactive_phase_1": SensorEntityDescription(
         key="power_reactive_phase_1",
         name="Power reactive phase 1",
-        native_unit_of_measurement=VOLTAMPEREREACTIVE,
-        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_reactive_phase_2": SensorEntityDescription(
         key="power_reactive_phase_2",
         name="Power reactive phase 2",
-        native_unit_of_measurement=VOLTAMPEREREACTIVE,
-        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_reactive_phase_3": SensorEntityDescription(
         key="power_reactive_phase_3",
         name="Power reactive phase 3",
-        native_unit_of_measurement=VOLTAMPEREREACTIVE,
-        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_reactive": SensorEntityDescription(
         key="power_reactive",
         name="Power reactive",
-        native_unit_of_measurement=VOLTAMPEREREACTIVE,
-        device_class=DEVICE_CLASS_POWER,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:flash-outline",
     ),
     "power_real_phase_1": SensorEntityDescription(
         key="power_real_phase_1",
@@ -387,12 +387,14 @@ POWER_FLOW_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         name="Relative autonomy",
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:home-circle-outline",
     ),
     "relative_self_consumption": SensorEntityDescription(
         key="relative_self_consumption",
         name="Relative self consumption",
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:solar-power",
     ),
 }
 
@@ -400,12 +402,12 @@ STORAGE_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "capacity_maximum": SensorEntityDescription(
         key="capacity_maximum",
         name="Capacity maximum",
-        native_unit_of_measurement=AMPERE_HOURS,
+        native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
     ),
     "capacity_designed": SensorEntityDescription(
         key="capacity_designed",
         name="Capacity designed",
-        native_unit_of_measurement=AMPERE_HOURS,
+        native_unit_of_measurement=ELECTRIC_CHARGE_AMPERE_HOURS,
     ),
     "current_dc": SensorEntityDescription(
         key="current_dc",
