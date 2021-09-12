@@ -85,7 +85,7 @@ SENSORS = {
     "asleep": "mdi:sleep",
     "awake": "mdi:eue",
     "dead": "mdi:robot-dead",
-    none: "mdi:help-rhombus"
+    "unknown": "mdi:help-rhombus"
 }
 
 @dataclass
