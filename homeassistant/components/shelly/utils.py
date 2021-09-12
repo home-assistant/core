@@ -9,6 +9,7 @@ from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
 from aioshelly.rpc_device import RpcDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
@@ -81,12 +82,12 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
     return channels or 1
 
 
-def get_entity_name(
+def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
     description: str | None = None,
 ) -> str:
-    """Naming for switch and sensors."""
+    """Naming for block based switch and sensors."""
     channel_name = get_device_channel_name(device, block)
 
     if description:
@@ -237,3 +238,23 @@ def get_model_name(info: dict[str, Any]) -> str:
         return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
+
+
+def get_rpc_entity_name(
+    device: RpcDevice, key: str, description: str | None = None
+) -> str:
+    """Naming for RPC based switch and sensors."""
+    entity_name: str | None = device.config[key].get("name")
+
+    if entity_name is None:
+        entity_name = f"{get_rpc_device_name(device)} {key.replace(':', '_')}"
+
+    if description:
+        return f"{entity_name} {description}"
+
+    return entity_name
+
+
+def get_device_entry_gen(entry: ConfigEntry) -> int:
+    """Return the device generation from config entry."""
+    return int(entry.data.get("gen", 1))

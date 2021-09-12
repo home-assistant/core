@@ -8,11 +8,11 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.shelly import ShellyDeviceWrapper
+from homeassistant.components.shelly import BlockDeviceWrapper
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
-    COAP,
+    BLOCK,
     CONF_SUBTYPE,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -79,8 +79,8 @@ async def test_get_triggers_button(hass):
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
     coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
-        COAP
-    ] = ShellyDeviceWrapper(hass, config_entry, device)
+        BLOCK
+    ] = BlockDeviceWrapper(hass, config_entry, device)
 
     await coap_wrapper.async_setup()
 

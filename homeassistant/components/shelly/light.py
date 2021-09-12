@@ -33,10 +33,10 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import ShellyDeviceWrapper
+from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
-    COAP,
+    BLOCK,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     FIRMWARE_PATTERN,
@@ -46,11 +46,12 @@ from .const import (
     LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
+    RPC,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )
-from .entity import ShellyBlockEntity
-from .utils import async_remove_shelly_entity
+from .entity import ShellyBlockEntity, ShellyRpcEntity
+from .utils import async_remove_shelly_entity, get_device_entry_gen
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -61,33 +62,71 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up lights for device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][COAP]
+    if get_device_entry_gen(config_entry) == 2:
+        return await async_setup_rpc_entry(hass, config_entry, async_add_entities)
+
+    return await async_setup_block_entry(hass, config_entry, async_add_entities)
+
+
+async def async_setup_block_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up entities for block device."""
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
 
     blocks = []
+    assert wrapper.device.blocks
     for block in wrapper.device.blocks:
         if block.type == "light":
             blocks.append(block)
         elif block.type == "relay":
-            appliance_type = wrapper.device.settings["relays"][int(block.channel)].get(
+            app_type = wrapper.device.settings["relays"][int(block.channel)].get(
                 "appliance_type"
             )
-            if appliance_type and appliance_type.lower() == "light":
-                blocks.append(block)
-                unique_id = (
-                    f'{wrapper.device.shelly["mac"]}-{block.type}_{block.channel}'
-                )
-                await async_remove_shelly_entity(hass, "switch", unique_id)
+            if not app_type or app_type.lower() != "light":
+                continue
+
+            blocks.append(block)
+            assert wrapper.device.shelly
+            unique_id = f'{wrapper.device.shelly["mac"]}-{block.type}_{block.channel}'
+            await async_remove_shelly_entity(hass, "switch", unique_id)
 
     if not blocks:
         return
 
-    async_add_entities(ShellyLight(wrapper, block) for block in blocks)
+    async_add_entities(BlockShellyLight(wrapper, block) for block in blocks)
 
 
-class ShellyLight(ShellyBlockEntity, LightEntity):
-    """Switch that controls a relay block on Shelly devices."""
+async def async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
+    switch_keys = []
+    for i in range(4):
+        key = f"switch:{i}"
+        if wrapper.device.status.get(key):
+            con_types = wrapper.device.config["sys"]["ui_data"].get("consumption_types")
+            if con_types is not None and con_types[i] == "lights":
+                switch_keys.append(key)
+                unique_id = f"{wrapper.mac}-{key}"
+                await async_remove_shelly_entity(hass, "switch", unique_id)
+
+    if not switch_keys:
+        return
+
+    async_add_entities(RpcShellyLight(wrapper, key) for key in switch_keys)
+
+
+class BlockShellyLight(ShellyBlockEntity, LightEntity):
+    """Entity that controls a light on block based Shelly devices."""
+
+    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
@@ -369,3 +408,27 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         self.control_result = None
         self.mode_result = None
         super()._update_callback()
+
+
+class RpcShellyLight(ShellyRpcEntity, LightEntity):
+    """Entity that controls a light on RPC based Shelly devices."""
+
+    def __init__(self, wrapper: RpcDeviceWrapper, key: str) -> None:
+        """Initialize light."""
+        super().__init__(wrapper, key)
+        self._id = key[7:]
+
+    @property
+    def is_on(self) -> bool:
+        """If light is on."""
+        return bool(self.wrapper.device.status[self.key]["output"])
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on light."""
+        await self.set_state("Switch.Set", {"id": self._id, "on": True})
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off light."""
+        await self.set_state("Switch.Set", {"id": self._id, "on": False})
+        self.async_write_ha_state()
