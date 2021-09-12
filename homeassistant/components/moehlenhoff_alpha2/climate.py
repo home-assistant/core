@@ -65,7 +65,7 @@ class Alpha2Climate(ClimateEntity):
 
     def _handle_heatarea_data_updated(self, data):
         """Handle updated heatarea data."""
-        if data["NR"] == self._data["NR"]:
+        if data["ID"] == self._data["ID"]:
             self._data = data
             self.async_schedule_update_ha_state()
 
