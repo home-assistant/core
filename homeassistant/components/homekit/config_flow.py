@@ -9,6 +9,7 @@ import string
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import device_automation
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -16,6 +17,7 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
+    CONF_DEVICES,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_ENTITY_ID,
@@ -23,6 +25,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -38,6 +41,7 @@ from .const import (
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
+    CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
@@ -51,6 +55,7 @@ from .const import (
 )
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
+CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
 
@@ -81,6 +86,7 @@ SUPPORTED_DOMAINS = [
     "fan",
     "humidifier",
     "input_boolean",
+    "input_select",
     "light",
     "lock",
     MEDIA_PLAYER_DOMAIN,
@@ -88,6 +94,7 @@ SUPPORTED_DOMAINS = [
     REMOTE_DOMAIN,
     "scene",
     "script",
+    "select",
     "sensor",
     "switch",
     "vacuum",
@@ -167,9 +174,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         if user_input is not None:
-            port = await async_find_next_available_port(
-                self.hass, DEFAULT_CONFIG_FLOW_PORT
-            )
+            port = async_find_next_available_port(self.hass, DEFAULT_CONFIG_FLOW_PORT)
             await self._async_add_entries_for_accessory_mode_entities(port)
             self.hk_data[CONF_PORT] = port
             include_domains_filter = self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
@@ -200,7 +205,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entity_id in accessory_mode_entity_ids:
             if entity_id in exiting_entity_ids_accessory_mode:
                 continue
-            port = await async_find_next_available_port(self.hass, next_port_to_check)
+            port = async_find_next_available_port(self.hass, next_port_to_check)
             next_port_to_check = port + 1
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
@@ -318,20 +323,31 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if key in self.hk_options:
                     del self.hk_options[key]
 
+            if (
+                self.show_advanced_options
+                and self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
+            ):
+                self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
+
             return self.async_create_entry(title="", data=self.hk_options)
+
+        data_schema = {
+            vol.Optional(
+                CONF_AUTO_START,
+                default=self.hk_options.get(CONF_AUTO_START, DEFAULT_AUTO_START),
+            ): bool
+        }
+
+        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE:
+            all_supported_devices = await _async_get_supported_devices(self.hass)
+            devices = self.hk_options.get(CONF_DEVICES, [])
+            data_schema[vol.Optional(CONF_DEVICES, default=devices)] = cv.multi_select(
+                all_supported_devices
+            )
 
         return self.async_show_form(
             step_id="advanced",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_AUTO_START,
-                        default=self.hk_options.get(
-                            CONF_AUTO_START, DEFAULT_AUTO_START
-                        ),
-                    ): bool
-                }
-            ),
+            data_schema=vol.Schema(data_schema),
         )
 
     async def async_step_cameras(self, user_input=None):
@@ -348,20 +364,34 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     and CONF_VIDEO_CODEC in entity_config[entity_id]
                 ):
                     del entity_config[entity_id][CONF_VIDEO_CODEC]
+                if entity_id in user_input[CONF_CAMERA_AUDIO]:
+                    entity_config.setdefault(entity_id, {})[CONF_SUPPORT_AUDIO] = True
+                elif (
+                    entity_id in entity_config
+                    and CONF_SUPPORT_AUDIO in entity_config[entity_id]
+                ):
+                    del entity_config[entity_id][CONF_SUPPORT_AUDIO]
             return await self.async_step_advanced()
 
+        cameras_with_audio = []
         cameras_with_copy = []
         entity_config = self.hk_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             hk_entity_config = entity_config.get(entity, {})
             if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
                 cameras_with_copy.append(entity)
+            if hk_entity_config.get(CONF_SUPPORT_AUDIO):
+                cameras_with_audio.append(entity)
 
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_CAMERA_COPY,
                     default=cameras_with_copy,
+                ): cv.multi_select(self.included_cameras),
+                vol.Optional(
+                    CONF_CAMERA_AUDIO,
+                    default=cameras_with_audio,
                 ): cv.multi_select(self.included_cameras),
             }
         )
@@ -412,7 +442,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     self.included_cameras = set()
 
             self.hk_options[CONF_FILTER] = entity_filter
-
             if self.included_cameras:
                 return await self.async_step_cameras()
 
@@ -479,6 +508,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+
+async def _async_get_supported_devices(hass):
+    """Return all supported devices."""
+    results = await device_automation.async_get_device_automations(hass, "trigger")
+    dev_reg = device_registry.async_get(hass)
+    unsorted = {
+        device_id: dev_reg.async_get(device_id).name or device_id
+        for device_id in results
+    }
+    return dict(sorted(unsorted.items(), key=lambda item: item[1]))
 
 
 def _async_get_matching_entities(hass, domains=None):

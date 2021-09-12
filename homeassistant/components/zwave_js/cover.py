@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import BarrierState
+from zwave_js_server.const.command_class.barrier_operator import BarrierState
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (

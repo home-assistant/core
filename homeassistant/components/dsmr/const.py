@@ -44,6 +44,8 @@ DATA_TASK = "task"
 DEVICE_NAME_ENERGY = "Energy Meter"
 DEVICE_NAME_GAS = "Gas Meter"
 
+DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S"}
+
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.CURRENT_ELECTRICITY_USAGE,
@@ -62,11 +64,13 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_ACTIVE_TARIFF,
         name="Power Tariff",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         icon="mdi:flash",
     ),
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_USED_TARIFF_1,
         name="Energy Consumption (tarif 1)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         device_class=DEVICE_CLASS_ENERGY,
         force_update=True,
         state_class=STATE_CLASS_TOTAL_INCREASING,
@@ -74,6 +78,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_USED_TARIFF_2,
         name="Energy Consumption (tarif 2)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
@@ -81,6 +86,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_DELIVERED_TARIFF_1,
         name="Energy Production (tarif 1)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
@@ -88,6 +94,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_DELIVERED_TARIFF_2,
         name="Energy Production (tarif 2)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         force_update=True,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
@@ -137,45 +144,53 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.SHORT_POWER_FAILURE_COUNT,
         name="Short Power Failure Count",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:flash-off",
     ),
     DSMRSensorEntityDescription(
         key=obis_references.LONG_POWER_FAILURE_COUNT,
         name="Long Power Failure Count",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:flash-off",
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SAG_L1_COUNT,
         name="Voltage Sags Phase L1",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SAG_L2_COUNT,
         name="Voltage Sags Phase L2",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SAG_L3_COUNT,
         name="Voltage Sags Phase L3",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SWELL_L1_COUNT,
         name="Voltage Swells Phase L1",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:pulse",
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SWELL_L2_COUNT,
         name="Voltage Swells Phase L2",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:pulse",
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SWELL_L3_COUNT,
         name="Voltage Swells Phase L3",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:pulse",
     ),
@@ -238,6 +253,22 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
+        key=obis_references.SWEDEN_ELECTRICITY_USED_TARIFF_GLOBAL,
+        name="Energy Consumption (total)",
+        dsmr_versions={"5S"},
+        force_update=True,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.SWEDEN_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+        name="Energy Production (total)",
+        dsmr_versions={"5S"},
+        force_update=True,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         name="Energy Consumption (total)",
         dsmr_versions={"2.2", "4", "5", "5B"},
@@ -251,7 +282,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"4", "5", "5L"},
         is_gas=True,
         force_update=True,
-        icon="mdi:fire",
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
@@ -261,7 +291,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"5B"},
         is_gas=True,
         force_update=True,
-        icon="mdi:fire",
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
@@ -271,7 +300,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2"},
         is_gas=True,
         force_update=True,
-        icon="mdi:fire",
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),

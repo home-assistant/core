@@ -17,6 +17,7 @@ from pydeconz.sensor import (
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -41,7 +42,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
@@ -68,7 +68,7 @@ ICON = {
 }
 
 STATE_CLASS = {
-    Consumption: STATE_CLASS_MEASUREMENT,
+    Consumption: STATE_CLASS_TOTAL_INCREASING,
     Humidity: STATE_CLASS_MEASUREMENT,
     Pressure: STATE_CLASS_MEASUREMENT,
     Temperature: STATE_CLASS_MEASUREMENT,
@@ -163,9 +163,6 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT.get(
             type(self._device)
         )
-
-        if device.type in Consumption.ZHATYPE:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @callback
     def async_update_callback(self, force_update=False):
