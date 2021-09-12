@@ -8,8 +8,7 @@ from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass, ConfigurationValueType
-from zwave_js_server.const import NodeStatus
+from zwave_js_server.const import CommandClass, ConfigurationValueType, NodeStatus
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
