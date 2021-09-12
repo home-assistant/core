@@ -89,9 +89,14 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
 
         try:
             status: FritzStatus = self._fritzbox_tools.fritz_status
-            userinferface: dict[str, Any] = self._fritzbox_tools.connection.call_action(
+            userinferface_x_avm: dict[
+                str, Any
+            ] = self._fritzbox_tools.connection.call_action(
                 "UserInterface", "X_AVM-DE_GetInfo"
             )
+            userinferface1: dict[
+                str, Any
+            ] = self._fritzbox_tools.connection.call_action("UserInterface1", "GetInfo")
             self._attr_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
@@ -103,9 +108,9 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
         elif self.entity_description.key == "is_linked":
             self._attr_is_on = bool(status.is_linked)
         elif self.entity_description.key == "firmware_update":
-            latest_fw = userinferface["NewX_AVM-DE_CurrentFwVersion"]
-            installed_fw = userinferface["NewX_AVM-DE_LastFwVersion"]
-            self._attr_is_on = bool(latest_fw > installed_fw)
+            latest_fw = userinferface1["NewX_AVM-DE_Version"]
+            installed_fw = userinferface_x_avm["NewX_AVM-DE_CurrentFwVersion"]
+            self._attr_is_on = userinferface1["NewUpgradeAvailable"]
             self._attr_extra_state_attributes = {
                 "installed_version": installed_fw,
                 "latest_available_version:": latest_fw,
