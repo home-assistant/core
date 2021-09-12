@@ -10,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    PERCENTAGE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -100,18 +105,21 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
         if TYPE_CHECKING:
             assert coordinator.config_entry
 
+        ba_abbrev = coordinator.config_entry.data[CONF_BALANCING_AUTHORITY_ABBREV]
+
         self._attr_extra_state_attributes = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_BALANCING_AUTHORITY: coordinator.config_entry.data[
                 CONF_BALANCING_AUTHORITY
             ],
-            ATTR_BALANCING_AUTHORITY_ABBREV: coordinator.config_entry.data[
-                CONF_BALANCING_AUTHORITY_ABBREV
-            ],
+            ATTR_BALANCING_AUTHORITY_ABBREV: ba_abbrev,
             ATTR_BALANCING_AUTHORITY_ID: coordinator.config_entry.data[
                 CONF_BALANCING_AUTHORITY_ID
             ],
+            ATTR_LATITUDE: coordinator.config_entry.data[ATTR_LATITUDE],
+            ATTR_LONGITUDE: coordinator.config_entry.data[ATTR_LONGITUDE],
         }
+        self._attr_name = f"{description.name} ({ba_abbrev})"
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self.entity_description = description
 
