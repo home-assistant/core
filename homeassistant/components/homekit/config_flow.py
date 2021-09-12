@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import random
 import re
 import string
@@ -55,9 +54,6 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .util import async_find_next_available_port, state_needs_accessory_mode
-
-_LOGGER = logging.getLogger(__name__)
-
 
 CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"
@@ -522,7 +518,6 @@ async def _async_get_supported_devices(hass):
         device_id: dev_reg.async_get(device_id).name or device_id
         for device_id in results
     }
-    _LOGGER.warning("Unsorted: %s", unsorted)
     return dict(sorted(unsorted.items(), key=lambda item: item[1]))
 
 
