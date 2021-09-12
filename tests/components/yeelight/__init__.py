@@ -4,7 +4,7 @@ from datetime import timedelta
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_upnp_client.search import SSDPListener
+from async_upnp_client.search import SsdpSearchListener
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
@@ -145,7 +145,7 @@ def _mocked_bulb(cannot_connect=False):
 
 
 def _patched_ssdp_listener(info, *args, **kwargs):
-    listener = SSDPListener(*args, **kwargs)
+    listener = SsdpSearchListener(*args, **kwargs)
 
     async def _async_callback(*_):
         if kwargs["source_ip"] == IPv4Address(FAIL_TO_BIND_IP):
@@ -173,7 +173,7 @@ def _patch_discovery(no_device=False, capabilities=None):
         )
 
     return patch(
-        "homeassistant.components.yeelight.SSDPListener",
+        "homeassistant.components.yeelight.SsdpSearchListener",
         new=_generate_fake_ssdp_listener,
     )
 

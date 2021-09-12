@@ -519,7 +519,7 @@ class HomeKit:
         self.bridge = None
         self.driver = None
 
-    def setup(self, async_zeroconf_instance):
+    def setup(self, async_zeroconf_instance, uuid):
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
@@ -534,6 +534,7 @@ class HomeKit:
             persist_file=persist_file,
             advertised_address=self._advertise_ip,
             async_zeroconf_instance=async_zeroconf_instance,
+            zeroconf_server=f"{uuid}-hap.local.",
         )
 
         # If we do not load the mac address will be wrong
@@ -713,7 +714,8 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
-        await self.hass.async_add_executor_job(self.setup, async_zc_instance)
+        uuid = await self.hass.helpers.instance_id.async_get()
+        await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
         if not await self._async_create_accessories():

@@ -33,3 +33,5 @@ ID_LOCK_CONFIG_PARAMETER_SENSOR = (
 ZEN_31_ENTITY = "light.kitchen_under_cabinet_lights"
 METER_ENERGY_SENSOR = "sensor.smart_switch_6_electric_consumed_kwh"
 METER_VOLTAGE_SENSOR = "sensor.smart_switch_6_electric_consumed_v"
+
+PROPERTY_ULTRAVIOLET = "Ultraviolet"

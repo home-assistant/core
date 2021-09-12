@@ -13,21 +13,24 @@ from .common import (
     find_entity_id,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 DEVICE_IAS = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.IAS_ZONE,
-        "in_clusters": [security.IasZone.cluster_id],
-        "out_clusters": [],
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.IAS_ZONE,
+        SIG_EP_INPUT: [security.IasZone.cluster_id],
+        SIG_EP_OUTPUT: [],
     }
 }
 
 
 DEVICE_OCCUPANCY = {
     1: {
-        "device_type": zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
-        "in_clusters": [measurement.OccupancySensing.cluster_id],
-        "out_clusters": [],
+        SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+        SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
+        SIG_EP_INPUT: [measurement.OccupancySensing.cluster_id],
+        SIG_EP_OUTPUT: [],
     }
 }
 
