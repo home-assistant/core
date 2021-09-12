@@ -331,8 +331,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        if not self._reauth_entry:
-            return self.async_abort(reason="missing_config_entry")
+        assert self._reauth_entry
         data = self._reauth_entry.data
         if data.get(CONF_MODEL) and data.get(CONF_NAME):
             self._title = f"{data[CONF_NAME]} ({data[CONF_MODEL]})"
@@ -345,8 +344,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Confirm reauth."""
         errors = {}
-        if self._reauth_entry is None:
-            return self.async_abort(reason="missing_config_entry")
+        assert self._reauth_entry
         if user_input is not None:
             bridge = SamsungTVBridge.get_bridge(
                 self._reauth_entry.data[CONF_METHOD], self._reauth_entry.data[CONF_HOST]
