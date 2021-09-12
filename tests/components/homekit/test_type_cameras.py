@@ -317,28 +317,58 @@ async def test_camera_stream_source_found(hass, run_driver, events):
     assert acc.category == 17  # Camera
 
     await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="rtsp://example.local",
     ), patch(
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=_get_working_mock_ffmpeg(),
+        return_value=working_ffmpeg,
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
+
+    expected_output = (
+        "-map 0:v:0 -an -c:v libx264 -profile:v high -tune zerolatency -pix_fmt "
+        "yuv420p -r 30 -b:v 299k -bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f "
+        "rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
+        "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
+        "srtp://192.168.208.5:51246?rtcpport=51246&localrtcpport=51246&pkt_size=1316"
+    )
+
+    working_ffmpeg.open.assert_called_with(
+        cmd=[],
+        input_source="-i rtsp://example.local",
+        output=expected_output.format(**session_info),
+        stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
+    )
 
     await _async_setup_endpoints(hass, acc)
+    working_ffmpeg = _get_working_mock_ffmpeg()
+    session_info = acc.sessions[MOCK_START_STREAM_SESSION_UUID]
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value="rtsp://example.local",
+        return_value="rtsp://example2.local",
     ), patch(
         "homeassistant.components.homekit.type_cameras.HAFFmpeg",
-        return_value=_get_working_mock_ffmpeg(),
+        return_value=working_ffmpeg,
     ):
         await _async_start_streaming(hass, acc)
         await _async_stop_all_streams(hass, acc)
+
+    working_ffmpeg.open.assert_called_with(
+        cmd=[],
+        input_source="-i rtsp://example2.local",
+        output=expected_output.format(**session_info),
+        stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
+    )
 
 
 async def test_camera_stream_source_fails(hass, run_driver, events):

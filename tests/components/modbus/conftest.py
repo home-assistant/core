@@ -68,6 +68,12 @@ def config_addon():
 
 
 @pytest.fixture
+def do_exception():
+    """Remove side_effect to pymodbus calls."""
+    return False
+
+
+@pytest.fixture
 async def mock_modbus(
     hass, caplog, register_words, check_config_loaded, config_addon, do_config
 ):
@@ -92,18 +98,6 @@ async def mock_modbus(
     with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
     ):
-        if register_words is None:
-            exc = ModbusException("fail read_coils")
-            mock_pb.read_coils.side_effect = exc
-            mock_pb.read_discrete_inputs.side_effect = exc
-            mock_pb.read_input_registers.side_effect = exc
-            mock_pb.read_holding_registers.side_effect = exc
-        else:
-            read_result = ReadResult(register_words)
-            mock_pb.read_coils.return_value = read_result
-            mock_pb.read_discrete_inputs.return_value = read_result
-            mock_pb.read_input_registers.return_value = read_result
-            mock_pb.read_holding_registers.return_value = read_result
         now = dt_util.utcnow()
         with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
             result = await async_setup_component(hass, DOMAIN, config)
@@ -113,7 +107,28 @@ async def mock_modbus(
 
 
 @pytest.fixture
-async def mock_do_cycle(hass):
+async def mock_pymodbus_exception(hass, do_exception, mock_modbus):
+    """Trigger update call with time_changed event."""
+    if do_exception:
+        exc = ModbusException("fail read_coils")
+        mock_modbus.read_coils.side_effect = exc
+        mock_modbus.read_discrete_inputs.side_effect = exc
+        mock_modbus.read_input_registers.side_effect = exc
+        mock_modbus.read_holding_registers.side_effect = exc
+
+
+@pytest.fixture
+async def mock_pymodbus_return(hass, register_words, mock_modbus):
+    """Trigger update call with time_changed event."""
+    read_result = ReadResult(register_words)
+    mock_modbus.read_coils.return_value = read_result
+    mock_modbus.read_discrete_inputs.return_value = read_result
+    mock_modbus.read_input_registers.return_value = read_result
+    mock_modbus.read_holding_registers.return_value = read_result
+
+
+@pytest.fixture
+async def mock_do_cycle(hass, mock_pymodbus_exception, mock_pymodbus_return):
     """Trigger update call with time_changed event."""
     now = dt_util.utcnow() + timedelta(seconds=90)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
@@ -129,7 +144,7 @@ async def mock_test_state(hass, request):
 
 
 @pytest.fixture
-async def mock_ha(hass):
+async def mock_ha(hass, mock_pymodbus_return):
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()

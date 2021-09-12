@@ -5,13 +5,13 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Erreur inattendue",
+            "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Hote",
+                    "host": "H\u00f4te",
                     "password": "Mot de passe"
                 }
             }

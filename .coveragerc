@@ -685,7 +685,9 @@ omit =
     homeassistant/components/myq/cover.py
     homeassistant/components/myq/light.py
     homeassistant/components/nad/media_player.py
+    homeassistant/components/nanoleaf/__init__.py
     homeassistant/components/nanoleaf/light.py
+    homeassistant/components/nanoleaf/util.py
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
@@ -843,6 +845,7 @@ omit =
     homeassistant/components/raincloud/*
     homeassistant/components/rainmachine/__init__.py
     homeassistant/components/rainmachine/binary_sensor.py
+    homeassistant/components/rainmachine/model.py
     homeassistant/components/rainmachine/sensor.py
     homeassistant/components/rainmachine/switch.py
     homeassistant/components/raspihats/*
@@ -862,12 +865,8 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rituals_perfume_genie/binary_sensor.py
-    homeassistant/components/rituals_perfume_genie/entity.py
     homeassistant/components/rituals_perfume_genie/number.py
     homeassistant/components/rituals_perfume_genie/select.py
-    homeassistant/components/rituals_perfume_genie/sensor.py
-    homeassistant/components/rituals_perfume_genie/switch.py
-    homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -905,7 +904,9 @@ omit =
     homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/sendgrid/notify.py
-    homeassistant/components/sense/*
+    homeassistant/components/sense/__init__.py
+    homeassistant/components/sense/binary_sensor.py
+    homeassistant/components/sense/sensor.py
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
     homeassistant/components/sensibo/climate.py
@@ -989,7 +990,6 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
-    homeassistant/components/ssdp/util.py
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
@@ -1000,6 +1000,7 @@ omit =
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/binary_sensor.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
@@ -1030,6 +1031,8 @@ omit =
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
+    homeassistant/components/tautulli/const.py
+    homeassistant/components/tautulli/coordinator.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py
     homeassistant/components/telegram/notify.py
@@ -1045,14 +1048,6 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
-    homeassistant/components/tesla/__init__.py
-    homeassistant/components/tesla/binary_sensor.py
-    homeassistant/components/tesla/climate.py
-    homeassistant/components/tesla/const.py
-    homeassistant/components/tesla/device_tracker.py
-    homeassistant/components/tesla/lock.py
-    homeassistant/components/tesla/sensor.py
-    homeassistant/components/tesla/switch.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
@@ -1091,9 +1086,10 @@ omit =
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py
-    homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
+    homeassistant/components/tractive/entity.py
+    homeassistant/components/tractive/sensor.py
     homeassistant/components/tradfri/*
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
@@ -1279,5 +1275,6 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
 
-    # TYPE_CHECKING block is never executed during pytest run
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
     if TYPE_CHECKING:
+    @overload

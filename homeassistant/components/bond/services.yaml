@@ -1,0 +1,118 @@
+# Describes the format for available bond services
+
+set_fan_speed_belief:
+  name: Set believed fan speed
+  description: Sets the believed fan speed for a bond fan
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed fan speed.
+      example: "fan.living_room_fan"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: fan
+    speed:
+      required: true
+      name: Fan Speed
+      description: Fan Speed as %.
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
+
+set_switch_power_belief:
+  name: Set believed switch power state
+  description: Sets the believed power state of a bond switch
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed power state of.
+      example: "switch.whatever"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: switch
+    power_state:
+      required: true
+      name: Power state
+      description: Power state
+      example: true
+      selector:
+        boolean:
+
+set_light_power_belief:
+  name: Set believed light power state
+  description: Sets the believed light power state of a bond light
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed power state of.
+      example: "light.living_room_lights"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: light
+    power_state:
+      required: true
+      name: Power state
+      description: Power state
+      example: true
+      selector:
+        boolean:
+
+set_light_brightness_belief:
+  name: Set believed light brightness state
+  description: Sets the believed light brightness state of a bond light
+  fields:
+    entity_id:
+      description: Name(s) of entities to set the believed power state of.
+      example: "light.living_room_lights"
+      name: Entity
+      required: true
+      selector:
+        entity:
+          integration: bond
+          domain: light
+    brightness:
+      required: true
+      name: Brightness
+      description: Brightness
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          mode: slider
+
+start_increasing_brightness:
+  name: Start increasing brightness
+  description: "Start increasing the brightness of the light."
+  target:
+    entity:
+      integration: bond
+      domain: light
+
+start_decreasing_brightness:
+  name: Start decreasing brightness
+  description: "Start decreasing the brightness of the light."
+  target:
+    entity:
+      integration: bond
+      domain: light
+
+stop:
+  name: Stop
+  description: "Stop any in-progress action and empty the queue."
+  target:
+    entity:
+      integration: bond
+      domain: light
+

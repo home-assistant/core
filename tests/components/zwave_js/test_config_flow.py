@@ -499,6 +499,74 @@ async def test_usb_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_usb_discovery_addon_not_running(
+    hass,
+    supervisor,
+    addon_installed,
+    addon_options,
+    set_addon_options,
+    start_addon,
+    get_addon_discovery_info,
+):
+    """Test usb discovery when add-on is installed but not running."""
+    addon_options["device"] = "/dev/incorrect_device"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "usb_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "configure_addon"
+
+    # Make sure the discovered usb device is preferred.
+    data_schema = result["data_schema"]
+    assert data_schema({}) == {
+        "usb_path": USB_DISCOVERY_INFO["device"],
+        "network_key": "",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"usb_path": USB_DISCOVERY_INFO["device"], "network_key": "abc123"},
+    )
+
+    assert set_addon_options.call_args == call(
+        hass,
+        "core_zwave_js",
+        {"options": {"device": USB_DISCOVERY_INFO["device"], "network_key": "abc123"}},
+    )
+
+    assert result["type"] == "progress"
+    assert result["step_id"] == "start_addon"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call(hass, "core_zwave_js")
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"]["usb_path"] == USB_DISCOVERY_INFO["device"]
+    assert result["data"]["integration_created_addon"] is False
+    assert result["data"]["use_addon"] is True
+    assert result["data"]["network_key"] == "abc123"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_discovery_addon_not_running(
     hass, supervisor, addon_installed, addon_options, set_addon_options, start_addon
 ):
@@ -688,10 +756,7 @@ async def test_usb_discovery_already_running(hass, supervisor, addon_running):
 
 @pytest.mark.parametrize(
     "discovery_info",
-    [
-        NORTEK_ZIGBEE_DISCOVERY_INFO,
-        CP2652_ZIGBEE_DISCOVERY_INFO,
-    ],
+    [CP2652_ZIGBEE_DISCOVERY_INFO],
 )
 async def test_abort_usb_discovery_aborts_specific_devices(
     hass, supervisor, addon_options, discovery_info

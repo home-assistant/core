@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects import mysql, oracle, postgresql
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -39,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 19
+SCHEMA_VERSION = 21
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +65,12 @@ ALL_TABLES = [
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+DOUBLE_TYPE = (
+    Float()
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql")
+    .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
+    .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
 
 
@@ -220,8 +226,10 @@ class StatisticData(TypedDict, total=False):
     mean: float
     min: float
     max: float
+    last_reset: datetime | None
     state: float
     sum: float
+    sum_increase: float
 
 
 class Statistics(Base):  # type: ignore
@@ -240,11 +248,13 @@ class Statistics(Base):  # type: ignore
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
-    state = Column(Float())
-    sum = Column(Float())
+    mean = Column(DOUBLE_TYPE)
+    min = Column(DOUBLE_TYPE)
+    max = Column(DOUBLE_TYPE)
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(DOUBLE_TYPE)
+    sum = Column(DOUBLE_TYPE)
+    sum_increase = Column(DOUBLE_TYPE)
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
@@ -259,6 +269,7 @@ class Statistics(Base):  # type: ignore
 class StatisticMetaData(TypedDict, total=False):
     """Statistic meta data class."""
 
+    statistic_id: str
     unit_of_measurement: str | None
     has_mean: bool
     has_sum: bool
@@ -267,6 +278,9 @@ class StatisticMetaData(TypedDict, total=False):
 class StatisticsMeta(Base):  # type: ignore
     """Statistics meta data."""
 
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_STATISTICS_META
     id = Column(Integer, primary_key=True)
     statistic_id = Column(String(255), index=True)

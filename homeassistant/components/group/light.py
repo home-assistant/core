@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterator
 import itertools
-from typing import Any, Callable, Set, cast
+from typing import Any, Set, cast
 
 import voluptuous as vol
 
@@ -24,6 +23,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
@@ -50,6 +50,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 from . import GroupEntity
+from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 
@@ -93,6 +94,7 @@ FORWARDED_ATTRIBUTES = frozenset(
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,
         ATTR_TRANSITION,
+        ATTR_WHITE,
         ATTR_WHITE_VALUE,
         ATTR_XY_COLOR,
     }
@@ -181,36 +183,36 @@ class LightGroup(GroupEntity, light.LightEntity):
 
         self._attr_is_on = len(on_states) > 0
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
-        self._attr_brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
+        self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
-        self._attr_hs_color = _reduce_attribute(
-            on_states, ATTR_HS_COLOR, reduce=_mean_tuple
+        self._attr_hs_color = reduce_attribute(
+            on_states, ATTR_HS_COLOR, reduce=mean_tuple
         )
-        self._attr_rgb_color = _reduce_attribute(
-            on_states, ATTR_RGB_COLOR, reduce=_mean_tuple
+        self._attr_rgb_color = reduce_attribute(
+            on_states, ATTR_RGB_COLOR, reduce=mean_tuple
         )
-        self._attr_rgbw_color = _reduce_attribute(
-            on_states, ATTR_RGBW_COLOR, reduce=_mean_tuple
+        self._attr_rgbw_color = reduce_attribute(
+            on_states, ATTR_RGBW_COLOR, reduce=mean_tuple
         )
-        self._attr_rgbww_color = _reduce_attribute(
-            on_states, ATTR_RGBWW_COLOR, reduce=_mean_tuple
+        self._attr_rgbww_color = reduce_attribute(
+            on_states, ATTR_RGBWW_COLOR, reduce=mean_tuple
         )
-        self._attr_xy_color = _reduce_attribute(
-            on_states, ATTR_XY_COLOR, reduce=_mean_tuple
+        self._attr_xy_color = reduce_attribute(
+            on_states, ATTR_XY_COLOR, reduce=mean_tuple
         )
 
-        self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
+        self._white_value = reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
-        self._attr_color_temp = _reduce_attribute(on_states, ATTR_COLOR_TEMP)
-        self._attr_min_mireds = _reduce_attribute(
+        self._attr_color_temp = reduce_attribute(on_states, ATTR_COLOR_TEMP)
+        self._attr_min_mireds = reduce_attribute(
             states, ATTR_MIN_MIREDS, default=154, reduce=min
         )
-        self._attr_max_mireds = _reduce_attribute(
+        self._attr_max_mireds = reduce_attribute(
             states, ATTR_MAX_MIREDS, default=500, reduce=max
         )
 
         self._attr_effect_list = None
-        all_effect_lists = list(_find_state_attributes(states, ATTR_EFFECT_LIST))
+        all_effect_lists = list(find_state_attributes(states, ATTR_EFFECT_LIST))
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._attr_effect_list = list(set().union(*all_effect_lists))
@@ -220,14 +222,14 @@ class LightGroup(GroupEntity, light.LightEntity):
                 self._attr_effect_list.insert(0, "None")
 
         self._attr_effect = None
-        all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
+        all_effects = list(find_state_attributes(on_states, ATTR_EFFECT))
         if all_effects:
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._attr_effect = effects_count.most_common(1)[0][0]
 
         self._attr_color_mode = None
-        all_color_modes = list(_find_state_attributes(on_states, ATTR_COLOR_MODE))
+        all_color_modes = list(find_state_attributes(on_states, ATTR_COLOR_MODE))
         if all_color_modes:
             # Report the most common color mode, select brightness and onoff last
             color_mode_count = Counter(itertools.chain(all_color_modes))
@@ -239,7 +241,7 @@ class LightGroup(GroupEntity, light.LightEntity):
 
         self._attr_supported_color_modes = None
         all_supported_color_modes = list(
-            _find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
+            find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
         )
         if all_supported_color_modes:
             # Merge all color modes.
@@ -248,49 +250,10 @@ class LightGroup(GroupEntity, light.LightEntity):
             )
 
         self._attr_supported_features = 0
-        for support in _find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
+        for support in find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.
             self._attr_supported_features |= support
         # Bitwise-and the supported features with the GroupedLight's features
         # so that we don't break in the future when a new feature is added.
         self._attr_supported_features &= SUPPORT_GROUP_LIGHT
-
-
-def _find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
-    """Find attributes with matching key from states."""
-    for state in states:
-        value = state.attributes.get(key)
-        if value is not None:
-            yield value
-
-
-def _mean_int(*args: Any) -> int:
-    """Return the mean of the supplied values."""
-    return int(sum(args) / len(args))
-
-
-def _mean_tuple(*args: Any) -> tuple[float | Any, ...]:
-    """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(x) / len(x) for x in zip(*args))
-
-
-def _reduce_attribute(
-    states: list[State],
-    key: str,
-    default: Any | None = None,
-    reduce: Callable[..., Any] = _mean_int,
-) -> Any:
-    """Find the first attribute matching key from states.
-
-    If none are found, return default.
-    """
-    attrs = list(_find_state_attributes(states, key))
-
-    if not attrs:
-        return default
-
-    if len(attrs) == 1:
-        return attrs[0]
-
-    return reduce(*attrs)

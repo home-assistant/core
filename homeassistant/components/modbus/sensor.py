@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SENSORS, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -48,6 +48,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_state_class = entry.get(CONF_STATE_CLASS)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""

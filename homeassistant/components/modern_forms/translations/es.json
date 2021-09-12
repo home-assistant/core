@@ -3,6 +3,9 @@
         "flow_title": "{name}",
         "step": {
             "user": {
+                "data": {
+                    "host": "Anfitri\u00f3n"
+                },
                 "description": "Configura tu ventilador de Modern Forms para que se integre con Home Assistant."
             },
             "zeroconf_confirm": {
