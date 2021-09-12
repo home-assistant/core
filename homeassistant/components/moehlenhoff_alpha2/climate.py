@@ -5,6 +5,9 @@ import aiohttp
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     PRESET_COMFORT,
@@ -96,6 +99,15 @@ class Alpha2Climate(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         await self._base_update_handler.async_set_cooling(hvac_mode == HVAC_MODE_COOL)
+
+    @property
+    def hvac_action(self) -> str:
+        """Return the current running hvac operation."""
+        if not self._data["_HEATCTRL_STATE"]:
+            return CURRENT_HVAC_IDLE
+        if self._base_update_handler.get_cooling():
+            return CURRENT_HVAC_COOL
+        return CURRENT_HVAC_HEAT
 
     @property
     def target_temperature(self):
