@@ -84,7 +84,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title: str = ""
         self._id: int | None = None
         self._bridge: SamsungTVLegacyBridge | SamsungTVWSBridge | None = None
-        self._device_info: dict[Any, Any] | None = None
+        self._device_info: dict[str, Any] | None = None
 
     def _get_entry_from_bridge(self) -> data_entry_flow.FlowResult:
         """Get device entry."""

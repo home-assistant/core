@@ -24,7 +24,13 @@ from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .bridge import SamsungTVBridge, async_get_device_info, mac_from_device_info
+from .bridge import (
+    SamsungTVBridge,
+    SamsungTVLegacyBridge,
+    SamsungTVWSBridge,
+    async_get_device_info,
+    mac_from_device_info,
+)
 from .const import (
     CONF_ON_ACTION,
     DEFAULT_NAME,
@@ -36,7 +42,7 @@ from .const import (
 )
 
 
-def ensure_unique_hosts(value: Any) -> Any:
+def ensure_unique_hosts(value: dict[Any, Any]) -> dict[Any, Any]:
     """Validate that all configs have a unique host."""
     vol.Schema(vol.Unique("duplicate host entries found"))(
         [entry[CONF_HOST] for entry in value]
@@ -92,7 +98,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _async_get_device_bridge(data: dict[str, Any]) -> Any:
+def _async_get_device_bridge(
+    data: dict[str, Any]
+) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
         data[CONF_METHOD],
@@ -123,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: ConfigEntry
-) -> Any:
+) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
     """Create a bridge object and update any missing data in the config entry."""
     updated_data = {}
     host = entry.data[CONF_HOST]

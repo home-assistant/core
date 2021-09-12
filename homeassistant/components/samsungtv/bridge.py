@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import contextlib
-from typing import Any
+from typing import Any, cast
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -41,7 +41,7 @@ from .const import (
 )
 
 
-def mac_from_device_info(info: Any) -> str | None:
+def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
     dev_info = info.get("device", {})
     if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
@@ -50,15 +50,17 @@ def mac_from_device_info(info: Any) -> str | None:
 
 
 async def async_get_device_info(
-    hass: HomeAssistant, bridge: SamsungTVBridge | None, host: str
-) -> tuple[int | None, str | None, dict[Any, Any] | None]:
+    hass: HomeAssistant,
+    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge | None,
+    host: str,
+) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     return await hass.async_add_executor_job(_get_device_info, bridge, host)
 
 
 def _get_device_info(
     bridge: SamsungTVWSBridge | SamsungTVLegacyBridge, host: str
-) -> tuple[int | None, str | None, dict[Any, Any] | None]:
+) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     if bridge and bridge.port:
         return bridge.port, bridge.method, bridge.device_info()
@@ -106,7 +108,7 @@ class SamsungTVBridge(ABC):
         """Try to connect to the TV."""
 
     @abstractmethod
-    def device_info(self) -> dict | None:
+    def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
 
     @abstractmethod
@@ -316,13 +318,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return RESULT_CANNOT_CONNECT
 
-    def device_info(self) -> Any:
+    def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
-        remote = self._get_remote(avoid_open=True)
-        if not remote:
-            return None
-        with contextlib.suppress(HttpApiError):
-            return remote.rest_device_info()
+        if remote := self._get_remote(avoid_open=True):
+            with contextlib.suppress(HttpApiError):
+                return cast(dict[str, Any], remote.rest_device_info())
+
+        return None
 
     def _send_key(self, key: str) -> None:
         """Send the key using websocket protocol."""
