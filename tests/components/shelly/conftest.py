@@ -127,7 +127,7 @@ async def coap_wrapper(hass):
         BLOCK
     ] = BlockDeviceWrapper(hass, config_entry, device)
 
-    await wrapper.async_setup()
+    wrapper.async_setup()
 
     return wrapper
 
@@ -161,6 +161,6 @@ async def rpc_wrapper(hass):
         RPC
     ] = RpcDeviceWrapper(hass, config_entry, device)
 
-    await wrapper.async_setup()
+    wrapper.async_setup()
 
     return wrapper

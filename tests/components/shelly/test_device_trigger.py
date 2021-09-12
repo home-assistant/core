@@ -82,7 +82,7 @@ async def test_get_triggers_button(hass):
         BLOCK
     ] = BlockDeviceWrapper(hass, config_entry, device)
 
-    await coap_wrapper.async_setup()
+    coap_wrapper.async_setup()
 
     expected_triggers = [
         {

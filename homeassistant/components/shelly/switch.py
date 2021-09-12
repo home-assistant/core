@@ -46,17 +46,18 @@ async def async_setup_block_entry(
     relay_blocks = []
     assert wrapper.device.blocks
     for block in wrapper.device.blocks:
-        if block.type == "relay":
-            app_type = wrapper.device.settings["relays"][int(block.channel)].get(
-                "appliance_type"
-            )
-            if app_type and app_type.lower() == "light":
-                continue
+        if block.type != "relay":
+            continue
 
-            relay_blocks.append(block)
-            assert wrapper.device.shelly
-            unique_id = f'{wrapper.device.shelly["mac"]}-{block.type}_{block.channel}'
-            await async_remove_shelly_entity(hass, "light", unique_id)
+        app_type = wrapper.device.settings["relays"][int(block.channel)].get(
+            "appliance_type"
+        )
+        if app_type and app_type.lower() == "light":
+            continue
+
+        relay_blocks.append(block)
+        unique_id = f"{wrapper.mac}-{block.type}_{block.channel}"
+        await async_remove_shelly_entity(hass, "light", unique_id)
 
     if not relay_blocks:
         return
@@ -75,14 +76,16 @@ async def async_setup_rpc_entry(
     switch_keys = []
     for i in range(4):
         key = f"switch:{i}"
-        if wrapper.device.status.get(key):
-            con_types = wrapper.device.config["sys"]["ui_data"].get("consumption_types")
-            if con_types is not None and con_types[i] == "lights":
-                continue
+        if not wrapper.device.status.get(key):
+            continue
 
-            switch_keys.append(key)
-            unique_id = f"{wrapper.mac}-{key}"
-            await async_remove_shelly_entity(hass, "light", unique_id)
+        con_types = wrapper.device.config["sys"]["ui_data"].get("consumption_types")
+        if con_types is not None and con_types[i] == "lights":
+            continue
+
+        switch_keys.append(key)
+        unique_id = f"{wrapper.mac}-{key}"
+        await async_remove_shelly_entity(hass, "light", unique_id)
 
     if not switch_keys:
         return
@@ -138,10 +141,8 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.set_state("Switch.Set", {"id": self._id, "on": True})
-        self.async_write_ha_state()
+        await self.call_rpc("Switch.Set", {"id": self._id, "on": True})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.set_state("Switch.Set", {"id": self._id, "on": False})
-        self.async_write_ha_state()
+        await self.call_rpc("Switch.Set", {"id": self._id, "on": False})

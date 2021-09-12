@@ -299,10 +299,10 @@ class ShellyRpcEntity(entity.Entity):
         """Handle device update."""
         self.async_write_ha_state()
 
-    async def set_state(self, method: str, params: Any) -> Any:
-        """Set block state (RPC request)."""
+    async def call_rpc(self, method: str, params: Any) -> Any:
+        """Call RPC method."""
         _LOGGER.debug(
-            "Setting state for entity %s, method: %s, params: %s",
+            "Call RPC for entity %s, method: %s, params: %s",
             self.name,
             method,
             params,
@@ -312,7 +312,7 @@ class ShellyRpcEntity(entity.Entity):
                 return await self.wrapper.device.call_rpc(method, params)
         except asyncio.TimeoutError as err:
             _LOGGER.error(
-                "Setting state for entity %s failed, method: %s, params: %s, error: %s",
+                "Call RPC for entity %s failed, method: %s, params: %s, error: %s",
                 self.name,
                 method,
                 params,

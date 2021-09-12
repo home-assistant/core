@@ -123,6 +123,7 @@ async def test_rpc_device_services(hass, rpc_wrapper, monkeypatch):
         {ATTR_ENTITY_ID: "switch.test_switch_0"},
         blocking=True,
     )
+    rpc_wrapper.async_set_updated_data("")
     assert hass.states.get("switch.test_switch_0").state == STATE_OFF
 
 

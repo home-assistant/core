@@ -124,7 +124,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         False,
     )
 
-    dev_reg = await device_registry.async_get_registry(hass)
+    dev_reg = device_registry.async_get(hass)
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
@@ -180,7 +180,7 @@ async def async_block_device_setup(
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         BLOCK
     ] = BlockDeviceWrapper(hass, entry, device)
-    await device_wrapper.async_setup()
+    device_wrapper.async_setup()
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
@@ -213,7 +213,7 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
     ] = RpcDeviceWrapper(hass, entry, device)
-    await device_wrapper.async_setup()
+    device_wrapper.async_setup()
 
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
@@ -338,16 +338,14 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
-    async def async_setup(self) -> None:
+    def async_setup(self) -> None:
         """Set up the wrapper."""
-        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg = device_registry.async_get(self.hass)
         sw_version = self.device.firmware_version if self.device.initialized else ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
-            # This is duplicate but otherwise via_device can't work
-            identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
@@ -507,16 +505,14 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
-    async def async_setup(self) -> None:
+    def async_setup(self) -> None:
         """Set up the wrapper."""
-        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg = device_registry.async_get(self.hass)
         sw_version = self.device.firmware_version if self.device.initialized else ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
-            # This is duplicate but otherwise via_device can't work
-            identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
