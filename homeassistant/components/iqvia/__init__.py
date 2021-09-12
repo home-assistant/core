@@ -10,12 +10,12 @@ from typing import Any, Callable, Dict, cast
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
-from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -107,27 +107,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity, SensorEntity):
+class IQVIAEntity(CoordinatorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         entry: ConfigEntry,
-        sensor_type: str,
-        name: str,
-        icon: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._attr_icon = icon
-        self._attr_name = name
-        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{sensor_type}"
-        self._attr_native_unit_of_measurement = "index"
+        self._attr_unique_id = f"{entry.data[CONF_ZIP_CODE]}_{description.key}"
         self._entry = entry
-        self._type = sensor_type
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -142,7 +137,7 @@ class IQVIAEntity(CoordinatorEntity, SensorEntity):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        if self._type == TYPE_ALLERGY_FORECAST:
+        if self.entity_description.key == TYPE_ALLERGY_FORECAST:
             self.async_on_remove(
                 self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
                     TYPE_ALLERGY_OUTLOOK
