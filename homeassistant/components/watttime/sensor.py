@@ -34,7 +34,7 @@ SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT = "realtime_emissions_percent"
 
 @dataclass
 class RealtimeEmissionsSensorDescriptionMixin:
-    """Define an entity description mixin realtime emissions sensors."""
+    """Define an entity description mixin for realtime emissions sensors."""
 
     data_key: str
 
