@@ -209,7 +209,7 @@ arcam-fmj==0.7.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.21.1
+async-upnp-client==0.21.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -462,7 +462,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210830.0
+home-assistant-frontend==20210911.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
