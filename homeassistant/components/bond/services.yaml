@@ -1,11 +1,11 @@
 # Describes the format for available bond services
 
-set_fan_speed_belief:
-  name: Set believed fan speed
-  description: Sets the believed fan speed for a bond fan
+set_fan_speed_tracked_state:
+  name: Set fan speed tracked state
+  description: Sets the tracked fan speed for a bond fan
   fields:
     entity_id:
-      description: Name(s) of entities to set the believed fan speed.
+      description: Name(s) of entities to set the tracked fan speed.
       example: "fan.living_room_fan"
       name: Entity
       required: true
@@ -25,12 +25,12 @@ set_fan_speed_belief:
           step: 1
           mode: slider
 
-set_switch_power_belief:
-  name: Set believed switch power state
-  description: Sets the believed power state of a bond switch
+set_switch_power_tracked_state:
+  name: Set tracked switch power state
+  description: Sets the tracked power state of a bond switch
   fields:
     entity_id:
-      description: Name(s) of entities to set the believed power state of.
+      description: Name(s) of entities to set the tracked power state of.
       example: "switch.whatever"
       name: Entity
       required: true
@@ -46,12 +46,12 @@ set_switch_power_belief:
       selector:
         boolean:
 
-set_light_power_belief:
-  name: Set believed light power state
-  description: Sets the believed light power state of a bond light
+set_light_power_tracked_state:
+  name: Set tracked light power state
+  description: Sets the tracked power state of a bond light
   fields:
     entity_id:
-      description: Name(s) of entities to set the believed power state of.
+      description: Name(s) of entities to set the tracked power state of.
       example: "light.living_room_lights"
       name: Entity
       required: true
@@ -67,12 +67,12 @@ set_light_power_belief:
       selector:
         boolean:
 
-set_light_brightness_belief:
-  name: Set believed light brightness state
-  description: Sets the believed light brightness state of a bond light
+set_light_brightness_tracked_state:
+  name: Set tracked light brightness state
+  description: Sets the tracked brightness state of a bond light
   fields:
     entity_id:
-      description: Name(s) of entities to set the believed power state of.
+      description: Name(s) of entities to set the tracked brightness state of.
       example: "light.living_room_lights"
       name: Entity
       required: true
