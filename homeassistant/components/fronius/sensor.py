@@ -58,21 +58,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ):
     """Set up Fronius sensor entities based on a config entry."""
-    fronius: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
-    for inverter_coordinator in fronius.inverter_coordinators:
+    solar_net: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
+    for inverter_coordinator in solar_net.inverter_coordinators:
         inverter_coordinator.add_entities_for_seen_keys(
             async_add_entities, InverterSensor
         )
-    if fronius.meter_coordinator is not None:
-        fronius.meter_coordinator.add_entities_for_seen_keys(
+    if solar_net.meter_coordinator is not None:
+        solar_net.meter_coordinator.add_entities_for_seen_keys(
             async_add_entities, MeterSensor
         )
-    if fronius.power_flow_coordinator is not None:
-        fronius.power_flow_coordinator.add_entities_for_seen_keys(
+    if solar_net.power_flow_coordinator is not None:
+        solar_net.power_flow_coordinator.add_entities_for_seen_keys(
             async_add_entities, PowerFlowSensor
         )
-    if fronius.storage_coordinator is not None:
-        fronius.storage_coordinator.add_entities_for_seen_keys(
+    if solar_net.storage_coordinator is not None:
+        solar_net.storage_coordinator.add_entities_for_seen_keys(
             async_add_entities, StorageSensor
         )
 
@@ -116,7 +116,7 @@ class MeterSensor(FroniusEntity, SensorEntity):
             identifiers={(DOMAIN, meter_data["serial"]["value"])},
             manufacturer=meter_data["manufacturer"]["value"],
             model=meter_data["model"]["value"],
-            # TODO: via_device? entry_type?
+            via_device=(DOMAIN, self.coordinator.solar_net_device_id),
         )
         self._attr_native_value = meter_data[self.entity_description.key]["value"]
         self._attr_unique_id = (
@@ -158,7 +158,7 @@ class StorageSensor(FroniusEntity, SensorEntity):
             identifiers={(DOMAIN, storage_data["serial"]["value"])},
             manufacturer=storage_data["manufacturer"]["value"],
             model=storage_data["model"]["value"],
-            # TODO: via_device? entry_type?
+            via_device=(DOMAIN, self.coordinator.solar_net_device_id),
         )
         self._attr_native_value = storage_data[self.entity_description.key]["value"]
         self._attr_unique_id = (

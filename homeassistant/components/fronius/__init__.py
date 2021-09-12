@@ -10,11 +10,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, FroniusDeviceInfo
+from .const import DOMAIN, SOLAR_NET_ID_SYSTEM, FroniusDeviceInfo
 from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
@@ -28,7 +29,6 @@ PLATFORMS: list[str] = ["sensor"]
 DEFAULT_UPDATE_INTERVAL = 60
 
 
-# TODO: add import for yaml config - see eg. `awair` integration
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up fronius from a config entry."""
     fronius = FroniusSolarNet(hass, entry)
@@ -56,12 +56,15 @@ class FroniusSolarNet:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
-        self.bridge_uid: str = entry.unique_id  # type: ignore[assignment]
+        self.config_entry_id = entry.entry_id
+        # entry.unique_id is either logger uid or first inverter uid if no logger available
+        # prepended by "solar_net_" to have individual device for whole system (power_flow)
+        self.solar_net_device_id = f"solar_net_{entry.unique_id}"
         self.update_interval = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
         self.url: str = entry.data[CONF_HOST]
         self._has_logger: bool = entry.data["is_logger"]
 
-        self.bridge: Fronius = self._init_bridge()
+        self.fronius: Fronius = self._init_bridge()
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
@@ -75,11 +78,12 @@ class FroniusSolarNet:
 
     async def init_devices(self):
         """Initialize DataUpdateCoordinators for SolarNet devices."""
+        solar_net_device_info = await self._create_solar_net_device()
         _inverter_infos = await self._get_inverter_infos()
         for inverter_info in _inverter_infos:
             coordinator = FroniusInverterUpdateCoordinator(
                 hass=self.hass,
-                fronius=self.bridge,
+                solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.url}",
                 update_interval=self.update_interval,
@@ -91,40 +95,63 @@ class FroniusSolarNet:
         self.meter_coordinator = await self._init_optional_coordinator(
             FroniusMeterUpdateCoordinator(
                 hass=self.hass,
-                fronius=self.bridge,
+                solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_meters_{self.url}",
                 update_interval=self.update_interval,
             )
         )
-        # TODO: use logger as device if available or create SolarNet device
-        # instead of adding to first inverter
-        power_flow_info = _inverter_infos[0]
+
         self.power_flow_coordinator = FroniusPowerFlowUpdateCoordinator(
             hass=self.hass,
-            fronius=self.bridge,
+            solar_net=self,
             logger=_LOGGER,
             name=f"{DOMAIN}_power_flow_{self.url}",
             update_interval=self.update_interval,
-            power_flow_info=power_flow_info,
+            power_flow_info=solar_net_device_info,
         )
         await self.power_flow_coordinator.async_config_entry_first_refresh()
 
         self.storage_coordinator = await self._init_optional_coordinator(
             FroniusStorageUpdateCoordinator(
                 hass=self.hass,
-                fronius=self.bridge,
+                solar_net=self,
                 logger=_LOGGER,
                 name=f"{DOMAIN}_storages_{self.url}",
                 update_interval=self.update_interval,
             )
         )
-        # logger_info
+
+    async def _create_solar_net_device(self) -> FroniusDeviceInfo:
+        """Create a device for the Fronius SolarNet system."""
+        solar_net_device: DeviceInfo = DeviceInfo(
+            name="SolarNet",
+            identifiers={(DOMAIN, self.solar_net_device_id)},
+            manufacturer="Fronius",
+        )
+        if self._has_logger:
+            try:
+                _logger_info = await self.fronius.current_logger_info()
+            except FroniusError as err:
+                raise ConfigEntryNotReady from err
+            solar_net_device["model"] = _logger_info["product_type"]["value"]
+            solar_net_device["sw_version"] = _logger_info["software_version"]["value"]
+
+        device_registry = await dr.async_get_registry(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry_id,
+            **solar_net_device,
+        )
+        return FroniusDeviceInfo(
+            device_info=solar_net_device,
+            solar_net_id=SOLAR_NET_ID_SYSTEM,
+            unique_id=self.solar_net_device_id,
+        )
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:
         """Get information about the inverters in the SolarNet system."""
         try:
-            _inverter_info = await self.bridge.inverter_info()
+            _inverter_info = await self.fronius.inverter_info()
         except FroniusError as err:
             raise ConfigEntryNotReady from err
 
@@ -139,7 +166,7 @@ class FroniusSolarNet:
                 model=inverter["device_type"].get(
                     "model", inverter["device_type"]["value"]
                 ),
-                # TODO: via_device? entry_type?
+                via_device=(DOMAIN, self.solar_net_device_id),
             )
             inverter_infos.append(
                 FroniusDeviceInfo(

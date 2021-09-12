@@ -1,7 +1,7 @@
 """DataUpdateCoordinators for the Fronius integration."""
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping
+from typing import TYPE_CHECKING, Any, Dict, Mapping
 
 from pyfronius import Fronius, FroniusError
 
@@ -22,6 +22,9 @@ from .descriptions import (
     STORAGE_ENTITY_DESCRIPTIONS,
 )
 
+if TYPE_CHECKING:
+    from . import FroniusSolarNet
+
 
 class _FroniusUpdateCoordinator(
     DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
@@ -30,9 +33,10 @@ class _FroniusUpdateCoordinator(
 
     valid_descriptions: Mapping[str, EntityDescription]
 
-    def __init__(self, *args, fronius: Fronius, **kwargs) -> None:
+    def __init__(self, *args, solar_net: FroniusSolarNet, **kwargs) -> None:
         """Set up the _FroniusUpdateCoordinator class."""
-        self.fronius = fronius
+        self.fronius: Fronius = solar_net.fronius
+        self.solar_net_device_id = solar_net.solar_net_device_id
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
         super().__init__(*args, **kwargs)
