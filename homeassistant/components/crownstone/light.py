@@ -122,18 +122,18 @@ class CrownstoneEntity(CrownstoneDevice, LightEntity):
         attributes: dict[str, Any] = {}
         # switch method
         if self.usb_available:
-            attributes["Switch Method"] = "Crownstone USB Dongle"
+            attributes["switch_method"] = "Crownstone USB Dongle"
         else:
-            attributes["Switch Method"] = "Crownstone Cloud"
+            attributes["switch_method"] = "Crownstone Cloud"
 
         # crownstone abilities
-        attributes["Dimming"] = ABILITY_STATE.get(
+        attributes["dimming"] = ABILITY_STATE.get(
             self.device.abilities.get(DIMMING_ABILITY).is_enabled
         )
-        attributes["Tap To Toggle"] = ABILITY_STATE.get(
+        attributes["tap_to_toggle"] = ABILITY_STATE.get(
             self.device.abilities.get(TAP_TO_TOGGLE_ABILITY).is_enabled
         )
-        attributes["Switchcraft"] = ABILITY_STATE.get(
+        attributes["switchcraft"] = ABILITY_STATE.get(
             self.device.abilities.get(SWITCHCRAFT_ABILITY).is_enabled
         )
 
