@@ -374,7 +374,7 @@ async def test_icon_template(hass):
                                 "value": "{{ value }}",
                             },
                         },
-                        "icon": "{% if ((states.input_number.value or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
+                        "icon": "{% if ((states.input_number.value.state or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
                         # "optimistic": True,
                         # "unique_id": "a",
                     },
