@@ -1,9 +1,10 @@
 """Test setup of zeversolar local integration."""
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from zeversolarlocal.api import SolarData
 
-from homeassistant.components.zeversolar import async_unload_entry
+from homeassistant.components.zeversolar import ErrorDurationTracker, async_unload_entry
 from homeassistant.components.zeversolar.const import DOMAIN, ZEVER_INVERTER_ID
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -67,3 +68,15 @@ async def test_unload_entry(hass: HomeAssistant):
 
     result = await async_unload_entry(hass, mock_entry)
     assert result is True
+
+
+def test_error_duration_tracker_first_error():
+    """Test duration tracker."""
+    first_error = datetime.now()
+    tracker = ErrorDurationTracker()
+
+    assert tracker.get_error_duration(first_error) == 0
+
+    second_error = first_error + timedelta(hours=3)
+
+    assert tracker.get_error_duration(current=second_error) == 3
