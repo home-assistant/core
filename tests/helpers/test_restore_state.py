@@ -32,7 +32,7 @@ async def test_caching_data(hass):
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -59,7 +59,7 @@ async def test_periodic_write(hass):
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -105,7 +105,7 @@ async def test_save_persistent_states(hass):
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass
@@ -170,7 +170,8 @@ async def test_hass_starting(hass):
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
-    hass.data[DATA_RESTORE_STATE_TASK] = None
+    hass.state = CoreState.not_running
+    hass.data.pop(DATA_RESTORE_STATE_TASK)
 
     entity = RestoreEntity()
     entity.hass = hass

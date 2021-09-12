@@ -307,7 +307,7 @@ async def websocket_node_state(
     """Get the state data of a Z-Wave JS node."""
     connection.send_result(
         msg[ID],
-        node.data,
+        {**node.data, "values": [value.data for value in node.values.values()]},
     )
 
 

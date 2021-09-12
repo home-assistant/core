@@ -244,6 +244,7 @@ def hue_client(loop, hass_hue, hass_client_no_auth):
                 "scene.light_off": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
+        "127.0.0.1",
     )
     config.numbers = ENTITY_IDS_BY_NUMBER
 
@@ -322,7 +323,7 @@ async def test_lights_all_dimmable(hass, hass_client_no_auth):
             {emulated_hue.DOMAIN: hue_config},
         )
         await hass.async_block_till_done()
-    config = Config(None, hue_config)
+    config = Config(None, hue_config, "127.0.0.1")
     config.numbers = ENTITY_IDS_BY_NUMBER
     web_app = hass.http.app
     HueOneLightStateView(config).register(web_app, web_app.router)
