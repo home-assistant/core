@@ -85,8 +85,9 @@ SENSORS = {
     "asleep": "mdi:sleep",
     "awake": "mdi:eue",
     "dead": "mdi:robot-dead",
-    "unknown": "mdi:help-rhombus"
+    "unknown": "mdi:help-rhombus,"
 }
+
 
 @dataclass
 class ZwaveSensorEntityDescription(SensorEntityDescription):
