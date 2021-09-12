@@ -95,7 +95,7 @@ class ZwaveSensorEntityDescription(SensorEntityDescription):
 
     info: ZwaveDiscoveryInfo | None = None
 
-    
+
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
@@ -491,7 +491,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     def icon(self) -> str | None:
         """Icon of the entity."""
         return STATUS_ICON_MAP.get(self.node.status, DEFAULT_STATUS_ICON)
-    
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         # Add value_changed callbacks.
