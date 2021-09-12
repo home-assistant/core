@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -9,6 +10,7 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PLUG,
+    DEVICE_CLASS_UPDATE,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -32,6 +34,11 @@ SENSOR_TYPES = (
         key="is_linked",
         name="Link",
         device_class=DEVICE_CLASS_PLUG,
+    ),
+    BinarySensorEntityDescription(
+        key="firmware_update",
+        name="Firmware Update",
+        device_class=DEVICE_CLASS_UPDATE,
     ),
 )
 
@@ -82,6 +89,9 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
 
         try:
             status: FritzStatus = self._fritzbox_tools.fritz_status
+            userinferface: dict[str, Any] = self._fritzbox_tools.connection.call_action(
+                "UserInterface", "X_AVM-DE_GetInfo"
+            )
             self._attr_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
@@ -92,3 +102,11 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
             self._attr_is_on = bool(status.is_connected)
         elif self.entity_description.key == "is_linked":
             self._attr_is_on = bool(status.is_linked)
+        elif self.entity_description.key == "firmware_update":
+            latest_fw = userinferface["NewX_AVM-DE_CurrentFwVersion"]
+            installed_fw = userinferface["NewX_AVM-DE_LastFwVersion"]
+            self._attr_is_on = bool(latest_fw > installed_fw)
+            self._attr_extra_state_attributes = {
+                "installed_version": installed_fw,
+                "latest_available_version:": latest_fw,
+            }
