@@ -51,15 +51,6 @@ def async_is_ozw_migrated(hass):
 
 
 @callback
-def async_generate_migration_data(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Generate Z-Wave migration data."""
-    migration_handler = get_legacy_zwave_migration(hass)
-    migration_handler.generate_data(config_entry)
-
-
-@callback
 def async_add_migration_entity_value(
     hass: HomeAssistant,
     entity_id: str,
