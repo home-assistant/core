@@ -69,8 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tractive = TractiveClient(hass, client, creds["user_id"])
     tractive.subscribe()
 
-    trackable_objects = await client.trackable_objects()
     try:
+        trackable_objects = await client.trackable_objects()
         trackables = await asyncio.gather(
             *(_generate_trackables(client, item) for item in trackable_objects)
         )
