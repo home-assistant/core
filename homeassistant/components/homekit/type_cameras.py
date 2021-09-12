@@ -174,10 +174,8 @@ class Camera(HomeAccessory, PyhapCamera):
         }
         audio_options = {
             "codecs": [
-                #                {"type": "OPUS", "samplerate": 24},
-                #                {"type": "OPUS", "samplerate": 16},
-                {"type": "AAC-eld", "samplerate": 24},
-                #                {"type": "AAC-eld", "samplerate": 16},
+                {"type": "OPUS", "samplerate": 24},
+                {"type": "OPUS", "samplerate": 16},
             ]
         }
 
