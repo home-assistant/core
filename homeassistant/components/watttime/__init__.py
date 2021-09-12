@@ -1,20 +1,64 @@
 """The WattTime integration."""
 from __future__ import annotations
 
+from datetime import timedelta
+
+from aiowatttime import Client
+from aiowatttime.emissions import RealTimeEmissionsResponseType
+from aiowatttime.errors import WattTimeError
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DATA_COORDINATOR, DOMAIN, LOGGER
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS: list[str] = ["light"]
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
+
+PLATFORMS: list[str] = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WattTime from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
+
+    session = aiohttp_client.async_get_clientsession(hass)
+    client = await Client.async_login(
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        session=session,
+        logger=LOGGER,
+    )
+
+    async def async_update_data() -> RealTimeEmissionsResponseType:
+        """Get the latest realtime emissions data."""
+        try:
+            return await client.emissions.async_get_realtime_emissions(
+                entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]
+            )
+        except WattTimeError as err:
+            raise UpdateFailed(
+                f"Error while requesting data from WattTime: {err}"
+            ) from err
+
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][
+        entry.entry_id
+    ] = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=entry.title,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+        update_method=async_update_data,
+    )
+
+    await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

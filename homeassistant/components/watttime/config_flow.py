@@ -23,7 +23,15 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import AUTH_TYPE_LOGIN, AUTH_TYPE_REGISTER, DOMAIN, LOGGER
+from .const import (
+    AUTH_TYPE_LOGIN,
+    AUTH_TYPE_REGISTER,
+    CONF_BALANCING_AUTHORITY,
+    CONF_BALANCING_AUTHORITY_ABBREV,
+    CONF_BALANCING_AUTHORITY_ID,
+    DOMAIN,
+    LOGGER,
+)
 
 CONF_AUTH_TYPE = "auth_type"
 CONF_ORGANIZATION = "organization"
@@ -93,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         try:
-            await self._client.emissions.async_get_grid_region(
+            grid_region = await self._client.emissions.async_get_grid_region(
                 user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
             )
         except CoordinatesNotFoundError:
@@ -118,6 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_LATITUDE: user_input[CONF_LATITUDE],
                 CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                CONF_BALANCING_AUTHORITY: grid_region["name"],
+                CONF_BALANCING_AUTHORITY_ABBREV: grid_region["abbrev"],
+                CONF_BALANCING_AUTHORITY_ID: grid_region["id"],
             },
         )
 
