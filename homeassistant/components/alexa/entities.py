@@ -60,7 +60,6 @@ from .capabilities import (
     AlexaLockController,
     AlexaModeController,
     AlexaMotionSensor,
-    AlexaPercentageController,
     AlexaPlaybackController,
     AlexaPlaybackStateReporter,
     AlexaPowerController,
@@ -529,21 +528,30 @@ class FanCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
-
+        range_controller = True
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & fan.SUPPORT_SET_SPEED:
-            yield AlexaPercentageController(self.entity)
         if supported & fan.SUPPORT_OSCILLATE:
             yield AlexaToggleController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
             )
+            range_controller = False
         if supported & fan.SUPPORT_PRESET_MODE:
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
             )
+            range_controller = False
         if supported & fan.SUPPORT_DIRECTION:
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
+            )
+            range_controller = False
+
+        # AlexaRangeController controls the Fan Speed Percentage. When there is no speed support it will only allow to be set at 0 and 100%.
+        # If no other controller is activated AlexRangeController will not be needed unless there is speed support and will be initialized
+        # to make the fan controllable.
+        if range_controller or supported & fan.SUPPORT_SET_SPEED:
+            yield AlexaRangeController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)

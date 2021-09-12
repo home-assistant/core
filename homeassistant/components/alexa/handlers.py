@@ -1075,6 +1075,19 @@ async def async_api_set_range(hass, config, directive, context):
             service = cover.SERVICE_SET_COVER_TILT_POSITION
             data[cover.ATTR_TILT_POSITION] = range_value
 
+    # Fan Speed
+    elif instance == f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}":
+        range_value = int(range_value)
+        if range_value == 0:
+            service = fan.SERVICE_TURN_OFF
+        else:
+            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if supported and fan.SUPPORT_SET_SPEED:
+                service = fan.SERVICE_SET_PERCENTAGE
+                data[fan.ATTR_PERCENTAGE] = range_value
+            else:
+                service = fan.SERVICE_TURN_ON
+
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
