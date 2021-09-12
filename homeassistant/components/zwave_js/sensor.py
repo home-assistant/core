@@ -83,7 +83,7 @@ LOGGER = logging.getLogger(__name__)
 STATUS = {
     "alive": "mdi:heart-pulse",
     "asleep": "mdi:sleep",
-    "awake": "mdi:eue",
+    "awake": "mdi:eye",
     "dead": "mdi:robot-dead",
     "unknown": "mdi:help-rhombus",
 }
