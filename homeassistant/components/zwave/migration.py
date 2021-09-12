@@ -51,6 +51,19 @@ def async_is_ozw_migrated(hass):
 
 
 @callback
+def async_is_zwave_js_migrated(hass):
+    """Return True if migration to Z-Wave JS is done."""
+    zwave_js_config_entries = hass.config_entries.async_entries("zwave_js")
+    if not zwave_js_config_entries:
+        return False
+
+    migrated = any(
+        config_entry.data.get("migrated") for config_entry in zwave_js_config_entries
+    )
+    return migrated
+
+
+@callback
 def async_add_migration_entity_value(
     hass: HomeAssistant,
     entity_id: str,

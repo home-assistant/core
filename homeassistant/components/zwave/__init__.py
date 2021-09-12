@@ -59,6 +59,7 @@ from .migration import (  # noqa: F401 pylint: disable=unused-import
     async_add_migration_entity_value,
     async_get_migration_data,
     async_is_ozw_migrated,
+    async_is_zwave_js_migrated,
 )
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from .util import (
@@ -351,7 +352,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     # pylint: enable=import-error
     from pydispatch import dispatcher
 
-    if async_is_ozw_migrated(hass):
+    if async_is_ozw_migrated(hass) or async_is_zwave_js_migrated(hass):
 
         if hass.data.get(DATA_ZWAVE_CONFIG_YAML_PRESENT):
             config_yaml_message = (
@@ -363,7 +364,8 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             config_yaml_message = ""
 
         _LOGGER.error(
-            "Migration to ozw has been done. Please remove the %s integration%s",
+            "Migration away from legacy Z-Wave has been done. "
+            "Please remove the %s integration%s",
             DOMAIN,
             config_yaml_message,
         )
