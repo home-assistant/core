@@ -87,6 +87,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
+        if query_str is not None:
+            query_str.hass = hass
+            try:
+                query_str = query_str.async_render(parse_result=False)
+            else:
+                query_str = query.get(CONF_QUERY)
+
         # MSSQL uses TOP and not LIMIT
         if not ("LIMIT" in query_str or "SELECT TOP" in query_str):
             query_str = (

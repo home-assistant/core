@@ -159,7 +159,7 @@ def create_rest_data_from_config(hass, config):
         resource.hass = hass
         try:
             resource = resource.async_render(parse_result=False)
-        except:
+        else:
             resource = config.get(CONF_RESOURCE)
 
     if payload is not None:
