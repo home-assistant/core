@@ -436,7 +436,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active and None not in (
                 self._cur_temp,
                 self._target_temp,
-                self._is_device_active,
             ):
                 self._active = True
                 _LOGGER.info(
