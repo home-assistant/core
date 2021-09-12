@@ -13,6 +13,9 @@ from homeassistant.components.watttime.config_flow import CONF_ORGANIZATION
 from homeassistant.components.watttime.const import (
     AUTH_TYPE_LOGIN,
     AUTH_TYPE_REGISTER,
+    CONF_BALANCING_AUTHORITY,
+    CONF_BALANCING_AUTHORITY_ABBREV,
+    CONF_BALANCING_AUTHORITY_ID,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -51,7 +54,7 @@ def client_login_fixture(client):
 @pytest.fixture(name="get_grid_region")
 def get_grid_region_fixture():
     """Define a fixture for getting grid region data."""
-    return AsyncMock()
+    return AsyncMock(return_value={"abbrev": "AUTH_1", "id": 1, "name": "Authority 1"})
 
 
 async def test_duplicate_error(hass: HomeAssistant, client_login):
@@ -155,7 +158,7 @@ async def test_step_coordinates_unknown_coordinates(
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown_coordinates"}
+    assert result["errors"] == {"latitude": "unknown_coordinates"}
 
 
 @pytest.mark.parametrize("get_grid_region", [AsyncMock(side_effect=Exception)])
@@ -212,6 +215,9 @@ async def test_step_login(hass: HomeAssistant, client_login) -> None:
         CONF_PASSWORD: "password",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+        CONF_BALANCING_AUTHORITY: "Authority 1",
+        CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
+        CONF_BALANCING_AUTHORITY_ID: 1,
     }
 
 
@@ -234,7 +240,7 @@ async def test_step_login_invalid_credentials(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"username": "invalid_auth"}
 
 
 @pytest.mark.parametrize("get_grid_region", [AsyncMock(side_effect=Exception)])
@@ -296,6 +302,9 @@ async def test_step_register(hass: HomeAssistant, client_login) -> None:
         CONF_PASSWORD: "password",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+        CONF_BALANCING_AUTHORITY: "Authority 1",
+        CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
+        CONF_BALANCING_AUTHORITY_ID: 1,
     }
 
 
@@ -350,4 +359,4 @@ async def test_step_register_username_taken(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "username_taken"}
+    assert result["errors"] == {"username": "username_taken"}
