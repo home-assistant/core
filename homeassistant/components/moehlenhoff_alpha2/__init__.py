@@ -93,6 +93,7 @@ class Alpha2BaseUpdateHandler:
             target_temperature,
         )
         await self.base.update_heatarea(heatarea_id, {"T_TARGET": target_temperature})
+        await self.async_update()
 
     async def async_set_heatarea_mode(self, heatarea_id, heatarea_mode):
         """Set the mode of the given heatarea."""
