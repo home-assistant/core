@@ -53,7 +53,7 @@ async def validate_input(
     except FroniusError as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
-    for inverter in inverter_info["inverters"].values():
+    for inverter in inverter_info["inverters"]:
         first_inverter_uid: str = inverter["unique_id"]["value"]
         return first_inverter_uid, FroniusConfigEntryData(
             host=host,
