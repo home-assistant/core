@@ -554,7 +554,7 @@ class HomeKit:
         acc = self.driver.accessory
         if acc.entity_id not in entity_ids:
             return
-        acc.async_stop()
+        await acc.stop()
         if not (state := self.hass.states.get(acc.entity_id)):
             _LOGGER.warning(
                 "The underlying entity %s disappeared during reset", acc.entity
@@ -577,7 +577,7 @@ class HomeKit:
                 self._name,
                 entity_id,
             )
-            acc = self.remove_bridge_accessory(aid)
+            acc = await self.async_remove_bridge_accessory(aid)
             if state := self.hass.states.get(acc.entity_id):
                 new.append(state)
             else:
@@ -670,11 +670,11 @@ class HomeKit:
             )
         )
 
-    def remove_bridge_accessory(self, aid):
+    async def async_remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
         acc = self.bridge.accessories.pop(aid, None)
         if acc:
-            acc.async_stop()
+            await acc.stop()
         return acc
 
     async def async_configure_accessories(self):
@@ -866,11 +866,6 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         await self.driver.async_stop()
-        if self.bridge:
-            for acc in self.bridge.accessories.values():
-                acc.async_stop()
-        else:
-            self.driver.accessory.async_stop()
 
     @callback
     def _async_configure_linked_sensors(self, ent_reg_ent, device_lookup, state):

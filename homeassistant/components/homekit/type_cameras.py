@@ -244,17 +244,21 @@ class Camera(HomeAccessory, PyhapCamera):
         Run inside the Home Assistant event loop.
         """
         if self._char_motion_detected:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_motion_sensor],
-                self._async_update_motion_state_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_motion_sensor],
+                    self._async_update_motion_state_event,
+                )
             )
 
         if self._char_doorbell_detected:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_doorbell_sensor],
-                self._async_update_doorbell_state_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_doorbell_sensor],
+                    self._async_update_doorbell_state_event,
+                )
             )
 
         await super().run()
@@ -433,6 +437,12 @@ class Camera(HomeAccessory, PyhapCamera):
             return
         self.sessions[session_id].pop(FFMPEG_WATCHER)()
         self.sessions[session_id].pop(FFMPEG_LOGGER).cancel()
+
+    async def stop(self):
+        """Stop any streams when the accessory is stopped."""
+        for session_info in self.sessions.values():
+            asyncio.create_task(self.stop_stream(session_info))
+        await super().stop()
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
