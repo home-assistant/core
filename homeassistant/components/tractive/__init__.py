@@ -78,6 +78,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await tractive.unsubscribe()
         raise ConfigEntryNotReady from error
 
+    # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
+    # So we have to remove None values from trackables list.
+    trackables = [item for item in trackables if item]
+
     hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
     hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
 
@@ -96,6 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _generate_trackables(client, trackable):
     """Generate trackables."""
     trackable = await trackable.details()
+
+    # Check that the pet has tracker linked.
+    if not trackable["device_id"]:
+        return
+
     tracker = client.tracker(trackable["device_id"])
 
     tracker_details, hw_info, pos_report = await asyncio.gather(
