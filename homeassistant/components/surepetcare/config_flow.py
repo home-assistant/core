@@ -40,8 +40,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
         token = await surepy.sac.get_token()
 
-    except SurePetcareAuthenticationError:
-        raise InvalidAuth
+    except SurePetcareAuthenticationError as exp:
+        raise InvalidAuth from exp
 
     except SurePetcareError as exp:
         raise CannotConnect from exp
