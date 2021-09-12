@@ -80,12 +80,12 @@ from .helpers import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 
-SENSORS = {
+STATUS = {
     "alive": "mdi:heart-pulse",
     "asleep": "mdi:sleep",
     "awake": "mdi:eue",
     "dead": "mdi:robot-dead",
-    "unknown": "mdi:help-rhombus,"
+    "unknown": "mdi:help-rhombus",
 }
 
 
@@ -475,7 +475,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_device_info = {
             "identifiers": {get_device_id(self.client, self.node)},
         }
-        self._attr_icon = SENSORS[node.status.name.lower()]
+        self._attr_icon = STATUS[node.status.name.lower()]
         self._attr_native_value: str = node.status.name.lower()
 
     async def async_poll_value(self, _: bool) -> None:
