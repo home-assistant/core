@@ -53,7 +53,7 @@ class SurePetcareSensor(CoordinatorEntity, SensorEntity):
         _id: int,
         coordinator: DataUpdateCoordinator,
     ) -> None:
-        """Initialize a Sure Petcare binary sensor."""
+        """Initialize a Sure Petcare sensor."""
         super().__init__(coordinator)
 
         self._id = _id
