@@ -84,6 +84,20 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             for id in DEVICE_KEYS_0_7
         ]
     ),
+    "3A": (
+        OneWireSwitchEntityDescription(
+            key="PIO.A",
+            entity_registry_enabled_default=False,
+            name="PIO A",
+            read_mode=READ_MODE_BOOL,
+        ),
+        OneWireSwitchEntityDescription(
+            key="PIO.B",
+            entity_registry_enabled_default=False,
+            name="PIO B",
+            read_mode=READ_MODE_BOOL,
+        ),
+    ),
 }
 
 LOGGER = logging.getLogger(__name__)
