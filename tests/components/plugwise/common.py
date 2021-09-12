@@ -13,7 +13,6 @@ async def async_init_integration(
     skip_setup: bool = False,
 ):
     """Initialize the Smile integration."""
-
     entry = MockConfigEntry(
         domain=DOMAIN, data={"host": "1.1.1.1", "password": "test-password"}
     )

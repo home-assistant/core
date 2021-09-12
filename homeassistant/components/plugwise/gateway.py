@@ -38,6 +38,7 @@ from .const import (
     COORDINATOR,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_USERNAME,
     DOMAIN,
     GATEWAY,
     GATEWAY_PLATFORMS,
@@ -53,6 +54,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
+    entry_updates = {}
+
+    if CONF_USERNAME not in entry.data:
+        data = {**entry.data}
+        data.update({CONF_USERNAME: DEFAULT_USERNAME})
+        entry_updates["data"] = data
+
+    if entry_updates:
+        hass.config_entries.async_update_entry(entry, **entry_updates)
 
     api = Smile(
         host=entry.data[CONF_HOST],
