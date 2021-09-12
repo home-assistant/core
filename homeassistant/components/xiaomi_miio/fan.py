@@ -124,23 +124,10 @@ AVAILABLE_ATTRIBUTES_AIRFRESH = {
 
 PRESET_MODES_AIRPURIFIER = ["Auto", "Silent", "Favorite", "Idle"]
 PRESET_MODES_AIRPURIFIER_MIOT = ["Auto", "Silent", "Favorite", "Fan"]
-OPERATION_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_PRO = ["Auto", "Silent", "Favorite"]
-OPERATION_MODES_AIRPURIFIER_PRO_V7 = OPERATION_MODES_AIRPURIFIER_PRO
 PRESET_MODES_AIRPURIFIER_PRO_V7 = PRESET_MODES_AIRPURIFIER_PRO
-OPERATION_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
 PRESET_MODES_AIRPURIFIER_2S = ["Auto", "Silent", "Favorite"]
-OPERATION_MODES_AIRPURIFIER_3 = ["Auto", "Silent", "Favorite", "Fan"]
 PRESET_MODES_AIRPURIFIER_3C = ["Auto", "Silent", "Favorite"]
-OPERATION_MODES_AIRPURIFIER_V3 = [
-    "Auto",
-    "Silent",
-    "Favorite",
-    "Idle",
-    "Medium",
-    "High",
-    "Strong",
-]
 PRESET_MODES_AIRPURIFIER_V3 = [
     "Auto",
     "Silent",
@@ -150,7 +137,6 @@ PRESET_MODES_AIRPURIFIER_V3 = [
     "High",
     "Strong",
 ]
-OPERATION_MODES_AIRFRESH = ["Auto", "Silent", "Interval", "Low", "Middle", "Strong"]
 PRESET_MODES_AIRFRESH = ["Auto", "Interval"]
 
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
