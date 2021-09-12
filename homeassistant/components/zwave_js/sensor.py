@@ -95,11 +95,6 @@ class ZwaveSensorEntityDescription(SensorEntityDescription):
 
     info: ZwaveDiscoveryInfo | None = None
 
-    @property
-    def icon(self) -> str | None:
-        """Icon of the entity."""
-        return STATUS_ICON_MAP.get(self.node.status, DEFAULT_STATUS_ICON)
-
     
 ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
@@ -492,6 +487,11 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_native_value = self.node.status.name.lower()
         self.async_write_ha_state()
 
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return STATUS_ICON_MAP.get(self.node.status, DEFAULT_STATUS_ICON)
+    
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         # Add value_changed callbacks.
