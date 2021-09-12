@@ -24,7 +24,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-# TODO: [homeassistant.components.sensor.recorder] sensor.power_reactive_phase_1 has unknown unit VAr
 ELECTRIC_CHARGE_AMPERE_HOURS = "Ah"
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
 POWER_VOLT_AMPERE_REACTIVE = "var"

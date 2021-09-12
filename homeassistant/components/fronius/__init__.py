@@ -15,7 +15,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SOLAR_NET_ID_SYSTEM, FroniusDeviceInfo
+from .const import (
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    SOLAR_NET_ID_SYSTEM,
+    FroniusDeviceInfo,
+)
 from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
@@ -25,8 +30,6 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = ["sensor"]
-# TODO: add option flow to configure individual update intervals
-DEFAULT_UPDATE_INTERVAL = 60
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,11 +60,11 @@ class FroniusSolarNet:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
         self.config_entry_id = entry.entry_id
+        self.host: str = entry.data[CONF_HOST]
         # entry.unique_id is either logger uid or first inverter uid if no logger available
         # prepended by "solar_net_" to have individual device for whole system (power_flow)
         self.solar_net_device_id = f"solar_net_{entry.unique_id}"
         self.update_interval = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
-        self.url: str = entry.data[CONF_HOST]
         self._has_logger: bool = entry.data["is_logger"]
 
         self.fronius: Fronius = self._init_bridge()
@@ -74,7 +77,7 @@ class FroniusSolarNet:
     def _init_bridge(self) -> Fronius:
         """Initialize Fronius API."""
         session = async_get_clientsession(self.hass)
-        return Fronius(session, self.url)
+        return Fronius(session, self.host)
 
     async def init_devices(self):
         """Initialize DataUpdateCoordinators for SolarNet devices."""
@@ -85,7 +88,7 @@ class FroniusSolarNet:
                 hass=self.hass,
                 solar_net=self,
                 logger=_LOGGER,
-                name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.url}",
+                name=f"{DOMAIN}_inverter_{inverter_info.solar_net_id}_{self.host}",
                 update_interval=self.update_interval,
                 inverter_info=inverter_info,
             )
@@ -97,7 +100,7 @@ class FroniusSolarNet:
                 hass=self.hass,
                 solar_net=self,
                 logger=_LOGGER,
-                name=f"{DOMAIN}_meters_{self.url}",
+                name=f"{DOMAIN}_meters_{self.host}",
                 update_interval=self.update_interval,
             )
         )
@@ -106,7 +109,7 @@ class FroniusSolarNet:
             hass=self.hass,
             solar_net=self,
             logger=_LOGGER,
-            name=f"{DOMAIN}_power_flow_{self.url}",
+            name=f"{DOMAIN}_power_flow_{self.host}",
             update_interval=self.update_interval,
             power_flow_info=solar_net_device_info,
         )
@@ -117,7 +120,7 @@ class FroniusSolarNet:
                 hass=self.hass,
                 solar_net=self,
                 logger=_LOGGER,
-                name=f"{DOMAIN}_storages_{self.url}",
+                name=f"{DOMAIN}_storages_{self.host}",
                 update_interval=self.update_interval,
             )
         )
