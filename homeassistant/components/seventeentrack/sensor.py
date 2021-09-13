@@ -51,7 +51,7 @@ class SeventeenTrackBaseSensor(CoordinatorEntity, SensorEntity):
 
     coordinator: SeventeenTrackDataCoordinator
     _attr_icon = ICON
-    _attr_unit_of_measurement = "packages"
+    _attr_native_unit_of_measurement = "packages"
 
     def __init__(self, coordinator: SeventeenTrackDataCoordinator) -> None:
         """Pass coordinator to CoordinatorEntity."""
@@ -81,7 +81,7 @@ class SeventeenTrackPackagesSensor(SeventeenTrackBaseSensor):
         self._attr_unique_id = f"{self._username}-{slugify(self._attr_name)}"
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state."""
         return len(self.coordinator.data["packages"])
 
@@ -125,7 +125,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackBaseSensor):
         self.sensor_type = sensor_type
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state."""
         return self.coordinator.data["summary"][self.sensor_type]
 

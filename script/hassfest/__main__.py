@@ -18,22 +18,25 @@ from . import (
     services,
     ssdp,
     translations,
+    usb,
     zeroconf,
 )
 from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
-    json,
     codeowners,
     config_flow,
     dependencies,
+    dhcp,
+    json,
     manifest,
     mqtt,
+    requirements,
     services,
     ssdp,
     translations,
+    usb,
     zeroconf,
-    dhcp,
 ]
 HASS_PLUGINS = [
     coverage,
@@ -101,9 +104,6 @@ def main():
 
     plugins = [*INTEGRATION_PLUGINS]
 
-    if config.requirements:
-        plugins.append(requirements)
-
     if config.specific_integrations:
         integrations = {}
 
@@ -120,7 +120,11 @@ def main():
         try:
             start = monotonic()
             print(f"Validating {plugin.__name__.split('.')[-1]}...", end="", flush=True)
-            if plugin is requirements and not config.specific_integrations:
+            if (
+                plugin is requirements
+                and config.requirements
+                and not config.specific_integrations
+            ):
                 print()
             plugin.validate(integrations, config)
             print(f" done in {monotonic() - start:.2f}s")

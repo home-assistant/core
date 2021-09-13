@@ -1,6 +1,5 @@
 """Rest API for Home Assistant."""
 import asyncio
-from contextlib import suppress
 import json
 import logging
 
@@ -30,20 +29,16 @@ from homeassistant.const import (
     URL_API_STATES,
     URL_API_STREAM,
     URL_API_TEMPLATE,
-    __version__,
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.system_info import async_get_system_info
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BASE_URL = "base_url"
-ATTR_CURRENCY = "currency"
 ATTR_EXTERNAL_URL = "external_url"
 ATTR_INTERNAL_URL = "internal_url"
 ATTR_LOCATION_NAME = "location_name"
@@ -174,7 +169,11 @@ class APIConfigView(HomeAssistantView):
 
 
 class APIDiscoveryView(HomeAssistantView):
-    """View to provide Discovery information."""
+    """
+    View to provide Discovery information.
+
+    DEPRECATED: To be removed in 2022.1
+    """
 
     requires_auth = False
     url = URL_API_DISCOVERY_INFO
@@ -182,33 +181,18 @@ class APIDiscoveryView(HomeAssistantView):
 
     async def get(self, request):
         """Get discovery information."""
-        hass = request.app["hass"]
-        uuid = await hass.helpers.instance_id.async_get()
-        system_info = await async_get_system_info(hass)
-
-        data = {
-            ATTR_UUID: uuid,
-            ATTR_BASE_URL: None,
-            ATTR_EXTERNAL_URL: None,
-            ATTR_INTERNAL_URL: None,
-            ATTR_LOCATION_NAME: hass.config.location_name,
-            ATTR_INSTALLATION_TYPE: system_info[ATTR_INSTALLATION_TYPE],
-            # always needs authentication
-            ATTR_REQUIRES_API_PASSWORD: True,
-            ATTR_VERSION: __version__,
-            ATTR_CURRENCY: None,
-        }
-
-        with suppress(NoURLAvailableError):
-            data["external_url"] = get_url(hass, allow_internal=False)
-
-        with suppress(NoURLAvailableError):
-            data["internal_url"] = get_url(hass, allow_external=False)
-
-        # Set old base URL based on external or internal
-        data["base_url"] = data["external_url"] or data["internal_url"]
-
-        return self.json(data)
+        return self.json(
+            {
+                ATTR_UUID: "",
+                ATTR_BASE_URL: "",
+                ATTR_EXTERNAL_URL: "",
+                ATTR_INTERNAL_URL: "",
+                ATTR_LOCATION_NAME: "",
+                ATTR_INSTALLATION_TYPE: "",
+                ATTR_REQUIRES_API_PASSWORD: True,
+                ATTR_VERSION: "",
+            }
+        )
 
 
 class APIStatesView(HomeAssistantView):

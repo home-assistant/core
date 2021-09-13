@@ -1,0 +1,38 @@
+{
+  "data": {
+    "type": "ChargeSchedule",
+    "id": "guid",
+    "attributes": {
+      "schedules": [
+        {
+          "id": 1,
+          "activated": true,
+          "tuesday": {
+            "startTime": "T04:30Z",
+            "duration": 420
+          },
+          "wednesday": {
+            "startTime": "T22:30Z",
+            "duration": 420
+          },
+          "thursday": {
+            "startTime": "T22:00Z",
+            "duration": 420
+          },
+          "friday": {
+            "startTime": "T23:30Z",
+            "duration": 480
+          },
+          "saturday": {
+            "startTime": "T18:30Z",
+            "duration": 120
+          },
+          "sunday": {
+            "startTime": "T12:45Z",
+            "duration": 45
+          }
+        }
+      ]
+    }
+  }
+}

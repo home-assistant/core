@@ -17,5 +17,16 @@
                 "title": "T\u00f6ltsd ki az adataid"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Kezd\u0151 UV index a v\u00e9d\u0151ablakhoz",
+                    "to_window": "A v\u00e9d\u0151ablak UV-index\u00e9nek v\u00e9ge"
+                },
+                "title": "Konfigur\u00e1lja az OpenUV-t"
+            }
+        }
     }
 }

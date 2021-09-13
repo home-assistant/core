@@ -31,40 +31,40 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage",
         name="Voltage",
-        unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
     ),
     SensorEntityDescription(
         key="amps",
         name="Amps",
-        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="watts",
         name="Watts",
-        unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key="charge_time",
         name="Charge time",
-        unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
     ),
     SensorEntityDescription(
         key="energy_added",
         name="Energy added",
-        unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
 )
@@ -110,6 +110,6 @@ class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
         return icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return getattr(self.device, self.entity_description.key, None)

@@ -109,7 +109,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         path = SENSOR_TYPES[self._type][ENTITY_API_DATA_PATH].split(":")
         data = getattr(self.coordinator.data, path[0])
@@ -135,7 +135,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         return value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return SENSOR_TYPES[self._type][ENTITY_UNIT]
 
@@ -164,7 +164,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
     """Representation of a Meteo-France rain sensor."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         # search first cadran with rain
         next_rain = next(
@@ -202,7 +202,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         self._unique_id = self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return get_warning_text_status_from_indice_color(
             self.coordinator.data.get_domain_max_color()

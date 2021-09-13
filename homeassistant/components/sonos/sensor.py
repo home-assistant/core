@@ -45,7 +45,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
         return PERCENTAGE
 
@@ -54,7 +54,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
         await self.speaker.async_poll_battery()
 
     @property
-    def state(self) -> int | None:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self.speaker.battery_info.get("Level")
 

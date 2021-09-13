@@ -3,11 +3,15 @@
 from datetime import timedelta
 from unittest.mock import patch, sentinel
 
+import pytest
 from pytest import approx
 
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    Statistics,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
@@ -32,7 +36,7 @@ def test_compile_hourly_statistics(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
@@ -47,6 +51,8 @@ def test_compile_hourly_statistics(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_2 = {
         "statistic_id": "sensor.test1",
@@ -57,6 +63,8 @@ def test_compile_hourly_statistics(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
@@ -78,20 +86,123 @@ def test_compile_hourly_statistics(hass_recorder):
     assert stats == {}
 
     # Test get_last_statistics
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    stats = get_last_statistics(hass, 1, "sensor.test1")
+    stats = get_last_statistics(hass, 1, "sensor.test1", True)
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
-    stats = get_last_statistics(hass, 2, "sensor.test1")
+    stats = get_last_statistics(hass, 2, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_statistics(hass, 3, "sensor.test1")
+    stats = get_last_statistics(hass, 3, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_statistics(hass, 1, "sensor.test3")
+    stats = get_last_statistics(hass, 1, "sensor.test3", True)
     assert stats == {}
+
+
+@pytest.fixture
+def mock_sensor_statistics():
+    """Generate some fake statistics."""
+    sensor_stats = {
+        "meta": {"unit_of_measurement": "dogs", "has_mean": True, "has_sum": False},
+        "stat": {},
+    }
+
+    def get_fake_stats():
+        return {
+            "sensor.test1": sensor_stats,
+            "sensor.test2": sensor_stats,
+            "sensor.test3": sensor_stats,
+        }
+
+    with patch(
+        "homeassistant.components.sensor.recorder.compile_statistics",
+        return_value=get_fake_stats(),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_from_stats():
+    """Mock out Statistics.from_stats."""
+    counter = 0
+    real_from_stats = Statistics.from_stats
+
+    def from_stats(metadata_id, start, stats):
+        nonlocal counter
+        if counter == 0 and metadata_id == 2:
+            counter += 1
+            return None
+        return real_from_stats(metadata_id, start, stats)
+
+    with patch(
+        "homeassistant.components.recorder.statistics.Statistics.from_stats",
+        side_effect=from_stats,
+        autospec=True,
+    ):
+        yield
+
+
+def test_compile_hourly_statistics_exception(
+    hass_recorder, mock_sensor_statistics, mock_from_stats
+):
+    """Test exception handling when compiling hourly statistics."""
+
+    def mock_from_stats():
+        raise ValueError
+
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+
+    now = dt_util.utcnow()
+    recorder.do_adhoc_statistics(period="hourly", start=now)
+    recorder.do_adhoc_statistics(period="hourly", start=now + timedelta(hours=1))
+    wait_recording_done(hass)
+    expected_1 = {
+        "statistic_id": "sensor.test1",
+        "start": process_timestamp_to_utc_isoformat(now),
+        "mean": None,
+        "min": None,
+        "max": None,
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
+    }
+    expected_2 = {
+        "statistic_id": "sensor.test1",
+        "start": process_timestamp_to_utc_isoformat(now + timedelta(hours=1)),
+        "mean": None,
+        "min": None,
+        "max": None,
+        "last_reset": None,
+        "state": None,
+        "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
+    }
+    expected_stats1 = [
+        {**expected_1, "statistic_id": "sensor.test1"},
+        {**expected_2, "statistic_id": "sensor.test1"},
+    ]
+    expected_stats2 = [
+        {**expected_2, "statistic_id": "sensor.test2"},
+    ]
+    expected_stats3 = [
+        {**expected_1, "statistic_id": "sensor.test3"},
+        {**expected_2, "statistic_id": "sensor.test3"},
+    ]
+
+    stats = statistics_during_period(hass, now)
+    assert stats == {
+        "sensor.test1": expected_stats1,
+        "sensor.test2": expected_stats2,
+        "sensor.test3": expected_stats3,
+    }
 
 
 def test_rename_entity(hass_recorder):
@@ -116,7 +227,7 @@ def test_rename_entity(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1")
+    stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(period="hourly", start=zero)
@@ -130,6 +241,8 @@ def test_rename_entity(hass_recorder):
         "last_reset": None,
         "state": None,
         "sum": None,
+        "sum_decrease": None,
+        "sum_increase": None,
     }
     expected_stats1 = [
         {**expected_1, "statistic_id": "sensor.test1"},
@@ -149,6 +262,39 @@ def test_rename_entity(hass_recorder):
 
     stats = statistics_during_period(hass, zero)
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
+
+
+def test_statistics_duplicated(hass_recorder, caplog):
+    """Test statistics with same start time is not compiled."""
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    zero, four, states = record_states(hass)
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    with patch(
+        "homeassistant.components.sensor.recorder.compile_statistics"
+    ) as compile_statistics:
+        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        wait_recording_done(hass)
+        assert compile_statistics.called
+        compile_statistics.reset_mock()
+        assert "Compiling statistics for" in caplog.text
+        assert "Statistics already compiled" not in caplog.text
+        caplog.clear()
+
+        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        wait_recording_done(hass)
+        assert not compile_statistics.called
+        compile_statistics.reset_mock()
+        assert "Compiling statistics for" not in caplog.text
+        assert "Statistics already compiled" in caplog.text
+        caplog.clear()
 
 
 def record_states(hass):

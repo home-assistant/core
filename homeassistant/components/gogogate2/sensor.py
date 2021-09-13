@@ -72,7 +72,7 @@ class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.voltage  # This is a percentage, not an absolute voltage
@@ -110,18 +110,18 @@ class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         door = self._get_door()
         return door.temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit_of_measurement."""
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         door = self._get_door()
         if door.sensorid is not None:

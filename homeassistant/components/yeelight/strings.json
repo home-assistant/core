@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{model} {host}",
+    "flow_title": "{model} {id} ({host})",
     "step": {
       "user": {
         "description": "If you leave the host empty, discovery will be used to find devices.",
@@ -30,7 +30,7 @@
       "init": {
         "description": "If you leave model empty, it will be automatically detected.",
         "data": {
-          "model": "Model (Optional)",
+          "model": "Model (optional)",
           "transition": "Transition Time (ms)",
           "use_music_mode": "Enable Music Mode",
           "save_on_change": "Save Status On Change",

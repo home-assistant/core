@@ -70,9 +70,6 @@ class RachioPerson:
                 can_pause = True
                 break
 
-        if not can_pause:
-            return
-
         all_devices = [rachio_iro.name for rachio_iro in self._controllers]
 
         def pause_water(service):
@@ -99,6 +96,16 @@ class RachioPerson:
 
         hass.services.async_register(
             DOMAIN,
+            SERVICE_STOP_WATERING,
+            stop_water,
+            schema=STOP_SERVICE_SCHEMA,
+        )
+
+        if not can_pause:
+            return
+
+        hass.services.async_register(
+            DOMAIN,
             SERVICE_PAUSE_WATERING,
             pause_water,
             schema=PAUSE_SERVICE_SCHEMA,
@@ -109,13 +116,6 @@ class RachioPerson:
             SERVICE_RESUME_WATERING,
             resume_water,
             schema=RESUME_SERVICE_SCHEMA,
-        )
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_STOP_WATERING,
-            stop_water,
-            schema=STOP_SERVICE_SCHEMA,
         )
 
     def _setup(self, hass):
@@ -134,7 +134,7 @@ class RachioPerson:
         for controller in devices:
             webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
-            # or if they are the owner. To work around this problem we fetch the webooks
+            # or if they are the owner. To work around this problem we fetch the webhooks
             # before we setup the device so we can skip it instead of failing.
             # webhooks are normally a list, however if there is an error
             # rachio hands us back a dict

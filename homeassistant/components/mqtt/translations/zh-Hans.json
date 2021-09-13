@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\u670d\u52a1\u5df2\u88ab\u914d\u7f6e",
             "single_instance_allowed": "\u53ea\u5141\u8bb8\u4e00\u4e2a MQTT \u914d\u7f6e\u3002"
         },
         "error": {

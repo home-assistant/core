@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "account_id": "ID de la cuenta",
+                    "host": "Anfitri\u00f3n",
+                    "password": "Contrase\u00f1a"
+                }
+            }
+        }
+    }
+}

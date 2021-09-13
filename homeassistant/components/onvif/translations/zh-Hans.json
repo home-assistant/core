@@ -62,7 +62,7 @@
             "onvif_devices": {
                 "data": {
                     "extra_arguments": "\u9644\u52a0 FFmpeg \u53c2\u6570",
-                    "rtsp_transport": "RTSP \u4f20\u8f93"
+                    "rtsp_transport": "RTSP \u4f20\u8f93\u901a\u8baf\u534f\u8bae"
                 },
                 "title": "ONVIF \u8bbe\u5907\u9009\u9879"
             }

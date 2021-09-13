@@ -10,7 +10,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
-            "cloud_login_error": "Could not login to Xioami Miio Cloud, check the credentials.",
+            "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials.",
             "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
             "no_device_selected": "No device selected, please select one device.",
             "unknown_device": "The device model is not known, not able to setup the device using config flow."
