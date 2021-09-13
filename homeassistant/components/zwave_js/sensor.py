@@ -490,7 +490,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon of the entity."""
-        return STATUS_ICON_MAP.get(self.node.status, DEFAULT_STATUS_ICON)
+        return STATUS_ICON_MAP[self.node.status]
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
