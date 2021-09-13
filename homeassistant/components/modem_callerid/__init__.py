@@ -19,13 +19,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.initialize(device)
     except EXCEPTIONS as ex:
-        raise ConfigEntryNotReady("Unable to open port", device) from ex
+        raise ConfigEntryNotReady(f"Unable to open port: {device}") from ex
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_KEY_API: api,
-    }
-
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_KEY_API: api}
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
