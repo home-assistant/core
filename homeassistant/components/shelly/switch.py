@@ -83,14 +83,14 @@ async def async_setup_rpc_entry(
         if con_types is not None and con_types[i] == "lights":
             continue
 
-        switch_keys.append(key)
+        switch_keys.append((key, i))
         unique_id = f"{wrapper.mac}-{key}"
         await async_remove_shelly_entity(hass, "light", unique_id)
 
     if not switch_keys:
         return
 
-    async_add_entities(RpcRelaySwitch(wrapper, key) for key in switch_keys)
+    async_add_entities(RpcRelaySwitch(wrapper, key, id_) for key, id_ in switch_keys)
 
 
 class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
@@ -129,10 +129,10 @@ class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
 class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
     """Entity that controls a relay on RPC based Shelly devices."""
 
-    def __init__(self, wrapper: RpcDeviceWrapper, key: str) -> None:
+    def __init__(self, wrapper: RpcDeviceWrapper, key: str, id_: int) -> None:
         """Initialize relay switch."""
         super().__init__(wrapper, key)
-        self._id = key[7:]
+        self._id = id_
 
     @property
     def is_on(self) -> bool:
