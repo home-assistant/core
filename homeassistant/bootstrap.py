@@ -196,10 +196,11 @@ async def async_setup_hass(
                 safe_mode = True
                 for timestamp, crash_report in recent_crash_logs:
                     crash_time = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
+                    summary = crash_report.split("\n")[0]
                     _LOGGER.error("Detected crash at %s: %s", crash_time, crash_report)
                     if basic_setup_success:
                         hass.components.persistent_notification.async_create(
-                            crash_report,
+                            summary,
                             f"Detected crash at {crash_time}",
                             f"crash_log_{timestamp}",
                         )
