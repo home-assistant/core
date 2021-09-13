@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import get_device_wrapper
+from . import RpcDeviceWrapper, get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -55,6 +55,10 @@ async def async_validate_trigger_config(
 
     # if device is available verify parameters against device capabilities
     wrapper = get_device_wrapper(hass, config[CONF_DEVICE_ID])
+
+    if isinstance(wrapper, RpcDeviceWrapper):
+        return config
+
     if not wrapper or not wrapper.device.initialized:
         return config
 
@@ -76,11 +80,14 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, Any]]:
     """List device triggers for Shelly devices."""
-    triggers = []
-
     wrapper = get_device_wrapper(hass, device_id)
     if not wrapper:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
+
+    if isinstance(wrapper, RpcDeviceWrapper):
+        return []
+
+    triggers = []
 
     if wrapper.model in SHBTN_MODELS:
         for trigger in SHBTN_INPUTS_EVENTS_TYPES:

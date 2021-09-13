@@ -23,9 +23,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
-from .utils import async_remove_shelly_entity, get_entity_name
+from . import BlockDeviceWrapper, RpcDeviceWrapper, ShellyDeviceRestWrapper
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, BLOCK, DATA_CONFIG_ENTRY, DOMAIN, REST
+from .utils import (
+    async_remove_shelly_entity,
+    get_block_entity_name,
+    get_rpc_entity_name,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -38,9 +42,9 @@ async def async_setup_entry_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for attributes."""
-    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+    wrapper: BlockDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
-    ][COAP]
+    ][BLOCK]
 
     if wrapper.device.initialized:
         await async_setup_block_attribute_entities(
@@ -55,7 +59,7 @@ async def async_setup_entry_attribute_entities(
 async def async_setup_block_attribute_entities(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
-    wrapper: ShellyDeviceWrapper,
+    wrapper: BlockDeviceWrapper,
     sensors: dict[tuple[str, str], BlockAttributeDescription],
     sensor_class: Callable,
 ) -> None:
@@ -99,7 +103,7 @@ async def async_restore_block_attribute_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    wrapper: ShellyDeviceWrapper,
+    wrapper: BlockDeviceWrapper,
     sensors: dict[tuple[str, str], BlockAttributeDescription],
     sensor_class: Callable,
 ) -> None:
@@ -198,13 +202,13 @@ class RestAttributeDescription:
 
 
 class ShellyBlockEntity(entity.Entity):
-    """Helper class to represent a block."""
+    """Helper class to represent a block entity."""
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
+    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper.device, block)
+        self._name = get_block_entity_name(wrapper.device, block)
 
     @property
     def name(self) -> str:
@@ -263,12 +267,67 @@ class ShellyBlockEntity(entity.Entity):
             return None
 
 
+class ShellyRpcEntity(entity.Entity):
+    """Helper class to represent a rpc entity."""
+
+    def __init__(self, wrapper: RpcDeviceWrapper, key: str) -> None:
+        """Initialize Shelly entity."""
+        self.wrapper = wrapper
+        self.key = key
+        self._attr_should_poll = False
+        self._attr_device_info = {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        }
+        self._attr_unique_id = f"{wrapper.mac}-{key}"
+        self._attr_name = get_rpc_entity_name(wrapper.device, key)
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        return self.wrapper.device.connected
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
+
+    async def async_update(self) -> None:
+        """Update entity with latest info."""
+        await self.wrapper.async_request_refresh()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Handle device update."""
+        self.async_write_ha_state()
+
+    async def call_rpc(self, method: str, params: Any) -> Any:
+        """Call RPC method."""
+        _LOGGER.debug(
+            "Call RPC for entity %s, method: %s, params: %s",
+            self.name,
+            method,
+            params,
+        )
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                return await self.wrapper.device.call_rpc(method, params)
+        except asyncio.TimeoutError as err:
+            _LOGGER.error(
+                "Call RPC for entity %s failed, method: %s, params: %s, error: %s",
+                self.name,
+                method,
+                params,
+                repr(err),
+            )
+            self.wrapper.last_update_success = False
+            return None
+
+
 class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     """Helper class to represent a block attribute."""
 
     def __init__(
         self,
-        wrapper: ShellyDeviceWrapper,
+        wrapper: BlockDeviceWrapper,
         block: Block,
         attribute: str,
         description: BlockAttributeDescription,
@@ -285,7 +344,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit: None | str | Callable[[dict], str] = unit
         self._unique_id: str = f"{super().unique_id}-{self.attribute}"
-        self._name = get_entity_name(wrapper.device, block, self.description.name)
+        self._name = get_block_entity_name(wrapper.device, block, self.description.name)
 
     @property
     def unique_id(self) -> str:
@@ -346,7 +405,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
     def __init__(
         self,
-        wrapper: ShellyDeviceWrapper,
+        wrapper: BlockDeviceWrapper,
         attribute: str,
         description: RestAttributeDescription,
     ) -> None:
@@ -355,7 +414,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.wrapper = wrapper
         self.attribute = attribute
         self.description = description
-        self._name = get_entity_name(wrapper.device, None, self.description.name)
+        self._name = get_block_entity_name(wrapper.device, None, self.description.name)
         self._last_value = None
 
     @property
@@ -419,7 +478,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     # pylint: disable=super-init-not-called
     def __init__(
         self,
-        wrapper: ShellyDeviceWrapper,
+        wrapper: BlockDeviceWrapper,
         block: Block | None,
         attribute: str,
         description: BlockAttributeDescription,
@@ -440,7 +499,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 self._unit = self._unit(block.info(attribute))
 
             self._unique_id = f"{self.wrapper.mac}-{block.description}-{attribute}"
-            self._name = get_entity_name(
+            self._name = get_block_entity_name(
                 self.wrapper.device, block, self.description.name
             )
         elif entry is not None:

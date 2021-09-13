@@ -4,11 +4,12 @@ from __future__ import annotations
 import re
 from typing import Final
 
-COAP: Final = "coap"
+BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
 DEVICE: Final = "device"
 DOMAIN: Final = "shelly"
 REST: Final = "rest"
+RPC: Final = "rpc"
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
@@ -43,6 +44,9 @@ SLEEP_PERIOD_MULTIPLIER: Final = 1.2
 
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
+
+# Reconnect interval for GEN2 devices
+RPC_RECONNECT_INTERVAL = 60
 
 # Shelly Air - Maximum work hours before lamp replacement
 SHAIR_MAX_WORK_HOURS: Final = 9000
