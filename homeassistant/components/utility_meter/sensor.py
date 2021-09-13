@@ -18,7 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -137,7 +137,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     ):
         """Initialize the Utility Meter sensor."""
         self._sensor_source_id = source_entity
-        self._state = 0
+        self._state = None
         self._last_period = 0
         self._last_reset = dt_util.utcnow()
         self._collecting = None
@@ -322,6 +322,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
                 self._unit_of_measurement = source_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT
                 )
+                self._state = 0
                 self.async_write_ha_state()
             if self._tariff_entity is not None:
                 _LOGGER.debug(
@@ -346,7 +347,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             )
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_source_tracking
+            EVENT_HOMEASSISTANT_STARTED, async_source_tracking
         )
 
     @property
