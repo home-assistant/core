@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, SURE_API_TIMEOUT
@@ -29,22 +28,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    try:
-        surepy = Surepy(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            auth_token=None,
-            api_timeout=SURE_API_TIMEOUT,
-            session=async_get_clientsession(hass),
-        )
+    surepy = Surepy(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        auth_token=None,
+        api_timeout=SURE_API_TIMEOUT,
+        session=async_get_clientsession(hass),
+    )
 
-        token = await surepy.sac.get_token()
-
-    except SurePetcareAuthenticationError as exp:
-        raise InvalidAuth from exp
-
-    except SurePetcareError as exp:
-        raise CannotConnect from exp
+    token = await surepy.sac.get_token()
 
     return {CONF_TOKEN: token}
 
@@ -71,15 +63,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except SurePetcareError:
-            errors["base"] = "cannot_connect"
         except SurePetcareAuthenticationError:
             errors["base"] = "invalid_auth"
+        except SurePetcareError:
+            errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
             self._abort_if_unique_id_configured()
 
             user_input[CONF_TOKEN] = info[CONF_TOKEN]

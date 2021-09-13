@@ -1,5 +1,5 @@
 """Test the Sure Petcare config flow."""
-from unittest.mock import patch
+from unittest.mock import NonCallableMagicMock, patch
 
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, surepetcare) -> None:
+async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> None:
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -113,7 +113,9 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_flow_entry_already_exists(hass, surepetcare) -> None:
+async def test_flow_entry_already_exists(
+    hass, surepetcare: NonCallableMagicMock
+) -> None:
     """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
         domain="surepetcare",
