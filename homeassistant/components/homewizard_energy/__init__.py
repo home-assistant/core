@@ -31,8 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("__init__ async_setup_entry")
 
-    hass.data[DOMAIN][entry.data["unique_id"]] = {}
-
     # Get api and do a initialization
     energy_api = aiohwenergy.HomeWizardEnergy(entry.data.get("host"))
 
@@ -70,12 +68,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             await energy_api.close()
 
     # Create coordinator
-    coordinator = hass.data[DOMAIN][entry.data["unique_id"]][COORDINATOR] = Coordinator(
-        hass, energy_api
-    )
+    coordinator = Coordinator(hass, energy_api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.data["unique_id"]][CONF_API] = energy_api
+    # Finalize
+    hass.data[DOMAIN][entry.data["unique_id"]] = {
+        COORDINATOR: coordinator,
+        CONF_API: energy_api,
+    }
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
