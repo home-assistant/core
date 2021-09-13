@@ -57,6 +57,7 @@ COOLDOWN_TIME = 60
 
 MAX_LOAD_CONCURRENTLY = 6
 
+CRASH_REPORT_PREFIX = "hass_crash_report"
 MAX_RECENT_CRASHES_SAFE_MODE = 3
 MAX_RECENT_CRASHES_AGE = 60 * 15  # 15 minutes in seconds
 
@@ -89,17 +90,17 @@ def _get_recent_crash_reports(
     hass: core.HomeAssistant, config_dir: str
 ) -> list[tuple[int, str]]:
     """Load for recent crash reports."""
-    epoch = time.time()
+    timestamp = time.time()
     crash_reports = []
     for file_name in os.listdir(config_dir):
         file_path = Path(config_dir) / file_name
-        if not file_name.startswith("hass_crash_report."):
+        if not file_name.startswith(f"{CRASH_REPORT_PREFIX}."):
             continue
-        timestamp_int = int(file_name.split(".")[1])
-        if timestamp_int + MAX_RECENT_CRASHES_AGE < epoch:
+        crash_timestamp_int = int(file_name.split(".")[1])
+        if crash_timestamp_int + MAX_RECENT_CRASHES_AGE < timestamp:
             os.unlink(file_path)
             continue
-        crash_reports.append((timestamp_int, Path(file_path).read_text()))
+        crash_reports.append((crash_timestamp_int, Path(file_path).read_text()))
 
     return crash_reports
 
