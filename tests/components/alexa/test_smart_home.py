@@ -365,8 +365,13 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
+    # Alexa.RangeController is added to make a van controllable when no other controllers are available
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     power_capability = get_capability(capabilities, "Alexa.PowerController")
@@ -396,102 +401,67 @@ async def test_variable_fan(hass):
 
     capabilities = assert_endpoint_capabilities(
         appliance,
-        "Alexa.PercentageController",
+        "Alexa.RangeController",
         "Alexa.PowerController",
-        "Alexa.PowerLevelController",
         "Alexa.EndpointHealth",
         "Alexa",
     )
 
-    capability = get_capability(capabilities, "Alexa.PercentageController")
+    capability = get_capability(capabilities, "Alexa.RangeController")
     assert capability is not None
 
     capability = get_capability(capabilities, "Alexa.PowerController")
     assert capability is not None
 
-    capability = get_capability(capabilities, "Alexa.PowerLevelController")
-    assert capability is not None
-
     call, _ = await assert_request_calls_service(
-        "Alexa.PercentageController",
-        "SetPercentage",
+        "Alexa.RangeController",
+        "SetRangeValue",
         "fan#test_2",
         "fan.set_percentage",
         hass,
-        payload={"percentage": "50"},
+        payload={"rangeValue": "50"},
+        instance="fan.percentage",
     )
     assert call.data["percentage"] == 50
 
     call, _ = await assert_request_calls_service(
-        "Alexa.PercentageController",
-        "SetPercentage",
+        "Alexa.RangeController",
+        "SetRangeValue",
         "fan#test_2",
         "fan.set_percentage",
         hass,
-        payload={"percentage": "33"},
+        payload={"rangeValue": "33"},
+        instance="fan.percentage",
     )
     assert call.data["percentage"] == 33
 
     call, _ = await assert_request_calls_service(
-        "Alexa.PercentageController",
-        "SetPercentage",
+        "Alexa.RangeController",
+        "SetRangeValue",
         "fan#test_2",
         "fan.set_percentage",
         hass,
-        payload={"percentage": "100"},
+        payload={"rangeValue": "100"},
+        instance="fan.percentage",
     )
     assert call.data["percentage"] == 100
 
-    await assert_percentage_changes(
+    await assert_range_changes(
         hass,
-        [(95, "-5"), (100, "5"), (20, "-80"), (66, "-34")],
-        "Alexa.PercentageController",
-        "AdjustPercentage",
+        [
+            (95, -5, False),
+            (100, 5, False),
+            (20, -80, False),
+            (66, -34, False),
+            (80, -1, True),
+            (20, -4, True),
+        ],
+        "Alexa.RangeController",
+        "AdjustRangeValue",
         "fan#test_2",
-        "percentageDelta",
         "fan.set_percentage",
         "percentage",
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.PowerLevelController",
-        "SetPowerLevel",
-        "fan#test_2",
-        "fan.set_percentage",
-        hass,
-        payload={"powerLevel": "20"},
-    )
-    assert call.data["percentage"] == 20
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.PowerLevelController",
-        "SetPowerLevel",
-        "fan#test_2",
-        "fan.set_percentage",
-        hass,
-        payload={"powerLevel": "50"},
-    )
-    assert call.data["percentage"] == 50
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.PowerLevelController",
-        "SetPowerLevel",
-        "fan#test_2",
-        "fan.set_percentage",
-        hass,
-        payload={"powerLevel": "99"},
-    )
-    assert call.data["percentage"] == 99
-
-    await assert_percentage_changes(
-        hass,
-        [(95, "-5"), (50, "-50"), (20, "-80")],
-        "Alexa.PowerLevelController",
-        "AdjustPowerLevel",
-        "fan#test_2",
-        "powerLevelDelta",
-        "fan.set_percentage",
-        "percentage",
+        "fan.percentage",
     )
 
 

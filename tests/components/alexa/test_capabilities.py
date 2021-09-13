@@ -385,20 +385,16 @@ async def test_report_fan_speed_state(hass):
     )
 
     properties = await reported_properties(hass, "fan.off")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 0)
-    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 0)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
     properties = await reported_properties(hass, "fan.low_speed")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 33)
-    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 33)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 33)
 
     properties = await reported_properties(hass, "fan.medium_speed")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 66)
-    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 66)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 66)
 
     properties = await reported_properties(hass, "fan.high_speed")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 100)
-    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 100)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 100)
 
 
 async def test_report_fan_preset_mode(hass):
