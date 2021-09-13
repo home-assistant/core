@@ -699,7 +699,10 @@ omit =
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/legacy/*
     homeassistant/components/netdata/sensor.py
+    homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/device_tracker.py
+    homeassistant/components/netgear/router.py
+    homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py

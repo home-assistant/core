@@ -950,6 +950,9 @@ pymysensors==0.21.0
 # homeassistant.components.nanoleaf
 pynanoleaf==0.1.0
 
+# homeassistant.components.netgear
+pynetgear==0.7.0
+
 # homeassistant.components.nuki
 pynuki==1.4.1
 
