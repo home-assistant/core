@@ -83,11 +83,11 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
             if self.api_versions.data["FTL_update"]:
                 available_updates += 1
             return available_updates
-        else:
-            try:
-                return round(self.api.data[self.entity_description.key], 2)
-            except TypeError:
-                return self.api.data[self.entity_description.key]
+
+        try:
+            return round(self.api.data[self.entity_description.key], 2)
+        except TypeError:
+            return self.api.data[self.entity_description.key]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -99,7 +99,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
                 ATTR_WEB_CURRENT: self.api_versions.data[ATTR_WEB_CURRENT],
                 ATTR_WEB_LATEST: self.api_versions.data[ATTR_WEB_LATEST],
                 ATTR_FTL_CURRENT: self.api_versions.data[ATTR_FTL_CURRENT],
-                ATTR_FTL_LATEST: self.api_versions.data[ATTR_FTL_LATEST]
+                ATTR_FTL_LATEST: self.api_versions.data[ATTR_FTL_LATEST],
             }
-        else:
-            return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
+
+        return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
