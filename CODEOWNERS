@@ -169,6 +169,7 @@ homeassistant/components/flo/* @dmulcahey
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
+homeassistant/components/flux_led/* @icemanch
 homeassistant/components/forecast_solar/* @klaasnicolaas @frenck
 homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
