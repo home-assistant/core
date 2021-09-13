@@ -99,6 +99,7 @@ FLOWS = [
     "gios",
     "glances",
     "goalzero",
+    "goe_charger",
     "gogogate2",
     "google_travel_time",
     "gpslogger",

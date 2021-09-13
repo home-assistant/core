@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "timeout_occured": "Timeout occured",
+            "invalid_resp_status": "Invalid response status",
+            "invalid_json": "Invalid JSON",
+            "not_implemented": "Not implemented",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "interval": "Interval"
+                }
+            },
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "interval": "Interval"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "interval": "[%key:common::config_flow::data::interval%]"
+        }
+      },
+      "init": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "interval": "[%key:common::config_flow::data::interval%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_occured": "[%key:common::config_flow::error::timeout_occured%]",
+      "invalid_resp_status": "[%key:common::config_flow::error::invalid_resp_status%]",
+      "invalid_json": "[%key:common::config_flow::error::invalid_json%]",
+      "not_implemented": "[%key:common::config_flow::error::not_implemented%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

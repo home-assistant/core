@@ -192,6 +192,7 @@ homeassistant/components/github/* @timmo001 @ludeeus
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
+homeassistant/components/goe_charger/* @0xFEEDC0DE64
 homeassistant/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
