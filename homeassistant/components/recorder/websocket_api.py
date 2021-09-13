@@ -43,6 +43,10 @@ async def ws_validate_statistics(
 async def ws_clear_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
-    """Clear statistics for a list of statistic_ids."""
+    """Clear statistics for a list of statistic_ids.
+
+    Note: The WS call posts a job to the recorder's queue and then returns, it doesn't
+    wait until the job is completed.
+    """
     hass.data[DATA_INSTANCE].async_clear_statistics(msg["statistic_ids"])
     connection.send_result(msg["id"])
