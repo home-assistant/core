@@ -446,7 +446,7 @@ homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff
 homeassistant/components/seven_segments/* @fabaff
-homeassistant/components/seventeentrack/* @bachya @engrbm87
+homeassistant/components/seventeentrack/* @engrbm87
 homeassistant/components/sharkiq/* @ajmarks
 homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shelly/* @balloob @bieniu @thecode @chemelli74

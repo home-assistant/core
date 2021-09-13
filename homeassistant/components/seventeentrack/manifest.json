@@ -4,6 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/seventeentrack",
   "requirements": ["py17track==3.3.0"],
-  "codeowners": ["@bachya", "@engrbm87"],
+  "codeowners": ["@engrbm87"],
   "iot_class": "cloud_polling"
 }
