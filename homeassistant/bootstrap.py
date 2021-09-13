@@ -86,8 +86,8 @@ STAGE_1_INTEGRATIONS = {
 }
 
 
-def _get_recent_crash_reports(config_dir: str) -> list[tuple[int, str]]:
-    """Load for recent crash reports."""
+def _check_and_log_crash_reports(config_dir: str) -> bool:
+    """Check and log crash reports."""
     timestamp = time.time()
     crash_reports = []
     for file_name in os.listdir(config_dir):
@@ -98,9 +98,20 @@ def _get_recent_crash_reports(config_dir: str) -> list[tuple[int, str]]:
         if crash_timestamp_int + MAX_RECENT_CRASHES_AGE < timestamp:
             os.unlink(file_path)
             continue
-        crash_reports.append((crash_timestamp_int, Path(file_path).read_text()))
+        crash_reports.append((crash_timestamp_int, file_path, file_path.read_text()))
 
-    return crash_reports
+    activate_safe_mode = len(crash_reports) >= MAX_RECENT_CRASHES_SAFE_MODE
+    for timestamp, file_path, crash_report in crash_reports:
+        _LOGGER.error(
+            "Detected crash at %s: %s",
+            dt_util.as_local(dt_util.utc_from_timestamp(timestamp)),
+            crash_report,
+        )
+        if activate_safe_mode:
+            # Make sure we do not activate it on the next restart
+            os.unlink(file_path)
+
+    return activate_safe_mode
 
 
 async def async_setup_hass(
@@ -136,27 +147,12 @@ async def async_setup_hass(
 
     if not safe_mode:
         try:
-            recent_crash_logs = await hass.async_add_executor_job(
-                _get_recent_crash_reports, runtime_config.config_dir
-            )
-        except (ValueError, OSError):
-            _LOGGER.exception("Unable to check for recent crash logs")
-        else:
-            if len(recent_crash_logs) >= MAX_RECENT_CRASHES_SAFE_MODE:
-                _LOGGER.warning(
-                    "Detected multiple recent crashes; Activating safe mode"
-                )
+            if await hass.async_add_executor_job(
+                _check_and_log_crash_reports, runtime_config.config_dir
+            ):
                 safe_mode = True
-                for timestamp, crash_report in recent_crash_logs:
-                    crash_time = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
-                    summary = crash_report.split("\n")[0]
-                    _LOGGER.error("Detected crash at %s: %s", crash_time, crash_report)
-                    if basic_setup_success:
-                        hass.components.persistent_notification.async_create(
-                            summary,
-                            f"Detected crash at {crash_time}",
-                            f"crash_log_{timestamp}",
-                        )
+        except (ValueError, OSError):
+            _LOGGER.exception("Unable to check for recent crash reports")
 
     if not safe_mode:
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
