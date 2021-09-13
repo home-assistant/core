@@ -50,7 +50,8 @@ def get_api(
     return api
 
 
-async def async_setup_netgear_entry(
+@callback
+def async_setup_netgear_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -173,7 +174,7 @@ class NetgearRouter:
 
         async_dispatcher_send(self.hass, self.signal_device_new)
 
-    async def async_get_attached_devices(self) -> None:
+    async def async_get_attached_devices(self) -> list:
         """Get the devices connected to the router."""
         if self._method_version == 1:
             return await self.hass.async_add_executor_job(

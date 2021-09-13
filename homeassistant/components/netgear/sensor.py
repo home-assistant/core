@@ -18,27 +18,20 @@ from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entr
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class NetgearSensorDescription(SensorEntityDescription):
-    """Class that holds device specific info for a netgear sensor."""
-
-    attributes: tuple = ()
-
-
 SENSOR_TYPES = {
-    "type": NetgearSensorDescription(
+    "type": SensorEntityDescription(
         key="type",
         name="link type",
         native_unit_of_measurement=None,
         device_class=None,
     ),
-    "link_rate": NetgearSensorDescription(
+    "link_rate": SensorEntityDescription(
         key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
         device_class=None,
     ),
-    "signal": NetgearSensorDescription(
+    "signal": SensorEntityDescription(
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
@@ -58,7 +51,7 @@ async def async_setup_entry(
             for attribute in ("type", "link_rate", "signal")
         ]
 
-    await async_setup_netgear_entry(
+    async_setup_netgear_entry(
         hass, entry, async_add_entities, generate_sensor_classes
     )
 

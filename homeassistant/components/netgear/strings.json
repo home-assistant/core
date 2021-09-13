@@ -11,14 +11,6 @@
           "username": "[%key:common::config_flow::data::username%] (Optional)",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "link": {
-        "title": "Netgear",
-        "description": "Do you want to setup router {name} ({url})?\n Default username: {username}",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%] (Optional)",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
       }
     },
     "error": {

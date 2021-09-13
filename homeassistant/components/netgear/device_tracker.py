@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_APS = "accesspoints"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL): cv.boolean,
@@ -68,7 +68,7 @@ async def async_setup_entry(
     def generate_classes(router: NetgearRouter, device: dict):
         return [NetgearScannerEntity(router, device)]
 
-    await async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
+    async_setup_netgear_entry(hass, entry, async_add_entities, generate_classes)
 
 
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):

@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -33,7 +32,7 @@ def _discovery_schema_with_defaults(discovery_info):
 def _user_schema_with_defaults(user_input):
     user_schema = {
         vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-        vol.Optional(CONF_PORT, default=user_input.get(CONF_PORT, 0)): int,
+        vol.Optional(CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)): int,
         vol.Optional(CONF_SSL, default=user_input.get(CONF_SSL, False)): bool,
     }
     user_schema.update(_ordered_shared_schema(user_input))
@@ -82,7 +81,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the netgear config flow."""
         self.placeholders = {
-            CONF_NAME: "",
             CONF_HOST: DEFAULT_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_USERNAME: DEFAULT_USER,
@@ -138,7 +136,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.placeholders.update(updated_data)
         self.discovered = True
 
-        self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):

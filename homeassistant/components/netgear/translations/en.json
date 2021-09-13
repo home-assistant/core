@@ -7,14 +7,6 @@
             "config": "Connection or login error: please check your configuration"
         },
         "step": {
-            "link": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username (Optional)"
-                },
-                "description": "Do you want to setup router {name} ({url})?\n Default username: {username}",
-                "title": "Netgear"
-            },
             "user": {
                 "data": {
                     "host": "Host (Optional)",
