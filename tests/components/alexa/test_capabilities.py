@@ -383,7 +383,22 @@ async def test_report_fan_speed_state(hass):
             "percentage": 100,
         },
     )
-
+    hass.states.async_set(
+        "fan.speed_less_on",
+        "on",
+        {
+            "friendly_name": "Speedless fan on",
+            "supported_features": 0,
+        },
+    )
+    hass.states.async_set(
+        "fan.speed_less_off",
+        "off",
+        {
+            "friendly_name": "Speedless fan off",
+            "supported_features": 0,
+        },
+    )
     properties = await reported_properties(hass, "fan.off")
     properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
@@ -395,6 +410,12 @@ async def test_report_fan_speed_state(hass):
 
     properties = await reported_properties(hass, "fan.high_speed")
     properties.assert_equal("Alexa.RangeController", "rangeValue", 100)
+
+    properties = await reported_properties(hass, "fan.speed_less_on")
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 100)
+
+    properties = await reported_properties(hass, "fan.speed_less_off")
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
 async def test_report_fan_preset_mode(hass):

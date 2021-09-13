@@ -378,6 +378,29 @@ async def test_fan(hass):
     assert "capabilityResources" not in power_capability
     assert "configuration" not in power_capability
 
+    await assert_power_controller_works(
+        "fan#test_1", "fan.turn_on", "fan.turn_off", hass
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "fan#test_1",
+        "fan.turn_on",
+        hass,
+        payload={"rangeValue": "100"},
+        instance="fan.percentage",
+    )
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "fan#test_1",
+        "fan.turn_off",
+        hass,
+        payload={"rangeValue": "0"},
+        instance="fan.percentage",
+    )
+
 
 async def test_variable_fan(hass):
     """Test fan discovery.
