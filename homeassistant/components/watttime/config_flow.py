@@ -26,9 +26,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import (
     AUTH_TYPE_LOGIN,
     AUTH_TYPE_REGISTER,
-    CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_BALANCING_AUTHORITY_ID,
     DOMAIN,
     LOGGER,
 )
@@ -126,9 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_LATITUDE: user_input[CONF_LATITUDE],
                 CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                CONF_BALANCING_AUTHORITY: grid_region["name"],
                 CONF_BALANCING_AUTHORITY_ABBREV: grid_region["abbrev"],
-                CONF_BALANCING_AUTHORITY_ID: grid_region["id"],
             },
         )
 
