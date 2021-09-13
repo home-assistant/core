@@ -1,14 +1,12 @@
 """Support for Velbus thermostat."""
 import logging
 
-from velbus.util import VelbusException
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import VelbusEntity
 from .const import DOMAIN
@@ -17,13 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Velbus binary sensor based on config_entry."""
+    """Set up Velbus switch based on config_entry."""
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["climate"]
     entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusClimate(module, channel))
+    for channel in cntrl.get_all("climate"):
+        entities.append(VelbusClimate(channel))
     async_add_entities(entities)
 
 
@@ -37,15 +34,13 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
 
     @property
     def temperature_unit(self):
-        """Return the unit this state is expressed in."""
-        if self._module.get_unit(self._channel) == TEMP_CELSIUS:
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+        """Return the unit."""
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._module.get_state(self._channel)
+        return self._channel.get_state()
 
     @property
     def hvac_mode(self):
@@ -66,18 +61,14 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._module.get_climate_target()
+        return self._channel.get_climate_target()
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
-        try:
-            self._module.set_temp(temp)
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
-            return
+        self._channel.set_temp(temp)
         self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
