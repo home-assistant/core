@@ -503,14 +503,24 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                 ],
             )
     elif new_version == 21:
+        if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
+            data_type = "DOUBLE PRECISION"
+        else:
+            data_type = "FLOAT"
         _add_columns(
             connection,
             "statistics",
-            ["sum_increase DOUBLE PRECISION"],
+            [f"sum_increase {data_type}"],
         )
         # Try to change the character set of the statistic_meta table
         if engine.dialect.name == "mysql":
             for table in ("events", "states", "statistics_meta"):
+                _LOGGER.warning(
+                    "Updating character set and collation of table %s to utf8mb4. "
+                    "Note: this can take several minutes on large databases and slow "
+                    "computers. Please be patient!",
+                    table,
+                )
                 with contextlib.suppress(SQLAlchemyError):
                     connection.execute(
                         text(
