@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import EventType
 
-from . import get_device_wrapper
+from . import RpcDeviceWrapper, get_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -29,6 +29,10 @@ def async_describe_events(
     def async_describe_shelly_click_event(event: EventType) -> dict[str, str]:
         """Describe shelly.click logbook event."""
         wrapper = get_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
+
+        if isinstance(wrapper, RpcDeviceWrapper):
+            return {}
+
         if wrapper and wrapper.device.initialized:
             device_name = get_block_device_name(wrapper.device)
         else:
