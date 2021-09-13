@@ -7,8 +7,10 @@ from datetime import datetime
 import logging
 import logging.handlers
 import os
+from pathlib import Path
 import sys
 import threading
+import time
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
@@ -55,6 +57,10 @@ COOLDOWN_TIME = 60
 
 MAX_LOAD_CONCURRENTLY = 6
 
+CRASH_REPORT_PREFIX = "hass_crash_report"
+MAX_RECENT_CRASHES_SAFE_MODE = 3
+MAX_RECENT_CRASHES_AGE = 60 * 15  # 15 minutes in seconds
+
 DEBUGGER_INTEGRATIONS = {"debugpy"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {
@@ -78,6 +84,25 @@ STAGE_1_INTEGRATIONS = {
     # be removed
     "frontend",
 }
+
+
+def _get_recent_crash_reports(
+    hass: core.HomeAssistant, config_dir: str
+) -> list[tuple[int, str]]:
+    """Load for recent crash reports."""
+    timestamp = time.time()
+    crash_reports = []
+    for file_name in os.listdir(config_dir):
+        file_path = Path(config_dir) / file_name
+        if not file_name.startswith(f"{CRASH_REPORT_PREFIX}."):
+            continue
+        crash_timestamp_int = int(file_name.split(".")[1])
+        if crash_timestamp_int + MAX_RECENT_CRASHES_AGE < timestamp:
+            os.unlink(file_path)
+            continue
+        crash_reports.append((crash_timestamp_int, Path(file_path).read_text()))
+
+    return crash_reports
 
 
 async def async_setup_hass(
@@ -155,6 +180,30 @@ async def async_setup_hass(
         hass.config.internal_url = old_config.internal_url
         hass.config.external_url = old_config.external_url
         hass.config.config_dir = old_config.config_dir
+
+    if not safe_mode:
+        try:
+            recent_crash_logs = await hass.async_add_executor_job(
+                _get_recent_crash_reports, hass, runtime_config.config_dir
+            )
+        except (ValueError, OSError):
+            _LOGGER.exception("Unable to check for recent crash logs")
+        else:
+            if len(recent_crash_logs) > MAX_RECENT_CRASHES_SAFE_MODE:
+                _LOGGER.warning(
+                    "Detected multiple recent crashes; Activating safe mode"
+                )
+                safe_mode = True
+                for timestamp, crash_report in recent_crash_logs:
+                    crash_time = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
+                    summary = crash_report.split("\n")[0]
+                    _LOGGER.error("Detected crash at %s: %s", crash_time, crash_report)
+                    if basic_setup_success:
+                        hass.components.persistent_notification.async_create(
+                            summary,
+                            f"Detected crash at {crash_time}",
+                            f"crash_log_{timestamp}",
+                        )
 
     if safe_mode:
         _LOGGER.info("Starting in safe mode")
