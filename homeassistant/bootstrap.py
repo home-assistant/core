@@ -86,9 +86,7 @@ STAGE_1_INTEGRATIONS = {
 }
 
 
-def _get_recent_crash_reports(
-    hass: core.HomeAssistant, config_dir: str
-) -> list[tuple[int, str]]:
+def _get_recent_crash_reports(config_dir: str) -> list[tuple[int, str]]:
     """Load for recent crash reports."""
     timestamp = time.time()
     crash_reports = []
@@ -184,12 +182,12 @@ async def async_setup_hass(
     if not safe_mode:
         try:
             recent_crash_logs = await hass.async_add_executor_job(
-                _get_recent_crash_reports, hass, runtime_config.config_dir
+                _get_recent_crash_reports, runtime_config.config_dir
             )
         except (ValueError, OSError):
             _LOGGER.exception("Unable to check for recent crash logs")
         else:
-            if len(recent_crash_logs) > MAX_RECENT_CRASHES_SAFE_MODE:
+            if len(recent_crash_logs) >= MAX_RECENT_CRASHES_SAFE_MODE:
                 _LOGGER.warning(
                     "Detected multiple recent crashes; Activating safe mode"
                 )
