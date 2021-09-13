@@ -137,8 +137,8 @@ class LegacyZWaveMigration:
         assert device_entry
 
         # Normalize unit of measurement.
-        unit = entity_entry.unit_of_measurement
-        unit = unit and unit.lower()
+        if unit := entity_entry.unit_of_measurement:
+            unit = unit.lower()
         if unit == "":
             unit = None
 
