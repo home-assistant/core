@@ -99,14 +99,12 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
         name="IPv4 address",
-        native_unit_of_measurement="",
         icon="mdi:server-network",
         mandatory_arg=True,
     ),
     "ipv6_address": SysMonitorSensorEntityDescription(
         key="ipv6_address",
         name="IPv6 address",
-        native_unit_of_measurement="",
         icon="mdi:server-network",
         mandatory_arg=True,
     ),
@@ -215,7 +213,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
-        name="Processor use (percent)",
+        name="Processor use",
         native_unit_of_measurement=PERCENTAGE,
         icon=CPU_ICON,
         state_class=STATE_CLASS_TOTAL,
