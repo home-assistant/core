@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -55,6 +56,8 @@ from .const import (
     SERVICE_STOP,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
+    SIGNAL_START_ENTITY,
+    SIGNAL_STOP_ENTITY,
     TCP,
     UDP,
 )
@@ -137,6 +140,7 @@ async def async_modbus_setup(
     async def async_stop_modbus(event):
         """Stop Modbus service."""
 
+        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
         for client in hub_collect.values():
             await client.async_close()
 
@@ -185,6 +189,7 @@ async def async_modbus_setup(
 
     async def async_stop_hub(service):
         """Stop Modbus hub."""
+        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_close()
 
@@ -194,6 +199,7 @@ async def async_modbus_setup(
 
     async def async_restart_hub(service):
         """Restart Modbus hub."""
+        async_dispatcher_send(hass, SIGNAL_START_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_restart()
 
@@ -211,7 +217,6 @@ class ModbusHub:
 
         # generic configuration
         self._client = None
-        self.entity_controls: list[CALLBACK_TYPE] = []
         self._async_cancel_listener = None
         self._in_error = False
         self._lock = asyncio.Lock()
@@ -307,16 +312,12 @@ class ModbusHub:
             await self.async_close()
 
         await self.async_setup()
-        for call in self.entity_controls:
-            await call(False)
 
     async def async_close(self):
         """Disconnect client."""
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
-        for call in self.entity_controls:
-            await call(True)
         async with self._lock:
             if self._client:
                 try:
