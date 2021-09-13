@@ -3,7 +3,6 @@ from typing import Final, NamedTuple, TypedDict
 
 from homeassistant.helpers.entity import DeviceInfo
 
-# TODO: add option flow to configure individual update intervals
 DEFAULT_UPDATE_INTERVAL = 60
 DOMAIN: Final = "fronius"
 

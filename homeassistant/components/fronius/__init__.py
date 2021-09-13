@@ -40,7 +40,6 @@ FroniusCoordinatorType = TypeVar(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up fronius from a config entry."""
     fronius = FroniusSolarNet(hass, entry)
-    # TODO: does this retry - only for inverters/logger - when ConfigEntryNotReady
     await fronius.init_devices()
 
     hass.data.setdefault(DOMAIN, {})
@@ -193,7 +192,6 @@ class FroniusSolarNet:
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
-            # TODO: do we have to clean up the coordinator if not used?
             return None
         # keep coordinator only if devices are found
         # else ConfigEntryNotReady raised form KeyError

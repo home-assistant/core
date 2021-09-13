@@ -28,7 +28,7 @@ ELECTRIC_CHARGE_AMPERE_HOURS = "Ah"
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
 POWER_VOLT_AMPERE_REACTIVE = "var"
 
-# TODO: add entity_registry_enabled_default
+
 INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "energy_day": SensorEntityDescription(
         key="energy_day",
@@ -331,7 +331,6 @@ METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 }
 
 POWER_FLOW_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    # TODO: add battery_standby as BinarySensor entity
     "energy_day": SensorEntityDescription(
         key="energy_day",
         name="Energy day",

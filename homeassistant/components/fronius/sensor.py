@@ -40,7 +40,6 @@ async def async_setup_platform(
     discovery_info: None = None,
 ) -> None:
     """Import Fronius configuration from yaml."""
-    # TODO: maybe use persistent notification. Hint for changed entity_ids.
     _LOGGER.warning(
         "Loading Fronius via platform setup is deprecated. Please remove it from your configuration"
     )
@@ -106,7 +105,6 @@ class MeterSensor(FroniusEntity, SensorEntity):
         super().__init__(*args, **kwargs)
         meter_data = self._device_data
 
-        # TODO: add meter_location to extra attributes? - from enum?
         self._attr_extra_state_attributes = {
             "meter_loaction": meter_data["meter_location"]["value"],
             "enable": meter_data["enable"]["value"],

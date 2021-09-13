@@ -20,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        # TODO: remove default
-        vol.Required(CONF_HOST, default="10.1.2.5"): str,
+        vol.Required(CONF_HOST): str,
     }
 )
 
