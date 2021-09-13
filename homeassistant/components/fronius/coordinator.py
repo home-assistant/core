@@ -1,18 +1,15 @@
 """DataUpdateCoordinators for the Fronius integration."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SOLAR_NET_ID_POWER_FLOW, FroniusDeviceInfo, SolarNetId
 from .descriptions import (
@@ -24,6 +21,9 @@ from .descriptions import (
 
 if TYPE_CHECKING:
     from . import FroniusSolarNet
+    from .sensor import _FroniusSensorEntity
+
+    FroniusEntityType = TypeVar("FroniusEntityType", bound=_FroniusSensorEntity)
 
 
 class _FroniusUpdateCoordinator(
@@ -31,7 +31,7 @@ class _FroniusUpdateCoordinator(
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
-    valid_descriptions: Mapping[str, EntityDescription]
+    valid_descriptions: Mapping[str, SensorEntityDescription]
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the _FroniusUpdateCoordinator class."""
@@ -62,7 +62,7 @@ class _FroniusUpdateCoordinator(
     def add_entities_for_seen_keys(
         self,
         async_add_entities: AddEntitiesCallback,
-        entity_constructor: type[FroniusEntity],
+        entity_constructor: type[FroniusEntityType],
     ) -> None:
         """
         Add entities for received keys and registers listener for future seen keys.
@@ -149,33 +149,3 @@ class FroniusStorageUpdateCoordinator(_FroniusUpdateCoordinator):
         """Return data per solar net id from pyfronius."""
         data = await self.fronius.current_system_storage_data()
         return data["storages"]  # type: ignore[no-any-return]
-
-
-class FroniusEntity(CoordinatorEntity):
-    """Defines a Fronius coordinator entity."""
-
-    def __init__(
-        self,
-        coordinator: _FroniusUpdateCoordinator,
-        entity_description: EntityDescription,
-        solar_net_id: str,
-    ) -> None:
-        """Set up an individual Fronius meter sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self.solar_net_id = solar_net_id
-
-    @property
-    def _device_data(self) -> dict[str, Any]:
-        return self.coordinator.data[self.solar_net_id]  # type: ignore[no-any-return]
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        try:
-            self._attr_native_value = self._device_data[self.entity_description.key][
-                "value"
-            ]
-        except KeyError:
-            return
-        self.async_write_ha_state()
