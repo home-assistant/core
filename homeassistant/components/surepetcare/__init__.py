@@ -131,7 +131,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 [
                     Location.INSIDE.name.title(),
                     Location.OUTSIDE.name.title(),
-                    Location.UNKNOWN.name.title(),
                 ]
             ),
         }

@@ -40,4 +40,3 @@ set_pet_location:
           options:
             - 'Inside'
             - 'Outside'
-            - 'Unknown'
