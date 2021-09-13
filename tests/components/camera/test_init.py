@@ -20,6 +20,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from .common import EMPTY_8_6_JPEG, mock_turbo_jpeg
+
 from tests.components.camera import common
 
 
@@ -73,6 +75,96 @@ async def test_get_image_from_camera(hass, image_mock_url):
 
     assert mock_camera.called
     assert image.content == b"Test"
+
+
+async def test_legacy_async_get_image_signature_warns_only_once(
+    hass, image_mock_url, caplog
+):
+    """Test that we only warn once when we encounter a legacy async_get_image function signature."""
+
+    async def _legacy_async_camera_image(self):
+        return b"Image"
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+        new=_legacy_async_camera_image,
+    ):
+        image = await camera.async_get_image(hass, "camera.demo_camera")
+        assert image.content == b"Image"
+        assert "does not support requesting width and height" in caplog.text
+        caplog.clear()
+
+        image = await camera.async_get_image(hass, "camera.demo_camera")
+        assert image.content == b"Image"
+        assert "does not support requesting width and height" not in caplog.text
+
+
+async def test_get_image_from_camera_with_width_height(hass, image_mock_url):
+    """Grab an image from camera entity with width and height."""
+
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"Test",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera", width=640, height=480
+        )
+
+    assert mock_camera.called
+    assert image.content == b"Test"
+
+
+async def test_get_image_from_camera_with_width_height_scaled(hass, image_mock_url):
+    """Grab an image from camera entity with width and height and scale it."""
+
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"Valid jpeg",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera", width=4, height=3
+        )
+
+    assert mock_camera.called
+    assert image.content_type == "image/jpg"
+    assert image.content == EMPTY_8_6_JPEG
+
+
+async def test_get_image_from_camera_not_jpeg(hass, image_mock_url):
+    """Grab an image from camera entity that we cannot scale."""
+
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
+    )
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton.instance",
+        return_value=turbo_jpeg,
+    ), patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        autospec=True,
+        return_value=b"png",
+    ) as mock_camera:
+        image = await camera.async_get_image(
+            hass, "camera.demo_camera_png", width=4, height=3
+        )
+
+    assert mock_camera.called
+    assert image.content_type == "image/png"
+    assert image.content == b"png"
 
 
 async def test_get_stream_source_from_camera(hass, mock_camera):
@@ -153,7 +245,7 @@ async def test_websocket_camera_thumbnail(hass, hass_ws_client, mock_camera):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"]["content_type"] == "image/jpeg"
+    assert msg["result"]["content_type"] == "image/jpg"
     assert msg["result"]["content"] == base64.b64encode(b"Test").decode("utf-8")
 
 

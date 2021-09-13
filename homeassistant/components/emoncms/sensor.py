@@ -5,7 +5,12 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
@@ -13,6 +18,8 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
     HTTP_OK,
     POWER_WATT,
     STATE_UNKNOWN,
@@ -149,6 +156,13 @@ class EmonCmsSensor(SensorEntity):
         self._sensorid = sensorid
         self._elem = elem
 
+        if unit_of_measurement == "kWh":
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        elif unit_of_measurement == "W":
+            self._attr_device_class = DEVICE_CLASS_POWER
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(
                 elem["value"], STATE_UNKNOWN
@@ -162,12 +176,12 @@ class EmonCmsSensor(SensorEntity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self._state
 

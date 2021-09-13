@@ -36,7 +36,7 @@ HOST_SCHEMA = vol.Schema(
 def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> None:
     """Write the tls assets to disk."""
     makedirs(hass.config.path(DOMAIN), exist_ok=True)
-    with open(hass.config.path(DOMAIN, filename), "w") as file_handle:
+    with open(hass.config.path(DOMAIN, filename), "w", encoding="utf8") as file_handle:
         file_handle.write(asset.decode("utf-8"))
 
 

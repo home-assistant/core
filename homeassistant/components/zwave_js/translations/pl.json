@@ -8,7 +8,9 @@
             "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS.",
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "discovery_requires_supervisor": "Wykrywanie wymaga Supervisora.",
+            "not_zwave_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Z-Wave."
         },
         "error": {
             "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS. Sprawd\u017a konfiguracj\u0119",
@@ -16,6 +18,7 @@
             "invalid_ws_url": "Nieprawid\u0142owy URL websocket",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 kilka minut.",
             "start_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 uruchamianie dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 chwil\u0119."
@@ -48,7 +51,27 @@
             },
             "start_addon": {
                 "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
+            },
+            "usb_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} z dodatkiem Z-Wave JS?"
             }
+        }
+    },
+    "device_automation": {
+        "condition_type": {
+            "config_parameter": "warto\u015b\u0107 parametru jest {subtype}",
+            "node_status": "stan w\u0119z\u0142a",
+            "value": "aktualna warto\u015b\u0107 Z-Wave"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "zostanie wys\u0142ane powiadomienie kontroli wpisu",
+            "event.notification.notification": "zostanie wys\u0142ane powiadomienie",
+            "event.value_notification.basic": "wyst\u0105pi podstawowe wydarzenie CC na {subtype}",
+            "event.value_notification.central_scene": "wyst\u0105pi akcja sceny centralnej na {subtype}",
+            "event.value_notification.scene_activation": "zostanie aktywowana scena na {subtype}",
+            "state.node_status": "zmieni si\u0119 stan w\u0119z\u0142a",
+            "zwave_js.value_updated.config_parameter": "zmieni si\u0119 warto\u015b\u0107 parametru konfiguracji {subtype}",
+            "zwave_js.value_updated.value": "zmieni si\u0119 warto\u015b\u0107 na Z-Wave JS"
         }
     },
     "options": {

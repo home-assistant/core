@@ -61,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async for outlet in outlets:
         switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
 
-    async_add_entities(switches)
+    async_add_entities(switches, True)
 
 
 class AtenSwitch(SwitchEntity):
@@ -72,48 +72,26 @@ class AtenSwitch(SwitchEntity):
     def __init__(self, device, mac, outlet, name):
         """Initialize an ATEN PE switch."""
         self._device = device
-        self._mac = mac
         self._outlet = outlet
-        self._name = name or f"Outlet {outlet}"
-        self._enabled = False
-        self._outlet_power = 0.0
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._mac}-{self._outlet}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._enabled
-
-    @property
-    def current_power_w(self) -> float:
-        """Return the current power usage in W."""
-        return self._outlet_power
+        self._attr_unique_id = f"{mac}-{outlet}"
+        self._attr_name = name or f"Outlet {outlet}"
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self._device.setOutletStatus(self._outlet, "on")
-        self._enabled = True
+        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self._device.setOutletStatus(self._outlet, "off")
-        self._enabled = False
+        self._attr_is_on = False
 
     async def async_update(self):
         """Process update from entity."""
         status = await self._device.displayOutletStatus(self._outlet)
         if status == "on":
-            self._enabled = True
-            self._outlet_power = await self._device.outletPower(self._outlet)
-        elif status == "off":
-            self._enabled = False
-            self._outlet_power = 0.0
+            self._attr_is_on = True
+            self._attr_current_power_w = await self._device.outletPower(self._outlet)
+        else:
+            self._attr_is_on = False
+            self._attr_current_power_w = 0.0

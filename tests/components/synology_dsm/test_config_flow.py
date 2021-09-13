@@ -23,7 +23,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -41,7 +41,6 @@ from homeassistant.core import HomeAssistant
 from .consts import (
     DEVICE_TOKEN,
     HOST,
-    HOST_2,
     MACS,
     PASSWORD,
     PORT,
@@ -256,84 +255,74 @@ async def test_user_vdsm(hass: HomeAssistant, service_vdsm: MagicMock):
     assert result["data"].get(CONF_VOLUMES) is None
 
 
-async def test_import(hass: HomeAssistant, service: MagicMock):
-    """Test import step."""
-    # import with minimum setup
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == SERIAL
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == DEFAULT_PORT_SSL
-    assert result["data"][CONF_SSL] == DEFAULT_USE_SSL
-    assert result["data"][CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_MAC] == MACS
-    assert result["data"].get("device_token") is None
-    assert result["data"].get(CONF_DISKS) is None
-    assert result["data"].get(CONF_VOLUMES) is None
-
-    service.return_value.information.serial = SERIAL_2
-    # import with all
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
+async def test_reauth(hass: HomeAssistant, service: MagicMock):
+    """Test reauthentication."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
         data={
-            CONF_HOST: HOST_2,
-            CONF_PORT: PORT,
-            CONF_SSL: USE_SSL,
-            CONF_VERIFY_SSL: VERIFY_SSL,
+            CONF_HOST: HOST,
             CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_DISKS: ["sda", "sdb", "sdc"],
-            CONF_VOLUMES: ["volume_1"],
+            CONF_PASSWORD: f"{PASSWORD}_invalid",
         },
+        unique_id=SERIAL,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == SERIAL_2
-    assert result["title"] == HOST_2
-    assert result["data"][CONF_HOST] == HOST_2
-    assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SSL] == USE_SSL
-    assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_MAC] == MACS
-    assert result["data"].get("device_token") is None
-    assert result["data"][CONF_DISKS] == ["sda", "sdb", "sdc"]
-    assert result["data"][CONF_VOLUMES] == ["volume_1"]
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=True,
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data={
+                CONF_HOST: HOST,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant, service: MagicMock):
-    """Test we abort if the account is already setup."""
+async def test_reconfig_user(hass: HomeAssistant, service: MagicMock):
+    """Test re-configuration of already existing entry by user."""
     MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        data={
+            CONF_HOST: "wrong_host",
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
         unique_id=SERIAL,
     ).add_to_hass(hass)
 
-    # Should fail, same HOST:PORT (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-    # Should fail, same HOST:PORT (flow)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reconfigure_successful"
 
 
 async def test_login_failed(hass: HomeAssistant, service: MagicMock):
@@ -392,33 +381,6 @@ async def test_missing_data_after_login(hass: HomeAssistant, service_failed: Mag
     assert result["errors"] == {"base": "missing_data"}
 
 
-async def test_form_ssdp_already_configured(hass: HomeAssistant, service: MagicMock):
-    """Test ssdp abort when the serial number is already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_MAC: MACS,
-        },
-        unique_id=SERIAL,
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-
-
 async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test we can setup from ssdp."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -453,6 +415,62 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
+    """Test re-configuration of already existing entry by ssdp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "wrong_host",
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        unique_id=SERIAL,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
+    """Test abort of already existing entry by ssdp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.5",
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        unique_id=SERIAL,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_options_flow(hass: HomeAssistant, service: MagicMock):

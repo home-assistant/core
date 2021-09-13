@@ -14,19 +14,18 @@ from pyHS100 import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as TPLINK_DOMAIN
+from .const import (
+    CONF_DIMMER,
+    CONF_LIGHT,
+    CONF_STRIP,
+    CONF_SWITCH,
+    DOMAIN as TPLINK_DOMAIN,
+    MAX_DISCOVERY_RETRIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-ATTR_CONFIG = "config"
-CONF_DIMMER = "dimmer"
-CONF_DISCOVERY = "discovery"
-CONF_LIGHT = "light"
-CONF_STRIP = "strip"
-CONF_SWITCH = "switch"
-MAX_DISCOVERY_RETRIES = 4
 
 
 class SmartDevices:
@@ -98,7 +97,7 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
 
-    devices = {}
+    devices: dict[str, SmartDevice] = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
         _LOGGER.debug(
             "Discovering tplink devices, attempt %s of %s",
@@ -136,7 +135,7 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
+    for type_ in (CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER):
         for entry in config_data[type_]:
             host = entry["host"]
             try:
@@ -159,16 +158,18 @@ def get_static_devices(config_data) -> SmartDevices:
 
 def add_available_devices(
     hass: HomeAssistant, device_type: str, device_class: Callable
-) -> list:
+) -> list[Entity]:
     """Get sysinfo for all devices."""
 
-    devices = hass.data[TPLINK_DOMAIN][device_type]
+    devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][device_type]
 
     if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
-        devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
+        devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][
+            f"{device_type}_remaining"
+        ]
 
-    entities_ready = []
-    devices_unavailable = []
+    entities_ready: list[Entity] = []
+    devices_unavailable: list[SmartDevice] = []
     for device in devices:
         try:
             device.get_sysinfo()

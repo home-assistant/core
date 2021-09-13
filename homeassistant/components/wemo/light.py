@@ -1,9 +1,9 @@
 """Support for Belkin WeMo lights."""
 import asyncio
-from datetime import timedelta
 import logging
 
-from homeassistant import util
+from pywemo.ouimeaux_device import bridge
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -15,14 +15,14 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity, WemoSubscriptionEntity
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
+from .entity import WemoEntity
+from .wemo_device import DeviceCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,83 +31,82 @@ SUPPORT_WEMO = (
 )
 
 # The WEMO_ constants below come from pywemo itself
-WEMO_ON = 1
 WEMO_OFF = 0
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo lights."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator: DeviceCoordinator):
         """Handle a discovered Wemo device."""
-        if device.wemo.model_name == "Dimmer":
-            async_add_entities([WemoDimmer(device)])
+        if isinstance(coordinator.wemo, bridge.Bridge):
+            async_setup_bridge(hass, config_entry, async_add_entities, coordinator)
         else:
-            await hass.async_add_executor_job(
-                setup_bridge, hass, device.wemo, async_add_entities
-            )
+            async_add_entities([WemoDimmer(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
     await asyncio.gather(
-        *[
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
-        ]
+        *(
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("light")
+        )
     )
 
 
-def setup_bridge(hass, bridge, async_add_entities):
+@callback
+def async_setup_bridge(hass, config_entry, async_add_entities, coordinator):
     """Set up a WeMo link."""
-    lights = {}
+    known_light_ids = set()
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_lights():
-        """Update the WeMo led objects with latest info from the bridge."""
-        bridge.bridge_update()
-
+    @callback
+    def async_update_lights():
+        """Check to see if the bridge has any new lights."""
         new_lights = []
 
-        for light_id, device in bridge.Lights.items():
-            if light_id not in lights:
-                lights[light_id] = WemoLight(device, update_lights)
-                new_lights.append(lights[light_id])
+        for light_id, light in coordinator.wemo.Lights.items():
+            if light_id not in known_light_ids:
+                known_light_ids.add(light_id)
+                new_lights.append(WemoLight(coordinator, light))
 
         if new_lights:
-            hass.add_job(async_add_entities, new_lights)
+            async_add_entities(new_lights)
 
-    update_lights()
+    async_update_lights()
+    config_entry.async_on_unload(coordinator.async_add_listener(async_update_lights))
 
 
 class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
-    def __init__(self, device, update_lights):
+    def __init__(self, coordinator: DeviceCoordinator, light: bridge.Light) -> None:
         """Initialize the WeMo light."""
-        super().__init__(device)
-        self._update_lights = update_lights
-        self._brightness = None
-        self._hs_color = None
-        self._color_temp = None
-        self._is_on = None
-        self._unique_id = self.wemo.uniqueID
-        self._model_name = type(self.wemo).__name__
+        super().__init__(coordinator)
+        self.light = light
+        self._unique_id = self.light.uniqueID
+        self._model_name = type(self.light).__name__
 
-    async def async_added_to_hass(self):
-        """Wemo light added to Home Assistant."""
-        # Define inside async context so we know our event loop
-        self._update_lock = asyncio.Lock()
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return self.light.name
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is available."""
+        return super().available and self.light.state.get("available")
 
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return self.wemo.uniqueID
+        return self.light.uniqueID
 
     @property
     def device_info(self):
         """Return the device info."""
         return {
             "name": self.name,
+            "connections": {(CONNECTION_ZIGBEE, self._unique_id)},
             "identifiers": {(WEMO_DOMAIN, self._unique_id)},
             "model": self._model_name,
             "manufacturer": "Belkin",
@@ -116,22 +115,25 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._brightness
+        return self.light.state.get("level", 255)
 
     @property
     def hs_color(self):
         """Return the hs color values of this light."""
-        return self._hs_color
+        xy_color = self.light.state.get("color_xy")
+        if xy_color:
+            return color_util.color_xy_to_hs(*xy_color)
+        return None
 
     @property
     def color_temp(self):
         """Return the color temperature of this light in mireds."""
-        return self._color_temp
+        return self.light.state.get("temperature_mireds")
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._is_on
+        return self.light.state.get("onoff") != WEMO_OFF
 
     @property
     def supported_features(self):
@@ -158,13 +160,14 @@ class WemoLight(WemoEntity, LightEntity):
 
         with self._wemo_exception_handler("turn on"):
             if xy_color is not None:
-                self.wemo.set_color(xy_color, transition=transition_time)
+                self.light.set_color(xy_color, transition=transition_time)
 
             if color_temp is not None:
-                self.wemo.set_temperature(mireds=color_temp, transition=transition_time)
+                self.light.set_temperature(
+                    mireds=color_temp, transition=transition_time
+                )
 
-            if self.wemo.turn_on(**turn_on_kwargs):
-                self._state["onoff"] = WEMO_ON
+            self.light.turn_on(**turn_on_kwargs)
 
         self.schedule_update_ha_state()
 
@@ -173,36 +176,13 @@ class WemoLight(WemoEntity, LightEntity):
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
         with self._wemo_exception_handler("turn off"):
-            if self.wemo.turn_off(transition=transition_time):
-                self._state["onoff"] = WEMO_OFF
+            self.light.turn_off(transition=transition_time)
 
         self.schedule_update_ha_state()
 
-    def _update(self, force_update=True):
-        """Synchronize state with bridge."""
-        with self._wemo_exception_handler("update status") as handler:
-            self._update_lights(no_throttle=force_update)
-            self._state = self.wemo.state
-        if handler.success:
-            self._is_on = self._state.get("onoff") != WEMO_OFF
-            self._brightness = self._state.get("level", 255)
-            self._color_temp = self._state.get("temperature_mireds")
 
-            xy_color = self._state.get("color_xy")
-
-            if xy_color:
-                self._hs_color = color_util.color_xy_to_hs(*xy_color)
-            else:
-                self._hs_color = None
-
-
-class WemoDimmer(WemoSubscriptionEntity, LightEntity):
+class WemoDimmer(WemoEntity, LightEntity):
     """Representation of a WeMo dimmer."""
-
-    def __init__(self, device):
-        """Initialize the WeMo dimmer."""
-        super().__init__(device)
-        self._brightness = None
 
     @property
     def supported_features(self):
@@ -212,15 +192,13 @@ class WemoDimmer(WemoSubscriptionEntity, LightEntity):
     @property
     def brightness(self):
         """Return the brightness of this light between 1 and 100."""
-        return self._brightness
+        wemo_brightness = int(self.wemo.get_brightness())
+        return int((wemo_brightness * 255) / 100)
 
-    def _update(self, force_update=True):
-        """Update the device state."""
-        with self._wemo_exception_handler("update status"):
-            self._state = self.wemo.get_state(force_update)
-
-            wemobrightness = int(self.wemo.get_brightness(force_update))
-            self._brightness = int((wemobrightness * 255) / 100)
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on."""
+        return self.wemo.get_state()
 
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
@@ -229,21 +207,17 @@ class WemoDimmer(WemoSubscriptionEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int((brightness / 255) * 100)
+            with self._wemo_exception_handler("set brightness"):
+                self.wemo.set_brightness(brightness)
         else:
-            brightness = 255
-
-        with self._wemo_exception_handler("turn on"):
-            if self.wemo.on():
-                self._state = WEMO_ON
-
-            self.wemo.set_brightness(brightness)
+            with self._wemo_exception_handler("turn on"):
+                self.wemo.on()
 
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
         with self._wemo_exception_handler("turn off"):
-            if self.wemo.off():
-                self._state = WEMO_OFF
+            self.wemo.off()
 
         self.schedule_update_ha_state()

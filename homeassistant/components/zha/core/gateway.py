@@ -46,10 +46,10 @@ from .const import (
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
-    DEBUG_COMP_ZIGPY_CC,
     DEBUG_COMP_ZIGPY_DECONZ,
     DEBUG_COMP_ZIGPY_XBEE,
     DEBUG_COMP_ZIGPY_ZIGATE,
+    DEBUG_COMP_ZIGPY_ZNP,
     DEBUG_LEVEL_CURRENT,
     DEBUG_LEVEL_ORIGINAL,
     DEBUG_LEVELS,
@@ -174,7 +174,7 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
-            if zha_device.nwk == 0x0000:
+            if zha_device.ieee == self.application_controller.ieee:
                 self.coordinator_zha_device = zha_device
             zha_dev_entry = self.zha_storage.devices.get(str(zigpy_device.ieee))
             delta_msg = "not known"
@@ -217,20 +217,20 @@ class ZHAGateway:
 
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=True)
                 for dev in self.devices.values()
                 if not dev.is_mains_powered
-            ]
+            )
         )
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=False)
                 for dev in self.devices.values()
                 if dev.is_mains_powered
-            ]
+            )
         )
 
     def device_joined(self, device):
@@ -689,7 +689,9 @@ def async_capture_log_levels():
         DEBUG_COMP_BELLOWS: logging.getLogger(DEBUG_COMP_BELLOWS).getEffectiveLevel(),
         DEBUG_COMP_ZHA: logging.getLogger(DEBUG_COMP_ZHA).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY: logging.getLogger(DEBUG_COMP_ZIGPY).getEffectiveLevel(),
-        DEBUG_COMP_ZIGPY_CC: logging.getLogger(DEBUG_COMP_ZIGPY_CC).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_ZNP: logging.getLogger(
+            DEBUG_COMP_ZIGPY_ZNP
+        ).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
             DEBUG_COMP_ZIGPY_DECONZ
         ).getEffectiveLevel(),
@@ -708,7 +710,7 @@ def async_set_logger_levels(levels):
     logging.getLogger(DEBUG_COMP_BELLOWS).setLevel(levels[DEBUG_COMP_BELLOWS])
     logging.getLogger(DEBUG_COMP_ZHA).setLevel(levels[DEBUG_COMP_ZHA])
     logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
-    logging.getLogger(DEBUG_COMP_ZIGPY_CC).setLevel(levels[DEBUG_COMP_ZIGPY_CC])
+    logging.getLogger(DEBUG_COMP_ZIGPY_ZNP).setLevel(levels[DEBUG_COMP_ZIGPY_ZNP])
     logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
     logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
     logging.getLogger(DEBUG_COMP_ZIGPY_ZIGATE).setLevel(levels[DEBUG_COMP_ZIGPY_ZIGATE])

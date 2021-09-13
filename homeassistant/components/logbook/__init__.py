@@ -48,11 +48,10 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-ENTITY_ID_JSON_TEMPLATE = '"entity_id": "{}"'
-ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": "([^"]+)"')
-DOMAIN_JSON_EXTRACT = re.compile('"domain": "([^"]+)"')
-ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
-
+ENTITY_ID_JSON_TEMPLATE = '"entity_id":"{}"'
+ENTITY_ID_JSON_EXTRACT = re.compile('"entity_id": ?"([^"]+)"')
+DOMAIN_JSON_EXTRACT = re.compile('"domain": ?"([^"]+)"')
+ICON_JSON_EXTRACT = re.compile('"icon": ?"([^"]+)"')
 ATTR_MESSAGE = "message"
 
 CONTINUOUS_DOMAINS = ["proximity", "sensor"]
@@ -574,10 +573,10 @@ def _apply_event_types_filter(hass, query, event_types):
 def _apply_event_entity_id_matchers(events_query, entity_ids):
     return events_query.filter(
         sqlalchemy.or_(
-            *[
+            *(
                 Events.event_data.contains(ENTITY_ID_JSON_TEMPLATE.format(entity_id))
                 for entity_id in entity_ids
-            ]
+            )
         )
     )
 

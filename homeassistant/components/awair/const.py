@@ -1,4 +1,5 @@
 """Constants for the Awair component."""
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -6,9 +7,8 @@ import logging
 
 from python_awair.devices import AwairDevice
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
+    SOUND_PRESSURE_WEIGHTED_DBA,
     TEMP_CELSIUS,
 )
 
@@ -35,10 +36,6 @@ API_VOC = "volatile_organic_compounds"
 
 ATTRIBUTION = "Awair air quality sensor"
 
-ATTR_LABEL = "label"
-ATTR_UNIT = "unit"
-ATTR_UNIQUE_ID = "unique_id"
-
 DOMAIN = "awair"
 
 DUST_ALIASES = [API_PM25, API_PM10]
@@ -47,71 +44,89 @@ LOGGER = logging.getLogger(__package__)
 
 UPDATE_INTERVAL = timedelta(minutes=5)
 
-SENSOR_TYPES = {
-    API_SCORE: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_LABEL: "Awair score",
-        ATTR_UNIQUE_ID: "score",  # matches legacy format
-    },
-    API_HUMID: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
-        ATTR_ICON: None,
-        ATTR_UNIT: PERCENTAGE,
-        ATTR_LABEL: "Humidity",
-        ATTR_UNIQUE_ID: "HUMID",  # matches legacy format
-    },
-    API_LUX: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
-        ATTR_ICON: None,
-        ATTR_UNIT: LIGHT_LUX,
-        ATTR_LABEL: "Illuminance",
-        ATTR_UNIQUE_ID: "illuminance",
-    },
-    API_SPL_A: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:ear-hearing",
-        ATTR_UNIT: "dBa",
-        ATTR_LABEL: "Sound level",
-        ATTR_UNIQUE_ID: "sound_level",
-    },
-    API_VOC: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:cloud",
-        ATTR_UNIT: CONCENTRATION_PARTS_PER_BILLION,
-        ATTR_LABEL: "Volatile organic compounds",
-        ATTR_UNIQUE_ID: "VOC",  # matches legacy format
-    },
-    API_TEMP: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_ICON: None,
-        ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_LABEL: "Temperature",
-        ATTR_UNIQUE_ID: "TEMP",  # matches legacy format
-    },
-    API_PM25: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_LABEL: "PM2.5",
-        ATTR_UNIQUE_ID: "PM25",  # matches legacy format
-    },
-    API_PM10: {
-        ATTR_DEVICE_CLASS: None,
-        ATTR_ICON: "mdi:blur",
-        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ATTR_LABEL: "PM10",
-        ATTR_UNIQUE_ID: "PM10",  # matches legacy format
-    },
-    API_CO2: {
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2,
-        ATTR_ICON: "mdi:cloud",
-        ATTR_UNIT: CONCENTRATION_PARTS_PER_MILLION,
-        ATTR_LABEL: "Carbon dioxide",
-        ATTR_UNIQUE_ID: "CO2",  # matches legacy format
-    },
-}
+
+@dataclass
+class AwairRequiredKeysMixin:
+    """Mixinf for required keys."""
+
+    unique_id_tag: str
+
+
+@dataclass
+class AwairSensorEntityDescription(SensorEntityDescription, AwairRequiredKeysMixin):
+    """Describes Awair sensor entity."""
+
+
+SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
+    key=API_SCORE,
+    icon="mdi:blur",
+    native_unit_of_measurement=PERCENTAGE,
+    name="Awair score",
+    unique_id_tag="score",  # matches legacy format
+)
+
+SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
+    AwairSensorEntityDescription(
+        key=API_HUMID,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        name="Humidity",
+        unique_id_tag="HUMID",  # matches legacy format
+    ),
+    AwairSensorEntityDescription(
+        key=API_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+        native_unit_of_measurement=LIGHT_LUX,
+        name="Illuminance",
+        unique_id_tag="illuminance",
+    ),
+    AwairSensorEntityDescription(
+        key=API_SPL_A,
+        icon="mdi:ear-hearing",
+        native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
+        name="Sound level",
+        unique_id_tag="sound_level",
+    ),
+    AwairSensorEntityDescription(
+        key=API_VOC,
+        icon="mdi:cloud",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        name="Volatile organic compounds",
+        unique_id_tag="VOC",  # matches legacy format
+    ),
+    AwairSensorEntityDescription(
+        key=API_TEMP,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="Temperature",
+        unique_id_tag="TEMP",  # matches legacy format
+    ),
+    AwairSensorEntityDescription(
+        key=API_CO2,
+        device_class=DEVICE_CLASS_CO2,
+        icon="mdi:cloud",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        name="Carbon dioxide",
+        unique_id_tag="CO2",  # matches legacy format
+    ),
+)
+
+SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
+    AwairSensorEntityDescription(
+        key=API_PM25,
+        icon="mdi:blur",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        name="PM2.5",
+        unique_id_tag="PM25",  # matches legacy format
+    ),
+    AwairSensorEntityDescription(
+        key=API_PM10,
+        icon="mdi:blur",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        name="PM10",
+        unique_id_tag="PM10",  # matches legacy format
+    ),
+)
 
 
 @dataclass

@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
 import zigpy.profiles.zha
 import zigpy.quirks
 import zigpy.types
@@ -29,7 +30,15 @@ import homeassistant.components.zha.switch
 import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
-from .zha_devices_list import DEVICES
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from .zha_devices_list import (
+    DEV_SIG_CHANNELS,
+    DEV_SIG_ENT_MAP,
+    DEV_SIG_ENT_MAP_CLASS,
+    DEV_SIG_ENT_MAP_ID,
+    DEV_SIG_EVT_CHANNELS,
+    DEVICES,
+)
 
 NO_TAIL_ID = re.compile("_\\d$")
 
@@ -72,11 +81,11 @@ async def test_devices(
     )
 
     zigpy_device = zigpy_device_mock(
-        device["endpoints"],
+        device[SIG_ENDPOINTS],
         "00:11:22:33:44:55:66:77",
-        device["manufacturer"],
-        device["model"],
-        node_descriptor=device["node_descriptor"],
+        device[SIG_MANUFACTURER],
+        device[SIG_MODEL],
+        node_descriptor=device[SIG_NODE_DESC],
         patch_cluster=False,
     )
 
@@ -120,11 +129,13 @@ async def test_devices(
         ch.id for pool in zha_dev.channels.pools for ch in pool.client_channels.values()
     }
 
-    entity_map = device["entity_map"]
+    entity_map = device[DEV_SIG_ENT_MAP]
     assert zha_entity_ids == {
-        e["entity_id"] for e in entity_map.values() if not e.get("default_match", False)
+        e[DEV_SIG_ENT_MAP_ID]
+        for e in entity_map.values()
+        if not e.get("default_match", False)
     }
-    assert event_channels == set(device["event_channels"])
+    assert event_channels == set(device[DEV_SIG_EVT_CHANNELS])
 
     for call in _dispatch.call_args_list:
         _, component, entity_cls, unique_id, channels = call[0]
@@ -133,10 +144,10 @@ async def test_devices(
 
         assert key in entity_map
         assert entity_id is not None
-        no_tail_id = NO_TAIL_ID.sub("", entity_map[key]["entity_id"])
+        no_tail_id = NO_TAIL_ID.sub("", entity_map[key][DEV_SIG_ENT_MAP_ID])
         assert entity_id.startswith(no_tail_id)
-        assert {ch.name for ch in channels} == set(entity_map[key]["channels"])
-        assert entity_cls.__name__ == entity_map[key]["entity_class"]
+        assert {ch.name for ch in channels} == set(entity_map[key][DEV_SIG_CHANNELS])
+        assert entity_cls.__name__ == entity_map[key][DEV_SIG_ENT_MAP_CLASS]
 
 
 def _get_first_identify_cluster(zigpy_device):
@@ -258,20 +269,20 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         "homeassistant.components.zha.core.channels.Channels.async_new_entity"
     ) as new_ent:
         channels = channels_mock(
-            device_info["endpoints"],
-            manufacturer=device_info["manufacturer"],
-            model=device_info["model"],
-            node_desc=device_info["node_descriptor"],
+            device_info[SIG_ENDPOINTS],
+            manufacturer=device_info[SIG_MANUFACTURER],
+            model=device_info[SIG_MODEL],
+            node_desc=device_info[SIG_NODE_DESC],
             patch_cluster=False,
         )
 
-    assert device_info["event_channels"] == sorted(
-        [ch.id for pool in channels.pools for ch in pool.client_channels.values()]
+    assert device_info[DEV_SIG_EVT_CHANNELS] == sorted(
+        ch.id for pool in channels.pools for ch in pool.client_channels.values()
     )
     assert new_ent.call_count == len(
         [
             device_info
-            for device_info in device_info["entity_map"].values()
+            for device_info in device_info[DEV_SIG_ENT_MAP].values()
             if not device_info.get("default_match", False)
         ]
     )
@@ -279,10 +290,10 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
     for call_args in new_ent.call_args_list:
         comp, ent_cls, unique_id, channels = call_args[0]
         map_id = (comp, unique_id)
-        assert map_id in device_info["entity_map"]
-        entity_info = device_info["entity_map"][map_id]
-        assert {ch.name for ch in channels} == set(entity_info["channels"])
-        assert ent_cls.__name__ == entity_info["entity_class"]
+        assert map_id in device_info[DEV_SIG_ENT_MAP]
+        entity_info = device_info[DEV_SIG_ENT_MAP][map_id]
+        assert {ch.name for ch in channels} == set(entity_info[DEV_SIG_CHANNELS])
+        assert ent_cls.__name__ == entity_info[DEV_SIG_ENT_MAP_CLASS]
 
 
 def _ch_mock(cluster):
@@ -377,11 +388,11 @@ async def test_device_override(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "device_type": zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
                 "endpoint_id": 1,
-                "in_clusters": [0, 3, 4, 5, 6, 8, 768, 2821, 64513],
-                "out_clusters": [25],
-                "profile_id": 260,
+                SIG_EP_INPUT: [0, 3, 4, 5, 6, 8, 768, 2821, 64513],
+                SIG_EP_OUTPUT: [25],
+                SIG_EP_PROFILE: 260,
             }
         },
         "00:11:22:33:44:55:66:77",

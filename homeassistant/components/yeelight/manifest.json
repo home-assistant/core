@@ -2,14 +2,16 @@
   "domain": "yeelight",
   "name": "Yeelight",
   "documentation": "https://www.home-assistant.io/integrations/yeelight",
-  "requirements": ["yeelight==0.6.3"],
-  "codeowners": ["@rytilahti", "@zewelor", "@shenxn"],
+  "requirements": ["yeelight==0.7.4", "async-upnp-client==0.21.2"],
+  "codeowners": ["@rytilahti", "@zewelor", "@shenxn", "@starkillerOG"],
   "config_flow": true,
-  "iot_class": "local_polling",
+  "dependencies": ["network"],
+  "quality_scale": "platinum",
+  "iot_class": "local_push",
   "dhcp": [{
     "hostname": "yeelink-*"
   }],
   "homekit": {
-    "models": ["YLDP*"]
+    "models": ["YL*"]
   }
 }

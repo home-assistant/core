@@ -18,15 +18,17 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
+    SynologyDSMLogin2SARequiredException,
+    SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
+    SynologyDSMLoginInvalidException,
+    SynologyDSMLoginPermissionDeniedException,
     SynologyDSMRequestException,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -38,7 +40,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -46,7 +48,6 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -56,19 +57,14 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_DEVICE_TOKEN,
     CONF_SERIAL,
-    CONF_VOLUMES,
     COORDINATOR_CAMERAS,
     COORDINATOR_CENTRAL,
     COORDINATOR_SWITCHES,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    ENTITY_CLASS,
-    ENTITY_ENABLE,
-    ENTITY_ICON,
-    ENTITY_NAME,
-    ENTITY_UNIT,
+    EXCEPTION_DETAILS,
+    EXCEPTION_UNKNOWN,
     PLATFORMS,
     SERVICE_REBOOT,
     SERVICE_SHUTDOWN,
@@ -80,53 +76,16 @@ from .const import (
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
-    EntityInfo,
+    SynologyDSMEntityDescription,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_USE_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DISKS): cv.ensure_list,
-        vol.Optional(CONF_VOLUMES): cv.ensure_list,
-    }
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONFIG_SCHEMA]))},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 ATTRIBUTION = "Data provided by Synology"
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Synology DSM sensors from legacy config file."""
-
-    conf = config.get(DOMAIN)
-    if conf is None:
-        return True
-
-    for dsm_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=dsm_conf,
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(  # noqa: C901
@@ -144,12 +103,12 @@ async def async_setup_entry(  # noqa: C901
         if "SYNO." in entity_entry.unique_id:
             return None
 
-        entries = {
-            **STORAGE_DISK_BINARY_SENSORS,
-            **STORAGE_DISK_SENSORS,
-            **STORAGE_VOL_SENSORS,
-            **UTILISATION_SENSORS,
-        }
+        entries = (
+            *STORAGE_DISK_BINARY_SENSORS,
+            *STORAGE_DISK_SENSORS,
+            *STORAGE_VOL_SENSORS,
+            *UTILISATION_SENSORS,
+        )
         infos = entity_entry.unique_id.split("_")
         serial = infos.pop(0)
         label = infos.pop(0)
@@ -164,22 +123,22 @@ async def async_setup_entry(  # noqa: C901
             return None
 
         entity_type: str | None = None
-        for entity_key, entity_attrs in entries.items():
+        for description in entries:
             if (
                 device_id
-                and entity_attrs[ENTITY_NAME] == "Status"
+                and description.name == "Status"
                 and "Status" in entity_entry.unique_id
                 and "(Smart)" not in entity_entry.unique_id
             ):
-                if "sd" in device_id and "disk" in entity_key:
-                    entity_type = entity_key
+                if "sd" in device_id and "disk" in description.key:
+                    entity_type = description.key
                     continue
-                if "volume" in device_id and "volume" in entity_key:
-                    entity_type = entity_key
+                if "volume" in device_id and "volume" in description.key:
+                    entity_type = description.key
                     continue
 
-            if entity_attrs[ENTITY_NAME] == label:
-                entity_type = entity_key
+            if description.name == label:
+                entity_type = description.key
 
         if entity_type is None:
             return None
@@ -223,11 +182,25 @@ async def async_setup_entry(  # noqa: C901
     api = SynoApi(hass, entry)
     try:
         await api.async_setup()
+    except (
+        SynologyDSMLogin2SARequiredException,
+        SynologyDSMLoginDisabledAccountException,
+        SynologyDSMLoginInvalidException,
+        SynologyDSMLoginPermissionDeniedException,
+    ) as err:
+        if err.args[0] and isinstance(err.args[0], dict):
+            # pylint: disable=no-member
+            details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
+        else:
+            details = EXCEPTION_UNKNOWN
+        raise ConfigEntryAuthFailed(f"reason: {details}") from err
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-        _LOGGER.debug(
-            "Unable to connect to DSM '%s' during setup: %s", entry.unique_id, err
-        )
-        raise ConfigEntryNotReady from err
+        if err.args[0] and isinstance(err.args[0], dict):
+            # pylint: disable=no-member
+            details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
+        else:
+            details = EXCEPTION_UNKNOWN
+        raise ConfigEntryNotReady(details) from err
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {
@@ -612,50 +585,25 @@ class SynoApi:
 class SynologyDSMBaseEntity(CoordinatorEntity):
     """Representation of a Synology NAS entry."""
 
+    entity_description: SynologyDSMEntityDescription
+    unique_id: str
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
     def __init__(
         self,
         api: SynoApi,
-        entity_type: str,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMEntityDescription,
     ) -> None:
         """Initialize the Synology DSM entity."""
         super().__init__(coordinator)
+        self.entity_description = description
 
         self._api = api
-        self._api_key = entity_type.split(":")[0]
-        self.entity_type = entity_type.split(":")[-1]
-        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class = entity_info[ENTITY_CLASS]
-        self._enable_default = entity_info[ENTITY_ENABLE]
-        self._icon = entity_info[ENTITY_ICON]
-        self._unit = entity_info[ENTITY_UNIT]
-        self._unique_id = f"{self._api.information.serial}_{entity_type}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the class of this device."""
-        return self._class
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_name = f"{api.network.hostname} {description.name}"
+        self._attr_unique_id: str = (
+            f"{api.information.serial}_{description.api_key}:{description.key}"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -668,14 +616,11 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
             "sw_version": self._api.information.version_string,
         }
 
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enable_default
-
     async def async_added_to_hass(self) -> None:
         """Register entity for updates from API."""
-        self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
+        self.async_on_remove(
+            self._api.subscribe(self.entity_description.api_key, self.unique_id)
+        )
         await super().async_added_to_hass()
 
 
@@ -685,21 +630,20 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     def __init__(
         self,
         api: SynoApi,
-        entity_type: str,
-        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMEntityDescription,
         device_id: str | None = None,
     ) -> None:
         """Initialize the Synology DSM disk or volume entity."""
-        super().__init__(api, entity_type, entity_info, coordinator)
+        super().__init__(api, coordinator, description)
         self._device_id = device_id
-        self._device_name = None
-        self._device_manufacturer = None
-        self._device_model = None
-        self._device_firmware = None
+        self._device_name: str | None = None
+        self._device_manufacturer: str | None = None
+        self._device_model: str | None = None
+        self._device_firmware: str | None = None
         self._device_type = None
 
-        if "volume" in entity_type:
+        if "volume" in description.key:
             volume = self._api.storage.get_volume(self._device_id)
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
@@ -712,15 +656,17 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
                 .replace("raid", "RAID")
                 .replace("shr", "SHR")
             )
-        elif "disk" in entity_type:
+        elif "disk" in description.key:
             disk = self._api.storage.get_disk(self._device_id)
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
-        self._name = f"{self._api.network.hostname} {self._device_name} {entity_info[ENTITY_NAME]}"
-        self._unique_id += f"_{self._device_id}"
+        self._name = (
+            f"{self._api.network.hostname} {self._device_name} {description.name}"
+        )
+        self._attr_unique_id += f"_{self._device_id}"
 
     @property
     def available(self) -> bool:
@@ -735,8 +681,8 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
                 (DOMAIN, f"{self._api.information.serial}_{self._device_id}")
             },
             "name": f"Synology NAS ({self._device_name} - {self._device_type})",
-            "manufacturer": self._device_manufacturer,  # type: ignore[typeddict-item]
-            "model": self._device_model,  # type: ignore[typeddict-item]
-            "sw_version": self._device_firmware,  # type: ignore[typeddict-item]
+            "manufacturer": self._device_manufacturer,
+            "model": self._device_model,
+            "sw_version": self._device_firmware,
             "via_device": (DOMAIN, self._api.information.serial),
         }

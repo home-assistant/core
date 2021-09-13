@@ -1,6 +1,4 @@
 """The tests for the Modbus sensor component."""
-import logging
-
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -8,8 +6,8 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
     CONF_INPUT_TYPE,
+    CONF_LAZY_ERROR,
     CONF_PRECISION,
-    CONF_REGISTERS,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -22,13 +20,18 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COUNT,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -36,10 +39,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
-SENSOR_NAME = "test_sensor"
-ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
+ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}"
 
 
 @pytest.mark.parametrize(
@@ -48,7 +50,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                 }
             ]
@@ -56,7 +58,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
                     CONF_COUNT: 1,
@@ -64,6 +66,8 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
                     CONF_PRECISION: 0,
                     CONF_SCALE: 1,
                     CONF_OFFSET: 0,
+                    CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+                    CONF_LAZY_ERROR: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_DEVICE_CLASS: "battery",
                 }
@@ -72,7 +76,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
                     CONF_COUNT: 1,
@@ -88,7 +92,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 1,
                     CONF_SWAP: CONF_SWAP_NONE,
@@ -98,7 +102,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 1,
                     CONF_SWAP: CONF_SWAP_BYTE,
@@ -108,7 +112,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 2,
                     CONF_SWAP: CONF_SWAP_WORD,
@@ -118,7 +122,7 @@ ENTITY_ID = f"{SENSOR_DOMAIN}.{SENSOR_NAME}"
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_COUNT: 2,
                     CONF_SWAP: CONF_SWAP_WORD_BYTE,
@@ -132,108 +136,123 @@ async def test_config_sensor(hass, mock_modbus):
     assert SENSOR_DOMAIN in hass.config.components
 
 
+@pytest.mark.parametrize("check_config_loaded", [False])
 @pytest.mark.parametrize(
     "do_config,error_message",
     [
         (
             {
-                CONF_ADDRESS: 1234,
-                CONF_COUNT: 8,
-                CONF_PRECISION: 2,
-                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_COUNT: 8,
+                        CONF_PRECISION: 2,
+                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_STRUCTURE: ">no struct",
+                    },
+                ]
             },
-            "Unable to detect data type for test_sensor sensor, try a custom type",
+            "bad char in struct format",
         ),
         (
             {
-                CONF_ADDRESS: 1234,
-                CONF_COUNT: 8,
-                CONF_PRECISION: 2,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_STRUCTURE: ">no struct",
-            },
-            "Error in sensor test_sensor structure: bad char in struct format",
-        ),
-        (
-            {
-                CONF_ADDRESS: 1234,
-                CONF_COUNT: 2,
-                CONF_PRECISION: 2,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_STRUCTURE: ">4f",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_COUNT: 2,
+                        CONF_PRECISION: 2,
+                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_STRUCTURE: ">4f",
+                    },
+                ]
             },
             "Structure request 16 bytes, but 2 registers have a size of 4 bytes",
         ),
         (
             {
-                CONF_ADDRESS: 1234,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_COUNT: 4,
-                CONF_SWAP: CONF_SWAP_NONE,
-                CONF_STRUCTURE: "invalid",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_COUNT: 4,
+                        CONF_SWAP: CONF_SWAP_NONE,
+                        CONF_STRUCTURE: "invalid",
+                    },
+                ]
             },
-            "Error in sensor test_sensor structure: bad char in struct format",
+            "bad char in struct format",
         ),
         (
             {
-                CONF_ADDRESS: 1234,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_COUNT: 4,
-                CONF_SWAP: CONF_SWAP_NONE,
-                CONF_STRUCTURE: "",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_COUNT: 4,
+                        CONF_SWAP: CONF_SWAP_NONE,
+                        CONF_STRUCTURE: "",
+                    },
+                ]
             },
-            "Error in sensor test_sensor. The `structure` field can not be empty if the parameter `data_type` is set to the `custom`",
+            f"Error in sensor {TEST_ENTITY_NAME}. The `structure` field can not be empty",
         ),
         (
             {
-                CONF_ADDRESS: 1234,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_COUNT: 4,
-                CONF_SWAP: CONF_SWAP_NONE,
-                CONF_STRUCTURE: "1s",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_COUNT: 4,
+                        CONF_SWAP: CONF_SWAP_NONE,
+                        CONF_STRUCTURE: "1s",
+                    },
+                ]
             },
             "Structure request 1 bytes, but 4 registers have a size of 8 bytes",
         ),
         (
             {
-                CONF_ADDRESS: 1234,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_COUNT: 1,
-                CONF_STRUCTURE: "2s",
-                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 1234,
+                        CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                        CONF_COUNT: 1,
+                        CONF_STRUCTURE: "2s",
+                        CONF_SWAP: CONF_SWAP_WORD,
+                    },
+                ]
             },
-            "Error in sensor test_sensor swap(word) not possible due to the registers count: 1, needed: 2",
+            f"Error in sensor {TEST_ENTITY_NAME} swap(word) not possible due to the registers count: 1, needed: 2",
         ),
     ],
 )
-async def test_config_wrong_struct_sensor(
-    hass, caplog, do_config, error_message, mock_pymodbus
-):
+async def test_config_wrong_struct_sensor(hass, error_message, mock_modbus, caplog):
     """Run test for sensor with wrong struct."""
-
-    config_sensor = {
-        CONF_NAME: SENSOR_NAME,
-        **do_config,
-    }
-    caplog.set_level(logging.WARNING)
-    caplog.clear()
-
-    await base_config_test(
-        hass,
-        config_sensor,
-        SENSOR_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        method_discovery=True,
-        expect_setup_to_fail=True,
-    )
-
-    assert error_message in caplog.text
+    messages = str([x.message for x in caplog.get_records("setup")])
+    assert error_message in messages
 
 
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,do_exception,expected",
     [
         (
             {
@@ -244,11 +263,13 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0],
+            False,
             "0",
         ),
         (
             {},
             [0x8000],
+            False,
             "-32768",
         ),
         (
@@ -260,6 +281,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [7],
+            False,
             "20",
         ),
         (
@@ -271,6 +293,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [7],
+            False,
             "34",
         ),
         (
@@ -282,6 +305,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 4,
             },
             [7],
+            False,
             "34.0000",
         ),
         (
@@ -293,6 +317,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [1],
+            False,
             "2",
         ),
         (
@@ -304,6 +329,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: "1",
             },
             [9],
+            False,
             "18.5",
         ),
         (
@@ -315,6 +341,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 2,
             },
             [1],
+            False,
             "2.40",
         ),
         (
@@ -326,6 +353,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 1,
             },
             [2],
+            False,
             "-8.3",
         ),
         (
@@ -337,6 +365,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             "-1985229329",
         ),
         (
@@ -348,6 +377,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             str(0x89ABCDEF),
         ),
         (
@@ -359,6 +389,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF, 0x0123, 0x4567],
+            False,
             "9920249030613615975",
         ),
         (
@@ -370,6 +401,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x0123, 0x4567, 0x89AB, 0xCDEF],
+            False,
             "163971058432973793",
         ),
         (
@@ -381,6 +413,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x0123, 0x4567, 0x89AB, 0xCDEF],
+            False,
             "163971058432973792",
         ),
         (
@@ -393,6 +426,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             str(0x89ABCDEF),
         ),
         (
@@ -405,6 +439,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x89AB, 0xCDEF],
+            False,
             str(0x89ABCDEF),
         ),
         (
@@ -417,6 +452,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 5,
             },
             [16286, 1617],
+            False,
             "1.23457",
         ),
         (
@@ -429,6 +465,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_PRECISION: 0,
             },
             [0x3037, 0x2D30, 0x352D, 0x3230, 0x3230, 0x2031, 0x343A, 0x3335],
+            False,
             "07-05-2020 14:35",
         ),
         (
@@ -440,7 +477,8 @@ async def test_config_wrong_struct_sensor(
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
-            None,
+            [0x00],
+            True,
             STATE_UNAVAILABLE,
         ),
         (
@@ -452,7 +490,8 @@ async def test_config_wrong_struct_sensor(
                 CONF_OFFSET: 0,
                 CONF_PRECISION: 0,
             },
-            None,
+            [0x00],
+            True,
             STATE_UNAVAILABLE,
         ),
         (
@@ -462,6 +501,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_SWAP: CONF_SWAP_NONE,
             },
             [0x0102],
+            False,
             str(int(0x0102)),
         ),
         (
@@ -471,6 +511,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x0201],
+            False,
             str(int(0x0102)),
         ),
         (
@@ -480,6 +521,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x0102, 0x0304],
+            False,
             str(int(0x02010403)),
         ),
         (
@@ -489,6 +531,7 @@ async def test_config_wrong_struct_sensor(
                 CONF_SWAP: CONF_SWAP_WORD,
             },
             [0x0102, 0x0304],
+            False,
             str(int(0x03040102)),
         ),
         (
@@ -498,30 +541,31 @@ async def test_config_wrong_struct_sensor(
                 CONF_SWAP: CONF_SWAP_WORD_BYTE,
             },
             [0x0102, 0x0304],
+            False,
             str(int(0x04030201)),
         ),
     ],
 )
-async def test_all_sensor(hass, cfg, regs, expected):
+async def test_all_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor."""
-
-    state = await base_test(
-        hass,
-        {CONF_NAME: SENSOR_NAME, CONF_ADDRESS: 1234, **cfg},
-        SENSOR_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        CONF_REGISTERS,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words,expected",
     [
         (
             {
@@ -556,22 +600,9 @@ async def test_all_sensor(hass, cfg, regs, expected):
         ),
     ],
 )
-async def test_struct_sensor(hass, cfg, regs, expected):
+async def test_struct_sensor(hass, mock_do_cycle, expected):
     """Run test for sensor struct."""
-
-    state = await base_test(
-        hass,
-        {CONF_NAME: SENSOR_NAME, CONF_ADDRESS: 1234, **cfg},
-        SENSOR_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
-    assert state == expected
+    assert hass.states.get(ENTITY_ID).state == expected
 
 
 @pytest.mark.parametrize(
@@ -585,8 +616,9 @@ async def test_struct_sensor(hass, cfg, regs, expected):
         {
             CONF_SENSORS: [
                 {
-                    CONF_NAME: SENSOR_NAME,
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 0,
                 }
             ]
         },
@@ -598,66 +630,27 @@ async def test_restore_state_sensor(hass, mock_test_state, mock_modbus):
 
 
 @pytest.mark.parametrize(
-    "swap_type, error_message",
+    "do_config",
     [
-        (
-            CONF_SWAP_WORD,
-            f"Error in sensor {SENSOR_NAME} swap(word) not possible due to the registers count: 1, needed: 2",
-        ),
-        (
-            CONF_SWAP_WORD_BYTE,
-            f"Error in sensor {SENSOR_NAME} swap(word_byte) not possible due to the registers count: 1, needed: 2",
-        ),
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                }
+            ]
+        },
     ],
 )
-async def test_swap_sensor_wrong_config(
-    hass, caplog, swap_type, error_message, mock_pymodbus
-):
-    """Run test for sensor swap."""
-    config = {
-        CONF_NAME: SENSOR_NAME,
-        CONF_ADDRESS: 1234,
-        CONF_COUNT: 1,
-        CONF_SWAP: swap_type,
-        CONF_DATA_TYPE: DATA_TYPE_INT,
-    }
-
-    caplog.set_level(logging.ERROR)
-    caplog.clear()
-    await base_config_test(
-        hass,
-        config,
-        SENSOR_NAME,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        None,
-        method_discovery=True,
-        expect_setup_to_fail=True,
-    )
-    assert error_message in "".join(caplog.messages)
-
-
-async def test_service_sensor_update(hass, mock_pymodbus):
+async def test_service_sensor_update(hass, mock_modbus, mock_ha):
     """Run test for service homeassistant.update_entity."""
-    config = {
-        CONF_SENSORS: [
-            {
-                CONF_NAME: SENSOR_NAME,
-                CONF_ADDRESS: 1234,
-                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-            }
-        ]
-    }
-    mock_pymodbus.read_input_registers.return_value = ReadResult([27])
-    await prepare_service_update(
-        hass,
-        config,
-    )
+    mock_modbus.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == "27"
-    mock_pymodbus.read_input_registers.return_value = ReadResult([32])
+    mock_modbus.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )

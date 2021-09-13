@@ -18,8 +18,11 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
@@ -43,9 +46,6 @@ from homeassistant.util.decorator import Registry
 from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -58,12 +58,19 @@ from .const import (
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEVICE_CLASS_PM25,
+    DOMAIN,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
+    MAX_MANUFACTURER_LENGTH,
+    MAX_MODEL_LENGTH,
+    MAX_NAME_LENGTH,
+    MAX_SERIAL_LENGTH,
+    MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
+    SERVICE_HOMEKIT_RESET_ACCESSORY,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -131,6 +138,11 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             a_type = "WindowCovering"
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = "WindowCoveringBasic"
+        elif features & cover.SUPPORT_SET_TILT_POSITION:
+            # WindowCovering and WindowCoveringBasic both support tilt
+            # only WindowCovering can handle the covers that are missing
+            # SUPPORT_SET_POSITION, SUPPORT_OPEN, and SUPPORT_CLOSE
+            a_type = "WindowCovering"
 
     elif state.domain == "fan":
         a_type = "Fan"
@@ -186,6 +198,9 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
 
+    elif state.domain in ("input_select", "select"):
+        a_type = "SelectSwitch"
+
     elif state.domain == "water_heater":
         a_type = "WaterHeater"
 
@@ -212,39 +227,58 @@ class HomeAccessory(Accessory):
         config,
         *args,
         category=CATEGORY_OTHER,
+        device_id=None,
         **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
+        super().__init__(
+            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+        )
         self.config = config or {}
-        domain = split_entity_id(entity_id)[0].replace("_", " ")
+        if device_id:
+            self.device_id = device_id
+            serial_number = device_id
+            domain = None
+        else:
+            self.device_id = None
+            serial_number = entity_id
+            domain = split_entity_id(entity_id)[0].replace("_", " ")
 
-        if ATTR_MANUFACTURER in self.config:
+        if self.config.get(ATTR_MANUFACTURER) is not None:
             manufacturer = self.config[ATTR_MANUFACTURER]
-        elif ATTR_INTEGRATION in self.config:
+        elif self.config.get(ATTR_INTEGRATION) is not None:
             manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
-        else:
+        elif domain:
             manufacturer = f"{MANUFACTURER} {domain}".title()
-        if ATTR_MODEL in self.config:
+        else:
+            manufacturer = MANUFACTURER
+        if self.config.get(ATTR_MODEL) is not None:
             model = self.config[ATTR_MODEL]
-        else:
+        elif domain:
             model = domain.title()
-        if ATTR_SOFTWARE_VERSION in self.config:
-            sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
         else:
+            model = MANUFACTURER
+        sw_version = None
+        if self.config.get(ATTR_SW_VERSION) is not None:
+            sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
+        if sw_version is None:
             sw_version = __version__
 
         self.set_info_service(
-            manufacturer=manufacturer,
-            model=model,
-            serial_number=entity_id,
-            firmware_revision=sw_version,
+            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
+            model=model[:MAX_MODEL_LENGTH],
+            serial_number=serial_number[:MAX_SERIAL_LENGTH],
+            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
         )
 
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
         self._subscriptions = []
+
+        if device_id:
+            return
+
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
@@ -455,7 +489,17 @@ class HomeAccessory(Accessory):
         )
 
     @ha_callback
-    def async_stop(self):
+    def async_reset(self):
+        """Reset and recreate an accessory."""
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                DOMAIN,
+                SERVICE_HOMEKIT_RESET_ACCESSORY,
+                {ATTR_ENTITY_ID: self.entity_id},
+            )
+        )
+
+    async def stop(self):
         """Cancel any subscriptions when the bridge is stopped."""
         while self._subscriptions:
             self._subscriptions.pop(0)()
@@ -502,9 +546,9 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
-    def pair(self, client_uuid, client_public):
+    def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
-        success = super().pair(client_uuid, client_public)
+        success = super().pair(client_uuid, client_public, client_permissions)
         if success:
             dismiss_setup_message(self.hass, self._entry_id)
         return success

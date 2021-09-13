@@ -100,6 +100,12 @@ set_option:
       example: "true"
       selector:
         boolean:
+    crossfade:
+      name: Crossfade
+      description: Enable crossfade on the device
+      example: "true"
+      selector:
+        boolean:
     night_sound:
       name: Night sound
       description: Enable Night Sound mode
@@ -115,6 +121,22 @@ set_option:
       description: Enable Status (LED) Light
       selector:
         boolean:
+    bass_level:
+      name: Bass Level
+      description: Bass level for EQ.
+      selector:
+        number:
+          min: -10
+          max: 10
+          mode: box
+    treble_level:
+      name: Treble Level
+      description: Treble level for EQ.
+      selector:
+        number:
+          min: -10
+          max: 10
+          mode: box
 
 play_queue:
   name: Play queue

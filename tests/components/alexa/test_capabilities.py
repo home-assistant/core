@@ -6,6 +6,7 @@ import pytest
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
 from homeassistant.components.climate import const as climate
+from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -227,15 +228,27 @@ async def test_report_lock_state(hass):
     """Test LockController implements lockState property."""
     hass.states.async_set("lock.locked", STATE_LOCKED, {})
     hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
+    hass.states.async_set("lock.unlocking", STATE_UNLOCKING, {})
+    hass.states.async_set("lock.locking", STATE_LOCKING, {})
+    hass.states.async_set("lock.jammed", STATE_JAMMED, {})
     hass.states.async_set("lock.unknown", STATE_UNKNOWN, {})
 
     properties = await reported_properties(hass, "lock.locked")
     properties.assert_equal("Alexa.LockController", "lockState", "LOCKED")
 
+    properties = await reported_properties(hass, "lock.unlocking")
+    properties.assert_equal("Alexa.LockController", "lockState", "LOCKED")
+
     properties = await reported_properties(hass, "lock.unlocked")
     properties.assert_equal("Alexa.LockController", "lockState", "UNLOCKED")
 
+    properties = await reported_properties(hass, "lock.locking")
+    properties.assert_equal("Alexa.LockController", "lockState", "UNLOCKED")
+
     properties = await reported_properties(hass, "lock.unknown")
+    properties.assert_equal("Alexa.LockController", "lockState", "JAMMED")
+
+    properties = await reported_properties(hass, "lock.jammed")
     properties.assert_equal("Alexa.LockController", "lockState", "JAMMED")
 
 
@@ -333,16 +346,14 @@ async def test_report_colored_temp_light_state(hass):
 
 
 async def test_report_fan_speed_state(hass):
-    """Test PercentageController, PowerLevelController, RangeController reports fan speed correctly."""
+    """Test PercentageController, PowerLevelController reports fan speed correctly."""
     hass.states.async_set(
         "fan.off",
         "off",
         {
             "friendly_name": "Off fan",
-            "speed": "off",
             "supported_features": 1,
             "percentage": 0,
-            "speed_list": ["off", "low", "medium", "high"],
         },
     )
     hass.states.async_set(
@@ -350,10 +361,8 @@ async def test_report_fan_speed_state(hass):
         "on",
         {
             "friendly_name": "Low speed fan",
-            "speed": "low",
             "supported_features": 1,
             "percentage": 33,
-            "speed_list": ["off", "low", "medium", "high"],
         },
     )
     hass.states.async_set(
@@ -361,10 +370,8 @@ async def test_report_fan_speed_state(hass):
         "on",
         {
             "friendly_name": "Medium speed fan",
-            "speed": "medium",
             "supported_features": 1,
             "percentage": 66,
-            "speed_list": ["off", "low", "medium", "high"],
         },
     )
     hass.states.async_set(
@@ -372,32 +379,26 @@ async def test_report_fan_speed_state(hass):
         "on",
         {
             "friendly_name": "High speed fan",
-            "speed": "high",
             "supported_features": 1,
             "percentage": 100,
-            "speed_list": ["off", "low", "medium", "high"],
         },
     )
 
     properties = await reported_properties(hass, "fan.off")
     properties.assert_equal("Alexa.PercentageController", "percentage", 0)
     properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 0)
-    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
     properties = await reported_properties(hass, "fan.low_speed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 33)
     properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 33)
-    properties.assert_equal("Alexa.RangeController", "rangeValue", 1)
 
     properties = await reported_properties(hass, "fan.medium_speed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 66)
     properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 66)
-    properties.assert_equal("Alexa.RangeController", "rangeValue", 2)
 
     properties = await reported_properties(hass, "fan.high_speed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 100)
     properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 100)
-    properties.assert_equal("Alexa.RangeController", "rangeValue", 3)
 
 
 async def test_report_fan_preset_mode(hass):

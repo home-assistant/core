@@ -63,7 +63,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         return f"{self.wolf_object.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
         if self.wolf_object.parameter_id in self.coordinator.data:
             new_state = self.coordinator.data[self.wolf_object.parameter_id]
@@ -95,7 +95,7 @@ class WolfLinkHours(WolfLinkSensor):
         return "mdi:clock"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return TIME_HOURS
 
@@ -109,7 +109,7 @@ class WolfLinkTemperature(WolfLinkSensor):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return TEMP_CELSIUS
 
@@ -123,7 +123,7 @@ class WolfLinkPressure(WolfLinkSensor):
         return DEVICE_CLASS_PRESSURE
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return PRESSURE_BAR
 
@@ -132,7 +132,7 @@ class WolfLinkPercentage(WolfLinkSensor):
     """Class for percentage based entities."""
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.wolf_object.unit
 
@@ -146,9 +146,9 @@ class WolfLinkState(WolfLinkSensor):
         return "wolflink__state"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state converting with supported values."""
-        state = super().state
+        state = super().native_value
         resolved_state = [
             item for item in self.wolf_object.items if item.value == int(state)
         ]

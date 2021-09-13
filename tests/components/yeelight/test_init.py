@@ -1,9 +1,12 @@
 """Test Yeelight."""
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
-from yeelight import BulbType
+from yeelight import BulbException, BulbType
+from yeelight.aio import KEY_CONNECTED
 
 from homeassistant.components.yeelight import (
+    CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     DATA_CONFIG_ENTRIES,
@@ -22,24 +25,28 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
-    CAPABILITIES,
     CONFIG_ENTRY_DATA,
     ENTITY_AMBILIGHT,
     ENTITY_BINARY_SENSOR,
     ENTITY_BINARY_SENSOR_TEMPLATE,
     ENTITY_LIGHT,
     ENTITY_NIGHTLIGHT,
+    FAIL_TO_BIND_IP,
     ID,
     IP_ADDRESS,
+    MODEL,
     MODULE,
-    MODULE_CONFIG_FLOW,
+    SHORT_ID,
     _mocked_bulb,
     _patch_discovery,
+    _patch_discovery_interval,
+    _patch_discovery_timeout,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
@@ -51,32 +58,39 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    mocked_bulb.get_capabilities = MagicMock(
-        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
-    )
+    mocked_bulb.async_listen = AsyncMock(side_effect=[BulbException, None, None, None])
 
-    _discovered_devices = [{"capabilities": CAPABILITIES, "ip": IP_ADDRESS}]
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
-        f"{MODULE}.discover_bulbs", return_value=_discovered_devices
-    ):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery():
         assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
-        f"yeelight_color_{ID}"
+        f"yeelight_color_{SHORT_ID}"
     )
-    entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(binary_sensor_entity_id) is None
 
-    await hass.async_block_till_done()
+    type(mocked_bulb).async_get_properties = AsyncMock(None)
 
-    type(mocked_bulb).get_properties = MagicMock(None)
-
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][
+        DATA_DEVICE
+    ].async_update()
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery():
+        # The discovery should update the ip address
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done()
+        assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+    # Make sure we can still reload with the new ip right after we change it
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery():
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
 
 
@@ -87,11 +101,9 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    mocked_bulb.get_capabilities = MagicMock(
-        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
-    )
+    mocked_bulb.async_listen = AsyncMock(side_effect=[BulbException, None, None, None])
 
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -104,7 +116,7 @@ async def test_setup_discovery(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
 
     mocked_bulb = _mocked_bulb()
-    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -123,13 +135,112 @@ async def test_setup_discovery(hass: HomeAssistant):
     assert hass.states.get(ENTITY_LIGHT) is None
 
 
+_ADAPTERS_WITH_MANUAL_CONFIG = [
+    {
+        "auto": True,
+        "index": 2,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth1",
+    },
+]
+
+
+async def test_setup_discovery_with_manually_configured_network_adapter(
+    hass: HomeAssistant,
+):
+    """Test setting up Yeelight by discovery with a manually configured network adapter."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ), patch(
+        "homeassistant.components.zeroconf.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is not None
+    assert hass.states.get(ENTITY_LIGHT) is not None
+
+    # Unload
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get(ENTITY_BINARY_SENSOR).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+    # Remove
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is None
+    assert hass.states.get(ENTITY_LIGHT) is None
+
+
+_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING = [
+    {
+        "auto": True,
+        "index": 1,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": FAIL_TO_BIND_IP, "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth0",
+    },
+    {
+        "auto": True,
+        "index": 2,
+        "default": False,
+        "enabled": True,
+        "ipv4": [{"address": "192.168.1.5", "network_prefix": 23}],
+        "ipv6": [],
+        "name": "eth1",
+    },
+]
+
+
+async def test_setup_discovery_with_manually_configured_network_adapter_one_fails(
+    hass: HomeAssistant, caplog
+):
+    """Test setting up Yeelight by discovery with a manually configured network adapter with one that fails to bind."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ), patch(
+        "homeassistant.components.zeroconf.network.async_get_adapters",
+        return_value=_ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is not None
+    assert hass.states.get(ENTITY_LIGHT) is not None
+
+    # Unload
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get(ENTITY_BINARY_SENSOR).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+    # Remove
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is None
+    assert hass.states.get(ENTITY_LIGHT) is None
+
+    assert f"Failed to setup listener for {FAIL_TO_BIND_IP}" in caplog.text
+
+
 async def test_setup_import(hass: HomeAssistant):
     """Test import from yaml."""
     mocked_bulb = _mocked_bulb()
     name = "yeelight"
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
-        f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", return_value=mocked_bulb
-    ):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery():
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -149,6 +260,9 @@ async def test_setup_import(hass: HomeAssistant):
     assert hass.states.get(f"binary_sensor.{name}_nightlight") is not None
     assert hass.states.get(f"light.{name}") is not None
     assert hass.states.get(f"light.{name}_nightlight") is not None
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.unique_id == "0x000000000015243f"
+    assert entry.data[CONF_ID] == "0x000000000015243f"
 
 
 async def test_unique_ids_device(hass: HomeAssistant):
@@ -162,7 +276,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
 
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
-    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -186,7 +300,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb()
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with _patch_discovery(MODULE), patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -216,24 +330,114 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     mocked_bulb = _mocked_bulb(True)
     mocked_bulb.bulb_type = BulbType.WhiteTempMood
 
-    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
-        f"{MODULE}.config_flow.yeelight.Bulb", return_value=mocked_bulb
-    ):
+    with patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb), _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval():
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
-        IP_ADDRESS.replace(".", "_")
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_async_listen_error_late_discovery(hass, caplog):
+    """Test the async listen error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(cannot_connect=True)
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert "Failed to connect to bulb at" in caplog.text
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    caplog.clear()
+
+    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "Failed to connect to bulb at" not in caplog.text
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options[CONF_MODEL] == MODEL
+
+
+async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
+    """Test the async listen error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "127.0.0.1"}
     )
-    entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(binary_sensor_entity_id) is None
+    config_entry.add_to_hass(hass)
 
-    type(mocked_bulb).get_capabilities = MagicMock(CAPABILITIES)
-    type(mocked_bulb).get_properties = MagicMock(None)
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
+    """Test the async listen error but no id."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "127.0.0.1"})
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_with_missing_id(hass: HomeAssistant):
+    """Test that setting adds the missing CONF_ID from unique_id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "127.0.0.1"},
+        options={CONF_NAME: "Test name"},
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb(cannot_connect=True)
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data[CONF_ID] == ID
+
+
+async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
+    """Test handling a connection drop results in a property resync."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "127.0.0.1"},
+        options={CONF_NAME: "Test name"},
+    )
+    config_entry.add_to_hass(hass)
+    mocked_bulb = _mocked_bulb()
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mocked_bulb.async_get_properties.mock_calls) == 1
+        mocked_bulb._async_callback({KEY_CONNECTED: False})
+        await hass.async_block_till_done()
+        assert len(mocked_bulb.async_get_properties.mock_calls) == 1
+        mocked_bulb._async_callback({KEY_CONNECTED: True})
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        assert len(mocked_bulb.async_get_properties.mock_calls) == 2

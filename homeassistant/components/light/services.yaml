@@ -265,6 +265,17 @@ turn_on:
           min: -100
           max: 100
           unit_of_measurement: "%"
+    white:
+      name: White
+      description:
+        Set the light to white mode and change its brightness, where 0 turns
+        the light off, 1 is the minimum brightness and 255 is the maximum
+        brightness supported by the light.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
     profile:
       name: Profile
       description: Name of a light profile to use.
@@ -285,11 +296,7 @@ turn_on:
       name: Effect
       description: Light effect.
       selector:
-        select:
-          options:
-            - colorloop
-            - random
-            - white
+        text:
 
 turn_off:
   name: Turn off

@@ -2,11 +2,19 @@
 from datetime import timedelta
 import logging
 
-from pyhaversion import HaVersion, HaVersionChannel, HaVersionSource
-from pyhaversion.exceptions import HaVersionFetchException, HaVersionParseException
+from pyhaversion import (
+    HaVersion,
+    HaVersionChannel,
+    HaVersionSource,
+    exceptions as pyhaversionexceptions,
+)
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -30,12 +38,10 @@ ALL_IMAGES = [
     "raspberrypi4",
     "tinker",
 ]
-ALL_SOURCES = [
-    "container",
-    "haio",
-    "local",
-    "pypi",
-    "supervisor",
+
+HA_VERSION_SOURCES = [source.value for source in HaVersionSource]
+
+ALL_SOURCES = HA_VERSION_SOURCES + [
     "hassio",  # Kept to not break existing configurations
     "docker",  # Kept to not break existing configurations
 ]
@@ -47,8 +53,6 @@ DEFAULT_IMAGE = "default"
 DEFAULT_NAME_LATEST = "Latest Version"
 DEFAULT_NAME_LOCAL = "Current Version"
 DEFAULT_SOURCE = "local"
-
-ICON = "mdi:package-up"
 
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
@@ -72,40 +76,42 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     source = config.get(CONF_SOURCE)
 
+    channel = HaVersionChannel.BETA if beta else HaVersionChannel.STABLE
     session = async_get_clientsession(hass)
 
-    channel = HaVersionChannel.BETA if beta else HaVersionChannel.STABLE
+    if source in HA_VERSION_SOURCES:
+        source = HaVersionSource(source)
+    elif source == "hassio":
+        source = HaVersionSource.SUPERVISOR
+    elif source == "docker":
+        source = HaVersionSource.CONTAINER
 
-    if source == "pypi":
-        haversion = VersionData(
-            HaVersion(session, source=HaVersionSource.PYPI, channel=channel)
-        )
-    elif source in ["hassio", "supervisor"]:
-        haversion = VersionData(
-            HaVersion(
-                session, source=HaVersionSource.SUPERVISOR, channel=channel, image=image
-            )
-        )
-    elif source in ["docker", "container"]:
-        if image is not None and image != DEFAULT_IMAGE:
-            image = f"{image}-homeassistant"
-        haversion = VersionData(
-            HaVersion(
-                session, source=HaVersionSource.CONTAINER, channel=channel, image=image
-            )
-        )
-    elif source == "haio":
-        haversion = VersionData(HaVersion(session, source=HaVersionSource.HAIO))
-    else:
-        haversion = VersionData(HaVersion(session, source=HaVersionSource.LOCAL))
+    if (
+        source == HaVersionSource.CONTAINER
+        and image is not None
+        and image != DEFAULT_IMAGE
+    ):
+        image = f"{image}-homeassistant"
 
-    if not name:
-        if source == DEFAULT_SOURCE:
+    if not (name := config.get(CONF_NAME)):
+        if source == HaVersionSource.LOCAL:
             name = DEFAULT_NAME_LOCAL
         else:
             name = DEFAULT_NAME_LATEST
 
-    async_add_entities([VersionSensor(haversion, name)], True)
+    async_add_entities(
+        [
+            VersionSensor(
+                VersionData(
+                    HaVersion(
+                        session=session, source=source, image=image, channel=channel
+                    )
+                ),
+                SensorEntityDescription(key=source, name=name),
+            )
+        ],
+        True,
+    )
 
 
 class VersionData:
@@ -120,9 +126,9 @@ class VersionData:
         """Get the latest version information."""
         try:
             await self.api.get_version()
-        except HaVersionFetchException as exception:
+        except pyhaversionexceptions.HaVersionFetchException as exception:
             _LOGGER.warning(exception)
-        except HaVersionParseException as exception:
+        except pyhaversionexceptions.HaVersionParseException as exception:
             _LOGGER.warning(
                 "Could not parse data received for %s - %s", self.api.source, exception
             )
@@ -131,32 +137,19 @@ class VersionData:
 class VersionSensor(SensorEntity):
     """Representation of a Home Assistant version sensor."""
 
-    def __init__(self, data: VersionData, name: str) -> None:
+    _attr_icon = "mdi:package-up"
+
+    def __init__(
+        self,
+        data: VersionData,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the Version sensor."""
         self.data = data
-        self._name = name
-        self._state = None
+        self.entity_description = description
 
     async def async_update(self):
         """Get the latest version information."""
         await self.data.async_update()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.data.api.version
-
-    @property
-    def extra_state_attributes(self):
-        """Return attributes for the sensor."""
-        return self.data.api.version_data
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
+        self._attr_native_value = self.data.api.version
+        self._attr_extra_state_attributes = self.data.api.version_data

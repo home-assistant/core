@@ -1,6 +1,10 @@
 """The airvisual component."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
@@ -10,6 +14,7 @@ from pyairvisual.errors import (
     NodeProError,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -20,13 +25,14 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
     entity_registry,
 )
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -57,11 +63,8 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
-def async_get_geography_id(geography_dict):
+def async_get_geography_id(geography_dict: Mapping[str, Any]) -> str:
     """Generate a unique ID from a geography dict."""
-    if not geography_dict:
-        return
-
     if CONF_CITY in geography_dict:
         return ", ".join(
             (
@@ -76,7 +79,9 @@ def async_get_geography_id(geography_dict):
 
 
 @callback
-def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
+def async_get_cloud_api_update_interval(
+    hass: HomeAssistant, api_key: str, num_consumers: int
+) -> timedelta:
     """Get a leveled scan interval for a particular cloud API key.
 
     This will shift based on the number of active consumers, thus keeping the user
@@ -97,18 +102,22 @@ def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
 
 
 @callback
-def async_get_cloud_coordinators_by_api_key(hass, api_key):
+def async_get_cloud_coordinators_by_api_key(
+    hass: HomeAssistant, api_key: str
+) -> list[DataUpdateCoordinator]:
     """Get all DataUpdateCoordinator objects related to a particular API key."""
     coordinators = []
     for entry_id, coordinator in hass.data[DOMAIN][DATA_COORDINATOR].items():
         config_entry = hass.config_entries.async_get_entry(entry_id)
-        if config_entry.data.get(CONF_API_KEY) == api_key:
+        if config_entry and config_entry.data.get(CONF_API_KEY) == api_key:
             coordinators.append(coordinator)
     return coordinators
 
 
 @callback
-def async_sync_geo_coordinator_update_intervals(hass, api_key):
+def async_sync_geo_coordinator_update_intervals(
+    hass: HomeAssistant, api_key: str
+) -> None:
     """Sync the update interval for geography-based data coordinators (by API key)."""
     coordinators = async_get_cloud_coordinators_by_api_key(hass, api_key)
 
@@ -129,7 +138,9 @@ def async_sync_geo_coordinator_update_intervals(hass, api_key):
 
 
 @callback
-def _standardize_geography_config_entry(hass, config_entry):
+def _standardize_geography_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Ensure that geography config entries have appropriate properties."""
     entry_updates = {}
 
@@ -162,9 +173,11 @@ def _standardize_geography_config_entry(hass, config_entry):
 
 
 @callback
-def _standardize_node_pro_config_entry(hass, config_entry):
+def _standardize_node_pro_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Ensure that Node/Pro config entries have appropriate properties."""
-    entry_updates = {}
+    entry_updates: dict[str, Any] = {}
 
     if CONF_INTEGRATION_TYPE not in config_entry.data:
         # If the config entry data doesn't contain the integration type, add it:
@@ -179,7 +192,7 @@ def _standardize_node_pro_config_entry(hass, config_entry):
     hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up AirVisual as config entry."""
     hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_LISTENER: {}})
 
@@ -189,7 +202,7 @@ async def async_setup_entry(hass, config_entry):
         websession = aiohttp_client.async_get_clientsession(hass)
         cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
 
-        async def async_update_data():
+        async def async_update_data() -> dict[str, Any]:
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
                 api_coro = cloud_api.air_quality.city(
@@ -242,7 +255,7 @@ async def async_setup_entry(hass, config_entry):
 
         _standardize_node_pro_config_entry(hass, config_entry)
 
-        async def async_update_data():
+        async def async_update_data() -> dict[str, Any]:
             """Get new data from the API."""
             try:
                 async with NodeSamba(
@@ -275,7 +288,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate an old config entry."""
     version = config_entry.version
 
@@ -317,7 +330,7 @@ async def async_migrate_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload an AirVisual config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -338,7 +351,7 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-async def async_reload_entry(hass, config_entry):
+async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -346,16 +359,20 @@ async def async_reload_entry(hass, config_entry):
 class AirVisualEntity(CoordinatorEntity):
     """Define a generic AirVisual entity."""
 
-    def __init__(self, coordinator):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, description: EntityDescription
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
 
-    async def async_added_to_hass(self):
+        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self.entity_description = description
+
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the state."""
             self.update_from_latest_data()
             self.async_write_ha_state()
@@ -365,6 +382,6 @@ class AirVisualEntity(CoordinatorEntity):
         self.update_from_latest_data()
 
     @callback
-    def update_from_latest_data(self):
+    def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         raise NotImplementedError

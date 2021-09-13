@@ -49,8 +49,8 @@ def config_entry_fixture():
 
 @pytest.fixture(name="soco")
 def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
-    """Create a mock pysonos SoCo fixture."""
-    with patch("pysonos.SoCo", autospec=True) as mock, patch(
+    """Create a mock soco SoCo fixture."""
+    with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
@@ -74,16 +74,28 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         yield mock_soco
 
 
+@pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
 @pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
-    """Create a mock pysonos discover fixture."""
+    """Create a mock soco discover fixture."""
 
-    def do_callback(hass, callback, *args, **kwargs):
-        callback(
+    async def do_callback(hass, callback, *args, **kwargs):
+        await callback(
             {
                 ssdp.ATTR_UPNP_UDN: soco.uid,
                 ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
-            }
+            },
+            ssdp.SsdpChange.ALIVE,
         )
         return MagicMock()
 

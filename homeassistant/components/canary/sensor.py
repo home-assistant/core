@@ -17,7 +17,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -97,11 +96,9 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._sensor_type = sensor_type
         self._device_id = device.device_id
-        self._device_name = device.name
-        self._device_type_name = device.device_type["name"]
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
-        self._name = f"{location.name} {device.name} {sensor_type_name}"
+        self._attr_name = f"{location.name} {device.name} {sensor_type_name}"
 
         canary_sensor_type = None
         if self._sensor_type[0] == "air_quality":
@@ -116,6 +113,16 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
             canary_sensor_type = SensorType.BATTERY
 
         self._canary_type = canary_sensor_type
+        self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, str(device.device_id))},
+            "name": device.name,
+            "model": device.device_type["name"],
+            "manufacturer": MANUFACTURER,
+        }
+        self._attr_native_unit_of_measurement = sensor_type[1]
+        self._attr_device_class = sensor_type[3]
+        self._attr_icon = sensor_type[2]
 
     @property
     def reading(self) -> float | None:
@@ -137,44 +144,9 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def name(self) -> str:
-        """Return the name of the Canary sensor."""
-        return self._name
-
-    @property
-    def state(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.reading
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this sensor."""
-        return f"{self._device_id}_{self._sensor_type[0]}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, str(self._device_id))},
-            "name": self._device_name,
-            "model": self._device_type_name,
-            "manufacturer": MANUFACTURER,
-        }
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return self._sensor_type[1]
-
-    @property
-    def device_class(self) -> str | None:
-        """Device class for the sensor."""
-        return self._sensor_type[3]
-
-    @property
-    def icon(self) -> str | None:
-        """Icon for the sensor."""
-        return self._sensor_type[2]
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:

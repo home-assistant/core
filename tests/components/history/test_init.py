@@ -914,6 +914,8 @@ async def test_statistics_during_period(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }
@@ -988,11 +990,6 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     await async_setup_component(hass, "history", {"history": {}})
     await async_setup_component(hass, "sensor", {})
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
-    await hass.async_block_till_done()
-
-    await hass.async_add_executor_job(trigger_db_commit, hass)
-    await hass.async_block_till_done()
 
     client = await hass_ws_client()
     await client.send_json({"id": 1, "type": "history/list_statistic_ids"})
@@ -1000,8 +997,11 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     assert response["success"]
     assert response["result"] == []
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
-    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+
+    await hass.async_add_executor_job(trigger_db_commit, hass)
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 2, "type": "history/list_statistic_ids"})
     response = await client.receive_json()
@@ -1010,8 +1010,27 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
         {"statistic_id": "sensor.test", "unit_of_measurement": unit}
     ]
 
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    # Remove the state, statistics will now be fetched from the database
+    hass.states.async_remove("sensor.test")
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 3, "type": "history/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+    ]
+
     await client.send_json(
-        {"id": 3, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
+        {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "dogs"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json(
+        {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "mean"}
     )
     response = await client.receive_json()
     assert response["success"]
@@ -1020,16 +1039,7 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     ]
 
     await client.send_json(
-        {"id": 4, "type": "history/list_statistic_ids", "statistic_type": "mean"}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
-    ]
-
-    await client.send_json(
-        {"id": 5, "type": "history/list_statistic_ids", "statistic_type": "sum"}
+        {"id": 6, "type": "history/list_statistic_ids", "statistic_type": "sum"}
     )
     response = await client.receive_json()
     assert response["success"]

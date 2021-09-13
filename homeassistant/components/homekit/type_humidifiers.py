@@ -149,10 +149,12 @@ class HumidifierDehumidifier(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_humidity_sensor:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_humidity_sensor],
-                self.async_update_current_humidity_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_humidity_sensor],
+                    self.async_update_current_humidity_event,
+                )
             )
 
         await super().run()
@@ -224,8 +226,7 @@ class HumidifierDehumidifier(HomeAccessory):
         is_active = new_state.state == STATE_ON
 
         # Update active state
-        if self.char_active.value != is_active:
-            self.char_active.set_value(is_active)
+        self.char_active.set_value(is_active)
 
         # Set current state
         if is_active:
@@ -235,13 +236,9 @@ class HumidifierDehumidifier(HomeAccessory):
                 current_state = HC_STATE_DEHUMIDIFYING
         else:
             current_state = HC_STATE_INACTIVE
-        if self.char_current_humidifier_dehumidifier.value != current_state:
-            self.char_current_humidifier_dehumidifier.set_value(current_state)
+        self.char_current_humidifier_dehumidifier.set_value(current_state)
 
         # Update target humidity
         target_humidity = new_state.attributes.get(ATTR_HUMIDITY)
-        if (
-            isinstance(target_humidity, (int, float))
-            and self.char_target_humidity.value != target_humidity
-        ):
+        if isinstance(target_humidity, (int, float)):
             self.char_target_humidity.set_value(target_humidity)

@@ -11,7 +11,7 @@ from collections.abc import Coroutine
 import logging
 
 from zigpy.exceptions import ZigbeeException
-import zigpy.zcl.clusters.security as security
+from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
 from homeassistant.core import CALLABLE_T, callback

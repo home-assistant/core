@@ -12,7 +12,6 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     SUPPORT_PRESET_MODE,
@@ -185,8 +184,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
             f"{self._device.temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address_state}_"
             f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
+            f"{self._device._setpoint_shift.group_address}"
         )
+        self.default_hvac_mode: str = config[ClimateSchema.CONF_DEFAULT_CONTROLLER_MODE]
 
     async def async_update(self) -> None:
         """Request a state update from KNX bus."""
@@ -231,10 +231,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
             return HVAC_MODE_OFF
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             return CONTROLLER_MODES.get(
-                self._device.mode.controller_mode.value, HVAC_MODE_HEAT
+                self._device.mode.controller_mode.value, self.default_hvac_mode
             )
-        # default to "heat"
-        return HVAC_MODE_HEAT
+        return self.default_hvac_mode
 
     @property
     def hvac_modes(self) -> list[str]:
@@ -248,12 +247,11 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
         if self._device.supports_on_off:
             if not ha_controller_modes:
-                ha_controller_modes.append(HVAC_MODE_HEAT)
+                ha_controller_modes.append(self.default_hvac_mode)
             ha_controller_modes.append(HVAC_MODE_OFF)
 
         hvac_modes = list(set(filter(None, ha_controller_modes)))
-        # default to ["heat"]
-        return hvac_modes if hvac_modes else [HVAC_MODE_HEAT]
+        return hvac_modes if hvac_modes else [self.default_hvac_mode]
 
     @property
     def hvac_action(self) -> str | None:

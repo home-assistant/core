@@ -131,6 +131,11 @@ ZEROCONF = {
             "name": "shelly*"
         }
     ],
+    "_hue._tcp.local.": [
+        {
+            "domain": "hue"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"
@@ -165,6 +170,16 @@ ZEROCONF = {
             "domain": "xiaomi_miio"
         }
     ],
+    "_nanoleafapi._tcp.local.": [
+        {
+            "domain": "nanoleaf"
+        }
+    ],
+    "_nanoleafms._tcp.local.": [
+        {
+            "domain": "nanoleaf"
+        }
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut"
@@ -184,6 +199,11 @@ ZEROCONF = {
         {
             "domain": "brother",
             "name": "brother*"
+        }
+    ],
+    "_sonos._tcp.local.": [
+        {
+            "domain": "sonos"
         }
     ],
     "_spotify-connect._tcp.local.": [
@@ -246,6 +266,7 @@ HOMEKIT = {
     "Iota": "abode",
     "LIFX": "lifx",
     "MYQ": "myq",
+    "NL*": "nanoleaf",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
@@ -257,7 +278,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
-    "YLDP*": "yeelight",
+    "YL*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

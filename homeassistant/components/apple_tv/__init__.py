@@ -57,10 +57,10 @@ async def async_setup_entry(hass, entry):
     async def setup_platforms():
         """Set up platforms and initiate connection."""
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         await manager.init()
 
@@ -83,12 +83,17 @@ async def async_unload_entry(hass, entry):
 class AppleTVEntity(Entity):
     """Device that sends commands to an Apple TV."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, identifier, manager):
         """Initialize device."""
         self.atv = None
         self.manager = manager
-        self._name = name
-        self._identifier = identifier
+        self._attr_name = name
+        self._attr_unique_id = identifier
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, identifier)},
+        }
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
@@ -109,13 +114,13 @@ class AppleTVEntity(Entity):
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{SIGNAL_CONNECTED}_{self._identifier}", _async_connected
+                self.hass, f"{SIGNAL_CONNECTED}_{self.unique_id}", _async_connected
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_DISCONNECTED}_{self._identifier}",
+                f"{SIGNAL_DISCONNECTED}_{self.unique_id}",
                 _async_disconnected,
             )
         )
@@ -125,28 +130,6 @@ class AppleTVEntity(Entity):
 
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._identifier
-
-    @property
-    def should_poll(self):
-        """No polling needed for Apple TV."""
-        return False
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-        }
 
 
 class AppleTVManager:

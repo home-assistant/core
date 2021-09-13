@@ -5,6 +5,9 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const.command_class.barrier_operator import (
+    BarrierEventSignalingSubsystemState,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,15 +15,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
-
-
-BARRIER_EVENT_SIGNALING_OFF = 0
-BARRIER_EVENT_SIGNALING_ON = 255
 
 
 async def async_setup_entry(
@@ -44,7 +43,7 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{SWITCH_DOMAIN}",
@@ -108,7 +107,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.info.node.async_set_value(
-            self.info.primary_value, BARRIER_EVENT_SIGNALING_ON
+            self.info.primary_value, BarrierEventSignalingSubsystemState.ON
         )
         # this value is not refreshed, so assume success
         self._state = True
@@ -117,7 +116,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.info.node.async_set_value(
-            self.info.primary_value, BARRIER_EVENT_SIGNALING_OFF
+            self.info.primary_value, BarrierEventSignalingSubsystemState.OFF
         )
         # this value is not refreshed, so assume success
         self._state = False
@@ -127,4 +126,6 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
     def _update_state(self) -> None:
         self._state = None
         if self.info.primary_value.value is not None:
-            self._state = self.info.primary_value.value == BARRIER_EVENT_SIGNALING_ON
+            self._state = (
+                self.info.primary_value.value == BarrierEventSignalingSubsystemState.ON
+            )

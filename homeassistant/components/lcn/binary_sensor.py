@@ -9,8 +9,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, SETPOINTS
@@ -18,7 +19,7 @@ from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 
 def create_lcn_binary_sensor_entity(
-    hass: HomeAssistantType, entity_config: ConfigType, config_entry: ConfigEntry
+    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
 ) -> LcnEntity:
     """Set up an entity for this domain."""
     device_connection = get_device_connection(
@@ -36,7 +37,7 @@ def create_lcn_binary_sensor_entity(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:

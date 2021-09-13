@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -24,11 +25,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a Goal Zero Yeti flow."""
         self.ip_address = None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info[IP_ADDRESS]
 
@@ -36,7 +37,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
-        _, error = await self._async_try_connect(self.ip_address)
+        _, error = await self._async_try_connect(str(self.ip_address))
         if error is None:
             return await self.async_step_confirm_discovery()
         return self.async_abort(reason=error)
@@ -63,7 +64,9 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -74,7 +77,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             mac_address, error = await self._async_try_connect(host)
             if error is None:
-                await self.async_set_unique_id(format_mac(mac_address))
+                await self.async_set_unique_id(format_mac(str(mac_address)))
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=name,
@@ -98,7 +101,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_try_connect(self, host):
+    async def _async_try_connect(self, host: str) -> tuple[str | None, str | None]:
         """Try connecting to Goal Zero Yeti."""
         try:
             session = async_get_clientsession(self.hass)

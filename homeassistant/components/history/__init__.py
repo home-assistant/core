@@ -103,7 +103,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:poll-box"
+        "history", "history", "hass:chart-box"
     )
     hass.components.websocket_api.async_register_command(
         ws_get_statistics_during_period
@@ -164,10 +164,9 @@ async def ws_get_statistics_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "history/list_statistic_ids",
-        vol.Optional("statistic_type"): str,
+        vol.Optional("statistic_type"): vol.Any("sum", "mean"),
     }
 )
-@websocket_api.require_admin
 @websocket_api.async_response
 async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -393,7 +392,7 @@ class Filters:
         if includes and not excludes:
             return or_(*includes)
 
-        if not excludes and includes:
+        if not includes and excludes:
             return not_(or_(*excludes))
 
         return or_(*includes) & not_(or_(*excludes))

@@ -1,7 +1,10 @@
 """Support for RainMachine devices."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
+from typing import Any
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -19,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -93,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.entry_id
     ] = get_client_controller(client)
 
-    entry_updates = {}
+    entry_updates: dict[str, Any] = {}
     if not entry.unique_id or is_ip_address(entry.unique_id):
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = controller.mac
@@ -111,31 +115,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update(api_category: str) -> dict:
         """Update the appropriate API data based on a category."""
+        data: dict = {}
+
         try:
             if api_category == DATA_PROGRAMS:
-                return await controller.programs.all(include_inactive=True)
-
-            if api_category == DATA_PROVISION_SETTINGS:
-                return await controller.provisioning.settings()
-
-            if api_category == DATA_RESTRICTIONS_CURRENT:
-                return await controller.restrictions.current()
-
-            if api_category == DATA_RESTRICTIONS_UNIVERSAL:
-                return await controller.restrictions.universal()
-
-            return await controller.zones.all(details=True, include_inactive=True)
+                data = await controller.programs.all(include_inactive=True)
+            elif api_category == DATA_PROVISION_SETTINGS:
+                data = await controller.provisioning.settings()
+            elif api_category == DATA_RESTRICTIONS_CURRENT:
+                data = await controller.restrictions.current()
+            elif api_category == DATA_RESTRICTIONS_UNIVERSAL:
+                data = await controller.restrictions.universal()
+            else:
+                data = await controller.zones.all(details=True, include_inactive=True)
         except RainMachineError as err:
             raise UpdateFailed(err) from err
 
+        return data
+
     controller_init_tasks = []
-    for api_category in [
+    for api_category in (
         DATA_PROGRAMS,
         DATA_PROVISION_SETTINGS,
         DATA_RESTRICTIONS_CURRENT,
         DATA_RESTRICTIONS_UNIVERSAL,
         DATA_ZONES,
-    ]:
+    ):
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api_category
         ] = DataUpdateCoordinator(
@@ -176,7 +181,7 @@ class RainMachineEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         controller: Controller,
-        entity_type: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -184,7 +189,7 @@ class RainMachineEntity(CoordinatorEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, controller.mac)},
             "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            "name": controller.name,
+            "name": str(controller.name),
             "manufacturer": "RainMachine",
             "model": (
                 f"Version {controller.hardware_version} "
@@ -196,17 +201,17 @@ class RainMachineEntity(CoordinatorEntity):
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
-        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{entity_type}"
+        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{description.key}"
         self._controller = controller
-        self._entity_type = entity_type
+        self.entity_description = description
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
         self.update_from_latest_data()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.update_from_latest_data()

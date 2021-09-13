@@ -158,9 +158,9 @@ async def async_setup_entry(
     }
 
     if motion_gateway.firmware is not None:
-        version = f"{motion_gateway.firmware}, proto: {motion_gateway.protocol}"
+        version = f"{motion_gateway.firmware}, protocol: {motion_gateway.protocol}"
     else:
-        version = motion_gateway.protocol
+        version = f"Protocol: {motion_gateway.protocol}"
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

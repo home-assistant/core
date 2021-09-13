@@ -18,6 +18,11 @@ DHCP = [
     },
     {
         "domain": "august",
+        "hostname": "connect",
+        "macaddress": "2C9FFB*"
+    },
+    {
+        "domain": "august",
         "hostname": "august*",
         "macaddress": "E076D0*"
     },
@@ -157,6 +162,10 @@ DHCP = [
         "macaddress": "74C63B*"
     },
     {
+        "domain": "rainforest_eagle",
+        "macaddress": "D8D5B9*"
+    },
+    {
         "domain": "ring",
         "hostname": "ring*",
         "macaddress": "0CAE7D*"
@@ -174,6 +183,22 @@ DHCP = [
     {
         "domain": "samsungtv",
         "hostname": "tizen*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "8CC8CD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "606BBD*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "F47B5E*"
+    },
+    {
+        "domain": "samsungtv",
+        "macaddress": "4844F7*"
     },
     {
         "domain": "screenlogic",
@@ -233,21 +258,6 @@ DHCP = [
     {
         "domain": "tado",
         "hostname": "tado*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "4CFCAA*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "044EAF*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "98ED5C*"
     },
     {
         "domain": "toon",

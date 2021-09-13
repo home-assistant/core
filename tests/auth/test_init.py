@@ -335,7 +335,7 @@ async def test_saving_loading(hass, hass_storage):
             assert r_token.last_used_at is None
             assert r_token.last_used_ip is None
         else:
-            assert False, "Unknown client_id: %s" % r_token.client_id
+            assert False, f"Unknown client_id: {r_token.client_id}"
 
 
 async def test_cannot_retrieve_expired_access_token(hass):
@@ -539,7 +539,7 @@ async def test_create_access_token(mock_hass):
     access_token = manager.async_create_access_token(refresh_token)
     assert access_token is not None
     assert refresh_token.jwt_key == jwt_key
-    jwt_payload = jwt.decode(access_token, jwt_key, algorithm=["HS256"])
+    jwt_payload = jwt.decode(access_token, jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token.id
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(minutes=30).total_seconds()
@@ -558,7 +558,7 @@ async def test_create_long_lived_access_token(mock_hass):
     )
     assert refresh_token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
     access_token = manager.async_create_access_token(refresh_token)
-    jwt_payload = jwt.decode(access_token, refresh_token.jwt_key, algorithm=["HS256"])
+    jwt_payload = jwt.decode(access_token, refresh_token.jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token.id
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(days=300).total_seconds()
@@ -610,7 +610,7 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass):
     assert jwt_key != jwt_key_2
 
     rt = await manager.async_validate_access_token(access_token_2)
-    jwt_payload = jwt.decode(access_token_2, rt.jwt_key, algorithm=["HS256"])
+    jwt_payload = jwt.decode(access_token_2, rt.jwt_key, algorithms=["HS256"])
     assert jwt_payload["iss"] == refresh_token_2.id
     assert (
         jwt_payload["exp"] - jwt_payload["iat"] == timedelta(days=3000).total_seconds()

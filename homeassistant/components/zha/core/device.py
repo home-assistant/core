@@ -183,11 +183,12 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.model
 
     @property
-    def manufacturer_code(self):
+    def manufacturer_code(self) -> int | None:
         """Return the manufacturer code for the device."""
-        if self._zigpy_device.node_desc.is_valid:
-            return self._zigpy_device.node_desc.manufacturer_code
-        return None
+        if self._zigpy_device.node_desc is None:
+            return None
+
+        return self._zigpy_device.node_desc.manufacturer_code
 
     @property
     def nwk(self):
@@ -210,17 +211,20 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.last_seen
 
     @property
-    def is_mains_powered(self):
+    def is_mains_powered(self) -> bool | None:
         """Return true if device is mains powered."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_mains_powered
 
     @property
-    def device_type(self):
+    def device_type(self) -> str:
         """Return the logical device type for the device."""
-        node_descriptor = self._zigpy_device.node_desc
-        return (
-            node_descriptor.logical_type.name if node_descriptor.is_valid else UNKNOWN
-        )
+        if self._zigpy_device.node_desc is None:
+            return UNKNOWN
+
+        return self._zigpy_device.node_desc.logical_type.name
 
     @property
     def power_source(self):
@@ -230,18 +234,27 @@ class ZHADevice(LogMixin):
         )
 
     @property
-    def is_router(self):
+    def is_router(self) -> bool | None:
         """Return true if this is a routing capable device."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_router
 
     @property
-    def is_coordinator(self):
+    def is_coordinator(self) -> bool | None:
         """Return true if this device represents the coordinator."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_coordinator
 
     @property
-    def is_end_device(self):
+    def is_end_device(self) -> bool | None:
         """Return true if this device is an end device."""
+        if self._zigpy_device.node_desc is None:
+            return None
+
         return self._zigpy_device.node_desc.is_end_device
 
     @property
@@ -490,7 +503,7 @@ class ZHADevice(LogMixin):
                 names.append(
                     {
                         ATTR_NAME: f"unknown {endpoint.device_type} device_type "
-                        "of 0x{endpoint.profile_id:04x} profile id"
+                        f"of 0x{(endpoint.profile_id or 0xFFFF):04x} profile id"
                     }
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names

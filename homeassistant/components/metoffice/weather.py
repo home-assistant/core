@@ -47,7 +47,7 @@ async def async_setup_entry(
 
 def _build_forecast_data(timestep):
     data = {}
-    data[ATTR_FORECAST_TIME] = timestep.date
+    data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:

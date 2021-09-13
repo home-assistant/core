@@ -3,13 +3,15 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 
+from pywemo import CoffeeMaker, Insight, Maker
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import convert
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoSubscriptionEntity
+from .entity import WemoEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
@@ -33,63 +35,62 @@ WEMO_STANDBY = 8
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo switches."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator):
         """Handle a discovered Wemo device."""
-        async_add_entities([WemoSwitch(device)])
+        async_add_entities([WemoSwitch(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
 
     await asyncio.gather(
-        *[
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
-        ]
+        *(
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
+        )
     )
 
 
-class WemoSwitch(WemoSubscriptionEntity, SwitchEntity):
+class WemoSwitch(WemoEntity, SwitchEntity):
     """Representation of a WeMo switch."""
-
-    def __init__(self, device):
-        """Initialize the WeMo switch."""
-        super().__init__(device)
-        self.insight_params = None
-        self.maker_params = None
-        self.coffeemaker_mode = None
-        self._mode_string = None
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
-        if self.maker_params:
+        if isinstance(self.wemo, Maker):
             # Is the maker sensor on or off.
-            if self.maker_params["hassensor"]:
+            if self.wemo.maker_params["hassensor"]:
                 # Note a state of 1 matches the WeMo app 'not triggered'!
-                if self.maker_params["sensorstate"]:
+                if self.wemo.maker_params["sensorstate"]:
                     attr[ATTR_SENSOR_STATE] = STATE_OFF
                 else:
                     attr[ATTR_SENSOR_STATE] = STATE_ON
 
             # Is the maker switch configured as toggle(0) or momentary (1).
-            if self.maker_params["switchmode"]:
+            if self.wemo.maker_params["switchmode"]:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
-        if self.insight_params or (self.coffeemaker_mode is not None):
+        if isinstance(self.wemo, (Insight, CoffeeMaker)):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
-        if self.insight_params:
-            attr["on_latest_time"] = WemoSwitch.as_uptime(self.insight_params["onfor"])
-            attr["on_today_time"] = WemoSwitch.as_uptime(self.insight_params["ontoday"])
-            attr["on_total_time"] = WemoSwitch.as_uptime(self.insight_params["ontotal"])
+        if isinstance(self.wemo, Insight):
+            attr["on_latest_time"] = WemoSwitch.as_uptime(
+                self.wemo.insight_params.get("onfor", 0)
+            )
+            attr["on_today_time"] = WemoSwitch.as_uptime(
+                self.wemo.insight_params.get("ontoday", 0)
+            )
+            attr["on_total_time"] = WemoSwitch.as_uptime(
+                self.wemo.insight_params.get("ontotal", 0)
+            )
             attr["power_threshold_w"] = (
-                convert(self.insight_params["powerthreshold"], float, 0.0) / 1000.0
+                convert(self.wemo.insight_params.get("powerthreshold"), float, 0.0)
+                / 1000.0
             )
 
-        if self.coffeemaker_mode is not None:
-            attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
+        if isinstance(self.wemo, CoffeeMaker):
+            attr[ATTR_COFFEMAKER_MODE] = self.wemo.mode
 
         return attr
 
@@ -104,23 +105,26 @@ class WemoSwitch(WemoSubscriptionEntity, SwitchEntity):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        if self.insight_params:
-            return convert(self.insight_params["currentpower"], float, 0.0) / 1000.0
+        if isinstance(self.wemo, Insight):
+            return (
+                convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
+                / 1000.0
+            )
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
-        if self.insight_params:
-            miliwatts = convert(self.insight_params["todaymw"], float, 0.0)
+        if isinstance(self.wemo, Insight):
+            miliwatts = convert(self.wemo.insight_params.get("todaymw"), float, 0.0)
             return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
 
     @property
     def detail_state(self):
         """Return the state of the device."""
-        if self.coffeemaker_mode is not None:
-            return self._mode_string
-        if self.insight_params:
-            standby_state = int(self.insight_params["state"])
+        if isinstance(self.wemo, CoffeeMaker):
+            return self.wemo.mode_string
+        if isinstance(self.wemo, Insight):
+            standby_state = int(self.wemo.insight_params.get("state", 0))
             if standby_state == WEMO_ON:
                 return STATE_ON
             if standby_state == WEMO_OFF:
@@ -132,36 +136,25 @@ class WemoSwitch(WemoSubscriptionEntity, SwitchEntity):
     @property
     def icon(self):
         """Return the icon of device based on its type."""
-        if self.wemo.model_name == "CoffeeMaker":
+        if isinstance(self.wemo, CoffeeMaker):
             return "mdi:coffee"
         return None
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on. Standby is on."""
+        return self.wemo.get_state()
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         with self._wemo_exception_handler("turn on"):
-            if self.wemo.on():
-                self._state = WEMO_ON
+            self.wemo.on()
 
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         with self._wemo_exception_handler("turn off"):
-            if self.wemo.off():
-                self._state = WEMO_OFF
+            self.wemo.off()
 
         self.schedule_update_ha_state()
-
-    def _update(self, force_update=True):
-        """Update the device state."""
-        with self._wemo_exception_handler("update status"):
-            self._state = self.wemo.get_state(force_update)
-
-            if self.wemo.model_name == "Insight":
-                self.insight_params = self.wemo.insight_params
-                self.insight_params["standby_state"] = self.wemo.get_standby_state
-            elif self.wemo.model_name == "Maker":
-                self.maker_params = self.wemo.maker_params
-            elif self.wemo.model_name == "CoffeeMaker":
-                self.coffeemaker_mode = self.wemo.mode
-                self._mode_string = self.wemo.mode_string

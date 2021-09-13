@@ -1,10 +1,14 @@
 """Support for Repetier-Server sensors."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 import pyrepetier
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -12,6 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -108,25 +113,66 @@ def has_all_unique_names(value):
     return value
 
 
-SENSOR_TYPES = {
-    # Type, Unit, Icon, post
-    "bed_temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer", "_bed_"],
-    "extruder_temperature": [
-        "temperature",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        "_extruder_",
-    ],
-    "chamber_temperature": [
-        "temperature",
-        TEMP_CELSIUS,
-        "mdi:thermometer",
-        "_chamber_",
-    ],
-    "current_state": ["state", None, "mdi:printer-3d", ""],
-    "current_job": ["progress", PERCENTAGE, "mdi:file-percent", "_current_job"],
-    "job_end": ["progress", None, "mdi:clock-end", "_job_end"],
-    "job_start": ["progress", None, "mdi:clock-start", "_job_start"],
+@dataclass
+class RepetierRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    type: str
+
+
+@dataclass
+class RepetierSensorEntityDescription(
+    SensorEntityDescription, RepetierRequiredKeysMixin
+):
+    """Describes Repetier sensor entity."""
+
+
+SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
+    "bed_temperature": RepetierSensorEntityDescription(
+        key="bed_temperature",
+        type="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="_bed_",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "extruder_temperature": RepetierSensorEntityDescription(
+        key="extruder_temperature",
+        type="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="_extruder_",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "chamber_temperature": RepetierSensorEntityDescription(
+        key="chamber_temperature",
+        type="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        name="_chamber_",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "current_state": RepetierSensorEntityDescription(
+        key="current_state",
+        type="state",
+        icon="mdi:printer-3d",
+    ),
+    "current_job": RepetierSensorEntityDescription(
+        key="current_job",
+        type="progress",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:file-percent",
+        name="_current_job",
+    ),
+    "job_end": RepetierSensorEntityDescription(
+        key="job_end",
+        type="progress",
+        icon="mdi:clock-end",
+        name="_job_end",
+    ),
+    "job_start": RepetierSensorEntityDescription(
+        key="job_start",
+        type="progress",
+        icon="mdi:clock-start",
+        name="_job_start",
+    ),
 }
 
 SENSOR_SCHEMA = vol.Schema(

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -25,7 +25,7 @@
                     "username": "Smile-Benutzername"
                 },
                 "description": "Bitte eingeben",
-                "title": "Stellen Sie eine Verbindung zu Smile her"
+                "title": "Stelle eine Verbindung zu Smile her"
             }
         }
     },

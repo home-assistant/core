@@ -1,6 +1,7 @@
 """Component to interface with locks that can be controlled remotely."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -15,8 +16,11 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_JAMMED,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +29,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
@@ -81,12 +85,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class LockEntityDescription(EntityDescription):
+    """A class that describes lock entities."""
+
+
 class LockEntity(Entity):
     """Base class for lock entities."""
 
+    entity_description: LockEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_format: str | None = None
     _attr_is_locked: bool | None = None
+    _attr_is_locking: bool | None = None
+    _attr_is_unlocking: bool | None = None
+    _attr_is_jammed: bool | None = None
     _attr_state: None = None
 
     @property
@@ -103,6 +116,21 @@ class LockEntity(Entity):
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._attr_is_locked
+
+    @property
+    def is_locking(self) -> bool | None:
+        """Return true if the lock is locking."""
+        return self._attr_is_locking
+
+    @property
+    def is_unlocking(self) -> bool | None:
+        """Return true if the lock is unlocking."""
+        return self._attr_is_unlocking
+
+    @property
+    def is_jammed(self) -> bool | None:
+        """Return true if the lock is jammed (incomplete locking)."""
+        return self._attr_is_jammed
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
@@ -143,6 +171,12 @@ class LockEntity(Entity):
     @property
     def state(self) -> str | None:
         """Return the state."""
+        if self.is_jammed:
+            return STATE_JAMMED
+        if self.is_locking:
+            return STATE_LOCKING
+        if self.is_unlocking:
+            return STATE_UNLOCKING
         locked = self.is_locked
         if locked is None:
             return None

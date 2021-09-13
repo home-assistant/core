@@ -24,9 +24,11 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_BATTERY_LEVEL,
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -73,6 +75,7 @@ from .const import (
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
+    ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NO_AVAILABLE_CHANNEL,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
@@ -103,6 +106,9 @@ TRAIT_HUMIDITY_SETTING = f"{PREFIX_TRAITS}HumiditySetting"
 TRAIT_TRANSPORT_CONTROL = f"{PREFIX_TRAITS}TransportControl"
 TRAIT_MEDIA_STATE = f"{PREFIX_TRAITS}MediaState"
 TRAIT_CHANNEL = f"{PREFIX_TRAITS}Channel"
+TRAIT_LOCATOR = f"{PREFIX_TRAITS}Locator"
+TRAIT_ENERGYSTORAGE = f"{PREFIX_TRAITS}EnergyStorage"
+TRAIT_SENSOR_STATE = f"{PREFIX_TRAITS}SensorState"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = f"{PREFIX_COMMANDS}OnOff"
@@ -141,8 +147,11 @@ COMMAND_MEDIA_SEEK_RELATIVE = f"{PREFIX_COMMANDS}mediaSeekRelative"
 COMMAND_MEDIA_SEEK_TO_POSITION = f"{PREFIX_COMMANDS}mediaSeekToPosition"
 COMMAND_MEDIA_SHUFFLE = f"{PREFIX_COMMANDS}mediaShuffle"
 COMMAND_MEDIA_STOP = f"{PREFIX_COMMANDS}mediaStop"
+COMMAND_REVERSE = f"{PREFIX_COMMANDS}Reverse"
 COMMAND_SET_HUMIDITY = f"{PREFIX_COMMANDS}SetHumidity"
 COMMAND_SELECT_CHANNEL = f"{PREFIX_COMMANDS}selectChannel"
+COMMAND_LOCATE = f"{PREFIX_COMMANDS}Locate"
+COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 
 TRAITS = []
 
@@ -404,10 +413,11 @@ class ColorSettingTrait(_Trait):
 
     def query_attributes(self):
         """Return color temperature query attributes."""
-        color_modes = self.state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        color_mode = self.state.attributes.get(light.ATTR_COLOR_MODE)
+
         color = {}
 
-        if light.color_supported(color_modes):
+        if light.color_supported([color_mode]):
             color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS, 1)
             if color_hs is not None:
@@ -417,7 +427,7 @@ class ColorSettingTrait(_Trait):
                     "value": brightness / 255,
                 }
 
-        if light.color_temp_supported(color_modes):
+        if light.color_temp_supported([color_mode]):
             temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
@@ -561,6 +571,98 @@ class DockTrait(_Trait):
             {ATTR_ENTITY_ID: self.state.entity_id},
             blocking=True,
             context=data.context,
+        )
+
+
+@register_trait
+class LocatorTrait(_Trait):
+    """Trait to offer locate functionality.
+
+    https://developers.google.com/actions/smarthome/traits/locator
+    """
+
+    name = TRAIT_LOCATOR
+    commands = [COMMAND_LOCATE]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_LOCATE
+
+    def sync_attributes(self):
+        """Return locator attributes for a sync request."""
+        return {}
+
+    def query_attributes(self):
+        """Return locator query attributes."""
+        return {}
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a locate command."""
+        if params.get("silence", False):
+            raise SmartHomeError(
+                ERR_FUNCTION_NOT_SUPPORTED,
+                "Silencing a Locate request is not yet supported",
+            )
+
+        await self.hass.services.async_call(
+            self.state.domain,
+            vacuum.SERVICE_LOCATE,
+            {ATTR_ENTITY_ID: self.state.entity_id},
+            blocking=True,
+            context=data.context,
+        )
+
+
+class EnergyStorageTrait(_Trait):
+    """Trait to offer EnergyStorage functionality.
+
+    https://developers.google.com/actions/smarthome/traits/energystorage
+    """
+
+    name = TRAIT_ENERGYSTORAGE
+    commands = [COMMAND_CHARGE]
+
+    @staticmethod
+    def supported(domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == vacuum.DOMAIN and features & vacuum.SUPPORT_BATTERY
+
+    def sync_attributes(self):
+        """Return EnergyStorage attributes for a sync request."""
+        return {
+            "isRechargeable": True,
+            "queryOnlyEnergyStorage": True,
+        }
+
+    def query_attributes(self):
+        """Return EnergyStorage query attributes."""
+        battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
+        if battery_level == 100:
+            descriptive_capacity_remaining = "FULL"
+        elif 75 <= battery_level < 100:
+            descriptive_capacity_remaining = "HIGH"
+        elif 50 <= battery_level < 75:
+            descriptive_capacity_remaining = "MEDIUM"
+        elif 25 <= battery_level < 50:
+            descriptive_capacity_remaining = "LOW"
+        elif 0 <= battery_level < 25:
+            descriptive_capacity_remaining = "CRITICALLY_LOW"
+        return {
+            "descriptiveCapacityRemaining": descriptive_capacity_remaining,
+            "capacityRemaining": [{"rawValue": battery_level, "unit": "PERCENTAGE"}],
+            "capacityUntilFull": [
+                {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
+            ],
+            "isCharging": self.state.state == vacuum.STATE_DOCKED,
+            "isPluggedIn": self.state.state == vacuum.STATE_DOCKED,
+        }
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a dock command."""
+        raise SmartHomeError(
+            ERR_FUNCTION_NOT_SUPPORTED,
+            "Controlling charging of a vacuum is not yet supported",
         )
 
 
@@ -1101,7 +1203,11 @@ class LockUnlockTrait(_Trait):
 
     def query_attributes(self):
         """Return LockUnlock query attributes."""
-        return {"isLocked": self.state.state == STATE_LOCKED}
+        if self.state.state == STATE_JAMMED:
+            return {"isJammed": True}
+
+        # If its unlocking its not yet unlocked so we consider is locked
+        return {"isLocked": self.state.state in (STATE_UNLOCKING, STATE_LOCKED)}
 
     async def execute(self, command, data, params, challenge):
         """Execute an LockUnlock command."""
@@ -1253,14 +1359,7 @@ class FanSpeedTrait(_Trait):
     """
 
     name = TRAIT_FANSPEED
-    commands = [COMMAND_FANSPEED]
-
-    speed_synonyms = {
-        fan.SPEED_OFF: ["stop", "off"],
-        fan.SPEED_LOW: ["slow", "low", "slowest", "lowest"],
-        fan.SPEED_MEDIUM: ["medium", "mid", "middle"],
-        fan.SPEED_HIGH: ["high", "max", "fast", "highest", "fastest", "maximum"],
-    }
+    commands = [COMMAND_FANSPEED, COMMAND_REVERSE]
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1275,25 +1374,23 @@ class FanSpeedTrait(_Trait):
         """Return speed point and modes attributes for a sync request."""
         domain = self.state.domain
         speeds = []
-        reversible = False
+        result = {}
 
         if domain == fan.DOMAIN:
-            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
-            modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
-            for mode in modes:
-                speed = {
-                    "speed_name": mode,
-                    "speed_values": [
-                        {"speed_synonym": self.speed_synonyms.get(mode), "lang": "en"}
-                    ],
-                }
-                speeds.append(speed)
             reversible = bool(
                 self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & fan.SUPPORT_DIRECTION
             )
+
+            result.update(
+                {
+                    "reversible": reversible,
+                    "supportsFanSpeedPercent": True,
+                }
+            )
+
         elif domain == climate.DOMAIN:
-            modes = self.state.attributes.get(climate.ATTR_FAN_MODES, [])
+            modes = self.state.attributes.get(climate.ATTR_FAN_MODES) or []
             for mode in modes:
                 speed = {
                     "speed_name": mode,
@@ -1301,32 +1398,32 @@ class FanSpeedTrait(_Trait):
                 }
                 speeds.append(speed)
 
-        return {
-            "availableFanSpeeds": {"speeds": speeds, "ordered": True},
-            "reversible": reversible,
-            "supportsFanSpeedPercent": True,
-        }
+            result.update(
+                {
+                    "reversible": False,
+                    "availableFanSpeeds": {"speeds": speeds, "ordered": True},
+                }
+            )
+
+        return result
 
     def query_attributes(self):
         """Return speed point and modes query attributes."""
+
         attrs = self.state.attributes
         domain = self.state.domain
         response = {}
         if domain == climate.DOMAIN:
-            speed = attrs.get(climate.ATTR_FAN_MODE)
-            if speed is not None:
-                response["currentFanSpeedSetting"] = speed
+            speed = attrs.get(climate.ATTR_FAN_MODE) or "off"
+            response["currentFanSpeedSetting"] = speed
+
         if domain == fan.DOMAIN:
-            speed = attrs.get(fan.ATTR_SPEED)
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
-            if speed is not None:
-                response["on"] = speed != fan.SPEED_OFF
-                response["currentFanSpeedSetting"] = speed
-            if percent is not None:
-                response["currentFanSpeedPercent"] = percent
+            response["currentFanSpeedPercent"] = percent
+
         return response
 
-    async def execute(self, command, data, params, challenge):
+    async def execute_fanspeed(self, data, params):
         """Execute an SetFanSpeed command."""
         domain = self.state.domain
         if domain == climate.DOMAIN:
@@ -1340,24 +1437,42 @@ class FanSpeedTrait(_Trait):
                 blocking=True,
                 context=data.context,
             )
-        if domain == fan.DOMAIN:
-            service_params = {
-                ATTR_ENTITY_ID: self.state.entity_id,
-            }
-            if "fanSpeedPercent" in params:
-                service = fan.SERVICE_SET_PERCENTAGE
-                service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
-            else:
-                service = fan.SERVICE_SET_SPEED
-                service_params[fan.ATTR_SPEED] = params["fanSpeed"]
 
+        if domain == fan.DOMAIN:
             await self.hass.services.async_call(
                 fan.DOMAIN,
-                service,
-                service_params,
+                fan.SERVICE_SET_PERCENTAGE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_PERCENTAGE: params["fanSpeedPercent"],
+                },
                 blocking=True,
                 context=data.context,
             )
+
+    async def execute_reverse(self, data, params):
+        """Execute a Reverse command."""
+        domain = self.state.domain
+        if domain == fan.DOMAIN:
+            if self.state.attributes.get(fan.ATTR_DIRECTION) == fan.DIRECTION_FORWARD:
+                direction = fan.DIRECTION_REVERSE
+            else:
+                direction = fan.DIRECTION_FORWARD
+
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_DIRECTION,
+                {ATTR_ENTITY_ID: self.state.entity_id, fan.ATTR_DIRECTION: direction},
+                blocking=True,
+                context=data.context,
+            )
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a smart home command."""
+        if command == COMMAND_FANSPEED:
+            await self.execute_fanspeed(data, params)
+        elif command == COMMAND_REVERSE:
+            await self.execute_reverse(data, params)
 
 
 @register_trait
@@ -2172,3 +2287,54 @@ class ChannelTrait(_Trait):
             blocking=True,
             context=data.context,
         )
+
+
+@register_trait
+class SensorStateTrait(_Trait):
+    """Trait to get sensor state.
+
+    https://developers.google.com/actions/smarthome/traits/sensorstate
+    """
+
+    sensor_types = {
+        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
+        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+            "VolatileOrganicCompounds",
+            "PARTS_PER_MILLION",
+        ),
+    }
+
+    name = TRAIT_SENSOR_STATE
+    commands = []
+
+    @classmethod
+    def supported(cls, domain, features, device_class, _):
+        """Test if state is supported."""
+        return domain == sensor.DOMAIN and device_class in cls.sensor_types
+
+    def sync_attributes(self):
+        """Return attributes for a sync request."""
+        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        data = self.sensor_types.get(device_class)
+        if data is not None:
+            return {
+                "sensorStatesSupported": {
+                    "name": data[0],
+                    "numericCapabilities": {"rawValueUnit": data[1]},
+                }
+            }
+
+    def query_attributes(self):
+        """Return the attributes of this trait for this entity."""
+        device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
+        data = self.sensor_types.get(device_class)
+        if data is not None:
+            return {
+                "currentSensorStateData": [
+                    {"name": data[0], "rawValue": self.state.state}
+                ]
+            }

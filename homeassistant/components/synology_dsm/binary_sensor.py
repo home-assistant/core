@@ -1,11 +1,14 @@
 """Support for Synology DSM binary sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
 from .const import (
@@ -15,6 +18,7 @@ from .const import (
     STORAGE_DISK_BINARY_SENSORS,
     SYNO_API,
     UPGRADE_BINARY_SENSORS,
+    SynologyDSMBinarySensorEntityDescription,
 )
 
 
@@ -32,43 +36,52 @@ async def async_setup_entry(
         | SynoDSMUpgradeBinarySensor
         | SynoDSMStorageBinarySensor
     ] = [
-        SynoDSMSecurityBinarySensor(
-            api, sensor_type, SECURITY_BINARY_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in SECURITY_BINARY_SENSORS
+        SynoDSMSecurityBinarySensor(api, coordinator, description)
+        for description in SECURITY_BINARY_SENSORS
     ]
 
-    entities += [
-        SynoDSMUpgradeBinarySensor(
-            api, sensor_type, UPGRADE_BINARY_SENSORS[sensor_type], coordinator
-        )
-        for sensor_type in UPGRADE_BINARY_SENSORS
-    ]
+    entities.extend(
+        [
+            SynoDSMUpgradeBinarySensor(api, coordinator, description)
+            for description in UPGRADE_BINARY_SENSORS
+        ]
+    )
 
     # Handle all disks
     if api.storage.disks_ids:
-        for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
-            entities += [
-                SynoDSMStorageBinarySensor(
-                    api,
-                    sensor_type,
-                    STORAGE_DISK_BINARY_SENSORS[sensor_type],
-                    coordinator,
-                    disk,
-                )
-                for sensor_type in STORAGE_DISK_BINARY_SENSORS
+        entities.extend(
+            [
+                SynoDSMStorageBinarySensor(api, coordinator, description, disk)
+                for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids)
+                for description in STORAGE_DISK_BINARY_SENSORS
             ]
+        )
 
     async_add_entities(entities)
 
 
-class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
+class SynoDSMBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
+    """Mixin for binary sensor specific attributes."""
+
+    entity_description: SynologyDSMBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        api: SynoApi,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the Synology DSM binary_sensor entity."""
+        super().__init__(api, coordinator, description)
+
+
+class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     """Representation a Synology Security binary sensor."""
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.security, self.entity_type) != "safe"  # type: ignore[no-any-return]
+        return getattr(self._api.security, self.entity_description.key) != "safe"  # type: ignore[no-any-return]
 
     @property
     def available(self) -> bool:
@@ -81,22 +94,36 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
         return self._api.security.status_by_check  # type: ignore[no-any-return]
 
 
-class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
+class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
     """Representation a Synology Storage binary sensor."""
+
+    entity_description: SynologyDSMBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        api: SynoApi,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        description: SynologyDSMBinarySensorEntityDescription,
+        device_id: str | None = None,
+    ) -> None:
+        """Initialize the Synology DSM storage binary_sensor entity."""
+        super().__init__(api, coordinator, description, device_id)
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return bool(getattr(self._api.storage, self.entity_type)(self._device_id))
+        return bool(
+            getattr(self._api.storage, self.entity_description.key)(self._device_id)
+        )
 
 
-class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
+class SynoDSMUpgradeBinarySensor(SynoDSMBinarySensor):
     """Representation a Synology Upgrade binary sensor."""
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return bool(getattr(self._api.upgrade, self.entity_type))
+        return bool(getattr(self._api.upgrade, self.entity_description.key))
 
     @property
     def available(self) -> bool:

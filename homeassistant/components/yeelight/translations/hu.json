@@ -9,6 +9,9 @@
         },
         "flow_title": "{model} {host}",
         "step": {
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a {model} ( {host} ) szolg\u00e1ltat\u00e1st?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Eszk\u00f6z"

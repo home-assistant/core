@@ -6,16 +6,23 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+)
+from zwave_js_server.exceptions import UnknownValueData
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceEntry
 
+from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
+    NumericSensorDataTemplate,
     ZwaveValueID,
 )
 
@@ -59,14 +66,16 @@ class ZwaveDiscoveryInfo:
     assumed_state: bool
     # the home assistant platform for which an entity should be created
     platform: str
+    # helper data to use in platform setup
+    platform_data: Any
+    # additional values that need to be watched by entity
+    additional_value_ids_to_watch: set[str]
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
     # data template to use in platform logic
     platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
-    # helper data to use in platform setup
-    platform_data: dict[str, Any] | None = None
-    # additional values that need to be watched by entity
-    additional_value_ids_to_watch: set[str] | None = None
+    # bool to specify whether entity should be enabled by default
+    entity_registry_enabled_default: bool = True
 
 
 @dataclass
@@ -135,6 +144,8 @@ class ZWaveDiscoverySchema:
     allow_multi: bool = False
     # [optional] bool to specify whether state is assumed and events should be fired on value update
     assumed_state: bool = False
+    # [optional] bool to specify whether entity should be enabled by default
+    entity_registry_enabled_default: bool = True
 
 
 def get_config_parameter_discovery_schema(
@@ -161,6 +172,7 @@ def get_config_parameter_discovery_schema(
             property_key_name=property_key_name,
             type={"number"},
         ),
+        entity_registry_enabled_default=False,
         **kwargs,
     )
 
@@ -173,6 +185,10 @@ SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
+)
+
+SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SOUND_SWITCH}, property={"toneId"}, type={"number"}
 )
 
 # For device class mapping see:
@@ -350,24 +366,11 @@ DISCOVERY_SCHEMAS = [
     get_config_parameter_discovery_schema(
         property_name={"Door lock mode"},
         device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Door Lock",
-            "Advanced Door Lock",
-            "Secure Keypad Door Lock",
-            "Secure Lockbox",
-        },
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     ZWaveDiscoverySchema(
         platform="lock",
-        device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Door Lock",
-            "Advanced Door Lock",
-            "Secure Keypad Door Lock",
-            "Secure Lockbox",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.LOCK,
@@ -381,13 +384,6 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="binary_sensor",
         hint="property",
-        device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Door Lock",
-            "Advanced Door Lock",
-            "Secure Keypad Door Lock",
-            "Secure Lockbox",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.LOCK,
@@ -424,12 +420,33 @@ DISCOVERY_SCHEMAS = [
         ],
     ),
     # binary sensors
+    # When CC is Sensor Binary and device class generic is Binary Sensor, entity should
+    # be enabled by default
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="boolean",
+        device_class_generic={"Binary Sensor"},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_BINARY},
+            type={"boolean"},
+        ),
+    ),
+    # Legacy binary sensors are phased out (replaced by notification sensors)
+    # Disable by default to not confuse users
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="boolean",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SENSOR_BINARY},
+            type={"boolean"},
+        ),
+        entity_registry_enabled_default=False,
+    ),
     ZWaveDiscoverySchema(
         platform="binary_sensor",
         hint="boolean",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.SENSOR_BINARY,
                 CommandClass.BATTERY,
                 CommandClass.SENSOR_ALARM,
             },
@@ -452,12 +469,18 @@ DISCOVERY_SCHEMAS = [
         platform="sensor",
         hint="string_sensor",
         primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.SENSOR_ALARM,
-                CommandClass.INDICATOR,
-            },
+            command_class={CommandClass.SENSOR_ALARM},
             type={"string"},
         ),
+    ),
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="string_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={"string"},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # generic numeric sensors
     ZWaveDiscoverySchema(
@@ -467,16 +490,26 @@ DISCOVERY_SCHEMAS = [
             command_class={
                 CommandClass.SENSOR_MULTILEVEL,
                 CommandClass.SENSOR_ALARM,
-                CommandClass.INDICATOR,
                 CommandClass.BATTERY,
             },
             type={"number"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
-    # numeric sensors for Meter CC
     ZWaveDiscoverySchema(
         platform="sensor",
         hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.INDICATOR},
+            type={"number"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+        entity_registry_enabled_default=False,
+    ),
+    # Meter sensors for Meter CC
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="meter",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.METER,
@@ -484,6 +517,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
             property={"value"},
         ),
+        data_template=NumericSensorDataTemplate(),
     ),
     # special list sensors (Notification CC)
     ZWaveDiscoverySchema(
@@ -496,11 +530,12 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
         allow_multi=True,
+        entity_registry_enabled_default=False,
     ),
-    # sensor for basic CC
+    # number for Basic CC
     ZWaveDiscoverySchema(
-        platform="sensor",
-        hint="numeric_sensor",
+        platform="number",
+        hint="Basic",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.BASIC,
@@ -508,6 +543,17 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
             property={"currentValue"},
         ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={
+                    CommandClass.BASIC,
+                },
+                type={"number"},
+                property={"targetValue"},
+            )
+        ],
+        data_template=NumericSensorDataTemplate(),
+        entity_registry_enabled_default=False,
     ),
     # binary switches
     ZWaveDiscoverySchema(
@@ -582,117 +628,181 @@ DISCOVERY_SCHEMAS = [
         platform="light",
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # sirens
+    ZWaveDiscoverySchema(
+        platform="siren",
+        primary_value=SIREN_TONE_SCHEMA,
+    ),
+    # select
+    # siren default tone
+    ZWaveDiscoverySchema(
+        platform="select",
+        hint="Default tone",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SOUND_SWITCH},
+            property={"defaultToneId"},
+            type={"number"},
+        ),
+        required_values=[SIREN_TONE_SCHEMA],
+    ),
+    # number
+    # siren default volume
+    ZWaveDiscoverySchema(
+        platform="number",
+        hint="volume",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SOUND_SWITCH},
+            property={"defaultVolume"},
+            type={"number"},
+        ),
+        required_values=[SIREN_TONE_SCHEMA],
+    ),
+    # select
+    # protection CC
+    ZWaveDiscoverySchema(
+        platform="select",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.PROTECTION},
+            property={"local", "rf"},
+            type={"number"},
+        ),
+    ),
 ]
 
 
 @callback
-def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
+def async_discover_node_values(
+    node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
-        for schema in DISCOVERY_SCHEMAS:
-            # check manufacturer_id
-            if (
-                schema.manufacturer_id is not None
-                and value.node.manufacturer_id not in schema.manufacturer_id
-            ):
-                continue
+        # We don't need to rediscover an already processed value_id
+        if value.value_id in discovered_value_ids[device.id]:
+            continue
+        yield from async_discover_single_value(value, device, discovered_value_ids)
 
-            # check product_id
-            if (
-                schema.product_id is not None
-                and value.node.product_id not in schema.product_id
-            ):
-                continue
 
-            # check product_type
-            if (
-                schema.product_type is not None
-                and value.node.product_type not in schema.product_type
-            ):
-                continue
+@callback
+def async_discover_single_value(
+    value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
+) -> Generator[ZwaveDiscoveryInfo, None, None]:
+    """Run discovery on a single ZWave value and return matching schema info."""
+    discovered_value_ids[device.id].add(value.value_id)
+    for schema in DISCOVERY_SCHEMAS:
+        # check manufacturer_id
+        if (
+            schema.manufacturer_id is not None
+            and value.node.manufacturer_id not in schema.manufacturer_id
+        ):
+            continue
 
-            # check firmware_version_range
-            if schema.firmware_version_range is not None and (
-                (
-                    schema.firmware_version_range.min is not None
-                    and schema.firmware_version_range.min_ver
-                    > AwesomeVersion(value.node.firmware_version)
-                )
-                or (
-                    schema.firmware_version_range.max is not None
-                    and schema.firmware_version_range.max_ver
-                    < AwesomeVersion(value.node.firmware_version)
-                )
-            ):
-                continue
+        # check product_id
+        if (
+            schema.product_id is not None
+            and value.node.product_id not in schema.product_id
+        ):
+            continue
 
-            # check firmware_version
-            if (
-                schema.firmware_version is not None
-                and value.node.firmware_version not in schema.firmware_version
-            ):
-                continue
+        # check product_type
+        if (
+            schema.product_type is not None
+            and value.node.product_type not in schema.product_type
+        ):
+            continue
 
-            # check device_class_basic
-            if not check_device_class(
-                value.node.device_class.basic, schema.device_class_basic
-            ):
-                continue
+        # check firmware_version_range
+        if schema.firmware_version_range is not None and (
+            (
+                schema.firmware_version_range.min is not None
+                and schema.firmware_version_range.min_ver
+                > AwesomeVersion(value.node.firmware_version)
+            )
+            or (
+                schema.firmware_version_range.max is not None
+                and schema.firmware_version_range.max_ver
+                < AwesomeVersion(value.node.firmware_version)
+            )
+        ):
+            continue
 
-            # check device_class_generic
-            if not check_device_class(
-                value.node.device_class.generic, schema.device_class_generic
-            ):
-                continue
+        # check firmware_version
+        if (
+            schema.firmware_version is not None
+            and value.node.firmware_version not in schema.firmware_version
+        ):
+            continue
 
-            # check device_class_specific
-            if not check_device_class(
-                value.node.device_class.specific, schema.device_class_specific
-            ):
-                continue
+        # check device_class_basic
+        if not check_device_class(
+            value.node.device_class.basic, schema.device_class_basic
+        ):
+            continue
 
-            # check primary value
-            if not check_value(value, schema.primary_value):
-                continue
+        # check device_class_generic
+        if not check_device_class(
+            value.node.device_class.generic, schema.device_class_generic
+        ):
+            continue
 
-            # check additional required values
-            if schema.required_values is not None and not all(
-                any(check_value(val, val_scheme) for val in node.values.values())
-                for val_scheme in schema.required_values
-            ):
-                continue
+        # check device_class_specific
+        if not check_device_class(
+            value.node.device_class.specific, schema.device_class_specific
+        ):
+            continue
 
-            # check for values that may not be present
-            if schema.absent_values is not None and any(
-                any(check_value(val, val_scheme) for val in node.values.values())
-                for val_scheme in schema.absent_values
-            ):
-                continue
+        # check primary value
+        if not check_value(value, schema.primary_value):
+            continue
 
-            # resolve helper data from template
-            resolved_data = None
-            additional_value_ids_to_watch = None
-            if schema.data_template:
+        # check additional required values
+        if schema.required_values is not None and not all(
+            any(check_value(val, val_scheme) for val in value.node.values.values())
+            for val_scheme in schema.required_values
+        ):
+            continue
+
+        # check for values that may not be present
+        if schema.absent_values is not None and any(
+            any(check_value(val, val_scheme) for val in value.node.values.values())
+            for val_scheme in schema.absent_values
+        ):
+            continue
+
+        # resolve helper data from template
+        resolved_data = None
+        additional_value_ids_to_watch = set()
+        if schema.data_template:
+            try:
                 resolved_data = schema.data_template.resolve_data(value)
-                additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
-                    resolved_data
+            except UnknownValueData as err:
+                LOGGER.error(
+                    "Discovery for value %s on device '%s' (%s) will be skipped: %s",
+                    value,
+                    device.name_by_user or device.name,
+                    value.node,
+                    err,
                 )
-
-            # all checks passed, this value belongs to an entity
-            yield ZwaveDiscoveryInfo(
-                node=value.node,
-                primary_value=value,
-                assumed_state=schema.assumed_state,
-                platform=schema.platform,
-                platform_hint=schema.hint,
-                platform_data_template=schema.data_template,
-                platform_data=resolved_data,
-                additional_value_ids_to_watch=additional_value_ids_to_watch,
+                continue
+            additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
+                resolved_data
             )
 
-            if not schema.allow_multi:
-                # break out of loop, this value may not be discovered by other schemas/platforms
-                break
+        # all checks passed, this value belongs to an entity
+        yield ZwaveDiscoveryInfo(
+            node=value.node,
+            primary_value=value,
+            assumed_state=schema.assumed_state,
+            platform=schema.platform,
+            platform_hint=schema.hint,
+            platform_data_template=schema.data_template,
+            platform_data=resolved_data,
+            additional_value_ids_to_watch=additional_value_ids_to_watch,
+            entity_registry_enabled_default=schema.entity_registry_enabled_default,
+        )
+
+        if not schema.allow_multi:
+            # return early since this value may not be discovered by other schemas/platforms
+            return
 
 
 @callback

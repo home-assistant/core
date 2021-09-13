@@ -94,7 +94,7 @@ async def _migrate_old_unique_ids(
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     modified = 0
-    for importable_option in [ATTR_ACTIVITY, ATTR_DELAY_SECS]:
+    for importable_option in (ATTR_ACTIVITY, ATTR_DELAY_SECS):
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
             modified = 1

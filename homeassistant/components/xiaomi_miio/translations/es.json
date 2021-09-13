@@ -53,11 +53,12 @@
                 "title": "Conectar con un Xiaomi Gateway"
             },
             "manual": {
-                "description": "Necesitar\u00e1 la clave de 32 caracteres Token API, consulte https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token para obtener instrucciones. Tenga en cuenta que esta Token API es diferente de la clave utilizada por la integraci\u00f3n de Xiaomi Aqara.",
-                "title": "Con\u00e9ctese a un dispositivo Xiaomi Miio o una puerta de enlace Xiaomi"
+                "description": "Necesitar\u00e1s la clave de 32 caracteres Token API, consulta https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token para obtener instrucciones. Ten en cuenta que esta Token API es diferente de la clave utilizada por la integraci\u00f3n de Xiaomi Aqara.",
+                "title": "Con\u00e9ctate a un dispositivo Xiaomi Miio o una puerta de enlace Xiaomi"
             },
             "reauth_confirm": {
-                "description": "La integraci\u00f3n de Xiaomi Miio necesita volver a autenticar tu cuenta para actualizar los tokens o a\u00f1adir las credenciales de la nube que faltan."
+                "description": "La integraci\u00f3n de Xiaomi Miio necesita volver a autenticar tu cuenta para actualizar los tokens o a\u00f1adir las credenciales de la nube que faltan.",
+                "title": "Volver a autenticar la integraci\u00f3n"
             },
             "select": {
                 "data": {
@@ -77,14 +78,14 @@
     },
     "options": {
         "error": {
-            "cloud_credentials_incomplete": "Las credenciales de la nube est\u00e1n incompletas, por favor, rellene el nombre de usuario, la contrase\u00f1a y el pa\u00eds"
+            "cloud_credentials_incomplete": "Las credenciales de la nube est\u00e1n incompletas, por favor, rellena el nombre de usuario, la contrase\u00f1a y el pa\u00eds"
         },
         "step": {
             "init": {
                 "data": {
-                    "cloud_subdevices": "Utilice la nube para conectar subdispositivos"
+                    "cloud_subdevices": "Utiliza la nube para conectar subdispositivos"
                 },
-                "description": "Especifique los ajustes opcionales",
+                "description": "Especifica los ajustes opcionales",
                 "title": "Xiaomi Miio"
             }
         }

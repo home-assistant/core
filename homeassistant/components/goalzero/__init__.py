@@ -1,4 +1,6 @@
 """The Goal Zero Yeti integration."""
+from __future__ import annotations
+
 import logging
 
 from goalzero import Yeti, exceptions
@@ -7,17 +9,33 @@ from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSO
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    ATTRIBUTION,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SENSOR, DOMAIN_SWITCH]
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Goal Zero Yeti from a config entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
@@ -35,8 +53,7 @@ async def async_setup_entry(hass, entry):
     try:
         await api.init_connect()
     except exceptions.ConnectError as ex:
-        _LOGGER.warning("Failed to connect: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"Failed to connect to device: {ex}") from ex
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -63,7 +80,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -74,29 +91,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class YetiEntity(CoordinatorEntity):
     """Representation of a Goal Zero Yeti entity."""
 
-    def __init__(self, api, coordinator, name, server_unique_id):
+    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    def __init__(
+        self,
+        api: Yeti,
+        coordinator: DataUpdateCoordinator,
+        name: str,
+        server_unique_id: str,
+    ) -> None:
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
         self.api = api
         self._name = name
         self._server_unique_id = server_unique_id
-        self._device_class = None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
-        info = {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "manufacturer": "Goal Zero",
-            "name": self._name,
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+            ATTR_MANUFACTURER: "Goal Zero",
+            ATTR_NAME: self._name,
+            ATTR_MODEL: self.api.sysdata.get(ATTR_MODEL),
+            ATTR_SW_VERSION: self.api.data.get("firmwareVersion"),
         }
-        if self.api.sysdata:
-            info["model"] = self.api.sysdata["model"]
-        if self.api.data:
-            info["sw_version"] = self.api.data["firmwareVersion"]
-        return info
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return self._device_class

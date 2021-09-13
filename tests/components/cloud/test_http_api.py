@@ -71,7 +71,7 @@ def setup_api_fixture(hass, aioclient_mock):
 @pytest.fixture(name="cloud_client")
 def cloud_client_fixture(hass, hass_client):
     """Fixture that can fetch from the cloud client."""
-    with patch("hass_nabucasa.Cloud.write_user_info"):
+    with patch("hass_nabucasa.Cloud._write_user_info"):
         yield hass.loop.run_until_complete(hass_client())
 
 
@@ -394,59 +394,18 @@ async def test_websocket_status_not_logged_in(hass, hass_ws_client):
     assert response["result"] == {"logged_in": False, "cloud": "disconnected"}
 
 
-async def test_websocket_subscription_reconnect(
+async def test_websocket_subscription_info(
     hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
 ):
     """Test querying the status and connecting because valid account."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
     client = await hass_ws_client(hass)
 
-    with patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
-    ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
+    with patch("hass_nabucasa.auth.CognitoAuth.async_renew_access_token") as mock_renew:
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
-
     assert response["result"] == {"provider": "stripe"}
     assert len(mock_renew.mock_calls) == 1
-    assert len(mock_connect.mock_calls) == 1
-
-
-async def test_websocket_subscription_no_reconnect_if_connected(
-    hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
-):
-    """Test querying the status and not reconnecting because still expired."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
-    hass.data[DOMAIN].iot.state = STATE_CONNECTED
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
-    ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
-        await client.send_json({"id": 5, "type": "cloud/subscription"})
-        response = await client.receive_json()
-
-    assert response["result"] == {"provider": "stripe"}
-    assert len(mock_renew.mock_calls) == 0
-    assert len(mock_connect.mock_calls) == 0
-
-
-async def test_websocket_subscription_no_reconnect_if_expired(
-    hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
-):
-    """Test querying the status and not reconnecting because still expired."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
-    ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
-        await client.send_json({"id": 5, "type": "cloud/subscription"})
-        response = await client.receive_json()
-
-    assert response["result"] == {"provider": "stripe"}
-    assert len(mock_renew.mock_calls) == 1
-    assert len(mock_connect.mock_calls) == 1
 
 
 async def test_websocket_subscription_fail(
@@ -466,7 +425,7 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
     """Test querying the status."""
     client = await hass_ws_client(hass)
     with patch(
-        "hass_nabucasa.Cloud.fetch_subscription_info",
+        "hass_nabucasa.cloud_api.async_subscription_info",
         return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})

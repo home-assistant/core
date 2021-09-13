@@ -135,7 +135,7 @@ class DaikinClimate(ClimateEntity):
         """Set device settings using API."""
         values = {}
 
-        for attr in [ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE, ATTR_HVAC_MODE]:
+        for attr in (ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE, ATTR_HVAC_MODE):
             value = settings.get(attr)
             if value is None:
                 continue

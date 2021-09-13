@@ -382,11 +382,13 @@ def _listen_count(hass):
     return sum(hass.bus.async_listeners().values())
 
 
-async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin_user):
+async def test_api_error_log(
+    hass, hass_client_no_auth, hass_access_token, hass_admin_user
+):
     """Test if we can fetch the error log."""
     hass.data[DATA_LOGGING] = "/some/path"
     await async_setup_component(hass, "api", {})
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     resp = await client.get(const.URL_API_ERROR_LOG)
     # Verify auth required
@@ -557,3 +559,20 @@ async def test_api_call_service_bad_data(hass, mock_api_client):
         "/api/services/test_domain/test_service", json={"hello": 5}
     )
     assert resp.status == 400
+
+
+async def test_api_get_discovery_info(hass, mock_api_client):
+    """Test the return of discovery info."""
+    resp = await mock_api_client.get(const.URL_API_DISCOVERY_INFO)
+    result = await resp.json()
+
+    assert result == {
+        "base_url": "",
+        "external_url": "",
+        "installation_type": "",
+        "internal_url": "",
+        "location_name": "",
+        "requires_api_password": True,
+        "uuid": "",
+        "version": "",
+    }

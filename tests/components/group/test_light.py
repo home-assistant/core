@@ -21,6 +21,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
+    ATTR_WHITE,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
@@ -29,6 +30,7 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -44,6 +46,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -58,6 +61,7 @@ async def test_default_state(hass):
                 "platform": DOMAIN,
                 "entities": ["light.kitchen", "light.bedroom"],
                 "name": "Bedroom Group",
+                "unique_id": "unique_identifier",
             }
         },
     )
@@ -76,6 +80,11 @@ async def test_default_state(hass):
     assert state.attributes.get(ATTR_WHITE_VALUE) is None
     assert state.attributes.get(ATTR_EFFECT_LIST) is None
     assert state.attributes.get(ATTR_EFFECT) is None
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("light.bedroom_group")
+    assert entry
+    assert entry.unique_id == "unique_identifier"
 
 
 async def test_state_reporting(hass):
@@ -435,6 +444,62 @@ async def test_white_value(hass):
     assert state.attributes[ATTR_WHITE_VALUE] == 100
 
 
+async def test_white(hass, enable_custom_integrations):
+    """Test white reporting."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("test1", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("test2", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {COLOR_MODE_HS, COLOR_MODE_WHITE}
+    entity0.color_mode = COLOR_MODE_WHITE
+    entity0.brightness = 255
+
+    entity1 = platform.ENTITIES[1]
+    entity1.supported_color_modes = {COLOR_MODE_HS, COLOR_MODE_WHITE}
+    entity1.color_mode = COLOR_MODE_WHITE
+    entity1.brightness = 128
+
+    assert await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2"],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_COLOR_MODE] == "white"
+    assert state.attributes[ATTR_BRIGHTNESS] == 191
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs", "white"]
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": ["light.light_group"], ATTR_WHITE: 128},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.light_group")
+    assert state.attributes[ATTR_COLOR_MODE] == "white"
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs", "white"]
+
+
 async def test_color_temp(hass, enable_custom_integrations):
     """Test color temp reporting."""
     platform = getattr(hass.components, "test.light")
@@ -553,12 +618,12 @@ async def test_emulated_color_temp_group(hass, enable_custom_integrations):
     state = hass.states.get("light.test1")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP] == 200
-    assert ATTR_HS_COLOR not in state.attributes.keys()
+    assert ATTR_HS_COLOR in state.attributes.keys()
 
     state = hass.states.get("light.test2")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP] == 200
-    assert ATTR_HS_COLOR not in state.attributes.keys()
+    assert ATTR_HS_COLOR in state.attributes.keys()
 
     state = hass.states.get("light.test3")
     assert state.state == STATE_ON
@@ -1064,7 +1129,7 @@ async def test_invalid_service_calls(hass):
     """Test invalid service call arguments get discarded."""
     add_entities = MagicMock()
     await group.async_setup_platform(
-        hass, {"entities": ["light.test1", "light.test2"]}, add_entities
+        hass, {"name": "test", "entities": ["light.test1", "light.test2"]}, add_entities
     )
     await hass.async_block_till_done()
     await hass.async_start()

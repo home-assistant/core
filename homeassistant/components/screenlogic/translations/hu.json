@@ -20,6 +20,7 @@
                 "data": {
                     "selected_gateway": "Gateway"
                 },
+                "description": "A k\u00f6vetkez\u0151 ScreenLogic \u00e1tj\u00e1r\u00f3kat fedezt\u00e9k fel. V\u00e1lasszon egyet a konfigur\u00e1l\u00e1shoz, vagy v\u00e1lassza a ScreenLogic \u00e1tj\u00e1r\u00f3 k\u00e9zi konfigur\u00e1l\u00e1s\u00e1t.",
                 "title": "ScreenLogic"
             }
         }

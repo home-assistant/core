@@ -13,7 +13,6 @@ CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
 DATA_CLIENT = "client"
-DATA_UNSUBSCRIBE = "unsubs"
 DATA_PLATFORM_SETUP = "platform_setup"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
@@ -44,26 +43,58 @@ ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_DATA = "event_data"
 ATTR_DATA_TYPE = "data_type"
 ATTR_WAIT_FOR_RESULT = "wait_for_result"
+ATTR_OPTIONS = "options"
+
+ATTR_NODE = "node"
+ATTR_ZWAVE_VALUE = "zwave_value"
+
+# automation trigger attributes
+ATTR_PREVIOUS_VALUE = "previous_value"
+ATTR_PREVIOUS_VALUE_RAW = "previous_value_raw"
+ATTR_CURRENT_VALUE = "current_value"
+ATTR_CURRENT_VALUE_RAW = "current_value_raw"
+ATTR_DESCRIPTION = "description"
 
 # service constants
-ATTR_NODES = "nodes"
-
+SERVICE_SET_VALUE = "set_value"
+SERVICE_RESET_METER = "reset_meter"
+SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
+SERVICE_PING = "ping"
+SERVICE_REFRESH_VALUE = "refresh_value"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 
+ATTR_NODES = "nodes"
+# config parameter
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
-
-SERVICE_REFRESH_VALUE = "refresh_value"
-
+# refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
-
-SERVICE_SET_VALUE = "set_value"
-SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
-
+# multicast
 ATTR_BROADCAST = "broadcast"
-
-SERVICE_PING = "ping"
+# meter reset
+ATTR_METER_TYPE = "meter_type"
+ATTR_METER_TYPE_NAME = "meter_type_name"
 
 ADDON_SLUG = "core_zwave_js"
+
+# Sensor entity description constants
+ENTITY_DESC_KEY_BATTERY = "battery"
+ENTITY_DESC_KEY_CURRENT = "current"
+ENTITY_DESC_KEY_VOLTAGE = "voltage"
+ENTITY_DESC_KEY_ENERGY_MEASUREMENT = "energy_measurement"
+ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING = "energy_total_increasing"
+ENTITY_DESC_KEY_POWER = "power"
+ENTITY_DESC_KEY_POWER_FACTOR = "power_factor"
+ENTITY_DESC_KEY_CO = "co"
+ENTITY_DESC_KEY_CO2 = "co2"
+ENTITY_DESC_KEY_HUMIDITY = "humidity"
+ENTITY_DESC_KEY_ILLUMINANCE = "illuminance"
+ENTITY_DESC_KEY_PRESSURE = "pressure"
+ENTITY_DESC_KEY_SIGNAL_STRENGTH = "signal_strength"
+ENTITY_DESC_KEY_TEMPERATURE = "temperature"
+ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
+ENTITY_DESC_KEY_TIMESTAMP = "timestamp"
+ENTITY_DESC_KEY_MEASUREMENT = "measurement"
+ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"

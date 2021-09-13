@@ -16,9 +16,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_URL,
     DATA_BYTES,
     DATA_RATE_BYTES_PER_SECOND,
+    FREQUENCY_MEGAHERTZ,
     PERCENTAGE,
     STATE_UNKNOWN,
     TIME_SECONDS,
@@ -193,11 +193,17 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
         name="Downlink frequency",
-        formatter=lambda x: (round(int(x) / 10), "MHz"),
+        formatter=lambda x: (
+            round(int(x) / 10) if x is not None else None,
+            FREQUENCY_MEGAHERTZ,
+        ),
     ),
     (KEY_DEVICE_SIGNAL, "lteulfreq"): SensorMeta(
         name="Uplink frequency",
-        formatter=lambda x: (round(int(x) / 10), "MHz"),
+        formatter=lambda x: (
+            round(int(x) / 10) if x is not None else None,
+            FREQUENCY_MEGAHERTZ,
+        ),
     ),
     KEY_MONITORING_CHECK_NOTIFICATIONS: SensorMeta(
         exclude=re.compile(
@@ -360,7 +366,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
+    router = hass.data[DOMAIN].routers[config_entry.unique_id]
     sensors: list[Entity] = []
     for key in SENSOR_KEYS:
         if not (items := router.data.get(key)):
@@ -426,7 +432,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         return f"{self.key}.{self.item}"
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return sensor state."""
         return self._state
 
@@ -436,7 +442,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         return self.meta.device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return sensor's unit of measurement."""
         return self.meta.unit or self._unit
 

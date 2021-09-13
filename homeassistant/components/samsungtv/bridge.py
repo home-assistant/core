@@ -209,8 +209,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         except AccessDenied:
             LOGGER.debug("Working but denied config: %s", config)
             return RESULT_AUTH_MISSING
-        except UnhandledResponse:
-            LOGGER.debug("Working but unsupported config: %s", config)
+        except UnhandledResponse as err:
+            LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
             return RESULT_NOT_SUPPORTED
         except (ConnectionClosed, OSError) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
@@ -240,7 +240,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def _send_key(self, key):
         """Send the key using legacy protocol."""
-        self._get_remote().control(key)
+        if remote := self._get_remote():
+            remote.control(key)
 
     def stop(self):
         """Stop Bridge."""
@@ -289,8 +290,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
                         config[CONF_TOKEN] = "*****"
                 LOGGER.debug("Working config: %s", config)
                 return RESULT_SUCCESS
-            except WebSocketException:
-                LOGGER.debug("Working but unsupported config: %s", config)
+            except WebSocketException as err:
+                LOGGER.debug(
+                    "Working but unsupported config: %s, error: %s", config, err
+                )
                 result = RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
@@ -313,7 +316,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
-        self._get_remote().send_key(key)
+        if remote := self._get_remote():
+            remote.send_key(key)
 
     def _get_remote(self, avoid_open: bool = False):
         """Create or return a remote control instance."""

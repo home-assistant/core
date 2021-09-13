@@ -5,9 +5,9 @@ import collections
 from typing import Callable, Dict
 
 import attr
+from zigpy import zcl
 import zigpy.profiles.zha
 import zigpy.profiles.zll
-import zigpy.zcl as zcl
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
@@ -66,6 +66,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     VOC_LEVEL_CLUSTER: SENSOR,
     zcl.clusters.closures.DoorLock.cluster_id: LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: COVER,
+    zcl.clusters.general.BinaryInput.cluster_id: BINARY_SENSOR,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
     zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
