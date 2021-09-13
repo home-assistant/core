@@ -10,16 +10,19 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, SIGNAL_HEATAREA_DATA_UPDATED
+from .const import (
+    DOMAIN,
+    PRESET_AUTO,
+    PRESET_DAY,
+    PRESET_NIGHT,
+    SIGNAL_HEATAREA_DATA_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +49,7 @@ class Alpha2Climate(ClimateEntity):
     _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_preset_modes = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO]
+    _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
 
     def __init__(self, base_update_handler, data):
         """Initialize Alpha2 ClimateEntity."""
@@ -133,20 +136,18 @@ class Alpha2Climate(ClimateEntity):
     @property
     def preset_mode(self):
         """Return the current preset mode."""
-        # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
         if self._data["HEATAREA_MODE"] == 1:
-            return PRESET_COMFORT
+            return PRESET_DAY
         if self._data["HEATAREA_MODE"] == 2:
-            return PRESET_ECO
-        return PRESET_NONE
+            return PRESET_NIGHT
+        return PRESET_AUTO
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new operation mode."""
-        # HEATAREA_MODE: 0=Auto, 1=Tag, 2=Nacht
         heatarea_mode = 0
-        if preset_mode == PRESET_COMFORT:
+        if preset_mode == PRESET_DAY:
             heatarea_mode = 1
-        elif preset_mode == PRESET_ECO:
+        elif preset_mode == PRESET_NIGHT:
             heatarea_mode = 2
 
         try:
@@ -162,9 +163,15 @@ class Alpha2Climate(ClimateEntity):
         else:
             self._data["HEATAREA_MODE"] = heatarea_mode
             if heatarea_mode == 1:
-                self._data["T_TARGET"] = self._data["T_HEAT_DAY"]
+                if self._base_update_handler.get_cooling():
+                    self._data["T_TARGET"] = self._data["T_COOL_DAY"]
+                else:
+                    self._data["T_TARGET"] = self._data["T_HEAT_DAY"]
             elif heatarea_mode == 2:
-                self._data["T_TARGET"] = self._data["T_HEAT_NIGHT"]
+                if self._base_update_handler.get_cooling():
+                    self._data["T_TARGET"] = self._data["T_COOL_NIGHT"]
+                else:
+                    self._data["T_TARGET"] = self._data["T_HEAT_NIGHT"]
 
     @property
     def device_state_attributes(self):
