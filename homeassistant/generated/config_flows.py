@@ -181,6 +181,7 @@ FLOWS = [
     "neato",
     "nest",
     "netatmo",
+    "netgear",
     "nexia",
     "nfandroidtv",
     "nightscout",

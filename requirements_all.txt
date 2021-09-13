@@ -1641,7 +1641,7 @@ pynanoleaf==0.1.0
 pynello==2.0.3
 
 # homeassistant.components.netgear
-pynetgear==0.6.1
+pynetgear==0.7.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
