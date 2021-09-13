@@ -39,7 +39,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         name,
         update_interval=None,
         update_method=None,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
@@ -136,6 +136,11 @@ async def async_setup_entry(
         KEY_COORDINATOR: coordinator,
     }
 
+    if motion_gateway.firmware is not None:
+        version = f"{motion_gateway.firmware}, protocol: {motion_gateway.protocol}"
+    else:
+        version = f"Protocol: {motion_gateway.protocol}"
+
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -144,7 +149,7 @@ async def async_setup_entry(
         manufacturer=MANUFACTURER,
         name=entry.title,
         model="Wi-Fi bridge",
-        sw_version=motion_gateway.protocol,
+        sw_version=version,
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

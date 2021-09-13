@@ -103,7 +103,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:poll-box"
+        "history", "history", "hass:chart-box"
     )
     hass.components.websocket_api.async_register_command(
         ws_get_statistics_during_period

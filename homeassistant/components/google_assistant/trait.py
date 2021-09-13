@@ -2311,17 +2311,10 @@ class SensorStateTrait(_Trait):
     name = TRAIT_SENSOR_STATE
     commands = []
 
-    @staticmethod
-    def supported(domain, features, device_class, _):
+    @classmethod
+    def supported(cls, domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == sensor.DOMAIN and device_class in (
-            sensor.DEVICE_CLASS_AQI,
-            sensor.DEVICE_CLASS_CO,
-            sensor.DEVICE_CLASS_CO2,
-            sensor.DEVICE_CLASS_PM25,
-            sensor.DEVICE_CLASS_PM10,
-            sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-        )
+        return domain == sensor.DOMAIN and device_class in cls.sensor_types
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
