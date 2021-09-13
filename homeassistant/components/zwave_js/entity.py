@@ -111,7 +111,7 @@ class ZWaveBaseEntity(Entity):
         )
 
         # Add legacy Z-Wave migration data.
-        async_add_migration_entity_value(
+        await async_add_migration_entity_value(
             self.hass, self.config_entry, self.entity_id, self.info
         )
 

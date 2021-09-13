@@ -1269,7 +1269,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         )
 
         # Add legacy Z-Wave migration data.
-        async_add_migration_entity_value(self.hass, self.entity_id, self.values)
+        await async_add_migration_entity_value(self.hass, self.entity_id, self.values)
 
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""

@@ -132,15 +132,14 @@ class LegacyZWaveMappedData:
     device_entries: dict[str, str] = field(default_factory=dict)
 
 
-@callback
-def async_add_migration_entity_value(
+async def async_add_migration_entity_value(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     entity_id: str,
     discovery_info: ZwaveDiscoveryInfo,
 ) -> None:
     """Add Z-Wave JS entity value for legacy Z-Wave migration."""
-    migration_handler: LegacyZWaveMigration = get_legacy_zwave_migration(hass)
+    migration_handler: LegacyZWaveMigration = await get_legacy_zwave_migration(hass)
     migration_handler.add_entity_value(config_entry, entity_id, discovery_info)
 
 
@@ -148,15 +147,16 @@ async def async_get_migration_data(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, ZWaveJSMigrationData]:
     """Return Z-Wave JS migration data."""
-    migration_handler: LegacyZWaveMigration = get_legacy_zwave_migration(hass)
+    migration_handler: LegacyZWaveMigration = await get_legacy_zwave_migration(hass)
     return await migration_handler.get_data(config_entry)
 
 
 @singleton(LEGACY_ZWAVE_MIGRATION)
-@callback
-def get_legacy_zwave_migration(hass: HomeAssistant) -> LegacyZWaveMigration:
+async def get_legacy_zwave_migration(hass: HomeAssistant) -> LegacyZWaveMigration:
     """Return legacy Z-Wave migration handler."""
-    return LegacyZWaveMigration(hass)
+    migration_handler = LegacyZWaveMigration(hass)
+    await migration_handler.load_data()
+    return migration_handler
 
 
 class LegacyZWaveMigration:
