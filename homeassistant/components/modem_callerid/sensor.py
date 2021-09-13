@@ -74,7 +74,7 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "reject_call")
+    platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "async_reject_call")
 
 
 class ModemCalleridSensor(SensorEntity):
@@ -121,6 +121,6 @@ class ModemCalleridSensor(SensorEntity):
         self._attr_native_value = self.api.state
         self.async_write_ha_state()
 
-    async def reject_call(self) -> None:
+    async def async_reject_call(self) -> None:
         """Reject Incoming Call."""
         await self.api.reject_call(self.device)
