@@ -18,11 +18,11 @@ function write_crash_report() {
   local epoch="$(printf "%(%s)T")"
   local isoformat="$(printf "%(%Y-%m-%d %H:%M:%S%z)T")"
 
-  echo "Home Assistant exited with signal $exit_signal at $isoformat" > /config/crash_report.$epoch
-  echo "Writing crash report to /config/crash_report.$epoch"
+  echo "Home Assistant exited with signal $exit_signal at $isoformat" > /config/hass_crash_report.$epoch
+  echo "Writing crash report to /config/hass_crash_report.$epoch"
   # dmesg may not run if all memory is exhausted since
   # only built-in commands will likely work at this point
-  dmesg -s 16384 >> /config/crash_report.$timestamp
+  dmesg -s 16384 >> /config/hass_crash_report.$timestamp
   return
 }
 
