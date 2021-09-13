@@ -116,21 +116,18 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "load_15m": SysMonitorSensorEntityDescription(
         key="load_15m",
         name="Load (15m)",
-        native_unit_of_measurement=" ",
         icon=CPU_ICON,
         state_class=STATE_CLASS_TOTAL,
     ),
     "load_1m": SysMonitorSensorEntityDescription(
         key="load_1m",
         name="Load (1m)",
-        native_unit_of_measurement=" ",
         icon=CPU_ICON,
         state_class=STATE_CLASS_TOTAL,
     ),
     "load_5m": SysMonitorSensorEntityDescription(
         key="load_5m",
         name="Load (5m)",
-        native_unit_of_measurement=" ",
         icon=CPU_ICON,
         state_class=STATE_CLASS_TOTAL,
     ),
@@ -174,7 +171,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "packets_in": SysMonitorSensorEntityDescription(
         key="packets_in",
         name="Packets in",
-        native_unit_of_measurement=" ",
         icon="mdi:server-network",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory_arg=True,
@@ -182,7 +178,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "packets_out": SysMonitorSensorEntityDescription(
         key="packets_out",
         name="Packets out",
-        native_unit_of_measurement=" ",
         icon="mdi:server-network",
         state_class=STATE_CLASS_TOTAL_INCREASING,
         mandatory_arg=True,
@@ -206,7 +201,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "process": SysMonitorSensorEntityDescription(
         key="process",
         name="Process",
-        native_unit_of_measurement=" ",
         icon=CPU_ICON,
         state_class=STATE_CLASS_TOTAL,
         mandatory_arg=True,
