@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 import logging
-from typing import TypedDict
+from typing import TypedDict, overload
 
 from sqlalchemy import (
     Boolean,
@@ -391,6 +391,16 @@ class StatisticsRuns(Base):  # type: ignore
         )
 
 
+@overload
+def process_timestamp(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp(ts: datetime) -> datetime:
+    ...
+
+
 def process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
@@ -399,6 +409,16 @@ def process_timestamp(ts):
         return ts.replace(tzinfo=dt_util.UTC)
 
     return dt_util.as_utc(ts)
+
+
+@overload
+def process_timestamp_to_utc_isoformat(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
+    ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
