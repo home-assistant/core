@@ -30,12 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}})
 
     session = aiohttp_client.async_get_clientsession(hass)
-    client = await Client.async_login(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        session=session,
-        logger=LOGGER,
-    )
+
+    try:
+        client = await Client.async_login(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            session=session,
+            logger=LOGGER,
+        )
+    except WattTimeError as err:
+        LOGGER.error("Error while authenticating with WattTime: %s", err)
+        return False
 
     async def async_update_data() -> RealTimeEmissionsResponseType:
         """Get the latest realtime emissions data."""
