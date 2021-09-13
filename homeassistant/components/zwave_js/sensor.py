@@ -80,7 +80,7 @@ from .helpers import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 
-STATUS_ICON_MAP: dict[NodeStatus, str] = {
+STATUS_ICON: dict[NodeStatus, str] = {
     NodeStatus.ALIVE: "mdi:heart-pulse",
     NodeStatus.ASLEEP: "mdi:sleep",
     NodeStatus.AWAKE: "mdi:eye",
@@ -490,7 +490,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     @property
     def icon(self) -> str | None:
         """Icon of the entity."""
-        return STATUS_ICON_MAP[self.node.status]
+        return STATUS_ICON[self.node.status]
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
