@@ -1,4 +1,6 @@
 """The seventeentrack component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -15,7 +17,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_FRIENDLY_NAME, CONF_SCAN_IN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_flow import get_client
@@ -25,9 +27,10 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SHOW_ARCHIVED,
     DOMAIN,
+    PLATFORMS,
     SERVICE_ADD_PACKAGE,
 )
-from .errors import AuthenticationError, UnknownError
+from .errors import AuthenticationError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +44,7 @@ SERVICE_ADD_PACKAGE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the SeventeenTrack component."""
     coordinator = SeventeenTrackDataCoordinator(hass, config_entry)
 
@@ -50,24 +53,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload SeventeenTrack Entry from config_entry."""
 
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.services.async_remove(DOMAIN, SERVICE_ADD_PACKAGE)
+            del hass.data[DOMAIN]
 
-    if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_PACKAGE)
-        del hass.data[DOMAIN]
-
-    return True
+    return unload_ok
 
 
 class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
@@ -95,7 +98,7 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
         """Include archived packages when fetching data."""
         return self.config_entry.options.get(CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED)
 
-    async def async_update(self) -> dict:
+    async def async_update(self) -> dict[str, dict]:
         """Update SeventeenTrack data."""
         try:
             packages = await self.client.profile.packages(
@@ -128,16 +131,17 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
 
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed from err
-        except UnknownError as err:
+        except SeventeenTrackError as err:
             raise ConfigEntryNotReady(
                 f"There was an error while logging in: {err}"
             ) from err
 
-        async def async_add_package(service: ServiceCall):
+        async def async_add_package(service: ServiceCall) -> None:
             """Add new package."""
-            device: DeviceEntry = self.hass.helpers.device_registry.async_get(
-                self.hass
-            ).async_get(service.data[CONF_DEVICE_ID])
+            device_registry: DeviceRegistry = (
+                self.hass.helpers.device_registry.async_get(self.hass)
+            )
+            device = device_registry.async_get(service.data[CONF_DEVICE_ID])
             if device is None:
                 _LOGGER.error("17Track device not found")
                 return
@@ -170,7 +174,7 @@ class SeventeenTrackDataCoordinator(DataUpdateCoordinator):
         return True
 
     @staticmethod
-    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         hass.data[DOMAIN][entry.entry_id].update_interval = timedelta(
             minutes=entry.options[CONF_SCAN_INTERVAL]

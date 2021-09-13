@@ -110,7 +110,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "unique_id": "email@email.com",
+            "entry_id": entry.entry_id,
         },
     )
 
@@ -141,7 +141,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_api) -> None:
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "unique_id": "email@email.com",
+            "entry_id": entry.entry_id,
         },
     )
 

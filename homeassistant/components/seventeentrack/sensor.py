@@ -65,7 +65,7 @@ class SeventeenTrackBaseSensor(CoordinatorEntity, SensorEntity):
         """Return device information about this 17Track instance."""
         return {
             "identifiers": {(DOMAIN, self._username)},
-            "name": self.coordinator.config_entry.data[CONF_NAME],
+            "default_name": self.coordinator.config_entry.data[CONF_NAME],
             "manufacturer": "17Track",
             "entry_type": "service",
         }
@@ -82,7 +82,7 @@ class SeventeenTrackPackagesSensor(SeventeenTrackBaseSensor):
 
     @property
     def native_value(self) -> int:
-        """Return the state."""
+        """Return the native value."""
         return len(self.coordinator.data["packages"])
 
     @property
@@ -126,7 +126,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackBaseSensor):
 
     @property
     def native_value(self) -> str:
-        """Return the state."""
+        """Return the native value."""
         return self.coordinator.data["summary"][self.sensor_type]
 
     @property

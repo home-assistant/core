@@ -1,10 +1,10 @@
 add_package:
   name: Add Package
-  description: Add a new oackage to track.
+  description: Add a new package to track.
   fields:
-    account:
-      name: 17Track account
-      description: Select 17Track account.
+    device_id:
+      name: 17Track account device
+      description: Select the 17Track account device.
       required: true
       selector:
         device:

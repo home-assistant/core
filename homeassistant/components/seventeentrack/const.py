@@ -25,3 +25,5 @@ ATTR_TRACKING_INFO_LANGUAGE: Final = "tracking_info_language"
 ATTRIBUTION: Final = "Data provided by 17track.net"
 
 ICON: Final = "mdi:package"
+
+PLATFORMS: Final = ["sensor"]
