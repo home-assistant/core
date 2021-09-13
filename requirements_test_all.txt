@@ -1090,9 +1090,6 @@ python-tado==0.10.0
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
 
-# homeassistant.components.velbus
-python-velbus==2.1.2
-
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -1311,6 +1308,9 @@ url-normalize==1.4.1
 
 # homeassistant.components.uvc
 uvcclient==0.11.0
+
+# homeassistant.components.velbus
+velbus-aio==2021.9.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
