@@ -35,6 +35,16 @@ _MAXIMUM_INPUT_NUMBER = "input_number.maximum"
 # Represent for number's step
 _STEP_INPUT_NUMBER = "input_number.step"
 
+_VALUE_INPUT_NUMBER_CONFIG = {
+    "value": {
+        "min": 0.0,
+        "max": 100.0,
+        "name": "Value",
+        "step": 1.0,
+        "mode": "slider",
+    }
+}
+
 
 @pytest.fixture
 def calls(hass):
@@ -135,13 +145,7 @@ async def test_templates_with_entities(hass, calls):
             "input_number",
             {
                 "input_number": {
-                    "value": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Value",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
+                    **_VALUE_INPUT_NUMBER_CONFIG,
                     "step": {
                         "min": 0.0,
                         "max": 100.0,
@@ -342,17 +346,7 @@ async def test_icon_template(hass):
         assert await setup.async_setup_component(
             hass,
             "input_number",
-            {
-                "input_number": {
-                    "value": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Value",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
-                }
-            },
+            {"input_number": _VALUE_INPUT_NUMBER_CONFIG},
         )
 
     with assert_setup_component(1, "template"):
@@ -409,17 +403,7 @@ async def test_icon_template_with_trigger(hass):
         assert await setup.async_setup_component(
             hass,
             "input_number",
-            {
-                "input_number": {
-                    "value": {
-                        "min": 0.0,
-                        "max": 100.0,
-                        "name": "Value",
-                        "step": 1.0,
-                        "mode": "slider",
-                    },
-                }
-            },
+            {"input_number": _VALUE_INPUT_NUMBER_CONFIG},
         )
 
     with assert_setup_component(1, "template"):
