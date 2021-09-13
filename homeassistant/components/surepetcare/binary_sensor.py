@@ -23,16 +23,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up Sure PetCare Flaps binary sensors based on a config entry."""
-    if discovery_info is None:
-        return
 
     entities: list[SurepyEntity | Pet | Hub | DeviceConnectivity] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 
