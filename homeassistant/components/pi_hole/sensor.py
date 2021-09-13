@@ -65,7 +65,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
         description: PiHoleSensorEntityDescription,
     ) -> None:
         """Initialize a Pi-hole sensor."""
-        super().__init__(api, coordinator, name, server_unique_id)
+        super().__init__(api, api_versions, coordinator, name, server_unique_id)
         self.entity_description = description
 
         self._attr_name = f"{name} {description.name}"
