@@ -45,5 +45,5 @@ function check_for_crash() {
   esac
 }
 
-python3 -m homeassistant --config /config
-check_for_crash $?
+python3 -m homeassistant --config /config && exit_code=$? || exit_code=$?
+check_for_crash $exit_code
