@@ -22,7 +22,7 @@ function write_crash_report() {
   echo "Writing crash report to /config/hass_crash_report.$epoch"
   # dmesg may not run if all memory is exhausted since
   # only built-in commands will likely work at this point
-  dmesg -s 16384 >> /config/hass_crash_report.$timestamp
+  dmesg -s 16384 >> /config/hass_crash_report.$epoch
   return
 }
 
