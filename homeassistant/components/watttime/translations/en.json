@@ -16,14 +16,20 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
-                "title": "Input your latitude and longitude"
+                "description": "Input the latitude and longitude to monitor:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Location"
+                },
+                "description": "Pick a location to monitor:"
             },
             "login": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
                 },
-                "title": "Login to WattTime"
+                "description": "Input your username and password:"
             },
             "register": {
                 "data": {
@@ -32,11 +38,10 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "title": "Register for a WattTime Account"
+                "description": "Register for a WattTime account:"
             },
             "user": {
-                "description": "How you would like to authenticate with WattTime?",
-                "title": "Configure WattTime"
+                "description": "How you would like to authenticate with WattTime?"
             }
         }
     }

@@ -23,7 +23,14 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_BALANCING_AUTHORITY_ABBREV, DATA_COORDINATOR, DOMAIN
+from .const import (
+    CONF_BALANCING_AUTHORITY,
+    CONF_BALANCING_AUTHORITY_ABBREV,
+    DATA_COORDINATOR,
+    DOMAIN,
+)
+
+ATTR_BALANCING_AUTHORITY = "balancing_authority"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by WattTime"
 
@@ -97,6 +104,9 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_extra_state_attributes = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
+            ATTR_BALANCING_AUTHORITY: coordinator.config_entry.data[
+                CONF_BALANCING_AUTHORITY
+            ],
             ATTR_LATITUDE: coordinator.config_entry.data[ATTR_LATITUDE],
             ATTR_LONGITUDE: coordinator.config_entry.data[ATTR_LONGITUDE],
         }

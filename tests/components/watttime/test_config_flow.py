@@ -9,13 +9,17 @@ from aiowatttime.errors import (
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.watttime.config_flow import CONF_ORGANIZATION
+from homeassistant.components.watttime.config_flow import (
+    CONF_LOCATION_TYPE,
+    CONF_ORGANIZATION,
+    LOCATION_TYPE_COORDINATES,
+    LOCATION_TYPE_HOME,
+)
 from homeassistant.components.watttime.const import (
     AUTH_TYPE_LOGIN,
     AUTH_TYPE_REGISTER,
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_BALANCING_AUTHORITY_ID,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -61,12 +65,12 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
     """Test that errors are shown when duplicate entries are added."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="51.528308, -0.3817765",
+        unique_id="32.87336, -117.22743",
         data={
             CONF_USERNAME: "user",
             CONF_PASSWORD: "password",
-            CONF_LATITUDE: 51.528308,
-            CONF_LONGITUDE: -0.3817765,
+            CONF_LATITUDE: 32.87336,
+            CONF_LONGITUDE: -117.22743,
         },
     ).add_to_hass(hass)
 
@@ -81,12 +85,37 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
+        user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_HOME},
     )
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_show_form_coordinates(hass: HomeAssistant) -> None:
+    """Test showing the form to input coordinates."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"auth_type": AUTH_TYPE_LOGIN},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_COORDINATES},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "coordinates"
+    assert result["errors"] is None
 
 
 async def test_show_form_login(hass: HomeAssistant) -> None:
@@ -153,6 +182,10 @@ async def test_step_coordinates_unknown_coordinates(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_COORDINATES},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         user_input={CONF_LATITUDE: "0", CONF_LONGITUDE: "0"},
     )
     await hass.async_block_till_done()
@@ -178,7 +211,7 @@ async def test_step_coordinates_unknown_error(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_LATITUDE: "0", CONF_LONGITUDE: "0"},
+        user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_HOME},
     )
     await hass.async_block_till_done()
 
@@ -186,8 +219,8 @@ async def test_step_coordinates_unknown_error(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_step_login(hass: HomeAssistant, client_login) -> None:
-    """Test a full login flow."""
+async def test_step_login_coordinates(hass: HomeAssistant, client_login) -> None:
+    """Test a full login flow (inputting custom coordinates)."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.watttime.async_setup_entry",
@@ -204,7 +237,11 @@ async def test_step_login(hass: HomeAssistant, client_login) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
+            user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_COORDINATES},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LATITUDE: "51.528308", CONF_LONGITUDE: "-0.3817765"},
         )
         await hass.async_block_till_done()
 
@@ -217,7 +254,40 @@ async def test_step_login(hass: HomeAssistant, client_login) -> None:
         CONF_LONGITUDE: -0.3817765,
         CONF_BALANCING_AUTHORITY: "Authority 1",
         CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
-        CONF_BALANCING_AUTHORITY_ID: 1,
+    }
+
+
+async def test_step_login_home(hass: HomeAssistant, client_login) -> None:
+    """Test a full login flow (selecting the home location)."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "homeassistant.components.watttime.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={"auth_type": AUTH_TYPE_LOGIN},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_HOME},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "32.87336, -117.22743"
+    assert result["data"] == {
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "password",
+        CONF_LATITUDE: 32.87336,
+        CONF_LONGITUDE: -117.22743,
+        CONF_BALANCING_AUTHORITY: "Authority 1",
+        CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
     }
 
 
@@ -290,21 +360,19 @@ async def test_step_register(hass: HomeAssistant, client_login) -> None:
             },
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
+            result["flow_id"], user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_HOME}
         )
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "51.528308, -0.3817765"
+    assert result["title"] == "32.87336, -117.22743"
     assert result["data"] == {
         CONF_USERNAME: "user",
         CONF_PASSWORD: "password",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
+        CONF_LATITUDE: 32.87336,
+        CONF_LONGITUDE: -117.22743,
         CONF_BALANCING_AUTHORITY: "Authority 1",
         CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
-        CONF_BALANCING_AUTHORITY_ID: 1,
     }
 
 

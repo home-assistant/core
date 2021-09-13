@@ -1,7 +1,6 @@
 """Config flow for WattTime integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any
 
 from aiowatttime import Client
@@ -26,13 +25,33 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import (
     AUTH_TYPE_LOGIN,
     AUTH_TYPE_REGISTER,
+    CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
     DOMAIN,
     LOGGER,
 )
 
 CONF_AUTH_TYPE = "auth_type"
+CONF_LOCATION_TYPE = "location_type"
 CONF_ORGANIZATION = "organization"
+
+LOCATION_TYPE_COORDINATES = "Specify coordinates"
+LOCATION_TYPE_HOME = "Use home location"
+
+STEP_COORDINATES_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_LATITUDE): cv.latitude,
+        vol.Required(CONF_LONGITUDE): cv.longitude,
+    }
+)
+
+STEP_LOCATION_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_LOCATION_TYPE): vol.In(
+            [LOCATION_TYPE_HOME, LOCATION_TYPE_COORDINATES]
+        ),
+    }
+)
 
 STEP_LOGIN_DATA_SCHEMA = vol.Schema(
     {
@@ -65,30 +84,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._client: Client | None = None
+        self._location_type_step: str | None = None
         self._password: str | None = None
         self._username: str | None = None
-
-    @property
-    def coordinates_schema(self) -> vol.Schema:
-        """Return the coordinates schema."""
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Required(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
-            }
-        )
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the latitude/longitude step."""
+        """Handle the coordinates step."""
         if not user_input:
             return self.async_show_form(
-                step_id="coordinates", data_schema=self.coordinates_schema
+                step_id="coordinates", data_schema=STEP_COORDINATES_DATA_SCHEMA
             )
 
         if TYPE_CHECKING:
@@ -105,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CoordinatesNotFoundError:
             return self.async_show_form(
                 step_id="coordinates",
-                data_schema=self.coordinates_schema,
+                data_schema=STEP_COORDINATES_DATA_SCHEMA,
                 errors={CONF_LATITUDE: "unknown_coordinates"},
             )
 
@@ -113,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception while getting region: %s", err)
             return self.async_show_form(
                 step_id="coordinates",
-                data_schema=self.coordinates_schema,
+                data_schema=STEP_COORDINATES_DATA_SCHEMA,
                 errors={"base": "unknown"},
             )
 
@@ -124,8 +130,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self._password,
                 CONF_LATITUDE: user_input[CONF_LATITUDE],
                 CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                CONF_BALANCING_AUTHORITY: grid_region["name"],
                 CONF_BALANCING_AUTHORITY_ABBREV: grid_region["abbrev"],
             },
+        )
+
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the "pick a location" step."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="location", data_schema=STEP_LOCATION_DATA_SCHEMA
+            )
+
+        if user_input[CONF_LOCATION_TYPE] == LOCATION_TYPE_COORDINATES:
+            return self.async_show_form(
+                step_id="coordinates", data_schema=STEP_COORDINATES_DATA_SCHEMA
+            )
+        return await self.async_step_coordinates(
+            {
+                CONF_LATITUDE: self.hass.config.latitude,
+                CONF_LONGITUDE: self.hass.config.longitude,
+            }
         )
 
     async def async_step_login(
@@ -137,43 +164,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="login", data_schema=STEP_LOGIN_DATA_SCHEMA
             )
 
-        # If this is the first time we've seen these credentials, check that they're
-        # valid – this allows a user to configure multiple config entries without
-        # rechecking the credentials each time:
-        valid_creds = self.hass.data.setdefault(f"{DOMAIN}_checked_creds", set())
-        valid_creds_lock = self.hass.data.setdefault(
-            f"{DOMAIN}_checked_creds_lock", asyncio.Lock()
-        )
-
         session = aiohttp_client.async_get_clientsession(self.hass)
 
-        async with valid_creds_lock:
-            if user_input[CONF_USERNAME] not in valid_creds:
-                try:
-                    self._client = await Client.async_login(
-                        user_input[CONF_USERNAME],
-                        user_input[CONF_PASSWORD],
-                        session=session,
-                    )
-                except InvalidCredentialsError:
-                    return self.async_show_form(
-                        step_id="login",
-                        data_schema=STEP_LOGIN_DATA_SCHEMA,
-                        errors={CONF_USERNAME: "invalid_auth"},
-                    )
-                except Exception as err:  # pylint: disable=broad-except
-                    LOGGER.exception("Unexpected exception while logging in: %s", err)
-                    return self.async_show_form(
-                        step_id="login",
-                        data_schema=STEP_LOGIN_DATA_SCHEMA,
-                        errors={"base": "unknown"},
-                    )
-                else:
-                    valid_creds.add(user_input[CONF_USERNAME])
+        try:
+            self._client = await Client.async_login(
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session=session,
+            )
+        except InvalidCredentialsError:
+            return self.async_show_form(
+                step_id="login",
+                data_schema=STEP_LOGIN_DATA_SCHEMA,
+                errors={CONF_USERNAME: "invalid_auth"},
+            )
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.exception("Unexpected exception while logging in: %s", err)
+            return self.async_show_form(
+                step_id="login",
+                data_schema=STEP_LOGIN_DATA_SCHEMA,
+                errors={"base": "unknown"},
+            )
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        return await self.async_step_coordinates()
+        return await self.async_step_location()
 
     async def async_step_register(
         self, user_input: dict[str, Any] | None = None

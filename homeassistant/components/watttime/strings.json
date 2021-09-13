@@ -2,21 +2,27 @@
   "config": {
     "step": {
       "coordinates": {
-        "title": "Input your latitude and longitude",
+        "description": "Input the latitude and longitude to monitor:",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       },
+      "location": {
+        "description": "Pick a location to monitor:",
+        "data": {
+          "location_type": "[%key:common::config_flow::data::location%]"
+        }
+      },
       "login": {
-        "title": "Login to WattTime",
+        "description": "Input your username and password:",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "register": {
-        "title": "Register for a WattTime Account",
+        "description": "Register for a WattTime account:",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -25,7 +31,6 @@
         }
       },
       "user": {
-        "title": "Configure WattTime",
         "description": "How you would like to authenticate with WattTime?"
       }
     },
