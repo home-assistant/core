@@ -40,16 +40,20 @@ def skip_notifications_fixture() -> Iterable[None]:
         yield
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_ssdp_scanner() -> Iterable[Mock]:
     """Mock the SSDP module."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
+        reg_callback = mock_scanner.return_value.async_register_callback
+        reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
+        assert (
+            reg_callback.call_count == reg_callback.return_value.call_count
+        ), "Not all callbacks unregistered"
 
 
-@pytest.fixture
-def device_requests_mock(aioclient_mock) -> Iterable[AiohttpClientMocker]:
-    """Mock device responses to HTTP requests."""
+def configure_device_requests_mock(aioclient_mock: AiohttpClientMocker) -> None:
+    """Add mock device responses to existing AiohttpClient mock."""
     description_xml = load_fixture("dlna_dmr/dmr_description.xml")
     aioclient_mock.get(GOOD_DEVICE_LOCATION, text=description_xml)
     rc_desc_xml = load_fixture("dlna_dmr/rc_desc.xml")
@@ -85,6 +89,13 @@ def device_requests_mock(aioclient_mock) -> Iterable[AiohttpClientMocker]:
     igd_desc_xml = load_fixture("dlna_dmr/igd_desc.xml")
     aioclient_mock.get(WRONG_ST_DEVICE_LOCATION, text=igd_desc_xml)
 
+
+@pytest.fixture
+def device_requests_mock(
+    aioclient_mock: AiohttpClientMocker,
+) -> Iterable[AiohttpClientMocker]:
+    """Mock device responses to HTTP requests."""
+    configure_device_requests_mock(aioclient_mock)
     yield aioclient_mock
 
 

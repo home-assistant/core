@@ -19,14 +19,12 @@ from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Sure PetCare Flaps sensors."""
-    if discovery_info is None:
-        return
 
     entities: list[SurepyEntity] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 

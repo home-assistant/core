@@ -1551,7 +1551,7 @@ pykira==0.1.1
 pykmtronic==0.3.0
 
 # homeassistant.components.kodi
-pykodi==0.2.5
+pykodi==0.2.6
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
@@ -2389,6 +2389,9 @@ waterfurnace==1.1.0
 
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
+
+# homeassistant.components.whirlpool
+whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.wiffi
 wiffi==1.0.1

@@ -2,16 +2,17 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from collections.abc import Mapping, Sequence
+from datetime import datetime, timedelta
 import functools
-import logging
+from typing import Any, Callable, TypeVar, cast
 
-import aiohttp
-from async_upnp_client import UpnpFactory
-from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
+from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
 from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -24,12 +25,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.const import (
+    CONF_DEVICE_ID,
     CONF_NAME,
+    CONF_TYPE,
     CONF_URL,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -37,196 +37,310 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.device_registry import CONNECTION_UPNP
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_CALLBACK_URL_OVERRIDE,
+    CONF_LISTEN_PORT,
+    CONF_POLL_AVAILABILITY,
+    DEFAULT_NAME,
+    LOGGER as _LOGGER,
+)
+from .data import EventListenAddr, get_domain_data
 
-DLNA_DMR_DATA = "dlna_dmr"
-
-DEFAULT_NAME = "DLNA Digital Media Renderer"
-DEFAULT_LISTEN_PORT = 8301
-
+# Configuration via YAML is deprecated in favour of config flow
 CONF_LISTEN_IP = "listen_ip"
-CONF_LISTEN_PORT = "listen_port"
-CONF_CALLBACK_URL_OVERRIDE = "callback_url_override"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_LISTEN_IP): cv.string,
-        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CALLBACK_URL_OVERRIDE): cv.url,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_URL),
+    cv.deprecated(CONF_LISTEN_IP),
+    cv.deprecated(CONF_LISTEN_PORT),
+    cv.deprecated(CONF_NAME),
+    cv.deprecated(CONF_CALLBACK_URL_OVERRIDE),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_URL): cv.string,
+            vol.Optional(CONF_LISTEN_IP): cv.string,
+            vol.Optional(CONF_LISTEN_PORT): cv.port,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_CALLBACK_URL_OVERRIDE): cv.url,
+        }
+    ),
 )
 
-
-def catch_request_errors():
-    """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
-
-    def call_wrapper(func):
-        """Call wrapper for decorator."""
-
-        @functools.wraps(func)
-        async def wrapper(self, *args, **kwargs):
-            """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
-            try:
-                return await func(self, *args, **kwargs)
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                _LOGGER.error("Error during call %s", func.__name__)
-
-        return wrapper
-
-    return call_wrapper
+Func = TypeVar("Func", bound=Callable[..., Any])
 
 
-async def async_start_event_handler(
+def catch_request_errors(func: Func) -> Func:
+    """Catch UpnpError errors."""
+
+    @functools.wraps(func)
+    async def wrapper(self: "DlnaDmrEntity", *args: Any, **kwargs: Any) -> Any:
+        """Catch UpnpError errors and check availability."""
+        try:
+            return await func(self, *args, **kwargs)
+        except UpnpError as err:
+            self.check_available = True
+            _LOGGER.error("Error during call %s: %s(%s)", func.__name__, type(err), err)
+
+    return cast(Func, wrapper)
+
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    server_host: str,
-    server_port: int,
-    requester,
-    callback_url_override: str | None = None,
-):
-    """Register notify view."""
-    hass_data = hass.data[DLNA_DMR_DATA]
-    if "event_handler" in hass_data:
-        return hass_data["event_handler"]
+    entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the DlnaDmrEntity from a config entry."""
+    del hass  # Unused
+    _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
 
-    # start event handler
-    server = AiohttpNotifyServer(
-        requester,
-        listen_port=server_port,
-        listen_host=server_host,
-        callback_url=callback_url_override,
+    # Create our own device-wrapping entity
+    event_addr = EventListenAddr(
+        entry.options.get(CONF_LISTEN_PORT) or 0,
+        entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
     )
-    await server.start_server()
-    _LOGGER.info("UPNP/DLNA event handler listening, url: %s", server.callback_url)
-    hass_data["notify_server"] = server
-    hass_data["event_handler"] = server.event_handler
+    entity = DlnaDmrEntity(
+        udn=entry.data[CONF_DEVICE_ID],
+        device_type=entry.data[CONF_TYPE],
+        name=entry.title,
+        event_addr=event_addr,
+        poll_availability=entry.options.get(CONF_POLL_AVAILABILITY, False),
+        location=entry.data[CONF_URL],
+    )
 
-    # register for graceful shutdown
-    async def async_stop_server(event):
-        """Stop server."""
-        _LOGGER.debug("Stopping UPNP/DLNA event handler")
-        await server.stop_server()
+    entry.async_on_unload(
+        entry.add_update_listener(entity.async_config_update_listener)
+    )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_server)
-
-    return hass_data["event_handler"]
+    async_add_entities([entity], True)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant, config, async_add_entities, discovery_info=None
-):
-    """Set up DLNA DMR platform."""
-    if config.get(CONF_URL) is not None:
-        url = config[CONF_URL]
-        name = config.get(CONF_NAME)
-    elif discovery_info is not None:
-        url = discovery_info["ssdp_description"]
-        name = discovery_info.get("name")
+class DlnaDmrEntity(MediaPlayerEntity):
+    """Representation of a DLNA DMR device as a HA entity."""
 
-    if DLNA_DMR_DATA not in hass.data:
-        hass.data[DLNA_DMR_DATA] = {}
+    udn: str
+    device_type: str
 
-    if "lock" not in hass.data[DLNA_DMR_DATA]:
-        hass.data[DLNA_DMR_DATA]["lock"] = asyncio.Lock()
+    _event_addr: EventListenAddr
+    poll_availability: bool
+    # Last known URL for the device, used when adding this entity to hass to try
+    # to connect before SSDP has rediscovered it, or when SSDP discovery fails.
+    location: str
 
-    # build upnp/aiohttp requester
-    session = async_get_clientsession(hass)
-    requester = AiohttpSessionRequester(session, True)
+    _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
+    _device: DmrDevice | None = None
+    _remove_ssdp_callback: Callable | None = None
+    check_available: bool = False
 
-    # ensure event handler has been started
-    async with hass.data[DLNA_DMR_DATA]["lock"]:
-        server_host = config.get(CONF_LISTEN_IP)
-        if server_host is None:
-            server_host = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
-        server_port = config.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
-        callback_url_override = config.get(CONF_CALLBACK_URL_OVERRIDE)
-        event_handler = await async_start_event_handler(
-            hass, server_host, server_port, requester, callback_url_override
+    # Track BOOTID in SSDP advertisements for device changes
+    _bootid: int | None = None
+
+    # DMR devices need polling for track position information. async_update will
+    # determine whether further device polling is required.
+    _attr_should_poll = True
+
+    def __init__(
+        self,
+        udn: str,
+        device_type: str,
+        name: str,
+        event_addr: EventListenAddr,
+        poll_availability: bool,
+        location: str,
+    ) -> None:
+        """Initialize DLNA DMR entity."""
+        self.udn = udn
+        self.device_type = device_type
+        self._attr_name = name
+        self._event_addr = event_addr
+        self.poll_availability = poll_availability
+        self.location = location
+        self._device_lock = asyncio.Lock()
+
+    async def async_added_to_hass(self) -> None:
+        """Handle addition."""
+        # Try to connect to the last known location, but don't worry if not available
+        if not self._device:
+            try:
+                await self._device_connect(self.location)
+            except UpnpError as err:
+                _LOGGER.debug("Couldn't connect immediately: %s", err)
+
+        # Get SSDP notifications for only this device
+        self._remove_ssdp_callback = await ssdp.async_register_callback(
+            self.hass, self.async_ssdp_callback, {"USN": self.usn}
         )
 
-    # create upnp device
-    factory = UpnpFactory(requester, non_strict=True)
-    try:
-        upnp_device = await factory.async_create_device(url)
-    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-        raise PlatformNotReady() from err
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal."""
+        if self._remove_ssdp_callback:
+            self._remove_ssdp_callback()
+        await self._device_disconnect()
 
-    # wrap with DmrDevice
-    dlna_device = DmrDevice(upnp_device, event_handler)
+    async def async_ssdp_callback(
+        self, info: Mapping[str, Any], change: ssdp.SsdpChange
+    ) -> None:
+        """Handle notification from SSDP of device state change."""
+        _LOGGER.debug(
+            "SSDP %s notification of device %s at %s",
+            change,
+            info[ssdp.ATTR_SSDP_USN],
+            info.get(ssdp.ATTR_SSDP_LOCATION),
+        )
 
-    # create our own device
-    device = DlnaDmrDevice(dlna_device, name)
-    _LOGGER.debug("Adding device: %s", device)
-    async_add_entities([device], True)
+        bootid_str = info.get(ssdp.ATTR_SSDP_BOOTID)
+        if bootid_str:
+            bootid = int(bootid_str, 10)
+            if self._bootid is not None and self._bootid != bootid and self._device:
+                # Device has rebooted, drop existing connection and maybe reconnect
+                await self._device_disconnect()
+            self._bootid = bootid
 
+        if change == ssdp.SsdpChange.BYEBYE and self._device:
+            # Device is going away, disconnect
+            await self._device_disconnect()
 
-class DlnaDmrDevice(MediaPlayerEntity):
-    """Representation of a DLNA DMR device."""
+        if (
+            change in (ssdp.SsdpChange.ALIVE, ssdp.SsdpChange.UPDATE)
+            and not self._device
+        ):
+            location = info[ssdp.ATTR_SSDP_LOCATION]
+            await self._device_connect(location)
 
-    def __init__(self, dmr_device, name=None):
-        """Initialize DLNA DMR device."""
-        self._device = dmr_device
-        self._name = name
+    async def async_config_update_listener(
+        self, hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Handle options update by modifying self in-place."""
+        del hass  # Unused
+        _LOGGER.debug(
+            "Updating: %s with data=%s and options=%s",
+            self.name,
+            entry.data,
+            entry.options,
+        )
+        self.location = entry.data[CONF_URL]
+        self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
 
-        self._available = False
-        self._subscription_renew_time = None
+        new_event_addr = EventListenAddr(
+            entry.options.get(CONF_LISTEN_PORT) or 0,
+            entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
+        )
+        if new_event_addr != self._event_addr:
+            self._event_addr = new_event_addr
+            # Changes to eventing requires a device reconnect for it to update correctly
+            await self._device_disconnect()
+            try:
+                await self._device_connect(self.location)
+            except UpnpError as err:
+                _LOGGER.debug("Couldn't (re)connect: %s", err)
 
-    async def async_added_to_hass(self):
-        """Handle addition."""
-        self._device.on_event = self._on_event
+    async def _device_connect(self, location: str) -> None:
+        """Connect to the device now that it's available."""
+        _LOGGER.debug("Connecting to device at %s", location)
 
-        # Register unsubscribe on stop
-        bus = self.hass.bus
-        bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_on_hass_stop)
+        async with self._device_lock:
+            if self._device:
+                _LOGGER.debug("Trying to connect when device already connected")
+                return
+
+            domain_data = get_domain_data(self.hass)
+
+            # Connect to the base UPNP device
+            upnp_device = await domain_data.upnp_factory.async_create_device(location)
+
+            # Create/get event handler that is reachable by the device
+            event_handler = await domain_data.async_get_event_notifier(
+                self._event_addr, self.hass.loop
+            )
+
+            # Create profile wrapper
+            self._device = DmrDevice(upnp_device, event_handler)
+
+            # Set hass device information now that it's known.
+            self._attr_device_info = {
+                "name": self._device.name,
+                # Connection is based on the root device's UDN, which is
+                # currently equivalent to our UDN (embedded devices aren't
+                # supported by async_upnp_client)
+                "connections": {(CONNECTION_UPNP, self._device.udn)},
+                "manufacturer": self._device.manufacturer,
+                "model": self._device.model_name,
+            }
+
+            self.location = location
+
+            # Subscribe to event notifications
+            try:
+                self._device.on_event = self._on_event
+                await self._device.async_subscribe_services(auto_resubscribe=True)
+            except UpnpError as err:
+                # Don't leave the device half-constructed
+                self._device = None
+                _LOGGER.debug("Error while subscribing during device connect: %s", err)
+                raise
+
+    async def _device_disconnect(self) -> None:
+        """Destroy connections to the device now that it's not available.
+
+        Also call when removing this entity from hass to clean up connections.
+        """
+        async with self._device_lock:
+            if not self._device:
+                _LOGGER.debug("Disconnecting from device that's not connected")
+                return
+
+            _LOGGER.debug("Disconnecting from %s", self._device.name)
+
+            self._device.on_event = None
+            old_device = self._device
+            self._device = None
+            await old_device.async_unsubscribe_services()
 
     @property
-    def available(self):
-        """Device is available."""
-        return self._available
+    def available(self) -> bool:
+        """Device is available when we have a connection to it."""
+        return self._device is not None and self._device.device.available
 
-    async def _async_on_hass_stop(self, event):
-        """Event handler on Home Assistant stop."""
-        async with self.hass.data[DLNA_DMR_DATA]["lock"]:
-            await self._device.async_unsubscribe_services()
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve the latest data."""
-        was_available = self._available
+        if not self._device:
+            if not self.poll_availability:
+                return
+            try:
+                await self._device_connect(self.location)
+            except UpnpError:
+                return
+
+        assert self._device is not None
 
         try:
-            await self._device.async_update()
-            self._available = True
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            self._available = False
+            do_ping = self.poll_availability or self.check_available
+            await self._device.async_update(do_ping=do_ping)
+        except UpnpError:
             _LOGGER.debug("Device unavailable")
+            await self._device_disconnect()
             return
+        finally:
+            self.check_available = False
 
-        # do we need to (re-)subscribe?
-        now = dt_util.utcnow()
-        should_renew = (
-            self._subscription_renew_time and now >= self._subscription_renew_time
-        )
-        if should_renew or not was_available and self._available:
-            try:
-                timeout = await self._device.async_subscribe_services()
-                self._subscription_renew_time = dt_util.utcnow() + timeout / 2
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                self._available = False
-                _LOGGER.debug("Could not (re)subscribe")
-
-    def _on_event(self, service, state_variables):
+    def _on_event(
+        self, service: UpnpService, state_variables: Sequence[UpnpStateVariable]
+    ) -> None:
         """State variable(s) changed, let home-assistant know."""
+        del service  # Unused
+        if not state_variables:
+            # Indicates a failure to resubscribe, check if device is still available
+            self.check_available = True
         self.schedule_update_ha_state()
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
+        if not self._device:
+            return 0
+
         supported_features = 0
 
         if self._device.has_volume_level:
@@ -251,70 +365,91 @@ class DlnaDmrDevice(MediaPlayerEntity):
         return supported_features
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._device.has_volume_level:
-            return self._device.volume_level
-        return 0
+        if (
+            not self._device
+            or not self._device.has_volume_level
+            or self._device.volume_level is None
+        ):
+            _LOGGER.debug("Cannot get volume level")
+            return None
+        return self._device.volume_level
 
-    @catch_request_errors()
-    async def async_set_volume_level(self, volume):
+    @catch_request_errors
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
+        if not self._device or not self._device.has_volume_level:
+            _LOGGER.debug("Cannot set volume level")
+            return
         await self._device.async_set_volume_level(volume)
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
+        if not self._device or not self._device.has_volume_mute:
+            _LOGGER.debug("Cannot get volume mute")
+            return None
         return self._device.is_volume_muted
 
-    @catch_request_errors()
-    async def async_mute_volume(self, mute):
+    @catch_request_errors
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
+        if not self._device or not self._device.has_volume_mute:
+            _LOGGER.debug("Cannot set volume mute")
+            return
+
         desired_mute = bool(mute)
         await self._device.async_mute_volume(desired_mute)
 
-    @catch_request_errors()
-    async def async_media_pause(self):
+    @catch_request_errors
+    async def async_media_pause(self) -> None:
         """Send pause command."""
-        if not self._device.can_pause:
+        if not self._device or not self._device.can_pause:
             _LOGGER.debug("Cannot do Pause")
             return
 
         await self._device.async_pause()
 
-    @catch_request_errors()
-    async def async_media_play(self):
+    @catch_request_errors
+    async def async_media_play(self) -> None:
         """Send play command."""
-        if not self._device.can_play:
+        if not self._device or not self._device.can_play:
             _LOGGER.debug("Cannot do Play")
             return
 
         await self._device.async_play()
 
-    @catch_request_errors()
-    async def async_media_stop(self):
+    @catch_request_errors
+    async def async_media_stop(self) -> None:
         """Send stop command."""
-        if not self._device.can_stop:
+        if not self._device or not self._device.can_stop:
             _LOGGER.debug("Cannot do Stop")
             return
 
         await self._device.async_stop()
 
-    @catch_request_errors()
-    async def async_media_seek(self, position):
+    @catch_request_errors
+    async def async_media_seek(self, position: int | float) -> None:
         """Send seek command."""
-        if not self._device.can_seek_rel_time:
+        if not self._device or not self._device.can_seek_rel_time:
             _LOGGER.debug("Cannot do Seek/rel_time")
             return
 
         time = timedelta(seconds=position)
         await self._device.async_seek_rel_time(time)
 
-    @catch_request_errors()
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    @catch_request_errors
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         title = "Home Assistant"
+
+        if not self._device or not self._device.has_play_media:
+            _LOGGER.debug("Cannot do play / set_transport_uri")
+            return
 
         # Stop current playing media
         if self._device.can_stop:
@@ -331,41 +466,45 @@ class DlnaDmrDevice(MediaPlayerEntity):
         # Play it
         await self.async_media_play()
 
-    @catch_request_errors()
-    async def async_media_previous_track(self):
+    @catch_request_errors
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if not self._device.can_previous:
+        if not self._device or not self._device.can_previous:
             _LOGGER.debug("Cannot do Previous")
             return
 
         await self._device.async_previous()
 
-    @catch_request_errors()
-    async def async_media_next_track(self):
+    @catch_request_errors
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if not self._device.can_next:
+        if not self._device or not self._device.can_next:
             _LOGGER.debug("Cannot do Next")
             return
 
         await self._device.async_next()
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
+        if not self._device:
+            return None
         return self._device.media_title
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
+        if not self._device:
+            return None
         return self._device.media_image_url
 
     @property
-    def state(self):
+    def state(self) -> str:
         """State of the player."""
-        if not self._available:
+        if not self._device or not self.available:
             return STATE_OFF
 
-        if self._device.state is None:
+        if self._device.state == DeviceState.ON:
             return STATE_ON
         if self._device.state == DeviceState.PLAYING:
             return STATE_PLAYING
@@ -375,31 +514,35 @@ class DlnaDmrDevice(MediaPlayerEntity):
         return STATE_IDLE
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
+        if not self._device:
+            return None
         return self._device.media_duration
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
+        if not self._device:
+            return None
         return self._device.media_position
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid.
 
         Returns value from homeassistant.util.dt.utcnow().
         """
+        if not self._device:
+            return None
         return self._device.media_position_updated_at
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        if self._name:
-            return self._name
-        return self._device.name
+    def unique_id(self) -> str:
+        """Report the UDN (Unique Device Name) as this entity's unique ID."""
+        return self.udn
 
     @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return self._device.udn
+    def usn(self) -> str:
+        """Get the USN based on the UDN (Unique Device Name) and device type."""
+        return f"{self.udn}::{self.device_type}"
