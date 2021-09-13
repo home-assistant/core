@@ -16,9 +16,8 @@ function write_crash_report() {
   # be enough memory to execute an external command
   local exit_signal=${1}
   local epoch="$(printf "%(%s)T")"
-  local isoformat="$(printf "%(%Y-%m-%d %H:%M:%S%z)T")"
 
-  echo "Home Assistant exited with signal $exit_signal at $isoformat" > /config/hass_crash_report.$epoch
+  echo "Home Assistant exited with signal $exit_signal" > /config/hass_crash_report.$epoch
   echo "Writing crash report to /config/hass_crash_report.$epoch"
   # only built-in commands will likely work at this point if we are out of memory
   return
