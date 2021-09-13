@@ -35,6 +35,7 @@ _MAXIMUM_INPUT_NUMBER = "input_number.maximum"
 # Represent for number's step
 _STEP_INPUT_NUMBER = "input_number.step"
 
+# Config for `_VALUE_INPUT_NUMBER`
 _VALUE_INPUT_NUMBER_CONFIG = {
     "value": {
         "min": 0.0,
