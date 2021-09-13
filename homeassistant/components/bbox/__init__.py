@@ -12,7 +12,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bbox from a config entry."""
     coordinator = BboxCoordinator(hass, entry)
     # This will set data for device_info
-    await coordinator.set_device_info()
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

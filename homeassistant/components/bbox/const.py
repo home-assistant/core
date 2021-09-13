@@ -2,4 +2,4 @@
 
 DOMAIN = "bbox"
 # TODO : switch
-PLATFORMS = ["sensor", "device_tracker"]
+PLATFORMS = ["sensor", "switch", "device_tracker"]

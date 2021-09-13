@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 import socket
-from typing import Callable, TypedDict
+from typing import Any, Callable, TypedDict
 
 import pybbox2
 from pybbox2.bbox_api import BboxApiEndpoints
@@ -32,6 +32,8 @@ class BboxData(TypedDict):
     current_up_bandwidth: int
     current_up_bandwidth_max: int
     number_of_reboots: int
+    wifi_enabled: bool
+    wifi_attrs: dict[str, Any]
     device_info: DeviceInfo
 
 
@@ -49,11 +51,13 @@ class BboxScannedDevice(TypedDict):
     device_info: DeviceInfo
 
 
-def bbox_request_raising(bbox: pybbox2.Bbox, endpoints: tuple[str, str]):
+def bbox_request_raising(
+    bbox: pybbox2.Bbox, endpoints: tuple[str, str], data: dict | None = None
+):
     """Do a Bbox request and raise exceptions on errors."""
     try:
         host = bbox.api_host
-        result = bbox.request(*endpoints)
+        result = bbox.request(*endpoints, data=data)
 
     except (
         socket.gaierror,
@@ -98,6 +102,8 @@ class BboxCoordinator(DataUpdateCoordinator[BboxData]):
 
         self.listeners: list[Callable] = []
 
+        self.update_device_info()
+
     @property
     def entry_id(self) -> str:
         """Return entry ID."""
@@ -113,7 +119,7 @@ class BboxCoordinator(DataUpdateCoordinator[BboxData]):
         """Event specific per Freebox entry to signal updates in devices."""
         return f"{DOMAIN}-{self._entry.entry_id}-device-update"
 
-    async def set_device_info(self) -> None:
+    async def update_device_info(self) -> None:
         """Set device info from Bbox requests."""
         box_info = await self.hass.async_add_executor_job(
             bbox_request_raising, self.bbox, BboxApiEndpoints.get_bbox_info
@@ -142,7 +148,7 @@ class BboxCoordinator(DataUpdateCoordinator[BboxData]):
             # default_model = "",
         )
 
-    async def get_hosts_info(self) -> None:
+    async def update_hosts_info(self) -> None:
         """Get scanned devices and save in in the class."""
         hosts = await self.hass.async_add_executor_job(
             bbox_request_raising, self.bbox, BboxApiEndpoints.get_all_connected_devices
@@ -177,16 +183,23 @@ class BboxCoordinator(DataUpdateCoordinator[BboxData]):
 
     async def _async_update_data(self) -> BboxData:
         """Get the latest data from the Bbox."""
-        await self.get_hosts_info()
+        await self.update_hosts_info()
 
         ip_stats = await self.hass.async_add_executor_job(
             bbox_request_raising, self.bbox, BboxApiEndpoints.get_ip_stats
         )
         ip_stats = ip_stats["wan"]["ip"]["stats"]
+
         box_info = await self.hass.async_add_executor_job(
             bbox_request_raising, self.bbox, BboxApiEndpoints.get_bbox_info
         )
         device_info = box_info["device"]
+
+        wifi_info = await self.hass.async_add_executor_job(
+            bbox_request_raising, self.bbox, ("get", "v1/wireless")
+        )
+        wifi_info = wifi_info["wireless"]["radio"]
+        wifi_enabled = (wifi_info["24"]["enable"] + wifi_info["5"]["enable"]) > 0
 
         data = BboxData(
             current_down_bandwidth=ip_stats["rx"]["bandwidth"],
@@ -194,6 +207,18 @@ class BboxCoordinator(DataUpdateCoordinator[BboxData]):
             current_up_bandwidth=ip_stats["tx"]["bandwidth"],
             current_up_bandwidth_max=ip_stats["tx"]["maxBandwidth"],
             number_of_reboots=device_info["numberofboots"],
+            wifi_enabled=wifi_enabled,
+            wifi_attrs={
+                "2.4GHz": wifi_info["24"],
+                "5GHz": wifi_info["5"],
+            },
             device_info=self.device_info,
         )
         return data
+
+    async def set_wifi(self, enable):
+        """Set wifi state (both 2.4GHz and 5GHz)."""
+        data = {"enable": enable}
+        await self.hass.async_add_executor_job(
+            bbox_request_raising, self.bbox, ("put", "v1/wireless"), data=data
+        )
