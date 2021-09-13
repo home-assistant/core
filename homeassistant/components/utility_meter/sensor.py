@@ -318,7 +318,9 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
             source_state = self.hass.states.get(self._sensor_source_id)
-            if self._unit_of_measurement is None and source_state:
+            if (
+                self._unit_of_measurement is None or self._state is None
+            ) and source_state:
                 self._unit_of_measurement = source_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT
                 )
