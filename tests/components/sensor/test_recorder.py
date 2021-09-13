@@ -95,6 +95,7 @@ def test_compile_hourly_statistics(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -159,6 +160,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(13.050847),
                 "min": approx(-10.0),
                 "max": approx(30.0),
@@ -173,6 +175,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
             {
                 "statistic_id": "sensor.test6",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(13.050847),
                 "min": approx(-10.0),
                 "max": approx(30.0),
@@ -187,6 +190,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
             {
                 "statistic_id": "sensor.test7",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(13.050847),
                 "min": approx(-10.0),
                 "max": approx(30.0),
@@ -260,6 +264,7 @@ def test_compile_hourly_sum_statistics_amount(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -272,6 +277,7 @@ def test_compile_hourly_sum_statistics_amount(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -284,6 +290,7 @@ def test_compile_hourly_sum_statistics_amount(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -360,6 +367,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -426,6 +434,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -492,6 +501,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -504,6 +514,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -516,6 +527,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -578,6 +590,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -590,6 +603,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -602,6 +616,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -675,6 +690,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "last_reset": None,
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -687,6 +703,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "last_reset": None,
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -699,6 +716,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "last_reset": None,
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -767,6 +785,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -779,6 +798,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -791,6 +811,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -856,6 +877,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -868,6 +890,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -880,6 +903,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -894,6 +918,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test2",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -906,6 +931,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test2",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -918,6 +944,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test2",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -932,6 +959,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test3",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -944,6 +972,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test3",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -956,6 +985,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test3",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1011,6 +1041,7 @@ def test_compile_hourly_statistics_unchanged(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(four),
+                "end": process_timestamp_to_utc_isoformat(four + timedelta(hours=1)),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -1045,6 +1076,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(21.1864406779661),
                 "min": approx(10.0),
                 "max": approx(25.0),
@@ -1104,6 +1136,7 @@ def test_compile_hourly_statistics_unavailable(
             {
                 "statistic_id": "sensor.test2",
                 "start": process_timestamp_to_utc_isoformat(four),
+                "end": process_timestamp_to_utc_isoformat(four + timedelta(hours=1)),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -1256,6 +1289,7 @@ def test_compile_hourly_statistics_changing_units_1(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -1284,6 +1318,7 @@ def test_compile_hourly_statistics_changing_units_1(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -1391,6 +1426,7 @@ def test_compile_hourly_statistics_changing_units_3(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -1417,6 +1453,7 @@ def test_compile_hourly_statistics_changing_units_3(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -1497,6 +1534,7 @@ def test_compile_hourly_statistics_changing_statistics(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
                 "mean": approx(mean),
                 "min": approx(min),
                 "max": approx(max),
@@ -1509,6 +1547,7 @@ def test_compile_hourly_statistics_changing_statistics(
             {
                 "statistic_id": "sensor.test1",
                 "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
                 "mean": None,
                 "min": None,
                 "max": None,
