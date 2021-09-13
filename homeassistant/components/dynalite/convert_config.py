@@ -149,24 +149,24 @@ def convert_config(
         CONF_AUTO_DISCOVER: dyn_const.CONF_AUTO_DISCOVER,
         CONF_POLL_TIMER: dyn_const.CONF_POLL_TIMER,
     }
-    result = convert_with_map(config, my_map)
-    if CONF_AREA in config:
+    result = {**convert_with_map(config, my_map), **convert_with_map(options, my_map)}
+    if CONF_AREA in options:
         result[dyn_const.CONF_AREA] = {
             area: convert_area(area_conf)
-            for (area, area_conf) in config[CONF_AREA].items()
+            for (area, area_conf) in options[CONF_AREA].items()
         }
-    if CONF_DEFAULT in config:
-        result[dyn_const.CONF_DEFAULT] = convert_default(config[CONF_DEFAULT])
-    if CONF_ACTIVE in config:
-        result[dyn_const.CONF_ACTIVE] = ACTIVE_MAP[config[CONF_ACTIVE]]
-    if CONF_PRESET in config:
+    if CONF_DEFAULT in options:
+        result[dyn_const.CONF_DEFAULT] = convert_default(options[CONF_DEFAULT])
+    if CONF_ACTIVE in options:
+        result[dyn_const.CONF_ACTIVE] = ACTIVE_MAP[options[CONF_ACTIVE]]
+    if CONF_PRESET in options:
         result[dyn_const.CONF_PRESET] = {
             preset: convert_preset(preset_conf)
-            for (preset, preset_conf) in config[CONF_PRESET].items()
+            for (preset, preset_conf) in options[CONF_PRESET].items()
         }
-    if CONF_TEMPLATE in config:
+    if CONF_TEMPLATE in options:
         result[dyn_const.CONF_TEMPLATE] = {
             TEMPLATE_MAP[template]: convert_template(template_conf)
-            for (template, template_conf) in config[CONF_TEMPLATE].items()
+            for (template, template_conf) in options[CONF_TEMPLATE].items()
         }
     return result

@@ -18,7 +18,9 @@ from tests.common import MockConfigEntry
         (True, False, "create_entry", config_entries.ConfigEntryState.SETUP_RETRY, ""),
     ],
 )
-async def test_flow(hass, first_con, second_con, exp_type, exp_result, exp_reason):
+async def test_import_flow(
+    hass, first_con, second_con, exp_type, exp_result, exp_reason
+):
     """Run a flow with or without errors and return result."""
     host = "1.2.3.4"
     with patch(
@@ -93,7 +95,7 @@ async def test_two_entries(hass):
     host1 = "1.2.3.4"
     host2 = "5.6.7.8"
     MockConfigEntry(
-        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host1}
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host1}, version=2
     ).add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -106,3 +108,79 @@ async def test_two_entries(hass):
         )
     assert result["type"] == "create_entry"
     assert result["result"].state == config_entries.ConfigEntryState.LOADED
+
+
+async def test_user_flow(hass):
+    """Test the basic user initiated flow."""
+    result = await hass.config_entries.flow.async_init(
+        dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    host = "1.2.3.4"
+    port = 724
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {dynalite.CONF_HOST: host, dynalite.CONF_PORT: port},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == host
+    assert result["data"] == {dynalite.CONF_HOST: host, dynalite.CONF_PORT: port}
+
+
+async def test_user_flow_cannot_connect(hass):
+    """Test user flow with a connection error."""
+    result = await hass.config_entries.flow.async_init(
+        dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    host = "1.2.3.4"
+    port = 724
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {dynalite.CONF_HOST: host, dynalite.CONF_PORT: port},
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_generic_exception(hass):
+    """Test user flow with a generic exception."""
+    result = await hass.config_entries.flow.async_init(
+        dynalite.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] is None
+
+    host = "1.2.3.4"
+    port = 724
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {dynalite.CONF_HOST: host, dynalite.CONF_PORT: port},
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "unknown"}

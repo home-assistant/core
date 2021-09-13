@@ -299,7 +299,10 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         save_data = config_entry.data
         config_keys = [CONF_HOST, CONF_PORT]
         config_entry.data = MappingProxyType(
-            {key: value for (key, value) in save_data.items() if key in config_keys}
+            {
+                CONF_HOST: save_data[CONF_HOST],
+                CONF_PORT: save_data.get(CONF_PORT, DEFAULT_PORT),
+            }
         )
         config_entry.options = MappingProxyType(
             {key: value for (key, value) in save_data.items() if key not in config_keys}

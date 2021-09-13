@@ -64,10 +64,15 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
 
+        dict_input = user_input or {}
         step_schema = vol.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+                vol.Required(
+                    CONF_HOST, default=dict_input.get(CONF_HOST, "")
+                ): cv.string,
+                vol.Required(
+                    CONF_PORT, default=dict_input.get(CONF_PORT, DEFAULT_PORT)
+                ): cv.positive_int,
             }
         )
 

@@ -1,6 +1,7 @@
 """Test Dynalite __init__."""
 
 
+from types import MappingProxyType
 from unittest.mock import call, patch
 
 import pytest
@@ -281,3 +282,25 @@ async def test_unload_entry(hass):
         expected_calls = [call(entry, platform) for platform in dynalite.PLATFORMS]
         for cur_call in mock_unload.mock_calls:
             assert cur_call in expected_calls
+
+
+async def test_migrate(hass):
+    """Test migration from version 1."""
+    host = "1.2.3.4"
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN,
+        data={CONF_HOST: host, dynalite.CONF_AUTO_DISCOVER: True},
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 1
+    hass_entry = hass.config_entries.async_entries(dynalite.DOMAIN)[0]
+    assert hass_entry.data == MappingProxyType(
+        {CONF_HOST: host, CONF_PORT: dynalite.DEFAULT_PORT}
+    )
+    assert hass_entry.options == MappingProxyType({dynalite.CONF_AUTO_DISCOVER: True})
