@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TypeVar
 
 from pyfronius import Fronius, FroniusError
 
@@ -13,7 +14,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DEFAULT_UPDATE_INTERVAL,
@@ -26,10 +26,15 @@ from .coordinator import (
     FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
+    _FroniusUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[str] = ["sensor"]
+
+FroniusCoordinatorType = TypeVar(
+    "FroniusCoordinatorType", bound=_FroniusUpdateCoordinator
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -79,7 +84,7 @@ class FroniusSolarNet:
         session = async_get_clientsession(self.hass)
         return Fronius(session, self.host)
 
-    async def init_devices(self):
+    async def init_devices(self) -> None:
         """Initialize DataUpdateCoordinators for SolarNet devices."""
         solar_net_device_info = await self._create_solar_net_device()
         _inverter_infos = await self._get_inverter_infos()
@@ -182,8 +187,8 @@ class FroniusSolarNet:
 
     @staticmethod
     async def _init_optional_coordinator(
-        coordinator: DataUpdateCoordinator,
-    ) -> DataUpdateCoordinator | None:
+        coordinator: FroniusCoordinatorType,
+    ) -> FroniusCoordinatorType | None:
         """Initialize an update coordinator and return it if devices are found."""
         try:
             await coordinator.async_config_entry_first_refresh()

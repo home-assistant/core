@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -56,7 +57,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up Fronius sensor entities based on a config entry."""
     solar_net: FroniusSolarNet = hass.data[DOMAIN][config_entry.entry_id]
     for inverter_coordinator in solar_net.inverter_coordinators:
@@ -82,7 +83,7 @@ class InverterSensor(FroniusEntity, SensorEntity):
 
     coordinator: FroniusInverterUpdateCoordinator
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up an individual Fronius inverter sensor."""
         super().__init__(*args, **kwargs)
         # device_info created in __init__ from a `GetInverterInfo` request
@@ -100,7 +101,7 @@ class MeterSensor(FroniusEntity, SensorEntity):
 
     coordinator: FroniusMeterUpdateCoordinator
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up an individual Fronius meter sensor."""
         super().__init__(*args, **kwargs)
         meter_data = self._device_data
@@ -129,7 +130,7 @@ class PowerFlowSensor(FroniusEntity, SensorEntity):
 
     coordinator: FroniusPowerFlowUpdateCoordinator
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up an individual Fronius power flow sensor."""
         super().__init__(*args, **kwargs)
         # device_info created in __init__ from a `GetLoggerInfo` or `GetInverterInfo` request
@@ -148,7 +149,7 @@ class StorageSensor(FroniusEntity, SensorEntity):
 
     coordinator: FroniusStorageUpdateCoordinator
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up an individual Fronius storage sensor."""
         super().__init__(*args, **kwargs)
         storage_data = self._device_data

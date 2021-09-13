@@ -33,7 +33,7 @@ class _FroniusUpdateCoordinator(
 
     valid_descriptions: Mapping[str, EntityDescription]
 
-    def __init__(self, *args, solar_net: FroniusSolarNet, **kwargs) -> None:
+    def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the _FroniusUpdateCoordinator class."""
         self.fronius: Fronius = solar_net.fronius
         self.solar_net_device_id = solar_net.solar_net_device_id
@@ -71,7 +71,7 @@ class _FroniusUpdateCoordinator(
         """
 
         @callback
-        def _add_entities_for_unregistered_keys():
+        def _add_entities_for_unregistered_keys() -> None:
             """Add entities for keys seen for the first time."""
             new_entities: list = []
             for solar_net_id, device_data in self.data.items():
@@ -96,7 +96,9 @@ class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
 
     valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
-    def __init__(self, *args, inverter_info: FroniusDeviceInfo, **kwargs) -> None:
+    def __init__(
+        self, *args: Any, inverter_info: FroniusDeviceInfo, **kwargs: Any
+    ) -> None:
         """Set up a Fronius inverter device scope coordinator."""
         super().__init__(*args, **kwargs)
         self.inverter_info = inverter_info
@@ -117,7 +119,7 @@ class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.fronius.current_system_meter_data()
-        return data["meters"]
+        return data["meters"]  # type: ignore[no-any-return]
 
 
 class FroniusPowerFlowUpdateCoordinator(_FroniusUpdateCoordinator):
@@ -125,7 +127,9 @@ class FroniusPowerFlowUpdateCoordinator(_FroniusUpdateCoordinator):
 
     valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
 
-    def __init__(self, *args, power_flow_info: FroniusDeviceInfo, **kwargs) -> None:
+    def __init__(
+        self, *args: Any, power_flow_info: FroniusDeviceInfo, **kwargs: Any
+    ) -> None:
         """Set up a Fronius power flow coordinator."""
         super().__init__(*args, **kwargs)
         self.power_flow_info = power_flow_info
@@ -144,7 +148,7 @@ class FroniusStorageUpdateCoordinator(_FroniusUpdateCoordinator):
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
         data = await self.fronius.current_system_storage_data()
-        return data["storages"]
+        return data["storages"]  # type: ignore[no-any-return]
 
 
 class FroniusEntity(CoordinatorEntity):
@@ -163,7 +167,7 @@ class FroniusEntity(CoordinatorEntity):
 
     @property
     def _device_data(self) -> dict[str, Any]:
-        return self.coordinator.data[self.solar_net_id]
+        return self.coordinator.data[self.solar_net_id]  # type: ignore[no-any-return]
 
     @callback
     def _handle_coordinator_update(self) -> None:

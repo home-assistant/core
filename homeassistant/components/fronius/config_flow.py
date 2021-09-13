@@ -106,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, conf: dict):
+    async def async_step_import(self, conf: dict) -> FlowResult:
         """Import a configuration from config.yaml."""
         return await self.async_step_user(user_input={CONF_HOST: conf[CONF_RESOURCE]})
 
