@@ -42,6 +42,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
+    async_mock_service,
     mock_restore_cache,
 )
 from tests.components.climate import common
@@ -1392,23 +1393,17 @@ async def test_restore_will_turn_off_when_loaded_second(hass):
     assert state.attributes[ATTR_TEMPERATURE] == 20
     assert state.state == HVAC_MODE_OFF
 
-    calls = []
-
-    @callback
-    def log_call(call):
-        """Log service calls."""
-        calls.append(call)
-
-    hass.services.async_register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
-    hass.services.async_register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
+    calls_on = async_mock_service(hass, ha.DOMAIN, SERVICE_TURN_ON)
+    calls_off = async_mock_service(hass, ha.DOMAIN, SERVICE_TURN_OFF)
 
     assert await async_setup_component(
         hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
     )
     await hass.async_block_till_done()
     # heater must be switched off
-    assert len(calls) == 1
-    call = calls[0]
+    assert len(calls_on) == 0
+    assert len(calls_off) == 1
+    call = calls_off[0]
     assert call.domain == HASS_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == "input_boolean.test"
