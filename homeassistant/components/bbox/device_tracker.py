@@ -1,97 +1,129 @@
 """Support for French FAI Bouygues Bbox routers."""
 from __future__ import annotations
 
-from collections import namedtuple
-from datetime import timedelta
-import logging
+from typing import Any
 
-import pybbox
-import voluptuous as vol
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_HOST = "192.168.1.254"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
-)
+from . import BboxCoordinator, BboxScannedDevice
+from .const import DOMAIN
 
 
-def get_scanner(hass, config):
-    """Validate the configuration and return a Bbox scanner."""
-    scanner = BboxDeviceScanner(config[DOMAIN])
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up device tracker for Freebox component."""
+    router: BboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    tracked: set[str] = set()
 
-    return scanner if scanner.success_init else None
+    @callback
+    def update_router():
+        """Update the values of the router."""
+        add_entities(router, async_add_entities, tracked)
+
+    router.listeners.append(
+        async_dispatcher_connect(hass, router.signal_device_new, update_router)
+    )
+
+    update_router()
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+@callback
+def add_entities(
+    router: BboxCoordinator, async_add_entities: AddEntitiesCallback, tracked: set[str]
+) -> None:
+    """Add new tracker entities from the router."""
+    new_tracked = []
+
+    for mac, device in router.scanned_devices.items():
+        if mac not in tracked:
+            new_tracked.append(BboxDevice(router, device))
+            tracked.add(mac)
+
+    if new_tracked:
+        async_add_entities(new_tracked, True)
 
 
-class BboxDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to the bbox."""
+class BboxDevice(ScannerEntity):
+    """Representation of a Freebox device."""
 
-    def __init__(self, config):
-        """Get host from config."""
+    def __init__(self, router: BboxCoordinator, device: BboxScannedDevice) -> None:
+        """Initialize a Freebox device."""
+        self._router = router
+        self._name = device["hostname"]
+        self._mac = device["mac_addr"]
+        self._device_info = device["device_info"]
+        # self._manufacturer = device["vendor_name"]
+        self._icon = "mdi:help-network"
+        self._active = False
+        self._attrs: dict[str, Any] = {}
 
-        self.host = config[CONF_HOST]
+    @callback
+    def async_update_state(self) -> None:
+        """Update the Freebox device."""
+        device = self._router.scanned_devices[self._mac]
+        self._active = device["active"]
+        self._attrs = {"last_time_seen": device["last_seen"], "mac_address": self._mac}
 
-        """Initialize the scanner."""
-        self.last_results: list[Device] = []
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._mac
 
-        self.success_init = self._update_info()
-        _LOGGER.info("Scanner initialized")
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return self._active
 
-        return [device.mac for device in self.last_results]
+    @property
+    def source_type(self) -> str:
+        """Return the source type."""
+        return SOURCE_TYPE_ROUTER
 
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        filter_named = [
-            result.name for result in self.last_results if result.mac == device
-        ]
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
 
-        if filter_named:
-            return filter_named[0]
-        return None
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the attributes."""
+        return self._attrs
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self):
-        """Check the Bbox for devices.
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return self._device_info
 
-        Returns boolean if scanning successful.
-        """
-        _LOGGER.info("Scanning")
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
 
-        box = pybbox.Bbox(ip=self.host)
-        result = box.get_all_connected_devices()
+    @callback
+    def async_on_demand_update(self):
+        """Update state."""
+        self.async_update_state()
+        self.async_write_ha_state()
 
-        now = dt_util.now()
-        last_results = []
-        for device in result:
-            if device["active"] != 1:
-                continue
-            last_results.append(
-                Device(
-                    device["macaddress"], device["hostname"], device["ipaddress"], now
-                )
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self.async_update_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_device_update,
+                self.async_on_demand_update,
             )
-
-        self.last_results = last_results
-
-        _LOGGER.info("Scan successful")
-        return True
+        )

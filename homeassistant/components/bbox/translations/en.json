@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to the Bbox.",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_type": "Bbox ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password"
+                },
+                "description": "Please enter the login to your bbox."
+            },
+            "discovery_confirm": {
+                "description": "Do you want to add the Bbox ({host}) to Home Assistant?",
+                "title": "Bbox discovered"
+            },
+            "authenticate": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Please enter the password you set in your configuration for {host}."
+            }
+        }
+    }
+}

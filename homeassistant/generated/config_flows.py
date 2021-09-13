@@ -32,6 +32,7 @@ FLOWS = [
     "awair",
     "axis",
     "azure_devops",
+    "bbox",
     "blebox",
     "blink",
     "bmw_connected_drive",

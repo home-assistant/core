@@ -1352,7 +1352,7 @@ pyatome==0.1.1
 pyatv==0.8.2
 
 # homeassistant.components.bbox
-pybbox==0.0.5-alpha
+pybbox2==0.2.3
 
 # homeassistant.components.blackbird
 pyblackbird==0.5

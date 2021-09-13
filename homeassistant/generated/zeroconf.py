@@ -131,6 +131,12 @@ ZEROCONF = {
             "name": "shelly*"
         }
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "bbox",
+            "name": "bbox*"
+        }
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue"

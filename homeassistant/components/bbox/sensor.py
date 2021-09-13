@@ -1,61 +1,40 @@
-"""Support for Bbox Bouygues Modem Router."""
+"""Platform for sensor integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from typing import Any
 
-import pybbox
-import requests
-import voluptuous as vol
-
+from homeassistant import config_entries
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_MONITORED_VARIABLES,
-    CONF_NAME,
+    DATA_RATE_MEBIBYTES_PER_SECOND,
     DATA_RATE_MEGABITS_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.util.dt import utcnow
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from . import BboxCoordinator, BboxData
+from .const import DOMAIN
 
-ATTRIBUTION = "Powered by Bouygues Telecom"
-
-DEFAULT_NAME = "Bbox"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="down_max_bandwidth",
-        name="Maximum Download Bandwidth",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        icon="mdi:download",
-    ),
-    SensorEntityDescription(
-        key="up_max_bandwidth",
-        name="Maximum Upload Bandwidth",
-        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        icon="mdi:upload",
-    ),
+SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="current_down_bandwidth",
-        name="Currently Used Download Bandwidth",
+        name="Download speed",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        icon="mdi:download",
+        icon="mdi:download-network",
     ),
     SensorEntityDescription(
         key="current_up_bandwidth",
-        name="Currently Used Upload Bandwidth",
+        name="Upload speed",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
-        icon="mdi:upload",
+        icon="mdi:upload-network",
     ),
     SensorEntityDescription(
         key="number_of_reboots",
@@ -64,7 +43,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_TYPES_UPTIME: tuple[SensorEntityDescription, ...] = (
+SENSOR_UPTIME: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="uptime",
         name="Uptime",
@@ -72,124 +51,85 @@ SENSOR_TYPES_UPTIME: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_KEYS: list[str] = [desc.key for desc in (*SENSOR_TYPES, *SENSOR_TYPES_UPTIME)]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bbox sensor."""
-    # Create a data fetcher to support all of the configured sensors. Then make
-    # the first call to init the data.
-    try:
-        bbox_data = BboxData()
-        bbox_data.update()
-    except requests.exceptions.HTTPError as error:
-        _LOGGER.error(error)
-        return False
-
-    name = config[CONF_NAME]
-
-    monitored_variables = config[CONF_MONITORED_VARIABLES]
-    entities: list[BboxSensor | BboxUptimeSensor] = [
-        BboxSensor(bbox_data, name, description)
-        for description in SENSOR_TYPES
-        if description.key in monitored_variables
-    ]
-    entities.extend(
-        [
-            BboxUptimeSensor(bbox_data, name, description)
-            for description in SENSOR_TYPES_UPTIME
-            if description.key in monitored_variables
-        ]
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config,
     )
 
-    add_entities(entities, True)
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Add Bbox entities from a config_entry."""
+    coordinator: BboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    entities = [BboxSensor(coordinator, descr) for descr in SENSORS]
+
+    async_add_entities(entities)
 
 
-class BboxUptimeSensor(SensorEntity):
-    """Bbox uptime sensor."""
+class BboxSensor(CoordinatorEntity[BboxData], SensorEntity):
+    """Representation of a Sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_state_class = STATE_CLASS_MEASUREMENT
 
-    def __init__(self, bbox_data, name, description: SensorEntityDescription):
+    def __init__(self, coordinator, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.coordinator = coordinator
+        self._description = description
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self.bbox_data = bbox_data
+        self._attr_name = f"{self.coordinator.name} {self._description.name}"
+        self._sensor_value = None
+        self._attr_unique_id = f"{coordinator.entry_id}_{description.key}"
 
-    def update(self):
-        """Get the latest data from Bbox and update the state."""
-        self.bbox_data.update()
-        uptime = utcnow() - timedelta(
-            seconds=self.bbox_data.router_infos["device"]["uptime"]
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return self.coordinator.data["device_info"]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.coordinator.data.get(self._description.key) is not None
         )
-        self._attr_native_value = uptime.replace(microsecond=0).isoformat()
 
+    @staticmethod
+    def units_convert(value, unit) -> StateType:
+        """Convert value to correct units."""
+        if unit == DATA_RATE_MEGABITS_PER_SECOND:
+            return round(float(value) / 1000, 3)
+        if unit == DATA_RATE_MEBIBYTES_PER_SECOND:
+            return round(float(value) / 1024 / 8, 3)
+        return value
 
-class BboxSensor(SensorEntity):
-    """Implementation of a Bbox sensor."""
+    @property
+    def native_value(self) -> StateType:
+        """Return sensor state."""
+        return self.units_convert(
+            self.coordinator.data.get(self._description.key),
+            self._description.native_unit_of_measurement,
+        )
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        return self._description.native_unit_of_measurement or None
 
-    def __init__(self, bbox_data, name, description: SensorEntityDescription):
-        """Initialize the sensor."""
-        self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self.bbox_data = bbox_data
-
-    def update(self):
-        """Get the latest data from Bbox and update the state."""
-        self.bbox_data.update()
-        sensor_type = self.entity_description.key
-        if sensor_type == "down_max_bandwidth":
-            self._attr_native_value = round(
-                self.bbox_data.data["rx"]["maxBandwidth"] / 1000, 2
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device specific state attributes."""
+        attributes = {}
+        max_key = f"{self._description.key}_max"
+        if max_key in self.coordinator.data:
+            attributes["maximum"] = self.units_convert(
+                self.coordinator.data.get(max_key),
+                self._description.native_unit_of_measurement,
             )
-        elif sensor_type == "up_max_bandwidth":
-            self._attr_native_value = round(
-                self.bbox_data.data["tx"]["maxBandwidth"] / 1000, 2
-            )
-        elif sensor_type == "current_down_bandwidth":
-            self._attr_native_value = round(
-                self.bbox_data.data["rx"]["bandwidth"] / 1000, 2
-            )
-        elif sensor_type == "current_up_bandwidth":
-            self._attr_native_value = round(
-                self.bbox_data.data["tx"]["bandwidth"] / 1000, 2
-            )
-        elif sensor_type == "number_of_reboots":
-            self._attr_native_value = self.bbox_data.router_infos["device"][
-                "numberofboots"
-            ]
 
-
-class BboxData:
-    """Get data from the Bbox."""
-
-    def __init__(self):
-        """Initialize the data object."""
-        self.data = None
-        self.router_infos = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from the Bbox."""
-
-        try:
-            box = pybbox.Bbox()
-            self.data = box.get_ip_stats()
-            self.router_infos = box.get_bbox_info()
-        except requests.exceptions.HTTPError as error:
-            _LOGGER.error(error)
-            self.data = None
-            self.router_infos = None
-            return False
+        return attributes
