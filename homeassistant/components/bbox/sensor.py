@@ -20,8 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BboxCoordinator, BboxData
 from .const import DOMAIN
+from .router import BboxCoordinator, BboxData
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

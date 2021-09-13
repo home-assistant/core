@@ -11,8 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BboxCoordinator, BboxScannedDevice
 from .const import DOMAIN
+from .router import BboxCoordinator, BboxScannedDevice
 
 
 async def async_setup_entry(
