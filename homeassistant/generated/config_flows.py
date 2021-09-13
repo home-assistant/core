@@ -265,6 +265,7 @@ FLOWS = [
     "srp_energy",
     "starline",
     "subaru",
+    "surepetcare",
     "switcher_kis",
     "syncthing",
     "syncthru",
