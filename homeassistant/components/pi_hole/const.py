@@ -23,10 +23,17 @@ SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
 
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
+ATTR_CORE_CURRENT = "core_current"
+ATTR_CORE_LATEST = "core_latest"
+ATTR_WEB_CURRENT = "web_current"
+ATTR_WEB_LATEST = "web_latest"
+ATTR_FTL_CURRENT = "FTL_current"
+ATTR_FTL_LATEST = "FTL_latest"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 DATA_KEY_API = "api"
+DATA_KEY_API_VERSIONS = "api_versions"
 DATA_KEY_COORDINATOR = "coordinator"
 
 
@@ -91,5 +98,11 @@ SENSOR_TYPES: tuple[PiHoleSensorEntityDescription, ...] = (
         name="DNS Unique Domains",
         native_unit_of_measurement="domains",
         icon="mdi:domain",
+    ),
+    PiHoleSensorEntityDescription(
+        key="available_updates",
+        name="Available Updates",
+        native_unit_of_measurement="updates",
+        icon="mdi:update",
     ),
 )
