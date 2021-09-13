@@ -285,33 +285,45 @@ async def test_clear_statistics(hass, hass_ws_client):
             {
                 "statistic_id": "sensor.test1",
                 "start": now.isoformat(),
+                "end": (now + timedelta(hours=1)).isoformat(),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ],
         "sensor.test2": [
             {
                 "statistic_id": "sensor.test2",
                 "start": now.isoformat(),
+                "end": (now + timedelta(hours=1)).isoformat(),
                 "mean": approx(value * 2),
                 "min": approx(value * 2),
                 "max": approx(value * 2),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ],
         "sensor.test3": [
             {
                 "statistic_id": "sensor.test3",
                 "start": now.isoformat(),
+                "end": (now + timedelta(hours=1)).isoformat(),
                 "mean": approx(value * 3),
                 "min": approx(value * 3),
                 "max": approx(value * 3),
+                "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ],
     }
