@@ -242,7 +242,7 @@ async def async_setup_gateway_entry(
         for sub_device in gateway.gateway_device.devices.values():
             try:
                 sub_device.update()
-            except GatewayException as ex:
+            except (GatewayException, TypeError) as ex:
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
                 data[sub_device.sid] = {ATTR_AVAILABLE: False}
             else:
