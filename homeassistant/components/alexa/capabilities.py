@@ -1495,8 +1495,7 @@ class AlexaRangeController(AlexaCapability):
             supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
             if supported and fan.SUPPORT_SET_SPEED:
                 return self.entity.attributes.get(fan.ATTR_PERCENTAGE)
-            else:
-                return 100 if self.entity.state == fan.STATE_ON else 0
+            return 100 if self.entity.state == fan.STATE_ON else 0
 
         # Input Number Value
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
