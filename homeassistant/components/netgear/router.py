@@ -27,7 +27,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DOMAIN, MODELS_V2
+from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DEFAULT_NAME, DOMAIN, MODELS_V2
 from .errors import CannotLoginException
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -134,9 +134,9 @@ class NetgearRouter:
         )
 
         self._info = self._api.get_info()
-        self.device_name = self._info["DeviceName"]
-        self.model = self._info["ModelName"]
-        self.firmware_version = self._info["Firmwareversion"]
+        self.device_name = self._info.get("DeviceName", DEFAULT_NAME)
+        self.model = self._info.get("ModelName")
+        self.firmware_version = self._info.get("Firmwareversion")
 
         if self.model in MODELS_V2:
             self._method_version = 2

@@ -8,6 +8,7 @@ PLATFORMS = ["device_tracker", "sensor"]
 CONF_CONSIDER_HOME = "consider_home"
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
+DEFAULT_NAME = "Netgear router"
 
 # update method V2 models
 MODELS_V2 = ["Orbi"]

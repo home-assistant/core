@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DOMAIN
+from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DEFAULT_NAME, DOMAIN
 from .errors import CannotLoginException
 from .router import get_api
 
@@ -176,7 +176,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if info.get('ModelName') is not None and info.get('DeviceName') is not None:
             name = f"{info['ModelName']} - {info['DeviceName']}"
         else:
-            name = info.get('ModelName', "Netgear router")
+            name = info.get('ModelName', DEFAULT_NAME)
 
         return self.async_create_entry(
             title=name,
