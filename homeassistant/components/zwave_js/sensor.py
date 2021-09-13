@@ -85,8 +85,8 @@ STATUS_ICON_MAP: dict[NodeStatus, str] = {
     NodeStatus.ASLEEP: "mdi:sleep",
     NodeStatus.AWAKE: "mdi:eye",
     NodeStatus.DEAD: "mdi:robot-dead",
+    NodeStatus.UNKNOWN: "mdi:help-rhombus",
 }
-DEFAULT_STATUS_ICON = "mdi:help-rhombus"
 
 
 @dataclass
