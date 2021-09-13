@@ -111,6 +111,11 @@ class BboxDevice(ScannerEntity):
         """No polling needed."""
         return False
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Do NOT enable the entity unless the user requires it."""
+        return False
+
     @callback
     def async_on_demand_update(self):
         """Update state."""
