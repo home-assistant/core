@@ -2390,6 +2390,9 @@ waterfurnace==1.1.0
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
 
+# homeassistant.components.whirlpool
+whirlpool-sixth-sense==0.15.1
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 
