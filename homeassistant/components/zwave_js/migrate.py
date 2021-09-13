@@ -246,11 +246,11 @@ def async_map_legacy_zwave_values(
     migration_map = LegacyZWaveMappedData()
     zwave_proc_data: dict[
         tuple[int, int, int, str, str | None, str | None],
-        ZWaveMigrationData,
+        ZWaveMigrationData | None,
     ] = {}
     zwave_js_proc_data: dict[
         tuple[int, int, int, str, str | None, str | None],
-        ZWaveJSMigrationData,
+        ZWaveJSMigrationData | None,
     ] = {}
 
     for zwave_item in zwave_data.values():
@@ -266,9 +266,9 @@ def async_map_legacy_zwave_values(
             zwave_js_property_name,
         )
 
-        # Remove duplicates that are not resolvable.
+        # Filter out duplicates that are not resolvable.
         if item_id in zwave_proc_data:
-            zwave_proc_data.pop(item_id)
+            zwave_proc_data[item_id] = None
             continue
 
         zwave_proc_data[item_id] = zwave_item
@@ -288,9 +288,9 @@ def async_map_legacy_zwave_values(
             zwave_js_property_name,
         )
 
-        # Remove duplicates that are not resolvable.
+        # Filter out duplicates that are not resolvable.
         if item_id in zwave_js_proc_data:
-            zwave_js_proc_data.pop(item_id)
+            zwave_js_proc_data[item_id] = None
             continue
 
         zwave_js_proc_data[item_id] = zwave_js_item
@@ -298,7 +298,7 @@ def async_map_legacy_zwave_values(
     for item_id, zwave_entry in zwave_proc_data.items():
         zwave_js_entry = zwave_js_proc_data.pop(item_id, None)
 
-        if zwave_js_entry is None:
+        if zwave_entry is None or zwave_js_entry is None:
             continue
 
         migration_map.entity_entries[zwave_js_entry["entity_id"]] = zwave_entry
