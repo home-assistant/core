@@ -109,15 +109,16 @@ class FroniusSolarNet:
             )
         )
 
-        self.power_flow_coordinator = FroniusPowerFlowUpdateCoordinator(
-            hass=self.hass,
-            solar_net=self,
-            logger=_LOGGER,
-            name=f"{DOMAIN}_power_flow_{self.host}",
-            update_interval=self.update_interval,
-            power_flow_info=solar_net_device_info,
+        self.power_flow_coordinator = await self._init_optional_coordinator(
+            FroniusPowerFlowUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_power_flow_{self.host}",
+                update_interval=self.update_interval,
+                power_flow_info=solar_net_device_info,
+            )
         )
-        await self.power_flow_coordinator.async_config_entry_first_refresh()
 
         self.storage_coordinator = await self._init_optional_coordinator(
             FroniusStorageUpdateCoordinator(
