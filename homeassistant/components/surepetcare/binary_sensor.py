@@ -65,7 +65,7 @@ class SurePetcareBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
         self._id = _id
 
-        surepy_entity: SurepyEntity = coordinator.data[self._id]
+        surepy_entity: SurepyEntity = coordinator.data[_id]
 
         # cover special case where a device has no name set
         if surepy_entity.name:
@@ -74,7 +74,7 @@ class SurePetcareBinarySensor(CoordinatorEntity, BinarySensorEntity):
             name = f"Unnamed {surepy_entity.type.name.capitalize()}"
 
         self._attr_name = f"{surepy_entity.type.name.capitalize()} {name.capitalize()}"
-        self._attr_unique_id = f"{surepy_entity.household_id}-{self._id}"
+        self._attr_unique_id = f"{surepy_entity.household_id}-{_id}"
         self._update_attr(coordinator.data[_id])
 
     @abstractmethod
