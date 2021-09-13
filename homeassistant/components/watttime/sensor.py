@@ -23,17 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    CONF_BALANCING_AUTHORITY,
-    CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_BALANCING_AUTHORITY_ID,
-    DATA_COORDINATOR,
-    DOMAIN,
-)
-
-ATTR_BALANCING_AUTHORITY = "balancing_authority"
-ATTR_BALANCING_AUTHORITY_ABBREV = "balancing_authority_abbreviation"
-ATTR_BALANCING_AUTHORITY_ID = "balancing_authority_id"
+from .const import DATA_COORDINATOR, DOMAIN
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by WattTime"
 
@@ -105,21 +95,14 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
         if TYPE_CHECKING:
             assert coordinator.config_entry
 
-        ba_abbrev = coordinator.config_entry.data[CONF_BALANCING_AUTHORITY_ABBREV]
-
         self._attr_extra_state_attributes = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_BALANCING_AUTHORITY: coordinator.config_entry.data[
-                CONF_BALANCING_AUTHORITY
-            ],
-            ATTR_BALANCING_AUTHORITY_ABBREV: ba_abbrev,
-            ATTR_BALANCING_AUTHORITY_ID: coordinator.config_entry.data[
-                CONF_BALANCING_AUTHORITY_ID
-            ],
             ATTR_LATITUDE: coordinator.config_entry.data[ATTR_LATITUDE],
             ATTR_LONGITUDE: coordinator.config_entry.data[ATTR_LONGITUDE],
         }
-        self._attr_name = f"{description.name} ({ba_abbrev})"
+        self._attr_name = (
+            f"{description.name} ({coordinator.config_entry.data['abbrev']})"
+        )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self.entity_description = description
 
