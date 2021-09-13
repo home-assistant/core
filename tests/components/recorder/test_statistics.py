@@ -45,6 +45,7 @@ def test_compile_hourly_statistics(hass_recorder):
     expected_1 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(zero),
+        "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
@@ -57,6 +58,7 @@ def test_compile_hourly_statistics(hass_recorder):
     expected_2 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(four),
+        "end": process_timestamp_to_utc_isoformat(four + timedelta(hours=1)),
         "mean": approx(20.0),
         "min": approx(20.0),
         "max": approx(20.0),
@@ -164,6 +166,7 @@ def test_compile_hourly_statistics_exception(
     expected_1 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(now),
+        "end": process_timestamp_to_utc_isoformat(now + timedelta(hours=1)),
         "mean": None,
         "min": None,
         "max": None,
@@ -176,6 +179,7 @@ def test_compile_hourly_statistics_exception(
     expected_2 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(now + timedelta(hours=1)),
+        "end": process_timestamp_to_utc_isoformat(now + timedelta(hours=2)),
         "mean": None,
         "min": None,
         "max": None,
@@ -235,6 +239,7 @@ def test_rename_entity(hass_recorder):
     expected_1 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(zero),
+        "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
