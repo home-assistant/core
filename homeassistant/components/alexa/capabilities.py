@@ -1355,11 +1355,14 @@ class AlexaModeController(AlexaCapability):
                 [AlexaGlobalCatalog.SETTING_PRESET], False
             )
             preset_modes = self.entity.attributes.get(fan.ATTR_PRESET_MODES, [])
-            if len(preset_modes) == 1:
-                preset_modes.append(PRESET_MODE_NA)
             for preset_mode in preset_modes:
                 self._resource.add_mode(
                     f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
+                )
+            # Avoid usecases with only one preset_mode
+            if len(preset_modes) == 1:
+                self._resource.add_mode(
+                    f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [PRESET_MODE_NA]
                 )
             return self._resource.serialize_capability_resources()
 

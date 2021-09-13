@@ -928,7 +928,7 @@ async def async_api_set_mode(hass, config, directive, context):
             fan.ATTR_PRESET_MODES
         ):
             service = fan.SERVICE_SET_PRESET_MODE
-            data[fan.ATTR_PRESET_MODE] = None if PRESET_MODE_NA else preset_mode
+            data[fan.ATTR_PRESET_MODE] = preset_mode
         else:
             msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
             raise AlexaInvalidValueError(msg)
