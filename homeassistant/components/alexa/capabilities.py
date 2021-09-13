@@ -48,6 +48,7 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
+    PRESET_MODE_NA,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -1353,7 +1354,10 @@ class AlexaModeController(AlexaCapability):
             self._resource = AlexaModeResource(
                 [AlexaGlobalCatalog.SETTING_PRESET], False
             )
-            for preset_mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, []):
+            preset_modes = self.entity.attributes.get(fan.ATTR_PRESET_MODES, [])
+            if len(preset_modes) == 1:
+                preset_modes.append(PRESET_MODE_NA)
+            for preset_mode in preset_modes:
                 self._resource.add_mode(
                     f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
                 )

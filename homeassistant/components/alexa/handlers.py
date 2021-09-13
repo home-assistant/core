@@ -54,6 +54,7 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
+    PRESET_MODE_NA,
     Cause,
     Inputs,
 )
@@ -923,9 +924,11 @@ async def async_api_set_mode(hass, config, directive, context):
     # Fan preset_mode
     elif instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
-        if preset_mode in entity.attributes.get(fan.ATTR_PRESET_MODES):
+        if preset_mode != PRESET_MODE_NA and preset_mode in entity.attributes.get(
+            fan.ATTR_PRESET_MODES
+        ):
             service = fan.SERVICE_SET_PRESET_MODE
-            data[fan.ATTR_PRESET_MODE] = preset_mode
+            data[fan.ATTR_PRESET_MODE] = None if PRESET_MODE_NA else preset_mode
         else:
             msg = f"Entity '{entity.entity_id}' does not support Preset '{preset_mode}'"
             raise AlexaInvalidValueError(msg)
