@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except CannotConnect:
+        except SurePetcareError:
             errors["base"] = "cannot_connect"
         except SurePetcareAuthenticationError:
             errors["base"] = "invalid_auth"
