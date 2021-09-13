@@ -584,7 +584,7 @@ class Recorder(threading.Thread):
 
         # Compile short term statistics every 5 minutes
         async_track_time_change(
-            self.hass, self.async_periodic_statistics, minute=range(3, 60, 5), second=0
+            self.hass, self.async_periodic_statistics, minute=range(0, 60, 5), second=10
         )
 
     def run(self):

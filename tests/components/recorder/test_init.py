@@ -705,9 +705,9 @@ def test_auto_statistics(hass_recorder):
     # arbitrary year in the future to avoid boundary conditions relative to the current
     # date.
     #
-    # The clock is started at 4:15am then advanced forward below
+    # The clock is started at 4:16am then advanced forward below
     now = dt_util.utcnow()
-    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    test_time = datetime(now.year + 2, 1, 1, 4, 16, 0, tzinfo=tz)
     run_tasks_at_time(hass, test_time)
 
     with patch(

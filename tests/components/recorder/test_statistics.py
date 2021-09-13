@@ -34,7 +34,7 @@ def test_compile_hourly_statistics(hass_recorder):
     assert dict(states) == dict(hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
-        stats = statistics_during_period(hass, zero, period="minute", **kwargs)
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
     stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
@@ -78,16 +78,16 @@ def test_compile_hourly_statistics(hass_recorder):
     ]
 
     # Test statistics_during_period
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
     stats = statistics_during_period(
-        hass, zero, statistic_ids=["sensor.test2"], period="minute"
+        hass, zero, statistic_ids=["sensor.test2"], period="5minute"
     )
     assert stats == {"sensor.test2": expected_stats2}
 
     stats = statistics_during_period(
-        hass, zero, statistic_ids=["sensor.test3"], period="minute"
+        hass, zero, statistic_ids=["sensor.test3"], period="5minute"
     )
     assert stats == {}
 
@@ -205,7 +205,7 @@ def test_compile_periodic_statistics_exception(
         {**expected_2, "statistic_id": "sensor.test3"},
     ]
 
-    stats = statistics_during_period(hass, now, period="minute")
+    stats = statistics_during_period(hass, now, period="5minute")
     assert stats == {
         "sensor.test1": expected_stats1,
         "sensor.test2": expected_stats2,
@@ -233,7 +233,7 @@ def test_rename_entity(hass_recorder):
     assert dict(states) == dict(hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
-        stats = statistics_during_period(hass, zero, period="minute", **kwargs)
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
     stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
@@ -263,13 +263,13 @@ def test_rename_entity(hass_recorder):
         {**expected_1, "statistic_id": "sensor.test99"},
     ]
 
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
     entity_reg.async_update_entity(reg_entry.entity_id, new_entity_id="sensor.test99")
     hass.block_till_done()
 
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
 
 

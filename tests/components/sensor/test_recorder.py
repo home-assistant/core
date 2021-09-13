@@ -90,7 +90,7 @@ def test_compile_hourly_statistics(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -155,7 +155,7 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
         {"statistic_id": "sensor.test6", "unit_of_measurement": "°C"},
         {"statistic_id": "sensor.test7", "unit_of_measurement": "°C"},
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -262,7 +262,7 @@ def test_compile_hourly_sum_statistics_amount(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": display_unit}
     ]
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -365,7 +365,7 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -432,7 +432,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -502,7 +502,7 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -594,7 +594,7 @@ def test_compile_hourly_sum_statistics_total_increasing(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -696,7 +696,7 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -795,7 +795,7 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": "kWh"}
     ]
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -890,7 +890,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         {"statistic_id": "sensor.test2", "unit_of_measurement": "kWh"},
         {"statistic_id": "sensor.test3", "unit_of_measurement": "kWh"},
     ]
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1054,7 +1054,7 @@ def test_compile_hourly_statistics_unchanged(
 
     recorder.do_adhoc_statistics(start=four)
     wait_recording_done(hass)
-    stats = statistics_during_period(hass, four, period="minute")
+    stats = statistics_during_period(hass, four, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1089,7 +1089,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
 
     recorder.do_adhoc_statistics(start=zero)
     wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1149,7 +1149,7 @@ def test_compile_hourly_statistics_unavailable(
 
     recorder.do_adhoc_statistics(start=four)
     wait_recording_done(hass)
-    stats = statistics_during_period(hass, four, period="minute")
+    stats = statistics_during_period(hass, four, period="5minute")
     assert stats == {
         "sensor.test2": [
             {
@@ -1302,7 +1302,7 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1331,7 +1331,7 @@ def test_compile_hourly_statistics_changing_units_1(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1391,7 +1391,7 @@ def test_compile_hourly_statistics_changing_units_2(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": "cats"}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {}
 
     assert "Error while processing event StatisticsTask" not in caplog.text
@@ -1439,7 +1439,7 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1466,7 +1466,7 @@ def test_compile_hourly_statistics_changing_units_3(
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
     ]
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1547,7 +1547,7 @@ def test_compile_hourly_statistics_changing_statistics(
         "statistic_id": "sensor.test1",
         "unit_of_measurement": None,
     }
-    stats = statistics_during_period(hass, period0, period="minute")
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
@@ -1677,7 +1677,7 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         {"statistic_id": "sensor.test3", "unit_of_measurement": "%"},
     ]
 
-    stats = statistics_during_period(hass, zero, period="minute")
+    stats = statistics_during_period(hass, zero, period="5minute")
     expected_stats = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
     start = zero
     end = zero + timedelta(minutes=5)

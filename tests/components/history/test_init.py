@@ -899,7 +899,7 @@ async def test_statistics_during_period(
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "statistic_ids": ["sensor.test"],
-            "period": "minute",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
