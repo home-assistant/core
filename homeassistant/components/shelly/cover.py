@@ -18,8 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ShellyDeviceWrapper
-from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN
+from . import BlockDeviceWrapper
+from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN
 from .entity import ShellyBlockEntity
 
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up cover for device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][COAP]
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
     blocks = [block for block in wrapper.device.blocks if block.type == "roller"]
 
     if not blocks:
@@ -43,7 +43,7 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
 
     _attr_device_class = DEVICE_CLASS_SHUTTER
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: Block) -> None:
+    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result: dict[str, Any] | None = None
