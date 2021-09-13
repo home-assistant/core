@@ -637,6 +637,9 @@ ondilo==0.2.0
 # homeassistant.components.onvif
 onvif-zeep-async==1.2.0
 
+# homeassistant.components.oocsi
+oocsi == 0.4.1
+
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
