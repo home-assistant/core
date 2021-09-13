@@ -70,8 +70,6 @@ async def async_setup_platform(
 class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     """Representation of a BinarySensorGroup."""
 
-    _attr_assumed_state: bool = True
-
     def __init__(
         self,
         unique_id: str | None,
