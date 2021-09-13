@@ -431,7 +431,7 @@ async def test_icon_template_with_trigger(hass):
                     "trigger": {"platform": "state", "entity_id": _VALUE_INPUT_NUMBER},
                     "unique_id": "b",
                     "number": {
-                        "state": f"{{{{ states('{_VALUE_INPUT_NUMBER}') }}}}",
+                        "state": "{{ trigger.to_state.state }}",
                         "step": 1,
                         "min": 0,
                         "max": 100,
@@ -442,7 +442,7 @@ async def test_icon_template_with_trigger(hass):
                                 "value": "{{ value }}",
                             },
                         },
-                        "icon": "{% if ((states.input_number.value.state or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
+                        "icon": "{% if ((trigger.to_state.state or 0) | int) > 50 %}mdi:greater{% else %}mdi:less{% endif %}",
                     },
                 }
             },
