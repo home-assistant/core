@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from surepy import Surepy, SurepyEntity
-from surepy.enums import LockState
+from surepy.enums import EntityType, Location, LockState
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
@@ -20,17 +20,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service import ServiceCall
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_FLAP_ID,
+    ATTR_LOCATION,
     ATTR_LOCK_STATE,
+    ATTR_PET_NAME,
     CONF_FEEDERS,
     CONF_FLAPS,
     CONF_PETS,
     DOMAIN,
     SERVICE_SET_LOCK_STATE,
+    SERVICE_SET_PET_LOCATION,
     SURE_API_TIMEOUT,
 )
 
@@ -86,12 +90,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     try:
-        surepy = Surepy(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            auth_token=entry.data[CONF_TOKEN],
-            api_timeout=SURE_API_TIMEOUT,
-            session=async_get_clientsession(hass),
+        hass.data[DOMAIN][entry.entry_id] = coordinator = SurePetcareDataCoordinator(
+            entry,
+            hass,
         )
     except SurePetcareAuthenticationError:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
@@ -100,39 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         return False
 
-    async def _update_method() -> dict[int, SurepyEntity]:
-        """Get the latest data from Sure Petcare."""
-        try:
-            return await surepy.get_entities(refresh=True)
-        except SurePetcareError as err:
-            raise UpdateFailed(f"Unable to fetch data: {err}") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=_update_method,
-        update_interval=SCAN_INTERVAL,
-    )
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
     await coordinator.async_config_entry_first_refresh()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    lock_states = {
-        LockState.UNLOCKED.name.lower(): surepy.sac.unlock,
-        LockState.LOCKED_IN.name.lower(): surepy.sac.lock_in,
-        LockState.LOCKED_OUT.name.lower(): surepy.sac.lock_out,
-        LockState.LOCKED_ALL.name.lower(): surepy.sac.lock,
-    }
-
-    async def handle_set_lock_state(call):
-        """Call when setting the lock state."""
-        flap_id = call.data[ATTR_FLAP_ID]
-        state = call.data[ATTR_LOCK_STATE]
-        await lock_states[state](flap_id)
-        await coordinator.async_request_refresh()
 
     lock_state_service_schema = vol.Schema(
         {
@@ -142,16 +113,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             vol.Required(ATTR_LOCK_STATE): vol.All(
                 cv.string,
                 vol.Lower,
-                vol.In(lock_states.keys()),
+                vol.In(coordinator.lock_states.keys()),
             ),
         }
     )
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_LOCK_STATE,
-        handle_set_lock_state,
+        coordinator.handle_set_lock_state,
         schema=lock_state_service_schema,
+    )
+
+    set_pet_location_schema = vol.Schema(
+        {
+            vol.Optional(ATTR_PET_NAME): vol.In(coordinator.get_pets().values()),
+            vol.Required(ATTR_LOCATION): vol.In(
+                [
+                    Location.INSIDE.name.title(),
+                    Location.OUTSIDE.name.title(),
+                    Location.UNKNOWN.name.title(),
+                ]
+            ),
+        }
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PET_LOCATION,
+        coordinator.handle_set_pet_location,
+        schema=set_pet_location_schema,
     )
 
     return True
@@ -164,3 +153,64 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class SurePetcareDataCoordinator(DataUpdateCoordinator):
+    """Handle Surepetcare data."""
+
+    def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:
+        """Initialize the data handler."""
+        self.surepy = Surepy(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            auth_token=entry.data[CONF_TOKEN],
+            api_timeout=SURE_API_TIMEOUT,
+            session=async_get_clientsession(hass),
+        )
+        self.lock_states = {
+            LockState.UNLOCKED.name.lower(): self.surepy.sac.unlock,
+            LockState.LOCKED_IN.name.lower(): self.surepy.sac.lock_in,
+            LockState.LOCKED_OUT.name.lower(): self.surepy.sac.lock_out,
+            LockState.LOCKED_ALL.name.lower(): self.surepy.sac.lock,
+        }
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
+
+    async def _async_update_data(self) -> dict[int, SurepyEntity]:
+        """Get the latest data from Sure Petcare."""
+        try:
+            return await self.surepy.get_entities(refresh=True)
+        except SurePetcareError as err:
+            raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+    async def handle_set_lock_state(self, call: ServiceCall) -> None:
+        """Call when setting the lock state."""
+        flap_id = call.data[ATTR_FLAP_ID]
+        state = call.data[ATTR_LOCK_STATE]
+        await self.lock_states[state](flap_id)
+        await self.async_request_refresh()
+
+    def get_pets(self) -> dict[int, str]:
+        """Get pets."""
+        names = {}
+        for surepy_entity in self.data.values():
+            if surepy_entity.type == EntityType.PET and surepy_entity.name:
+                names[surepy_entity.id] = surepy_entity.name
+        return names
+
+    async def handle_set_pet_location(self, call: ServiceCall) -> None:
+        """Call when setting the pet location."""
+        pet_name = call.data[ATTR_PET_NAME]
+        location = call.data[ATTR_LOCATION]
+        for device_id, device_name in self.get_pets().items():
+            if pet_name == device_name:
+                await self.surepy.sac.set_pet_location(
+                    device_id, Location[location.upper()]
+                )
+                await self.async_request_refresh()
+                return
+        _LOGGER.error("Unknown pet %s", pet_name)
