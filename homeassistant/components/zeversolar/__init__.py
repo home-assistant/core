@@ -59,7 +59,7 @@ class ErrorDurationTracker:
             return 0
 
         value = int((current - self._last_occurence).total_seconds() / 3600)
-        _LOGGER.debug(f"Returning {value=}")
+        _LOGGER.debug("Error duration: %s", value)
         return value
 
     def reset(self) -> None:
@@ -90,17 +90,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except api.ZeverTimeout as err:
             error_duration = error_duration_tracker.get_error_duration(now)
             if error_duration > 26:
-                _LOGGER.debug("errors occurring for more than 24 hours.")
+                _LOGGER.debug("Errors occurring for more than 24 hours")
                 raise UpdateFailed(err) from err
             if new_day:
-                _LOGGER.debug("A new day is born! resetting solar data.")
+                _LOGGER.debug("A new day is born! Resetting solar data")
                 return api.SolarData(0, 0)
-            _LOGGER.debug("A timeout has occurred, but is not considered an error.")
+            _LOGGER.debug("A timeout has occurred, but is not considered an error")
             # assuming the inverter is switched off during lack of sun.
             old_data = coordinator.data
             return api.SolarData(old_data.daily_energy, current_power=0)
         except api.ZeverError as err:
-            _LOGGER.debug("Unknown response returned. re-using old data %s", err)
+            _LOGGER.debug("Unknown response returned. Re-using old data %s", err)
             return coordinator.data
         else:
             error_duration_tracker.reset()
