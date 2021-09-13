@@ -263,7 +263,7 @@ async def test_async_setup_bad_config2(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host})
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host}, version=2)
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",

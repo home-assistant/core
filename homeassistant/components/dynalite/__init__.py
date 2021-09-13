@@ -1,6 +1,7 @@
 """Support for the Dynalite networks."""
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
@@ -256,16 +257,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_entry_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload entry since the data has changed."""
-    LOGGER.debug("Reconfiguring entry %s", entry.data)
+    LOGGER.debug("Reconfiguring entry data=%s, options=%s", entry.data, entry.options)
     bridge = hass.data[DOMAIN][entry.entry_id]
-    bridge.reload_config(entry.data)
+    bridge.reload_config(entry.data, entry.options)
     LOGGER.debug("Reconfiguring entry finished %s", entry.data)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
-    bridge = DynaliteBridge(hass, convert_config(entry.data))
+    bridge = DynaliteBridge(hass, convert_config(entry.data, entry.options))
     # need to do it before the listener
     hass.data[DOMAIN][entry.entry_id] = bridge
     entry.async_on_unload(entry.add_update_listener(async_entry_changed))
@@ -287,3 +288,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        # move from everything in data to splitting data and options
+        save_data = config_entry.data
+        config_keys = [CONF_HOST, CONF_PORT]
+        config_entry.data = MappingProxyType(
+            {key: value for (key, value) in save_data.items() if key in config_keys}
+        )
+        config_entry.options = MappingProxyType(
+            {key: value for (key, value) in save_data.items() if key not in config_keys}
+        )
+        config_entry.version = 2
+
+    LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True

@@ -45,10 +45,17 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: MappingProxyType[str, Any]) -> None:
+    def reload_config(
+        self, config: MappingProxyType[str, Any], options: MappingProxyType[str, Any]
+    ) -> None:
         """Reconfigure a bridge when config changes."""
-        LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
-        self.dynalite_devices.configure(convert_config(config))
+        LOGGER.debug(
+            "Reloading bridge - host %s, config %s options %s",
+            self.host,
+            config,
+            options,
+        )
+        self.dynalite_devices.configure(convert_config(config, options))
 
     def update_signal(self, device: DynaliteBaseDevice | None = None) -> str:
         """Create signal to use to trigger entity update."""

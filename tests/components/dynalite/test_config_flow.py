@@ -42,7 +42,7 @@ async def test_existing(hass):
     """Test when the entry exists with the same config."""
     host = "1.2.3.4"
     MockConfigEntry(
-        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}, version=2
     ).add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
@@ -65,6 +65,7 @@ async def test_existing_update(hass):
     entry = MockConfigEntry(
         domain=dynalite.DOMAIN,
         data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port1},
+        version=2,
     )
     entry.add_to_hass(hass)
     with patch(

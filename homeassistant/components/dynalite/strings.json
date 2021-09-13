@@ -1,0 +1,22 @@
+{
+    "config": {
+        "flow_title": "Configure Dynalite",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "port": "[%key:common::config_flow::data::port%]"
+                },
+                "title": "Configure Dynalite",
+                "description": "Please provide the host IP and port to connect to Dynalite"
+            }
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        }
+    }
+}

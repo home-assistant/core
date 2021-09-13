@@ -33,7 +33,9 @@ async def get_entry_id_from_hass(hass):
 async def create_entity_from_device(hass, device):
     """Set up the component and platform and create a light based on the device provided."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}, version=2
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"

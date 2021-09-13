@@ -26,7 +26,9 @@ from tests.common import MockConfigEntry
 async def test_update_device(hass):
     """Test that update works."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}, version=2
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
@@ -56,7 +58,9 @@ async def test_update_device(hass):
 async def test_add_devices_then_register(hass):
     """Test that add_devices work."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}, version=2
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
@@ -89,7 +93,9 @@ async def test_add_devices_then_register(hass):
 async def test_register_then_add_devices(hass):
     """Test that add_devices work after register_add_entities."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}, version=2
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
@@ -116,7 +122,9 @@ async def test_register_then_add_devices(hass):
 async def test_notifications(hass):
     """Test that update works."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host}, version=2
+    )
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
