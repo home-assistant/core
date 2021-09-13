@@ -1337,6 +1337,9 @@ wallbox==0.4.4
 # homeassistant.components.folder_watcher
 watchdog==2.1.4
 
+# homeassistant.components.whirlpool
+whirlpool-sixth-sense==0.15.1
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 
