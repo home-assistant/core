@@ -176,7 +176,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if info.get('ModelName') is not None and info.get('DeviceName') is not None:
             name = f"{info['ModelName']} - {info['DeviceName']}"
         else:
-            name = info.get('ModelName', DEFAULT_NAME)
+            name = info.get("ModelName", DEFAULT_NAME)
 
         return self.async_create_entry(
             title=name,
