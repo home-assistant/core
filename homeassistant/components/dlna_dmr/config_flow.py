@@ -46,7 +46,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: list[dict[str, str]] = []
+        self._discoveries: list[Mapping[str, str]] = []
 
     @staticmethod
     @callback
@@ -71,6 +71,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ConnectError as err:
                 errors["base"] = err.args[0]
             else:
+                # If unmigrated config was imported earlier then use it
+                import_data = get_domain_data(self.hass).unmigrated_config.get(
+                    user_input[CONF_URL]
+                )
+                if import_data is not None:
+                    return await self.async_step_import(import_data)
                 # Device setup manually, assume we don't get SSDP broadcast notifications
                 options = {CONF_POLL_AVAILABILITY: True}
                 return await self._async_create_entry_from_discovery(discovery, options)
@@ -90,12 +96,13 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_import: import_data: %s", import_data)
 
         if not import_data or CONF_URL not in import_data:
+            LOGGER.debug("Entry not imported: incomplete_config")
             return self.async_abort(reason="incomplete_config")
 
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
 
         location = import_data[CONF_URL]
-        self._discoveries = self._get_discoveries()
+        self._discoveries = await self._async_get_discoveries()
 
         poll_availability = True
 
@@ -104,12 +111,22 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if discovery[ssdp.ATTR_SSDP_LOCATION] == location:
                 # Device found via SSDP, it shouldn't need polling
                 poll_availability = False
+                LOGGER.debug(
+                    "Entry %s found via SSDP, with UDN %s",
+                    import_data[CONF_URL],
+                    discovery[ssdp.ATTR_UPNP_UDN],
+                )
                 break
         else:
             # Not in discoveries. Try connecting directly.
             try:
                 discovery = await self._async_connect(location)
             except ConnectError as err:
+                LOGGER.debug(
+                    "Entry %s not imported: %s", import_data[CONF_URL], err.args[0]
+                )
+                # Store the config to apply if the device is added later
+                get_domain_data(self.hass).unmigrated_config[location] = import_data
                 return self.async_abort(reason=err.args[0])
 
         # Set options from the import_data, except listen_ip which is no longer used
@@ -121,8 +138,10 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Override device name if it's set in the YAML
         if CONF_NAME in import_data:
+            discovery = dict(discovery)
             discovery[ssdp.ATTR_UPNP_FRIENDLY_NAME] = import_data[CONF_NAME]
 
+        LOGGER.debug("Entry %s ready for import", import_data[CONF_URL])
         return await self._async_create_entry_from_discovery(discovery, options)
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
@@ -136,7 +155,15 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Abort if already configured, but update the last-known location
         await self.async_set_unique_id(udn)
-        self._abort_if_unique_id_configured(updates={CONF_URL: location})
+        self._abort_if_unique_id_configured(
+            updates={CONF_URL: location}, reload_on_update=False
+        )
+
+        # If the device needs migration because it wasn't turned on when HA
+        # started, silently migrate it now.
+        import_data = get_domain_data(self.hass).unmigrated_config.get(location)
+        if import_data is not None:
+            return await self.async_step_import(import_data)
 
         parsed_url = urlparse(location)
         name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or parsed_url.hostname
@@ -166,7 +193,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="confirm", errors=errors)
 
     async def _async_create_entry_from_discovery(
-        self, discovery: Mapping[str, Any], options: Mapping[str, Any] | None = None
+        self,
+        discovery: Mapping[str, Any],
+        options: Mapping[str, Any] | None = None,
     ) -> FlowResult:
         """Create an entry from discovery."""
         LOGGER.debug("_async_create_entry_from_discovery: discovery: %s", discovery)
@@ -188,14 +217,17 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=title, data=data, options=options)
 
-    def _get_discoveries(self) -> list[dict[str, str]]:
+    async def _async_get_discoveries(self) -> list[Mapping[str, str]]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
-        discoveries: list[dict[str, str]] = []
+        discoveries: list[Mapping[str, str]] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
-            discoveries.extend(ssdp.async_get_discovery_info_by_st(self.hass, udn_st))
+            st_discoveries = await ssdp.async_get_discovery_info_by_st(
+                self.hass, udn_st
+            )
+            discoveries.extend(st_discoveries)
 
         # Filter out devices already configured
         current_unique_ids = {
