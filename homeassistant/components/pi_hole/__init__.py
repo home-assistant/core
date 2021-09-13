@@ -31,6 +31,7 @@ from .const import (
     CONF_LOCATION,
     CONF_STATISTICS_ONLY,
     DATA_KEY_API,
+    DATA_KEY_API_VERSIONS,
     DATA_KEY_COORDINATOR,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -109,6 +110,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api_token=api_key,
         )
         await api.get_data()
+
+        api_versions = Hole(
+            host,
+            hass.loop,
+            session,
+            location=location,
+            tls=use_tls,
+            api_token=api_key,
+        )
+        await api_versions.get_versions()
     except HoleError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
@@ -117,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
+            await api_versions.get_versions()
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
 
@@ -129,6 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
+        DATA_KEY_API_VERSIONS: api_versions,
         DATA_KEY_COORDINATOR: coordinator,
     }
 
@@ -164,6 +177,7 @@ class PiHoleEntity(CoordinatorEntity):
     def __init__(
         self,
         api: Hole,
+        api_versions: Hole,
         coordinator: DataUpdateCoordinator,
         name: str,
         server_unique_id: str,
@@ -171,6 +185,7 @@ class PiHoleEntity(CoordinatorEntity):
         """Initialize a Pi-hole entity."""
         super().__init__(coordinator)
         self.api = api
+        self.api_versions = api_versions
         self._name = name
         self._server_unique_id = server_unique_id
 
