@@ -50,7 +50,7 @@ class _FroniusUpdateCoordinator(
         try:
             data = await self._update_method()
         except FroniusError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(err) from err
 
         for solar_net_id in data:
             if solar_net_id not in self.unregistered_keys:
