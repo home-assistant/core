@@ -489,8 +489,5 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
     for platform in hass.data[DOMAIN].values():
         if not hasattr(platform, "validate_statistics"):
             continue
-        platform_validation = {
-            **platform_validation,
-            **platform.validate_statistics(hass),
-        }
+        platform_validation.update(platform.validate_statistics(hass))
     return platform_validation
