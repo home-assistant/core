@@ -15,7 +15,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import PiHoleEntity
 from .const import (
     ATTR_BLOCKED_DOMAINS,
+    ATTR_CORE_CURRENT,
+    ATTR_CORE_LATEST,
+    ATTR_WEB_CURRENT,
+    ATTR_WEB_LATEST,
+    ATTR_FTL_CURRENT,
+    ATTR_FTL_LATEST,
     DATA_KEY_API,
+    DATA_KEY_API_VERSIONS,
     DATA_KEY_COORDINATOR,
     DOMAIN as PIHOLE_DOMAIN,
     SENSOR_TYPES,
@@ -32,6 +39,7 @@ async def async_setup_entry(
     sensors = [
         PiHoleSensor(
             hole_data[DATA_KEY_API],
+            hole_data[DATA_KEY_API_VERSIONS],
             hole_data[DATA_KEY_COORDINATOR],
             name,
             entry.entry_id,
@@ -50,6 +58,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def __init__(
         self,
         api: Hole,
+        api_versions: Hole,
         coordinator: DataUpdateCoordinator,
         name: str,
         server_unique_id: str,
@@ -65,12 +74,32 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     @property
     def native_value(self) -> Any:
         """Return the state of the device."""
-        try:
-            return round(self.api.data[self.entity_description.key], 2)
-        except TypeError:
-            return self.api.data[self.entity_description.key]
+        if self.entity_description.key == "available_updates":
+            available_updates = 0
+            if self.api_versions.data["core_update"]:
+                available_updates += 1
+            if self.api_versions.data["web_update"]:
+                available_updates += 1
+            if self.api_versions.data["FTL_update"]:
+                available_updates += 1
+            return available_updates
+        else:
+            try:
+                return round(self.api.data[self.entity_description.key], 2)
+            except TypeError:
+                return self.api.data[self.entity_description.key]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Pi-hole."""
-        return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
+        if self.entity_description.key == "available_updates":
+            return {
+                ATTR_CORE_CURRENT: self.api_versions.data[ATTR_CORE_CURRENT],
+                ATTR_CORE_LATEST: self.api_versions.data[ATTR_CORE_LATEST],
+                ATTR_WEB_CURRENT: self.api_versions.data[ATTR_WEB_CURRENT],
+                ATTR_WEB_LATEST: self.api_versions.data[ATTR_WEB_LATEST],
+                ATTR_FTL_CURRENT: self.api_versions.data[ATTR_FTL_CURRENT],
+                ATTR_FTL_LATEST: self.api_versions.data[ATTR_FTL_LATEST]
+            }
+        else:
+            return {ATTR_BLOCKED_DOMAINS: self.api.data["domains_being_blocked"]}
