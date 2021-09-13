@@ -105,3 +105,4 @@ class Alpha2BaseUpdateHandler:
             heatarea_mode,
         )
         await self.base.update_heatarea(heatarea_id, {"HEATAREA_MODE": heatarea_mode})
+        await self.async_update()
