@@ -133,6 +133,10 @@ async def test_step_coordinates_unknown_coordinates(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_COORDINATES},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         user_input={CONF_LATITUDE: "0", CONF_LONGITUDE: "0"},
     )
     await hass.async_block_till_done()
@@ -184,7 +188,11 @@ async def test_step_login_coordinates(hass: HomeAssistant, client_login) -> None
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
+            user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_COORDINATES},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LATITUDE: "51.528308", CONF_LONGITUDE: "-0.3817765"},
         )
         await hass.async_block_till_done()
 
