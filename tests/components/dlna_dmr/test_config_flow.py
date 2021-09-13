@@ -330,6 +330,12 @@ async def test_import_flow_deferred_ssdp(
         CONF_POLL_AVAILABILITY: False,
     }
 
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
+
 
 async def test_import_flow_deferred_user(
     hass: HomeAssistant, mock_ssdp_scanner: Mock, aioclient_mock: AiohttpClientMocker
@@ -387,6 +393,12 @@ async def test_import_flow_deferred_user(
         CONF_POLL_AVAILABILITY: True,
     }
 
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
+
 
 async def test_ssdp_flow_success(hass: HomeAssistant, device_requests_mock) -> None:
     """Test that SSDP discovery with an available device works."""
@@ -402,6 +414,8 @@ async def test_ssdp_flow_success(hass: HomeAssistant, device_requests_mock) -> N
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
+    await hass.async_block_till_done()
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == GOOD_DEVICE_NAME
     assert result["data"] == {
@@ -410,6 +424,12 @@ async def test_ssdp_flow_success(hass: HomeAssistant, device_requests_mock) -> N
         CONF_TYPE: GOOD_DEVICE_TYPE,
     }
     assert result["options"] == {}
+
+    # Remove the device to clean up all resources, completing its life cycle
+    entry_id = result["result"].entry_id
+    assert await hass.config_entries.async_remove(entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_ssdp_flow_unavailable(hass: HomeAssistant, aioclient_mock) -> None:

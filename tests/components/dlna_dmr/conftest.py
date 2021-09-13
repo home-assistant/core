@@ -44,7 +44,12 @@ def skip_notifications_fixture() -> Iterable[None]:
 def mock_ssdp_scanner() -> Iterable[Mock]:
     """Mock the SSDP module."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
+        reg_callback = mock_scanner.return_value.async_register_callback
+        reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
+        assert (
+            reg_callback.call_count == reg_callback.return_value.call_count
+        ), "Not all callbacks unregistered"
 
 
 def configure_device_requests_mock(aioclient_mock: AiohttpClientMocker) -> None:

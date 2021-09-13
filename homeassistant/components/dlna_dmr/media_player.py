@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
 import functools
 from typing import Any, Callable, TypeVar, cast
@@ -36,7 +36,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_UPNP
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -131,8 +131,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _ssdp_callback: Callable | None = None
+    _remove_ssdp_callback: Callable | None = None
     check_available: bool = False
+
+    # Track BOOTID in SSDP advertisements for device changes
+    _bootid: int | None = None
 
     # DMR devices need polling for track position information. async_update will
     # determine whether further device polling is required.
@@ -166,28 +169,45 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 _LOGGER.debug("Couldn't connect immediately: %s", err)
 
         # Get SSDP notifications for only this device
-        self._ssdp_callback = ssdp.async_register_callback(
-            self.hass, self._async_ssdp_notified, {"USN": self.usn}
+        self._remove_ssdp_callback = await ssdp.async_register_callback(
+            self.hass, self.async_ssdp_callback, {"USN": self.usn}
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
-        if self._ssdp_callback:
-            self._ssdp_callback()
+        if self._remove_ssdp_callback:
+            self._remove_ssdp_callback()
         await self._device_disconnect()
 
-    @callback
-    def _async_ssdp_notified(self, info: dict[str, str]) -> None:
+    async def async_ssdp_callback(
+        self, info: Mapping[str, Any], change: ssdp.SsdpChange
+    ) -> None:
         """Handle notification from SSDP of device state change."""
         _LOGGER.debug(
-            "SSDP notification of device %s at %s",
+            "SSDP %s notification of device %s at %s",
+            change,
             info[ssdp.ATTR_SSDP_USN],
-            info[ssdp.ATTR_SSDP_LOCATION],
+            info.get(ssdp.ATTR_SSDP_LOCATION),
         )
 
-        if not self._device:
+        bootid_str = info.get(ssdp.ATTR_SSDP_BOOTID)
+        if bootid_str:
+            bootid = int(bootid_str, 10)
+            if self._bootid is not None and self._bootid != bootid and self._device:
+                # Device has rebooted, drop existing connection and maybe reconnect
+                await self._device_disconnect()
+            self._bootid = bootid
+
+        if change == ssdp.SsdpChange.BYEBYE and self._device:
+            # Device is going away, disconnect
+            await self._device_disconnect()
+
+        if (
+            change in (ssdp.SsdpChange.ALIVE, ssdp.SsdpChange.UPDATE)
+            and not self._device
+        ):
             location = info[ssdp.ATTR_SSDP_LOCATION]
-            self.hass.async_run_job(self._device_connect, location)
+            await self._device_connect(location)
 
     async def async_config_update_listener(
         self, hass: HomeAssistant, entry: config_entries.ConfigEntry
@@ -296,7 +316,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         assert self._device is not None
 
         try:
-            await self._device.async_update()
+            do_ping = self.poll_availability or self.check_available
+            await self._device.async_update(do_ping=do_ping)
         except UpnpError:
             _LOGGER.debug("Device unavailable")
             await self._device_disconnect()

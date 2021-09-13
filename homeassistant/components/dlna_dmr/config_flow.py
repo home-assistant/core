@@ -102,7 +102,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
 
         location = import_data[CONF_URL]
-        self._discoveries = self._get_discoveries()
+        self._discoveries = await self._async_get_discoveries()
 
         poll_availability = True
 
@@ -217,14 +217,17 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=title, data=data, options=options)
 
-    def _get_discoveries(self) -> list[Mapping[str, str]]:
+    async def _async_get_discoveries(self) -> list[Mapping[str, str]]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
         discoveries: list[Mapping[str, str]] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
-            discoveries.extend(ssdp.async_get_discovery_info_by_st(self.hass, udn_st))
+            st_discoveries = await ssdp.async_get_discovery_info_by_st(
+                self.hass, udn_st
+            )
+            discoveries.extend(st_discoveries)
 
         # Filter out devices already configured
         current_unique_ids = {

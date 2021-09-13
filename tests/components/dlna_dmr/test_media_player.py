@@ -257,7 +257,7 @@ async def test_device_available(
     }
     # Check SSDP notifications are registered
     mock_ssdp_scanner.async_register_callback.assert_called_once_with(
-        entity._async_ssdp_notified, {"USN": GOOD_DEVICE_USN}
+        entity.async_ssdp_callback, {"USN": GOOD_DEVICE_USN}
     )
 
     await send_initial_event_notifications(entity)
@@ -360,7 +360,7 @@ async def test_device_unavailable(
 
     # Check SSDP notifications are registered
     mock_ssdp_scanner.async_register_callback.assert_called_once_with(
-        entity._async_ssdp_notified, {"USN": GOOD_DEVICE_USN}
+        entity.async_ssdp_callback, {"USN": GOOD_DEVICE_USN}
     )
 
     # Check async_update will do nothing
@@ -417,13 +417,13 @@ async def test_become_available(
 
     # Send an SSDP notification with the new device URL
     assert device_requests_mock.call_count == 1
-    entity._async_ssdp_notified(
+    await entity.async_ssdp_callback(
         {
             ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
             ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-        }
+        },
+        ssdp.SsdpChange.ALIVE,
     )
-    await hass.async_block_till_done()
 
     # Device should be contacted, and entity should be updated
     assert device_requests_mock.call_count > 1
@@ -496,19 +496,20 @@ async def test_multiple_ssdp_alive(
     ) as create_device_mock:
 
         # Send two SSDP notifications with the new device URL
-        entity._async_ssdp_notified(
+        await entity.async_ssdp_callback(
             {
                 ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
                 ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-            }
+            },
+            ssdp.SsdpChange.ALIVE,
         )
-        entity._async_ssdp_notified(
+        await entity.async_ssdp_callback(
             {
                 ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
                 ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-            }
+            },
+            ssdp.SsdpChange.ALIVE,
         )
-        await hass.async_block_till_done()
 
     # Check device is contacted exactly once
     assert create_device_mock.call_count == 1
@@ -519,6 +520,106 @@ async def test_multiple_ssdp_alive(
     assert entity._device is not None
     assert entity.available is True
     assert entity.supported_features == 0x523F
+
+    # Clean up
+    await entity.async_remove()
+    assert entity._device is None
+
+
+async def test_ssdp_byebye(
+    hass: HomeAssistant,
+    device_requests_mock: AiohttpClientMocker,
+    mock_ssdp_scanner: Mock,
+) -> None:
+    """Test device is disconnected when byebye is received."""
+    # Start with a connected device
+    entity = await make_dmr_entity(hass, {CONF_URL: GOOD_DEVICE_LOCATION})
+    assert entity._device is not None
+
+    # First byebye will cause a disconnect
+    await entity.async_ssdp_callback(
+        {ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN}, ssdp.SsdpChange.BYEBYE
+    )
+    assert entity._device is None
+
+    # Second byebye will do nothing
+    last_request_count = device_requests_mock.call_count
+    await entity.async_ssdp_callback(
+        {ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN}, ssdp.SsdpChange.BYEBYE
+    )
+    assert entity._device is None
+    assert device_requests_mock.call_count == last_request_count
+
+    # Clean up
+    await entity.async_remove()
+    assert entity._device is None
+
+
+async def test_ssdp_bootid(
+    hass: HomeAssistant,
+    device_requests_mock: AiohttpClientMocker,
+    mock_ssdp_scanner: Mock,
+) -> None:
+    """Test an alive with a new BOOTID.UPNP.ORG header causes a reconnect."""
+    # Start with a disconnected device
+    entity: DlnaDmrEntity = await make_dmr_entity(
+        hass, {CONF_URL: UNCONTACTABLE_DEVICE_LOCATION}
+    )
+    assert entity._device is None
+
+    # Send SSDP alive with boot ID
+    await entity.async_ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "1",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+
+    assert entity._device is not None
+
+    # Send SSDP alive with same boot ID, nothing should happen
+    with patch.object(
+        entity, "_device_connect", wraps=entity._device_connect
+    ) as mock_connect, patch.object(
+        entity, "_device_disconnect", wraps=entity._device_disconnect
+    ) as mock_disconnect:
+        await entity.async_ssdp_callback(
+            {
+                ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
+                ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
+                ssdp.ATTR_SSDP_BOOTID: "1",
+            },
+            ssdp.SsdpChange.ALIVE,
+        )
+        assert mock_disconnect.call_count == 0
+        assert mock_connect.call_count == 0
+
+    assert entity._device is not None
+
+    # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
+    with patch.object(
+        entity, "_device_connect", wraps=entity._device_connect
+    ) as mock_connect, patch.object(
+        entity, "_device_disconnect", wraps=entity._device_disconnect
+    ) as mock_disconnect:
+        await entity.async_ssdp_callback(
+            {
+                ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
+                ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
+                ssdp.ATTR_SSDP_BOOTID: "2",
+            },
+            ssdp.SsdpChange.ALIVE,
+        )
+        assert mock_disconnect.call_count == 1
+        assert mock_connect.call_count == 1
+
+    assert entity._device is not None
+
+    # Clean up
+    await entity.async_remove()
+    assert entity._device is None
 
 
 async def test_become_unavailable(
@@ -578,6 +679,9 @@ async def test_become_unavailable(
     assert entity._device is None
     assert entity.check_available is False
 
+    # Clean up
+    await entity.async_remove()
+
 
 async def test_poll_availability(
     hass: HomeAssistant,
@@ -609,6 +713,10 @@ async def test_poll_availability(
     await entity.async_update()
     assert entity._device is not None
 
+    # Clean up
+    await entity.async_remove()
+    assert entity._device is None
+
 
 async def test_resubscribe_failure(
     hass: HomeAssistant,
@@ -623,6 +731,10 @@ async def test_resubscribe_failure(
         entity._device.device.services["urn:schemas-upnp-org:service:AVTransport:1"], []
     )
     assert entity.check_available is True
+
+    # Clean up
+    await entity.async_remove()
+    assert entity._device is None
 
 
 async def test_config_update(
@@ -695,3 +807,6 @@ async def test_config_update(
     # Device will *not* be reconnected
     assert device_requests_mock.call_count == 22
     assert entity.poll_availability is True
+
+    # Remove the entity to clean up all resources, completing its life cycle
+    await entity.async_remove()
