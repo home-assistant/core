@@ -189,7 +189,9 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     )
     node.receive_event(event)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
-    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:heart-pulse"
+    assert (
++        hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:heart-pulse"
++   )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
