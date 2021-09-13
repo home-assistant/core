@@ -84,19 +84,14 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             for id in DEVICE_KEYS_0_7
         ]
     ),
-    "3A": (
+    "3A": tuple(
         OneWireSwitchEntityDescription(
-            key="PIO.A",
+            key=f"PIO.{id}",
             entity_registry_enabled_default=False,
-            name="PIO A",
+            name=f"PIO {id}",
             read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.B",
-            entity_registry_enabled_default=False,
-            name="PIO B",
-            read_mode=READ_MODE_BOOL,
-        ),
+        )
+        for id in DEVICE_KEYS_A_B
     ),
 }
 
