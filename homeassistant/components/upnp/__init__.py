@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from ipaddress import ip_address
 from typing import Any
 
 import voluptuous as vol
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,6 +27,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_LOCAL_IP,
     CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
@@ -43,11 +46,19 @@ NOTIFICATION_TITLE = "UPnP/IGD Setup"
 PLATFORMS = ["binary_sensor", "sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {},
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    cv.deprecated(CONF_LOCAL_IP),
+                    {
+                        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
+                    },
+                )
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
