@@ -16,11 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_CONSIDER_HOME,
-    DEFAULT_CONSIDER_HOME,
-    DOMAIN,
-)
+from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DOMAIN
 from .errors import CannotLoginException
 from .router import get_api
 

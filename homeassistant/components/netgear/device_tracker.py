@@ -3,7 +3,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SOURCE_TYPE_ROUTER,
+)
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (

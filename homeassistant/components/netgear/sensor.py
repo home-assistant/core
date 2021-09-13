@@ -1,5 +1,4 @@
 """Support for Netgear routers."""
-from dataclasses import dataclass
 import logging
 
 from homeassistant.components.sensor import (
@@ -51,9 +50,7 @@ async def async_setup_entry(
             for attribute in ("type", "link_rate", "signal")
         ]
 
-    async_setup_netgear_entry(
-        hass, entry, async_add_entities, generate_sensor_classes
-    )
+    async_setup_netgear_entry(hass, entry, async_add_entities, generate_sensor_classes)
 
 
 class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
