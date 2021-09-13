@@ -173,7 +173,12 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SSL: ssl,
         }
 
+        if info.get('ModelName') is not None and info.get('DeviceName') is not None:
+            name = f"{info['ModelName']} - {info['DeviceName']}"
+        else:
+            name = info.get('ModelName', "Netgear router")
+
         return self.async_create_entry(
-            title=f"{info['ModelName']} - {info['DeviceName']}",
+            title=name,
             data=config_data,
         )
