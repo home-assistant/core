@@ -14,32 +14,18 @@
           "location_type": "[%key:common::config_flow::data::location%]"
         }
       },
-      "login": {
+      "user": {
         "description": "Input your username and password:",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
-      },
-      "register": {
-        "description": "Register for a WattTime account:",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "email": "[%key:common::config_flow::data::email%]",
-          "organization": "Organization Name"
-        }
-      },
-      "user": {
-        "description": "How you would like to authenticate with WattTime?"
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_coordinates": "No data for latitude/longitude",
-      "username_taken": "Username already registered"
+      "unknown_coordinates": "No data for latitude/longitude"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

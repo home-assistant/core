@@ -4,11 +4,9 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error",
-            "unknown_coordinates": "No data for latitude/longitude",
-            "username_taken": "Username already registered"
+            "unknown_coordinates": "No data for latitude/longitude"
         },
         "step": {
             "coordinates": {
@@ -24,24 +22,12 @@
                 },
                 "description": "Pick a location to monitor:"
             },
-            "login": {
+            "user": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
                 },
                 "description": "Input your username and password:"
-            },
-            "register": {
-                "data": {
-                    "email": "Email",
-                    "organization": "Organization Name",
-                    "password": "Password",
-                    "username": "Username"
-                },
-                "description": "Register for a WattTime account:"
-            },
-            "user": {
-                "description": "How you would like to authenticate with WattTime?"
             }
         }
     }

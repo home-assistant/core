@@ -1,29 +1,21 @@
 """Test the WattTime config flow."""
 from unittest.mock import AsyncMock, patch
 
-from aiowatttime.errors import (
-    CoordinatesNotFoundError,
-    InvalidCredentialsError,
-    UsernameTakenError,
-)
+from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
-    CONF_ORGANIZATION,
     LOCATION_TYPE_COORDINATES,
     LOCATION_TYPE_HOME,
 )
 from homeassistant.components.watttime.const import (
-    AUTH_TYPE_LOGIN,
-    AUTH_TYPE_REGISTER,
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
     DOMAIN,
 )
 from homeassistant.const import (
-    CONF_EMAIL,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
@@ -77,11 +69,7 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={"auth_type": AUTH_TYPE_LOGIN},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -94,13 +82,9 @@ async def test_duplicate_error(hass: HomeAssistant, client_login):
 
 
 async def test_show_form_coordinates(hass: HomeAssistant) -> None:
-    """Test showing the form to input coordinates."""
+    """Test showing the form to input custom latitude/longitude."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"auth_type": AUTH_TYPE_LOGIN},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -118,40 +102,6 @@ async def test_show_form_coordinates(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
 
-async def test_show_form_login(hass: HomeAssistant) -> None:
-    """Test showing the form to login."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"auth_type": AUTH_TYPE_LOGIN},
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "login"
-    assert result["errors"] is None
-
-
-async def test_show_form_register(hass: HomeAssistant) -> None:
-    """Test showing the form to register a new user."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"auth_type": AUTH_TYPE_REGISTER},
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "register"
-    assert result["errors"] is None
-
-
 async def test_show_form_user(hass: HomeAssistant) -> None:
     """Test showing the form to select the authentication type."""
     result = await hass.config_entries.flow.async_init(
@@ -160,6 +110,7 @@ async def test_show_form_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
     assert result["errors"] is None
 
 
@@ -174,11 +125,7 @@ async def test_step_coordinates_unknown_coordinates(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={"auth_type": AUTH_TYPE_LOGIN},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -203,11 +150,7 @@ async def test_step_coordinates_unknown_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={"auth_type": AUTH_TYPE_LOGIN},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -229,11 +172,7 @@ async def test_step_login_coordinates(hass: HomeAssistant, client_login) -> None
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_LOGIN},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+            data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -257,7 +196,7 @@ async def test_step_login_coordinates(hass: HomeAssistant, client_login) -> None
     }
 
 
-async def test_step_login_home(hass: HomeAssistant, client_login) -> None:
+async def test_step_user_home(hass: HomeAssistant, client_login) -> None:
     """Test a full login flow (selecting the home location)."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
@@ -267,11 +206,7 @@ async def test_step_login_home(hass: HomeAssistant, client_login) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_LOGIN},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+            data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -291,7 +226,7 @@ async def test_step_login_home(hass: HomeAssistant, client_login) -> None:
     }
 
 
-async def test_step_login_invalid_credentials(hass: HomeAssistant) -> None:
+async def test_step_user_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials are handled."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
@@ -301,11 +236,7 @@ async def test_step_login_invalid_credentials(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_LOGIN},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+            data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
         )
         await hass.async_block_till_done()
 
@@ -314,7 +245,7 @@ async def test_step_login_invalid_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("get_grid_region", [AsyncMock(side_effect=Exception)])
-async def test_step_login_unknown_error(hass: HomeAssistant, client_login) -> None:
+async def test_step_user_unknown_error(hass: HomeAssistant, client_login) -> None:
     """Test that an unknown error during the login step is handled."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
@@ -324,107 +255,9 @@ async def test_step_login_unknown_error(hass: HomeAssistant, client_login) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_LOGIN},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
+            data={CONF_USERNAME: "user", CONF_PASSWORD: "password"},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "unknown"}
-
-
-async def test_step_register(hass: HomeAssistant, client_login) -> None:
-    """Test a full user registration flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(
-        "homeassistant.components.watttime.config_flow.Client.async_register_new_username",
-    ), patch(
-        "homeassistant.components.watttime.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_REGISTER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "password",
-                CONF_EMAIL: "email@address.com",
-                CONF_ORGANIZATION: "My Organization",
-            },
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_LOCATION_TYPE: LOCATION_TYPE_HOME}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "32.87336, -117.22743"
-    assert result["data"] == {
-        CONF_USERNAME: "user",
-        CONF_PASSWORD: "password",
-        CONF_LATITUDE: 32.87336,
-        CONF_LONGITUDE: -117.22743,
-        CONF_BALANCING_AUTHORITY: "Authority 1",
-        CONF_BALANCING_AUTHORITY_ABBREV: "AUTH_1",
-    }
-
-
-async def test_step_register_unknown_error(hass: HomeAssistant) -> None:
-    """Test that an unknown error during the register step is handled."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(
-        "homeassistant.components.watttime.config_flow.Client.async_register_new_username",
-        AsyncMock(side_effect=Exception),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_REGISTER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "password",
-                CONF_EMAIL: "email@address.com",
-                CONF_ORGANIZATION: "My Organization",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_step_register_username_taken(hass: HomeAssistant) -> None:
-    """Test that a username being already taken the register step is handled."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(
-        "homeassistant.components.watttime.config_flow.Client.async_register_new_username",
-        AsyncMock(side_effect=UsernameTakenError),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={"auth_type": AUTH_TYPE_REGISTER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "password",
-                CONF_EMAIL: "email@address.com",
-                CONF_ORGANIZATION: "My Organization",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"username": "username_taken"}
