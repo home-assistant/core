@@ -90,7 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_COORDINATES_DATA_SCHEMA,
                 errors={CONF_LATITUDE: "unknown_coordinates"},
             )
-
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception while getting region: %s", err)
             return self.async_show_form(
