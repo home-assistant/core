@@ -486,6 +486,15 @@ coronavirus==1.1.1
 # homeassistant.components.utility_meter
 croniter==1.0.6
 
+# homeassistant.components.crownstone
+crownstone-cloud==1.4.7
+
+# homeassistant.components.crownstone
+crownstone-sse==2.0.2
+
+# homeassistant.components.crownstone
+crownstone-uart==2.1.0
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -1761,6 +1770,7 @@ pysensibo==1.0.3
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.crownstone
 # homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
@@ -2453,10 +2463,10 @@ youtube_dl==2021.04.26
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.2
+zeroconf==0.36.3
 
 # homeassistant.components.zha
-zha-quirks==0.0.60
+zha-quirks==0.0.61
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2477,7 +2487,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.37.1
+zigpy==0.38.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

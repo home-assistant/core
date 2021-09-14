@@ -27,6 +27,7 @@ homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cover.*
+homeassistant.components.crownstone.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*

@@ -104,6 +104,7 @@ homeassistant/components/coronavirus/* @home-assistant/core
 homeassistant/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
+homeassistant/components/crownstone/* @Crownstone @RicArch97
 homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
