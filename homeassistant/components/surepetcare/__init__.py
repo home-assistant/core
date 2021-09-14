@@ -3,20 +3,25 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
-from surepy import Surepy
+from surepy import Surepy, SurepyEntity
 from surepy.enums import LockState
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_FLAP_ID,
@@ -26,9 +31,7 @@ from .const import (
     CONF_PETS,
     DOMAIN,
     SERVICE_SET_LOCK_STATE,
-    SPC,
     SURE_API_TIMEOUT,
-    TOPIC_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,14 +68,28 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sure Petcare integration."""
-    conf = config[DOMAIN]
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Sure Petcare from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     try:
         surepy = Surepy(
-            conf[CONF_USERNAME],
-            conf[CONF_PASSWORD],
-            auth_token=None,
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            auth_token=entry.data[CONF_TOKEN],
             api_timeout=SURE_API_TIMEOUT,
             session=async_get_clientsession(hass),
         )
@@ -83,40 +100,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         return False
 
-    spc = SurePetcareAPI(hass, surepy)
-    hass.data[DOMAIN][SPC] = spc
+    async def _update_method() -> dict[int, SurepyEntity]:
+        """Get the latest data from Sure Petcare."""
+        try:
+            return await surepy.get_entities(refresh=True)
+        except SurePetcareError as err:
+            raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
-    await spc.async_update()
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_method=_update_method,
+        update_interval=SCAN_INTERVAL,
+    )
 
-    async_track_time_interval(hass, spc.async_update, SCAN_INTERVAL)
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+    await coordinator.async_config_entry_first_refresh()
 
-    # load platforms
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    lock_states = {
+        LockState.UNLOCKED.name.lower(): surepy.sac.unlock,
+        LockState.LOCKED_IN.name.lower(): surepy.sac.lock_in,
+        LockState.LOCKED_OUT.name.lower(): surepy.sac.lock_out,
+        LockState.LOCKED_ALL.name.lower(): surepy.sac.lock,
+    }
 
     async def handle_set_lock_state(call):
         """Call when setting the lock state."""
-        await spc.set_lock_state(call.data[ATTR_FLAP_ID], call.data[ATTR_LOCK_STATE])
-        await spc.async_update()
+        flap_id = call.data[ATTR_FLAP_ID]
+        state = call.data[ATTR_LOCK_STATE]
+        await lock_states[state](flap_id)
+        await coordinator.async_request_refresh()
 
     lock_state_service_schema = vol.Schema(
         {
             vol.Required(ATTR_FLAP_ID): vol.All(
-                cv.positive_int, vol.In(spc.states.keys())
+                cv.positive_int, vol.In(coordinator.data.keys())
             ),
             vol.Required(ATTR_LOCK_STATE): vol.All(
                 cv.string,
                 vol.Lower,
-                vol.In(
-                    [
-                        LockState.UNLOCKED.name.lower(),
-                        LockState.LOCKED_IN.name.lower(),
-                        LockState.LOCKED_OUT.name.lower(),
-                        LockState.LOCKED_ALL.name.lower(),
-                    ]
-                ),
+                vol.In(lock_states.keys()),
             ),
         }
     )
@@ -131,34 +157,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class SurePetcareAPI:
-    """Define a generic Sure Petcare object."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    def __init__(self, hass: HomeAssistant, surepy: Surepy) -> None:
-        """Initialize the Sure Petcare object."""
-        self.hass = hass
-        self.surepy = surepy
-        self.states: dict[int, Any] = {}
-
-    async def async_update(self, _: Any = None) -> None:
-        """Get the latest data from Sure Petcare."""
-
-        try:
-            self.states = await self.surepy.get_entities()
-        except SurePetcareError as error:
-            _LOGGER.error("Unable to fetch data: %s", error)
-            return
-
-        async_dispatcher_send(self.hass, TOPIC_UPDATE)
-
-    async def set_lock_state(self, flap_id: int, state: str) -> None:
-        """Update the lock state of a flap."""
-
-        if state == LockState.UNLOCKED.name.lower():
-            await self.surepy.sac.unlock(flap_id)
-        elif state == LockState.LOCKED_IN.name.lower():
-            await self.surepy.sac.lock_in(flap_id)
-        elif state == LockState.LOCKED_OUT.name.lower():
-            await self.surepy.sac.lock_out(flap_id)
-        elif state == LockState.LOCKED_ALL.name.lower():
-            await self.surepy.sac.lock(flap_id)
+    return unload_ok

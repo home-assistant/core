@@ -908,12 +908,15 @@ async def test_statistics_during_period(
             {
                 "statistic_id": "sensor.test",
                 "start": now.isoformat(),
+                "end": (now + timedelta(hours=1)).isoformat(),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
                 "last_reset": None,
                 "state": None,
                 "sum": None,
+                "sum_decrease": None,
+                "sum_increase": None,
             }
         ]
     }

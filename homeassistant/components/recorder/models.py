@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 import logging
-from typing import TypedDict
+from typing import TypedDict, overload
 
 from sqlalchemy import (
     Boolean,
@@ -39,7 +39,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 20
+SCHEMA_VERSION = 21
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -229,6 +229,7 @@ class StatisticData(TypedDict, total=False):
     last_reset: datetime | None
     state: float
     sum: float
+    sum_increase: float
 
 
 class Statistics(Base):  # type: ignore
@@ -253,6 +254,7 @@ class Statistics(Base):  # type: ignore
     last_reset = Column(DATETIME_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
+    sum_increase = Column(DOUBLE_TYPE)
 
     @staticmethod
     def from_stats(metadata_id: str, start: datetime, stats: StatisticData):
@@ -276,6 +278,9 @@ class StatisticMetaData(TypedDict, total=False):
 class StatisticsMeta(Base):  # type: ignore
     """Statistics meta data."""
 
+    __table_args__ = (
+        {"mysql_default_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
+    )
     __tablename__ = TABLE_STATISTICS_META
     id = Column(Integer, primary_key=True)
     statistic_id = Column(String(255), index=True)
@@ -386,6 +391,16 @@ class StatisticsRuns(Base):  # type: ignore
         )
 
 
+@overload
+def process_timestamp(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp(ts: datetime) -> datetime:
+    ...
+
+
 def process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
@@ -394,6 +409,16 @@ def process_timestamp(ts):
         return ts.replace(tzinfo=dt_util.UTC)
 
     return dt_util.as_utc(ts)
+
+
+@overload
+def process_timestamp_to_utc_isoformat(ts: None) -> None:
+    ...
+
+
+@overload
+def process_timestamp_to_utc_isoformat(ts: datetime) -> str:
+    ...
 
 
 def process_timestamp_to_utc_isoformat(ts: datetime | None) -> str | None:
