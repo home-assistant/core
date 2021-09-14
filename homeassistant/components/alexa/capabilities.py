@@ -1362,7 +1362,7 @@ class AlexaModeController(AlexaCapability):
             # Avoid usecases with only one preset_mode
             if len(preset_modes) == 1:
                 self._resource.add_mode(
-                    f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [PRESET_MODE_NA]
+                    f"{fan.ATTR_PRESET_MODE}.preset_mode_na", [PRESET_MODE_NA]
                 )
             return self._resource.serialize_capability_resources()
 
