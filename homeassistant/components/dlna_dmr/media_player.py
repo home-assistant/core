@@ -8,6 +8,7 @@ import functools
 from typing import Any, Callable, TypeVar, cast
 
 from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
+from async_upnp_client.const import NotificationSubType
 from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
 import voluptuous as vol
 
@@ -131,7 +132,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _remove_ssdp_callback: Callable | None = None
+    _remove_ssdp_callbacks: list[Callable] = []
     check_available: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
@@ -169,14 +170,28 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 _LOGGER.debug("Couldn't connect immediately: %s", err)
 
         # Get SSDP notifications for only this device
-        self._remove_ssdp_callback = await ssdp.async_register_callback(
-            self.hass, self.async_ssdp_callback, {"USN": self.usn}
+        self._remove_ssdp_callbacks.append(
+            await ssdp.async_register_callback(
+                self.hass, self.async_ssdp_callback, {"USN": self.usn}
+            )
+        )
+
+        # async_upnp_client.SsdpListener only reports byebye once for each *UDN*
+        # (device name) which often is not the USN (service within the device)
+        # that we're interested in. So also listen for byebye advertisements for
+        # the UDN, which is reported in the _udn field of the combined_headers.
+        self._remove_ssdp_callbacks.append(
+            await ssdp.async_register_callback(
+                self.hass,
+                self.async_ssdp_callback,
+                {"_udn": self.udn, "NTS": NotificationSubType.SSDP_BYEBYE},
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
-        if self._remove_ssdp_callback:
-            self._remove_ssdp_callback()
+        for callback in self._remove_ssdp_callbacks:
+            callback()
         await self._device_disconnect()
 
     async def async_ssdp_callback(
@@ -190,9 +205,17 @@ class DlnaDmrEntity(MediaPlayerEntity):
             info.get(ssdp.ATTR_SSDP_LOCATION),
         )
 
-        bootid_str = info.get(ssdp.ATTR_SSDP_BOOTID)
-        if bootid_str:
+        if change == ssdp.SsdpChange.UPDATE:
+            # This is an announcement that bootid is about to change. We'll deal
+            # with it when the ssdp:alive message comes through.
+            return
+
+        try:
+            bootid_str = info[ssdp.ATTR_SSDP_BOOTID]
             bootid = int(bootid_str, 10)
+        except (KeyError, ValueError):
+            pass
+        else:
             if self._bootid is not None and self._bootid != bootid and self._device:
                 # Device has rebooted, drop existing connection and maybe reconnect
                 await self._device_disconnect()
@@ -202,10 +225,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Device is going away, disconnect
             await self._device_disconnect()
 
-        if (
-            change in (ssdp.SsdpChange.ALIVE, ssdp.SsdpChange.UPDATE)
-            and not self._device
-        ):
+        if change == ssdp.SsdpChange.ALIVE and not self._device:
             location = info[ssdp.ATTR_SSDP_LOCATION]
             await self._device_connect(location)
 
