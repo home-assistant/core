@@ -145,8 +145,8 @@ async def async_setup_platform(
     registry = entity_registry.async_get(hass)
     old_entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
     if old_entity_id is not None:
-        _LOGGER.info(f"Updating unique id for camera {old_entity_id}")
-        await hass.async_add_executor_job(entity._update_unique_id)
+        _LOGGER.info("Updating unique id for camera %s", old_entity_id)
+        await hass.async_add_executor_job(entity.update_unique_id)
         unique_id = entity.unique_id
         assert unique_id is not None
         registry.async_update_entity(old_entity_id, new_unique_id=unique_id)
@@ -406,7 +406,7 @@ class AmcrestCam(Camera):
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                self._update_unique_id()
+                self.update_unique_id()
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
@@ -420,8 +420,13 @@ class AmcrestCam(Camera):
         else:
             self._update_succeeded = True
 
-    def _update_unique_id(self) -> None:
-        """Set the unique id."""
+    def update_unique_id(self) -> None:
+        """Set the unique id.
+
+        Used to determine the unique id for the entity migration from 2021.9.0,
+        this can be just run in the update() method once that is no longer
+        required.
+        """
         self._attr_unique_id = f"{self._api.serial_number.strip()}-{self._resolution}"
         _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
 
