@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "title": "Connect to your Poolstation account",
-        "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -16,7 +15,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }

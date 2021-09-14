@@ -66,7 +66,7 @@ class PoolstationDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{pool.id}",
+            name=f"{DOMAIN}-{pool.alias}",
             update_interval=UPDATE_INTERVAL,
         )
 
