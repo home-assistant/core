@@ -18,12 +18,14 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     DEFAULT_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL_LOGGER,
     DOMAIN,
     SOLAR_NET_ID_SYSTEM,
     FroniusDeviceInfo,
 )
 from .coordinator import (
     FroniusInverterUpdateCoordinator,
+    FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
@@ -75,6 +77,7 @@ class FroniusSolarNet:
 
         self.fronius: Fronius = self._init_bridge()
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
+        self.logger_coordinator: FroniusLoggerUpdateCoordinator | None = None
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
@@ -87,7 +90,19 @@ class FroniusSolarNet:
 
     async def init_devices(self) -> None:
         """Initialize DataUpdateCoordinators for SolarNet devices."""
+        if self._has_logger:
+            self.logger_coordinator = FroniusLoggerUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_logger_{self.host}",
+                update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL_LOGGER),
+            )
+            await self.logger_coordinator.async_config_entry_first_refresh()
+
+        # solar_net_device_info uses data from self.logger_coordinator when available
         solar_net_device_info = await self._create_solar_net_device()
+
         _inverter_infos = await self._get_inverter_infos()
         for inverter_info in _inverter_infos:
             coordinator = FroniusInverterUpdateCoordinator(
@@ -139,11 +154,8 @@ class FroniusSolarNet:
             identifiers={(DOMAIN, self.solar_net_device_id)},
             manufacturer="Fronius",
         )
-        if self._has_logger:
-            try:
-                _logger_info = await self.fronius.current_logger_info()
-            except FroniusError as err:
-                raise ConfigEntryNotReady from err
+        if self.logger_coordinator:
+            _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
             solar_net_device["model"] = _logger_info["product_type"]["value"]
             solar_net_device["sw_version"] = _logger_info["software_version"]["value"]
 

@@ -108,6 +108,25 @@ INVERTER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
+LOGGER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    "co2_factor": SensorEntityDescription(
+        key="co2_factor",
+        name="CO₂ factor",
+        state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:molecule-co2",
+    ),
+    "cash_factor": SensorEntityDescription(
+        key="cash_factor",
+        name="Grid export tariff",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    "delivery_factor": SensorEntityDescription(
+        key="delivery_factor",
+        name="Grid import tariff",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+}
+
 METER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "current_ac_phase_1": SensorEntityDescription(
         key="current_ac_phase_1",

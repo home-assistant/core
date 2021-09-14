@@ -11,9 +11,15 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SOLAR_NET_ID_POWER_FLOW, FroniusDeviceInfo, SolarNetId
+from .const import (
+    SOLAR_NET_ID_POWER_FLOW,
+    SOLAR_NET_ID_SYSTEM,
+    FroniusDeviceInfo,
+    SolarNetId,
+)
 from .descriptions import (
     INVERTER_ENTITY_DESCRIPTIONS,
+    LOGGER_ENTITY_DESCRIPTIONS,
     METER_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
@@ -111,6 +117,17 @@ class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
         # wrap a single devices data in a dict with solar_net_id key for
         # _FroniusUpdateCoordinator _async_update_data and add_entities_for_seen_keys
         return {self.inverter_info.solar_net_id: data}
+
+
+class FroniusLoggerUpdateCoordinator(_FroniusUpdateCoordinator):
+    """Query Fronius logger info endpoint and keep track of seen conditions."""
+
+    valid_descriptions = LOGGER_ENTITY_DESCRIPTIONS
+
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from pyfronius."""
+        data = await self.fronius.current_logger_info()
+        return {SOLAR_NET_ID_SYSTEM: data}
 
 
 class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
