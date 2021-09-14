@@ -18,6 +18,7 @@ from .const import DOMAIN, LOGGER
 class EventListenAddr(NamedTuple):
     """Unique identifier for an event listener."""
 
+    host: str | None  # Specific local IP(v6) address for listening on
     port: int  # Listening port, 0 means use an ephemeral port
     callback_url: str | None
 
@@ -71,6 +72,7 @@ class DlnaDmrData:
             server = AiohttpNotifyServer(
                 requester=self.requester,
                 listen_port=listen_addr.port,
+                listen_host=listen_addr.host,
                 callback_url=listen_addr.callback_url,
                 loop=loop,
             )
