@@ -178,27 +178,13 @@ def _async_validate_cost_stat(
             )
         )
 
-
-@callback
-def _async_validate_cost_entity(
-    hass: HomeAssistant, entity_id: str, result: list[ValidationIssue]
-) -> None:
-    """Validate that the cost entity is correct."""
-    if not recorder.is_entity_recorded(hass, entity_id):
-        result.append(
-            ValidationIssue(
-                "recorder_untracked",
-                entity_id,
-            )
-        )
-
-    state = hass.states.get(entity_id)
+    state = hass.states.get(stat_id)
 
     if state is None:
         result.append(
             ValidationIssue(
                 "entity_not_defined",
-                entity_id,
+                stat_id,
             )
         )
         return
@@ -213,7 +199,21 @@ def _async_validate_cost_entity(
     if state_class not in supported_state_classes:
         result.append(
             ValidationIssue(
-                "entity_unexpected_state_class_total_increasing", entity_id, state_class
+                "entity_unexpected_state_class_total_increasing", stat_id, state_class
+            )
+        )
+
+
+@callback
+def _async_validate_cost_entity(
+    hass: HomeAssistant, entity_id: str, result: list[ValidationIssue]
+) -> None:
+    """Validate that the auto generated cost entity is correct."""
+    if not recorder.is_entity_recorded(hass, entity_id):
+        result.append(
+            ValidationIssue(
+                "recorder_untracked",
+                entity_id,
             )
         )
 
