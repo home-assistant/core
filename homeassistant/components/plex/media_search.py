@@ -47,7 +47,7 @@ def search_media(media_type, library_section, **kwargs):
 
     if not libtype:
         # Default to a sane libtype if not explicitly provided
-        for libtype in [
+        for libtype in (
             "movie",
             "episode",
             "season",
@@ -56,7 +56,7 @@ def search_media(media_type, library_section, **kwargs):
             "album",
             "artist",
             None,
-        ]:
+        ):
             if not libtype or any(key.startswith(libtype) for key in search_query):
                 break
 

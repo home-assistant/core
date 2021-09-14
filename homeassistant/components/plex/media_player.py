@@ -502,8 +502,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         try:
             self.device.playMedia(playqueue)
-        except requests.exceptions.ConnectTimeout:
-            raise HomeAssistantError(f"Request failed when playing on {self.name}")
+        except requests.exceptions.ConnectTimeout as exc:
+            raise HomeAssistantError(
+                f"Request failed when playing on {self.name}"
+            ) from exc
 
     @property
     def extra_state_attributes(self):
