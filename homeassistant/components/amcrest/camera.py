@@ -14,9 +14,11 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM, Camera
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -33,6 +35,7 @@ from .const import (
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
+    DOMAIN,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
 )
@@ -133,7 +136,22 @@ async def async_setup_platform(
 
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
-    async_add_entities([AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
+    entity = AmcrestCam(name, device, hass.data[DATA_FFMPEG])
+
+    # 2021.9.0 introduced unique id's for the camera entity, but these were not
+    # unique for different resolution streams.  If any cameras were configured
+    # with this version, update the old entity with the new unique id.
+    serial_number = await hass.async_add_executor_job(lambda: device.api.serial_number)  # type: ignore[no-any-return]
+    registry = entity_registry.async_get(hass)
+    old_entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
+    if old_entity_id is not None:
+        _LOGGER.info(f"Updating unique id for camera {old_entity_id}")
+        await hass.async_add_executor_job(entity._update_unique_id)
+        unique_id = entity.unique_id
+        assert unique_id is not None
+        registry.async_update_entity(old_entity_id, new_unique_id=unique_id)
+
+    async_add_entities([entity], True)
 
 
 class CannotSnapshot(Exception):
@@ -388,15 +406,7 @@ class AmcrestCam(Camera):
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                if self._resolution == 0:
-                    # Use just the serial number for the high resolution stream.
-                    self._attr_unique_id = self._api.serial_number.strip()
-                else:
-                    # Differentiate the other streams by the configured resolution value.
-                    self._attr_unique_id = (
-                        f"{self._api.serial_number.strip()}-{self._resolution}"
-                    )
-                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+                self._update_unique_id()
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
@@ -409,6 +419,11 @@ class AmcrestCam(Camera):
             self._update_succeeded = False
         else:
             self._update_succeeded = True
+
+    def _update_unique_id(self) -> None:
+        """Set the unique id."""
+        self._attr_unique_id = f"{self._api.serial_number.strip()}-{self._resolution}"
+        _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
 
     # Other Camera method overrides
 
