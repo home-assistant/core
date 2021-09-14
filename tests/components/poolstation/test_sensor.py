@@ -21,8 +21,8 @@ from .common import init_integration, mock_config_entry, mock_pool
 
 async def test_pool_sensors(hass: HomeAssistant) -> None:
     """Test the creation and values of the Poolstation sensors."""
-    config_entry = mock_config_entry(uniqe_id="id_123_sensor_test_pool")
-    pool = mock_pool(id=123)
+    config_entry = mock_config_entry(uniqe_id="id_my_pool_sensor_test_pool")
+    pool = mock_pool(id=123, alias="my_pool")
     await init_integration(hass, config_entry, [pool])
     registry = entity_registry.async_get(hass)
 

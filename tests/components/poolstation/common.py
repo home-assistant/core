@@ -50,7 +50,7 @@ def mock_pool(
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pools: list[MagicMock] = [mock_pool(id=123)],
+    mock_pools: list[MagicMock] = [mock_pool(id=123, alias="my_pool")],
 ) -> None:
     """Initialize the Poolstation integration with the given Config Entry and Pool list."""
     mock_config_entry.add_to_hass(hass)

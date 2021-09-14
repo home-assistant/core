@@ -12,7 +12,7 @@ from .common import init_integration, mock_config_entry
 
 async def test_config_entry_not_ready(hass: HomeAssistant):
     """Test the Poolstation configuration entry setup if connection to Poolstation is missing."""
-    config_entry = mock_config_entry(uniqe_id="id_123_not_ready")
+    config_entry = mock_config_entry(uniqe_id="id_my_pool_not_ready")
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.poolstation.Pool.all",
@@ -24,7 +24,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant):
 
 async def test_config_entry_unload(hass: HomeAssistant) -> None:
     """Test the Poolstation configuration entry setup and unloading."""
-    config_entry = mock_config_entry(uniqe_id="id_123_unload")
+    config_entry = mock_config_entry(uniqe_id="id_my_pool_unload")
     with patch(
         "homeassistant.components.poolstation.Pool.all",
         return_value=[],
