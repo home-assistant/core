@@ -41,7 +41,7 @@ async def async_setup_entry(
 class PoolPhSensor(PoolEntity, SensorEntity):
     """Representation of a pool's PH sensor."""
 
-    _attr_icon = "mdi:flask"
+    _attr_icon = "mdi:ph"
 
     def __init__(
         self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator

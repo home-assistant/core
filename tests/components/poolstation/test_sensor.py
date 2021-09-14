@@ -30,7 +30,7 @@ async def test_pool_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.home_ph")
     assert state
     assert state.state == str(pool.current_ph)
-    assert state.attributes.get(ATTR_ICON) == "mdi:flask"
+    assert state.attributes.get(ATTR_ICON) == "mdi:ph"
     entry = registry.async_get("sensor.home_ph")
     assert entry
     assert entry.unique_id == f"{pool.alias}{PH_SUFFIX}"

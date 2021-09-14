@@ -1723,7 +1723,7 @@ pyplaato==0.0.15
 pypoint==2.2.0
 
 # homeassistant.components.poolstation
-pypoolstation==0.2.0
+pypoolstation==0.3.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5

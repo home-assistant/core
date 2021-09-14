@@ -13,7 +13,7 @@ VALID_PASSWORD = "passw0rd"
 WRONG_PASSWORD = "wrong-passw0rd"
 
 
-def _mock_account(*_):
+def _mock_account(*_, **kwargs):
     account = MagicMock()
     account.login = AsyncMock(return_value="any")
     account.token = "any"

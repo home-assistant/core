@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, TOKEN
 
@@ -38,7 +39,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
         errors = {}
-        account = Account(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+        session = async_get_clientsession(self.hass)
+        account = Account(
+            session, username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
+        )
 
         try:
             token = await account.login()
