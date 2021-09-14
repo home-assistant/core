@@ -34,7 +34,6 @@ from .const import (
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_CONFIG,
     DOMAIN_DEVICES,
     LOGGER,
 )
@@ -66,10 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up UPnP component."""
     LOGGER.debug("async_setup, config: %s", config)
-    conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-    conf = config.get(DOMAIN, conf_default)
     hass.data[DOMAIN] = {
-        DOMAIN_CONFIG: conf,
         DOMAIN_DEVICES: {},
     }
 

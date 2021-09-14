@@ -8,7 +8,6 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_LOCAL_IP = "local_ip"
 DOMAIN = "upnp"
-DOMAIN_CONFIG = "config"
 DOMAIN_DEVICES = "devices"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
