@@ -55,6 +55,7 @@ homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
+homeassistant.components.jewish_calendar.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lcn.*
