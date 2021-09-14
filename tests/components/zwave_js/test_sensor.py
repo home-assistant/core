@@ -20,6 +20,7 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -168,24 +169,30 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     )
     node.receive_event(event)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "dead"
-
+    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:robot-dead"
+    
     event = Event(
         "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "awake"
+    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:eye"
 
     event = Event(
         "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "asleep"
+    assert hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:sleep"
 
     event = Event(
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
+    assert (
+        hass.states.get(NODE_STATUS_ENTITY).attributes[ATTR_ICON] == "mdi:heart-pulse"
+    )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
