@@ -77,7 +77,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_MIN): vol.Coerce(float),
     vol.Optional(CONF_MAX): vol.Coerce(float),
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
+    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
