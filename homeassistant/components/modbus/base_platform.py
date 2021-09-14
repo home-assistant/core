@@ -111,7 +111,7 @@ class BasePlatform(Entity):
 
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
-        await self.async_remote_start()
+        self.async_remote_start()
         async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_remote_stop)
         async_dispatcher_connect(
             self.hass, SIGNAL_START_ENTITY, self.async_remote_start
