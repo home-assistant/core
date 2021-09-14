@@ -60,7 +60,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._client: Client | None = None
-        self._location_type_step: str | None = None
         self._password: str | None = None
         self._username: str | None = None
 
