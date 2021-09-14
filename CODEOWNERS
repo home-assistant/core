@@ -312,6 +312,7 @@ homeassistant/components/minecraft_server/* @elmurato
 homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/modbus/* @adamchengtkc @janiversen @vzahradnik
+homeassistant/components/modem_callerid/* @tkdrob
 homeassistant/components/modern_forms/* @wonderslug
 homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
@@ -576,6 +577,7 @@ homeassistant/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid @thecode
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @esev
+homeassistant/components/whirlpool/* @abmantis
 homeassistant/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj
 homeassistant/components/wirelesstag/* @sergeymaysak

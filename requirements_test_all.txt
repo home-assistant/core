@@ -662,6 +662,9 @@ pdunehd==1.3.2
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
+# homeassistant.components.modem_callerid
+phone_modem==0.1.1
+
 # homeassistant.components.onewire
 pi1wire==0.1.0
 
@@ -891,7 +894,7 @@ pykira==0.1.1
 pykmtronic==0.3.0
 
 # homeassistant.components.kodi
-pykodi==0.2.5
+pykodi==0.2.6
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
@@ -1337,6 +1340,9 @@ wallbox==0.4.4
 # homeassistant.components.folder_watcher
 watchdog==2.1.4
 
+# homeassistant.components.whirlpool
+whirlpool-sixth-sense==0.15.1
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 
@@ -1379,7 +1385,7 @@ youless-api==0.12
 zeroconf==0.36.2
 
 # homeassistant.components.zha
-zha-quirks==0.0.60
+zha-quirks==0.0.61
 
 # homeassistant.components.zha
 zigpy-deconz==0.13.0
@@ -1394,7 +1400,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.5.4
 
 # homeassistant.components.zha
-zigpy==0.37.1
+zigpy==0.38.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.30.0
