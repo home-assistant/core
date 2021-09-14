@@ -111,6 +111,7 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         key=_ONLINE_KEY,
         name="Online",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        should_poll=True,
     ),
 )
 BINARY_SENSOR_KEYS = [description.key for description in BINARY_SENSORS]

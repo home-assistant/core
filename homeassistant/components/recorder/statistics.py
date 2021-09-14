@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
 from typing import TYPE_CHECKING, Any, Callable
 
 from sqlalchemy import bindparam
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
 
@@ -31,6 +33,7 @@ from .models import (
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
+    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, retryable_database_job, session_scope
@@ -47,6 +50,7 @@ QUERY_STATISTICS = [
     Statistics.last_reset,
     Statistics.state,
     Statistics.sum,
+    Statistics.sum_increase,
 ]
 
 QUERY_STATISTIC_META = [
@@ -86,6 +90,18 @@ UNIT_CONVERSIONS = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class ValidationIssue:
+    """Error or warning message."""
+
+    type: str
+    data: dict[str, str | None] | None = None
+
+    def as_dict(self) -> dict:
+        """Return dictionary version."""
+        return dataclasses.asdict(self)
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -215,7 +231,14 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                 metadata_id = _update_or_add_metadata(
                     instance.hass, session, entity_id, stat["meta"]
                 )
-                session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+                try:
+                    session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+                except SQLAlchemyError:
+                    _LOGGER.exception(
+                        "Unexpected exception when inserting statistics %s:%s ",
+                        metadata_id,
+                        stat,
+                    )
         session.add(StatisticsRuns(start=start))
 
     return True
@@ -369,11 +392,11 @@ def statistics_during_period(
         )
         if not stats:
             return {}
-        return _sorted_statistics_to_dict(hass, stats, statistic_ids, metadata)
+        return _sorted_statistics_to_dict(hass, stats, statistic_ids, metadata, True)
 
 
 def get_last_statistics(
-    hass: HomeAssistant, number_of_stats: int, statistic_id: str
+    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a statistic_id."""
     statistic_ids = [statistic_id]
@@ -403,7 +426,9 @@ def get_last_statistics(
         if not stats:
             return {}
 
-        return _sorted_statistics_to_dict(hass, stats, statistic_ids, metadata)
+        return _sorted_statistics_to_dict(
+            hass, stats, statistic_ids, metadata, convert_units
+        )
 
 
 def _sorted_statistics_to_dict(
@@ -411,40 +436,61 @@ def _sorted_statistics_to_dict(
     stats: list,
     statistic_ids: list[str] | None,
     metadata: dict[str, StatisticMetaData],
+    convert_units: bool,
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
     units = hass.config.units
+
+    def no_conversion(val: Any, _: Any) -> float | None:
+        """Return x."""
+        return val  # type: ignore
 
     # Set all statistic IDs to empty lists in result set to maintain the order
     if statistic_ids is not None:
         for stat_id in statistic_ids:
             result[stat_id] = []
 
-    # Called in a tight loop so cache the function here
-    _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
-
     # Append all statistic entries, and do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
         unit = metadata[meta_id]["unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
-        convert: Callable[[Any, Any], float | None] = UNIT_CONVERSIONS.get(
-            unit, lambda x, units: x  # type: ignore
-        )
+        convert: Callable[[Any, Any], float | None]
+        if convert_units:
+            convert = UNIT_CONVERSIONS.get(unit, lambda x, units: x)  # type: ignore
+        else:
+            convert = no_conversion
         ent_results = result[meta_id]
-        ent_results.extend(
-            {
-                "statistic_id": statistic_id,
-                "start": _process_timestamp_to_utc_isoformat(db_state.start),
-                "mean": convert(db_state.mean, units),
-                "min": convert(db_state.min, units),
-                "max": convert(db_state.max, units),
-                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
-                "state": convert(db_state.state, units),
-                "sum": convert(db_state.sum, units),
-            }
-            for db_state in group
-        )
+        for db_state in group:
+            start = process_timestamp(db_state.start)
+            end = start + timedelta(hours=1)
+            ent_results.append(
+                {
+                    "statistic_id": statistic_id,
+                    "start": start.isoformat(),
+                    "end": end.isoformat(),
+                    "mean": convert(db_state.mean, units),
+                    "min": convert(db_state.min, units),
+                    "max": convert(db_state.max, units),
+                    "last_reset": process_timestamp_to_utc_isoformat(
+                        db_state.last_reset
+                    ),
+                    "state": convert(db_state.state, units),
+                    "sum": (_sum := convert(db_state.sum, units)),
+                    "sum_increase": (inc := convert(db_state.sum_increase, units)),
+                    "sum_decrease": None if _sum is None or inc is None else inc - _sum,
+                }
+            )
 
     # Filter out the empty lists if some states had 0 results.
     return {metadata[key]["statistic_id"]: val for key, val in result.items() if val}
+
+
+def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
+    """Validate statistics."""
+    platform_validation: dict[str, list[ValidationIssue]] = {}
+    for platform in hass.data[DOMAIN].values():
+        if not hasattr(platform, "validate_statistics"):
+            continue
+        platform_validation.update(platform.validate_statistics(hass))
+    return platform_validation

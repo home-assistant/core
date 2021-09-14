@@ -3,6 +3,7 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
+from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
 
@@ -122,6 +123,39 @@ async def test_listen_failure(hass, client, error):
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_new_entity_on_value_added(hass, multisensor_6, client, integration):
+    """Test we create a new entity if a value is added after the fact."""
+    node: Node = multisensor_6
+
+    # Add a value on a random endpoint so we can be sure we should get a new entity
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 10,
+                "property": "Ultraviolet",
+                "propertyName": "Ultraviolet",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Ultraviolet",
+                    "ccSpecific": {"sensorType": 27, "scale": 0},
+                },
+                "value": 0,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
 
 
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):

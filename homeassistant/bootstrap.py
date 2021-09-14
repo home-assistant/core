@@ -564,6 +564,14 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
+    # Wrap up startup
+    _LOGGER.debug("Waiting for startup to wrap up")
+    try:
+        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+
     watch_task.cancel()
     async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
 
@@ -576,11 +584,3 @@ async def _async_set_up_integrations(
             )
         },
     )
-
-    # Wrap up startup
-    _LOGGER.debug("Waiting for startup to wrap up")
-    try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
-            await hass.async_block_till_done()
-    except asyncio.TimeoutError:
-        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
