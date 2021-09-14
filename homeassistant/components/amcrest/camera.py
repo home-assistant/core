@@ -143,13 +143,14 @@ async def async_setup_platform(
     # with this version, update the old entity with the new unique id.
     serial_number = await hass.async_add_executor_job(lambda: device.api.serial_number)  # type: ignore[no-any-return]
     registry = entity_registry.async_get(hass)
-    old_entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
-    if old_entity_id is not None:
-        _LOGGER.info("Updating unique id for camera %s", old_entity_id)
+    entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
+    if entity_id is not None:
+        msg = f"Updating unique id for camera {entity_id}"
+        _LOGGER.info(msg)
         await hass.async_add_executor_job(entity.update_unique_id)
-        unique_id = entity.unique_id
-        assert unique_id is not None
-        registry.async_update_entity(old_entity_id, new_unique_id=unique_id)
+        new_unique_id = entity.unique_id
+        assert new_unique_id is not None
+        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     async_add_entities([entity], True)
 
@@ -427,8 +428,10 @@ class AmcrestCam(Camera):
         this can be just run in the update() method once that is no longer
         required.
         """
-        self._attr_unique_id = f"{self._api.serial_number.strip()}-{self._resolution}"
-        _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+        serial_number = self._api.serial_number.strip()
+        if serial_number:
+            self._attr_unique_id = f"{serial_number}-{self._resolution}"
+            _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
 
     # Other Camera method overrides
 
