@@ -40,7 +40,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 21
+SCHEMA_VERSION = 22
 
 _LOGGER = logging.getLogger(__name__)
 
