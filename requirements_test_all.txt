@@ -285,6 +285,15 @@ coronavirus==1.1.1
 # homeassistant.components.utility_meter
 croniter==1.0.6
 
+# homeassistant.components.crownstone
+crownstone-cloud==1.4.7
+
+# homeassistant.components.crownstone
+crownstone-sse==2.0.2
+
+# homeassistant.components.crownstone
+crownstone-uart==2.1.0
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -1026,6 +1035,7 @@ pyruckus==0.12
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
+# homeassistant.components.crownstone
 # homeassistant.components.usb
 # homeassistant.components.zha
 pyserial==3.5
