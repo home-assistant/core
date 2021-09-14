@@ -69,10 +69,12 @@ class Ted5000Sensor(SensorEntity):
     def __init__(self, gateway, name, mtu, unit):
         """Initialize the sensor."""
         units = {POWER_WATT: "power", ELECTRIC_POTENTIAL_VOLT: "voltage"}
+        dclass = {POWER_WATT: DEVICE_CLASS_POWER, ELECTRIC_POTENTIAL_VOLT: DEVICE_CLASS_VOLTAGE}
         self._gateway = gateway
         self._name = f"{name} mtu{mtu} {units[unit]}"
         self._mtu = mtu
         self._unit = unit
+        self._dclass = dclass[unit]
         self.update()
 
     @property
@@ -88,10 +90,7 @@ class Ted5000Sensor(SensorEntity):
     @property
     def device_class(self):
         """Return the device class the value is expressed in."""
-        if self._unit is POWER_WATT:
-            return DEVICE_CLASS_POWER
-        if self._unit is ELECTRIC_POTENTIAL_VOLT:
-            return DEVICE_CLASS_VOLTAGE
+        return self._dclass
 
     @property
     def native_value(self):
