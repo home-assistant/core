@@ -90,7 +90,8 @@ class BasePlatform(Entity):
     async def async_update(self, now=None):
         """Virtual function to be overwritten."""
 
-    async def async_remote_start(self) -> None:
+    @callback
+    def async_remote_start(self) -> None:
         """Remote start entity."""
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
