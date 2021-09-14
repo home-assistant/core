@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -93,6 +94,9 @@ class BasePlatform(Entity):
     @callback
     def async_remote_start(self) -> None:
         """Remote start entity."""
+        if self._cancel_timer:
+            self._cancel_timer()
+            self._cancel_timer = None
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
