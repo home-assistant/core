@@ -48,7 +48,7 @@ from .const import (
 from .errors import (
     AuthenticationError,
     CannotConnect,
-    TrasnmissionrBaseError,
+    TransmissionrBaseError,
     UnknownError,
 )
 
@@ -139,7 +139,7 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             tm_api = await get_api(self.hass, {**self.config_entry.data})
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
-        except TrasnmissionrBaseError as error:
+        except TransmissionrBaseError as error:
             raise ConfigEntryNotReady from error
 
         self.add_options()

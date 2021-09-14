@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     SUPPORTED_ORDER_MODES,
 )
-from .errors import AuthenticationError, TrasnmissionrBaseError
+from .errors import AuthenticationError, TransmissionrBaseError
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -79,7 +79,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except TrasnmissionrBaseError:
+            except TransmissionrBaseError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -120,7 +120,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except TrasnmissionrBaseError:
+            except TransmissionrBaseError:
                 errors["base"] = "cannot_connect"
 
             if not errors:

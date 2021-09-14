@@ -2,17 +2,17 @@
 from homeassistant.exceptions import HomeAssistantError
 
 
-class TrasnmissionrBaseError(HomeAssistantError):
+class TransmissionrBaseError(HomeAssistantError):
     """Base exception for transmission client."""
 
 
-class AuthenticationError(TrasnmissionrBaseError):
+class AuthenticationError(TransmissionrBaseError):
     """Wrong Username or Password."""
 
 
-class CannotConnect(TrasnmissionrBaseError):
+class CannotConnect(TransmissionrBaseError):
     """Unable to connect to client."""
 
 
-class UnknownError(TrasnmissionrBaseError):
+class UnknownError(TransmissionrBaseError):
     """Unknown Error."""
