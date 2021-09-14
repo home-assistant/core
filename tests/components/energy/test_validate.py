@@ -567,11 +567,6 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                     "identifier": "sensor.gas_consumption_4",
                     "value": None,
                 },
-                {
-                    "type": "entity_unexpected_unit_gas",
-                    "identifier": "sensor.gas_consumption_4",
-                    "value": "beers",
-                },
             ],
         ],
         "device_consumption": [],
