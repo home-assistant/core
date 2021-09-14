@@ -87,8 +87,8 @@ async def test_setup_entry_with_options(
     entity = added_entities[0]
     assert isinstance(entity, media_player.DlnaDmrEntity)
     assert entity.poll_availability is True
-    assert entity._event_addr.port == 2222
-    assert entity._event_addr.callback_url == "http://192.88.99.10/events"
+    assert entity._event_port == 2222
+    assert entity._event_callback_url == "http://192.88.99.10/events"
 
 
 UPNP_CTRL_RESPONSE_BLANK = """<?xml version="1.0" encoding="utf-8"?><s:Envelope
@@ -795,7 +795,7 @@ async def test_config_update(
     assert entity._device is not None
     # Device will be reconnected
     assert device_requests_mock.call_count == 14
-    assert entity._event_addr.callback_url == "http://example.com"
+    assert entity._event_callback_url == "http://example.com"
 
     hass.config_entries.async_update_entry(
         config_entry,
@@ -808,7 +808,7 @@ async def test_config_update(
     assert entity._device is not None
     # Device will be reconnected
     assert device_requests_mock.call_count == 22
-    assert entity._event_addr.port == 1234
+    assert entity._event_port == 1234
 
     hass.config_entries.async_update_entry(
         config_entry,
