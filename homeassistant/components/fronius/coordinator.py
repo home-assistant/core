@@ -35,6 +35,7 @@ class _FroniusUpdateCoordinator(
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the _FroniusUpdateCoordinator class."""
+        self.lock = solar_net.coordinator_lock
         self.fronius: Fronius = solar_net.fronius
         self.solar_net_device_id = solar_net.solar_net_device_id
         # unregistered_keys are used to create entities in platform module
@@ -47,16 +48,17 @@ class _FroniusUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[SolarNetId, Any]:
         """Fetch the latest data from the source."""
-        try:
-            data = await self._update_method()
-        except FroniusError as err:
-            raise UpdateFailed(err) from err
+        async with self.lock:
+            try:
+                data = await self._update_method()
+            except FroniusError as err:
+                raise UpdateFailed(err) from err
 
-        for solar_net_id in data:
-            if solar_net_id not in self.unregistered_keys:
-                # id seen for the first time
-                self.unregistered_keys[solar_net_id] = set(self.valid_descriptions)
-        return data
+            for solar_net_id in data:
+                if solar_net_id not in self.unregistered_keys:
+                    # id seen for the first time
+                    self.unregistered_keys[solar_net_id] = set(self.valid_descriptions)
+            return data
 
     @callback
     def add_entities_for_seen_keys(

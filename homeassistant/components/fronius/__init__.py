@@ -1,6 +1,7 @@
 """The Fronius integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import TypeVar
@@ -64,6 +65,7 @@ class FroniusSolarNet:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
         self.config_entry_id = entry.entry_id
+        self.coordinator_lock = asyncio.Lock()
         self.host: str = entry.data[CONF_HOST]
         # entry.unique_id is either logger uid or first inverter uid if no logger available
         # prepended by "solar_net_" to have individual device for whole system (power_flow)
