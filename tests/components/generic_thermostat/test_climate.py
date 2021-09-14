@@ -42,6 +42,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
+    async_mock_service,
     mock_restore_cache,
 )
 from tests.components.climate import common
@@ -1189,14 +1190,15 @@ async def test_custom_setup_params(hass):
     assert state.attributes.get("temperature") == TARGET_TEMP
 
 
-async def test_restore_state(hass):
+@pytest.mark.parametrize("hvac_mode", [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_COOL])
+async def test_restore_state(hass, hvac_mode):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
         (
             State(
                 "climate.test_thermostat",
-                HVAC_MODE_OFF,
+                hvac_mode,
                 {ATTR_TEMPERATURE: "20", ATTR_PRESET_MODE: PRESET_AWAY},
             ),
         ),
@@ -1221,7 +1223,7 @@ async def test_restore_state(hass):
     state = hass.states.get("climate.test_thermostat")
     assert state.attributes[ATTR_TEMPERATURE] == 20
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_AWAY
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == hvac_mode
 
 
 async def test_no_restore_state(hass):
@@ -1345,6 +1347,66 @@ async def test_restore_will_turn_off_(hass):
     assert state.attributes[ATTR_TEMPERATURE] == 20
     assert state.state == HVAC_MODE_HEAT
     assert hass.states.get(heater_switch).state == STATE_ON
+
+
+async def test_restore_will_turn_off_when_loaded_second(hass):
+    """Ensure that restored state is coherent with real situation.
+
+    Switch is not available until after component is loaded
+    """
+    heater_switch = "input_boolean.test"
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "climate.test_thermostat",
+                HVAC_MODE_HEAT,
+                {ATTR_TEMPERATURE: "18", ATTR_PRESET_MODE: PRESET_NONE},
+            ),
+            State(heater_switch, STATE_ON, {}),
+        ),
+    )
+
+    hass.state = CoreState.starting
+
+    await hass.async_block_till_done()
+    assert hass.states.get(heater_switch) is None
+
+    _setup_sensor(hass, 16)
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test_thermostat",
+                "heater": heater_switch,
+                "target_sensor": ENT_SENSOR,
+                "target_temp": 20,
+                "initial_hvac_mode": HVAC_MODE_OFF,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("climate.test_thermostat")
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert state.state == HVAC_MODE_OFF
+
+    calls_on = async_mock_service(hass, ha.DOMAIN, SERVICE_TURN_ON)
+    calls_off = async_mock_service(hass, ha.DOMAIN, SERVICE_TURN_OFF)
+
+    assert await async_setup_component(
+        hass, input_boolean.DOMAIN, {"input_boolean": {"test": None}}
+    )
+    await hass.async_block_till_done()
+    # heater must be switched off
+    assert len(calls_on) == 0
+    assert len(calls_off) == 1
+    call = calls_off[0]
+    assert call.domain == HASS_DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data["entity_id"] == "input_boolean.test"
 
 
 async def test_restore_state_uncoherence_case(hass):
