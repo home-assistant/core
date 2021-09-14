@@ -28,7 +28,7 @@ from typing import Any
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = "prototype"
-DEFAULT_HOST = "192.168.160.1"
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4444
 
 
@@ -58,10 +58,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._connect_to_oocsi(user_input)
-
             except:
                 return self._async_show_form_popup({"base": "cannot find oocsi"})
-
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
                 data={
