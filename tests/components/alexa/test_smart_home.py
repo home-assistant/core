@@ -735,6 +735,78 @@ async def test_preset_mode_fan(hass, caplog):
     caplog.clear()
 
 
+async def test_single_preset_mode_fan(hass, caplog):
+    """Test fan discovery.
+
+    This one has only preset mode.
+    """
+    device = (
+        "fan.test_8",
+        "off",
+        {
+            "friendly_name": "Test fan 8",
+            "supported_features": 8,
+            "preset_modes": ["auto"],
+            "preset_mode": "auto",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "fan#test_8"
+    assert appliance["displayCategories"][0] == "FAN"
+    assert appliance["friendlyName"] == "Test fan 8"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.EndpointHealth",
+        "Alexa.ModeController",
+        "Alexa.PowerController",
+        "Alexa",
+    )
+
+    range_capability = get_capability(capabilities, "Alexa.ModeController")
+    assert range_capability is not None
+    assert range_capability["instance"] == "fan.preset_mode"
+
+    properties = range_capability["properties"]
+    assert properties["nonControllable"] is False
+    assert {"name": "mode"} in properties["supported"]
+
+    capability_resources = range_capability["capabilityResources"]
+    assert capability_resources is not None
+    assert {
+        "@type": "asset",
+        "value": {"assetId": "Alexa.Setting.Preset"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = range_capability["configuration"]
+    assert configuration is not None
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "fan#test_8",
+        "fan.set_preset_mode",
+        hass,
+        payload={"mode": "preset_mode.auto"},
+        instance="fan.preset_mode",
+    )
+    assert call.data["preset_mode"] == "auto"
+
+    with pytest.raises(AssertionError):
+        await assert_request_calls_service(
+            "Alexa.ModeController",
+            "SetMode",
+            "fan#test_8",
+            "fan.set_preset_mode",
+            hass,
+            payload={"mode": "preset_mode.preset_mode_na"},
+            instance="fan.preset_mode",
+        )
+    assert "Entity 'fan.test_8' does not support Preset 'n/a'" in caplog.text
+    caplog.clear()
+
+
 async def test_lock(hass):
     """Test lock discovery."""
     device = ("lock.test", "off", {"friendly_name": "Test lock"})

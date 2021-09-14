@@ -459,6 +459,18 @@ async def test_report_fan_preset_mode(hass):
     properties = await reported_properties(hass, "fan.preset_mode")
     properties.assert_equal("Alexa.ModeController", "mode", "preset_mode.whoosh")
 
+    hass.states.async_set(
+        "fan.preset_mode",
+        "whoosh",
+        {
+            "friendly_name": "one preset mode fan",
+            "supported_features": 8,
+            "preset_mode": "auto",
+            "preset_modes": ["auto"],
+        },
+    )
+    properties = await reported_properties(hass, "fan.preset_mode")
+
 
 async def test_report_fan_oscillating(hass):
     """Test ToggleController reports fan oscillating correctly."""
