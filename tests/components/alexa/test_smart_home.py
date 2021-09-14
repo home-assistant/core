@@ -382,7 +382,7 @@ async def test_fan(hass):
         "fan#test_1", "fan.turn_on", "fan.turn_off", hass
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
         "fan#test_1",
@@ -391,7 +391,7 @@ async def test_fan(hass):
         payload={"rangeValue": "100"},
         instance="fan.percentage",
     )
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
         "fan#test_1",
@@ -486,6 +486,71 @@ async def test_variable_fan(hass):
         "percentage",
         "fan.percentage",
     )
+    await assert_range_changes(
+        hass,
+        [
+            (0, -100, False),
+        ],
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "fan#test_2",
+        "fan.turn_off",
+        None,
+        "fan.percentage",
+    )
+
+
+async def test_variable_fan_no_current_speed(hass, caplog):
+    """Test fan discovery.
+
+    This one has variable speed, but no current speed.
+    """
+    device = (
+        "fan.test_3",
+        "off",
+        {
+            "friendly_name": "Test fan 3",
+            "supported_features": 1,
+            "percentage": None,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "fan#test_3"
+    assert appliance["displayCategories"][0] == "FAN"
+    assert appliance["friendlyName"] == "Test fan 3"
+    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+    capability = get_capability(capabilities, "Alexa.RangeController")
+    assert capability is not None
+
+    capability = get_capability(capabilities, "Alexa.PowerController")
+    assert capability is not None
+
+    with pytest.raises(AssertionError):
+        await assert_range_changes(
+            hass,
+            [
+                (20, -5, False),
+            ],
+            "Alexa.RangeController",
+            "AdjustRangeValue",
+            "fan#test_3",
+            "fan.set_percentage",
+            "percentage",
+            "fan.percentage",
+        )
+    assert (
+        "Request Alexa.RangeController/AdjustRangeValue error INVALID_VALUE: Unable to determine fan.test_3 current fan speed"
+        in caplog.text
+    )
+    caplog.clear()
 
 
 async def test_oscillating_fan(hass):
@@ -1680,7 +1745,8 @@ async def assert_range_changes(
         call, _ = await assert_request_calls_service(
             namespace, name, endpoint, service, hass, payload=payload, instance=instance
         )
-        assert call.data[changed_parameter] == result_range
+        if changed_parameter:
+            assert call.data[changed_parameter] == result_range
 
 
 async def test_temp_sensor(hass):
