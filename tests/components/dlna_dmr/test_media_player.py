@@ -256,8 +256,11 @@ async def test_device_available(
         SUBSCRIPTION_UUID_AVT,
     }
     # Check SSDP notifications are registered
-    mock_ssdp_scanner.async_register_callback.assert_called_once_with(
+    mock_ssdp_scanner.async_register_callback.assert_any_call(
         entity.async_ssdp_callback, {"USN": GOOD_DEVICE_USN}
+    )
+    mock_ssdp_scanner.async_register_callback.assert_any_call(
+        entity.async_ssdp_callback, {"_udn": GOOD_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
 
     await send_initial_event_notifications(entity)
@@ -339,7 +342,7 @@ async def test_device_available(
     # Verify UPnP services are unsubscribed
     assert device_requests_mock.call_count == 2
     # Check SSDP notifications are cleared
-    mock_ssdp_scanner.async_register_callback.return_value.assert_called_once()
+    assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
 
 
 async def test_device_unavailable(
@@ -359,8 +362,11 @@ async def test_device_unavailable(
     assert device_requests_mock.call_count == 1
 
     # Check SSDP notifications are registered
-    mock_ssdp_scanner.async_register_callback.assert_called_once_with(
+    mock_ssdp_scanner.async_register_callback.assert_any_call(
         entity.async_ssdp_callback, {"USN": GOOD_DEVICE_USN}
+    )
+    mock_ssdp_scanner.async_register_callback.assert_any_call(
+        entity.async_ssdp_callback, {"_udn": GOOD_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
 
     # Check async_update will do nothing
@@ -401,7 +407,7 @@ async def test_device_unavailable(
 
     # Removing entity cancels SSDP callback but does not contact device
     await entity.async_remove()
-    mock_ssdp_scanner.async_register_callback.return_value.assert_called_once()
+    assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
     assert device_requests_mock.call_count == 0
 
 
@@ -464,7 +470,7 @@ async def test_become_available(
     # Verify UPnP services are unsubscribed
     assert device_requests_mock.call_count == 2
     # Check SSDP notifications are cleared
-    mock_ssdp_scanner.async_register_callback.return_value.assert_called_once()
+    assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
 
 
 async def test_multiple_ssdp_alive(
@@ -538,14 +544,24 @@ async def test_ssdp_byebye(
 
     # First byebye will cause a disconnect
     await entity.async_ssdp_callback(
-        {ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN}, ssdp.SsdpChange.BYEBYE
+        {
+            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
+            "_udn": GOOD_DEVICE_UDN,
+            "NTS": "ssdp:byebye",
+        },
+        ssdp.SsdpChange.BYEBYE,
     )
     assert entity._device is None
 
     # Second byebye will do nothing
     last_request_count = device_requests_mock.call_count
     await entity.async_ssdp_callback(
-        {ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN}, ssdp.SsdpChange.BYEBYE
+        {
+            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
+            "_udn": GOOD_DEVICE_UDN,
+            "NTS": "ssdp:byebye",
+        },
+        ssdp.SsdpChange.BYEBYE,
     )
     assert entity._device is None
     assert device_requests_mock.call_count == last_request_count
