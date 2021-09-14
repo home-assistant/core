@@ -100,7 +100,8 @@ class BasePlatform(Entity):
         self._attr_available = True
         self.async_write_ha_state()
 
-    async def async_remote_stop(self) -> None:
+    @callback
+    def async_remote_stop(self) -> None:
         """Remote stop entity."""
         if self._cancel_timer:
             self._cancel_timer()
