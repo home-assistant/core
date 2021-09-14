@@ -45,7 +45,11 @@ async def test_validation(hass, mock_energy_manager):
         hass.states.async_set(
             f"sensor.{key}",
             "123",
-            {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+            {
+                "device_class": "energy",
+                "unit_of_measurement": "kWh",
+                "state_class": "total_increasing",
+            },
         )
 
     await mock_energy_manager.async_update(
@@ -142,7 +146,11 @@ async def test_validation_device_consumption_entity_unexpected_unit(
     hass.states.async_set(
         "sensor.unexpected_unit",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -194,7 +202,11 @@ async def test_validation_solar(hass, mock_energy_manager):
     hass.states.async_set(
         "sensor.solar_production",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -227,12 +239,20 @@ async def test_validation_battery(hass, mock_energy_manager):
     hass.states.async_set(
         "sensor.battery_import",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
     hass.states.async_set(
         "sensor.battery_export",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -282,12 +302,20 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
     hass.states.async_set(
         "sensor.grid_consumption_1",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
     hass.states.async_set(
         "sensor.grid_production_1",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
 
     assert (await validate.async_validate(hass)).as_dict() == {
@@ -324,12 +352,20 @@ async def test_validation_grid_price_not_exist(hass, mock_energy_manager):
     hass.states.async_set(
         "sensor.grid_consumption_1",
         "10.10",
-        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
     )
     hass.states.async_set(
         "sensor.grid_production_1",
         "10.10",
-        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
     )
     await mock_energy_manager.async_update(
         {
@@ -402,7 +438,11 @@ async def test_validation_grid_price_errors(
     hass.states.async_set(
         "sensor.grid_consumption_1",
         "10.10",
-        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
     )
     hass.states.async_set(
         "sensor.grid_price_1",
@@ -454,18 +494,50 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                     "stat_energy_from": "sensor.gas_consumption_2",
                     "stat_cost": "sensor.gas_cost_2",
                 },
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption_3",
+                    "stat_cost": "sensor.gas_cost_2",
+                },
+                {
+                    "type": "gas",
+                    "stat_energy_from": "sensor.gas_consumption_4",
+                    "stat_cost": "sensor.gas_cost_2",
+                },
             ]
         }
     )
     hass.states.async_set(
         "sensor.gas_consumption_1",
         "10.10",
-        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
     )
     hass.states.async_set(
         "sensor.gas_consumption_2",
         "10.10",
-        {"unit_of_measurement": "kWh", "state_class": "total_increasing"},
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption_3",
+        "10.10",
+        {
+            "device_class": "gas",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption_4",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
     )
     hass.states.async_set(
         "sensor.gas_cost_2",
@@ -488,6 +560,19 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                 },
             ],
             [],
+            [],
+            [
+                {
+                    "type": "entity_unexpected_device_class",
+                    "identifier": "sensor.gas_consumption_4",
+                    "value": None,
+                },
+                {
+                    "type": "entity_unexpected_unit_gas",
+                    "identifier": "sensor.gas_consumption_4",
+                    "value": "beers",
+                },
+            ],
         ],
         "device_consumption": [],
     }
