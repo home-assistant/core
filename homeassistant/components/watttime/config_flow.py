@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -54,6 +55,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+@callback
+def get_unique_id(data: dict[str, Any]) -> str:
+    """Get a unique ID from provided data."""
+    return f"{data[CONF_LATITUDE]}, {data[CONF_LONGITUDE]}"
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WattTime."""
 
@@ -90,9 +97,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If an entry already exists, we're in a re-auth flow – store the new data and
         # reload the config entry:
-        if existing_entry := await self.async_set_unique_id(
-            f"{self._data[CONF_LATITUDE]}, {self._data[CONF_LONGITUDE]}"
-        ):
+        entry_unique_id = get_unique_id(self._data)
+        if existing_entry := await self.async_set_unique_id(entry_unique_id):
             self.hass.config_entries.async_update_entry(existing_entry, data=self._data)
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -116,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self._client
 
-        unique_id = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
+        unique_id = get_unique_id(user_input)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
