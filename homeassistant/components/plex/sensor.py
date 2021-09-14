@@ -28,6 +28,11 @@ LIBRARY_PRIMARY_LIBTYPE = {
     "artist": "track",
 }
 
+LIBRARY_RECENT_LIBTYPE = {
+    "show": "episode",
+    "artist": "album",
+}
+
 LIBRARY_ICON_LOOKUP = {
     "artist": "mdi:music",
     "movie": "mdi:movie",
@@ -173,6 +178,31 @@ class PlexLibrarySectionSensor(SensorEntity):
             ] = self.library_section.totalViewSize(
                 libtype=libtype, includeCollections=False
             )
+
+        recent_libtype = LIBRARY_RECENT_LIBTYPE.get(
+            self.library_type, self.library_type
+        )
+        recently_added = self.library_section.recentlyAdded(
+            maxresults=1, libtype=recent_libtype
+        )
+        if recently_added:
+            media = recently_added[0]
+            if recent_libtype == "episode":
+                latest_item = (
+                    f"{media.grandparentTitle} - {media.seasonEpisode} - {media.title}"
+                )
+            elif media.type == "movie":
+                latest_item = media.title
+            elif media.type == "album":
+                latest_item = f"{media.parentTitle} - {media.title}"
+            else:
+                latest_item = media.title
+            if media.year is not None:
+                latest_item += f" ({media.year!s})"
+            elif parent_year := getattr(media, "parentYear", None):
+                latest_item += f" ({parent_year!s})"
+            self._attr_extra_state_attributes["last_added_item"] = latest_item
+            self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
 
     @property
     def device_info(self):
