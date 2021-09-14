@@ -4,14 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, DummyCookieJar
 from pypoolstation import Account, AuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN, TOKEN
 
@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
         errors = {}
-        session = async_get_clientsession(self.hass)
+        session = async_create_clientsession(self.hass, cookie_jar=DummyCookieJar)
         account = Account(
             session, username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
         )
