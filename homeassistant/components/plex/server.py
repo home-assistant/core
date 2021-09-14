@@ -13,13 +13,7 @@ from requests import Session
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_VIDEO,
-)
+from homeassistant.components.media_player.const import MEDIA_TYPE_PLAYLIST
 from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -47,13 +41,8 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import (
-    MediaNotFound,
-    NoServersFound,
-    ServerNotSpecified,
-    ShouldUpdateConfigEntry,
-)
-from .media_search import lookup_movie, lookup_music, lookup_tv
+from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
+from .media_search import search_media
 from .models import PlexSession
 
 _LOGGER = logging.getLogger(__name__)
@@ -652,26 +641,7 @@ class PlexServer:
             _LOGGER.error("Library '%s' not found", library_name)
             return None
 
-        try:
-            if media_type == MEDIA_TYPE_EPISODE:
-                return lookup_tv(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MOVIE:
-                return lookup_movie(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_MUSIC:
-                return lookup_music(library_section, **kwargs)
-            if media_type == MEDIA_TYPE_VIDEO:
-                # Legacy method for compatibility
-                try:
-                    video_name = kwargs["video_name"]
-                    return library_section.get(video_name)
-                except KeyError:
-                    _LOGGER.error("Must specify 'video_name' for this search")
-                    return None
-                except NotFound as err:
-                    raise MediaNotFound(f"Video {video_name}") from err
-        except MediaNotFound as failed_item:
-            _LOGGER.error("%s not found in %s", failed_item, library_name)
-            return None
+        return search_media(media_type, library_section, **kwargs)
 
     @property
     def sensor_attributes(self):
