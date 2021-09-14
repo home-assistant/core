@@ -1,7 +1,11 @@
 """Support for AirVisual air quality sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -76,6 +80,7 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
         name="Air Quality Index",
         device_class=DEVICE_CLASS_AQI,
         native_unit_of_measurement="AQI",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_POLLUTANT,
@@ -92,6 +97,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         name="Air Quality Index",
         device_class=DEVICE_CLASS_AQI,
         native_unit_of_measurement="AQI",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_BATTERY_LEVEL,
@@ -104,6 +110,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         name="C02",
         device_class=DEVICE_CLASS_CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_HUMIDITY,
@@ -116,30 +123,35 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         name="PM 0.1",
         device_class=DEVICE_CLASS_PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_1_0,
         name="PM 1.0",
         device_class=DEVICE_CLASS_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_2_5,
         name="PM 2.5",
         device_class=DEVICE_CLASS_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_VOC,
         name="VOC",
         device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
