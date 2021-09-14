@@ -800,7 +800,7 @@ async def test_single_preset_mode_fan(hass, caplog):
             "fan#test_8",
             "fan.set_preset_mode",
             hass,
-            payload={"mode": "preset_mode.preset_mode_na"},
+            payload={"mode": "preset_mode.n/a"},
             instance="fan.preset_mode",
         )
     assert "Entity 'fan.test_8' does not support Preset 'n/a'" in caplog.text
