@@ -125,26 +125,6 @@ class ThermostatChannel(ZigbeeChannel):
             "unoccupied_heating_setpoint": False,
             "unoccupied_cooling_setpoint": False,
         }
-        self._abs_max_cool_setpoint_limit = 3200  # 32C
-        self._abs_min_cool_setpoint_limit = 1600  # 16C
-        self._ctrl_seqe_of_oper = 0xFF
-        self._abs_max_heat_setpoint_limit = 3000  # 30C
-        self._abs_min_heat_setpoint_limit = 700  # 7C
-        self._running_mode = None
-        self._max_cool_setpoint_limit = None
-        self._max_heat_setpoint_limit = None
-        self._min_cool_setpoint_limit = None
-        self._min_heat_setpoint_limit = None
-        self._local_temp = None
-        self._occupancy = None
-        self._occupied_cooling_setpoint = None
-        self._occupied_heating_setpoint = None
-        self._pi_cooling_demand = None
-        self._pi_heating_demand = None
-        self._running_state = None
-        self._system_mode = None
-        self._unoccupied_cooling_setpoint = None
-        self._unoccupied_heating_setpoint = None
 
     @property
     def abs_max_cool_setpoint_limit(self) -> int:
@@ -279,8 +259,6 @@ class ThermostatChannel(ZigbeeChannel):
                 self._init_attrs.pop(attr, None)
                 if attr in fail:
                     continue
-                if isinstance(attr, str):
-                    setattr(self, f"_{attr}", res[attr])
                 self.async_send_signal(
                     f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                     AttributeUpdateRecord(None, attr, res[attr]),
@@ -304,7 +282,6 @@ class ThermostatChannel(ZigbeeChannel):
             self.debug("couldn't set '%s' operation mode", mode)
             return False
 
-        self._system_mode = mode
         self.debug("set system to %s", mode)
         return True
 
@@ -320,11 +297,6 @@ class ThermostatChannel(ZigbeeChannel):
             self.debug("couldn't set heating setpoint")
             return False
 
-        if is_away:
-            self._unoccupied_heating_setpoint = temperature
-        else:
-            self._occupied_heating_setpoint = temperature
-        self.debug("set heating setpoint to %s", temperature)
         return True
 
     async def async_set_cooling_setpoint(
@@ -338,10 +310,6 @@ class ThermostatChannel(ZigbeeChannel):
         if not await self.write_attributes(data):
             self.debug("couldn't set cooling setpoint")
             return False
-        if is_away:
-            self._unoccupied_cooling_setpoint = temperature
-        else:
-            self._occupied_cooling_setpoint = temperature
         self.debug("set cooling setpoint to %s", temperature)
         return True
 
@@ -352,7 +320,6 @@ class ThermostatChannel(ZigbeeChannel):
             self.debug("read 'occupancy' attr, success: %s, fail: %s", res, fail)
             if "occupancy" not in res:
                 return None
-            self._occupancy = res["occupancy"]
             return bool(self.occupancy)
         except ZigbeeException as ex:
             self.debug("Couldn't read 'occupancy' attribute: %s", ex)
