@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
@@ -32,6 +33,7 @@ from .models import (
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
+    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from .util import execute, retryable_database_job, session_scope
@@ -88,6 +90,18 @@ UNIT_CONVERSIONS = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class ValidationIssue:
+    """Error or warning message."""
+
+    type: str
+    data: dict[str, str | None] | None = None
+
+    def as_dict(self) -> dict:
+        """Return dictionary version."""
+        return dataclasses.asdict(self)
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -437,9 +451,6 @@ def _sorted_statistics_to_dict(
         for stat_id in statistic_ids:
             result[stat_id] = []
 
-    # Called in a tight loop so cache the function here
-    _process_timestamp_to_utc_isoformat = process_timestamp_to_utc_isoformat
-
     # Append all statistic entries, and do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore
         unit = metadata[meta_id]["unit_of_measurement"]
@@ -450,21 +461,36 @@ def _sorted_statistics_to_dict(
         else:
             convert = no_conversion
         ent_results = result[meta_id]
-        ent_results.extend(
-            {
-                "statistic_id": statistic_id,
-                "start": _process_timestamp_to_utc_isoformat(db_state.start),
-                "mean": convert(db_state.mean, units),
-                "min": convert(db_state.min, units),
-                "max": convert(db_state.max, units),
-                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
-                "state": convert(db_state.state, units),
-                "sum": (_sum := convert(db_state.sum, units)),
-                "sum_increase": (inc := convert(db_state.sum_increase, units)),
-                "sum_decrease": None if _sum is None or inc is None else inc - _sum,
-            }
-            for db_state in group
-        )
+        for db_state in group:
+            start = process_timestamp(db_state.start)
+            end = start + timedelta(hours=1)
+            ent_results.append(
+                {
+                    "statistic_id": statistic_id,
+                    "start": start.isoformat(),
+                    "end": end.isoformat(),
+                    "mean": convert(db_state.mean, units),
+                    "min": convert(db_state.min, units),
+                    "max": convert(db_state.max, units),
+                    "last_reset": process_timestamp_to_utc_isoformat(
+                        db_state.last_reset
+                    ),
+                    "state": convert(db_state.state, units),
+                    "sum": (_sum := convert(db_state.sum, units)),
+                    "sum_increase": (inc := convert(db_state.sum_increase, units)),
+                    "sum_decrease": None if _sum is None or inc is None else inc - _sum,
+                }
+            )
 
     # Filter out the empty lists if some states had 0 results.
     return {metadata[key]["statistic_id"]: val for key, val in result.items() if val}
+
+
+def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
+    """Validate statistics."""
+    platform_validation: dict[str, list[ValidationIssue]] = {}
+    for platform in hass.data[DOMAIN].values():
+        if not hasattr(platform, "validate_statistics"):
+            continue
+        platform_validation.update(platform.validate_statistics(hass))
+    return platform_validation

@@ -1,7 +1,10 @@
 """Support for Xiaomi Aqara sensors."""
+from __future__ import annotations
+
+from functools import cached_property
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
@@ -22,14 +25,51 @@ from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": [PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
-    "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
-    "lux": [LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
-    "pressure": [PRESSURE_HPA, None, DEVICE_CLASS_PRESSURE],
-    "bed_activity": ["μm", None, None],
-    "load_power": [POWER_WATT, None, DEVICE_CLASS_POWER],
+SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "temperature": SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+    ),
+    "illumination": SensorEntityDescription(
+        key="illumination",
+        native_unit_of_measurement="lm",
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    "lux": SensorEntityDescription(
+        key="lux",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=DEVICE_CLASS_ILLUMINANCE,
+    ),
+    "pressure": SensorEntityDescription(
+        key="pressure",
+        native_unit_of_measurement=PRESSURE_HPA,
+        device_class=DEVICE_CLASS_PRESSURE,
+    ),
+    "bed_activity": SensorEntityDescription(
+        key="bed_activity",
+        native_unit_of_measurement="μm",
+        device_class=None,
+    ),
+    "load_power": SensorEntityDescription(
+        key="load_power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+    ),
+    "final_tilt_angle": SensorEntityDescription(
+        key="final_tilt_angle",
+    ),
+    "coordination": SensorEntityDescription(
+        key="coordination",
+    ),
+    "Battery": SensorEntityDescription(
+        key="Battery",
+    ),
 }
 
 
@@ -116,35 +156,10 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         self._data_key = data_key
         super().__init__(device, name, xiaomi_hub, config_entry)
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        try:
-            return SENSOR_TYPES.get(self._data_key)[1]
-        except TypeError:
-            return None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        try:
-            return SENSOR_TYPES.get(self._data_key)[0]
-        except TypeError:
-            return None
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return (
-            SENSOR_TYPES.get(self._data_key)[2]
-            if self._data_key in SENSOR_TYPES
-            else None
-        )
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+    @cached_property
+    def entity_description(self) -> SensorEntityDescription:  # type: ignore[override]
+        """Return entity_description for data_key."""
+        return SENSOR_TYPES[self._data_key]
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -152,7 +167,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         if value is None:
             return False
         if self._data_key in ("coordination", "status"):
-            self._state = value
+            self._attr_native_value = value
             return True
         value = float(value)
         if self._data_key in ("temperature", "humidity", "pressure"):
@@ -166,29 +181,17 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         if self._data_key == "pressure" and value == 0:
             return False
         if self._data_key in ("illumination", "lux"):
-            self._state = round(value)
+            self._attr_native_value = round(value)
         else:
-            self._state = round(value, 1)
+            self._attr_native_value = round(value, 1)
         return True
 
 
 class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return PERCENTAGE
-
-    @property
-    def device_class(self):
-        """Return the device class of this entity."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_device_class = DEVICE_CLASS_BATTERY
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -198,7 +201,7 @@ class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
         battery_level = int(self._extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
         if battery_level <= 0 or battery_level > 100:
             return False
-        self._state = battery_level
+        self._attr_native_value = battery_level
         return True
 
     def parse_voltage(self, data):

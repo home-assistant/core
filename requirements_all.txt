@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==4.1.0
+HAP-python==4.2.1
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -355,9 +355,6 @@ baidu-aip==1.6.6
 
 # homeassistant.components.homekit
 base36==0.1.1
-
-# homeassistant.components.modem_callerid
-basicmodem==0.7
 
 # homeassistant.components.linux_battery
 batinfo==0.4.2
@@ -1169,6 +1166,9 @@ pencompy==0.0.3
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
+# homeassistant.components.modem_callerid
+phone_modem==0.1.1
+
 # homeassistant.components.onewire
 pi1wire==0.1.0
 
@@ -1200,7 +1200,7 @@ pillow==8.2.0
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.7.0
+plexapi==4.7.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1551,7 +1551,7 @@ pykira==0.1.1
 pykmtronic==0.3.0
 
 # homeassistant.components.kodi
-pykodi==0.2.5
+pykodi==0.2.6
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
@@ -1641,7 +1641,7 @@ pynanoleaf==0.1.0
 pynello==2.0.3
 
 # homeassistant.components.netgear
-pynetgear==0.6.1
+pynetgear==0.7.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -1923,9 +1923,6 @@ python-telnet-vlc==2.0.1
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
-
-# homeassistant.components.velbus
-python-velbus==2.1.2
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -2242,7 +2239,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.7.0
+surepy==0.7.1
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
@@ -2350,6 +2347,9 @@ uvcclient==0.11.0
 # homeassistant.components.vallox
 vallox-websocket-api==2.8.1
 
+# homeassistant.components.velbus
+velbus-aio==2021.9.1
+
 # homeassistant.components.venstar
 venstarcolortouch==0.14
 
@@ -2389,6 +2389,9 @@ waterfurnace==1.1.0
 
 # homeassistant.components.cisco_webex_teams
 webexteamssdk==1.1.1
+
+# homeassistant.components.whirlpool
+whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.wiffi
 wiffi==1.0.1
