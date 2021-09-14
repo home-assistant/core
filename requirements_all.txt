@@ -356,9 +356,6 @@ baidu-aip==1.6.6
 # homeassistant.components.homekit
 base36==0.1.1
 
-# homeassistant.components.modem_callerid
-basicmodem==0.7
-
 # homeassistant.components.linux_battery
 batinfo==0.4.2
 
@@ -1168,6 +1165,9 @@ pencompy==0.0.3
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
+
+# homeassistant.components.modem_callerid
+phone_modem==0.1.1
 
 # homeassistant.components.onewire
 pi1wire==0.1.0

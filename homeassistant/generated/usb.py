@@ -7,6 +7,11 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "domain": "modem_callerid",
+        "vid": "0572",
+        "pid": "1340"
+    },
+    {
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",

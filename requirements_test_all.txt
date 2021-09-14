@@ -662,6 +662,9 @@ pdunehd==1.3.2
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
+# homeassistant.components.modem_callerid
+phone_modem==0.1.1
+
 # homeassistant.components.onewire
 pi1wire==0.1.0
 
