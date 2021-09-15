@@ -21,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Decora Wifi lights based on a config entry."""
     # Retrieve the platform session from the binary sensor entity component.
     component: EntityComponent = hass.data[DOMAIN]
@@ -66,8 +66,8 @@ class DecoraWifiLight(DecoraWifiEntity, LightEntity):
         attribs = {"power": "ON"}
 
         if ATTR_BRIGHTNESS in kwargs:
-            maxlevel = self._switch.data.get("maxLevel", 100)
-            minlevel = self._switch.data.get("minLevel", 100)
+            max_level = self._switch.data.get("maxLevel", 100)
+            min_level = self._switch.data.get("minLevel", 100)
             brightness = int(kwargs[ATTR_BRIGHTNESS] * maxlevel / 255)
             brightness = max(brightness, minlevel)
             attribs["brightness"] = brightness

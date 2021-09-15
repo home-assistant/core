@@ -139,15 +139,15 @@ class DecoraWifiPlatform:
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
         """Set up a decora wifi session."""
 
-        def setupplatform() -> DecoraWifiPlatform:
+        def setup_platform() -> DecoraWifiPlatform:
             platform = DecoraWifiPlatform(email, password)
             platform.setup()
             return platform
 
-        return await hass.async_add_executor_job(setupplatform)
+        return await hass.async_add_executor_job(setup_platform)
 
     @staticmethod
-    def classifydevice(dev):
+    def classify_device(dev):
         """Classify devices by platform."""
         # The light platform is the only one currently implemented in the integration.
         return LIGHT_DOMAIN
@@ -160,14 +160,14 @@ class DecoraWifiEntity(Entity):
         """Initialize Decora Wifi device base class."""
         self._switch = device
         self._model = device.model
-        self._unique_id = device.mac
+        self._mac_address = device.mac
 
     @property
     def device_info(self):
         """Return device info for the associated device."""
         return {
             "name": self._switch.name,
-            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self._unique_id)},
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, self._mac_address)},
             "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": self._switch.manufacturer,
             "model": self._model,
@@ -182,4 +182,4 @@ class DecoraWifiEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the switch."""
-        return self._unique_id
+        return self._mac_address
