@@ -1,0 +1,36 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "description": "Choose whether you want to automatically search for devices on your network.",
+          "data": {
+            "automatic_add": "Enable automatic add of devices"
+          }
+        }
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      }
+    },
+    "options": {
+      "step": {
+        "prompt_options": {
+          "data": {
+            "automatic_add": "Enable automatic add of devices",
+            "effect_speed": "Default effect speed for all lights.",
+            "host": "Enter IP address to add a new light",
+            "name": "Enter the name for the new light (optional)",
+            "configure_device": "Select the device to configure",
+            "remove_device": "Select the device to delete"
+          }
+        },
+        "configure_device": {
+          "data": {
+            "effect_speed": "Default effect speed for this light."
+          },
+          "title":"FluxLED/MagicHome Device Options"
+        }
+      }
+    }
+  }
