@@ -285,24 +285,20 @@ class Thermostat(HomeAccessory):
                         target_hc = hc_fallback
                         break
 
-            service = SERVICE_SET_HVAC_MODE_THERMOSTAT
             params[ATTR_HVAC_MODE] = self.hc_homekit_to_hass[target_hc]
             events.append(
                 f"{CHAR_TARGET_HEATING_COOLING} to {char_values[CHAR_TARGET_HEATING_COOLING]}"
             )
-
-        if service:
             # Many integrations do not actually implement `hvac_mode` for the
             # `SERVICE_SET_TEMPERATURE_THERMOSTAT` service so we made a call to
             # `SERVICE_SET_HVAC_MODE_THERMOSTAT` before calling `SERVICE_SET_TEMPERATURE_THERMOSTAT`
             # to ensure the device is in the right mode before setting the temp.
             self.async_call_service(
                 DOMAIN_CLIMATE,
-                service,
+                SERVICE_SET_HVAC_MODE_THERMOSTAT,
                 params.copy(),
                 ", ".join(events),
             )
-            service = None
 
         if CHAR_TARGET_TEMPERATURE in char_values:
             hc_target_temp = char_values[CHAR_TARGET_TEMPERATURE]
