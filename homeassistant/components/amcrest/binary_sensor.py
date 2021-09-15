@@ -182,15 +182,15 @@ class AmcrestBinarySensor(BinarySensorEntity):
         """Return True if entity is available."""
         return self.entity_description.key == _ONLINE_KEY or self._api.available
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update entity."""
         if self.entity_description.key == _ONLINE_KEY:
-            self._update_online()
+            await self._update_online()
         else:
-            self._update_others()
+            await self._update_others()
 
     @Throttle(_ONLINE_SCAN_INTERVAL)
-    def _update_online(self) -> None:
+    async def _update_online(self) -> None:
         if not (self._api.available or self.is_on):
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
@@ -200,17 +200,17 @@ class AmcrestBinarySensor(BinarySensorEntity):
             # Override of Http.command() in __init__.py will set self._api.available
             # accordingly.
             with suppress(AmcrestError):
-                self._api.current_time  # pylint: disable=pointless-statement
-                self._update_unique_id()
+                await self._api.async_current_time
+                await self._update_unique_id()
         self._attr_is_on = self._api.available
 
-    def _update_others(self) -> None:
+    async def _update_others(self) -> None:
         if not self.available:
             return
         _LOGGER.debug(_UPDATE_MSG, self.name)
 
         try:
-            self._update_unique_id()
+            await self._update_unique_id()
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
@@ -221,15 +221,17 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
 
         try:
-            self._attr_is_on = len(self._api.event_channels_happened(event_code)) > 0
+            self._attr_is_on = (
+                len(await self._api.async_event_channels_happened(event_code)) > 0
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
 
-    def _update_unique_id(self) -> None:
+    async def _update_unique_id(self) -> None:
         """Set the unique id."""
         if self._attr_unique_id is None:
-            serial_number = self._api.serial_number
+            serial_number = await self._api.async_serial_number
             if serial_number:
                 self._attr_unique_id = (
                     f"{serial_number}-{self.entity_description.key}-{self._channel}"

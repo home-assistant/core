@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -198,20 +197,16 @@ class AmcrestCam(Camera):
             )
             raise CannotSnapshot
 
-    async def _async_get_image(self) -> None:
+    async def _async_get_image(self) -> bytes | None:
         try:
             # Send the request to snap a picture and return raw jpg data
             # Snapshot command needs a much longer read timeout than other commands.
-            return await self.hass.async_add_executor_job(
-                partial(
-                    self._api.snapshot,
-                    timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT),
-                    stream=False,
-                )
+            return await self._api.async_snapshot(
+                timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT)
             )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get image from", self.name, "camera", error)
-            return
+            return None
         finally:
             self._snapshot_task = None
 
@@ -383,7 +378,7 @@ class AmcrestCam(Camera):
         for unsub_dispatcher in self._unsub_dispatcher:
             unsub_dispatcher()
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update entity status."""
         if not self.available or self._update_succeeded:
             if not self.available:
@@ -392,33 +387,44 @@ class AmcrestCam(Camera):
         _LOGGER.debug("Updating %s camera", self.name)
         try:
             if self._brand is None:
-                resp = self._api.vendor_information.strip()
+                resp = await self._api.async_vendor_information
                 _LOGGER.debug("Assigned brand=%s", resp)
                 if resp:
                     self._brand = resp
                 else:
                     self._brand = "unknown"
             if self._model is None:
-                resp = self._api.device_type.strip()
+                resp = await self._api.async_device_type
                 _LOGGER.debug("Assigned model=%s", resp)
                 if resp:
                     self._model = resp
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                serial_number = self._api.serial_number.strip()
+                serial_number = (await self._api.async_serial_number).strip()
                 if serial_number:
                     self._attr_unique_id = (
                         f"{serial_number}-{self._resolution}-{self._channel}"
                     )
                     _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
-            self.is_streaming = self._get_video()
-            self._is_recording = self._get_recording()
-            self._motion_detection_enabled = self._get_motion_detection()
-            self._audio_enabled = self._get_audio()
-            self._motion_recording_enabled = self._get_motion_recording()
-            self._color_bw = self._get_color_mode()
-            self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
+            if self._rtsp_url is None:
+                self._rtsp_url = await self._api.async_rtsp_url(typeno=self._resolution)
+
+            (
+                self.is_streaming,
+                self._is_recording,
+                self._motion_detection_enabled,
+                self._audio_enabled,
+                self._motion_recording_enabled,
+                self._color_bw,
+            ) = await asyncio.gather(
+                self._get_video(),
+                self._get_recording(),
+                self._get_motion_detection(),
+                self._get_audio(),
+                self._get_motion_recording(),
+                self._get_color_mode(),
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
             self._update_succeeded = False
@@ -496,13 +502,9 @@ class AmcrestCam(Camera):
             kwargs["arg1"] = kwargs["arg2"] = 1
 
         try:
-            await self.hass.async_add_executor_job(
-                partial(self._api.ptz_control_command, action="start", **kwargs)
-            )
+            await self._api.async_ptz_control_command(action="start", **kwargs)  # type: ignore[arg-type]
             await asyncio.sleep(travel_time)
-            await self.hass.async_add_executor_job(
-                partial(self._api.ptz_control_command, action="stop", **kwargs)
-            )
+            await self._api.async_ptz_control_command(action="stop", **kwargs)  # type: ignore[arg-type]
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera PTZ {movement}", error
@@ -510,7 +512,7 @@ class AmcrestCam(Camera):
 
     # Methods to send commands to Amcrest camera and handle errors
 
-    def _change_setting(
+    async def _change_setting(
         self, value: str | bool, description: str, attr: str | None = None
     ) -> None:
         func = description.replace(" ", "_")
@@ -519,8 +521,8 @@ class AmcrestCam(Camera):
         max_tries = 3
         for tries in range(max_tries, 0, -1):
             try:
-                getattr(self, f"_set_{func}")(value)
-                new_value = getattr(self, f"_get_{func}")()
+                await getattr(self, f"_set_{func}")(value)
+                new_value = await getattr(self, f"_get_{func}")()
                 if new_value != value:
                     raise AmcrestCommandFailed
             except (AmcrestError, AmcrestCommandFailed) as error:
@@ -536,60 +538,64 @@ class AmcrestCam(Camera):
                     self.schedule_update_ha_state()
                 return
 
-    def _get_video(self) -> bool:
-        return self._api.video_enabled
+    async def _get_video(self) -> bool:
+        return await self._api.async_video_enabled
 
-    def _set_video(self, enable: bool) -> None:
-        self._api.video_enabled = enable
+    async def _set_video(self, enable: bool) -> None:
+        await self._api.async_set_video_enabled(enable, channel=0)
 
-    def _enable_video(self, enable: bool) -> None:
+    async def _enable_video(self, enable: bool) -> None:
         """Enable or disable camera video stream."""
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # recording on if video stream is being turned off.
         if self.is_recording and not enable:
             self._enable_recording(False)
-        self._change_setting(enable, "video", "is_streaming")
+        await self._change_setting(enable, "video", "is_streaming")
         if self._control_light:
             self._change_light()
 
-    def _get_recording(self) -> bool:
-        return self._api.record_mode == "Manual"
+    async def _get_recording(self) -> bool:
+        return (await self._api.async_record_mode) == "Manual"
 
-    def _set_recording(self, enable: bool) -> None:
+    async def _set_recording(self, enable: bool) -> None:
         rec_mode = {"Automatic": 0, "Manual": 1}
         # The property has a str type, but setter has int type, which causes mypy confusion
-        self._api.record_mode = rec_mode["Manual" if enable else "Automatic"]  # type: ignore[assignment]
+        await self._api.async_set_record_mode(
+            rec_mode["Manual" if enable else "Automatic"]
+        )
 
-    def _enable_recording(self, enable: bool) -> None:
+    async def _enable_recording(self, enable: bool) -> None:
         """Turn recording on or off."""
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # video stream off if recording is being turned on.
         if not self.is_streaming and enable:
             self._enable_video(True)
-        self._change_setting(enable, "recording", "_is_recording")
+        await self._change_setting(enable, "recording", "_is_recording")
 
-    def _get_motion_detection(self) -> bool:
-        return self._api.is_motion_detector_on()
+    async def _get_motion_detection(self) -> bool:
+        return await self._api.async_is_motion_detector_on()
 
-    def _set_motion_detection(self, enable: bool) -> None:
+    async def _set_motion_detection(self, enable: bool) -> None:
         # The property has a str type, but setter has bool type, which causes mypy confusion
-        self._api.motion_detection = enable  # type: ignore[assignment]
+        await self._api.async_set_motion_detection(enable)
 
-    def _enable_motion_detection(self, enable: bool) -> None:
+    async def _enable_motion_detection(self, enable: bool) -> None:
         """Enable or disable motion detection."""
-        self._change_setting(enable, "motion detection", "_motion_detection_enabled")
+        await self._change_setting(
+            enable, "motion detection", "_motion_detection_enabled"
+        )
 
-    def _get_audio(self) -> bool:
-        return self._api.audio_enabled
+    async def _get_audio(self) -> bool:
+        return await self._api.async_audio_enabled
 
-    def _set_audio(self, enable: bool) -> None:
-        self._api.audio_enabled = enable
+    async def _set_audio(self, enable: bool) -> None:
+        await self._api.async_set_audio_enabled(enable)
 
-    def _enable_audio(self, enable: bool) -> None:
+    async def _enable_audio(self, enable: bool) -> None:
         """Enable or disable audio stream."""
-        self._change_setting(enable, "audio", "_audio_enabled")
+        await self._change_setting(enable, "audio", "_audio_enabled")
         if self._control_light:
             self._change_light()
 
@@ -606,21 +612,23 @@ class AmcrestCam(Camera):
             f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
         )
 
-    def _change_light(self) -> None:
+    async def _change_light(self) -> None:
         """Enable or disable indicator light."""
-        self._change_setting(
+        await self._change_setting(
             self._audio_enabled or self.is_streaming, "indicator light"
         )
 
-    def _get_motion_recording(self) -> bool:
-        return self._api.is_record_on_motion_detection()
+    async def _get_motion_recording(self) -> bool:
+        return await self._api.async_is_record_on_motion_detection()
 
-    def _set_motion_recording(self, enable: bool) -> None:
-        self._api.motion_recording = enable
+    async def _set_motion_recording(self, enable: bool) -> None:
+        await self._api.async_set_motion_recording(enable)
 
-    def _enable_motion_recording(self, enable: bool) -> None:
+    async def _enable_motion_recording(self, enable: bool) -> None:
         """Enable or disable motion recording."""
-        self._change_setting(enable, "motion recording", "_motion_recording_enabled")
+        await self._change_setting(
+            enable, "motion recording", "_motion_recording_enabled"
+        )
 
     def _goto_preset(self, preset: int) -> None:
         """Move camera position and zoom to preset."""
@@ -631,15 +639,15 @@ class AmcrestCam(Camera):
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
-    def _get_color_mode(self) -> str:
-        return _CBW[self._api.day_night_color]
+    async def _get_color_mode(self) -> str:
+        return _CBW[await self._api.async_day_night_color]
 
-    def _set_color_mode(self, cbw: str) -> None:
-        self._api.day_night_color = _CBW.index(cbw)
+    async def _set_color_mode(self, cbw: str) -> None:
+        await self._api.async_set_day_night_color(_CBW.index(cbw), channel=0)
 
-    def _set_color_bw(self, cbw: str) -> None:
+    async def _set_color_bw(self, cbw: str) -> None:
         """Set camera color mode."""
-        self._change_setting(cbw, "color mode", "_color_bw")
+        await self._change_setting(cbw, "color mode", "_color_bw")
 
     def _start_tour(self, start: bool) -> None:
         """Start camera tour."""

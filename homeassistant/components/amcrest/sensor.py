@@ -89,7 +89,7 @@ class AmcrestSensor(SensorEntity):
         """Return True if entity is available."""
         return self._api.available
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
         if not self.available:
             return
@@ -110,10 +110,10 @@ class AmcrestSensor(SensorEntity):
                     )
 
             if sensor_type == SENSOR_PTZ_PRESET:
-                self._attr_native_value = self._api.ptz_presets_count
+                self._attr_native_value = await self._api.async_ptz_presets_count
 
             elif sensor_type == SENSOR_SDCARD:
-                storage = self._api.storage_all
+                storage = await self._api.async_storage_all
                 try:
                     self._attr_extra_state_attributes[
                         "Total"
