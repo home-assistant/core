@@ -51,7 +51,7 @@ from .const import (
     STANDARD_RGB_EFFECTS,
 )
 from .entity import ShellyBlockEntity, ShellyRpcEntity
-from .utils import async_remove_shelly_entity, get_device_entry_gen
+from .utils import async_remove_shelly_entity, get_device_entry_gen, get_rpc_key_ids
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -106,25 +106,22 @@ async def async_setup_rpc_entry(
 ) -> None:
     """Set up entities for RPC device."""
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
+    switch_key_ids = get_rpc_key_ids(wrapper.device.status, "switch")
 
-    switch_keys = []
-    for i in range(4):
-        key = f"switch:{i}"
-        if not wrapper.device.status.get(key):
-            continue
-
+    switch_ids = []
+    for id_ in switch_key_ids:
         con_types = wrapper.device.config["sys"]["ui_data"].get("consumption_types")
-        if con_types is None or con_types[i] != "lights":
+        if con_types is None or con_types[id_] != "lights":
             continue
 
-        switch_keys.append((key, i))
-        unique_id = f"{wrapper.mac}-{key}"
+        switch_ids.append(id_)
+        unique_id = f"{wrapper.mac}-switch:{id_}"
         await async_remove_shelly_entity(hass, "switch", unique_id)
 
-    if not switch_keys:
+    if not switch_ids:
         return
 
-    async_add_entities(RpcShellyLight(wrapper, key, id_) for key, id_ in switch_keys)
+    async_add_entities(RpcShellyLight(wrapper, id_) for id_ in switch_ids)
 
 
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
@@ -417,9 +414,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 class RpcShellyLight(ShellyRpcEntity, LightEntity):
     """Entity that controls a light on RPC based Shelly devices."""
 
-    def __init__(self, wrapper: RpcDeviceWrapper, key: str, id_: int) -> None:
+    def __init__(self, wrapper: RpcDeviceWrapper, id_: int) -> None:
         """Initialize light."""
-        super().__init__(wrapper, key)
+        super().__init__(wrapper, f"switch:{id_}")
         self._id = id_
 
     @property
