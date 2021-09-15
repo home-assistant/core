@@ -115,7 +115,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="c1_total",
                 name=DEFAULT_C1_NAME + " Total",
-                unit=config.get(CONF_C1_TOTAL_UNIT_OF_MEASUREMENT),
+                unit=config.get(
+                    CONF_C1_TOTAL_UNIT_OF_MEASUREMENT,
+                    config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                ),
                 device_class=config.get(CONF_C1_DEVICE_CLASS),
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 icon="mdi:counter",
@@ -141,7 +144,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="c2_total",
                 name=DEFAULT_C2_NAME + " Total",
-                unit=config.get(CONF_C2_TOTAL_UNIT_OF_MEASUREMENT),
+                unit=config.get(
+                    CONF_C2_TOTAL_UNIT_OF_MEASUREMENT,
+                    config.get(CONF_C2_UNIT_OF_MEASUREMENT),
+                ),
                 device_class=config.get(CONF_C2_DEVICE_CLASS),
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 icon="mdi:counter",
