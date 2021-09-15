@@ -146,7 +146,7 @@ class LoggerSensor(_FroniusSensorEntity):
         logger_data = self._device_data
         # Logger device is already created in FroniusSolarNet._create_solar_net_device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.solar_net_device_id)}
+            identifiers={(DOMAIN, self.coordinator.solar_net.solar_net_device_id)}
         )
         self._attr_native_unit_of_measurement = logger_data[
             self.entity_description.key
@@ -177,7 +177,7 @@ class MeterSensor(_FroniusSensorEntity):
             identifiers={(DOMAIN, meter_data["serial"]["value"])},
             manufacturer=meter_data["manufacturer"]["value"],
             model=meter_data["model"]["value"],
-            via_device=(DOMAIN, self.coordinator.solar_net_device_id),
+            via_device=(DOMAIN, self.coordinator.solar_net.solar_net_device_id),
         )
         self._attr_native_value = meter_data[self.entity_description.key]["value"]
         self._attr_unique_id = (
@@ -193,13 +193,15 @@ class PowerFlowSensor(_FroniusSensorEntity):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Set up an individual Fronius power flow sensor."""
         super().__init__(*args, **kwargs)
-        # device_info created in __init__ from a `GetLoggerInfo` or `GetInverterInfo` request
-        self._attr_device_info = self.coordinator.power_flow_info.device_info
+        # SolarNet device is already created in FroniusSolarNet._create_solar_net_device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.solar_net.solar_net_device_id)}
+        )
         self._attr_native_value = self._device_data[self.entity_description.key][
             "value"
         ]
         self._attr_unique_id = (
-            f"{self.coordinator.power_flow_info.unique_id}"
+            f"{self.coordinator.solar_net.solar_net_device_id}"
             f"-power_flow-{self.entity_description.key}"
         )
 
@@ -219,7 +221,7 @@ class StorageSensor(_FroniusSensorEntity):
             identifiers={(DOMAIN, storage_data["serial"]["value"])},
             manufacturer=storage_data["manufacturer"]["value"],
             model=storage_data["model"]["value"],
-            via_device=(DOMAIN, self.coordinator.solar_net_device_id),
+            via_device=(DOMAIN, self.coordinator.solar_net.solar_net_device_id),
         )
         self._attr_native_value = storage_data[self.entity_description.key]["value"]
         self._attr_unique_id = (

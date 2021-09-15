@@ -100,8 +100,8 @@ class FroniusSolarNet:
             )
             await self.logger_coordinator.async_config_entry_first_refresh()
 
-        # solar_net_device_info uses data from self.logger_coordinator when available
-        solar_net_device_info = await self._create_solar_net_device()
+        # _create_solar_net_device uses data from self.logger_coordinator when available
+        await self._create_solar_net_device()
 
         _inverter_infos = await self._get_inverter_infos()
         for inverter_info in _inverter_infos:
@@ -133,7 +133,6 @@ class FroniusSolarNet:
                 logger=_LOGGER,
                 name=f"{DOMAIN}_power_flow_{self.host}",
                 update_interval=self.update_interval,
-                power_flow_info=solar_net_device_info,
             )
         )
 
@@ -147,7 +146,7 @@ class FroniusSolarNet:
             )
         )
 
-    async def _create_solar_net_device(self) -> FroniusDeviceInfo:
+    async def _create_solar_net_device(self) -> None:
         """Create a device for the Fronius SolarNet system."""
         solar_net_device: DeviceInfo = DeviceInfo(
             name="SolarNet",
@@ -163,11 +162,6 @@ class FroniusSolarNet:
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry_id,
             **solar_net_device,
-        )
-        return FroniusDeviceInfo(
-            device_info=solar_net_device,
-            solar_net_id=SOLAR_NET_ID_SYSTEM,
-            unique_id=self.solar_net_device_id,
         )
 
     async def _get_inverter_infos(self) -> list[FroniusDeviceInfo]:

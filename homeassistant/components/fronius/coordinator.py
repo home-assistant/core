@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
-from pyfronius import Fronius, FroniusError
+from pyfronius import FroniusError
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
@@ -41,8 +41,7 @@ class _FroniusUpdateCoordinator(
 
     def __init__(self, *args: Any, solar_net: FroniusSolarNet, **kwargs: Any) -> None:
         """Set up the _FroniusUpdateCoordinator class."""
-        self.lock = solar_net.coordinator_lock
-        self.fronius: Fronius = solar_net.fronius
+        self.solar_net = solar_net
         self.solar_net_device_id = solar_net.solar_net_device_id
         # unregistered_keys are used to create entities in platform module
         self.unregistered_keys: dict[SolarNetId, set[str]] = {}
@@ -54,7 +53,7 @@ class _FroniusUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[SolarNetId, Any]:
         """Fetch the latest data from the source."""
-        async with self.lock:
+        async with self.solar_net.coordinator_lock:
             try:
                 data = await self._update_method()
             except FroniusError as err:
@@ -113,7 +112,9 @@ class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        data = await self.fronius.current_inverter_data(self.inverter_info.solar_net_id)
+        data = await self.solar_net.fronius.current_inverter_data(
+            self.inverter_info.solar_net_id
+        )
         # wrap a single devices data in a dict with solar_net_id key for
         # _FroniusUpdateCoordinator _async_update_data and add_entities_for_seen_keys
         return {self.inverter_info.solar_net_id: data}
@@ -126,7 +127,7 @@ class FroniusLoggerUpdateCoordinator(_FroniusUpdateCoordinator):
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        data = await self.fronius.current_logger_info()
+        data = await self.solar_net.fronius.current_logger_info()
         return {SOLAR_NET_ID_SYSTEM: data}
 
 
@@ -137,7 +138,7 @@ class FroniusMeterUpdateCoordinator(_FroniusUpdateCoordinator):
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        data = await self.fronius.current_system_meter_data()
+        data = await self.solar_net.fronius.current_system_meter_data()
         return data["meters"]  # type: ignore[no-any-return]
 
 
@@ -146,16 +147,9 @@ class FroniusPowerFlowUpdateCoordinator(_FroniusUpdateCoordinator):
 
     valid_descriptions = POWER_FLOW_ENTITY_DESCRIPTIONS
 
-    def __init__(
-        self, *args: Any, power_flow_info: FroniusDeviceInfo, **kwargs: Any
-    ) -> None:
-        """Set up a Fronius power flow coordinator."""
-        super().__init__(*args, **kwargs)
-        self.power_flow_info = power_flow_info
-
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        data = await self.fronius.current_power_flow()
+        data = await self.solar_net.fronius.current_power_flow()
         return {SOLAR_NET_ID_POWER_FLOW: data}
 
 
@@ -166,5 +160,5 @@ class FroniusStorageUpdateCoordinator(_FroniusUpdateCoordinator):
 
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from pyfronius."""
-        data = await self.fronius.current_system_storage_data()
+        data = await self.solar_net.fronius.current_system_storage_data()
         return data["storages"]  # type: ignore[no-any-return]
