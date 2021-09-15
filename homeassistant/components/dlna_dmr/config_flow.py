@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 from pprint import pformat
 from typing import Any, Mapping, Optional
 from urllib.parse import urlparse
@@ -24,9 +25,10 @@ from .const import (
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
     DOMAIN,
-    LOGGER,
 )
 from .data import get_domain_data
+
+LOGGER = logging.getLogger(__name__)
 
 FlowInput = Optional[Mapping[str, Any]]
 
