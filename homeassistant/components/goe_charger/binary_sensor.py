@@ -45,7 +45,9 @@ class GoeChargerBinary(CoordinatorEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data is not None and self._key in self.coordinator.data
+        return (self.coordinator.data is not None and
+                self._key in self.coordinator.data and
+                self.coordinator.data[self._key] is not None)
 
     @property
     def is_on(self) -> bool | None:
@@ -62,8 +64,5 @@ class GoeChargerBinary(CoordinatorEntity, BinarySensorEntity):
     def device_info(self):
         """Get attributes about the device."""
         return {
-            "identifiers": {(DOMAIN, self._serial)},
-            #"name": self._device.label,
-            #"model": self._device.device_type_name,
-            #"manufacturer": "Unavailable",
+            "identifiers": {(DOMAIN, self._serial)}
         }

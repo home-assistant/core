@@ -14,18 +14,22 @@ from .common import GoeChargerHub
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     serial = config_entry.data["serial"]
 
     async_add_entities([
-        GoeChargerNumber(coordinator, config_entry, "Requested current", serial, "requested_current", ELECTRIC_CURRENT_AMPERE, DEVICE_CLASS_CURRENT, "amp")
+        GoeChargerNumber(coordinator, config_entry, "Requested current", serial, "requested_current",
+                         ELECTRIC_CURRENT_AMPERE, DEVICE_CLASS_CURRENT, "amp")
     ])
+
 
 class GoeChargerNumber(CoordinatorEntity, NumberEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, config_entry: ConfigEntry, name: str, serial: str, unique_id: str, unit_of_measurement: str, device_class: str | None, key: str):
+    def __init__(self, coordinator: DataUpdateCoordinator, config_entry: ConfigEntry, name: str, serial: str,
+                 unique_id: str, unit_of_measurement: str, device_class: str | None, key: str):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
@@ -59,7 +63,9 @@ class GoeChargerNumber(CoordinatorEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data is not None and self._key in self.coordinator.data
+        return (self.coordinator.data is not None and
+                self._key in self.coordinator.data and
+                self.coordinator.data[self._key] is not None)
 
     @property
     def value(self) -> float:
@@ -84,7 +90,8 @@ class GoeChargerNumber(CoordinatorEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
 
-        hub = GoeChargerHub(self._config_entry.data["host"])
+        hub = GoeChargerHub(self._config_entry.data["secure"], self._config_entry.data["host"],
+                            self._config_entry.data["pathprefix"])
         await hub.set_data(self.hass, {
             self._key: int(value)
         })
@@ -99,8 +106,5 @@ class GoeChargerNumber(CoordinatorEntity, NumberEntity):
     def device_info(self):
         """Get attributes about the device."""
         return {
-            "identifiers": {(DOMAIN, self._serial)},
-            #"name": self._device.label,
-            #"model": self._device.device_type_name,
-            #"manufacturer": "Unavailable",
+            "identifiers": {(DOMAIN, self._serial)}
         }

@@ -1,3 +1,5 @@
 """Constants for the go-e Charger integration."""
 
-DOMAIN = "goe_charger"
+from typing import Final
+
+DOMAIN: Final = "goe_charger"

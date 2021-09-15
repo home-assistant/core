@@ -3,13 +3,17 @@
     "step": {
       "user": {
         "data": {
+          "secure": "[%key:common::config_flow::data::secure%]",
           "host": "[%key:common::config_flow::data::host%]",
+          "pathprefix": "[%key:common::config_flow::data::pathprefix%]",
           "interval": "[%key:common::config_flow::data::interval%]"
         }
       },
       "init": {
         "data": {
+          "secure": "[%key:common::config_flow::data::secure%]",
           "host": "[%key:common::config_flow::data::host%]",
+          "pathprefix": "[%key:common::config_flow::data::pathprefix%]",
           "interval": "[%key:common::config_flow::data::interval%]"
         }
       }

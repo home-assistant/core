@@ -14,13 +14,17 @@
         "step": {
             "user": {
                 "data": {
+                    "secure": "Secure (ssl/https)",
                     "host": "Host",
+                    "pathprefix": "Path prefix (for reverse proxies; typical empty)",
                     "interval": "Interval"
                 }
             },
             "init": {
                 "data": {
+                    "secure": "Secure (ssl/https)",
                     "host": "Host",
+                    "pathprefix": "Path prefix (for reverse proxies; typical empty)",
                     "interval": "Interval"
                 }
             }

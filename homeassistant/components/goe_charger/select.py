@@ -14,6 +14,7 @@ from .common import GoeChargerHub
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities) -> None:
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     serial = config_entry.data["serial"]
@@ -34,21 +35,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
             0: "Open",
             1: "Wait"
         }),
-        GoeChargerSelect(coordinator, config_entry, "Force state", serial, "force_state", None, None, "acs", {
+        GoeChargerSelect(coordinator, config_entry, "Force state", serial, "force_state", None, None, "frc", {
             0: "Neutral",
             1: "Off",
             2: "On"
         }),
-        GoeChargerSelect(coordinator, config_entry, "Phase switch mode", serial, "phase_switch_mode", None, None, "psm", {
-            1: "Force_1",
-            2: "Force_3"
-        })
+        GoeChargerSelect(coordinator, config_entry, "Phase switch mode", serial, "phase_switch_mode", None, None, "psm",
+                         {
+                             1: "Force_1",
+                             2: "Force_3"
+                         })
     ])
+
 
 class GoeChargerSelect(CoordinatorEntity, SelectEntity):
     """Representation of a Sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, config_entry: ConfigEntry, name: str, serial: str, unique_id: str, unit_of_measurement: str, device_class: str | None, key: str, options: dict[int, str]):
+    def __init__(self, coordinator: DataUpdateCoordinator, config_entry: ConfigEntry, name: str, serial: str,
+                 unique_id: str, unit_of_measurement: str, device_class: str | None, key: str, options: dict[int, str]):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._name = name
@@ -83,7 +87,9 @@ class GoeChargerSelect(CoordinatorEntity, SelectEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data is not None and self._key in self.coordinator.data
+        return (self.coordinator.data is not None and
+                self._key in self.coordinator.data and
+                self.coordinator.data[self._key] is not None)
 
     @property
     def current_option(self) -> str | None:
@@ -111,7 +117,8 @@ class GoeChargerSelect(CoordinatorEntity, SelectEntity):
 
         index = val_list.index(option)
 
-        hub = GoeChargerHub(self._config_entry.data["host"])
+        hub = GoeChargerHub(self._config_entry.data["secure"], self._config_entry.data["host"],
+                            self._config_entry.data["pathprefix"])
         await hub.set_data(self.hass, {
             self._key: key_list[index]
         })
@@ -126,8 +133,5 @@ class GoeChargerSelect(CoordinatorEntity, SelectEntity):
     def device_info(self):
         """Get attributes about the device."""
         return {
-            "identifiers": {(DOMAIN, self._serial)},
-            #"name": self._device.label,
-            #"model": self._device.device_type_name,
-            #"manufacturer": "Unavailable",
+            "identifiers": {(DOMAIN, self._serial)}
         }
