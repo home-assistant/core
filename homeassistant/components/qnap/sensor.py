@@ -122,12 +122,9 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        server_name = self.coordinator.data["system_stats"]["system"]["name"]
         if self.monitor_device is not None:
-            return (
-                f"{server_name} {self.entity_description.name} ({self.monitor_device})"
-            )
-        return f"{server_name} {self.entity_description.name}"
+            return f"{self.entity_description.name} ({self.monitor_device})"
+        return f"{self.entity_description.name}"
 
     @property
     def device_info(self):
@@ -305,18 +302,22 @@ class QNAPFolderSensor(QNAPSensor):
     """A QNAP sensor that monitors storage folder stats."""
 
     @property
+    def name(self):
+        """Return the name of the sensor, if any."""
+        return f"{self.entity_description.name} (Folder {self.monitor_subdevice})"
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
-        vol = self.coordinator.data["volumes"][self.monitor_device]
         for folder in self.coordinator.data["volumes"][self.monitor_device]["folders"]:
             if folder["sharename"] == self.monitor_subdevice:
-                data = folder
+                vol = self.coordinator.data["volumes"][self.monitor_device]
+                used_gb = int(folder["used_size"]) / 1024 / 1024 / 1024
+                total_gb = int(vol["total_size"]) / 1024 / 1024 / 1024
 
-        used_gb = int(data["used_size"]) / 1024 / 1024 / 1024
         if self.entity_description.key == "folder_size_used":
             return round_nicely(used_gb)
 
-        total_gb = int(vol["total_size"]) / 1024 / 1024 / 1024
         if self.entity_description.key == "folder_percentage_used":
             return round(used_gb / total_gb * 100)
 
