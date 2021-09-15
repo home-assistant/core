@@ -186,9 +186,9 @@ async def async_create_miio_device_and_coordinator(
         try:
             return await _async_fetch_data()
         except DeviceException as ex:
-            if ex.get("message") != "user ack timeout":
+            if ex.code != -9999:
                 raise UpdateFailed(ex) from ex
-        # Try to fetch the data a second time after `user ack timeout`
+        # Try to fetch the data a second time after error code -9999
         try:
             return await _async_fetch_data()
         except DeviceException as ex:
