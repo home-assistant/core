@@ -1,6 +1,7 @@
 """The Switcher integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -93,12 +94,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         wrapper = hass.data[DOMAIN][DATA_DEVICE][
             device.device_id
         ] = SwitcherDeviceWrapper(hass, entry, device)
-        hass.async_create_task(wrapper.async_setup())
+        wrapper.async_setup()
 
     async def platforms_setup_task() -> None:
         # Must be ready before dispatcher is called
-        for platform in PLATFORMS:
-            await hass.config_entries.async_forward_entry_setup(entry, platform)
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
+            )
+        )
 
         discovery_task = hass.data[DOMAIN].pop(DATA_DISCOVERY, None)
         if discovery_task is not None:
@@ -114,7 +119,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def stop_bridge(event: Event) -> None:
         await async_stop_bridge(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
+    )
 
     return True
 
@@ -132,7 +139,6 @@ class SwitcherDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             name=device.name,
             update_interval=timedelta(seconds=MAX_UPDATE_INTERVAL_SEC),
         )
-        self.hass = hass
         self.entry = entry
         self.data = device
 
@@ -157,9 +163,9 @@ class SwitcherDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Switcher device mac address."""
         return self.data.mac_address  # type: ignore[no-any-return]
 
-    async def async_setup(self) -> None:
+    def async_setup(self) -> None:
         """Set up the wrapper."""
-        dev_reg = await device_registry.async_get_registry(self.hass)
+        dev_reg = device_registry.async_get(self.hass)
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac_address)},

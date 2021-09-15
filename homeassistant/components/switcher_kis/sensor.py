@@ -98,30 +98,31 @@ class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        wrapper: SwitcherDeviceWrapper,
+        coordinator: SwitcherDeviceWrapper,
         attribute: str,
         description: AttributeDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(wrapper)
-        self.wrapper = wrapper
+        super().__init__(coordinator)
         self.attribute = attribute
 
         # Entity class attributes
-        self._attr_name = f"{wrapper.name} {description.name}"
+        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_icon = description.icon
         self._attr_native_unit_of_measurement = description.unit
         self._attr_device_class = description.device_class
         self._attr_entity_registry_enabled_default = description.default_enabled
 
-        self._attr_unique_id = f"{wrapper.device_id}-{wrapper.mac_address}-{attribute}"
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{attribute}"
+        )
         self._attr_device_info = {
             "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, wrapper.mac_address)
+                (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
             }
         }
 
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return getattr(self.wrapper.data, self.attribute)  # type: ignore[no-any-return]
+        return getattr(self.coordinator.data, self.attribute)  # type: ignore[no-any-return]
