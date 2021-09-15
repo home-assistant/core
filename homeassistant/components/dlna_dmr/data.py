@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any, NamedTuple, cast
 
@@ -9,7 +10,7 @@ from async_upnp_client import UpnpEventHandler, UpnpFactory, UpnpRequester
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
@@ -30,6 +31,8 @@ class DlnaDmrData:
     requester: UpnpRequester
     upnp_factory: UpnpFactory
     event_notifiers: dict[EventListenAddr, AiohttpNotifyServer]
+    event_notifier_refs: defaultdict[EventListenAddr, int]
+    stop_listener_remove: CALLBACK_TYPE | None = None
     unmigrated_config: dict[str, Mapping[str, Any]]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -39,11 +42,10 @@ class DlnaDmrData:
         self.requester = AiohttpSessionRequester(session, with_sleep=False)
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
         self.event_notifiers = {}
+        self.event_notifier_refs = defaultdict(int)
         self.unmigrated_config = {}
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
-
-    async def async_shutdown(self, event: Event) -> None:
+    async def async_cleanup_event_notifiers(self, event: Event) -> None:
         """Clean up resources when Home Assistant is stopped."""
         del event  # unused
         LOGGER.debug("Cleaning resources in DlnaDmrData")
@@ -51,19 +53,28 @@ class DlnaDmrData:
             tasks = (server.stop_server() for server in self.event_notifiers.values())
             asyncio.gather(*tasks)
             self.event_notifiers = {}
+            self.event_notifier_refs = defaultdict(int)
 
     async def async_get_event_notifier(
-        self,
-        listen_addr: EventListenAddr,
-        loop: asyncio.AbstractEventLoop,
+        self, listen_addr: EventListenAddr, hass: HomeAssistant
     ) -> UpnpEventHandler:
         """Return existing event notifier for the listen_addr, or create one.
 
-        Only one event notify server is kept for each listen_addr.
+        Only one event notify server is kept for each listen_addr. Must call
+        async_release_event_notifier when done to cleanup resources.
         """
         LOGGER.debug("Getting event handler for %s", listen_addr)
 
         async with self.lock:
+            # Stop all servers when HA shuts down, to release resources on devices
+            if not self.stop_listener_remove:
+                self.stop_listener_remove = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, self.async_cleanup_event_notifiers
+                )
+
+            # Always increment the reference counter, for existing or new event handlers
+            self.event_notifier_refs[listen_addr] += 1
+
             # Return an existing event handler if we can
             if listen_addr in self.event_notifiers:
                 return self.event_notifiers[listen_addr].event_handler
@@ -74,7 +85,7 @@ class DlnaDmrData:
                 listen_port=listen_addr.port,
                 listen_host=listen_addr.host,
                 callback_url=listen_addr.callback_url,
-                loop=loop,
+                loop=hass.loop,
             )
             await server.start_server()
             LOGGER.debug("Started event handler at %s", server.callback_url)
@@ -82,6 +93,27 @@ class DlnaDmrData:
             self.event_notifiers[listen_addr] = server
 
         return server.event_handler
+
+    async def async_release_event_notifier(self, listen_addr: EventListenAddr) -> None:
+        """Indicate that the event notifier for listen_addr is not used anymore.
+
+        This is called once by each caller of async_get_event_notifier, and will
+        stop the listening server when all users are done.
+        """
+        async with self.lock:
+            assert self.event_notifier_refs[listen_addr] > 0
+            self.event_notifier_refs[listen_addr] -= 1
+
+            # Shutdown the server when it has no more users
+            if self.event_notifier_refs[listen_addr] == 0:
+                server = self.event_notifiers.pop(listen_addr)
+                await server.stop_server()
+
+            # Remove the cleanup listener when there's nothing left to cleanup
+            if not self.event_notifiers:
+                assert self.stop_listener_remove is not None
+                self.stop_listener_remove()
+                self.stop_listener_remove = None
 
 
 def get_domain_data(hass: HomeAssistant) -> DlnaDmrData:

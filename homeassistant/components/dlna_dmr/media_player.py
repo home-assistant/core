@@ -122,8 +122,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     udn: str
     device_type: str
 
-    _event_port: int
-    _event_callback_url: str | None
+    _event_addr: EventListenAddr
     poll_availability: bool
     # Last known URL for the device, used when adding this entity to hass to try
     # to connect before SSDP has rediscovered it, or when SSDP discovery fails.
@@ -155,8 +154,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.udn = udn
         self.device_type = device_type
         self._attr_name = name
-        self._event_port = event_port
-        self._event_callback_url = event_callback_url
+        self._event_addr = EventListenAddr(None, event_port, event_callback_url)
         self.poll_availability = poll_availability
         self.location = location
         self._device_lock = asyncio.Lock()
@@ -247,11 +245,16 @@ class DlnaDmrEntity(MediaPlayerEntity):
         new_port = entry.options.get(CONF_LISTEN_PORT) or 0
         new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
 
-        if new_port != self._event_port or new_callback_url != self._event_callback_url:
-            self._event_port = new_port
-            self._event_callback_url = new_callback_url
+        if (
+            new_port != self._event_addr.port
+            or new_callback_url != self._event_addr.callback_url
+        ):
             # Changes to eventing requires a device reconnect for it to update correctly
             await self._device_disconnect()
+            # Update _event_addr after disconnecting, to stop the right event listener
+            self._event_addr = self._event_addr._replace(
+                port=new_port, callback_url=new_callback_url
+            )
             try:
                 await self._device_connect(self.location)
             except UpnpError as err:
@@ -274,11 +277,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Create/get event handler that is reachable by the device, using
             # the connection's local IP to listen only on the relevant interface
             _, event_ip = await async_get_local_ip(location, self.hass.loop)
-            event_addr = EventListenAddr(
-                event_ip, self._event_port, self._event_callback_url
-            )
+            self._event_addr = self._event_addr._replace(host=event_ip)
             event_handler = await domain_data.async_get_event_notifier(
-                event_addr, self.hass.loop
+                self._event_addr, self.hass
             )
 
             # Create profile wrapper
@@ -323,6 +324,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             old_device = self._device
             self._device = None
             await old_device.async_unsubscribe_services()
+
+        domain_data = get_domain_data(self.hass)
+        await domain_data.async_release_event_notifier(self._event_addr)
 
     @property
     def available(self) -> bool:
