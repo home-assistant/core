@@ -1677,7 +1677,7 @@ pyobihai==1.3.1
 pyombi==0.1.10
 
 # homeassistant.components.openuv
-pyopenuv==2.2.0
+pyopenuv==2.2.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
