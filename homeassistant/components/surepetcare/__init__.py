@@ -40,28 +40,33 @@ PLATFORMS = ["binary_sensor", "sensor"]
 SCAN_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_FEEDERS): vol.All(
-                        cv.ensure_list, [cv.positive_int]
-                    ),
-                    vol.Optional(CONF_FLAPS): vol.All(
-                        cv.ensure_list, [cv.positive_int]
-                    ),
-                    vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
-                    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-                },
-                cv.deprecated(CONF_FEEDERS),
-                cv.deprecated(CONF_FLAPS),
-                cv.deprecated(CONF_PETS),
-                cv.deprecated(CONF_SCAN_INTERVAL),
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    {
+                        vol.Required(CONF_USERNAME): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_FEEDERS): vol.All(
+                            cv.ensure_list, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_FLAPS): vol.All(
+                            cv.ensure_list, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_PETS): vol.All(
+                            cv.ensure_list, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+                    },
+                    cv.deprecated(CONF_FEEDERS),
+                    cv.deprecated(CONF_FLAPS),
+                    cv.deprecated(CONF_PETS),
+                    cv.deprecated(CONF_SCAN_INTERVAL),
+                )
             )
-        )
-    },
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
