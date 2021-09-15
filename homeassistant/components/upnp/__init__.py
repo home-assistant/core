@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from ipaddress import ip_address
 from typing import Any
 
 import voluptuous as vol
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,13 +27,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_LOCAL_IP,
     CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_CONFIG,
     DOMAIN_DEVICES,
     LOGGER,
 )
@@ -43,22 +45,26 @@ NOTIFICATION_TITLE = "UPnP/IGD Setup"
 PLATFORMS = ["binary_sensor", "sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {},
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    cv.deprecated(CONF_LOCAL_IP),
+                    {
+                        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
+                    },
+                )
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up UPnP component."""
-    LOGGER.debug("async_setup, config: %s", config)
-    conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-    conf = config.get(DOMAIN, conf_default)
     hass.data[DOMAIN] = {
-        DOMAIN_CONFIG: conf,
         DOMAIN_DEVICES: {},
     }
 
