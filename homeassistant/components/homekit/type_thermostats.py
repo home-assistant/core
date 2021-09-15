@@ -299,7 +299,7 @@ class Thermostat(HomeAccessory):
             self.async_call_service(
                 DOMAIN_CLIMATE,
                 service,
-                params,
+                params.copy(),
                 ", ".join(events),
             )
             service = None
