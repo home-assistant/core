@@ -31,9 +31,11 @@
           "t1_unit_of_measurement": "Teleinfo 1 Unit of measurement",
           "t2_unit_of_measurement": "Teleinfo 2 Unit of measurement",
           "c1_device_class": "Meter 1 Device Class (sensor)",
-          "c1_unit_of_measurement": "Meter 1 Unit of measurement",
+          "c1_unit_of_measurement": "Meter 1 Unit of measurement for current value",
+          "c1_total_unit_of_measurement": "Meter 1 Unit of measurement for total value",
           "c2_device_class": "Meter 2 Device Class (sensor)",
-          "c2_unit_of_measurement": "Meter 2 Unit of measurement"
+          "c2_unit_of_measurement": "Meter 2 Unit of measurement for current value",
+          "c2_total_unit_of_measurement": "Meter 2 Unit of measurement for total value"
         }
       }
     }

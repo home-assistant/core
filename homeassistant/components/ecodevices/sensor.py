@@ -11,9 +11,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_C1_DEVICE_CLASS,
     CONF_C1_ENABLED,
+    CONF_C1_TOTAL_UNIT_OF_MEASUREMENT,
     CONF_C1_UNIT_OF_MEASUREMENT,
     CONF_C2_DEVICE_CLASS,
     CONF_C2_ENABLED,
+    CONF_C2_TOTAL_UNIT_OF_MEASUREMENT,
     CONF_C2_UNIT_OF_MEASUREMENT,
     CONF_T1_ENABLED,
     CONF_T1_UNIT_OF_MEASUREMENT,
@@ -113,7 +115,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="c1_total",
                 name=DEFAULT_C1_NAME + " Total",
-                unit=config.get(CONF_C1_UNIT_OF_MEASUREMENT),
+                unit=config.get(CONF_C1_TOTAL_UNIT_OF_MEASUREMENT),
                 device_class=config.get(CONF_C1_DEVICE_CLASS),
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 icon="mdi:counter",
@@ -139,7 +141,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="c2_total",
                 name=DEFAULT_C2_NAME + " Total",
-                unit=config.get(CONF_C2_UNIT_OF_MEASUREMENT),
+                unit=config.get(CONF_C2_TOTAL_UNIT_OF_MEASUREMENT),
                 device_class=config.get(CONF_C2_DEVICE_CLASS),
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 icon="mdi:counter",
@@ -231,8 +233,10 @@ class T1TotalEdDevice(EdDevice):
 
     @property
     def native_value(self):
-        """Return the state."""
-        return self.coordinator.data["T1_BASE"]
+        """Return the total value if it's greater than 0."""
+        value = self.coordinator.data["T1_BASE"]
+        if float(value) > 0:
+            return value
 
 
 class T2EdDevice(EdDevice):
@@ -276,8 +280,10 @@ class T2TotalEdDevice(EdDevice):
 
     @property
     def native_value(self):
-        """Return the state."""
-        return self.coordinator.data["T2_BASE"]
+        """Return the total value if it's greater than 0."""
+        value = self.coordinator.data["T2_BASE"]
+        if float(value) > 0:
+            return value
 
 
 class C1EdDevice(EdDevice):
@@ -303,8 +309,10 @@ class C1TotalEdDevice(EdDevice):
 
     @property
     def native_value(self):
-        """Return the state."""
-        return self.coordinator.data["count0"]
+        """Return the total value if it's greater than 0."""
+        value = self.coordinator.data["count0"]
+        if float(value) > 0:
+            return value
 
 
 class C2EdDevice(EdDevice):
@@ -330,5 +338,7 @@ class C2TotalEdDevice(EdDevice):
 
     @property
     def native_value(self):
-        """Return the state."""
-        return self.coordinator.data["count1"]
+        """Return the total value if it's greater than 0."""
+        value = self.coordinator.data["count1"]
+        if float(value) > 0:
+            return value

@@ -20,9 +20,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_C1_DEVICE_CLASS,
     CONF_C1_ENABLED,
+    CONF_C1_TOTAL_UNIT_OF_MEASUREMENT,
     CONF_C1_UNIT_OF_MEASUREMENT,
     CONF_C2_DEVICE_CLASS,
     CONF_C2_ENABLED,
+    CONF_C2_TOTAL_UNIT_OF_MEASUREMENT,
     CONF_C2_UNIT_OF_MEASUREMENT,
     CONF_T1_ENABLED,
     CONF_T1_UNIT_OF_MEASUREMENT,
@@ -134,6 +136,7 @@ class EcoDevicesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         str, vol.Lower, vol.In(SENSOR_DEVICE_CLASSES)
                     ),
                     vol.Optional(CONF_C1_UNIT_OF_MEASUREMENT): str,
+                    vol.Optional(CONF_C1_TOTAL_UNIT_OF_MEASUREMENT): str,
                 }
             )
 
@@ -144,6 +147,7 @@ class EcoDevicesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         str, vol.Lower, vol.In(SENSOR_DEVICE_CLASSES)
                     ),
                     vol.Optional(CONF_C2_UNIT_OF_MEASUREMENT): str,
+                    vol.Optional(CONF_C2_TOTAL_UNIT_OF_MEASUREMENT): str,
                 }
             )
 
