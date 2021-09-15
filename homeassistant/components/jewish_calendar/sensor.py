@@ -264,16 +264,6 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
             return None
         return dt_util.as_utc(self._state).isoformat()  # type: ignore[unreachable]
 
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Return the state attributes."""
-        attrs: dict[str, str] = {}
-
-        if self._state is None:
-            return attrs
-
-        return attrs  # type: ignore[unreachable]
-
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
     ) -> Any | None:
