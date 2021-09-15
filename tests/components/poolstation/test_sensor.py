@@ -33,7 +33,7 @@ async def test_pool_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ICON) == "mdi:ph"
     entry = registry.async_get("sensor.my_pool_ph")
     assert entry
-    assert entry.unique_id == f"{pool.alias}{PH_SUFFIX}"
+    assert entry.unique_id == f"{pool.id}{PH_SUFFIX}"
 
     # Temperature
     state = hass.states.get("sensor.my_pool_temperature")
@@ -44,7 +44,7 @@ async def test_pool_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
     entry = registry.async_get("sensor.my_pool_temperature")
     assert entry
-    assert entry.unique_id == f"{pool.alias}{TEMPERATURE_SUFFIX}"
+    assert entry.unique_id == f"{pool.id}{TEMPERATURE_SUFFIX}"
 
     # Salt concentration
     state = hass.states.get("sensor.my_pool_salt_concentration")
@@ -54,7 +54,7 @@ async def test_pool_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "gr/l"
     entry = registry.async_get("sensor.my_pool_salt_concentration")
     assert entry
-    assert entry.unique_id == f"{pool.alias}{SALT_SUFFIX}"
+    assert entry.unique_id == f"{pool.id}{SALT_SUFFIX}"
 
     # Electrolysis
     state = hass.states.get("sensor.my_pool_electrolysis")
@@ -64,4 +64,4 @@ async def test_pool_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     entry = registry.async_get("sensor.my_pool_electrolysis")
     assert entry
-    assert entry.unique_id == f"{pool.alias}{ELECTROLYSIS_SUFFIX}"
+    assert entry.unique_id == f"{pool.id}{ELECTROLYSIS_SUFFIX}"

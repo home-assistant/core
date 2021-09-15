@@ -28,7 +28,7 @@ class PoolEntity(CoordinatorEntity):
         name = self._pool.alias
 
         self._attr_name = f"{name}{entity_suffix}"
-        self._attr_unique_id = f"{name}{entity_suffix}"
+        self._attr_unique_id = f"{pool_id}{entity_suffix}"
         self._attr_device_info = {"name": name, "identifiers": {(DOMAIN, pool_id)}}
 
     @property

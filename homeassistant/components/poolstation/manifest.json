@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/poolstation",
   "requirements": [
-    "pypoolstation==0.3.0"
+    "pypoolstation==0.4.0"
   ],
   "codeowners": [
     "@cibernox"

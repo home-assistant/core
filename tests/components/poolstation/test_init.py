@@ -15,7 +15,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant):
     config_entry = mock_config_entry(uniqe_id="id_my_pool_not_ready")
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.poolstation.Pool.all",
+        "homeassistant.components.poolstation.Pool.get_all_pools",
         side_effect=aiohttp.ClientError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -26,7 +26,7 @@ async def test_config_entry_unload(hass: HomeAssistant) -> None:
     """Test the Poolstation configuration entry setup and unloading."""
     config_entry = mock_config_entry(uniqe_id="id_my_pool_unload")
     with patch(
-        "homeassistant.components.poolstation.Pool.all",
+        "homeassistant.components.poolstation.Pool.get_all_pools",
         return_value=[],
     ):
         await init_integration(hass, config_entry)

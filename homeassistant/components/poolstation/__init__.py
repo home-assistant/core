@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     account = Account(session, token=entry.data[TOKEN])
 
     try:
-        pools = await Pool.all(session, account=account)
+        pools = await Pool.get_all_pools(session, account=account)
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
 

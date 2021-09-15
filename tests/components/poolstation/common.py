@@ -55,7 +55,7 @@ async def init_integration(
     """Initialize the Poolstation integration with the given Config Entry and Pool list."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.poolstation.Pool.all",
+        "homeassistant.components.poolstation.Pool.get_all_pools",
         return_value=mock_pools,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
