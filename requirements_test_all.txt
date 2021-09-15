@@ -1091,7 +1091,7 @@ python-smarttub==0.0.25
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.10.0
+python-tado==0.12.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
