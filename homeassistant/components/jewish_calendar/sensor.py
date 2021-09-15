@@ -166,14 +166,14 @@ class JewishCalendarSensor(SensorEntity):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
-        self._state = None
+        self._state: datetime | None = None
         self._holiday_attrs: dict[str, str] = {}
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if isinstance(self._state, datetime):
-            return self._state.isoformat()  # type: ignore[unreachable]
+            return self._state.isoformat()
         return self._state
 
     async def async_update(self) -> None:
@@ -262,7 +262,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         """Return the state of the sensor."""
         if self._state is None:
             return None
-        return dt_util.as_utc(self._state).isoformat()  # type: ignore[unreachable]
+        return dt_util.as_utc(self._state).isoformat()
 
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
