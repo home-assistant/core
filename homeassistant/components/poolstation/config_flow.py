@@ -1,6 +1,7 @@
 """Config flow for PoolStation integration."""
 from __future__ import annotations
 
+from asyncio import TimeoutError
 import logging
 from typing import Any
 
@@ -46,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             token = await account.login()
-        except ClientResponseError:
+        except (TimeoutError, ClientResponseError):
             errors["base"] = "cannot_connect"
         except AuthenticationException:
             errors["base"] = "invalid_auth"
