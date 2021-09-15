@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,7 +57,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
-        self._update_unsub = None
+        self._update_unsub: CALLBACK_TYPE | None = None
 
     @property
     def is_on(self) -> bool:
@@ -98,8 +98,8 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         if havdalah is not None and now < havdalah < update:
             update = havdalah
         if self._update_unsub:
-            self._update_unsub()  # type: ignore[unreachable]
-        self._update_unsub = event.async_track_point_in_time(  # type: ignore[assignment]
+            self._update_unsub()
+        self._update_unsub = event.async_track_point_in_time(
             self.hass, self._update, update
         )
         return None
