@@ -8,7 +8,9 @@ import functools
 from typing import Any, Callable, TypeVar, cast
 
 from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
+from async_upnp_client.const import NotificationSubType
 from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
+from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -97,15 +99,12 @@ async def async_setup_entry(
     _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
 
     # Create our own device-wrapping entity
-    event_addr = EventListenAddr(
-        entry.options.get(CONF_LISTEN_PORT) or 0,
-        entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
-    )
     entity = DlnaDmrEntity(
         udn=entry.data[CONF_DEVICE_ID],
         device_type=entry.data[CONF_TYPE],
         name=entry.title,
-        event_addr=event_addr,
+        event_port=entry.options.get(CONF_LISTEN_PORT) or 0,
+        event_callback_url=entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
         poll_availability=entry.options.get(CONF_POLL_AVAILABILITY, False),
         location=entry.data[CONF_URL],
     )
@@ -123,7 +122,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
     udn: str
     device_type: str
 
-    _event_addr: EventListenAddr
+    _event_port: int
+    _event_callback_url: str | None
     poll_availability: bool
     # Last known URL for the device, used when adding this entity to hass to try
     # to connect before SSDP has rediscovered it, or when SSDP discovery fails.
@@ -131,7 +131,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _remove_ssdp_callback: Callable | None = None
+    _remove_ssdp_callbacks: list[Callable] = []
     check_available: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
@@ -146,7 +146,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         udn: str,
         device_type: str,
         name: str,
-        event_addr: EventListenAddr,
+        event_port: int,
+        event_callback_url: str | None,
         poll_availability: bool,
         location: str,
     ) -> None:
@@ -154,7 +155,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.udn = udn
         self.device_type = device_type
         self._attr_name = name
-        self._event_addr = event_addr
+        self._event_port = event_port
+        self._event_callback_url = event_callback_url
         self.poll_availability = poll_availability
         self.location = location
         self._device_lock = asyncio.Lock()
@@ -169,14 +171,28 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 _LOGGER.debug("Couldn't connect immediately: %s", err)
 
         # Get SSDP notifications for only this device
-        self._remove_ssdp_callback = await ssdp.async_register_callback(
-            self.hass, self.async_ssdp_callback, {"USN": self.usn}
+        self._remove_ssdp_callbacks.append(
+            await ssdp.async_register_callback(
+                self.hass, self.async_ssdp_callback, {"USN": self.usn}
+            )
+        )
+
+        # async_upnp_client.SsdpListener only reports byebye once for each *UDN*
+        # (device name) which often is not the USN (service within the device)
+        # that we're interested in. So also listen for byebye advertisements for
+        # the UDN, which is reported in the _udn field of the combined_headers.
+        self._remove_ssdp_callbacks.append(
+            await ssdp.async_register_callback(
+                self.hass,
+                self.async_ssdp_callback,
+                {"_udn": self.udn, "NTS": NotificationSubType.SSDP_BYEBYE},
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
-        if self._remove_ssdp_callback:
-            self._remove_ssdp_callback()
+        for callback in self._remove_ssdp_callbacks:
+            callback()
         await self._device_disconnect()
 
     async def async_ssdp_callback(
@@ -190,9 +206,17 @@ class DlnaDmrEntity(MediaPlayerEntity):
             info.get(ssdp.ATTR_SSDP_LOCATION),
         )
 
-        bootid_str = info.get(ssdp.ATTR_SSDP_BOOTID)
-        if bootid_str:
+        if change == ssdp.SsdpChange.UPDATE:
+            # This is an announcement that bootid is about to change. We'll deal
+            # with it when the ssdp:alive message comes through.
+            return
+
+        try:
+            bootid_str = info[ssdp.ATTR_SSDP_BOOTID]
             bootid = int(bootid_str, 10)
+        except (KeyError, ValueError):
+            pass
+        else:
             if self._bootid is not None and self._bootid != bootid and self._device:
                 # Device has rebooted, drop existing connection and maybe reconnect
                 await self._device_disconnect()
@@ -202,10 +226,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Device is going away, disconnect
             await self._device_disconnect()
 
-        if (
-            change in (ssdp.SsdpChange.ALIVE, ssdp.SsdpChange.UPDATE)
-            and not self._device
-        ):
+        if change == ssdp.SsdpChange.ALIVE and not self._device:
             location = info[ssdp.ATTR_SSDP_LOCATION]
             await self._device_connect(location)
 
@@ -223,12 +244,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.location = entry.data[CONF_URL]
         self.poll_availability = entry.options.get(CONF_POLL_AVAILABILITY, False)
 
-        new_event_addr = EventListenAddr(
-            entry.options.get(CONF_LISTEN_PORT) or 0,
-            entry.options.get(CONF_CALLBACK_URL_OVERRIDE),
-        )
-        if new_event_addr != self._event_addr:
-            self._event_addr = new_event_addr
+        new_port = entry.options.get(CONF_LISTEN_PORT) or 0
+        new_callback_url = entry.options.get(CONF_CALLBACK_URL_OVERRIDE)
+
+        if new_port != self._event_port or new_callback_url != self._event_callback_url:
+            self._event_port = new_port
+            self._event_callback_url = new_callback_url
             # Changes to eventing requires a device reconnect for it to update correctly
             await self._device_disconnect()
             try:
@@ -250,9 +271,14 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Connect to the base UPNP device
             upnp_device = await domain_data.upnp_factory.async_create_device(location)
 
-            # Create/get event handler that is reachable by the device
+            # Create/get event handler that is reachable by the device, using
+            # the connection's local IP to listen only on the relevant interface
+            _, event_ip = await async_get_local_ip(location, self.hass.loop)
+            event_addr = EventListenAddr(
+                event_ip, self._event_port, self._event_callback_url
+            )
             event_handler = await domain_data.async_get_event_notifier(
-                self._event_addr, self.hass.loop
+                event_addr, self.hass.loop
             )
 
             # Create profile wrapper
