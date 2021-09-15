@@ -1,7 +1,7 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date as Date, datetime
 import logging
 from typing import Any
 
@@ -209,7 +209,7 @@ class JewishCalendarSensor(SensorEntity):
         self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
         _LOGGER.debug("New value for %s: %s", self.entity_description.key, self._state)
 
-    def make_zmanim(self, date: date) -> Zmanim:
+    def make_zmanim(self, date: Date) -> Zmanim:
         """Create a Zmanim object."""
         return Zmanim(
             date=date,
