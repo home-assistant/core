@@ -1,6 +1,8 @@
 """The Qnap constants."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Tuple
+
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
@@ -46,7 +48,7 @@ class QNapSensorEntityDescription(SensorEntityDescription):
     stype: str | None = None
 
 
-SENSOR_TYPES: Tuple[QNapSensorEntityDescription, ...] = (
+SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
         stype="basic",
         key="status",
