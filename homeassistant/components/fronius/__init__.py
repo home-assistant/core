@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TypeVar
+from typing import Callable, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
@@ -55,7 +55,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        solar_net = hass.data[DOMAIN].pop(entry.entry_id)
+        while solar_net.cleanup_callbacks:
+            solar_net.cleanup_callbacks.pop()()
 
     return unload_ok
 
@@ -66,6 +68,7 @@ class FroniusSolarNet:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize FroniusSolarNet class."""
         self.hass = hass
+        self.cleanup_callbacks: list[Callable[[], None]] = []
         self.config_entry_id = entry.entry_id
         self.coordinator_lock = asyncio.Lock()
         self.host: str = entry.data[CONF_HOST]

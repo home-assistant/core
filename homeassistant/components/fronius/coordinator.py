@@ -95,7 +95,9 @@ class _FroniusUpdateCoordinator(
                 async_add_entities(new_entities)
 
         _add_entities_for_unregistered_keys()
-        self.async_add_listener(_add_entities_for_unregistered_keys)
+        self.solar_net.cleanup_callbacks.append(
+            self.async_add_listener(_add_entities_for_unregistered_keys)
+        )
 
 
 class FroniusInverterUpdateCoordinator(_FroniusUpdateCoordinator):
