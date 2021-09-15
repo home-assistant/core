@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
@@ -87,6 +88,7 @@ async def test_unload_config_entry(mock_now, hass):
         return_value=timestamp,
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
