@@ -193,6 +193,16 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
+    # Sync remote connection with prefs
+    async def remote_prefs_updated(prefs):
+        """Update remote status."""
+        if prefs.remote_enabled and not cloud.remote.is_connected:
+            await cloud.remote.connect()
+        elif not prefs.remote_enabled and cloud.remote.is_connected:
+            await cloud.remote.disconnect()
+
+    prefs.async_listen_updates(remote_prefs_updated)
+
     async def _service_handler(service):
         """Handle service for cloud."""
         if service.service == SERVICE_REMOTE_CONNECT:
