@@ -26,6 +26,8 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ CONTENT_TYPE_HEADER = "Content-Type"
 
 DEFAULT_NAME = "Mjpeg Camera"
 DEFAULT_VERIFY_SSL = True
+DOMAIN = "mjpeg"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -50,11 +53,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PLATFORMS = ["camera"]
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a MJPEG IP Camera."""
     filter_urllib3_logging()
-
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
     async_add_entities([MjpegCamera(config)])
