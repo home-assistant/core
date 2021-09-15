@@ -175,12 +175,22 @@ async def async_create_miio_device_and_coordinator(
 
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
-        try:
+
+        async def _async_fetch_data():
+            """Fetch data from the device."""
             async with async_timeout.timeout(10):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
+        try:
+            return await _async_fetch_data()
+        except DeviceException as ex:
+            if ex.get("message") != "user ack timeout":
+                raise UpdateFailed(ex) from ex
+        # Try to fetch the data a second time after `user ack timeout`
+        try:
+            return await _async_fetch_data()
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex
 
