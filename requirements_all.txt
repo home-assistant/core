@@ -739,7 +739,7 @@ greeneye_monitor==2.1
 greenwavereality==0.5.1
 
 # homeassistant.components.growatt_server
-growattServer==1.0.1
+growattServer==1.1.0
 
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
