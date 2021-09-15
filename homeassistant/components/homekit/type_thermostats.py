@@ -303,7 +303,6 @@ class Thermostat(HomeAccessory):
                 ", ".join(events),
             )
             service = None
-            params = {ATTR_ENTITY_ID: self.entity_id}
 
         if CHAR_TARGET_TEMPERATURE in char_values:
             hc_target_temp = char_values[CHAR_TARGET_TEMPERATURE]
