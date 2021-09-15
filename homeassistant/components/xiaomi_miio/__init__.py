@@ -14,6 +14,7 @@ from miio import (
     DeviceException,
     Fan,
     FanP5,
+    FanZA5,
 )
 from miio.gateway.gateway import GatewayException
 
@@ -34,6 +35,7 @@ from .const import (
     KEY_DEVICE,
     MODEL_AIRPURIFIER_3C,
     MODEL_FAN_P5,
+    MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
     MODELS_FAN_MIIO,
@@ -154,6 +156,8 @@ async def async_create_miio_device_and_coordinator(
         device = FanP5(host, token)
     elif model in MODELS_FAN_MIIO:
         device = Fan(host, token, model=model)
+    elif model == MODEL_FAN_ZA5:
+        device = FanZA5(host, token, model=model)
     else:
         _LOGGER.error(
             "Unsupported device found! Please create an issue at "

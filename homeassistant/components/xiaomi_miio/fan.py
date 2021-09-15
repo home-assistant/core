@@ -11,6 +11,7 @@ from miio.fan import (
     MoveDirection as FanMoveDirection,
     OperationMode as FanOperationMode,
 )
+from miio.fan_miot import OperationMode as FanMiotOperationMode
 import voluptuous as vol
 
 from homeassistant.components.fan import (
@@ -42,6 +43,7 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_P5,
+    FEATURE_FLAGS_FAN_ZA5,
     FEATURE_RESET_FILTER,
     FEATURE_SET_EXTRA_FEATURES,
     KEY_COORDINATOR,
@@ -53,6 +55,7 @@ from .const import (
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
     MODEL_FAN_P5,
+    MODEL_FAN_ZA5,
     MODELS_FAN_MIIO,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
@@ -197,6 +200,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity = XiaomiFanP5(name, device, config_entry, unique_id, coordinator)
     elif model in MODELS_FAN_MIIO:
         entity = XiaomiFan(name, device, config_entry, unique_id, coordinator)
+    elif model == MODEL_FAN_ZA5:
+        entity = XiaomiFanMiot(name, device, config_entry, unique_id, coordinator)
     else:
         return
 
@@ -696,6 +701,9 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         if self._model == MODEL_FAN_P5:
             self._device_features = FEATURE_FLAGS_FAN_P5
             self._preset_modes = [mode.name for mode in FanOperationMode]
+        elif self._model == MODEL_FAN_ZA5:
+            self._device_features = FEATURE_FLAGS_FAN_ZA5
+            self._preset_modes = [mode.name for mode in FanMiotOperationMode]
         else:
             self._device_features = FEATURE_FLAGS_FAN
             self._preset_modes = [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
@@ -850,6 +858,61 @@ class XiaomiFanP5(XiaomiGenericFan):
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
         self._percentage = self.coordinator.data.speed
+
+        self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        if preset_mode not in self.preset_modes:
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            FanOperationMode[preset_mode],
+        )
+        self._preset_mode = preset_mode
+        self.async_write_ha_state()
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan."""
+        if percentage == 0:
+            self._percentage = 0
+            await self.async_turn_off()
+            return
+
+        await self._try_command(
+            "Setting fan speed percentage of the miio device failed.",
+            self._device.set_speed,
+            percentage,
+        )
+        self._percentage = percentage
+
+        if not self.is_on:
+            await self.async_turn_on()
+        else:
+            self.async_write_ha_state()
+
+
+class XiaomiFanMiot(XiaomiFan):
+    """Representation of a Xiaomi Fan Miot."""
+
+    @property
+    def preset_mode(self):
+        """Get the active preset mode."""
+        return self._preset_mode
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        self._available = True
+        self._state = self.coordinator.data.is_on
+        self._preset_mode = self.coordinator.data.mode.name
+        self._oscillating = self.coordinator.data.oscillate
+        if self.coordinator.data.is_on:
+            self._percentage = self.coordinator.data.fan_speed
+        else:
+            self._percentage = 0
 
         self.async_write_ha_state()
 
