@@ -125,7 +125,7 @@ aiohomekit==0.6.2
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.6.1
+aiohue==2.6.2
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -432,7 +432,7 @@ googlemaps==2.5.1
 greeclimate==0.11.8
 
 # homeassistant.components.growatt_server
-growattServer==1.0.1
+growattServer==1.1.0
 
 # homeassistant.components.profiler
 guppy3==3.1.0
@@ -981,7 +981,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.openuv
-pyopenuv==2.2.0
+pyopenuv==2.2.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
