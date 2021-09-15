@@ -87,8 +87,8 @@ async def test_setup_entry_with_options(
     entity = added_entities[0]
     assert isinstance(entity, media_player.DlnaDmrEntity)
     assert entity.poll_availability is True
-    assert entity._event_port == 2222
-    assert entity._event_callback_url == "http://192.88.99.10/events"
+    assert entity._event_addr.port == 2222
+    assert entity._event_addr.callback_url == "http://192.88.99.10/events"
 
 
 UPNP_CTRL_RESPONSE_BLANK = """<?xml version="1.0" encoding="utf-8"?><s:Envelope
@@ -250,6 +250,12 @@ async def test_device_available(
 
     # Check device was contacted
     assert device_requests_mock.call_count > 0
+    # Check event notifiers are acquired
+    domain_data = get_domain_data(hass)
+    assert entity._event_addr in domain_data.event_notifiers
+    assert len(domain_data.event_notifiers) == 1
+    assert sum(domain_data.event_notifier_refs.values()) == 1
+    assert domain_data.stop_listener_remove is not None
     # Check UPnP services are subscribed
     assert set(entity._device._subscriptions.keys()) == {
         SUBSCRIPTION_UUID_RC,
@@ -343,6 +349,10 @@ async def test_device_available(
     assert device_requests_mock.call_count == 2
     # Check SSDP notifications are cleared
     assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
+    # Check event notifiers are released
+    assert domain_data.event_notifiers == {}
+    assert sum(count for count in domain_data.event_notifier_refs.values()) == 0
+    assert domain_data.stop_listener_remove is None
 
 
 async def test_device_unavailable(
@@ -783,6 +793,14 @@ async def test_config_update(
     assert entity._device is not None
     assert device_requests_mock.call_count == 6
 
+    # There will be exactly one event listener
+    domain_data = get_domain_data(hass)
+    assert entity._event_addr in domain_data.event_notifiers
+    assert len(domain_data.event_notifiers) == 1
+    assert sum(domain_data.event_notifier_refs.values()) == 1
+    assert domain_data.stop_listener_remove is not None
+    old_event_notifier = domain_data.event_notifiers[entity._event_addr]
+
     # Update the config entry one option at a time and check the device also
     # updates. Order is important due to port binding of event listener.
     hass.config_entries.async_update_entry(
@@ -795,7 +813,14 @@ async def test_config_update(
     assert entity._device is not None
     # Device will be reconnected
     assert device_requests_mock.call_count == 14
-    assert entity._event_callback_url == "http://example.com"
+    assert entity._event_addr.callback_url == "http://example.com"
+    # There will still be exactly one event listener, but a different one
+    assert entity._event_addr in domain_data.event_notifiers
+    assert len(domain_data.event_notifiers) == 1
+    assert sum(domain_data.event_notifier_refs.values()) == 1
+    assert domain_data.stop_listener_remove is not None
+    assert domain_data.event_notifiers[entity._event_addr] is not old_event_notifier
+    old_event_notifier = domain_data.event_notifiers[entity._event_addr]
 
     hass.config_entries.async_update_entry(
         config_entry,
@@ -808,7 +833,14 @@ async def test_config_update(
     assert entity._device is not None
     # Device will be reconnected
     assert device_requests_mock.call_count == 22
-    assert entity._event_port == 1234
+    assert entity._event_addr.port == 1234
+    # There will still be exactly one event listener, but a different one
+    assert entity._event_addr in domain_data.event_notifiers
+    assert len(domain_data.event_notifiers) == 1
+    assert sum(domain_data.event_notifier_refs.values()) == 1
+    assert domain_data.stop_listener_remove is not None
+    assert domain_data.event_notifiers[entity._event_addr] is not old_event_notifier
+    old_event_notifier = domain_data.event_notifiers[entity._event_addr]
 
     hass.config_entries.async_update_entry(
         config_entry,
@@ -823,6 +855,17 @@ async def test_config_update(
     # Device will *not* be reconnected
     assert device_requests_mock.call_count == 22
     assert entity.poll_availability is True
+    # The event listener will not change
+    assert entity._event_addr in domain_data.event_notifiers
+    assert len(domain_data.event_notifiers) == 1
+    assert sum(domain_data.event_notifier_refs.values()) == 1
+    assert domain_data.stop_listener_remove is not None
+    assert domain_data.event_notifiers[entity._event_addr] is old_event_notifier
 
     # Remove the entity to clean up all resources, completing its life cycle
     await entity.async_remove()
+
+    # Check event notifiers are released
+    assert domain_data.event_notifiers == {}
+    assert sum(count for count in domain_data.event_notifier_refs.values()) == 0
+    assert domain_data.stop_listener_remove is None
