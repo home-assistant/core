@@ -123,6 +123,10 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the sensor, if any."""
         server_name = self.coordinator.data["system_stats"]["system"]["name"]
+        if self.monitor_device is not None:
+            return (
+                f"{server_name} {self.entity_description.name} ({self.monitor_device})"
+            )
         return f"{server_name} {self.entity_description.name}"
 
     @property
@@ -254,13 +258,6 @@ class QNAPDriveSensor(QNAPSensor):
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
 
     @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        server_name = self.coordinator.data["system_stats"]["system"]["name"]
-
-        return f"{server_name} {self.entity_description.name} (Drive {self.monitor_device})"
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         if self.coordinator.data:
@@ -308,12 +305,6 @@ class QNAPFolderSensor(QNAPSensor):
     """A QNAP sensor that monitors storage folder stats."""
 
     @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        server_name = self.coordinator.data["system_stats"]["system"]["name"]
-        return f"{server_name} {self.entity_description.name} {self.monitor_subdevice} ({self.monitor_device})"
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         vol = self.coordinator.data["volumes"][self.monitor_device]
@@ -322,11 +313,11 @@ class QNAPFolderSensor(QNAPSensor):
                 data = folder
 
         used_gb = int(data["used_size"]) / 1024 / 1024 / 1024
-        if self.sensor_type == "folder_size_used":
+        if self.entity_description.key == "folder_size_used":
             return round_nicely(used_gb)
 
         total_gb = int(vol["total_size"]) / 1024 / 1024 / 1024
-        if self.sensor_type == "folder_percentage_used":
+        if self.entity_description.key == "folder_percentage_used":
             return round(used_gb / total_gb * 100)
 
     @property
