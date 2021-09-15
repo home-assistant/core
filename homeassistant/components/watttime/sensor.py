@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    MASS_POUNDS,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -57,7 +58,7 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
         key=SENSOR_TYPE_REALTIME_EMISSIONS_MOER,
         name="Marginal Operating Emissions Rate",
         icon="mdi:blur",
-        native_unit_of_measurement="lbs CO2/MWh",
+        native_unit_of_measurement=f"{MASS_POUNDS} CO2/MWh",
         state_class=STATE_CLASS_MEASUREMENT,
         data_key="moer",
     ),
