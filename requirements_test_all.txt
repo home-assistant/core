@@ -966,7 +966,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.openuv
-pyopenuv==2.2.0
+pyopenuv==2.2.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
