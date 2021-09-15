@@ -870,8 +870,9 @@ def assert_setup_component(count, domain=None):
 
 def init_recorder_component(hass, add_config=None):
     """Initialize the recorder."""
-    config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+    config = {recorder.CONF_DB_URL: "sqlite://"}  # In memory DB
+    if add_config:
+        config.update(add_config)
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})

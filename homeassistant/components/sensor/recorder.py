@@ -499,10 +499,32 @@ def compile_statistics(  # noqa: C901
 
         result[entity_id]["stat"] = stat
 
+    statistic_ids = statistics.list_statistic_ids(hass, "sum")
+    for statistic_id in statistic_ids:
+        if not statistic_id.startswith(DOMAIN):
+            continue
+        if statistic_id in result:
+            continue
+        last_stats = statistics.get_last_statistics(hass, 1, statistic_id, False)
+        if statistic_id not in last_stats:
+            continue
+
+        # Copy previous sum statistics
+        stat = {}
+        last_reset = last_stats[statistic_id][0]["last_reset"]
+        if last_reset is not None:
+            stat["last_reset"] = dt_util.parse_datetime(last_reset)
+        stat["sum"] = last_stats[statistic_id][0]["sum"]
+        stat["sum_increase"] = last_stats[statistic_id][0]["sum_increase"]
+        stat["state"] = last_stats[statistic_id][0]["state"]
+        result[statistic_id] = {"meta": None, "stat": stat}
+
     return result
 
 
-def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -> dict:
+def list_statistic_ids_and_metadata(
+    hass: HomeAssistant, statistic_type: str | None = None
+) -> dict:
     """Return statistic_ids and meta data."""
     entities = _get_entities(hass)
 

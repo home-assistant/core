@@ -15,7 +15,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder import history, models as history_models
 from homeassistant.components.recorder.statistics import (
-    list_statistic_ids,
+    list_statistic_ids_and_metadata,
     statistics_during_period,
 )
 from homeassistant.components.recorder.util import session_scope
@@ -175,7 +175,7 @@ async def ws_get_list_statistic_ids(
 ) -> None:
     """Fetch a list of available statistic_id."""
     statistic_ids = await hass.async_add_executor_job(
-        list_statistic_ids,
+        list_statistic_ids_and_metadata,
         hass,
         msg.get("statistic_type"),
     )

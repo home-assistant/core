@@ -222,6 +222,8 @@ def _update_or_add_metadata(
         return metadata_ids[0]
 
     metadata_id, old_metadata = next(iter(old_metadata_dict.items()))
+    if not new_metadata:
+        return metadata_id
     if (
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
@@ -333,9 +335,9 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
-            for entity_id, stat in stats.items():
+            for statistic_id, stat in stats.items():
                 metadata_id = _update_or_add_metadata(
-                    instance.hass, session, entity_id, stat["meta"]
+                    instance.hass, session, statistic_id, stat["meta"]
                 )
                 try:
                     session.add(
@@ -431,8 +433,20 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
 
 def list_statistic_ids(
     hass: HomeAssistant, statistic_type: str | None = None
+) -> list[str]:
+    """Return statistic_ids."""
+    statistic_ids = []
+    with session_scope(hass=hass) as session:
+        metadata = _get_metadata(hass, session, None, statistic_type)
+        statistic_ids = [meta["statistic_id"] for meta in metadata.values()]
+
+    return statistic_ids
+
+
+def list_statistic_ids_and_metadata(
+    hass: HomeAssistant, statistic_type: str | None = None
 ) -> list[StatisticMetaData | None]:
-    """Return statistic_ids and meta data."""
+    """Return statistic_ids and metadata."""
     units = hass.config.units
     statistic_ids = {}
     with session_scope(hass=hass) as session:
@@ -450,16 +464,18 @@ def list_statistic_ids(
         }
 
     for platform in hass.data[DOMAIN].values():
-        if not hasattr(platform, "list_statistic_ids"):
+        if not hasattr(platform, "list_statistic_ids_and_metadata"):
             continue
-        platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
+        platform_statistic_ids = platform.list_statistic_ids_and_metadata(
+            hass, statistic_type
+        )
 
         for statistic_id, unit in platform_statistic_ids.items():
             if unit is not None:
                 unit = _configured_unit(unit, units)
             platform_statistic_ids[statistic_id] = unit
 
-        statistic_ids = {**statistic_ids, **platform_statistic_ids}
+        statistic_ids.update(platform_statistic_ids)
 
     return [
         {"statistic_id": _id, "unit_of_measurement": unit}
