@@ -145,8 +145,7 @@ async def async_setup_platform(
     registry = entity_registry.async_get(hass)
     entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
     if entity_id is not None:
-        msg = f"Updating unique id for camera {entity_id}"
-        _LOGGER.info(msg)
+        _LOGGER.debug("Updating unique id for camera %s", entity_id)
         new_unique_id = f"{serial_number}-{device.resolution}"
         registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
