@@ -1,7 +1,11 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -57,42 +61,49 @@ USER_SENSOR_DESCRIPTIONS = (
         name="Avian Flu Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_DENGUE,
         name="Dengue Fever Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_FLU,
         name="Flu Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_LEPTO,
         name="Leptospirosis Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_NO_SYMPTOMS,
         name="No Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_SYMPTOMS,
         name="Flu-like Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_TOTAL,
         name="Total Symptoms",
         icon="mdi:alert",
         native_unit_of_measurement="reports",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
