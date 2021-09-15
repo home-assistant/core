@@ -1,5 +1,6 @@
 """Binary Sensor for MeteoAlarm.eu."""
-from datetime import timedelta
+import datetime
+from datetime import timedelta, timezone
 import logging
 
 from meteoalertapi import Meteoalert
@@ -85,10 +86,16 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
 
     def update(self):
         """Update device state."""
+        self._attributes = {}
+        self._state = False
+
         alert = self._api.get_alert()
         if alert:
-            self._attributes = alert
-            self._state = True
-        else:
-            self._attributes = {}
-            self._state = False
+            expiration_date = datetime.datetime.strptime(
+                alert["expires"], "%Y-%m-%dT%H:%M:%S%z"
+            )
+            now = datetime.datetime.now(timezone.utc)
+
+            if expiration_date > now:
+                self._attributes = alert
+                self._state = True
