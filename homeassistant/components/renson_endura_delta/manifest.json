@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/renson_endura_delta",
   "requirements": [
-    "rensonVentilationLib==1.1.0"
+    "rensonVentilationLib==1.1.1"
   ],
   "ssdp": [],
   "zeroconf": [],
