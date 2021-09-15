@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 from datetime import datetime
-from typing import Callable
+from typing import Callable, cast
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -62,7 +62,7 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self._get_zmanim().issur_melacha_in_effect  # type: ignore[no-any-return]
+        return cast(bool, self._get_zmanim().issur_melacha_in_effect)
 
     def _get_zmanim(self) -> Zmanim:
         """Return the Zmanim object for now()."""
