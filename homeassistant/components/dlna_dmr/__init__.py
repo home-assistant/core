@@ -20,7 +20,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for entry_config in config[MEDIA_PLAYER_DOMAIN]:
         if entry_config.get(CONF_PLATFORM) != DOMAIN:
             continue
-        LOGGER.debug("async_setup migrating entry for: %s", entry_config.get(CONF_URL))
+        LOGGER.warning(
+            "Configuring dlna_dmr via yaml is deprecated; the configuration for"
+            " %s has been migrated to a config entry and can be safely removed",
+            entry_config.get(CONF_URL),
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
