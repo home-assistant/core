@@ -146,7 +146,7 @@ async def async_setup_platform(
     entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
     if entity_id is not None:
         _LOGGER.debug("Updating unique id for camera %s", entity_id)
-        new_unique_id = f"{serial_number}-{device.resolution}"
+        new_unique_id = f"{serial_number}-{device.resolution}-{device.channel}"
         registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     async_add_entities([entity], True)
@@ -172,6 +172,7 @@ class AmcrestCam(Camera):
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
         self._resolution = device.resolution
+        self._channel = device.channel
         self._token = self._auth = device.authentication
         self._control_light = device.control_light
         self._is_recording: bool = False
@@ -406,7 +407,9 @@ class AmcrestCam(Camera):
             if self._attr_unique_id is None:
                 serial_number = self._api.serial_number.strip()
                 if serial_number:
-                    self._attr_unique_id = f"{serial_number}-{self._resolution}"
+                    self._attr_unique_id = (
+                        f"{serial_number}-{self._resolution}-{self._channel}"
+                    )
                     _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             self.is_streaming = self._get_video()
             self._is_recording = self._get_recording()
