@@ -875,7 +875,7 @@ async def test_statistics_during_period(
     await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
@@ -886,19 +886,20 @@ async def test_statistics_during_period(
             "start_time": now.isoformat(),
             "end_time": now.isoformat(),
             "statistic_ids": ["sensor.test"],
+            "period": "hour",
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {}
 
-    client = await hass_ws_client()
     await client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "statistic_ids": ["sensor.test"],
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -908,6 +909,7 @@ async def test_statistics_during_period(
             {
                 "statistic_id": "sensor.test",
                 "start": now.isoformat(),
+                "end": (now + timedelta(minutes=5)).isoformat(),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -937,6 +939,7 @@ async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
             "id": 1,
             "type": "history/statistics_during_period",
             "start_time": "cats",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -963,6 +966,7 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": "dogs",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -1010,7 +1014,7 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
         {"statistic_id": "sensor.test", "unit_of_measurement": unit}
     ]
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")

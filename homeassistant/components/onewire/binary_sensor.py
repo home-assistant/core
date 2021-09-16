@@ -20,7 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_TYPE_OWSERVER, DOMAIN, READ_MODE_BOOL
+from .const import (
+    CONF_TYPE_OWSERVER,
+    DEVICE_KEYS_0_7,
+    DEVICE_KEYS_A_B,
+    DOMAIN,
+    READ_MODE_BOOL,
+)
 from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
@@ -33,69 +39,23 @@ class OneWireBinarySensorEntityDescription(
 
 
 DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
-    "12": (
+    "12": tuple(
         OneWireBinarySensorEntityDescription(
-            key="sensed.A",
+            key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name="Sensed A",
+            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.B",
-            entity_registry_enabled_default=False,
-            name="Sensed B",
-            read_mode=READ_MODE_BOOL,
-        ),
+        )
+        for id in DEVICE_KEYS_A_B
     ),
-    "29": (
+    "29": tuple(
         OneWireBinarySensorEntityDescription(
-            key="sensed.0",
+            key=f"sensed.{id}",
             entity_registry_enabled_default=False,
-            name="Sensed 0",
+            name=f"Sensed {id}",
             read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.1",
-            entity_registry_enabled_default=False,
-            name="Sensed 1",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.2",
-            entity_registry_enabled_default=False,
-            name="Sensed 2",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.3",
-            entity_registry_enabled_default=False,
-            name="Sensed 3",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.4",
-            entity_registry_enabled_default=False,
-            name="Sensed 4",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.5",
-            entity_registry_enabled_default=False,
-            name="Sensed 5",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.6",
-            entity_registry_enabled_default=False,
-            name="Sensed 6",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireBinarySensorEntityDescription(
-            key="sensed.7",
-            entity_registry_enabled_default=False,
-            name="Sensed 7",
-            read_mode=READ_MODE_BOOL,
-        ),
+        )
+        for id in DEVICE_KEYS_0_7
     ),
 }
 

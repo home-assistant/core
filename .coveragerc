@@ -171,6 +171,13 @@ omit =
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
+    homeassistant/components/crownstone/__init__.py
+    homeassistant/components/crownstone/const.py
+    homeassistant/components/crownstone/listeners.py
+    homeassistant/components/crownstone/helpers.py
+    homeassistant/components/crownstone/devices.py
+    homeassistant/components/crownstone/entry_manager.py
+    homeassistant/components/crownstone/light.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
     homeassistant/components/daikin/*
@@ -371,7 +378,6 @@ omit =
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
-    homeassistant/components/generic_hygrostat/*
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -702,7 +708,10 @@ omit =
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/legacy/*
     homeassistant/components/netdata/sensor.py
+    homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/device_tracker.py
+    homeassistant/components/netgear/router.py
+    homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
@@ -993,7 +1002,6 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
-    homeassistant/components/ssdp/util.py
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
