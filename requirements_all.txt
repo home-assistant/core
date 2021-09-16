@@ -2157,6 +2157,9 @@ sisyphus-control==3.0
 # homeassistant.components.skybell
 skybellpy==0.6.3
 
+# homeassistant.components.moon
+skyfield==1.39
+
 # homeassistant.components.slack
 slackclient==2.5.0
 
