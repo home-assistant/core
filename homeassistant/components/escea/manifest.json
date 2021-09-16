@@ -3,7 +3,7 @@
   "name": "Escea",
   "documentation": "https://www.home-assistant.io/integrations/escea",
   "codeowners": ["@lazdavila"],
-  "requirements": ["pescea==1.0.8"],
+  "requirements": ["pescea==1.0.9"],
   "config_flow": true,
   "homekit": {
     "models": ["Escea"]
