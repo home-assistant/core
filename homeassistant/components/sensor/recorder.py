@@ -554,6 +554,7 @@ def validate_statistics(
         entity_id,
         _state_class,
         device_class,
+        _unit,
     ) in entities:
         state = hass.states.get(entity_id)
         assert state is not None
