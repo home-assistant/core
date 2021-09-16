@@ -76,10 +76,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Existing device update device data
         if device.device_id in hass.data[DOMAIN][DATA_DEVICE]:
-            wrapper: SwitcherDeviceWrapper = hass.data[DOMAIN][DATA_DEVICE][
+            coordinator: SwitcherDataUpdateCoordinator = hass.data[DOMAIN][DATA_DEVICE][
                 device.device_id
             ]
-            wrapper.async_set_updated_data(device)
+            coordinator.async_set_updated_data(device)
             return
 
         # New device - create device
@@ -91,10 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device.device_type.hex_rep,
         )
 
-        wrapper = hass.data[DOMAIN][DATA_DEVICE][
+        coordinator = hass.data[DOMAIN][DATA_DEVICE][
             device.device_id
-        ] = SwitcherDeviceWrapper(hass, entry, device)
-        wrapper.async_setup()
+        ] = SwitcherDataUpdateCoordinator(hass, entry, device)
+        coordinator.async_setup()
 
     async def platforms_setup_task() -> None:
         # Must be ready before dispatcher is called
@@ -126,13 +126,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class SwitcherDeviceWrapper(update_coordinator.DataUpdateCoordinator):
-    """Wrapper for a Switcher device with Home Assistant specific functions."""
+class SwitcherDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
+    """Switcher device data update coordinator."""
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, device: SwitcherBase
     ) -> None:
-        """Initialize the Switcher device wrapper."""
+        """Initialize the Switcher device coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -163,8 +163,9 @@ class SwitcherDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Switcher device mac address."""
         return self.data.mac_address  # type: ignore[no-any-return]
 
+    @callback
     def async_setup(self) -> None:
-        """Set up the wrapper."""
+        """Set up the coordinator."""
         dev_reg = device_registry.async_get(self.hass)
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,

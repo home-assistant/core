@@ -26,7 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDeviceWrapper
+from . import SwitcherDataUpdateCoordinator
 from .const import (
     CONF_AUTO_OFF,
     CONF_TIMER_MINUTES,
@@ -69,12 +69,12 @@ async def async_setup_entry(
     )
 
     @callback
-    def async_add_switch(wrapper: SwitcherDeviceWrapper) -> None:
+    def async_add_switch(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add switch from Switcher device."""
-        if wrapper.data.device_type.category == DeviceCategory.POWER_PLUG:
-            async_add_entities([SwitcherPowerPlugSwitchEntity(wrapper)])
-        elif wrapper.data.device_type.category == DeviceCategory.WATER_HEATER:
-            async_add_entities([SwitcherWaterHeaterSwitchEntity(wrapper)])
+        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+            async_add_entities([SwitcherPowerPlugSwitchEntity(coordinator)])
+        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
+            async_add_entities([SwitcherWaterHeaterSwitchEntity(coordinator)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_switch)
@@ -84,7 +84,7 @@ async def async_setup_entry(
 class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
     """Representation of a Switcher switch entity."""
 
-    def __init__(self, coordinator: SwitcherDeviceWrapper) -> None:
+    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.control_result: bool | None = None

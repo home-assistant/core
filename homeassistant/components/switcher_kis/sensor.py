@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDeviceWrapper
+from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
 
 
@@ -75,16 +75,16 @@ async def async_setup_entry(
     """Set up Switcher sensor from config entry."""
 
     @callback
-    def async_add_sensors(wrapper: SwitcherDeviceWrapper) -> None:
+    def async_add_sensors(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add sensors from Switcher device."""
-        if wrapper.data.device_type.category == DeviceCategory.POWER_PLUG:
+        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
             async_add_entities(
-                SwitcherSensorEntity(wrapper, attribute, info)
+                SwitcherSensorEntity(coordinator, attribute, info)
                 for attribute, info in POWER_PLUG_SENSORS.items()
             )
-        elif wrapper.data.device_type.category == DeviceCategory.WATER_HEATER:
+        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
             async_add_entities(
-                SwitcherSensorEntity(wrapper, attribute, info)
+                SwitcherSensorEntity(coordinator, attribute, info)
                 for attribute, info in WATER_HEATER_SENSORS.items()
             )
 
@@ -98,7 +98,7 @@ class SwitcherSensorEntity(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: SwitcherDeviceWrapper,
+        coordinator: SwitcherDataUpdateCoordinator,
         attribute: str,
         description: AttributeDescription,
     ) -> None:
