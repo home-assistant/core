@@ -24,6 +24,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_setup_with_config(hass):
     """Test setup component with config."""
+    assert hass.state is CoreState.running
+
     config = {
         SENSOR_DOMAIN: [
             {"platform": DOMAIN, CONF_HOST: HOST, CONF_PORT: PORT},
@@ -50,6 +52,8 @@ async def test_setup_with_config(hass):
 
 async def test_update_unique_id(hass):
     """Test updating a config entry without a unique_id."""
+    assert hass.state is CoreState.running
+
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
     entry.add_to_hass(hass)
 
@@ -72,6 +76,8 @@ async def test_update_unique_id(hass):
 @patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
 async def test_unload_config_entry(mock_now, hass):
     """Test unloading a config entry."""
+    assert hass.state is CoreState.running
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
@@ -111,8 +117,8 @@ async def test_unload_config_entry(mock_now, hass):
 
 
 async def test_delay_load_during_startup(hass):
-    """Test loading a new config entry during runtime."""
-    hass.state = CoreState.starting
+    """Test delayed loading of a config entry during startup."""
+    hass.state = CoreState.not_running
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
     entry.add_to_hass(hass)
