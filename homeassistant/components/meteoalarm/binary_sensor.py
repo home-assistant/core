@@ -91,9 +91,7 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
 
         alert = self._api.get_alert()
         if alert:
-            expiration_date = datetime.datetime.strptime(
-                alert["expires"], "%Y-%m-%dT%H:%M:%S%z"
-            )
+            expiration_date = datetime.datetime.fromisoformat(alert["expires"])
             now = datetime.datetime.now(timezone.utc)
 
             if expiration_date > now:
