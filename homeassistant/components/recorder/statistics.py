@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 import dataclasses
 from datetime import datetime, timedelta
 from itertools import groupby
 import logging
 from typing import TYPE_CHECKING, Any, Callable
 
-from sqlalchemy import bindparam
+from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
@@ -33,6 +34,7 @@ from .models import (
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
+    StatisticsShortTerm,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
@@ -53,6 +55,40 @@ QUERY_STATISTICS = [
     Statistics.sum_increase,
 ]
 
+QUERY_STATISTICS_SHORT_TERM = [
+    StatisticsShortTerm.metadata_id,
+    StatisticsShortTerm.start,
+    StatisticsShortTerm.mean,
+    StatisticsShortTerm.min,
+    StatisticsShortTerm.max,
+    StatisticsShortTerm.last_reset,
+    StatisticsShortTerm.state,
+    StatisticsShortTerm.sum,
+    StatisticsShortTerm.sum_increase,
+]
+
+QUERY_STATISTICS_SUMMARY_MEAN = [
+    StatisticsShortTerm.metadata_id,
+    func.avg(StatisticsShortTerm.mean),
+    func.min(StatisticsShortTerm.min),
+    func.max(StatisticsShortTerm.max),
+]
+
+QUERY_STATISTICS_SUMMARY_SUM = [
+    StatisticsShortTerm.metadata_id,
+    StatisticsShortTerm.start,
+    StatisticsShortTerm.last_reset,
+    StatisticsShortTerm.state,
+    StatisticsShortTerm.sum,
+    StatisticsShortTerm.sum_increase,
+    func.row_number()
+    .over(
+        partition_by=StatisticsShortTerm.metadata_id,
+        order_by=StatisticsShortTerm.start.desc(),
+    )
+    .label("rownum"),
+]
+
 QUERY_STATISTIC_META = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
@@ -67,7 +103,9 @@ QUERY_STATISTIC_META_ID = [
 ]
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
-STATISTICS_META_BAKERY = "recorder_statistics_bakery"
+STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
+STATISTICS_SHORT_TERM_BAKERY = "recorder_statistics_short_term_bakery"
+
 
 # Convert pressure and temperature statistics from the native unit used for statistics
 # to the units configured by the user
@@ -108,6 +146,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
     hass.data[STATISTICS_BAKERY] = baked.bakery()
     hass.data[STATISTICS_META_BAKERY] = baked.bakery()
+    hass.data[STATISTICS_SHORT_TERM_BAKERY] = baked.bakery()
 
     def entity_id_changed(event: Event) -> None:
         """Handle entity_id changed."""
@@ -137,9 +176,11 @@ def async_setup(hass: HomeAssistant) -> None:
 
 def get_start_time() -> datetime:
     """Return start time."""
-    last_hour = dt_util.utcnow() - timedelta(hours=1)
-    start = last_hour.replace(minute=0, second=0, microsecond=0)
-    return start
+    now = dt_util.utcnow()
+    current_period_minutes = now.minute - now.minute % 5
+    current_period = now.replace(minute=current_period_minutes, second=0, microsecond=0)
+    last_period = current_period - timedelta(minutes=5)
+    return last_period
 
 
 def _get_metadata_ids(
@@ -204,11 +245,76 @@ def _update_or_add_metadata(
     return metadata_id
 
 
+def compile_hourly_statistics(
+    instance: Recorder, session: scoped_session, start: datetime
+) -> None:
+    """Compile hourly statistics."""
+    start_time = start.replace(minute=0)
+    end_time = start_time + timedelta(hours=1)
+    # Get last hour's average, min, max
+    summary = {}
+    baked_query = instance.hass.data[STATISTICS_SHORT_TERM_BAKERY](
+        lambda session: session.query(*QUERY_STATISTICS_SUMMARY_MEAN)
+    )
+
+    baked_query += lambda q: q.filter(
+        StatisticsShortTerm.start >= bindparam("start_time")
+    )
+    baked_query += lambda q: q.filter(StatisticsShortTerm.start < bindparam("end_time"))
+    baked_query += lambda q: q.group_by(StatisticsShortTerm.metadata_id)
+    baked_query += lambda q: q.order_by(StatisticsShortTerm.metadata_id)
+
+    stats = execute(
+        baked_query(session).params(start_time=start_time, end_time=end_time)
+    )
+
+    if stats:
+        for stat in stats:
+            metadata_id, _mean, _min, _max = stat
+            summary[metadata_id] = {
+                "metadata_id": metadata_id,
+                "mean": _mean,
+                "min": _min,
+                "max": _max,
+            }
+
+    # Get last hour's sum
+    subquery = (
+        session.query(*QUERY_STATISTICS_SUMMARY_SUM)
+        .filter(StatisticsShortTerm.start >= bindparam("start_time"))
+        .filter(StatisticsShortTerm.start < bindparam("end_time"))
+        .subquery()
+    )
+    query = (
+        session.query(subquery)
+        .filter(subquery.c.rownum == 1)
+        .order_by(subquery.c.metadata_id)
+    )
+    stats = execute(query.params(start_time=start_time, end_time=end_time))
+
+    if stats:
+        for stat in stats:
+            metadata_id, start, last_reset, state, _sum, sum_increase, _ = stat
+            summary[metadata_id] = {
+                **summary.get(metadata_id, {}),
+                **{
+                    "metadata_id": metadata_id,
+                    "last_reset": process_timestamp(last_reset),
+                    "state": state,
+                    "sum": _sum,
+                    "sum_increase": sum_increase,
+                },
+            }
+
+    for stat in summary.values():
+        session.add(Statistics.from_stats(stat.pop("metadata_id"), start_time, stat))
+
+
 @retryable_database_job("statistics")
 def compile_statistics(instance: Recorder, start: datetime) -> bool:
     """Compile statistics."""
     start = dt_util.as_utc(start)
-    end = start + timedelta(hours=1)
+    end = start + timedelta(minutes=5)
 
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         if session.query(StatisticsRuns).filter_by(start=start).first():
@@ -232,13 +338,20 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
                     instance.hass, session, entity_id, stat["meta"]
                 )
                 try:
-                    session.add(Statistics.from_stats(metadata_id, start, stat["stat"]))
+                    session.add(
+                        StatisticsShortTerm.from_stats(metadata_id, start, stat["stat"])
+                    )
                 except SQLAlchemyError:
                     _LOGGER.exception(
                         "Unexpected exception when inserting statistics %s:%s ",
                         metadata_id,
                         stat,
                     )
+
+        if start.minute == 55:
+            # A full hour is ready, summarize it
+            compile_hourly_statistics(instance, session, start)
+
         session.add(StatisticsRuns(start=start))
 
     return True
@@ -354,11 +467,36 @@ def list_statistic_ids(
     ]
 
 
+def _statistics_during_period_query(
+    hass: HomeAssistant,
+    end_time: datetime | None,
+    statistic_ids: list[str] | None,
+    bakery: Any,
+    base_query: Iterable,
+    table: type[Statistics | StatisticsShortTerm],
+) -> Callable:
+    baked_query = hass.data[bakery](lambda session: session.query(*base_query))
+
+    baked_query += lambda q: q.filter(table.start >= bindparam("start_time"))
+
+    if end_time is not None:
+        baked_query += lambda q: q.filter(table.start < bindparam("end_time"))
+
+    if statistic_ids is not None:
+        baked_query += lambda q: q.filter(
+            table.metadata_id.in_(bindparam("metadata_ids"))
+        )
+
+    baked_query += lambda q: q.order_by(table.metadata_id, table.start)
+    return baked_query  # type: ignore[no-any-return]
+
+
 def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
+    period: str = "hour",
 ) -> dict[str, list[dict[str, str]]]:
     """Return states changes during UTC period start_time - end_time."""
     metadata = None
@@ -367,23 +505,22 @@ def statistics_during_period(
         if not metadata:
             return {}
 
-        baked_query = hass.data[STATISTICS_BAKERY](
-            lambda session: session.query(*QUERY_STATISTICS)
-        )
-
-        baked_query += lambda q: q.filter(Statistics.start >= bindparam("start_time"))
-
-        if end_time is not None:
-            baked_query += lambda q: q.filter(Statistics.start < bindparam("end_time"))
-
         metadata_ids = None
         if statistic_ids is not None:
-            baked_query += lambda q: q.filter(
-                Statistics.metadata_id.in_(bindparam("metadata_ids"))
-            )
             metadata_ids = list(metadata.keys())
 
-        baked_query += lambda q: q.order_by(Statistics.metadata_id, Statistics.start)
+        if period == "hour":
+            bakery = STATISTICS_BAKERY
+            base_query = QUERY_STATISTICS
+            table = Statistics
+        else:
+            bakery = STATISTICS_SHORT_TERM_BAKERY
+            base_query = QUERY_STATISTICS_SHORT_TERM
+            table = StatisticsShortTerm
+
+        baked_query = _statistics_during_period_query(
+            hass, end_time, statistic_ids, bakery, base_query, table
+        )
 
         stats = execute(
             baked_query(session).params(
@@ -392,7 +529,9 @@ def statistics_during_period(
         )
         if not stats:
             return {}
-        return _sorted_statistics_to_dict(hass, stats, statistic_ids, metadata, True)
+        return _sorted_statistics_to_dict(
+            hass, stats, statistic_ids, metadata, True, table.duration
+        )
 
 
 def get_last_statistics(
@@ -405,15 +544,15 @@ def get_last_statistics(
         if not metadata:
             return {}
 
-        baked_query = hass.data[STATISTICS_BAKERY](
-            lambda session: session.query(*QUERY_STATISTICS)
+        baked_query = hass.data[STATISTICS_SHORT_TERM_BAKERY](
+            lambda session: session.query(*QUERY_STATISTICS_SHORT_TERM)
         )
 
         baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
         metadata_id = next(iter(metadata.keys()))
 
         baked_query += lambda q: q.order_by(
-            Statistics.metadata_id, Statistics.start.desc()
+            StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
         )
 
         baked_query += lambda q: q.limit(bindparam("number_of_stats"))
@@ -427,7 +566,12 @@ def get_last_statistics(
             return {}
 
         return _sorted_statistics_to_dict(
-            hass, stats, statistic_ids, metadata, convert_units
+            hass,
+            stats,
+            statistic_ids,
+            metadata,
+            convert_units,
+            StatisticsShortTerm.duration,
         )
 
 
@@ -437,6 +581,7 @@ def _sorted_statistics_to_dict(
     statistic_ids: list[str] | None,
     metadata: dict[str, StatisticMetaData],
     convert_units: bool,
+    duration: timedelta,
 ) -> dict[str, list[dict]]:
     """Convert SQL results into JSON friendly data structure."""
     result: dict = defaultdict(list)
@@ -463,7 +608,7 @@ def _sorted_statistics_to_dict(
         ent_results = result[meta_id]
         for db_state in group:
             start = process_timestamp(db_state.start)
-            end = start + timedelta(hours=1)
+            end = start + duration
             ent_results.append(
                 {
                     "statistic_id": statistic_id,
