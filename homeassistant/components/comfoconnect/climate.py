@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     TEMP_CELSIUS,
     ClimateEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
@@ -24,8 +25,10 @@ HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect climate platform."""
-    ccb = hass.data[DOMAIN]
+    if discovery_info is None:
+        return
 
+    ccb = hass.data[DOMAIN]
     add_entities([ComfoConnectBypass(ccb.name, ccb)], True)
 
 
@@ -63,6 +66,7 @@ class ComfoConnectBypass(ClimateEntity):
             self._ccb.comfoconnect.register_sensor, SENSOR_TEMPERATURE_SUPPLY
         )
 
+    @callback
     def _handle_update_bypass(self, value):
         """Handle update callback for bypass state."""
         _LOGGER.debug(
@@ -71,8 +75,9 @@ class ComfoConnectBypass(ClimateEntity):
         self.sensor_bypass_state_local = value
 
         self._ccb.data[SENSOR_BYPASS_STATE] = self.sensor_bypass_state_local
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
+    @callback
     def _handle_update_temp(self, value):
         """Handle update callback for temperature."""
         _LOGGER.debug(
@@ -83,7 +88,7 @@ class ComfoConnectBypass(ClimateEntity):
         self.sensor_temperature_supply_local = value
 
         self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = self.sensor_temperature_supply_local
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -96,7 +101,7 @@ class ComfoConnectBypass(ClimateEntity):
             _LOGGER.debug("Send command: CMD_BYPASS_ON")
             self._ccb.comfoconnect.cmd_rmi_request(CMD_BYPASS_ON)
         else:
-            raise ValueError("Unsupported hvac_mode: %s", hvac_mode)
+            raise ValueError(f"Unsupported hvac_mode: {hvac_mode}")
 
         # Update current mode
         self.schedule_update_ha_state()
