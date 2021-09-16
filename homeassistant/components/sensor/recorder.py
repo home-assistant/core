@@ -41,7 +41,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.entity import entity_sources
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
@@ -501,7 +501,7 @@ def compile_statistics(  # noqa: C901
 
     statistic_ids = statistics.list_statistic_ids(hass, "sum")
     for statistic_id in statistic_ids:
-        if not statistic_id.startswith(DOMAIN):
+        if split_entity_id(statistic_id)[0] != DOMAIN:
             continue
         if statistic_id in result:
             continue
