@@ -143,7 +143,6 @@ class AmcrestChecker(ApiWrapper):
         self._wrap_login_err = False
         self._wrap_event_flag = threading.Event()
         self._wrap_event_flag.set()
-        self._serial_number: str | None = None
         self._unsub_recheck: Callable[[], None] | None = None
         super().__init__(
             host,
@@ -153,19 +152,6 @@ class AmcrestChecker(ApiWrapper):
             retries_connection=COMM_RETRIES,
             timeout_protocol=COMM_TIMEOUT,
         )
-
-    @property
-    def serial_number(self) -> str | None:  # type: ignore[override]
-        """Return the serial number associated with the device.
-
-        Gives the unique identifier for the device, and caches the value to
-        avoid needing to fetch it for every entity associated with the device.
-        Errors are suppressed and return `None` in that case.
-        """
-        if self._serial_number is None:
-            with suppress(AmcrestError):
-                self._serial_number = super().serial_number.strip()
-        return self._serial_number
 
     @property
     def available(self) -> bool:

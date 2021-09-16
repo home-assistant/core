@@ -169,6 +169,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         """Initialize entity."""
         self._signal_name = name
         self._api = device.api
+        self._channel = 0  # Used in unique id, reserved for future use
         self.entity_description: AmcrestSensorEntityDescription = entity_description
 
         self._attr_name = f"{name} {entity_description.name}"
@@ -225,7 +226,9 @@ class AmcrestBinarySensor(BinarySensorEntity):
         if self._attr_unique_id is None:
             serial_number = self._api.serial_number
             if serial_number:
-                self._attr_unique_id = f"{serial_number}-{self.entity_description.key}"
+                self._attr_unique_id = (
+                    f"{serial_number}-{self.entity_description.key}-{self._channel}"
+                )
 
     async def async_on_demand_update(self) -> None:
         """Update state."""

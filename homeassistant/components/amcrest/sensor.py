@@ -77,6 +77,7 @@ class AmcrestSensor(SensorEntity):
         self.entity_description = description
         self._signal_name = name
         self._api = device.api
+        self._channel = 0  # Used in unique id, reserved for future use
         self._unsub_dispatcher: Callable[[], None] | None = None
 
         self._attr_name = f"{name} {description.name}"
@@ -97,7 +98,7 @@ class AmcrestSensor(SensorEntity):
         if self._attr_unique_id is None:
             serial_number = self._api.serial_number
             if serial_number:
-                self._attr_unique_id = f"{serial_number}-{sensor_type}"
+                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
 
         try:
             if sensor_type == SENSOR_PTZ_PRESET:
