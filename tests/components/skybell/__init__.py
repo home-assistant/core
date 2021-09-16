@@ -13,20 +13,12 @@ CONF_CONFIG_FLOW = {
 }
 
 
-async def _create_mocked_skybell(raise_exception=False):
+def _patch_skybell():
     mocked_skybell = AsyncMock()
-    return mocked_skybell
-
-
-def _patch_config_flow_skybell(mocked_skybell):
+    mocked_skybell._devices = {}
+    mocked_skybell._devices[0] = AsyncMock()
+    mocked_skybell._devices[0]._device_json = {"user": "123456789012345678901234"}
     return patch(
         "homeassistant.components.skybell.config_flow.Skybell",
-        return_value=mocked_skybell,
-    )
-
-
-def _patch_skybell_login(mocked_skybell):
-    return patch(
-        "skybellpy.Skybell.login",
         return_value=mocked_skybell,
     )

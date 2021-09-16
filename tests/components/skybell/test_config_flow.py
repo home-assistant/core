@@ -1,7 +1,7 @@
 """Test SkyBell config flow."""
 from unittest.mock import patch
 
-from requests.exceptions import ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import exceptions
 
 from homeassistant.components.skybell.const import DOMAIN
@@ -14,22 +14,9 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import (
-    CONF_CONFIG_FLOW,
-    _create_mocked_skybell,
-    _patch_config_flow_skybell,
-    _patch_skybell_login,
-)
+from . import CONF_CONFIG_FLOW, _patch_skybell
 
 from tests.common import MockConfigEntry
-
-
-def _flow_next(hass, flow_id):
-    return next(
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == flow_id
-    )
 
 
 def _patch_setup():
@@ -39,27 +26,27 @@ def _patch_setup():
     )
 
 
-async def test_flow_user(hass):
+async def test_flow_user(hass: HomeAssistant):
     """Test that the user step works."""
-    conf = {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    with patch("homeassistant.components.skybell.config_flow.Skybell"), patch(
-        "skybellpy.UTILS"
-    ):
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=conf
+    with _patch_skybell():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW,
         )
 
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "user@email.com"
-        assert result["data"] == {
-            CONF_EMAIL: "user@email.com",
-            CONF_PASSWORD: "password",
-        }
+        assert result["title"] == "user"
+        assert result["data"] == CONF_CONFIG_FLOW
 
 
-async def test_flow_user_already_configured(hass):
+async def test_flow_user_already_configured(hass: HomeAssistant):
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -77,11 +64,10 @@ async def test_flow_user_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_cannot_connect(hass):
+async def test_flow_user_cannot_connect(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
-    mocked_skybell = await _create_mocked_skybell(True)
-    with _patch_config_flow_skybell(mocked_skybell) as skybellmock:
-        skybellmock.side_effect = ConnectTimeout
+    with _patch_skybell() as skybellmock:
+        skybellmock.side_effect = (ConnectTimeout, HTTPError)
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
@@ -90,26 +76,22 @@ async def test_flow_user_cannot_connect(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant):
     """Test that invalid credentials throws an error."""
-    mocked_skybell = await _create_mocked_skybell(True)
-    with _patch_skybell_login(mocked_skybell) as skybellmock:
+    with _patch_skybell() as skybellmock:
         skybellmock.side_effect = exceptions.SkybellAuthenticationException
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_user_unknown_error(hass):
+async def test_flow_user_unknown_error(hass: HomeAssistant):
     """Test user initialized flow with unreachable server."""
-    mocked_skybell = await _create_mocked_skybell(True)
-    with _patch_config_flow_skybell(mocked_skybell) as skybellmock:
+    with _patch_skybell() as skybellmock:
         skybellmock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
@@ -119,29 +101,30 @@ async def test_flow_user_unknown_error(hass):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_flow_import(hass):
+async def test_flow_import(hass: HomeAssistant):
     """Test import step."""
-    mocked_skybell = await _create_mocked_skybell()
-    with _patch_config_flow_skybell(mocked_skybell), _patch_setup():
+    with _patch_skybell(), _patch_setup():
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
+            DOMAIN, context={"source": SOURCE_IMPORT}
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "user"
+        assert result["data"] == CONF_CONFIG_FLOW
 
+
+async def test_flow_import_already_configured(hass: HomeAssistant):
+    """Test import step already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_CONFIG_FLOW,
+        domain=DOMAIN, unique_id="123456789012345678901234", data=CONF_CONFIG_FLOW
     )
 
     entry.add_to_hass(hass)
 
-    with _patch_config_flow_skybell(mocked_skybell), _patch_setup():
+    with _patch_skybell():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -152,16 +135,13 @@ async def test_flow_import(hass):
 
 async def test_step_reauth(hass: HomeAssistant):
     """Test the reauth flow."""
-    conf = {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password"}
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="user@email.com", data=conf, entry_id="test"
+        domain=DOMAIN, unique_id="123456789012345678901234", data=CONF_CONFIG_FLOW
     )
 
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.skybell.config_flow.Skybell"), patch(
-        "skybellpy.UTILS"
-    ):
+    with patch("skybellpy.UTILS"):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -172,14 +152,13 @@ async def test_step_reauth(hass: HomeAssistant):
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
 
-        with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
-
-            result = await hass.config_entries.flow.async_configure(
+        with _patch_skybell():
+            new_conf = {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password2"}
+            result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                user_input={CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password2"},
+                user_input=new_conf,
             )
 
-            assert result["type"] == RESULT_TYPE_ABORT
-            assert result["reason"] == "reauth_successful"
-
-        assert len(hass.config_entries.async_entries()) == 1
+            assert result2["type"] == RESULT_TYPE_ABORT
+            assert result2["reason"] == "reauth_successful"
+            assert entry.data == new_conf

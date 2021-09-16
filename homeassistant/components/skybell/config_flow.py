@@ -1,4 +1,8 @@
 """Config flow for Skybell integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell, exceptions
 import voluptuous as vol
@@ -15,7 +19,6 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Skybell."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_import(self, user_input: ConfigType) -> FlowResult:
         """Import a config entry from configuration.yaml."""
@@ -34,12 +37,12 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.context[CONF_SOURCE] != config_entries.SOURCE_REAUTH:
                 self._async_abort_entries_match({CONF_EMAIL: email})
 
-            device_json, error = await self._async_try_connect(email, password)
+            device_json, error = await self._async_validate_input(email, password)
             if error is None:
                 entry = await self.async_set_unique_id(device_json["user"])
-                if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)  # type: ignore
-                    await self.hass.config_entries.async_reload(entry.entry_id)  # type: ignore
+                if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH and entry:
+                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                    await self.hass.config_entries.async_reload(entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -63,21 +66,21 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_try_connect(self, email, password) -> tuple:
+    async def _async_validate_input(self, email, password) -> tuple:
         try:
             skybell = await self.hass.async_add_executor_job(
                 Skybell,
                 email,
                 password,
                 True,
-                False,
+                True,
                 self.hass.config.path(DEFAULT_CACHEDB),
                 False,
                 AGENT_IDENTIFIER,
                 False,
             )
-            devices = await self.hass.async_add_executor_job(skybell.get_devices)
-            device_json = devices[0]._device_json  # pylint: disable=protected-access
+            devs = list(skybell._devices.values())  # pylint: disable=protected-access
+            device_json = devs[0]._device_json  # pylint: disable=protected-access
         except exceptions.SkybellAuthenticationException:
             return None, "invalid_auth"
         except (ConnectTimeout, HTTPError):
@@ -86,7 +89,6 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return None, "unknown"
         return device_json, None
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
-        self.current_login = dict(user_input)
         return await self.async_step_user()
