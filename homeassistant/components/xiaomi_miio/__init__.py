@@ -188,7 +188,7 @@ async def async_create_miio_device_and_coordinator(
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state: %s", ex)
+            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
         # Try to fetch the data a second time after error code -9999
         try:
             return await _async_fetch_data()
