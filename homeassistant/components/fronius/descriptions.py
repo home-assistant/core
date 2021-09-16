@@ -119,11 +119,13 @@ LOGGER_ENTITY_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="cash_factor",
         name="Grid export tariff",
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:cash-plus",
     ),
     "delivery_factor": SensorEntityDescription(
         key="delivery_factor",
         name="Grid import tariff",
         state_class=STATE_CLASS_MEASUREMENT,
+        icon="mdi:cash-minus",
     ),
 }
 
