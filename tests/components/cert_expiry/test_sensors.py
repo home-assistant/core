@@ -5,13 +5,7 @@ import ssl
 from unittest.mock import patch
 
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STARTED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
@@ -37,7 +31,6 @@ async def test_async_setup_entry(mock_now, hass):
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
@@ -62,7 +55,6 @@ async def test_async_setup_entry_bad_cert(hass):
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
@@ -89,7 +81,6 @@ async def test_update_sensor(hass):
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
@@ -132,7 +123,6 @@ async def test_update_sensor_network_errors(hass):
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")

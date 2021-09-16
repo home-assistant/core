@@ -12,6 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -107,3 +108,26 @@ async def test_unload_config_entry(mock_now, hass):
     await hass.async_block_till_done()
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is None
+
+
+async def test_delay_load_during_startup(hass):
+    """Test loading a new config entry during runtime."""
+    hass.state = CoreState.starting
+
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT})
+    entry.add_to_hass(hass)
+
+    timestamp = future_timestamp(100)
+    with patch(
+        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {}) is True
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    assert state.state == timestamp.isoformat()
+    assert state.attributes.get("error") == "None"
+    assert state.attributes.get("is_valid")
