@@ -4,9 +4,11 @@ from unittest.mock import patch
 
 import requests.exceptions
 
+from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt
 
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -25,6 +27,13 @@ class MockPlexMedia:
     addedAt = str(TIMESTAMP)
     listType = "video"
     year = 2021
+
+
+class MockPlexClip(MockPlexMedia):
+    """Minimal mock of plexapi clip object."""
+
+    type = "clip"
+    title = "Clip 1"
 
 
 class MockPlexMovie(MockPlexMedia):
@@ -90,7 +99,7 @@ async def test_library_sensor_values(
         text=library_music_size,
     )
 
-    await setup_plex_server()
+    mock_plex_server = await setup_plex_server()
     await wait_for_debouncer(hass)
 
     activity_sensor = hass.states.get("sensor.plex_plex_server_1")
@@ -188,6 +197,18 @@ async def test_library_sensor_values(
     assert library_movies_sensor.state == "1"
     assert library_movies_sensor.attributes["last_added_item"] == "Movie 1 (2021)"
     assert library_movies_sensor.attributes["last_added_timestamp"] == str(TIMESTAMP)
+
+    # Test with clip
+    media = [MockPlexClip()]
+    with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+        async_dispatcher_send(
+            hass, PLEX_UPDATE_LIBRARY_SIGNAL.format(mock_plex_server.machine_identifier)
+        )
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+        await hass.async_block_till_done()
+
+    library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
+    assert library_movies_sensor.attributes["last_added_item"] == "Clip 1 (2021)"
 
     # Test music library sensor
     entity_registry.async_update_entity(
