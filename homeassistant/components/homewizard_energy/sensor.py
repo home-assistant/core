@@ -149,9 +149,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     energy_api = hass.data[DOMAIN][entry.data["unique_id"]][CONF_API]
     coordinator = hass.data[DOMAIN][entry.data["unique_id"]][COORDINATOR]
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-
     if energy_api.data is not None:
         entities = []
         for description in SENSORS:
