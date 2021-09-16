@@ -434,6 +434,7 @@ class Camera(Entity):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
+        # pylint: disable=no-self-use
         return None
 
     def camera_image(
