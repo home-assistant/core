@@ -153,12 +153,7 @@ async def _change_host_name(hass, call):
     if not ais_global.has_root():
         return
     new_host_name = call.data["hostname"]
-    file = "/data/data/pl.sviete.dom/.ais/ais-hostname"
-    command = 'echo "net.hostname = ' + new_host_name + '" > ' + file
-
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)  # nosec
-    process.wait()
-    command = 'su -c "/data/data/pl.sviete.dom/.ais/run_as_root.sh"'
+    command = 'su -c "setprop net.hostname ' + new_host_name + '"'
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)  # nosec
     process.wait()
 
