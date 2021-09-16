@@ -28,22 +28,23 @@ def _patch_setup():
 
 async def test_flow_user(hass: HomeAssistant):
     """Test that the user step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    with _patch_skybell():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_CONFIG_FLOW,
+    with patch("skybellpy.UTILS"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "user"
-        assert result["data"] == CONF_CONFIG_FLOW
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+
+        with _patch_skybell():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input=CONF_CONFIG_FLOW,
+            )
+
+            assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+            assert result["title"] == "user"
+            assert result["data"] == CONF_CONFIG_FLOW
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant):

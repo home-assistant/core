@@ -8,7 +8,7 @@ from skybellpy import Skybell, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SOURCE
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,13 +34,11 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             email = user_input[CONF_EMAIL]
             password = user_input[CONF_PASSWORD]
 
-            if self.context[CONF_SOURCE] != config_entries.SOURCE_REAUTH:
-                self._async_abort_entries_match({CONF_EMAIL: email})
-
+            self._async_abort_entries_match({CONF_EMAIL: email})
             device_json, error = await self._async_validate_input(email, password)
             if error is None:
                 entry = await self.async_set_unique_id(device_json["user"])
-                if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH and entry:
+                if entry:
                     self.hass.config_entries.async_update_entry(entry, data=user_input)
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
@@ -57,16 +55,14 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_EMAIL, default=user_input.get(CONF_EMAIL)): str,
-                    vol.Required(
-                        CONF_PASSWORD,
-                        default=user_input.get(CONF_PASSWORD),
-                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
         )
 
-    async def _async_validate_input(self, email, password) -> tuple:
+    async def _async_validate_input(self, email: str, password: str) -> tuple:
+        """Validate login credentials."""
         try:
             skybell = await self.hass.async_add_executor_job(
                 Skybell,
