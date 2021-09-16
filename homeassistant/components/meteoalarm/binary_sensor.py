@@ -1,6 +1,5 @@
 """Binary Sensor for MeteoAlarm.eu."""
-import datetime
-from datetime import timedelta, timezone
+from datetime import timedelta
 import logging
 
 from meteoalertapi import Meteoalert
@@ -13,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,8 +91,8 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
 
         alert = self._api.get_alert()
         if alert:
-            expiration_date = datetime.datetime.fromisoformat(alert["expires"])
-            now = datetime.datetime.now(timezone.utc)
+            expiration_date = dt_util.parse_datetime(alert["expires"])
+            now = dt_util.utcnow()
 
             if expiration_date > now:
                 self._attributes = alert
