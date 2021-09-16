@@ -369,6 +369,11 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         ),
     }
 )
+SERVICE_STOP_START_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_HUB): cv.string,
+    }
+)
 
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
@@ -379,5 +384,9 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
 async def async_setup(hass, config):
     """Set up Modbus component."""
     return await async_modbus_setup(
-        hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
+        hass,
+        config,
+        SERVICE_WRITE_REGISTER_SCHEMA,
+        SERVICE_WRITE_COIL_SCHEMA,
+        SERVICE_STOP_START_SCHEMA,
     )

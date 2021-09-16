@@ -15,7 +15,13 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_POWER_STATE, BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_POWER_BELIEF
+from .const import (
+    ATTR_POWER_STATE,
+    BPUP_SUBS,
+    DOMAIN,
+    HUB,
+    SERVICE_SET_POWER_TRACKED_STATE,
+)
 from .entity import BondEntity
 from .utils import BondHub
 
@@ -38,7 +44,7 @@ async def async_setup_entry(
     ]
 
     platform.async_register_entity_service(
-        SERVICE_SET_POWER_BELIEF,
+        SERVICE_SET_POWER_TRACKED_STATE,
         {vol.Required(ATTR_POWER_STATE): cv.boolean},
         "async_set_power_belief",
     )
