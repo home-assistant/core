@@ -183,10 +183,11 @@ async def _change_remote_access(hass, call):
     _LOGGER.info(text)
 
     if access == "on":
-        if not os.path.isfile("/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem"):
+        # delete old tunnel
+        await _run("pm2 delete tunnel")
+
+        if not os.path.isfile("/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml"):
             await _run("mkdir -p /data/data/pl.sviete.dom/files/home/.cloudflared")
-            # delete old tunnel
-            await _run("pm2 delete tunnel")
             with async_timeout.timeout(20):
                 web_session = aiohttp_client.async_get_clientsession(hass)
                 # store file
@@ -196,40 +197,50 @@ async def _change_remote_access(hass, call):
                         f = open('/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem', mode='wb')
                         f.write(body)
                         f.close()
-            # # create named tunnel
-            # await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
-            #            "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel delete -f " + gate_id)
-            # await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
-            #            "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel create " + gate_id)
-            # # rename credentials file
-            # await _run("mv /data/data/pl.sviete.dom/files/home/.cloudflared/*.json "
-            #            "/data/data/pl.sviete.dom/files/home/.cloudflared/key.json")
-            #
-            # # create config.yaml
-            # f = open('/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml', mode='w')
-            # f.write("tunnel: " + gate_id + "\n")
-            # f.write("credentials-file: /data/data/pl.sviete.dom/files/home/.cloudflared/key.json\n")
-            # f.write("ingress:\n")
-            # f.write("  - hostname: " + gate_id + ".paczka.pro\n")
-            # f.write("    service: http://localhost:8180\n")
-            # f.write("  - service: http_status:404")
-            # f.close()
-            #
-            # # route traffic
-            # await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
-            #            "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel route dns -f " + gate_id
-            #            + " " + gate_id + ".paczka.pro")
+            # create named tunnel
+            await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
+                       "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel delete -f " + gate_id)
+            await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
+                       "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel create " + gate_id)
+            # rename credentials file
+            await _run("mv /data/data/pl.sviete.dom/files/home/.cloudflared/*.json "
+                       "/data/data/pl.sviete.dom/files/home/.cloudflared/key.json")
 
-            # # delete cert file
-            # await _run("rm /data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem")
+            # create config.yaml
+            f = open('/data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml', mode='w')
+            f.write("tunnel: " + gate_id + "\n")
+            f.write("credentials-file: /data/data/pl.sviete.dom/files/home/.cloudflared/key.json\n")
+            f.write("ingress:\n")
+            f.write("  - hostname: " + gate_id + ".paczka.pro\n")
+            f.write("    service: http://localhost:8180\n")
+            f.write("  - service: http_status:404")
+            f.close()
 
+            # route traffic
+            await _run("/data/data/pl.sviete.dom/files/usr/bin/cloudflared --origincert "
+                       "/data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem tunnel route dns -f " + gate_id
+                       + " " + gate_id + ".paczka.pro")
+
+            # delete cert file
+            await _run("rm /data/data/pl.sviete.dom/files/home/.cloudflared/cert.pem")
+
+            #
         await _run(
-            "pm2 restart tunnel || pm2 start /data/data/pl.sviete.dom/files/usr/bin/cloudflared"
-            " --name tunnel --output /dev/null --error /dev/null"
-            " --restart-delay=150000 -- --hostname http://{}.paczka.pro --url http://localhost:8180".format(
-                gate_id
-            )
+            "pm2 start /data/data/pl.sviete.dom/files/usr/bin/cloudflared "
+            "--name tunnel "
+            "--restart-delay=150000 -- --config /data/data/pl.sviete.dom/files/home/.cloudflared/config.yaml "
+            "tunnel run"
         )
+        await _run("pm2 save")
+
+        # OLD WAY
+        # await _run(
+        #     "pm2 restart tunnel || pm2 start /data/data/pl.sviete.dom/files/usr/bin/cloudflared"
+        #     " --name tunnel --output /dev/null --error /dev/null"
+        #     " --restart-delay=150000 -- --hostname http://{}.paczka.pro --url http://localhost:8180".format(
+        #         gate_id
+        #     )
+        # )
     else:
         await _run("pm2 delete tunnel && pm2 save")
         await _run("rm /data/data/pl.sviete.dom/files/home/.cloudflared/*")
