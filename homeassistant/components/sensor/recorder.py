@@ -1,9 +1,11 @@
 """Statistics helper for sensor."""
 from __future__ import annotations
 
+from collections import defaultdict
 import datetime
 import itertools
 import logging
+import math
 from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
@@ -15,6 +17,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
 )
@@ -56,10 +59,12 @@ DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
     },
+    STATE_CLASS_TOTAL: {},
     STATE_CLASS_TOTAL_INCREASING: {},
 }
 DEFAULT_STATISTICS = {
     STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
+    STATE_CLASS_TOTAL: {"sum"},
     STATE_CLASS_TOTAL_INCREASING: {"sum"},
 }
 
@@ -134,7 +139,7 @@ def _time_weighted_average(
 ) -> float:
     """Calculate a time weighted average.
 
-    The average is calculated by, weighting the states by duration in seconds between
+    The average is calculated by weighting the states by duration in seconds between
     state changes.
     Note: there's no interpolation of values between state changes.
     """
@@ -172,6 +177,14 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
 
 
+def _parse_float(state: str) -> float:
+    """Parse a float string, throw on inf or nan."""
+    fstate = float(state)
+    if math.isnan(fstate) or math.isinf(fstate):
+        raise ValueError
+    return fstate
+
+
 def _normalize_states(
     hass: HomeAssistant,
     entity_history: list[State],
@@ -186,9 +199,10 @@ def _normalize_states(
         fstates = []
         for state in entity_history:
             try:
-                fstates.append((float(state.state), state))
-            except ValueError:
+                fstate = _parse_float(state.state)
+            except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
                 continue
+            fstates.append((fstate, state))
 
         if fstates:
             all_units = _get_units(fstates)
@@ -218,20 +232,20 @@ def _normalize_states(
 
     for state in entity_history:
         try:
-            fstate = float(state.state)
-            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            # Exclude unsupported units from statistics
-            if unit not in UNIT_CONVERSIONS[device_class]:
-                if WARN_UNSUPPORTED_UNIT not in hass.data:
-                    hass.data[WARN_UNSUPPORTED_UNIT] = set()
-                if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
-                    hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
-                    _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
-                continue
-
-            fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
+            fstate = _parse_float(state.state)
         except ValueError:
             continue
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        # Exclude unsupported units from statistics
+        if unit not in UNIT_CONVERSIONS[device_class]:
+            if WARN_UNSUPPORTED_UNIT not in hass.data:
+                hass.data[WARN_UNSUPPORTED_UNIT] = set()
+            if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
+                hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
+                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+            continue
+
+        fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
 
     return DEVICE_CLASS_UNITS[device_class], fstates
 
@@ -329,7 +343,11 @@ def compile_statistics(  # noqa: C901
         )
         history_list = {**history_list, **_history_list}
 
-    for entity_id, state_class, device_class in entities:
+    for (  # pylint: disable=too-many-nested-blocks
+        entity_id,
+        state_class,
+        device_class,
+    ) in entities:
         if entity_id not in history_list:
             continue
 
@@ -379,17 +397,20 @@ def compile_statistics(  # noqa: C901
         if "sum" in wanted_statistics[entity_id]:
             last_reset = old_last_reset = None
             new_state = old_state = None
-            _sum = 0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id)
+            _sum = 0.0
+            sum_increase = 0.0
+            sum_increase_tmp = 0.0
+            last_stats = statistics.get_last_statistics(hass, 1, entity_id, False)
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 new_state = old_state = last_stats[entity_id][0]["state"]
-                _sum = last_stats[entity_id][0]["sum"] or 0
+                _sum = last_stats[entity_id][0]["sum"] or 0.0
+                sum_increase = last_stats[entity_id][0]["sum_increase"] or 0.0
 
             for fstate, state in fstates:
 
-                # Deprecated, will be removed in Home Assistant 2021.10
+                # Deprecated, will be removed in Home Assistant 2021.11
                 if (
                     "last_reset" not in state.attributes
                     and state_class == STATE_CLASS_MEASUREMENT
@@ -431,14 +452,18 @@ def compile_statistics(  # noqa: C901
                     _LOGGER.info(
                         "Detected new cycle for %s, value dropped from %s to %s",
                         entity_id,
-                        fstate,
                         new_state,
+                        fstate,
                     )
 
                 if reset:
                     # The sensor has been reset, update the sum
                     if old_state is not None:
                         _sum += new_state - old_state
+                        sum_increase += sum_increase_tmp
+                        sum_increase_tmp = 0.0
+                        if fstate > 0:
+                            sum_increase_tmp += fstate
                     # ..and update the starting point
                     new_state = fstate
                     old_last_reset = last_reset
@@ -448,6 +473,8 @@ def compile_statistics(  # noqa: C901
                     else:
                         old_state = new_state
                 else:
+                    if new_state is not None and fstate > new_state:
+                        sum_increase_tmp += fstate - new_state
                     new_state = fstate
 
             # Deprecated, will be removed in Home Assistant 2021.11
@@ -463,9 +490,11 @@ def compile_statistics(  # noqa: C901
 
             # Update the sum with the last state
             _sum += new_state - old_state
+            sum_increase += sum_increase_tmp
             if last_reset is not None:
                 stat["last_reset"] = dt_util.parse_datetime(last_reset)
             stat["sum"] = _sum
+            stat["sum_increase"] = sum_increase
             stat["state"] = new_state
 
         result[entity_id]["stat"] = stat
@@ -515,3 +544,56 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         statistic_ids[entity_id] = statistics_unit
 
     return statistic_ids
+
+
+def validate_statistics(
+    hass: HomeAssistant,
+) -> dict[str, list[statistics.ValidationIssue]]:
+    """Validate statistics."""
+    validation_result = defaultdict(list)
+
+    entities = _get_entities(hass)
+
+    for (
+        entity_id,
+        _state_class,
+        device_class,
+    ) in entities:
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+        metadata = statistics.get_metadata(hass, entity_id)
+        if not metadata:
+            continue
+
+        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        metadata_unit = metadata["unit_of_measurement"]
+
+        if device_class not in UNIT_CONVERSIONS:
+
+            if state_unit != metadata_unit:
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "units_changed",
+                        {
+                            "statistic_id": entity_id,
+                            "state_unit": state_unit,
+                            "metadata_unit": metadata_unit,
+                        },
+                    )
+                )
+            continue
+
+        if state_unit not in UNIT_CONVERSIONS[device_class]:
+            validation_result[entity_id].append(
+                statistics.ValidationIssue(
+                    "unsupported_unit",
+                    {
+                        "statistic_id": entity_id,
+                        "device_class": device_class,
+                        "state_unit": state_unit,
+                    },
+                )
+            )
+
+    return validation_result

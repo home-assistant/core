@@ -8,9 +8,7 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_LOCAL_IP = "local_ip"
 DOMAIN = "upnp"
-DOMAIN_CONFIG = "config"
 DOMAIN_DEVICES = "devices"
-DOMAIN_LOCAL_IP = "local_ip"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"
 PACKETS_RECEIVED = "packets_received"
@@ -31,6 +29,3 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()
 ST_IGD_V1 = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 ST_IGD_V2 = "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
 SSDP_SEARCH_TIMEOUT = 4
-
-RAW_SENSOR = "raw_sensor"
-DERIVED_SENSOR = "derived_sensor"

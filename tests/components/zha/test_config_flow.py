@@ -13,7 +13,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.components.zha import async_migrate_entry, config_flow
+from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
@@ -110,6 +110,34 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
         CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
         CONF_BAUDRATE: 115200,
         CONF_FLOWCONTROL: None,
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
+    """Test zeroconf flow that was ignored gets updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="tube_zb_gw_cc2652p2_poe",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    service_info = {
+        "host": "192.168.1.22",
+        "port": 6053,
+        "hostname": "tube_zb_gw_cc2652p2_poe.local.",
+        "properties": {"address": "tube_zb_gw_cc2652p2_poe.local"},
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
     }
 
 
@@ -315,6 +343,37 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
+
+
+@patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
+async def test_discovery_via_usb_zha_ignored_updates(detect_mock, hass):
+    """Test usb flow that was ignored gets updated."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        data={},
+        unique_id="AAAA:AAAA_1234_test_zigbee radio",
+    )
+    entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+    discovery_info = {
+        "device": "/dev/ttyZIGBEE",
+        "pid": "AAAA",
+        "vid": "AAAA",
+        "serial_number": "1234",
+        "description": "zigbee radio",
+        "manufacturer": "test",
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_DEVICE] == {
+        CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
+    }
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -574,8 +633,6 @@ async def test_user_port_config(probe_mock, hass):
 )
 async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
     """Test zigpy-cc to zigpy-znp config migration."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=old_type + new_type,
@@ -592,7 +649,9 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
     config_entry.version = 2
     config_entry.add_to_hass(hass)
 
-    await async_migrate_entry(hass, config_entry)
+    with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry.version > 2
     assert config_entry.data[CONF_RADIO_TYPE] == new_type
