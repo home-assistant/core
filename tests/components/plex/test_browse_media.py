@@ -4,7 +4,6 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
 )
 from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER
-from homeassistant.components.plex.media_browser import SPECIAL_METHODS
 from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
 
 from .const import DEFAULT_DATA
@@ -58,15 +57,12 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "server"
     assert result[ATTR_MEDIA_CONTENT_ID] == DEFAULT_DATA[CONF_SERVER_IDENTIFIER]
-    # Library Sections + Special Sections + Playlists
-    assert (
-        len(result["children"])
-        == len(mock_plex_server.library.sections()) + len(SPECIAL_METHODS) + 1
-    )
+    # Library Sections + On Deck + Recently Added + Playlists
+    assert len(result["children"]) == len(mock_plex_server.library.sections()) + 3
 
     tvshows = next(iter(x for x in result["children"] if x["title"] == "TV Shows"))
     playlists = next(iter(x for x in result["children"] if x["title"] == "Playlists"))
-    special_keys = list(SPECIAL_METHODS.keys())
+    special_keys = ["On Deck", "Recently Added"]
 
     # Browse into a special folder (server)
     msg_id += 1
@@ -144,9 +140,11 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
-    assert len(result["children"]) == len(
-        mock_plex_server.library.sectionByID(result_id).all()
-    ) + len(SPECIAL_METHODS)
+    # All items in section + On Deck + Recently Added
+    assert (
+        len(result["children"])
+        == len(mock_plex_server.library.sectionByID(result_id).all()) + 2
+    )
 
     # Browse into a Plex TV show
     msg_id += 1
