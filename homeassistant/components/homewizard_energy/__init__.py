@@ -72,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Finalize
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.data["unique_id"]] = {
         COORDINATOR: coordinator,
         CONF_API: energy_api,
