@@ -939,6 +939,7 @@ async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
             "id": 1,
             "type": "history/statistics_during_period",
             "start_time": "cats",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -965,6 +966,7 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": "dogs",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()

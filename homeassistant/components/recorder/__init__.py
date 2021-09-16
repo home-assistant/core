@@ -1009,7 +1009,7 @@ class Recorder(threading.Thread):
             end = start + timedelta(minutes=5)
             _LOGGER.debug("Compiling missing statistics for %s-%s", start, end)
             self.queue.put(StatisticsTask(start))
-            start = start + timedelta(minutes=5)
+            start = end
 
     def _end_session(self):
         """End the recorder session."""
