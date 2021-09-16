@@ -17,6 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
+py-version = "3.8"
 ignore = [
     "tests",
 ]
@@ -72,6 +73,7 @@ good-names = [
 # ---
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
+# consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
     "format",
     "abstract-class-little-used",
@@ -95,6 +97,7 @@ disable = [
     "unused-argument",
     "wrong-import-order",
     "consider-using-namedtuple-or-dataclass",
+    "consider-using-assignment-expr",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -120,8 +123,10 @@ overgeneral-exceptions = [
 ]
 
 [tool.pylint.TYPING]
-py-version = "3.8"
 runtime-typing = false
+
+[tool.pylint.CODE_STYLE]
+max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
 testpaths = [
