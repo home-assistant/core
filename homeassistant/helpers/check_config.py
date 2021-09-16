@@ -127,7 +127,7 @@ async def async_check_ha_config_file(  # noqa: C901
             integration = await async_get_integration_with_requirements(hass, domain)
         except loader.IntegrationNotFound as ex:
             if not hass.config.safe_mode:
-                result.add_error(f"Component error: {domain} - {ex}")
+                result.add_error(f"Integration error: {domain} - {ex}")
             continue
         except RequirementsNotFound as ex:
             result.add_error(f"Component error: {domain} - {ex}")
