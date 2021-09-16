@@ -8,7 +8,7 @@ import pyenasolar
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -33,14 +33,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def enasolar_entries(hass: HomeAssistant):
-    """Return the hosts already configured."""
-    return {
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
-
 class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """User Configuration of EnaSolar Integration."""
 
@@ -48,14 +40,16 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._enasolar = pyenasolar.EnaSolar()
+        self._enasolar = pyenasolar.EnaSolar()  # Only exposes methods, no significant
+        # code is executed during instantiation
         self._data: dict[str, Any] = {}
         self._errors: dict[str, str] = {}
 
-    def _host_in_configuration_exists(self, host) -> bool:
-        """Return True if host exists in configuration."""
-        if host in enasolar_entries(self.hass):
-            return True
+    def _conf_for_inverter_exists(self, serial) -> bool:
+        """Return True if inverter exists in configuration."""
+        for entry in self._async_current_entries(include_ignore=False):
+            if serial == entry.unique_id:
+                return True
         return False
 
     async def _try_connect(self, host):
@@ -74,6 +68,10 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Needed to mock name when running tests."""
         return self._data[CONF_NAME]
 
+    def get_serial_no(self):
+        """Needed to mock serial_no when running tests."""
+        return self._enasolar.get_serial_no()
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -86,11 +84,11 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._data[CONF_HOST] = user_input[CONF_HOST]
-            if self._host_in_configuration_exists(self._data[CONF_HOST]):
-                return self.async_abort(reason="already_configured")
             self._data[CONF_NAME] = user_input[CONF_NAME]
             if await self._try_connect(self._data[CONF_HOST]):
-                await self.async_set_unique_id(self._enasolar.get_serial_no())
+                if self._conf_for_inverter_exists(self.get_serial_no()):
+                    return self.async_abort(reason="already_configured")
+                await self.async_set_unique_id(self.get_serial_no())
                 return await self.async_step_inverter()
             _errors = self._errors
         else:

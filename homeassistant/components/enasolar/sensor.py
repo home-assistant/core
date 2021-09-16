@@ -173,7 +173,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 @callback
 def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively and increases the interval when failed."""
-    remove: Callable | None = None
+    remove: type = Callable  # type: ignore
     interval = min_interval
 
     async def interval_listener(now=None):
@@ -193,7 +193,7 @@ def async_track_time_interval_backoff(hass, action, min_interval) -> CALLBACK_TY
     def remove_listener():
         """Remove interval listener."""
         if remove:
-            remove()  # pylint: disable=not-callable
+            remove()
 
     return remove_listener
 
