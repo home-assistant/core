@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Flukso",
+        "description": "Please enter the Flukso serial and hash.",
+        "data": {
+          "device_serial": "Serial number",
+          "device_hash": "Hash",
+          "device_firmware": "Version"
+        }
+      }
+    },
+    "abort": {
+      "invalid_discovery_info": "Invalid discovery info"
+    }
+  }
+}

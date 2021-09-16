@@ -168,6 +168,7 @@ homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flipr/* @cnico
 homeassistant/components/flo/* @dmulcahey
 homeassistant/components/flock/* @fabaff
+homeassistant/components/flukso/* @bertouttier @icarus75
 homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/forecast_solar/* @klaasnicolaas @frenck

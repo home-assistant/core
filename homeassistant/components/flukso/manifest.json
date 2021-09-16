@@ -1,0 +1,13 @@
+{
+  "domain": "flukso",
+  "name": "Flukso",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flukso",
+  "dependencies": ["mqtt"],
+  "mqtt": ["/device/+/test/tap"],
+  "codeowners": [
+    "@bertouttier",
+    "@icarus75"
+  ],
+  "iot_class": "local_push"
+}

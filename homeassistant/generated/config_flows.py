@@ -82,6 +82,7 @@ FLOWS = [
     "flick_electric",
     "flipr",
     "flo",
+    "flukso",
     "flume",
     "flunearyou",
     "forecast_solar",
