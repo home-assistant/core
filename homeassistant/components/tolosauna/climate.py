@@ -1,6 +1,8 @@
 """TOLO Sauna climate controls (main sauna control)."""
 
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from tololib.const import Calefaction
 
@@ -43,7 +45,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up climate controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
-    await coordinator.async_config_entry_first_refresh()
     async_add_entities([SaunaClimate(coordinator, entry)])
 
 
@@ -102,13 +103,13 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
             return HVAC_MODE_OFF
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Execute HVAC action."""
         if self.status.calefaction == Calefaction.HEAT:
             return CURRENT_HVAC_HEAT
-        elif self.status.calefaction == Calefaction.KEEP:
+        if self.status.calefaction == Calefaction.KEEP:
             return CURRENT_HVAC_IDLE
-        elif self.status.calefaction == Calefaction.INACTIVE:
+        if self.status.calefaction == Calefaction.INACTIVE:
             if self.status.fan_on:
                 return CURRENT_HVAC_DRY
             else:
@@ -129,9 +130,9 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
             await self.hass.async_add_executor_job(
                 self._set_power_and_fan, False, False
             )
-        elif hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVAC_MODE_HEAT:
             await self.hass.async_add_executor_job(self._set_power_and_fan, True, False)
-        elif hvac_mode == HVAC_MODE_DRY:
+        if hvac_mode == HVAC_MODE_DRY:
             await self.hass.async_add_executor_job(self._set_power_and_fan, False, True)
 
         await self.coordinator.async_refresh()
@@ -140,7 +141,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Set fan mode."""
         if fan_mode == FAN_OFF:
             await self.hass.async_add_executor_job(self.client.set_fan_on, False)
-        elif fan_mode == FAN_ON:
+        if fan_mode == FAN_ON:
             await self.hass.async_add_executor_job(self.client.set_fan_on, True)
 
         await self.coordinator.async_refresh()

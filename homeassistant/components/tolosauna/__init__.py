@@ -1,9 +1,10 @@
 """Component to control TOLO Sauna/Steam Bath."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import NamedTuple, cast
 
 from tololib import ToloClient
 from tololib.errors import ResponseTimedOutError
@@ -12,13 +13,13 @@ from tololib.message_info import SettingsInfo, StatusInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from ...helpers.entity import DeviceInfo
 from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
 PLATFORMS = ["climate"]
@@ -30,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up tolosauna from a config entry."""
     client = ToloClient(entry.data[CONF_HOST])
     coordinator = ToloSaunaUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {"client": client, "coordinator": coordinator}
@@ -47,7 +49,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class ToloSaunaUpdateCoordinator(DataUpdateCoordinator):
+class ToloSaunaData(NamedTuple):
+    """Compound class for reflecting full state (status and info) of a TOLO Sauna."""
+
+    status: StatusInfo
+    settings: SettingsInfo
+
+
+class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
     """DataUpdateCoordinator for TOLO Sauna."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -57,11 +66,10 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator):
             hass=hass,
             logger=_LOGGER,
             name=f"{entry.title} ({entry.data[CONF_HOST]}) Data Update Coordinator",
-            update_method=self._update_data,
             update_interval=timedelta(seconds=3),
         )
 
-    async def _update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> ToloSaunaData:
         client = ToloClient(self._config_entry.data[CONF_HOST])
         try:
             status = client.get_status_info(
@@ -70,7 +78,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator):
             settings = client.get_settings_info(
                 resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
             )
-            return {"status": status, "settings": settings}
+            return ToloSaunaData(status, settings)
         except ResponseTimedOutError:
             raise UpdateFailed("communication timeout")
 
@@ -88,12 +96,12 @@ class ToloSaunaCoordinatorEntity(CoordinatorEntity):
     @property
     def status(self) -> StatusInfo:
         """Return TOLO Sauna status info."""
-        return cast(StatusInfo, self.coordinator.data["status"])
+        return cast(StatusInfo, self.coordinator.data.status)
 
     @property
     def settings(self) -> SettingsInfo:
         """Return TOLO Sauna settings info."""
-        return cast(SettingsInfo, self.coordinator.data["settings"])
+        return cast(SettingsInfo, self.coordinator.data.settings)
 
     @property
     def client(self) -> ToloClient:
