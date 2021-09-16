@@ -169,6 +169,7 @@ class AmcrestCam(Camera):
         super().__init__()
         self._name = name
         self._api = device.api
+        self._channel = device.channel
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
@@ -207,6 +208,7 @@ class AmcrestCam(Camera):
                     self._api.snapshot,
                     timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT),
                     stream=False,
+                    channel=self._channel + 1,
                 )
             )
         except AmcrestError as error:
@@ -258,7 +260,9 @@ class AmcrestCam(Camera):
         if self._stream_source == "mjpeg":
             # stream an MJPEG image stream directly from the camera
             websession = async_get_clientsession(self.hass)
-            streaming_url = self._api.mjpeg_url(typeno=self._resolution)
+            streaming_url = self._api.mjpeg_url(
+                typeno=self._resolution, channel=self._channel + 1
+            )
             stream_coro = websession.get(
                 streaming_url, auth=self._token, timeout=CAMERA_WEB_SESSION_TIMEOUT
             )
@@ -418,7 +422,9 @@ class AmcrestCam(Camera):
             self._audio_enabled = self._get_audio()
             self._motion_recording_enabled = self._get_motion_recording()
             self._color_bw = self._get_color_mode()
-            self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
+            self._rtsp_url = self._api.rtsp_url(
+                typeno=self._resolution, channel=self._channel + 1
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
             self._update_succeeded = False
@@ -489,7 +495,7 @@ class AmcrestCam(Camera):
         """Move or zoom camera in specified direction."""
         code = _ACTION[_MOV.index(movement)]
 
-        kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
+        kwargs = {"arg1": 0, "arg2": 0, "arg3": 0}
         if code in _MOVE_1_ACTIONS:
             kwargs["arg2"] = 1
         elif code in _MOVE_2_ACTIONS:
@@ -497,11 +503,23 @@ class AmcrestCam(Camera):
 
         try:
             await self.hass.async_add_executor_job(
-                partial(self._api.ptz_control_command, action="start", **kwargs)
+                partial(
+                    self._api.ptz_control_command,
+                    action="start",
+                    code=code,
+                    channel=self._channel,
+                    **kwargs,
+                )
             )
             await asyncio.sleep(travel_time)
             await self.hass.async_add_executor_job(
-                partial(self._api.ptz_control_command, action="stop", **kwargs)
+                partial(
+                    self._api.ptz_control_command,
+                    action="stop",
+                    code=code,
+                    channel=self._channel,
+                    **kwargs,
+                )
             )
         except AmcrestError as error:
             log_update_error(
@@ -537,10 +555,10 @@ class AmcrestCam(Camera):
                 return
 
     def _get_video(self) -> bool:
-        return self._api.video_enabled
+        return self._api.is_video_enabled(channel=self._channel)
 
     def _set_video(self, enable: bool) -> None:
-        self._api.video_enabled = enable
+        self._api.set_video_enabled(enable, channel=self._channel)
 
     def _enable_video(self, enable: bool) -> None:
         """Enable or disable camera video stream."""
@@ -554,12 +572,12 @@ class AmcrestCam(Camera):
             self._change_light()
 
     def _get_recording(self) -> bool:
-        return self._api.record_mode == "Manual"
+        return self._api.get_record_mode(channel=self._channel) == "Manual"
 
     def _set_recording(self, enable: bool) -> None:
-        rec_mode = {"Automatic": 0, "Manual": 1}
-        # The property has a str type, but setter has int type, which causes mypy confusion
-        self._api.record_mode = rec_mode["Manual" if enable else "Automatic"]  # type: ignore[assignment]
+        rec_modes = {"Automatic": 0, "Manual": 1}
+        rec_mode = rec_modes["Manual" if enable else "Automatic"]
+        self._api.set_record_mode(rec_mode, channel=self._channel)
 
     def _enable_recording(self, enable: bool) -> None:
         """Turn recording on or off."""
@@ -571,21 +589,20 @@ class AmcrestCam(Camera):
         self._change_setting(enable, "recording", "_is_recording")
 
     def _get_motion_detection(self) -> bool:
-        return self._api.is_motion_detector_on()
+        return self._api.is_motion_detector_on(channel=self._channel)
 
     def _set_motion_detection(self, enable: bool) -> None:
-        # The property has a str type, but setter has bool type, which causes mypy confusion
-        self._api.motion_detection = enable  # type: ignore[assignment]
+        self._api.set_motion_detection(enable, channel=self._channel)
 
     def _enable_motion_detection(self, enable: bool) -> None:
         """Enable or disable motion detection."""
         self._change_setting(enable, "motion detection", "_motion_detection_enabled")
 
     def _get_audio(self) -> bool:
-        return self._api.audio_enabled
+        return self._api.is_audio_enabled(channel=self._channel)
 
     def _set_audio(self, enable: bool) -> None:
-        self._api.audio_enabled = enable
+        self._api.set_audio_enabled(enable, channel=self._channel)
 
     def _enable_audio(self, enable: bool) -> None:
         """Enable or disable audio stream."""
@@ -613,10 +630,10 @@ class AmcrestCam(Camera):
         )
 
     def _get_motion_recording(self) -> bool:
-        return self._api.is_record_on_motion_detection()
+        return self._api.is_record_on_motion_detection(channel=self._channel)
 
     def _set_motion_recording(self, enable: bool) -> None:
-        self._api.motion_recording = enable
+        self._api.set_motion_recording(enable, channel=self._channel)
 
     def _enable_motion_recording(self, enable: bool) -> None:
         """Enable or disable motion recording."""
@@ -625,17 +642,17 @@ class AmcrestCam(Camera):
     def _goto_preset(self, preset: int) -> None:
         """Move camera position and zoom to preset."""
         try:
-            self._api.go_to_preset(preset_point_number=preset)
+            self._api.go_to_preset(preset_point_number=preset, channel=self._channel)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
     def _get_color_mode(self) -> str:
-        return _CBW[self._api.day_night_color]
+        return _CBW[self._api.get_day_night_color(channel=self._channel)]
 
     def _set_color_mode(self, cbw: str) -> None:
-        self._api.day_night_color = _CBW.index(cbw)
+        self._api.set_day_night_color(_CBW.index(cbw), channel=self._channel)
 
     def _set_color_bw(self, cbw: str) -> None:
         """Set camera color mode."""
@@ -644,7 +661,7 @@ class AmcrestCam(Camera):
     def _start_tour(self, start: bool) -> None:
         """Start camera tour."""
         try:
-            self._api.tour(start=start)
+            self._api.tour(start=start, channel=self._channel)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error

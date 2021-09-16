@@ -59,12 +59,14 @@ from .sensor import SENSOR_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CHANNEL = "channel"
+CONF_CONTROL_LIGHT = "control_light"
+CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 CONF_RESOLUTION = "resolution"
 CONF_STREAM_SOURCE = "stream_source"
-CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
-CONF_CONTROL_LIGHT = "control_light"
 
 DEFAULT_NAME = "Amcrest Camera"
+DEFAULT_CHANNEL = 0
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = "high"
 DEFAULT_ARGUMENTS = "-pred 1"
@@ -93,6 +95,7 @@ AMCREST_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_CHANNEL, default=DEFAULT_CHANNEL): cv.positive_int,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.All(
             vol.In(AUTHENTICATION_LIST)
@@ -271,6 +274,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
         resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
+        channel = device[CONF_CHANNEL]
         binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
         stream_source = device[CONF_STREAM_SOURCE]
@@ -291,6 +295,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ffmpeg_arguments,
             stream_source,
             resolution,
+            channel,
             control_light,
         )
 
@@ -379,5 +384,5 @@ class AmcrestDevice:
     ffmpeg_arguments: list[str]
     stream_source: str
     resolution: int
+    channel: int
     control_light: bool
-    channel: int = 0

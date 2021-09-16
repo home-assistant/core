@@ -221,7 +221,9 @@ class AmcrestBinarySensor(BinarySensorEntity):
             return
 
         try:
-            self._attr_is_on = len(self._api.event_channels_happened(event_code)) > 0
+            self._attr_is_on = self._channel in self._api.event_channels_happened(
+                event_code
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return

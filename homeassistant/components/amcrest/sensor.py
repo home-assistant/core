@@ -110,7 +110,9 @@ class AmcrestSensor(SensorEntity):
                     )
 
             if sensor_type == SENSOR_PTZ_PRESET:
-                self._attr_native_value = self._api.ptz_presets_count
+                self._attr_native_value = self._api.get_ptz_presets_count(
+                    channel=self._channel
+                )
 
             elif sensor_type == SENSOR_SDCARD:
                 storage = self._api.storage_all
