@@ -111,7 +111,6 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._meter = meter
-        self.coordinator = coordinator
 
         self.entity_description = description
         self._attr_name = (
@@ -120,22 +119,13 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
             f"{meter.location.street_number} - "
             f"{description.name}"
         )
-        self._attr_unique_id = f"{meter.serial_number}-" f"{description.key}"
+        self._attr_unique_id = f"{meter.serial_number}-{description.key}"
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
-            ATTR_NAME: self.device_name,
+            ATTR_NAME: f"{self._meter.type} {self._meter.measurement_type.capitalize()} {self._meter.location.street} {self._meter.location.street_number}",
             ATTR_MODEL: f"{meter.type.capitalize()} {meter.measurement_type.capitalize()}",
             ATTR_MANUFACTURER: MANUFACTURER,
         }
-
-    @property
-    def device_name(self):
-        """Return the name of the actual physical meter."""
-        return (
-            f"{self._meter.type} ",
-            f"{self._meter.measurement_type.capitalize()} ",
-            f"{self._meter.location.street} " f"{self._meter.location.street_number}",
-        )
 
     @property
     def native_value(self) -> StateType:

@@ -196,7 +196,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_successful")
 
         # set unique id to title which is the account email
-        await self.async_set_unique_id(title)
+        await self.async_set_unique_id(title.lower())
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=title, data=data)
