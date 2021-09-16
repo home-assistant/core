@@ -232,7 +232,8 @@ def test_compile_hourly_sum_statistics_amount(
     period0 = dt_util.utcnow()
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
-    period2_end = period0 + timedelta(minutes=15)
+    period2_end = period3 = period0 + timedelta(minutes=15)
+    period3_end = period0 + timedelta(minutes=20)
     hass = hass_recorder()
     hass.config.units = units
     recorder = hass.data[DATA_INSTANCE]
@@ -259,23 +260,23 @@ def test_compile_hourly_sum_statistics_amount(
     wait_recording_done(hass)
     recorder.do_adhoc_statistics(start=period2)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=3))
+    recorder.do_adhoc_statistics(start=period3)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids_and_metadata(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": display_unit}
     ]
-    stats = statistics_during_period(hass, zero)
+    stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "start": process_timestamp_to_utc_isoformat(period0),
+                "end": process_timestamp_to_utc_isoformat(period0_end),
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(zero),
+                "last_reset": process_timestamp_to_utc_isoformat(period0),
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
                 "sum_decrease": approx(factor * 0.0),
@@ -283,8 +284,8 @@ def test_compile_hourly_sum_statistics_amount(
             },
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "start": process_timestamp_to_utc_isoformat(period1),
+                "end": process_timestamp_to_utc_isoformat(period1_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -296,8 +297,8 @@ def test_compile_hourly_sum_statistics_amount(
             },
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
+                "start": process_timestamp_to_utc_isoformat(period2),
+                "end": process_timestamp_to_utc_isoformat(period2_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -310,8 +311,8 @@ def test_compile_hourly_sum_statistics_amount(
             # No update, last hour's data should be copied
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=4)),
+                "start": process_timestamp_to_utc_isoformat(period3),
+                "end": process_timestamp_to_utc_isoformat(period3_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -342,10 +343,18 @@ def test_compile_hourly_sum_statistics_amount_copy(
     """Test compiling hourly statistics when the sensor stops updating."""
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
-    zero = dt_util.utcnow()
+    period0 = dt_util.utcnow()
+    period0_end = period1 = period0 + timedelta(minutes=5)
+    period1_end = period2 = period0 + timedelta(minutes=10)
+    period2_end = period3 = period0 + timedelta(minutes=15)
+    period3_end = period4 = period0 + timedelta(minutes=20)
+    period4_end = period5 = period0 + timedelta(minutes=25)
+    period5_end = period0 + timedelta(minutes=30)
+    period8 = period0 + timedelta(minutes=40)
+    period8_end = period0 + timedelta(minutes=45)
     hass = get_test_home_assistant()
     with patch(
-        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         autospec=True,
     ):
         init_recorder_component(hass, {"db_url": dburl})
@@ -364,39 +373,39 @@ def test_compile_hourly_sum_statistics_amount_copy(
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
 
     four, eight, states = record_meter_states(
-        hass, zero, "sensor.test1", attributes, seq
+        hass, period0, "sensor.test1", attributes, seq
     )
     hist = history.get_significant_states(
-        hass, zero - timedelta.resolution, eight + timedelta.resolution
+        hass, period0 - timedelta.resolution, eight + timedelta.resolution
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
-    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    recorder.do_adhoc_statistics(start=period0)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
+    recorder.do_adhoc_statistics(start=period1)
     wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
+    recorder.do_adhoc_statistics(start=period2)
     wait_recording_done(hass)
     # Set state to non numeric state - sum should be copied from the previous state
-    future = zero + timedelta(hours=3, minutes=15)
+    future = period3 + timedelta(minutes=1)
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
         hass.states.set("sensor.test1", "unavailable", attributes)
         wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=3))
+    recorder.do_adhoc_statistics(start=period3)
     wait_recording_done(hass)
     # Set state to non numeric state - sum should be copied from the last statistics
-    future = zero + timedelta(hours=4, minutes=15)
+    future = period4 + timedelta(minutes=1)
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
         hass.states.set("sensor.test1", "unknown", attributes)
         wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=4))
+    recorder.do_adhoc_statistics(start=period4)
     wait_recording_done(hass)
     # Remove the state - sum should be copied from the last statistics
-    future = zero + timedelta(hours=5, minutes=15)
+    future = period5 + timedelta(minutes=1)
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
         hass.states.set("sensor.test1", None)
         wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=5))
+    recorder.do_adhoc_statistics(period="hourly", start=period5)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids_and_metadata(hass)
     assert statistic_ids == [
@@ -446,8 +455,8 @@ def test_compile_hourly_sum_statistics_amount_copy(
             },
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=3)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=4)),
+                "start": process_timestamp_to_utc_isoformat(period3),
+                "end": process_timestamp_to_utc_isoformat(period3_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -459,8 +468,8 @@ def test_compile_hourly_sum_statistics_amount_copy(
             },
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=4)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=5)),
+                "start": process_timestamp_to_utc_isoformat(period4),
+                "end": process_timestamp_to_utc_isoformat(period4_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -472,8 +481,8 @@ def test_compile_hourly_sum_statistics_amount_copy(
             },
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=5)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=6)),
+                "start": process_timestamp_to_utc_isoformat(period5),
+                "end": process_timestamp_to_utc_isoformat(period5_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -493,7 +502,7 @@ def test_compile_hourly_sum_statistics_amount_copy(
     # The sensor is not available, sum should be copied from the last statistics
     hass = get_test_home_assistant()
     with patch(
-        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         autospec=True,
     ):
         init_recorder_component(hass, {"db_url": dburl})
@@ -503,19 +512,19 @@ def test_compile_hourly_sum_statistics_amount_copy(
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)
-    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=8))
+    recorder.do_adhoc_statistics(start=period8)
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids_and_metadata(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": display_unit}
     ]
-    stats = statistics_during_period(hass, zero + timedelta(hours=8))
+    stats = statistics_during_period(hass, period8, period="5minute")
     assert stats == {
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
-                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=8)),
-                "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=9)),
+                "start": process_timestamp_to_utc_isoformat(period8),
+                "end": process_timestamp_to_utc_isoformat(period8_end),
                 "max": None,
                 "mean": None,
                 "min": None,
@@ -1938,7 +1947,7 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         wait_recording_done(hass)
         start += timedelta(minutes=5)
 
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = list_statistic_ids_and_metadata(hass)
     assert statistic_ids == [
         {"statistic_id": "sensor.test1", "unit_of_measurement": "%"},
         {"statistic_id": "sensor.test2", "unit_of_measurement": "%"},
