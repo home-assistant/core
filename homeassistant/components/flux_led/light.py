@@ -6,11 +6,9 @@ import random
 
 from flux_led import WifiLedBulb
 import voluptuous as vol
-from voluptuous.validators import Equal
 
 from homeassistant.components.light import (  # COLOR_MODES_BRIGHTNESS,; SUPPORT_BRIGHTNESS,; SUPPORT_COLOR,; SUPPORT_COLOR_TEMP,; SUPPORT_WHITE_VALUE,
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
@@ -53,7 +51,6 @@ from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_EFFECT_SPEED,
     DEFAULT_EFFECT_SPEED,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SIGNAL_ADD_DEVICE,
     SIGNAL_REMOVE_DEVICE,
@@ -242,8 +239,8 @@ class FluxLight(LightEntity):
         self._name = device[CONF_NAME]
         self._unique_id = unique_id
         self._icon = "mdi:lightbulb"
-        self._attrs = {}
-        self._state = None
+        self._attrs: dict = {}
+        self._state = False
         self._brightness = None
         self._color_temp_mired = None
         self._rgbww = None
@@ -253,6 +250,7 @@ class FluxLight(LightEntity):
         self._effect_speed = effect_speed
         self._mode = None
         self._bulb = bulb
+        self._color_brightness = None
 
     async def async_remove_light(self, device: dict):
         """Remove a bulb device when it is removed from options."""
@@ -326,11 +324,11 @@ class FluxLight(LightEntity):
 
         elif self._mode == MODE_RGBW:
             self._rgbww = list(self._bulb.getRgbw())
-            _, self._brightness = self.RGBWW_brightness(self._rgbww)
+            _, self._brightness = rgbww_brightness(self._rgbww, None)
 
         elif self._mode == MODE_RGBWW:
             self._rgbww = list(self._bulb.getRgbww())
-            _, self._brightness = self.RGBWW_brightness(self._rgbww)
+            _, self._brightness = rgbww_brightness(self._rgbww, None)
 
         else:
             self._brightness = self._bulb.getWarmWhite255()
@@ -510,9 +508,9 @@ class FluxLight(LightEntity):
             elif self._color_mode == COLOR_MODE_RGBW:
                 if rgbw:
                     self._rgbww = rgbw
-                    _, self._brightness = self.RGBWW_brightness(self._rgbww)
+                    _, self._brightness = rgbww_brightness(self._rgbww, None)
                 else:
-                    self._rgbww, self._brightness = self.RGBWW_brightness(
+                    self._rgbww, self._brightness = rgbww_brightness(
                         self._rgbww, brightness
                     )
 
@@ -521,9 +519,9 @@ class FluxLight(LightEntity):
             elif self._color_mode == COLOR_MODE_RGBWW:
                 if rgbww:
                     self._rgbww = rgbww
-                    _, self._brightness = self.RGBWW_brightness(self._rgbww)
+                    _, self._brightness = rgbww_brightness(self._rgbww, None)
                 else:
-                    self._rgbww, self._brightness = self.RGBWW_brightness(
+                    self._rgbww, self._brightness = rgbww_brightness(
                         self._rgbww, brightness
                     )
 
@@ -553,93 +551,11 @@ class FluxLight(LightEntity):
 
             return
 
-    def RGBWW_brightness(self, RGBWW_Data, brightness_255=None):
-        # Takes non-normalized RGBWW and a target hex brightness and returns
-        # a new non-normalized RGBWW updated to the target brightness
-        # if no brightness is provided the return will be the non-normalized RGBWW
-        # and a calculated hex brightness
-
-        ww_brightness_255 = None
-        cw_brightness_255 = None
-        color_brightness_255 = None
-        current_brightness_255 = None
-        change_brightness_pct = None
-        new_brightness_255 = None
-        hsv_data = [0, 0, 0]
-        RGBWW = [0, 0, 0, 0, 0]
-
-        ww_brightness_255 = RGBWW_Data[3]
-
-        hsv_data = list(color_util.color_RGB_to_hsv(*RGBWW_Data[0:3]))
-        color_brightness_255 = round(hsv_data[2] * 2.55)
-
-        if len(RGBWW_Data) == 5:
-            cw_brightness_255 = RGBWW_Data[4]
-            current_brightness_255 = round(
-                (ww_brightness_255 + color_brightness_255 + cw_brightness_255) / 3
-            )
-        else:
-            cw_brightness_255 = 0
-            current_brightness_255 = round(
-                (ww_brightness_255 + color_brightness_255) / 2
-            )
-
-        if brightness_255 and brightness_255 != current_brightness_255:
-
-            if brightness_255 < current_brightness_255:
-                change_brightness_pct = (
-                    current_brightness_255 - brightness_255
-                ) / current_brightness_255
-                ww_brightness_255 = round(
-                    ww_brightness_255 * (1 - change_brightness_pct)
-                )
-                color_brightness_255 = round(
-                    color_brightness_255 * (1 - change_brightness_pct)
-                )
-                cw_brightness_255 = round(
-                    cw_brightness_255 * (1 - change_brightness_pct)
-                )
-
-            else:
-                change_brightness_pct = (brightness_255 - current_brightness_255) / (
-                    255 - current_brightness_255
-                )
-                ww_brightness_255 = round(
-                    (255 - ww_brightness_255) * (change_brightness_pct)
-                    + ww_brightness_255
-                )
-                color_brightness_255 = round(
-                    (255 - color_brightness_255) * (change_brightness_pct)
-                    + color_brightness_255
-                )
-                cw_brightness_255 = round(
-                    (255 - cw_brightness_255) * (change_brightness_pct)
-                    + cw_brightness_255
-                )
-
-            hsv_data[2] = (color_brightness_255 / 255) * 100
-            RGBWW[0:3] = list(
-                color_util.color_hsv_to_RGB(hsv_data[0], hsv_data[1], hsv_data[2])
-            )
-            RGBWW[3] = ww_brightness_255
-            if len(RGBWW_Data) == 5:
-                RGBWW[4] = cw_brightness_255
-
-            new_brightness_255 = brightness_255
-
-        else:
-            new_brightness_255 = current_brightness_255
-            RGBWW = RGBWW_Data
-
-        return (RGBWW, new_brightness_255)
-
     def turn_off(self, **kwargs):
         """Turn off the light."""
 
         self._state = False
         self._bulb.turnOff()
-
-        return
 
     def set_custom_effect(self, colors: list, speed_pct: int, transition: str):
         """Define custom service to set a custom effect on the lights."""
@@ -650,3 +566,73 @@ class FluxLight(LightEntity):
         self._bulb.setCustomPattern(colors, speed_pct, transition)
 
         self._state = True
+
+
+def rgbww_brightness(rgbww_data, brightness_255=None):
+    """Return non-normalized RGB adjusted to brightnes."""
+
+    ww_brightness_255 = None
+    cw_brightness_255 = None
+    color_brightness_255 = None
+    current_brightness_255 = None
+    change_brightness_pct = None
+    new_brightness_255 = None
+    hsv_data = [0, 0, 0]
+    rgbww = [0, 0, 0, 0, 0]
+
+    ww_brightness_255 = rgbww_data[3]
+
+    hsv_data = list(color_util.color_RGB_to_hsv(*rgbww_data[0:3]))
+    color_brightness_255 = round(hsv_data[2] * 2.55)
+
+    if len(rgbww_data) == 5:
+        cw_brightness_255 = rgbww_data[4]
+        current_brightness_255 = round(
+            (ww_brightness_255 + color_brightness_255 + cw_brightness_255) / 3
+        )
+    else:
+        cw_brightness_255 = 0
+        current_brightness_255 = round((ww_brightness_255 + color_brightness_255) / 2)
+
+    if brightness_255 and brightness_255 != current_brightness_255:
+
+        if brightness_255 < current_brightness_255:
+            change_brightness_pct = (
+                current_brightness_255 - brightness_255
+            ) / current_brightness_255
+            ww_brightness_255 = round(ww_brightness_255 * (1 - change_brightness_pct))
+            color_brightness_255 = round(
+                color_brightness_255 * (1 - change_brightness_pct)
+            )
+            cw_brightness_255 = round(cw_brightness_255 * (1 - change_brightness_pct))
+
+        else:
+            change_brightness_pct = (brightness_255 - current_brightness_255) / (
+                255 - current_brightness_255
+            )
+            ww_brightness_255 = round(
+                (255 - ww_brightness_255) * (change_brightness_pct) + ww_brightness_255
+            )
+            color_brightness_255 = round(
+                (255 - color_brightness_255) * (change_brightness_pct)
+                + color_brightness_255
+            )
+            cw_brightness_255 = round(
+                (255 - cw_brightness_255) * (change_brightness_pct) + cw_brightness_255
+            )
+
+        hsv_data[2] = (color_brightness_255 / 255) * 100
+        rgbww[0:3] = list(
+            color_util.color_hsv_to_RGB(hsv_data[0], hsv_data[1], hsv_data[2])
+        )
+        rgbww[3] = ww_brightness_255
+        if len(rgbww_data) == 5:
+            rgbww[4] = cw_brightness_255
+
+        new_brightness_255 = brightness_255
+
+    else:
+        new_brightness_255 = current_brightness_255
+        rgbww = rgbww_data
+
+    return (rgbww, new_brightness_255)

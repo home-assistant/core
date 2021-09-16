@@ -89,6 +89,8 @@ class FluxLedList:
         self._bulb_scan = BulbScanner()
         self._config_entry = config_entry
 
+        return None
+
     @Throttle(timedelta(seconds=DEFAULT_NETWORK_SCAN_INTERVAL))
     async def async_update(self):
         """Fetch data from the network for flux_leds."""
