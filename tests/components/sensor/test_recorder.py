@@ -1598,6 +1598,12 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         "unit_of_measurement": "%",
     }
 
+    sum_attributes = {
+        "device_class": None,
+        "state_class": "total",
+        "unit_of_measurement": "EUR",
+    }
+
     def _weighted_average(seq, i, last_state):
         total = 0
         duration = 0
@@ -1620,45 +1626,83 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
             return max(seq)
         return max([*seq, last_state])
 
+    def _sum(seq, last_state, last_sum):
+        if last_state is None:
+            return seq[-1] - seq[0]
+        return last_sum[-1] + seq[-1] - last_state
+
     # Generate states for two hours
-    # TODO: Add some sum-type statistics
-    states = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
+    states = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
     expected_minima = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
     expected_maxima = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
-    expected_average = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
-    last_states = {"sensor.test1": None, "sensor.test2": None, "sensor.test3": None}
+    expected_averages = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
+    expected_states = {"sensor.test4": []}
+    expected_sums = {"sensor.test4": []}
+    expected_decreases = {"sensor.test4": []}
+    expected_increases = {"sensor.test4": []}
+    last_states = {
+        "sensor.test1": None,
+        "sensor.test2": None,
+        "sensor.test3": None,
+        "sensor.test4": None,
+    }
     start = zero
     for i in range(24):
         seq = [-10, 15, 30]
         # test1 has same value in every period
         four, _states = record_states(hass, start, "sensor.test1", attributes, seq)
-        last_state = last_states["sensor.test1"]
         states["sensor.test1"] += _states["sensor.test1"]
+        last_state = last_states["sensor.test1"]
         expected_minima["sensor.test1"].append(_min(seq, last_state))
         expected_maxima["sensor.test1"].append(_max(seq, last_state))
-        expected_average["sensor.test1"].append(_weighted_average(seq, i, last_state))
+        expected_averages["sensor.test1"].append(_weighted_average(seq, i, last_state))
         last_states["sensor.test1"] = seq[-1]
         # test2 values change: min/max at the last state
         seq = [-10 * (i + 1), 15 * (i + 1), 30 * (i + 1)]
         four, _states = record_states(hass, start, "sensor.test2", attributes, seq)
-        last_state = last_states["sensor.test2"]
         states["sensor.test2"] += _states["sensor.test2"]
+        last_state = last_states["sensor.test2"]
         expected_minima["sensor.test2"].append(_min(seq, last_state))
         expected_maxima["sensor.test2"].append(_max(seq, last_state))
-        expected_average["sensor.test2"].append(_weighted_average(seq, i, last_state))
+        expected_averages["sensor.test2"].append(_weighted_average(seq, i, last_state))
         last_states["sensor.test2"] = seq[-1]
         # test3 values change: min/max at the first state
         seq = [-10 * (23 - i + 1), 15 * (23 - i + 1), 30 * (23 - i + 1)]
         four, _states = record_states(hass, start, "sensor.test3", attributes, seq)
-        last_state = last_states["sensor.test3"]
-        start += timedelta(minutes=5)
         states["sensor.test3"] += _states["sensor.test3"]
+        last_state = last_states["sensor.test3"]
         expected_minima["sensor.test3"].append(_min(seq, last_state))
         expected_maxima["sensor.test3"].append(_max(seq, last_state))
-        expected_average["sensor.test3"].append(_weighted_average(seq, i, last_state))
+        expected_averages["sensor.test3"].append(_weighted_average(seq, i, last_state))
         last_states["sensor.test3"] = seq[-1]
+        # test4 values grow
+        seq = [i, i + 0.5, i + 0.75]
+        start_meter = start
+        for j in range(len(seq)):
+            _states = record_meter_state(
+                hass, start_meter, "sensor.test4", sum_attributes, seq[j : j + 1]
+            )
+            start_meter = start + timedelta(minutes=1)
+            states["sensor.test4"] += _states["sensor.test4"]
+        last_state = last_states["sensor.test4"]
+        expected_states["sensor.test4"].append(seq[-1])
+        expected_sums["sensor.test4"].append(
+            _sum(seq, last_state, expected_sums["sensor.test4"])
+        )
+        expected_decreases["sensor.test4"].append(0)
+        expected_increases["sensor.test4"].append(
+            _sum(seq, last_state, expected_increases["sensor.test4"])
+        )
+        last_states["sensor.test4"] = seq[-1]
+
+        start += timedelta(minutes=5)
     hist = history.get_significant_states(
-        hass, zero, four, significant_changes_only=False
+        hass, zero - timedelta.resolution, four, significant_changes_only=False
     )
     assert dict(states) == dict(hist)
     wait_recording_done(hass)
@@ -1675,27 +1719,65 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         {"statistic_id": "sensor.test1", "unit_of_measurement": "%"},
         {"statistic_id": "sensor.test2", "unit_of_measurement": "%"},
         {"statistic_id": "sensor.test3", "unit_of_measurement": "%"},
+        {"statistic_id": "sensor.test4", "unit_of_measurement": "EUR"},
     ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
-    expected_stats = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
+    expected_stats = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
     start = zero
     end = zero + timedelta(minutes=5)
     for i in range(24):
-        for entity_id in ["sensor.test1", "sensor.test2", "sensor.test3"]:
+        for entity_id in [
+            "sensor.test1",
+            "sensor.test2",
+            "sensor.test3",
+            "sensor.test4",
+        ]:
+            expected_average = (
+                expected_averages[entity_id][i]
+                if entity_id in expected_averages
+                else None
+            )
+            expected_minimum = (
+                expected_minima[entity_id][i] if entity_id in expected_minima else None
+            )
+            expected_maximum = (
+                expected_maxima[entity_id][i] if entity_id in expected_maxima else None
+            )
+            expected_state = (
+                expected_states[entity_id][i] if entity_id in expected_states else None
+            )
+            expected_sum = (
+                expected_sums[entity_id][i] if entity_id in expected_sums else None
+            )
+            expected_decrease = (
+                expected_decreases[entity_id][i]
+                if entity_id in expected_decreases
+                else None
+            )
+            expected_increase = (
+                expected_increases[entity_id][i]
+                if entity_id in expected_increases
+                else None
+            )
             expected_stats[entity_id].append(
                 {
                     "statistic_id": entity_id,
                     "start": process_timestamp_to_utc_isoformat(start),
                     "end": process_timestamp_to_utc_isoformat(end),
-                    "mean": approx(expected_average[entity_id][i]),
-                    "min": approx(expected_minima[entity_id][i]),
-                    "max": approx(expected_maxima[entity_id][i]),
+                    "mean": approx(expected_average),
+                    "min": approx(expected_minimum),
+                    "max": approx(expected_maximum),
                     "last_reset": None,
-                    "state": None,
-                    "sum": None,
-                    "sum_decrease": None,
-                    "sum_increase": None,
+                    "state": expected_state,
+                    "sum": expected_sum,
+                    "sum_decrease": expected_decrease,
+                    "sum_increase": expected_increase,
                 }
             )
         start += timedelta(minutes=5)
@@ -1703,30 +1785,69 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
     assert stats == expected_stats
 
     stats = statistics_during_period(hass, zero, period="hour")
-    expected_stats = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
+    expected_stats = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
     start = zero
     end = zero + timedelta(hours=1)
     for i in range(2):
-        for entity_id in ["sensor.test1", "sensor.test2", "sensor.test3"]:
+        for entity_id in [
+            "sensor.test1",
+            "sensor.test2",
+            "sensor.test3",
+            "sensor.test4",
+        ]:
+            expected_average = (
+                mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_averages
+                else None
+            )
+            expected_minimum = (
+                min(expected_minima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_minima
+                else None
+            )
+            expected_maximum = (
+                max(expected_maxima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_maxima
+                else None
+            )
+            expected_state = (
+                expected_states[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_states
+                else None
+            )
+            expected_sum = (
+                expected_sums[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_sums
+                else None
+            )
+            expected_decrease = (
+                expected_decreases[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_decreases
+                else None
+            )
+            expected_increase = (
+                expected_increases[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_increases
+                else None
+            )
             expected_stats[entity_id].append(
                 {
                     "statistic_id": entity_id,
                     "start": process_timestamp_to_utc_isoformat(start),
                     "end": process_timestamp_to_utc_isoformat(end),
-                    "mean": approx(
-                        mean(expected_average[entity_id][i * 12 : (i + 1) * 12])
-                    ),
-                    "min": approx(
-                        min(expected_minima[entity_id][i * 12 : (i + 1) * 12])
-                    ),
-                    "max": approx(
-                        max(expected_maxima[entity_id][i * 12 : (i + 1) * 12])
-                    ),
+                    "mean": approx(expected_average),
+                    "min": approx(expected_minimum),
+                    "max": approx(expected_maximum),
                     "last_reset": None,
-                    "state": None,
-                    "sum": None,
-                    "sum_decrease": None,
-                    "sum_increase": None,
+                    "state": expected_state,
+                    "sum": expected_sum,
+                    "sum_decrease": expected_decrease,
+                    "sum_increase": expected_increase,
                 }
             )
         start += timedelta(hours=1)
@@ -1786,14 +1907,14 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    one = zero + timedelta(seconds=15 * 5)
-    two = one + timedelta(seconds=30 * 5)
-    three = two + timedelta(seconds=15 * 5)
-    four = three + timedelta(seconds=15 * 5)
-    five = four + timedelta(seconds=30 * 5)
-    six = five + timedelta(seconds=15 * 5)
-    seven = six + timedelta(seconds=15 * 5)
-    eight = seven + timedelta(seconds=30 * 5)
+    one = zero + timedelta(seconds=15 * 5)  # 00:01:15
+    two = one + timedelta(seconds=30 * 5)  # 00:03:45
+    three = two + timedelta(seconds=15 * 5)  # 00:05:00
+    four = three + timedelta(seconds=15 * 5)  # 00:06:15
+    five = four + timedelta(seconds=30 * 5)  # 00:08:45
+    six = five + timedelta(seconds=15 * 5)  # 00:10:00
+    seven = six + timedelta(seconds=15 * 5)  # 00:11:45
+    eight = seven + timedelta(seconds=30 * 5)  # 00:13:45
 
     attributes = dict(_attributes)
     if "last_reset" in _attributes:
@@ -1847,7 +1968,8 @@ def record_meter_state(hass, zero, entity_id, _attributes, seq):
         return hass.states.get(entity_id)
 
     attributes = dict(_attributes)
-    attributes["last_reset"] = zero.isoformat()
+    if "last_reset" in _attributes:
+        attributes["last_reset"] = zero.isoformat()
 
     states = {entity_id: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=zero):
