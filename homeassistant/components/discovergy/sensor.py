@@ -110,8 +110,6 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        self._meter = meter
-
         self.entity_description = description
         self._attr_name = (
             f"{meter.measurement_type.capitalize()} "
@@ -122,7 +120,7 @@ class DiscovergyElectricitySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{meter.serial_number}-{description.key}"
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
-            ATTR_NAME: f"{self._meter.type} {self._meter.measurement_type.capitalize()} {self._meter.location.street} {self._meter.location.street_number}",
+            ATTR_NAME: f"{meter.type} {meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
             ATTR_MODEL: f"{meter.type.capitalize()} {meter.measurement_type.capitalize()}",
             ATTR_MANUFACTURER: MANUFACTURER,
         }
