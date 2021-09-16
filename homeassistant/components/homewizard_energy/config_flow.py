@@ -176,10 +176,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Format name
         self.context["custom_name"] = user_input["name"]
         if Lower(self.context["product_name"]) != Lower(user_input["name"]):
-            title = "{} ({})".format(
-                self.context["product_name"],
-                self.context["custom_name"],
-            )
+            title = f"{self.context['product_name']} ({self.context['custom_name']})"
         else:
             title = self.context["custom_name"]
 
