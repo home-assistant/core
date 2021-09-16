@@ -27,3 +27,8 @@ def controller(hass):
     instance = FakeController()
     with unittest.mock.patch("aiohomekit.Controller", return_value=instance):
         yield instance
+
+
+@pytest.fixture(autouse=True)
+def homekit_mock_zeroconf(mock_zeroconf):
+    """Mock zeroconf in all homekit tests."""
