@@ -15,14 +15,6 @@ from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Homewizard Energy component."""
-    _LOGGER.debug("__init__ async_setup")
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Homewizard Energy from a config entry."""
 
