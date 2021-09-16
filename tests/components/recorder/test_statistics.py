@@ -9,7 +9,7 @@ from pytest import approx
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
-    Statistics,
+    StatisticsShortTerm,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.statistics import (
@@ -34,18 +34,18 @@ def test_compile_hourly_statistics(hass_recorder):
     assert dict(states) == dict(hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
-        stats = statistics_during_period(hass, zero, **kwargs)
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
     stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    recorder.do_adhoc_statistics(period="hourly", start=zero)
-    recorder.do_adhoc_statistics(period="hourly", start=four)
+    recorder.do_adhoc_statistics(start=zero)
+    recorder.do_adhoc_statistics(start=four)
     wait_recording_done(hass)
     expected_1 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
@@ -58,7 +58,7 @@ def test_compile_hourly_statistics(hass_recorder):
     expected_2 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(four),
-        "end": process_timestamp_to_utc_isoformat(four + timedelta(hours=1)),
+        "end": process_timestamp_to_utc_isoformat(four + timedelta(minutes=5)),
         "mean": approx(20.0),
         "min": approx(20.0),
         "max": approx(20.0),
@@ -78,13 +78,17 @@ def test_compile_hourly_statistics(hass_recorder):
     ]
 
     # Test statistics_during_period
-    stats = statistics_during_period(hass, zero)
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
-    stats = statistics_during_period(hass, zero, statistic_ids=["sensor.test2"])
+    stats = statistics_during_period(
+        hass, zero, statistic_ids=["sensor.test2"], period="5minute"
+    )
     assert stats == {"sensor.test2": expected_stats2}
 
-    stats = statistics_during_period(hass, zero, statistic_ids=["sensor.test3"])
+    stats = statistics_during_period(
+        hass, zero, statistic_ids=["sensor.test3"], period="5minute"
+    )
     assert stats == {}
 
     # Test get_last_statistics
@@ -130,7 +134,7 @@ def mock_sensor_statistics():
 def mock_from_stats():
     """Mock out Statistics.from_stats."""
     counter = 0
-    real_from_stats = Statistics.from_stats
+    real_from_stats = StatisticsShortTerm.from_stats
 
     def from_stats(metadata_id, start, stats):
         nonlocal counter
@@ -140,17 +144,17 @@ def mock_from_stats():
         return real_from_stats(metadata_id, start, stats)
 
     with patch(
-        "homeassistant.components.recorder.statistics.Statistics.from_stats",
+        "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",
         side_effect=from_stats,
         autospec=True,
     ):
         yield
 
 
-def test_compile_hourly_statistics_exception(
+def test_compile_periodic_statistics_exception(
     hass_recorder, mock_sensor_statistics, mock_from_stats
 ):
-    """Test exception handling when compiling hourly statistics."""
+    """Test exception handling when compiling periodic statistics."""
 
     def mock_from_stats():
         raise ValueError
@@ -160,13 +164,13 @@ def test_compile_hourly_statistics_exception(
     setup_component(hass, "sensor", {})
 
     now = dt_util.utcnow()
-    recorder.do_adhoc_statistics(period="hourly", start=now)
-    recorder.do_adhoc_statistics(period="hourly", start=now + timedelta(hours=1))
+    recorder.do_adhoc_statistics(start=now)
+    recorder.do_adhoc_statistics(start=now + timedelta(minutes=5))
     wait_recording_done(hass)
     expected_1 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(now),
-        "end": process_timestamp_to_utc_isoformat(now + timedelta(hours=1)),
+        "end": process_timestamp_to_utc_isoformat(now + timedelta(minutes=5)),
         "mean": None,
         "min": None,
         "max": None,
@@ -178,8 +182,8 @@ def test_compile_hourly_statistics_exception(
     }
     expected_2 = {
         "statistic_id": "sensor.test1",
-        "start": process_timestamp_to_utc_isoformat(now + timedelta(hours=1)),
-        "end": process_timestamp_to_utc_isoformat(now + timedelta(hours=2)),
+        "start": process_timestamp_to_utc_isoformat(now + timedelta(minutes=5)),
+        "end": process_timestamp_to_utc_isoformat(now + timedelta(minutes=10)),
         "mean": None,
         "min": None,
         "max": None,
@@ -201,7 +205,7 @@ def test_compile_hourly_statistics_exception(
         {**expected_2, "statistic_id": "sensor.test3"},
     ]
 
-    stats = statistics_during_period(hass, now)
+    stats = statistics_during_period(hass, now, period="5minute")
     assert stats == {
         "sensor.test1": expected_stats1,
         "sensor.test2": expected_stats2,
@@ -229,17 +233,17 @@ def test_rename_entity(hass_recorder):
     assert dict(states) == dict(hist)
 
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
-        stats = statistics_during_period(hass, zero, **kwargs)
+        stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
     stats = get_last_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    recorder.do_adhoc_statistics(start=zero)
     wait_recording_done(hass)
     expected_1 = {
         "statistic_id": "sensor.test1",
         "start": process_timestamp_to_utc_isoformat(zero),
-        "end": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+        "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
         "mean": approx(14.915254237288135),
         "min": approx(10.0),
         "max": approx(20.0),
@@ -259,13 +263,13 @@ def test_rename_entity(hass_recorder):
         {**expected_1, "statistic_id": "sensor.test99"},
     ]
 
-    stats = statistics_during_period(hass, zero)
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
     entity_reg.async_update_entity(reg_entry.entity_id, new_entity_id="sensor.test99")
     hass.block_till_done()
 
-    stats = statistics_during_period(hass, zero)
+    stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test99": expected_stats99, "sensor.test2": expected_stats2}
 
 
@@ -285,7 +289,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
     with patch(
         "homeassistant.components.sensor.recorder.compile_statistics"
     ) as compile_statistics:
-        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        recorder.do_adhoc_statistics(start=zero)
         wait_recording_done(hass)
         assert compile_statistics.called
         compile_statistics.reset_mock()
@@ -293,7 +297,7 @@ def test_statistics_duplicated(hass_recorder, caplog):
         assert "Statistics already compiled" not in caplog.text
         caplog.clear()
 
-        recorder.do_adhoc_statistics(period="hourly", start=zero)
+        recorder.do_adhoc_statistics(start=zero)
         wait_recording_done(hass)
         assert not compile_statistics.called
         compile_statistics.reset_mock()
@@ -332,10 +336,10 @@ def record_states(hass):
         return hass.states.get(entity_id)
 
     zero = dt_util.utcnow()
-    one = zero + timedelta(minutes=1)
-    two = one + timedelta(minutes=15)
-    three = two + timedelta(minutes=30)
-    four = three + timedelta(minutes=15)
+    one = zero + timedelta(seconds=1 * 5)
+    two = one + timedelta(seconds=15 * 5)
+    three = two + timedelta(seconds=30 * 5)
+    four = three + timedelta(seconds=15 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
