@@ -35,10 +35,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         result = client.get_status_info(
             resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
         )
-        if result is None:
-            return False
-        else:
-            return True
+        return result is not None
 
     async def async_step_user(
         self, user_input: Optional[Dict[str, Any]] = None
