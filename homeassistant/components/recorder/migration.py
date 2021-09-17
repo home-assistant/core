@@ -1,6 +1,5 @@
 """Schema migration helpers."""
 import contextlib
-from datetime import timedelta
 import logging
 
 import sqlalchemy
@@ -13,8 +12,6 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
-import homeassistant.util.dt as dt_util
-
 from .models import (
     SCHEMA_VERSION,
     TABLE_STATES,
@@ -24,6 +21,7 @@ from .models import (
     StatisticsMeta,
     StatisticsRuns,
 )
+from .statistics import get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -483,10 +481,7 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
     elif new_version == 19:
         # This adds the statistic runs table, insert a fake run to prevent duplicating
         # statistics.
-        now = dt_util.utcnow()
-        start = now.replace(minute=0, second=0, microsecond=0)
-        start = start - timedelta(hours=1)
-        session.add(StatisticsRuns(start=start))
+        session.add(StatisticsRuns(start=get_start_time()))
     elif new_version == 20:
         # This changed the precision of statistics from float to double
         if engine.dialect.name in ["mysql", "oracle", "postgresql"]:
@@ -537,10 +532,7 @@ def _inspect_schema_version(engine, session):
     for index in indexes:
         if index["column_names"] == ["time_fired"]:
             # Schema addition from version 1 detected. New DB.
-            now = dt_util.utcnow()
-            start = now.replace(minute=0, second=0, microsecond=0)
-            start = start - timedelta(hours=1)
-            session.add(StatisticsRuns(start=start))
+            session.add(StatisticsRuns(start=get_start_time()))
             session.add(SchemaChanges(schema_version=SCHEMA_VERSION))
             return SCHEMA_VERSION
 

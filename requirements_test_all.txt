@@ -800,7 +800,7 @@ pybotvac==0.0.22
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==9.2.0
+pychromecast==9.2.1
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -912,7 +912,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lastfm
-pylast==4.2.0
+pylast==4.2.1
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
@@ -981,7 +981,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.openuv
-pyopenuv==2.2.0
+pyopenuv==2.2.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
@@ -1392,7 +1392,7 @@ yeelight==0.7.4
 youless-api==0.12
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.3
+zeroconf==0.36.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.61
