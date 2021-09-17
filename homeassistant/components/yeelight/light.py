@@ -6,7 +6,7 @@ import math
 
 import voluptuous as vol
 import yeelight
-from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
+from yeelight import Bulb, BulbException, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 
 from homeassistant.components.light import (
@@ -51,6 +51,7 @@ from . import (
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     BULB_EXCEPTIONS,
+    BULB_NETWORK_EXCEPTIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH,
@@ -243,11 +244,17 @@ def _async_cmd(func):
         try:
             _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
             return await func(self, *args, **kwargs)
-        except BULB_EXCEPTIONS as ex:
+        except BULB_NETWORK_EXCEPTIONS as ex:
+            # A network error happened, the bulb is likely offline now
             self.device.async_mark_unavailable()
             self.async_write_ha_state()
             raise HomeAssistantError(
-                f"Error when calling {func.__name__} for bulb {self.name} at {self._host}: {ex}"
+                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
+            )
+        except BulbException as ex:
+            # The bulb likely responded but had an error
+            raise HomeAssistantError(
+                f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
             )
 
     return _async_wrap
@@ -571,13 +578,16 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
-        if music_mode:
-            try:
-                self._bulb.start_music()
-            except AssertionError as ex:
-                _LOGGER.error(ex)
-        else:
+        if not music_mode:
             self._bulb.stop_music()
+            return
+
+        try:
+            self._bulb.start_music()
+        except AssertionError as ex:
+            raise HomeAssistantError(
+                f"Error when calling start_music for bulb {self.device.name} at {self.device.host}: {ex}"
+            )
 
     @_async_cmd
     async def async_set_brightness(self, brightness, duration) -> None:
@@ -712,6 +722,15 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         await self._bulb.async_start_flow(flow, light_type=self.light_type)
         self._effect = effect
 
+    @_async_cmd
+    async def _async_turn_on(self, duration) -> None:
+        """Turn on the bulb for with a transition duration wrapped with _async_cmd."""
+        await self._bulb.async_turn_on(
+            duration=duration,
+            light_type=self.light_type,
+            power_mode=self._turn_on_power_mode,
+        )
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -726,11 +745,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         if not self.is_on:
-            await self.device.async_turn_on(
-                duration=duration,
-                light_type=self.light_type,
-                power_mode=self._turn_on_power_mode,
-            )
+            await self._async_turn_on(duration)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -757,6 +772,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if not self.is_on:
             await self.device.async_update(True)
 
+    @_async_cmd
+    async def _async_turn_off(self, duration) -> None:
+        """Turn off with a given transition duration wrapped with _async_cmd."""
+        await self._bulb.async_turn_off(duration=duration, light_type=self.light_type)
+
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off."""
         if not self.is_on:
@@ -766,7 +786,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        await self.device.async_turn_off(duration=duration, light_type=self.light_type)
+        await self._async_turn_off(duration)
         # Some devices will not send back the off state so we need to force a refresh
         if self.is_on:
             await self.device.async_update(True)
