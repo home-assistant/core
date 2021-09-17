@@ -59,7 +59,7 @@ from .utils import (
 
 BLOCK_PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
 BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
-RPC_PLATFORMS: Final = ["light", "switch"]
+RPC_PLATFORMS: Final = ["binary_sensor", "light", "sensor", "switch"]
 _LOGGER: Final = logging.getLogger(__name__)
 
 COAP_SCHEMA: Final = vol.Schema(
@@ -410,7 +410,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, RPC_PLATFORMS
         )
         if unload_ok:
-            hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][RPC].shutdown()
+            await hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][RPC].shutdown()
             hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
 
         return unload_ok
