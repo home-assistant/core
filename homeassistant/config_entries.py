@@ -773,6 +773,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
+        self._domain_index: dict[str, set[str]] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
@@ -800,7 +801,9 @@ class ConfigEntries:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries.values())
-        return [entry for entry in self._entries.values() if entry.domain == domain]
+        return [
+            self._entries[entry_id] for entry_id in self._domain_index.get(domain, [])
+        ]
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
@@ -809,6 +812,7 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
+        self._domain_index.setdefault(entry.domain, set()).add(entry.entry_id)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
@@ -827,6 +831,9 @@ class ConfigEntries:
         await entry.async_remove(self.hass)
 
         del self._entries[entry.entry_id]
+        self._domain_index[entry.domain].remove(entry.entry_id)
+        if not self._domain_index[entry.domain]:
+            del self._domain_index[entry.domain]
         self._async_schedule_save()
 
         dev_reg, ent_reg = await asyncio.gather(
@@ -885,9 +892,11 @@ class ConfigEntries:
 
         if config is None:
             self._entries = {}
+            self._domain_index = {}
             return
 
         entries = {}
+        domain_index: dict[str, set[str]] = {}
 
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
@@ -898,10 +907,13 @@ class ConfigEntries:
                     "disable_new_entities"
                 )
 
-            entries[entry["entry_id"]] = ConfigEntry(
+            domain = entry["domain"]
+            entry_id = entry["entry_id"]
+
+            entries[entry_id] = ConfigEntry(
                 version=entry["version"],
-                domain=entry["domain"],
-                entry_id=entry["entry_id"],
+                domain=domain,
+                entry_id=entry_id,
                 data=entry["data"],
                 source=entry["source"],
                 title=entry["title"],
@@ -915,7 +927,9 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
+            domain_index.setdefault(domain, set()).add(entry_id)
 
+        self._domain_index = domain_index
         self._entries = entries
 
     async def async_setup(self, entry_id: str) -> bool:
