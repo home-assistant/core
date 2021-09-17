@@ -29,6 +29,7 @@ from .const import (
     MEM_SENSOR,
     NET_SENSOR,
     VOL_SENSOR,
+    VOLUME_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,7 +124,7 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return f"{self.entity_description.name} ({self.monitor_device})"
+            return f"{self.monitor_device} - {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
     @property
@@ -244,6 +245,11 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
+    def name(self):
+        """Return the name of the sensor, if any."""
+        return f"Drive {self.monitor_device} - {self.entity_description.name}"
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         data = self.coordinator.data["smart_drive_health"][self.monitor_device]
@@ -304,7 +310,7 @@ class QNAPFolderSensor(QNAPSensor):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        return f"{self.entity_description.name} (Folder {self.monitor_subdevice})"
+        return f"Folder {self.monitor_subdevice} - {self.entity_description.name}"
 
     @property
     def native_value(self):
@@ -327,5 +333,9 @@ class QNAPFolderSensor(QNAPSensor):
         if self.coordinator.data:
             data = self.coordinator.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
+            volume_name = self.monitor_device
 
-            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}
+            return {
+                ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}",
+                VOLUME_NAME: volume_name,
+            }

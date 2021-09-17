@@ -39,6 +39,7 @@ DOMAIN = "qnap"
 
 NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
+VOLUME_NAME = "volume"
 
 
 @dataclass
