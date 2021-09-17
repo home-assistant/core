@@ -276,7 +276,7 @@ ambee==0.3.0
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.8.1
+amcrest==1.9.2
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.60
@@ -1382,7 +1382,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==9.2.0
+pychromecast==9.2.1
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1575,7 +1575,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lastfm
-pylast==4.2.0
+pylast==4.2.1
 
 # homeassistant.components.launch_library
 pylaunches==1.0.0
