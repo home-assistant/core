@@ -144,7 +144,8 @@ async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
         assert call[3] == MOCK_HEADER
 
 
-async def test_report_state(hass, aioclient_mock, hass_storage):
+@patch("homeassistant.helpers.start.async_at_start")
+async def test_report_state(mock_at_start, hass, aioclient_mock, hass_storage):
     """Test the report state function."""
     agent_user_id = "user"
     config = GoogleConfig(hass, DUMMY_CONFIG)
