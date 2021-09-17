@@ -47,7 +47,7 @@ class TradfriBaseClass(Entity):
         self._api = handle_error(api)
         self._device: Command | None = None
         self._device_control: SocketControl = None
-        self._device_data: Socket = None
+        self._device_data: Socket | None = None
         self._gateway_id = gateway_id
         self._refresh(device)
 
