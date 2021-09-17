@@ -248,22 +248,24 @@ class FluxLight(LightEntity):
         entity_entry = entity_registry.async_get(self.entity_id)
 
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(entity_entry.device_id)
 
-        if (
-            len(
-                async_entries_for_device(
-                    entity_registry,
-                    entity_entry.device_id,
-                    include_disabled_entities=True,
+        if entity_entry:
+            device_entry = device_registry.async_get(entity_entry.device_id)
+
+            if (
+                len(
+                    async_entries_for_device(
+                        entity_registry,
+                        entity_entry.device_id,
+                        include_disabled_entities=True,
+                    )
                 )
-            )
-            == 1
-        ):
-            # If only this entity exists on this device, remove the device.
-            device_registry.async_remove_device(device_entry.id)
+                == 1
+            ):
+                # If only this entity exists on this device, remove the device.
+                device_registry.async_remove_device(device_entry.id)
 
-        entity_registry.async_remove(self.entity_id)
+            entity_registry.async_remove(self.entity_id)
 
     async def async_added_to_hass(self):
         """Run when the entity is about to be added to hass."""

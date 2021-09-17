@@ -1,5 +1,4 @@
 """The Flux LED/MagicLight integration."""
-import asyncio
 import copy
 from datetime import timedelta
 import logging
@@ -13,23 +12,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
-from .const import (
-    CONF_AUTOMATIC_ADD,
-    DEFAULT_NETWORK_SCAN_INTERVAL,
-    DOMAIN,
-    SIGNAL_ADD_DEVICE,
-)
+from .const import CONF_AUTOMATIC_ADD, DEFAULT_NETWORK_SCAN_INTERVAL, SIGNAL_ADD_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["light"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Flux LED/MagicLight component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -63,18 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            )
-        )
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     return unload_ok
 
@@ -82,7 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class FluxLedList:
     """Class to manage fetching the list of flux_led bulbs on the network."""
 
-    def __init__(self, hass: HomeAssistant, devices: dict, config_entry: ConfigEntry):
+    def __init__(
+        self, hass: HomeAssistant, devices: dict, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the update manager."""
 
         self.hass = hass
