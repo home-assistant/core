@@ -1,4 +1,4 @@
-"""Test the Tado config flow."""
+"""Test the Rfxtrx config flow."""
 import os
 from unittest.mock import MagicMock, patch, sentinel
 
@@ -32,11 +32,8 @@ def com_port():
     return port
 
 
-@patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
-    return_value=None,
-)
-async def test_setup_network(connect_mock, hass):
+@patch("homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport", autospec=True)
+async def test_setup_network(transport_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -170,10 +167,11 @@ async def test_setup_serial_manual(com_mock, connect_mock, hass):
 
 
 @patch(
-    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport.connect",
+    "homeassistant.components.rfxtrx.rfxtrxmod.PyNetworkTransport",
+    autospec=True,
     side_effect=OSError,
 )
-async def test_setup_network_fail(connect_mock, hass):
+async def test_setup_network_fail(transport_mock, hass):
     """Test we can setup network."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
