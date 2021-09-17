@@ -75,11 +75,24 @@ async def test_component_platform_not_found(hass):
 
         assert res.keys() == {"homeassistant"}
         assert res.errors[0] == CheckConfigError(
-            "Component error: beer - Integration 'beer' not found.", None, None
+            "Integration error: beer - Integration 'beer' not found.", None, None
         )
 
         # Only 1 error expected
         res.errors.pop(0)
+        assert not res.errors
+
+
+async def test_component_not_found_safe_mode(hass):
+    """Test no errors if component not found in safe mode."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "beer:"}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
         assert not res.errors
 
 
@@ -100,6 +113,21 @@ async def test_component_platform_not_found_2(hass):
 
         # Only 1 error expected
         res.errors.pop(0)
+        assert not res.errors
+
+
+async def test_platform_not_found_safe_mode(hass):
+    """Test no errors if platform not found in safe_mode."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "light:\n  platform: beer"}
+    hass.config.safe_mode = True
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant", "light"}
+        assert res["light"] == []
+
         assert not res.errors
 
 
