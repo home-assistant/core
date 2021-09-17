@@ -5,10 +5,10 @@ from urllib.parse import urlparse
 
 import async_timeout
 from pydeconz.errors import RequestError, ResponseError
+from pydeconz.gateway import DeconzSession
 from pydeconz.utils import (
-    async_discovery,
-    async_get_api_key,
-    async_get_bridge_id,
+    discovery as deconz_discovery,
+    get_bridge_id as deconz_get_bridge_id,
     normalize_bridge_id,
 )
 import voluptuous as vol
@@ -86,7 +86,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             with async_timeout.timeout(10):
-                self.bridges = await async_discovery(session)
+                self.bridges = await deconz_discovery(session)
 
         except (asyncio.TimeoutError, ResponseError):
             self.bridges = []
@@ -134,10 +134,15 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             session = aiohttp_client.async_get_clientsession(self.hass)
+            deconz_session = DeconzSession(
+                session,
+                host=self.deconz_config[CONF_HOST],
+                port=self.deconz_config[CONF_PORT],
+            )
 
             try:
                 with async_timeout.timeout(10):
-                    api_key = await async_get_api_key(session, **self.deconz_config)
+                    api_key = await deconz_session.get_api_key()
 
             except (ResponseError, RequestError, asyncio.TimeoutError):
                 errors["base"] = "no_key"
@@ -155,7 +160,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 with async_timeout.timeout(10):
-                    self.bridge_id = await async_get_bridge_id(
+                    self.bridge_id = await deconz_get_bridge_id(
                         session, **self.deconz_config
                     )
                     await self.async_set_unique_id(self.bridge_id)
