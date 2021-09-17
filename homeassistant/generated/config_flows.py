@@ -84,6 +84,7 @@ FLOWS = [
     "flo",
     "flume",
     "flunearyou",
+    "flux_led",
     "forecast_solar",
     "forked_daapd",
     "foscam",
