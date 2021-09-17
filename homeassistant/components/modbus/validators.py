@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
@@ -23,9 +25,11 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_INPUT_TYPE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
+    CONF_WRITE_TYPE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_FLOAT16,
@@ -201,15 +205,23 @@ def scan_interval_validator(config: dict) -> dict:
 def duplicate_entity_validator(config: dict) -> dict:
     """Control scan_interval."""
     for hub_index, hub in enumerate(config):
-        addresses: set[str] = set()
         for component, conf_key in PLATFORMS:
             if conf_key not in hub:
                 continue
             names: set[str] = set()
             errors: list[int] = []
+            addresses: set[str] = set()
             for index, entry in enumerate(hub[conf_key]):
                 name = entry[CONF_NAME]
                 addr = str(entry[CONF_ADDRESS])
+                if CONF_INPUT_TYPE in entry:
+                    addr += "_" + str(entry[CONF_INPUT_TYPE])
+                elif CONF_WRITE_TYPE in entry:
+                    addr += "_" + str(entry[CONF_WRITE_TYPE])
+                if CONF_COMMAND_ON in entry:
+                    addr += "_" + str(entry[CONF_COMMAND_ON])
+                if CONF_COMMAND_OFF in entry:
+                    addr += "_" + str(entry[CONF_COMMAND_OFF])
                 if CONF_SLAVE in entry:
                     addr += "_" + str(entry[CONF_SLAVE])
                 if addr in addresses:
@@ -236,7 +248,10 @@ def duplicate_modbus_validator(config: list) -> list:
     errors = []
     for index, hub in enumerate(config):
         name = hub.get(CONF_NAME, DEFAULT_HUB)
-        host = hub[CONF_PORT] if hub[CONF_TYPE] == SERIAL else hub[CONF_HOST]
+        if hub[CONF_TYPE] == SERIAL:
+            host = hub[CONF_PORT]
+        else:
+            host = f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
         if host in hosts:
             err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
             _LOGGER.warning(err)

@@ -48,18 +48,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TradfriGroup(TradfriBaseClass, LightEntity):
     """The platform class for light groups required by hass."""
 
+    _attr_supported_features = SUPPORTED_GROUP_FEATURES
+
     def __init__(self, device, api, gateway_id):
         """Initialize a Group."""
         super().__init__(device, api, gateway_id)
 
-        self._unique_id = f"group-{gateway_id}-{device.id}"
-
+        self._attr_unique_id = f"group-{gateway_id}-{device.id}"
+        self._attr_should_poll = True
         self._refresh(device)
-
-    @property
-    def should_poll(self):
-        """Poll needed for tradfri groups."""
-        return True
 
     async def async_update(self):
         """Fetch new state data for the group.
@@ -67,11 +64,6 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
         This method is required for groups to update properly.
         """
         await self._api(self._device.update())
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_GROUP_FEATURES
 
     @property
     def is_on(self):
@@ -108,7 +100,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
     def __init__(self, device, api, gateway_id):
         """Initialize a Light."""
         super().__init__(device, api, gateway_id)
-        self._unique_id = f"light-{gateway_id}-{device.id}"
+        self._attr_unique_id = f"light-{gateway_id}-{device.id}"
         self._hs_color = None
 
         # Calculate supported features
@@ -119,24 +111,11 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
             _features |= SUPPORT_COLOR | SUPPORT_COLOR_TEMP
         if device.light_control.can_set_temp:
             _features |= SUPPORT_COLOR_TEMP
-        self._features = _features
+        self._attr_supported_features = _features
 
         self._refresh(device)
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return self._device_control.min_mireds
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return self._device_control.max_mireds
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._features
+        self._attr_min_mireds = self._device_control.min_mireds
+        self._attr_max_mireds = self._device_control.max_mireds
 
     @property
     def is_on(self):

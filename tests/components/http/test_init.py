@@ -64,10 +64,10 @@ async def test_registering_view_while_running(
     hass.http.register_view(TestView)
 
 
-async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
+async def test_not_log_password(hass, hass_client_no_auth, caplog, legacy_auth):
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, "api", {"http": {}})
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     logging.getLogger("aiohttp.access").setLevel(logging.INFO)
 
     resp = await client.get("/api/", params={"api_password": "test-password"})

@@ -32,6 +32,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
+
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
         # Deprecated in Home Assistant 2021.6
@@ -46,8 +48,8 @@ CONFIG_SCHEMA = vol.Schema(
                     ): cv.positive_time_period,
                     vol.Optional(CONF_MANUAL, default=False): cv.boolean,
                     vol.Optional(
-                        CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                    ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+                        CONF_MONITORED_CONDITIONS, default=list(SENSOR_KEYS)
+                    ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_KEYS))]),
                 }
             )
         },
