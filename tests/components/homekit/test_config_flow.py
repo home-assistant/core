@@ -1087,7 +1087,9 @@ async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_sou
     with patch(
         "homeassistant.components.homekit.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.homekit.async_port_is_available"
+    ):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"camera_copy": ["camera.tv"]},
