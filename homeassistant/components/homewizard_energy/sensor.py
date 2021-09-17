@@ -15,7 +15,6 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
@@ -69,8 +68,8 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key=ATTR_WIFI_STRENGTH,
         name="Wifi Strength",
+        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
