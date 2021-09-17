@@ -32,6 +32,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    PRECISION_HALVES,
     PRECISION_TENTHS,
     STATE_ON,
     TEMP_FAHRENHEIT,
@@ -392,23 +393,28 @@ class Thermostat(ClimateEntity):
         return PRECISION_TENTHS
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.thermostat["runtime"]["actualTemperature"] / 10.0
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
+            return self.thermostat["runtime"]["desiredHeat"] / 10.0
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
+            return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Set target temperature step to halves."""
+        return PRECISION_HALVES
 
     @property
     def has_humidifier_control(self):
@@ -436,14 +442,14 @@ class Thermostat(ClimateEntity):
         return DEFAULT_MAX_HUMIDITY
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
-            return round(self.thermostat["runtime"]["desiredHeat"] / 10.0)
+            return self.thermostat["runtime"]["desiredHeat"] / 10.0
         if self.hvac_mode == HVAC_MODE_COOL:
-            return round(self.thermostat["runtime"]["desiredCool"] / 10.0)
+            return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
     @property
@@ -680,7 +686,7 @@ class Thermostat(ClimateEntity):
             heat_temp = temp
             cool_temp = temp
         else:
-            delta = self.thermostat["settings"]["heatCoolMinDelta"] / 10
+            delta = self.thermostat["settings"]["heatCoolMinDelta"] / 10.0
             heat_temp = temp - delta
             cool_temp = temp + delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
