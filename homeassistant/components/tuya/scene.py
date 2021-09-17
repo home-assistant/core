@@ -4,11 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from tuya_iot import TuyaHomeManager, TuyaScene
+
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from tuya_iot import TuyaHomeManager, TuyaScene
 
 from .const import DOMAIN, TUYA_HOME_MANAGER
 
