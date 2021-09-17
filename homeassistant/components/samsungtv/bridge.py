@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import contextlib
-from typing import Any, cast
+from typing import Any
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -322,7 +322,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Try to gather infos of this TV."""
         if remote := self._get_remote(avoid_open=True):
             with contextlib.suppress(HttpApiError):
-                return cast(dict[str, Any], remote.rest_device_info())
+                device_info: dict[str, Any] = remote.rest_device_info()
+                return device_info
 
         return None
 
