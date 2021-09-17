@@ -1,7 +1,8 @@
 """The Oocsi for HomeAssistant integration."""
 from __future__ import annotations
 
-from oocsi import OOCSI
+from oocsi import OOCSI, OOCSIDisconnect
+
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -22,14 +23,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
-    oocsi = OOCSI(name, host, port)
-    print(oocsi.handle)
-
-    if not oocsi:
-        print("oocsi can't connect")
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    return True
+    try:
+        oocsi = OOCSI(name, host, port)
+    except OOCSIDisconnect as error:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -39,3 +35,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+def async_send(
+    hass: HomeAssistant, topic: Any, payload) -> None:
+    oocsi.send(topic, payload)
+
+def handleEvent(sender, recipient, event):
+  print(event['color'])
+
+def async_receive(
+    hass: HomeAssistant, topic: Any, payload) -> None:
+    oocsi.subscribe(topic, handleEvent)

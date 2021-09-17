@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from oocsi import OOCSI
+from oocsi import OOCSI, OOCSIDisconnect
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._connect_to_oocsi(user_input)
-            except:
+            except OOCSIDisconnect:
                 return self._async_show_form_popup({"base": "cannot find oocsi"})
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
@@ -84,7 +84,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.port = user_input[CONF_PORT]
         oocsiconnect = OOCSI(self.name, self.host, self.port)
         print(oocsiconnect.handle)
-        await oocsiconnect.send("Bob", {"color": 120})
 
 
 class CannotConnect(HomeAssistantError):
