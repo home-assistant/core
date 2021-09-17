@@ -1,7 +1,9 @@
 """Test the Yeelight light."""
+import asyncio
 import logging
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+import pytest
 from yeelight import (
     BulbException,
     BulbType,
@@ -82,8 +84,16 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
@@ -122,6 +132,7 @@ CONFIG_ENTRY_DATA = {
 
 async def test_services(hass: HomeAssistant, caplog):
     """Test Yeelight services."""
+    assert await async_setup_component(hass, "homeassistant", {})
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -140,13 +151,16 @@ async def test_services(hass: HomeAssistant, caplog):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+    assert hass.states.get(ENTITY_NIGHTLIGHT).state == STATE_OFF
+
     async def _async_test_service(
         service,
         data,
         method,
         payload=None,
         domain=DOMAIN,
-        failure_side_effect=BulbException,
+        failure_side_effect=HomeAssistantError,
     ):
         err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
 
@@ -174,11 +188,8 @@ async def test_services(hass: HomeAssistant, caplog):
             else:
                 mocked_method = MagicMock(side_effect=failure_side_effect)
             setattr(mocked_bulb, method, mocked_method)
-            await hass.services.async_call(domain, service, data, blocking=True)
-            assert (
-                len([x for x in caplog.records if x.levelno == logging.ERROR])
-                == err_count + 1
-            )
+            with pytest.raises(failure_side_effect):
+                await hass.services.async_call(domain, service, data, blocking=True)
 
     # turn_on rgb_color
     brightness = 100
@@ -303,7 +314,6 @@ async def test_services(hass: HomeAssistant, caplog):
     mocked_bulb.async_start_flow.assert_called_once()  # flash
     mocked_bulb.async_stop_flow.assert_called_once_with(light_type=LightType.Main)
 
-    mocked_bulb.last_properties["power"] = "off"
     # turn_on nightlight
     await _async_test_service(
         SERVICE_TURN_ON,
@@ -318,6 +328,7 @@ async def test_services(hass: HomeAssistant, caplog):
     )
 
     mocked_bulb.last_properties["power"] = "on"
+    assert hass.states.get(ENTITY_LIGHT).state != STATE_UNAVAILABLE
     # turn_off
     await _async_test_service(
         SERVICE_TURN_OFF,
@@ -397,7 +408,6 @@ async def test_services(hass: HomeAssistant, caplog):
         SERVICE_SET_MUSIC_MODE,
         {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
         "start_music",
-        failure_side_effect=AssertionError,
     )
 
     # set_music_mode disable
@@ -417,18 +427,35 @@ async def test_services(hass: HomeAssistant, caplog):
     )
     # test _cmd wrapper error handler
     mocked_bulb.last_properties["power"] = "off"
-    err_count = len([x for x in caplog.records if x.levelno == logging.ERROR])
-    type(mocked_bulb).turn_on = MagicMock()
-    type(mocked_bulb).set_brightness = MagicMock(side_effect=BulbException)
+    mocked_bulb.available = True
     await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 50},
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
     )
-    assert (
-        len([x for x in caplog.records if x.levelno == logging.ERROR]) == err_count + 1
-    )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+
+    mocked_bulb.async_turn_on = AsyncMock()
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=BulbException)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 50},
+            blocking=True,
+        )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=asyncio.TimeoutError)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
+            blocking=True,
+        )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
 async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant):
