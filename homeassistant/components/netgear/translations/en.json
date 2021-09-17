@@ -15,15 +15,13 @@
                     "ssl": "Use SSL (Optional)",
                     "username": "Username (Optional)"
                 },
-                "description": "Default host: {host}\n Default port: {port}\n Default username: {username}",
-                "title": "Netgear"
+                "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}"
             }
         }
     },
     "options": {
         "step": {
           "init": {
-            "title": "Netgear",
             "description": "Specify optional settings",
             "data": {
               "consider_home": "Consider home time (seconds)"
