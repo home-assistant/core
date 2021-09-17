@@ -20,6 +20,7 @@ from .models import (
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
+    StatisticsShortTerm,
 )
 from .statistics import get_start_time
 from .util import session_scope
@@ -514,28 +515,31 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                         )
                     )
     elif new_version == 22:
-        # Recreate the statistics, statistics meta and statistics meta tables with Identity columns
+        # Recreate the all statistics tables for Oracle DB with Identity columns
         #
         # Order matters! Statistics has a relation with StatisticsMeta,
         # so statistics need to be deleted before meta (or in pair depending
         # on the SQL backend); and meta needs to be created before statistics.
-        if (
-            sqlalchemy.inspect(engine).has_table(StatisticsMeta.__tablename__)
-            or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__)
-            or sqlalchemy.inspect(engine).has_table(StatisticsRuns.__tablename__)
-        ):
-            Base.metadata.drop_all(
-                bind=engine,
-                tables=[
-                    Statistics.__table__,
-                    StatisticsMeta.__table__,
-                    StatisticsRuns.__table__,
-                ],
-            )
+        if engine.dialect.name == "oracle":
+            if (
+                sqlalchemy.inspect(engine).has_table(StatisticsMeta.__tablename__)
+                or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__)
+                or sqlalchemy.inspect(engine).has_table(StatisticsRuns.__tablename__)
+            ):
+                Base.metadata.drop_all(
+                    bind=engine,
+                    tables=[
+                        StatisticsShortTerm.__table__,
+                        Statistics.__table__,
+                        StatisticsMeta.__table__,
+                        StatisticsRuns.__table__,
+                    ],
+                )
 
-        StatisticsRuns.__table__.create(engine)
-        StatisticsMeta.__table__.create(engine)
-        Statistics.__table__.create(engine)
+            StatisticsRuns.__table__.create(engine)
+            StatisticsMeta.__table__.create(engine)
+            StatisticsShortTerm.__table__.create(engine)
+            Statistics.__table__.create(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
