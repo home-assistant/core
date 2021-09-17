@@ -133,7 +133,9 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
     with patch.object(
         config, "async_schedule_google_sync_all"
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+    ) as mock_sync, patch.object(config, "async_sync_entities_all"), patch.object(
+        ga_helpers, "SYNC_DELAY", 0
+    ):
         # Created entity
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
