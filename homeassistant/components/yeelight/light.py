@@ -722,6 +722,15 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         await self._bulb.async_start_flow(flow, light_type=self.light_type)
         self._effect = effect
 
+    @_async_cmd
+    async def _async_turn_on(self, duration) -> None:
+        """Turn on the bulb for with a transition duration wrapped with _async_cmd."""
+        await self._bulb.async_turn_on(
+            duration=duration,
+            light_type=self.light_type,
+            power_mode=self._turn_on_power_mode,
+        )
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -736,11 +745,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         if not self.is_on:
-            await self.device.async_turn_on(
-                duration=duration,
-                light_type=self.light_type,
-                power_mode=self._turn_on_power_mode,
-            )
+            await self._async_turn_on(duration)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
             try:
@@ -767,6 +772,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if not self.is_on:
             await self.device.async_update(True)
 
+    @_async_cmd
+    async def _async_turn_off(self, duration) -> None:
+        """Turn off with a given transition duration wrapped with _async_cmd."""
+        await self._bulb.async_turn_off(duration=duration, light_type=self.light_type)
+
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off."""
         if not self.is_on:
@@ -776,7 +786,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        await self.device.async_turn_off(duration=duration, light_type=self.light_type)
+        await self._async_turn_off(duration)
         # Some devices will not send back the off state so we need to force a refresh
         if self.is_on:
             await self.device.async_update(True)
