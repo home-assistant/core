@@ -358,8 +358,12 @@ class ModbusHub:
         return result
 
     async def async_pymodbus_call(
-        self, unit, address, value, use_call
-    ) -> ModbusResponse:
+        self,
+        unit: str | int | None,
+        address: int,
+        value: str | int,
+        use_call: str | None,
+    ) -> ModbusResponse | None:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
