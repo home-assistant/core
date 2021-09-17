@@ -121,8 +121,7 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         """Return current fan mode."""
         if self.status.fan_on:
             return FAN_ON
-        else:
-            return FAN_OFF
+        return FAN_OFF
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set HVAC mode."""

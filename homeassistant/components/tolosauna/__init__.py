@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 from tololib import ToloClient
 from tololib.errors import ResponseTimedOutError
@@ -86,6 +86,8 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
 class ToloSaunaCoordinatorEntity(CoordinatorEntity):
     """CoordinatorEntity for TOLO Sauna."""
 
+    coordinator: ToloSaunaUpdateCoordinator
+
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
     ) -> None:
@@ -96,19 +98,21 @@ class ToloSaunaCoordinatorEntity(CoordinatorEntity):
     @property
     def status(self) -> StatusInfo:
         """Return TOLO Sauna status info."""
-        return cast(StatusInfo, self.coordinator.data.status)
+        return self.coordinator.data.status
 
     @property
     def settings(self) -> SettingsInfo:
         """Return TOLO Sauna settings info."""
-        return cast(SettingsInfo, self.coordinator.data.settings)
+        return self.coordinator.data.settings
 
     @property
     def client(self) -> ToloClient:
         """Return ToloClient instance."""
-        return cast(
-            ToloClient, self.hass.data[DOMAIN][self._config_entry.entry_id]["client"]
-        )
+
+        client: ToloClient = self.hass.data[DOMAIN][self._config_entry.entry_id][
+            "client"
+        ]
+        return client
 
     @property
     def device_info(self) -> DeviceInfo:
