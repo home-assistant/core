@@ -342,3 +342,26 @@ async def test_browse_media(
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "playlists"
     result_id = result[ATTR_MEDIA_CONTENT_ID]
+
+    # Browse recently added items
+    msg_id += 1
+    mock_items = [MockPlexAlbum(), MockPlexEpisode(), MockPlexSeason(), MockPlexTrack()]
+    with patch("plexapi.library.Library.search", return_value=mock_items) as mock_fetch:
+        await websocket_client.send_json(
+            {
+                "id": msg_id,
+                "type": "media_player/browse_media",
+                "entity_id": media_players[0],
+                ATTR_MEDIA_CONTENT_TYPE: "server",
+                ATTR_MEDIA_CONTENT_ID: f"{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}:{special_keys[1]}",
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result[ATTR_MEDIA_CONTENT_TYPE] == "server"
+    result_id = result[ATTR_MEDIA_CONTENT_ID]
+    for child in result["children"]:
+        assert child["media_content_type"] in ["album", "episode"]
+        assert child["media_content_type"] not in ["season", "track"]
