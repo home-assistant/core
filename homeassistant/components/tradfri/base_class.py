@@ -13,18 +13,18 @@ from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_error(func):
+def handle_error(func: Callable) -> Callable:
     """Handle tradfri api call error."""
 
     @wraps(func)
-    async def wrapper(command):
+    async def wrapper(command: str) -> None:
         """Decorate api call."""
         try:
             await func(command)
@@ -54,12 +54,16 @@ class TradfriBaseClass(Entity):
         self._refresh(device)
 
     @callback
-    def _async_start_observe(self, exc=None):
+    def _async_start_observe(self, exc: Exception | None = None) -> None:
         """Start observation of device."""
+        if not self._device:
+            return
         if exc:
             self.async_write_ha_state()
             _LOGGER.warning("Observation failed for %s", self._attr_name, exc_info=exc)
 
+        if not self._device:
+            return
         try:
             cmd = self._device.observe(
                 callback=self._observe_update,
@@ -71,12 +75,12 @@ class TradfriBaseClass(Entity):
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Start thread when added to hass."""
         self._async_start_observe()
 
     @callback
-    def _observe_update(self, device):
+    def _observe_update(self, device: Command) -> None:
         """Receive new state data for this device."""
         self._refresh(device)
         self.async_write_ha_state()
@@ -94,10 +98,11 @@ class TradfriBaseDevice(TradfriBaseClass):
     """
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        if not self._device:
+            return {}
         info = self._device.device_info
-
         return {
             "identifiers": {(DOMAIN, self._device.id)},
             "manufacturer": info.manufacturer,
