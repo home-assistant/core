@@ -21,6 +21,7 @@ from .const import (
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DOMAIN,
+    MAX_RPC_KEY_INSTANCES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
@@ -88,7 +89,7 @@ def get_block_entity_name(
     description: str | None = None,
 ) -> str:
     """Naming for block based switch and sensors."""
-    channel_name = get_device_channel_name(device, block)
+    channel_name = get_block_channel_name(device, block)
 
     if description:
         return f"{channel_name} {description}"
@@ -96,7 +97,7 @@ def get_block_entity_name(
     return channel_name
 
 
-def get_device_channel_name(device: BlockDevice, block: Block | None) -> str:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
     entity_name = get_block_device_name(device)
 
@@ -125,8 +126,8 @@ def get_device_channel_name(device: BlockDevice, block: Block | None) -> str:
     return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
-def is_momentary_input(settings: dict[str, Any], block: Block) -> bool:
-    """Return true if input button settings is set to a momentary type."""
+def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
     if settings["device"]["type"] in SHBTN_MODELS:
         return True
@@ -147,9 +148,9 @@ def is_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(status: dict[str, Any], last_uptime: str | None) -> str:
+def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
-    delta_uptime = utcnow() - timedelta(seconds=status["uptime"])
+    delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
@@ -166,7 +167,7 @@ def get_input_triggers(device: BlockDevice, block: Block) -> list[tuple[str, str
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
 
-    if not is_momentary_input(device.settings, block):
+    if not is_block_momentary_input(device.settings, block):
         return []
 
     triggers = []
@@ -240,21 +241,64 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+    """Get name based on device and channel name."""
+    key = key.replace("input", "switch")
+    device_name = get_rpc_device_name(device)
+    entity_name: str | None = device.config[key].get("name", device_name)
+
+    if entity_name is None:
+        return f"{device_name} {key.replace(':', '_')}"
+
+    return entity_name
+
+
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
 ) -> str:
     """Naming for RPC based switch and sensors."""
-    entity_name: str | None = device.config[key].get("name")
-
-    if entity_name is None:
-        entity_name = f"{get_rpc_device_name(device)} {key.replace(':', '_')}"
+    channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{entity_name} {description}"
+        return f"{channel_name} {description}"
 
-    return entity_name
+    return channel_name
 
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
     return entry.data.get("gen", 1)
+
+
+def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
+    """Return list of key instances for RPC device from a dict."""
+    if key in keys_dict:
+        return [key]
+
+    keys_list: list[str] = []
+    for i in range(MAX_RPC_KEY_INSTANCES):
+        key_inst = f"{key}:{i}"
+        if key_inst not in keys_dict:
+            return keys_list
+
+        keys_list.append(key_inst)
+
+    return keys_list
+
+
+def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
+    """Return list of key ids for RPC device from a dict."""
+    key_ids: list[int] = []
+    for i in range(MAX_RPC_KEY_INSTANCES):
+        key_inst = f"{key}:{i}"
+        if key_inst not in keys_dict:
+            return key_ids
+
+        key_ids.append(i)
+
+    return key_ids
+
+
+def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
+    """Return true if rpc input button settings is set to a momentary type."""
+    return cast(bool, config[key]["type"] == "button")
