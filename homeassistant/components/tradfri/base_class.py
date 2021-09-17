@@ -6,6 +6,8 @@ import logging
 from typing import Any, Callable
 
 from pytradfri.command import Command
+from pytradfri.device.blind import Blind
+from pytradfri.device.light import Light
 from pytradfri.device.socket import Socket
 from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
@@ -46,8 +48,8 @@ class TradfriBaseClass(Entity):
         """Initialize a device."""
         self._api = handle_error(api)
         self._device: Command | None = None
-        self._device_control: SocketControl = None
-        self._device_data: Socket | None = None
+        self._device_control: SocketControl | None = None
+        self._device_data: Socket | Light | Blind | None = None
         self._gateway_id = gateway_id
         self._refresh(device)
 
