@@ -771,14 +771,14 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
         hass.config_entries._entries[self.entry_id] = self
-        hass.config_entries._domain_index.setdefault(self.domain, set()).add(
+        hass.config_entries._domain_index.setdefault(self.domain, []).append(
             self.entry_id
         )
 
     def add_to_manager(self, manager):
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
-        manager._domain_index.setdefault(self.domain, set()).add(self.entry_id)
+        manager._domain_index.setdefault(self.domain, []).append(self.entry_id)
 
 
 def patch_yaml_files(files_dict, endswith=True):

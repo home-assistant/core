@@ -769,7 +769,7 @@ class ConfigEntries:
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
-        self._domain_index: dict[str, set[str]] = {}
+        self._domain_index: dict[str, list[str]] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
@@ -808,7 +808,7 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
         self._entries[entry.entry_id] = entry
-        self._domain_index.setdefault(entry.domain, set()).add(entry.entry_id)
+        self._domain_index.setdefault(entry.domain, []).append(entry.entry_id)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
@@ -892,7 +892,7 @@ class ConfigEntries:
             return
 
         entries = {}
-        domain_index: dict[str, set[str]] = {}
+        domain_index: dict[str, list[str]] = {}
 
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
@@ -923,7 +923,7 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            domain_index.setdefault(domain, set()).add(entry_id)
+            domain_index.setdefault(domain, []).append(entry_id)
 
         self._domain_index = domain_index
         self._entries = entries
