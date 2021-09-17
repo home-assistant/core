@@ -1,118 +1,97 @@
-"""Platform for retrieving meteorological data from Environment Canada."""
+"""Support for Environment Canada (EC) weather service."""
 import datetime
-import re
-
-from env_canada import ECData
-import voluptuous as vol
+import logging
+from typing import Optional
 
 from homeassistant.components.weather import (
-    ATTR_CONDITION_CLEAR_NIGHT,
-    ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING_RAINY,
-    ATTR_CONDITION_PARTLYCLOUDY,
-    ATTR_CONDITION_POURING,
-    ATTR_CONDITION_RAINY,
-    ATTR_CONDITION_SNOWY,
-    ATTR_CONDITION_SNOWY_RAINY,
-    ATTR_CONDITION_SUNNY,
-    ATTR_CONDITION_WINDY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_NAME,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    TEMP_CELSIUS,
+)
 from homeassistant.util import dt
+from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.pressure import convert as convert_pressure
 
-CONF_FORECAST = "forecast"
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): validate_station,
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_FORECAST, default="daily"): vol.In(["daily", "hourly"]),
-    }
+from . import ECBaseEntity
+from .const import (
+    CONF_LANGUAGE,
+    CONF_STATION,
+    DEFAULT_NAME,
+    DOMAIN,
+    EC_ICON_TO_HA_CONDITION_MAP,
 )
 
-# Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
-# docs/current_conditions_icon_code_descriptions_e.csv
-ICON_CONDITION_MAP = {
-    ATTR_CONDITION_SUNNY: [0, 1],
-    ATTR_CONDITION_CLEAR_NIGHT: [30, 31],
-    ATTR_CONDITION_PARTLYCLOUDY: [2, 3, 4, 5, 22, 32, 33, 34, 35],
-    ATTR_CONDITION_CLOUDY: [10],
-    ATTR_CONDITION_RAINY: [6, 9, 11, 12, 28, 36],
-    ATTR_CONDITION_LIGHTNING_RAINY: [19, 39, 46, 47],
-    ATTR_CONDITION_POURING: [13],
-    ATTR_CONDITION_SNOWY_RAINY: [7, 14, 15, 27, 37],
-    ATTR_CONDITION_SNOWY: [8, 16, 17, 18, 25, 26, 38, 40],
-    ATTR_CONDITION_WINDY: [43],
-    ATTR_CONDITION_FOG: [20, 21, 23, 24, 44],
-    ATTR_CONDITION_HAIL: [26, 27],
-}
+_LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Environment Canada weather."""
-    if config.get(CONF_STATION):
-        ec_data = ECData(station_id=config[CONF_STATION])
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon))
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add a weather entity from a config_entry."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+    async_add_entities(
+        [
+            ECWeather(
+                coordinator, config_entry.data, hass.config.units.is_metric, False
+            ),
+            ECWeather(
+                coordinator, config_entry.data, hass.config.units.is_metric, True
+            ),
+        ]
+    )
 
-    add_devices([ECWeather(ec_data, config)])
+
+def format_condition(ec_icon: str) -> Optional[str]:
+    """Return condition."""
+    try:
+        icon_number = int(ec_icon)
+    except ValueError:
+        return None
+    return EC_ICON_TO_HA_CONDITION_MAP.get(icon_number)
 
 
-class ECWeather(WeatherEntity):
-    """Representation of a weather condition."""
+class ECWeather(ECBaseEntity, WeatherEntity):
+    """Implementation of a EC weather condition."""
 
-    def __init__(self, ec_data, config):
-        """Initialize Environment Canada weather."""
-        self.ec_data = ec_data
-        self.platform_name = config.get(CONF_NAME)
-        self.forecast_type = config[CONF_FORECAST]
+    def __init__(self, coordinator, config, is_metric, hourly):
+        """Initialise the platform."""
+        name = f"{config.get(CONF_NAME, DEFAULT_NAME)}{' Hourly' if hourly else ''}"
+        super().__init__(coordinator, config, name)
 
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return CONF_ATTRIBUTION
+        self._is_metric = is_metric
+        self._hourly = hourly
 
     @property
-    def name(self):
-        """Return the name of the weather entity."""
-        if self.platform_name:
-            return self.platform_name
-        return self.ec_data.metadata.get("location")
+    def unique_id(self):
+        """Return unique ID."""
+        suffix = "-hourly" if self._hourly else ""
+
+        # The combination of station and language are unique for all EC weather reporting
+        return f"{self._config[CONF_STATION]}-{self._config[CONF_LANGUAGE]}-weather{suffix}"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._hourly
+
+    @property
+    def condition(self):
+        """Return the current condition."""
+        return format_condition(self.get_value("icon_code"))
 
     @property
     def temperature(self):
         """Return the temperature."""
-        if self.ec_data.conditions.get("temperature", {}).get("value"):
-            return float(self.ec_data.conditions["temperature"]["value"])
-        if self.ec_data.hourly_forecasts[0].get("temperature"):
-            return float(self.ec_data.hourly_forecasts[0]["temperature"])
-        return None
+        return self.get_value("temperature")
 
     @property
     def temperature_unit(self):
@@ -120,76 +99,64 @@ class ECWeather(WeatherEntity):
         return TEMP_CELSIUS
 
     @property
+    def pressure(self):
+        """Return the pressure."""
+        if self.get_value("pressure") is None:
+            return None
+        pressure_hpa = 10 * float(
+            self._coordinator.data.conditions["pressure"]["value"]
+        )
+        if self._is_metric:
+            return pressure_hpa
+
+        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
+
+    @property
     def humidity(self):
         """Return the humidity."""
-        if self.ec_data.conditions.get("humidity", {}).get("value"):
-            return float(self.ec_data.conditions["humidity"]["value"])
-        return None
+        return self.get_value("humidity")
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        if self.ec_data.conditions.get("wind_speed", {}).get("value"):
-            return float(self.ec_data.conditions["wind_speed"]["value"])
-        return None
+        speed_km_h = self.get_value("wind_speed")
+        if self._is_metric or speed_km_h is None:
+            return speed_km_h
+
+        speed_mi_h = convert_distance(speed_km_h, LENGTH_KILOMETERS, LENGTH_MILES)
+        return int(round(speed_mi_h))
 
     @property
     def wind_bearing(self):
-        """Return the wind bearing."""
-        if self.ec_data.conditions.get("wind_bearing", {}).get("value"):
-            return float(self.ec_data.conditions["wind_bearing"]["value"])
-        return None
-
-    @property
-    def pressure(self):
-        """Return the pressure."""
-        if self.ec_data.conditions.get("pressure", {}).get("value"):
-            return 10 * float(self.ec_data.conditions["pressure"]["value"])
-        return None
+        """Return the wind direction."""
+        return self.get_value("wind_bearing")
 
     @property
     def visibility(self):
         """Return the visibility."""
-        if self.ec_data.conditions.get("visibility", {}).get("value"):
-            return float(self.ec_data.conditions["visibility"]["value"])
-        return None
+        visibility = self.get_value("visibility")
+        if self._is_metric or visibility is None:
+            return visibility
 
-    @property
-    def condition(self):
-        """Return the weather condition."""
-        icon_code = None
-
-        if self.ec_data.conditions.get("icon_code", {}).get("value"):
-            icon_code = self.ec_data.conditions["icon_code"]["value"]
-        elif self.ec_data.hourly_forecasts[0].get("icon_code"):
-            icon_code = self.ec_data.hourly_forecasts[0]["icon_code"]
-
-        if icon_code:
-            return icon_code_to_condition(int(icon_code))
-        return ""
+        visibility = convert_distance(visibility, LENGTH_KILOMETERS, LENGTH_MILES)
+        return visibility
 
     @property
     def forecast(self):
         """Return the forecast array."""
-        return get_forecast(self.ec_data, self.forecast_type)
-
-    def update(self):
-        """Get the latest data from Environment Canada."""
-        self.ec_data.update()
+        return get_forecast(self._coordinator.data, self._hourly)
 
 
-def get_forecast(ec_data, forecast_type):
+def get_forecast(data, hourly_forecast):
     """Build the forecast array."""
     forecast_array = []
 
-    if forecast_type == "daily":
-        half_days = ec_data.daily_forecasts
+    if not hourly_forecast:
+        half_days = data.daily_forecasts
 
         today = {
             ATTR_FORECAST_TIME: dt.now().isoformat(),
-            ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                int(half_days[0]["icon_code"])
-            ),
+            ATTR_FORECAST_CONDITION: format_condition(half_days[0]["icon_code"]),
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                 half_days[0]["precip_probability"]
             ),
@@ -222,8 +189,8 @@ def get_forecast(ec_data, forecast_type):
                     ).isoformat(),
                     ATTR_FORECAST_TEMP: int(half_days[high]["temperature"]),
                     ATTR_FORECAST_TEMP_LOW: int(half_days[low]["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(half_days[high]["icon_code"])
+                    ATTR_FORECAST_CONDITION: format_condition(
+                        half_days[high]["icon_code"]
                     ),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                         half_days[high]["precip_probability"]
@@ -231,19 +198,13 @@ def get_forecast(ec_data, forecast_type):
                 }
             )
 
-    elif forecast_type == "hourly":
-        for hour in ec_data.hourly_forecasts:
+    else:
+        for hour in data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: datetime.datetime.strptime(
-                        hour["period"], "%Y%m%d%H%M%S"
-                    )
-                    .replace(tzinfo=dt.UTC)
-                    .isoformat(),
+                    ATTR_FORECAST_TIME: hour["period"],
                     ATTR_FORECAST_TEMP: int(hour["temperature"]),
-                    ATTR_FORECAST_CONDITION: icon_code_to_condition(
-                        int(hour["icon_code"])
-                    ),
+                    ATTR_FORECAST_CONDITION: format_condition(hour["icon_code"]),
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(
                         hour["precip_probability"]
                     ),
@@ -251,11 +212,3 @@ def get_forecast(ec_data, forecast_type):
             )
 
     return forecast_array
-
-
-def icon_code_to_condition(icon_code):
-    """Return the condition corresponding to an icon code."""
-    for condition, codes in ICON_CONDITION_MAP.items():
-        if icon_code in codes:
-            return condition
-    return None

@@ -147,7 +147,7 @@ homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/enphase_envoy/* @gtdiehl
 homeassistant/components/entur_public_transport/* @hfurubotten
-homeassistant/components/environment_canada/* @michaeldavie
+homeassistant/components/environment_canada/* @gwww @michaeldavie
 homeassistant/components/ephember/* @ttroy50
 homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth

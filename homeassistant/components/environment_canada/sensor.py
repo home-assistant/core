@@ -1,162 +1,159 @@
-"""Support for the Environment Canada weather service."""
-from datetime import datetime, timedelta
-import logging
-import re
+"""Sensors for Environment Canada (EC)."""
+import datetime
 
-from env_canada import ECData
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LOCATION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    DEVICE_CLASS_TEMPERATURE,
+    CONF_NAME,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    PERCENTAGE,
+    PRESSURE_INHG,
+    PRESSURE_PA,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.pressure import convert as convert_pressure
 
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(minutes=10)
-
-ATTR_UPDATED = "updated"
-ATTR_STATION = "station"
-ATTR_TIME = "alert time"
-
-CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
-CONF_LANGUAGE = "language"
-
-
-def validate_station(station):
-    """Check that the station ID is well-formed."""
-    if station is None:
-        return
-    if not re.fullmatch(r"[A-Z]{2}/s0000\d{3}", station):
-        raise vol.error.Invalid('Station ID must be of the form "XX/s0000###"')
-    return station
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_LANGUAGE, default="english"): vol.In(["english", "french"]),
-        vol.Optional(CONF_STATION): validate_station,
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-    }
+from . import ECBaseEntity
+from .const import (
+    AQHI_SENSOR,
+    CONF_LANGUAGE,
+    CONF_STATION,
+    DEFAULT_NAME,
+    DOMAIN,
+    SENSOR_TYPES,
 )
 
+ALERTS = [
+    ("advisories", "Advisory", "mdi:bell-alert"),
+    ("endings", "Ending", "mdi:alert-circle-check"),
+    ("statements", "Statement", "mdi:bell-alert"),
+    ("warnings", "Warning", "mdi:alert-octagon"),
+    ("watches", "Watch", "mdi:alert"),
+]
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=5)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Environment Canada sensor."""
 
-    if config.get(CONF_STATION):
-        ec_data = ECData(
-            station_id=config[CONF_STATION], language=config.get(CONF_LANGUAGE)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the EC weather platform."""
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+    async_add_entities(
+        ECSensor(
+            coordinator, config_entry.data, description, hass.config.units.is_metric
         )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
+        for description in SENSOR_TYPES
+    )
+    async_add_entities(
+        ECAlertSensor(coordinator, config_entry.data, alert) for alert in ALERTS
+    )
 
-    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
-    add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
+    aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
+    async_add_entities(
+        [ECSensor(aqhi_coordinator, config_entry.data, AQHI_SENSOR, True)]
+    )
 
 
-class ECSensor(SensorEntity):
-    """Implementation of an Environment Canada sensor."""
+class ECSensor(ECBaseEntity, SensorEntity):
+    """An EC Sensor Entity."""
 
-    def __init__(self, sensor_type, ec_data):
-        """Initialize the sensor."""
-        self.sensor_type = sensor_type
-        self.ec_data = ec_data
+    def __init__(self, coordinator, config, description, is_metric):
+        """Initialise the platform with a data instance."""
+        name = f"{config.get(CONF_NAME, DEFAULT_NAME)} {description.name}"
+        super().__init__(coordinator, config, name)
 
-        self._unique_id = None
-        self._name = None
-        self._state = None
-        self._attr = None
-        self._unit = None
-        self._device_class = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._entity_description = description
+        self._is_metric = is_metric
+        if is_metric:
+            self._attr_native_unit_of_measurement = (
+                description.native_unit_of_measurement
+            )
+        else:
+            self._attr_native_unit_of_measurement = description.unit_convert
+        self._attr_device_class = description.device_class
 
     @property
     def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+        """Return the state."""
+        key = self._entity_description.key
+        value = self._coordinator.data.current if key == "aqhi" else self.get_value(key)
+
+        if value is None:
+            return None
+
+        if key == "pressure":
+            value = int(value * 10)  # Convert kPa to hPa
+        elif key == "tendency":
+            value = value.title()
+        elif isinstance(value, str) and len(value) > 254:
+            value = value[:254]
+
+        if self._is_metric:
+            return value
+
+        unit_of_measurement = self._entity_description.unit_convert
+        if unit_of_measurement == SPEED_MILES_PER_HOUR:
+            value = round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
+        elif unit_of_measurement == LENGTH_MILES:
+            value = round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
+        elif unit_of_measurement == PRESSURE_INHG:
+            value = round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
+        elif unit_of_measurement == TEMP_CELSIUS:
+            value = round(value, 1)
+        elif unit_of_measurement == PERCENTAGE:
+            value = round(value)
+        return value
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        station = self._config[CONF_STATION]
+        lang = self._config[CONF_LANGUAGE]
+        return f"{station}-{lang}-{self._entity_description.key}"
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._entity_description.icon
+
+
+class ECAlertSensor(ECBaseEntity, SensorEntity):
+    """An EC Sensor Entity for Alerts."""
+
+    def __init__(self, coordinator, config, alert_name):
+        """Initialise the platform with a data instance."""
+        name = f"{config.get(CONF_NAME, DEFAULT_NAME)} {alert_name[1]} Alerts"
+        super().__init__(coordinator, config, name)
+
+        self._alert_name = alert_name
+        self._alert_attrs = None
+
+    @property
+    def native_value(self):
+        """Return the state."""
+        value = self._coordinator.data.alerts.get(self._alert_name[0], {}).get("value")
+
+        self._alert_attrs = {}
+        for index, alert in enumerate(value, start=1):
+            self._alert_attrs[f"alert {index}"] = alert.get("title")
+            self._alert_attrs[f"alert_time {index}"] = alert.get("date")
+
+        return len(value)
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        return self._attr
+        return self._alert_attrs
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the units of measurement."""
-        return self._unit
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        station = self._config[CONF_STATION]
+        lang = self._config[CONF_LANGUAGE]
+        return f"{station}-{lang}-{self._alert_name[0]}"
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
-
-    def update(self):
-        """Update current conditions."""
-        self.ec_data.update()
-        self.ec_data.conditions.update(self.ec_data.alerts)
-
-        conditions = self.ec_data.conditions
-        metadata = self.ec_data.metadata
-        sensor_data = conditions.get(self.sensor_type)
-
-        self._unique_id = f"{metadata['location']}-{self.sensor_type}"
-        self._attr = {}
-        self._name = sensor_data.get("label")
-        value = sensor_data.get("value")
-
-        if isinstance(value, list):
-            self._state = " | ".join([str(s.get("title")) for s in value])[:255]
-            self._attr.update(
-                {ATTR_TIME: " | ".join([str(s.get("date")) for s in value])}
-            )
-        elif self.sensor_type == "tendency":
-            self._state = str(value).capitalize()
-        elif value is not None and len(value) > 255:
-            self._state = value[:255]
-            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
-        else:
-            self._state = value
-
-        if sensor_data.get("unit") == "C" or self.sensor_type in (
-            "wind_chill",
-            "humidex",
-        ):
-            self._unit = TEMP_CELSIUS
-            self._device_class = DEVICE_CLASS_TEMPERATURE
-        else:
-            self._unit = sensor_data.get("unit")
-
-        timestamp = metadata.get("timestamp")
-        if timestamp:
-            updated_utc = datetime.strptime(timestamp, "%Y%m%d%H%M%S").isoformat()
-        else:
-            updated_utc = None
-
-        self._attr.update(
-            {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                ATTR_UPDATED: updated_utc,
-                ATTR_LOCATION: metadata.get("location"),
-                ATTR_STATION: metadata.get("station"),
-            }
-        )
+    def icon(self):
+        """Return the icon."""
+        return self._alert_name[2]
