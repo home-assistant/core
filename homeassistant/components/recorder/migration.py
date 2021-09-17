@@ -525,6 +525,9 @@ def _apply_update(engine, session, new_version, old_version):  # noqa: C901
                 sqlalchemy.inspect(engine).has_table(StatisticsMeta.__tablename__)
                 or sqlalchemy.inspect(engine).has_table(Statistics.__tablename__)
                 or sqlalchemy.inspect(engine).has_table(StatisticsRuns.__tablename__)
+                or sqlalchemy.inspect(engine).has_table(
+                    StatisticsShortTerm.__tablename__
+                )
             ):
                 Base.metadata.drop_all(
                     bind=engine,
