@@ -112,3 +112,10 @@ def delay_fixture():
 def mock_now():
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="no_mac_address")
+def mac_address_fixture():
+    """Patch getmac.get_mac_address."""
+    with patch("getmac.get_mac_address", return_value=None) as mac:
+        yield mac
