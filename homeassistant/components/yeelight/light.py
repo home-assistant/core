@@ -250,12 +250,12 @@ def _async_cmd(func):
             self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
-            )
+            ) from ex
         except BulbException as ex:
             # The bulb likely responded but had an error
             raise HomeAssistantError(
                 f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
-            )
+            ) from ex
 
     return _async_wrap
 
@@ -587,7 +587,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         except AssertionError as ex:
             raise HomeAssistantError(
                 f"Error when calling start_music for bulb {self.device.name} at {self.device.host}: {ex}"
-            )
+            ) from ex
 
     @_async_cmd
     async def async_set_brightness(self, brightness, duration) -> None:
