@@ -18,9 +18,7 @@ def config_per_platform(config: ConfigType, domain: str) -> Iterable[tuple[Any, 
     Async friendly.
     """
     for config_key in extract_domain_configs(config, domain):
-        platform_config = config[config_key]
-
-        if not platform_config:
+        if not (platform_config := config[config_key]):
             continue
 
         if not isinstance(platform_config, list):
