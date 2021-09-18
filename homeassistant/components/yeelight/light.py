@@ -520,9 +520,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def effect(self):
         """Return the current effect."""
-        if not self.device.is_color_flow_enabled:
-            return None
-        return self._effect
+        return self._effect if self.device.is_color_flow_enabled else None
 
     @property
     def _bulb(self) -> Bulb:
@@ -530,9 +528,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     @property
     def _properties(self) -> dict:
-        if self._bulb is None:
-            return {}
-        return self._bulb.last_properties
+        return self._bulb.last_properties if self._bulb else {}
 
     def _get_property(self, prop, default=None):
         return self._properties.get(prop, default)
