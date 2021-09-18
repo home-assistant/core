@@ -118,9 +118,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             if self._user_settings is not None:
                 return
 
-            data = await self._user_store.async_load()
-
-            if data is None:
+            if (data := await self._user_store.async_load()) is None:
                 data = {STORAGE_USERS: {}}
 
             self._user_settings = {
@@ -207,8 +205,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id)
-        if notify_setting is None:
+        if (notify_setting := self._user_settings.get(user_id)) is None:
             return False
 
         # user_input has been validate in caller
@@ -225,8 +222,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id)
-        if notify_setting is None:
+        if (notify_setting := self._user_settings.get(user_id)) is None:
             raise ValueError("Cannot find user_id")
 
         def generate_secret_and_one_time_password() -> str:

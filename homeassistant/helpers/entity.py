@@ -99,13 +99,11 @@ def get_capability(hass: HomeAssistant, entity_id: str, capability: str) -> Any 
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(capability)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.capabilities.get(capability) if entry.capabilities else None
@@ -116,13 +114,11 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_DEVICE_CLASS)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.device_class
@@ -133,13 +129,11 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.supported_features or 0
@@ -150,13 +144,11 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 
     First try the statemachine, then entity registry.
     """
-    state = hass.states.get(entity_id)
-    if state:
+    if state := hass.states.get(entity_id):
         return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    if not entry:
+    if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.unit_of_measurement
@@ -465,8 +457,9 @@ class Entity(ABC):
 
     def _stringify_state(self) -> str:
         """Convert state to string."""
-        state = self.state
-        if state is None:
+        if not self.available:
+            return STATE_UNAVAILABLE
+        if (state := self.state) is None:
             return STATE_UNKNOWN
         if isinstance(state, float):
             # If the entity's state is a float, limit precision according to machine
@@ -493,8 +486,8 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
+        state = self._stringify_state()
         if self.available:
-            state = self._stringify_state()
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
@@ -502,8 +495,6 @@ class Entity(ABC):
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
-        else:
-            state = STATE_UNAVAILABLE
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is not None:
@@ -511,28 +502,22 @@ class Entity(ABC):
 
         entry = self.registry_entry
         # pylint: disable=consider-using-ternary
-        name = (entry and entry.name) or self.name
-        if name is not None:
+        if (name := (entry and entry.name) or self.name) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
-        icon = (entry and entry.icon) or self.icon
-        if icon is not None:
+        if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        entity_picture = self.entity_picture
-        if entity_picture is not None:
+        if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        assumed_state = self.assumed_state
-        if assumed_state:
+        if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
-        supported_features = self.supported_features
-        if supported_features is not None:
+        if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        device_class = self.device_class
-        if device_class is not None:
+        if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         end = timer()
@@ -636,8 +621,7 @@ class Entity(ABC):
             finished, _ = await asyncio.wait([task], timeout=SLOW_UPDATE_WARNING)
 
             for done in finished:
-                exc = done.exception()
-                if exc:
+                if exc := done.exception():
                     raise exc
                 return
 
