@@ -47,10 +47,11 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _conf_for_inverter_exists(self, serial) -> bool:
         """Return True if inverter exists in configuration."""
-        for entry in self._async_current_entries(include_ignore=False):
-            if serial == entry.unique_id:
-                return True
-        return False
+        return any(
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if serial == entry.unique_id
+        )
 
     async def _try_connect(self, host):
         try:
