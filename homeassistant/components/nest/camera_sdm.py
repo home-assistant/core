@@ -222,6 +222,7 @@ class NestCamera(Camera):
         self, trait: EventImageGenerator
     ) -> bytes | None:
         """Return image bytes for an active event."""
+        # pylint: disable=no-self-use
         try:
             event_image = await trait.generate_active_event_image()
         except GoogleNestException as err:

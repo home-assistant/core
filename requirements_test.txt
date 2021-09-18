@@ -13,7 +13,7 @@ jsonpickle==1.4.1
 mock-open==1.4.0
 mypy==0.910
 pre-commit==2.14.0
-pylint==2.10.2
+pylint==2.11.1
 pipdeptree==1.0.0
 pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0

@@ -164,7 +164,7 @@ aiorecollect==1.0.8
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.5
+aioswitcher==2.0.6
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -761,7 +761,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
-pyTibber==0.19.0
+pyTibber==0.19.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -815,7 +815,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==83
+pydeconz==84
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0

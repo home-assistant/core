@@ -676,7 +676,7 @@ class Thermostat(ClimateEntity):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.hvac_mode == HVAC_MODE_HEAT or self.hvac_mode == HVAC_MODE_COOL:
+        if self.hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL):
             heat_temp = temp
             cool_temp = temp
         else:

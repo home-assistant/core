@@ -120,7 +120,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
         self._auth_failed = True
-        self.hass.async_create_task(
+        self.hass.create_task(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={
@@ -183,22 +183,16 @@ class SamsungTVDevice(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
-        if (
-            self.name is not None
-            and self._manufacturer is not None
-            and self._model is not None
-            and self.unique_id is not None
-        ):
-            info: DeviceInfo = {
-                "name": self.name,
-                "identifiers": {(DOMAIN, self.unique_id)},
-                "manufacturer": self._manufacturer,
-                "model": self._model,
-            }
-            if self._mac:
-                info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
-            return info
-        return None
+        info: DeviceInfo = {
+            "name": self.name,
+            "manufacturer": self._manufacturer,
+            "model": self._model,
+        }
+        if self.unique_id:
+            info["identifiers"] = {(DOMAIN, self.unique_id)}
+        if self._mac:
+            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
+        return info
 
     @property
     def is_volume_muted(self) -> bool:

@@ -131,6 +131,7 @@ class WebhookView(HomeAssistantView):
 
     async def _handle(self, request: Request, webhook_id):
         """Handle webhook call."""
+        # pylint: disable=no-self-use
         _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)

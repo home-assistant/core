@@ -86,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 sensor.type in Thermostat.ZHATYPE
-                and sensor.uniqueid not in gateway.entities[DOMAIN]
+                and sensor.unique_id not in gateway.entities[DOMAIN]
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
@@ -142,7 +142,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     def fan_mode(self) -> str:
         """Return fan operation."""
         return DECONZ_TO_FAN_MODE.get(
-            self._device.fanmode, FAN_ON if self._device.state_on else FAN_OFF
+            self._device.fan_mode, FAN_ON if self._device.state_on else FAN_OFF
         )
 
     @property
@@ -155,9 +155,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         if fan_mode not in FAN_MODE_TO_DECONZ:
             raise ValueError(f"Unsupported fan mode {fan_mode}")
 
-        data = {"fanmode": FAN_MODE_TO_DECONZ[fan_mode]}
-
-        await self._device.async_set_config(data)
+        await self._device.set_config(fan_mode=FAN_MODE_TO_DECONZ[fan_mode])
 
     # HVAC control
 
@@ -186,7 +184,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         if len(self._hvac_mode_to_deconz) == 2:  # Only allow turn on and off thermostat
             data = {"on": self._hvac_mode_to_deconz[hvac_mode]}
 
-        await self._device.async_set_config(data)
+        await self._device.set_config(**data)
 
     # Preset control
 
@@ -205,9 +203,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         if preset_mode not in PRESET_MODE_TO_DECONZ:
             raise ValueError(f"Unsupported preset mode {preset_mode}")
 
-        data = {"preset": PRESET_MODE_TO_DECONZ[preset_mode]}
-
-        await self._device.async_set_config(data)
+        await self._device.set_config(preset=PRESET_MODE_TO_DECONZ[preset_mode])
 
     # Temperature control
 
@@ -220,19 +216,19 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     def target_temperature(self) -> float:
         """Return the target temperature."""
         if self._device.mode == "cool":
-            return self._device.coolsetpoint
-        return self._device.heatsetpoint
+            return self._device.cooling_setpoint
+        return self._device.heating_setpoint
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        data = {"heatsetpoint": kwargs[ATTR_TEMPERATURE] * 100}
+        data = {"heating_setpoint": kwargs[ATTR_TEMPERATURE] * 100}
         if self._device.mode == "cool":
-            data = {"coolsetpoint": kwargs[ATTR_TEMPERATURE] * 100}
+            data = {"cooling_setpoint": kwargs[ATTR_TEMPERATURE] * 100}
 
-        await self._device.async_set_config(data)
+        await self._device.set_config(**data)
 
     @property
     def extra_state_attributes(self):

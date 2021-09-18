@@ -42,6 +42,7 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
+        # pylint: disable=no-self-use
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
@@ -97,8 +98,6 @@ class WebSocketHandler:
             message = message_to_json(message)
 
         try:
-            if not isinstance(message, str):
-                message = message_to_json(message)
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:
             self._logger.error(

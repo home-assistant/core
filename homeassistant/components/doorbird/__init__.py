@@ -325,6 +325,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
     async def get(self, request, event):
         """Respond to requests from the device."""
+        # pylint: disable=no-self-use
         hass = request.app["hass"]
 
         token = request.query.get("token")
