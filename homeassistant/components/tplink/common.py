@@ -4,14 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Callable
 
-from pyHS100 import (
-    Discover,
-    SmartBulb,
-    SmartDevice,
-    SmartDeviceException,
-    SmartPlug,
-    SmartStrip,
-)
+from kasa import Discover, SmartDevice, SmartDeviceException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -60,10 +53,7 @@ class SmartDevices:
 async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Return if there are devices that can be discovered."""
 
-    def discover() -> dict[str, SmartDevice]:
-        return Discover.discover()
-
-    return await hass.async_add_executor_job(discover)
+    return await Discover.discover()
 
 
 async def async_discover_devices(
@@ -80,19 +70,9 @@ async def async_discover_devices(
             if existing_devices.has_device_with_host(dev.host):
                 continue
 
-            if isinstance(dev, SmartStrip):
-                for plug in dev.plugs.values():
-                    switches.append(plug)
-            elif isinstance(dev, SmartPlug):
-                try:
-                    if dev.is_dimmable:  # Dimmers act as lights
-                        lights.append(dev)
-                    else:
-                        switches.append(dev)
-                except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
-
-            elif isinstance(dev, SmartBulb):
+            if dev.is_strip or dev.is_plug:
+                switches.append(dev)
+            if dev.is_bulb or dev.is_light_strip or dev.is_dimmer:
                 lights.append(dev)
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(dev))
@@ -124,14 +104,14 @@ async def async_discover_devices(
         len(devices),
         attempt,
     )
-    await hass.async_add_executor_job(process_devices)
+
+    process_devices()
 
     return SmartDevices(lights, switches)
 
 
-def get_static_devices(config_data) -> SmartDevices:
+async def get_static_devices(config_data) -> SmartDevices:
     """Get statically defined devices in the config."""
-    _LOGGER.debug("Getting static devices")
     lights = []
     switches = []
 
@@ -139,16 +119,13 @@ def get_static_devices(config_data) -> SmartDevices:
         for entry in config_data[type_]:
             host = entry["host"]
             try:
-                if type_ == CONF_LIGHT:
-                    lights.append(SmartBulb(host))
-                elif type_ == CONF_SWITCH:
-                    switches.append(SmartPlug(host))
-                elif type_ == CONF_STRIP:
-                    for plug in SmartStrip(host).plugs.values():
-                        switches.append(plug)
-                # Dimmers need to be defined as smart plugs to work correctly.
-                elif type_ == CONF_DIMMER:
-                    lights.append(SmartPlug(host))
+                dev: SmartDevice = await Discover.discover_single(host)
+                if dev.is_bulb or dev.is_light_strip or dev.is_dimmer:
+                    _LOGGER.debug("Found static light: %s", dev)
+                    lights.append(dev)
+                elif dev.is_plug or dev.is_strip:
+                    _LOGGER.debug("Found static switch: %s", dev)
+                    switches.append(dev)
             except SmartDeviceException as sde:
                 _LOGGER.error(
                     "Failed to setup device %s due to %s; not retrying", host, sde
@@ -156,7 +133,7 @@ def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
-def add_available_devices(
+async def add_available_devices(
     hass: HomeAssistant, device_type: str, device_class: Callable
 ) -> list[Entity]:
     """Get sysinfo for all devices."""
@@ -172,7 +149,7 @@ def add_available_devices(
     devices_unavailable: list[SmartDevice] = []
     for device in devices:
         try:
-            device.get_sysinfo()
+            await device.update()
             entities_ready.append(device_class(device))
         except SmartDeviceException as ex:
             devices_unavailable.append(device)

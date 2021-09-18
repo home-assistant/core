@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from pyHS100 import SmartPlug
+from kasa import SmartBulb, SmartPlug
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.tplink import SmartPlugDataUpdateCoordinator
+from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -38,6 +38,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_EMETER_PARAMS,
+    CONF_LIGHT,
     CONF_MODEL,
     CONF_SW_VERSION,
     CONF_SWITCH,
@@ -96,19 +97,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     entities: list[SmartPlugSensor] = []
-    coordinators: list[SmartPlugDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
+    coordinators: list[TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
     switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    for switch in switches:
-        coordinator: SmartPlugDataUpdateCoordinator = coordinators[
-            switch.context or switch.mac
-        ]
-        if not switch.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
+    lights: list[SmartBulb] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
+    for dev in switches + lights:
+        coordinator: TPLinkDataUpdateCoordinator = coordinators[dev.device_id]
+        if not dev.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
             continue
         for description in ENERGY_SENSORS:
             if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
-                entities.append(SmartPlugSensor(switch, coordinator, description))
+                entities.append(SmartPlugSensor(dev, coordinator, description))
 
     async_add_entities(entities)
 
