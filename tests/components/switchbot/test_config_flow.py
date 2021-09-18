@@ -197,3 +197,30 @@ async def test_options_flow(hass):
     assert result["data"]["scan_timeout"] == 5
 
     assert len(mock_setup_entry.mock_calls) == 0
+
+    # Test changing of entry options.
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "update_time": 60,
+                "retry_count": 3,
+                "retry_timeout": 5,
+                "scan_timeout": 5,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"]["update_time"] == 60
+    assert result["data"]["retry_count"] == 3
+    assert result["data"]["retry_timeout"] == 5
+    assert result["data"]["scan_timeout"] == 5
+
+    assert len(mock_setup_entry.mock_calls) == 0
