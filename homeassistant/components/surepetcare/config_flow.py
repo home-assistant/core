@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, import_info: dict[str, Any] | None):
+    async def async_step_import(self, import_info: dict[str, Any] | None) -> FlowResult:
         """Set the config entry up from yaml."""
         return await self.async_step_user(import_info)
 
@@ -87,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         errors = {}
