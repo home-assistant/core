@@ -267,14 +267,14 @@ async def test_reset_after_successful_setup(hass, aioclient_mock):
 
 async def test_get_gateway(hass):
     """Successful call."""
-    with patch("pydeconz.DeconzSession.initialize", return_value=True):
+    with patch("pydeconz.DeconzSession.refresh_state", return_value=True):
         assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
 
 
 async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.initialize",
+        "pydeconz.DeconzSession.refresh_state",
         side_effect=pydeconz.errors.Unauthorized,
     ), pytest.raises(AuthenticationRequired):
         assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
@@ -283,7 +283,7 @@ async def test_get_gateway_fails_unauthorized(hass):
 async def test_get_gateway_fails_cannot_connect(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.initialize",
+        "pydeconz.DeconzSession.refresh_state",
         side_effect=pydeconz.errors.RequestError,
     ), pytest.raises(CannotConnect):
         assert await get_gateway(hass, ENTRY_CONFIG, Mock(), Mock()) is False
