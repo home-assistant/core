@@ -120,7 +120,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
         self._auth_failed = True
-        self.hass.async_create_task(
+        self.hass.create_task(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={
