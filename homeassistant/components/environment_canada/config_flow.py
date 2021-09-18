@@ -50,7 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Place to store data between steps."""
         self._data = {}
-        breakpoint()
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -61,11 +60,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_STATION] = info["title"]
                 user_input[CONF_NAME] = info["name"]
 
-                if not already_configured(self.hass, user_input):
-                    self._data = user_input
-                    return await self.async_step_name()
+                if already_configured(self.hass, user_input):
+                    return self.async_abort(reason="already_configured")
 
-                errors["base"] = "already_configured"
+                self._data = user_input
+                return await self.async_step_name()
 
             except BadStationId:
                 errors["base"] = "bad_station_id"

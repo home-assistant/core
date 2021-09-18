@@ -1,7 +1,8 @@
 """Support for Environment Canada (EC) weather service."""
+from __future__ import annotations
+
 import datetime
 import logging
-from typing import Optional
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -50,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def format_condition(ec_icon: str) -> Optional[str]:
+def format_condition(ec_icon: str) -> str | None:
     """Return condition."""
     try:
         icon_number = int(ec_icon)
