@@ -963,6 +963,7 @@ class HomeKitPairingQRView(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve the pairing QRCode image."""
+        # pylint: disable=no-self-use
         if not request.query_string:
             raise Unauthorized()
         entry_id, secret = request.query_string.split("-")

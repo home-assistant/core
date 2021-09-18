@@ -805,6 +805,7 @@ def esphome_state_property(func: _PropT) -> _PropT:
     @property  # type: ignore[misc]
     @functools.wraps(func)
     def _wrapper(self):  # type: ignore[no-untyped-def]
+        # pylint: disable=protected-access
         if not self._has_state:
             return None
         val = func(self)

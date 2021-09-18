@@ -170,7 +170,6 @@ class Segment:
         # Preload hints help save round trips by informing the client about the next part.
         # The next part will usually be in this segment but will be first part of the next
         # segment if this segment is already complete.
-        # pylint: disable=undefined-loop-variable
         if self.complete:  # Next part belongs to next segment
             sequence = self.sequence + 1
             part_num = 0

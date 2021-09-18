@@ -406,6 +406,7 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Receive authorization code."""
+        # pylint: disable=no-self-use
         if "code" not in request.query or "state" not in request.query:
             return web.Response(
                 text=f"Missing code or state parameter in {request.url}"
