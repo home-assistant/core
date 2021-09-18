@@ -1515,7 +1515,7 @@ def _rate_limit_for_event(
     """Determine the rate limit for an event."""
     # Specifically referenced entities are excluded
     # from the rate limit
-    if (entity_id := event.data.get(ATTR_ENTITY_ID)) in info.entities:
+    if event.data.get(ATTR_ENTITY_ID) in info.entities:
         return None
 
     if track_template_.rate_limit is not None:
