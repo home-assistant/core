@@ -164,7 +164,7 @@ aiorecollect==1.0.8
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.5
+aioswitcher==2.0.6
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -423,7 +423,7 @@ googlemaps==2.5.1
 greeclimate==0.11.8
 
 # homeassistant.components.growatt_server
-growattServer==1.0.1
+growattServer==1.1.0
 
 # homeassistant.components.profiler
 guppy3==3.1.0
@@ -678,7 +678,7 @@ pilight==0.1.1
 pillow==8.2.0
 
 # homeassistant.components.plex
-plexapi==4.7.0
+plexapi==4.7.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -788,7 +788,7 @@ pybotvac==0.0.22
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==9.2.0
+pychromecast==9.2.1
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -891,7 +891,7 @@ pykira==0.1.1
 pykmtronic==0.3.0
 
 # homeassistant.components.kodi
-pykodi==0.2.5
+pykodi==0.2.6
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
@@ -966,7 +966,7 @@ pynx584==0.5
 pynzbgetapi==0.2.0
 
 # homeassistant.components.openuv
-pyopenuv==2.2.0
+pyopenuv==2.2.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
