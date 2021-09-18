@@ -18,8 +18,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     ATTR_OBSERVATION_TIME,
     ATTR_STATION,
-    ATTRIBUTION_EN,
-    ATTRIBUTION_FR,
     CONF_LANGUAGE,
     CONF_STATION,
     DOMAIN,
@@ -43,7 +41,7 @@ class MyECRadar(ECRadar):
 
     async def update(self):
         """Get the update."""
-        self.image = await self.get_loop(fps=2)
+        self.image = await self.get_loop(fps=5)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -144,11 +142,7 @@ class ECBaseEntity(CoordinatorEntity):
     @property
     def attribution(self):
         """Return the attribution."""
-        return (
-            ATTRIBUTION_EN
-            if self._config[CONF_LANGUAGE] == "English"
-            else ATTRIBUTION_FR
-        )
+        return self._coordinator.data.metadata.get("attribution")
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -160,7 +154,7 @@ class ECBaseEntity(CoordinatorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {
-            ATTR_ATTRIBUTION: self.attribution,
+            ATTR_ATTRIBUTION: self._coordinator.data.metadata.get("attribution"),
             ATTR_OBSERVATION_TIME: self._coordinator.data.metadata.get("timestamp"),
             ATTR_LOCATION: self._coordinator.data.metadata.get("location"),
             ATTR_STATION: self._coordinator.data.metadata.get("station"),
