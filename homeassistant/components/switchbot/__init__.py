@@ -103,4 +103,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
+    # Update entity options stored in hass.
+    if {**entry.options} != hass.data[DOMAIN][COMMON_OPTIONS]:
+        hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
+        hass.data[DOMAIN].pop(DATA_COORDINATOR)
+
     await hass.config_entries.async_reload(entry.entry_id)
