@@ -40,7 +40,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "lock", "sensor"]
 SCAN_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
