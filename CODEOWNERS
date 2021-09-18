@@ -504,7 +504,7 @@ homeassistant/components/supla/* @mwegrzynek
 homeassistant/components/surepetcare/* @benleb @danielhiversen
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
-homeassistant/components/switchbot/* @danielhiversen
+homeassistant/components/switchbot/* @danielhiversen @RenierM26
 homeassistant/components/switcher_kis/* @tomerfi @thecode
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthing/* @zhulik
