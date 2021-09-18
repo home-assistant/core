@@ -14,7 +14,7 @@
       },
       "reauth_confirm": {
         "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds."
-      }      
+      }
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]"
@@ -27,7 +27,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_supported": "This Samsung device is currently not supported.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "missing_config_entry": "This Samsung device doesn't have a configuration entry."
     }
   }
 }
