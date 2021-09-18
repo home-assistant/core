@@ -210,10 +210,6 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
         """Call when setting the pet location."""
         pet_name = call.data[ATTR_PET_NAME]
         location = call.data[ATTR_LOCATION]
-        try:
-            device_id = self.get_pets()[pet_name]
-        except ValueError:
-            _LOGGER.error("Unknown pet %s", pet_name)
-            return
+        device_id = self.get_pets()[pet_name]
         await self.surepy.sac.set_pet_location(device_id, Location[location.upper()])
         await self.async_request_refresh()
