@@ -130,7 +130,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 result.add_error(f"Integration error: {domain} - {ex}")
             continue
         except RequirementsNotFound as ex:
-            result.add_error(f"Component error: {domain} - {ex}")
+            result.add_error(f"Integration error: {domain} - {ex}")
             continue
 
         try:
