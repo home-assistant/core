@@ -200,11 +200,11 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
 
     def get_pets(self) -> dict[str, int]:
         """Get pets."""
-        names = {}
+        pets = {}
         for surepy_entity in self.data.values():
             if surepy_entity.type == EntityType.PET and surepy_entity.name:
-                names[surepy_entity.name] = surepy_entity.id
-        return names
+                pets[surepy_entity.name] = surepy_entity.id
+        return pets
 
     async def handle_set_pet_location(self, call: ServiceCall) -> None:
         """Call when setting the pet location."""
