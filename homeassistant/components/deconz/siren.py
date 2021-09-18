@@ -54,7 +54,7 @@ class DeconzSiren(DeconzDevice, SirenEntity):
     TYPE = DOMAIN
 
     def __init__(self, device, gateway) -> None:
-        """Set up fan."""
+        """Set up siren."""
         super().__init__(device, gateway)
 
         self._attr_supported_features = (
