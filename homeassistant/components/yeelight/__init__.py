@@ -70,8 +70,8 @@ ACTION_RECOVER = "recover"
 ACTION_STAY = "stay"
 ACTION_OFF = "off"
 
-ACTIVE_MODE_NIGHTLIGHT = "1"
-ACTIVE_COLOR_FLOWING = "1"
+ACTIVE_MODE_NIGHTLIGHT = 1
+ACTIVE_COLOR_FLOWING = 1
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
@@ -610,7 +610,7 @@ class YeelightDevice:
         # Only ceiling lights have active_mode, from SDK docs:
         # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
         if self._active_mode is not None:
-            return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
+            return int(self._active_mode) == ACTIVE_MODE_NIGHTLIGHT
 
         if self._nightlight_brightness is not None:
             return int(self._nightlight_brightness) > 0
@@ -620,7 +620,7 @@ class YeelightDevice:
     @property
     def is_color_flow_enabled(self) -> bool:
         """Return true / false if color flow is currently running."""
-        return self._color_flow == ACTIVE_COLOR_FLOWING
+        return int(self._color_flow) == ACTIVE_COLOR_FLOWING
 
     @property
     def _active_mode(self):
