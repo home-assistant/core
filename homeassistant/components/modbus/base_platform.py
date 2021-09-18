@@ -97,7 +97,7 @@ class BasePlatform(Entity):
     def async_run(self) -> None:
         """Remote start entity."""
         self.async_hold(update=False)
-        if self._scan_interval == 0 | self._scan_interval > ACTIVE_SCAN_INTERVAL:
+        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
             self._cancel_call = async_call_later(self.hass, 1, self.async_update)
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
