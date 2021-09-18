@@ -122,8 +122,12 @@ class BasePlatform(Entity):
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
         self.async_run()
-        async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
-        async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_run)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_run)
+        )
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):
