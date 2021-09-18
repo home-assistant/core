@@ -43,8 +43,6 @@ ATTR_STATION = "station"
 
 CONF_LANGUAGE = "language"
 CONF_STATION = "station"
-ATTRIBUTION_EN = "Data provided by Environment Canada"
-ATTRIBUTION_FR = "Données fournies par xyzzyEnvironnement Canada"
 
 DEFAULT_NAME = "Environment Canada"
 
@@ -270,6 +268,22 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         device_class=None,
         native_unit_of_measurement=None,
         unit_convert=None,
+    ),
+    ECSensorEntityDescription(
+        key="normal_low",
+        name="Normal Low Temperature",
+        icon="mdi:thermometer-chevron-down",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        unit_convert=TEMP_CELSIUS,
+    ),
+    ECSensorEntityDescription(
+        key="normal_high",
+        name="Normal High Temperature",
+        icon="mdi:thermometer-chevron-up",
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        unit_convert=TEMP_CELSIUS,
     ),
 )
 
