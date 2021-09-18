@@ -67,9 +67,6 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
     attempts = 0
 
     def _simulate_bind(*_):
-        import pprint
-
-        pprint.pprint("Calling bind")
         nonlocal attempts
         attempts += 1
         if attempts <= failure_attempts:
