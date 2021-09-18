@@ -224,6 +224,44 @@ async def test_reauthentication_failure(hass):
     assert result2["errors"]["base"] == "invalid_auth"
 
 
+async def test_reauthentication_cannot_connect(hass):
+    """Test surepetcare reauthentication failure."""
+    old_entry = MockConfigEntry(
+        domain="surepetcare",
+        data=INPUT_DATA,
+        unique_id="USERID",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "unique_id": old_entry.unique_id,
+            "entry_id": old_entry.entry_id,
+        },
+        data=old_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "surepy.client.SureAPIClient.get_token",
+        side_effect=SurePetcareError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            INPUT_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result["type"] == "form"
+    assert result2["errors"]["base"] == "cannot_connect"
+
+
 async def test_reauthentication_unknown_failure(hass):
     """Test surepetcare reauthentication failure."""
     old_entry = MockConfigEntry(
