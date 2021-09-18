@@ -224,6 +224,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             ):
                 self._async_update_temp(sensor_state)
                 self.async_write_ha_state()
+            switch_state = self.hass.states.get(self.heater_entity_id)
+            if switch_state and switch_state.state not in (
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
+            ):
+                self.hass.create_task(self._check_switch_initial_state())
 
         if self.hass.state == CoreState.running:
             _async_startup()
@@ -266,14 +272,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Set default state to off
         if not self._hvac_mode:
             self._hvac_mode = HVAC_MODE_OFF
-
-        # Prevent the device from keep running if HVAC_MODE_OFF
-        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
-            await self._async_heater_turn_off()
-            _LOGGER.warning(
-                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
-                self.heater_entity_id,
-            )
 
     @property
     def should_poll(self):
@@ -408,12 +406,24 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         await self._async_control_heating()
         self.async_write_ha_state()
 
+    async def _check_switch_initial_state(self):
+        """Prevent the device from keep running if HVAC_MODE_OFF."""
+        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
+            _LOGGER.warning(
+                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                self.heater_entity_id,
+            )
+            await self._async_heater_turn_off()
+
     @callback
     def _async_switch_changed(self, event):
         """Handle heater switch state changes."""
         new_state = event.data.get("new_state")
+        old_state = event.data.get("old_state")
         if new_state is None:
             return
+        if old_state is None:
+            self.hass.create_task(self._check_switch_initial_state())
         self.async_write_ha_state()
 
     @callback
@@ -433,7 +443,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active and None not in (
                 self._cur_temp,
                 self._target_temp,
-                self._is_device_active,
             ):
                 self._active = True
                 _LOGGER.info(
