@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import namedtuple
 import logging
 import struct
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -84,7 +84,7 @@ DEFAULT_STRUCT_FORMAT = {
 }
 
 
-def struct_validator(config):
+def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Sensor schema validator."""
 
     data_type = config[CONF_DATA_TYPE]
@@ -155,12 +155,12 @@ def number_validator(value: Any) -> int | float:
 
     try:
         value = int(value)
-        return value
+        return cast(int, value)
     except (TypeError, ValueError):
         pass
     try:
         value = float(value)
-        return value
+        return cast(float, value)
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
