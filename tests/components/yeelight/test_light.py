@@ -404,11 +404,16 @@ async def test_services(hass: HomeAssistant, caplog):
     )
 
     # set_music_mode failure enable
-    await _async_test_service(
+    mocked_bulb.start_music = MagicMock(side_effect=AssertionError)
+    assert "Unable to turn on music mode, consider disabling it" not in caplog.text
+    await hass.services.async_call(
+        DOMAIN,
         SERVICE_SET_MUSIC_MODE,
         {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
-        "start_music",
+        blocking=True,
     )
+    assert mocked_bulb.start_music.mock_calls == [call()]
+    assert "Unable to turn on music mode, consider disabling it" in caplog.text
 
     # set_music_mode disable
     await _async_test_service(
