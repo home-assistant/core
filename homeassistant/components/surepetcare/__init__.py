@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service import ServiceCall
@@ -99,12 +100,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             hass,
         )
-    except SurePetcareAuthenticationError:
+    except SurePetcareAuthenticationError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
-        return False
+        raise ConfigEntryAuthFailed from error
     except SurePetcareError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
-        return False
+        raise ConfigEntryNotReady from error
 
     await coordinator.async_config_entry_first_refresh()
 
