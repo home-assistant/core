@@ -488,6 +488,7 @@ class HomeAssistant:
 
     async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
+        # pylint: disable=no-self-use
         wait_time = 0
         while pending:
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
