@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 sensor.BINARY
-                and sensor.uniqueid not in gateway.entities[DOMAIN]
+                and sensor.unique_id not in gateway.entities[DOMAIN]
                 and (
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
@@ -116,8 +116,8 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
 
         elif self._device.type in Vibration.ZHATYPE:
             attr[ATTR_ORIENTATION] = self._device.orientation
-            attr[ATTR_TILTANGLE] = self._device.tiltangle
-            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibrationstrength
+            attr[ATTR_TILTANGLE] = self._device.tilt_angle
+            attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibration_strength
 
         return attr
 
