@@ -7,6 +7,7 @@ from homeassistant.helpers.check_config import (
     CheckConfigError,
     async_check_ha_config_file,
 )
+from homeassistant.requirements import RequirementsNotFound
 
 from tests.common import mock_platform, patch_yaml_files
 
@@ -76,6 +77,29 @@ async def test_component_platform_not_found(hass):
         assert res.keys() == {"homeassistant"}
         assert res.errors[0] == CheckConfigError(
             "Integration error: beer - Integration 'beer' not found.", None, None
+        )
+
+        # Only 1 error expected
+        res.errors.pop(0)
+        assert not res.errors
+
+
+async def test_component_requirement_not_found(hass):
+    """Test errors if component with a requirement not found not found."""
+    # Make sure they don't exist
+    files = {YAML_CONFIG_FILE: BASE_CONFIG + "test_custom_component:"}
+    with patch(
+        "homeassistant.helpers.check_config.async_get_integration_with_requirements",
+        side_effect=RequirementsNotFound("test_custom_component", ["any"]),
+    ), patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
+        assert res.errors[0] == CheckConfigError(
+            "Integration error: test_custom_component - Requirements for test_custom_component not found: ['any'].",
+            None,
+            None,
         )
 
         # Only 1 error expected
