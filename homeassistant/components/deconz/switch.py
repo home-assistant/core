@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if light.type not in SIRENS:
             continue
         if entity_id := entity_registry.async_get_entity_id(
-            DOMAIN, DECONZ_DOMAIN, light.uniqueid
+            DOMAIN, DECONZ_DOMAIN, light.unique_id
         ):
             entity_registry.async_remove(entity_id)
 

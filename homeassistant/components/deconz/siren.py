@@ -3,6 +3,8 @@ from homeassistant.components.siren import (
     ATTR_DURATION,
     DOMAIN,
     SUPPORT_DURATION,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SirenEntity,
 )
 from homeassistant.core import callback
@@ -25,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for light in lights:
 
-            if light.type in SIRENS and light.uniqueid not in gateway.entities[DOMAIN]:
+            if light.type in SIRENS and light.unique_id not in gateway.entities[DOMAIN]:
                 entities.append(DeconzSiren(light, gateway))
 
         if entities:
@@ -49,7 +51,9 @@ class DeconzSiren(DeconzDevice, SirenEntity):
         """Set up fan."""
         super().__init__(device, gateway)
 
-        self._attr_supported_features = SUPPORT_DURATION
+        self._attr_supported_features = (
+            SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_DURATION
+        )
 
     @property
     def is_on(self):
@@ -59,8 +63,8 @@ class DeconzSiren(DeconzDevice, SirenEntity):
     async def async_turn_on(self, **kwargs):
         """Turn on siren."""
         data = {}
-        if ATTR_DURATION in kwargs:
-            data["duration"] = kwargs * 10
+        if (duration := kwargs.get(ATTR_DURATION)) is not None:
+            data["duration"] = duration * 10
         await self._device.turn_on(**data)
 
     async def async_turn_off(self, **kwargs):
