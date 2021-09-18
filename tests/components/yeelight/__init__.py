@@ -125,6 +125,7 @@ def _mocked_bulb(cannot_connect=False):
     )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
     bulb.capabilities = CAPABILITIES.copy()
+    bulb.available = True
     bulb.last_properties = PROPERTIES.copy()
     bulb.music_mode = False
     bulb.async_get_properties = AsyncMock()
