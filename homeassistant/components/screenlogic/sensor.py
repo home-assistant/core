@@ -85,7 +85,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for chem_sensor_name in coordinator.data[SL_DATA.KEY_CHEMISTRY]:
             enabled = True
             if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
-                if chem_sensor_name in ("salt_tds_ppm"):
+                if chem_sensor_name in ("salt_tds_ppm",):
                     enabled = False
             if chem_sensor_name in SUPPORTED_CHEM_SENSORS:
                 entities.append(
