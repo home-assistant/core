@@ -25,12 +25,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 light.type in POWER_PLUGS
-                and light.uniqueid not in gateway.entities[DOMAIN]
+                and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzPowerPlug(light, gateway))
 
             elif (
-                light.type in SIRENS and light.uniqueid not in gateway.entities[DOMAIN]
+                light.type in SIRENS and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSiren(light, gateway))
 
@@ -58,13 +58,11 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
-        data = {"on": True}
-        await self._device.async_set_state(data)
+        await self._device.set_state(on=True)
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
-        data = {"on": False}
-        await self._device.async_set_state(data)
+        await self._device.set_state(on=False)
 
 
 class DeconzSiren(DeconzDevice, SwitchEntity):
