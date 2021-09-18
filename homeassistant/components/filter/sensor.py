@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.recorder import history
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
@@ -191,6 +192,7 @@ class SensorFilter(SensorEntity):
         self._filters = filters
         self._icon = None
         self._device_class = None
+        self._state_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
@@ -247,6 +249,12 @@ class SensorFilter(SensorEntity):
             and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if (
+            self._state_class is None
+            and new_state.attributes.get(ATTR_STATE_CLASS) is not None
+        ):
+            self._state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -340,6 +348,11 @@ class SensorFilter(SensorEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor, if any."""
+        return self._state_class
 
     @property
     def native_unit_of_measurement(self):
