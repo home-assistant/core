@@ -50,7 +50,6 @@ from . import (
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
-    BULB_EXCEPTIONS,
     BULB_NETWORK_EXCEPTIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
@@ -387,7 +386,7 @@ def _async_setup_services(hass: HomeAssistant):
         _async_set_auto_delay_off_scene,
     )
     platform.async_register_entity_service(
-        SERVICE_SET_MUSIC_MODE, SERVICE_SCHEMA_SET_MUSIC_MODE, "set_music_mode"
+        SERVICE_SET_MUSIC_MODE, SERVICE_SCHEMA_SET_MUSIC_MODE, "async_set_music_mode"
     )
 
 
@@ -576,18 +575,19 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Update light properties."""
         await self.device.async_update()
 
-    def set_music_mode(self, music_mode) -> None:
+    async def async_set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
-        if not music_mode:
-            self._bulb.stop_music()
-            return
-
         try:
-            self._bulb.start_music()
+            await self._async_set_music_mode(music_mode)
         except AssertionError as ex:
-            raise HomeAssistantError(
-                f"Error when calling start_music for bulb {self.device.name} at {self.device.host}: {ex}"
-            ) from ex
+            _LOGGER.error("Unable to turn on music mode, consider disabling it: %s", ex)
+
+    @_async_cmd
+    async def _async_set_music_mode(self, music_mode) -> None:
+        """Set the music mode on or off wrapped with _async_cmd."""
+        bulb = self._bulb
+        method = bulb.stop_music if not music_mode else bulb.start_music
+        await self.hass.async_add_executor_job(method)
 
     @_async_cmd
     async def async_set_brightness(self, brightness, duration) -> None:
@@ -748,14 +748,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
             await self._async_turn_on(duration)
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
-            try:
-                await self.hass.async_add_executor_job(
-                    self.set_music_mode, self.config[CONF_MODE_MUSIC]
-                )
-            except BULB_EXCEPTIONS as ex:
-                _LOGGER.error(
-                    "Unable to turn on music mode, consider disabling it: %s", ex
-                )
+            await self.async_set_music_mode(True)
 
         await self.async_set_hs(hs_color, duration)
         await self.async_set_rgb(rgb, duration)
