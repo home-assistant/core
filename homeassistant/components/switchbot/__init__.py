@@ -93,11 +93,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        # Update entity options stored in hass.
-        if {**entry.options} != hass.data[DOMAIN][COMMON_OPTIONS]:
-            options = hass.data[DOMAIN][COMMON_OPTIONS]
-            hass.config_entries.async_update_entry(entry, options=options)
-
         hass.data[DOMAIN].pop(entry.entry_id)
 
         if len(hass.config_entries.async_entries(DOMAIN)) == 0:
@@ -108,14 +103,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-
-    # Update entity options stored in hass.
-    if {**entry.options} != hass.data[DOMAIN][COMMON_OPTIONS]:
-        hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
-        hass.data[DOMAIN].pop(DATA_COORDINATOR)
-
-        for item in hass.config_entries.async_entries(DOMAIN):
-            await hass.config_entries.async_reload(item.entry_id)
-
-    else:
-        await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)

@@ -147,6 +147,12 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Manage Switchbot options."""
         if user_input is not None:
+            # Update common entity options for all other entities.
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.unique_id != self.config_entry.unique_id:
+                    self.hass.config_entries.async_update_entry(
+                        entry, options=user_input
+                    )
             return self.async_create_entry(title="", data=user_input)
 
         options = {

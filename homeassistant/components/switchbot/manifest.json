@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/switchbot",
   "requirements": ["PySwitchbot==0.11.0"],
   "config_flow": true,
-  "codeowners": ["@danielhiversen"],
+  "codeowners": ["@danielhiversen", "@RenierM26"],
   "iot_class": "local_polling"
 }
