@@ -30,6 +30,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     FLASH_LONG,
+    FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -314,6 +315,50 @@ async def test_services(hass: HomeAssistant, caplog):
     mocked_bulb.async_start_flow.assert_called_once()  # flash
     mocked_bulb.async_stop_flow.assert_called_once_with(light_type=LightType.Main)
 
+    # turn_on color_temp - flash short
+    brightness = 100
+    color_temp = 200
+    transition = 1
+    mocked_bulb.start_music.reset_mock()
+    mocked_bulb.async_set_brightness.reset_mock()
+    mocked_bulb.async_set_color_temp.reset_mock()
+    mocked_bulb.async_start_flow.reset_mock()
+    mocked_bulb.async_stop_flow.reset_mock()
+
+    mocked_bulb.last_properties["power"] = "off"
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS: brightness,
+            ATTR_COLOR_TEMP: color_temp,
+            ATTR_FLASH: FLASH_SHORT,
+            ATTR_EFFECT: EFFECT_STOP,
+            ATTR_TRANSITION: transition,
+        },
+        blocking=True,
+    )
+    mocked_bulb.async_turn_on.assert_called_once_with(
+        duration=transition * 1000,
+        light_type=LightType.Main,
+        power_mode=PowerMode.NORMAL,
+    )
+    mocked_bulb.async_turn_on.reset_mock()
+    mocked_bulb.start_music.assert_called_once()
+    mocked_bulb.async_set_brightness.assert_called_once_with(
+        brightness / 255 * 100, duration=transition * 1000, light_type=LightType.Main
+    )
+    mocked_bulb.async_set_color_temp.assert_called_once_with(
+        color_temperature_mired_to_kelvin(color_temp),
+        duration=transition * 1000,
+        light_type=LightType.Main,
+    )
+    mocked_bulb.async_set_hsv.assert_not_called()
+    mocked_bulb.async_set_rgb.assert_not_called()
+    mocked_bulb.async_start_flow.assert_called_once()  # flash
+    mocked_bulb.async_stop_flow.assert_called_once_with(light_type=LightType.Main)
+
     # turn_on nightlight
     await _async_test_service(
         SERVICE_TURN_ON,
@@ -404,11 +449,16 @@ async def test_services(hass: HomeAssistant, caplog):
     )
 
     # set_music_mode failure enable
-    await _async_test_service(
+    mocked_bulb.start_music = MagicMock(side_effect=AssertionError)
+    assert "Unable to turn on music mode, consider disabling it" not in caplog.text
+    await hass.services.async_call(
+        DOMAIN,
         SERVICE_SET_MUSIC_MODE,
         {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
-        "start_music",
+        blocking=True,
     )
+    assert mocked_bulb.start_music.mock_calls == [call()]
+    assert "Unable to turn on music mode, consider disabling it" in caplog.text
 
     # set_music_mode disable
     await _async_test_service(
