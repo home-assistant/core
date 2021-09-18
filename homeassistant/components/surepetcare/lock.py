@@ -60,10 +60,10 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
         if surepy_entity.name:
             _device_name = f"{_device_name} {surepy_entity.name.capitalize()}"
 
-        self._attr_name = f"{_device_name} {lock_state.name.replace('_', ' ').lower()}"
-        self._attr_unique_id = f"{surepy_entity.household_id}-{_id}-{lock_state}"
-        self._available = False
         self._lock_state = lock_state.name.lower()
+        self._attr_name = f"{_device_name} {self._lock_state.replace('_', ' ')}"
+        self._attr_unique_id = f"{surepy_entity.household_id}-{_id}-{self._lock_state}"
+        self._available = False
 
         self._update_attr(coordinator.data[_id])
 
