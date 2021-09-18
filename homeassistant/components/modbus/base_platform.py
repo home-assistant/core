@@ -5,7 +5,7 @@ from abc import abstractmethod
 from datetime import datetime, timedelta
 import logging
 import struct
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -107,7 +107,7 @@ class BasePlatform(Entity):
         self.async_write_ha_state()
 
     @callback
-    def async_hold(self, update=True) -> None:
+    def async_hold(self, update: bool = True) -> None:
         """Remote stop entity."""
         if self._cancel_call:
             self._cancel_call()
@@ -225,7 +225,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 CALL_TYPE_WRITE_REGISTERS,
             ),
         }
-        self._write_type = convert[config[CONF_WRITE_TYPE]][1]
+        self._write_type = cast(str, convert[config[CONF_WRITE_TYPE]][1])
         self.command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
@@ -251,7 +251,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         if state:
             self._attr_is_on = state.state == STATE_ON
 
-    async def async_turn(self, command: str) -> None:
+    async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, command, self._write_type
