@@ -93,9 +93,7 @@ class FlowManager(abc.ABC):
 
     async def async_wait_init_flow_finish(self, handler: str) -> None:
         """Wait till all flows in progress are initialized."""
-        current = self._initializing.get(handler)
-
-        if not current:
+        if not (current := self._initializing.get(handler)):
             return
 
         await asyncio.wait(current)
@@ -189,9 +187,7 @@ class FlowManager(abc.ABC):
         self, flow_id: str, user_input: dict | None = None
     ) -> FlowResult:
         """Continue a configuration flow."""
-        flow = self._progress.get(flow_id)
-
-        if flow is None:
+        if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
 
         cur_step = flow.cur_step
