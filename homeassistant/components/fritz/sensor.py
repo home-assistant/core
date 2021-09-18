@@ -346,7 +346,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
             self._attr_available = False
             return
 
-        if self._state_provider:
-            self._attr_native_value = self._last_device_value = self._state_provider(
-                status, self._last_device_value
-            )
+        assert self._state_provider
+        self._attr_native_value = self._last_device_value = self._state_provider(
+            status, self._last_device_value
+        )
