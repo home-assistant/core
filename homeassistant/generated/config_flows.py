@@ -268,7 +268,6 @@ FLOWS = [
     "starline",
     "subaru",
     "surepetcare",
-    "switcher_kis",
     "switchbot",
     "switcher_kis",
     "syncthing",
