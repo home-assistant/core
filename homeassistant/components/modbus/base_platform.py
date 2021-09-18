@@ -28,6 +28,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    ACTIVE_SCAN_INTERVAL,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -78,6 +79,7 @@ class BasePlatform(Entity):
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._call_active = False
         self._cancel_timer: Callable[[], None] | None = None
+        self._cancel_call: Callable[[], None] | None = None
 
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
@@ -92,11 +94,11 @@ class BasePlatform(Entity):
         """Virtual function to be overwritten."""
 
     @callback
-    def async_remote_start(self) -> None:
+    def async_run(self) -> None:
         """Remote start entity."""
-        if self._cancel_timer:
-            self._cancel_timer()
-            self._cancel_timer = None
+        self.async_hold(update=False)
+        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
+            self._cancel_call = async_call_later(self.hass, 1, self.async_update)
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
@@ -105,20 +107,26 @@ class BasePlatform(Entity):
         self.async_write_ha_state()
 
     @callback
-    def async_remote_stop(self) -> None:
+    def async_hold(self, update=True) -> None:
         """Remote stop entity."""
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
         if self._cancel_timer:
             self._cancel_timer()
             self._cancel_timer = None
-        self._attr_available = False
-        self.async_write_ha_state()
+        if update:
+            self._attr_available = False
+            self.async_write_ha_state()
 
     async def async_base_added_to_hass(self):
         """Handle entity which will be added."""
-        self.async_remote_start()
-        async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_remote_stop)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_START_ENTITY, self.async_remote_start
+        self.async_run()
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_run)
         )
 
 
