@@ -53,7 +53,7 @@ REMOTE_CALL = {
 }
 
 
-async def test_setup(hass: HomeAssistant, remote: Mock):
+async def test_setup(hass: HomeAssistant, remote: Mock, no_mac_address: Mock):
     """Test Samsung TV integration is setup."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
         "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
@@ -129,7 +129,9 @@ async def test_setup_duplicate_config(hass: HomeAssistant, remote: Mock, caplog)
     assert "duplicate host entries found" in caplog.text
 
 
-async def test_setup_duplicate_entries(hass: HomeAssistant, remote: Mock, caplog):
+async def test_setup_duplicate_entries(
+    hass: HomeAssistant, remote: Mock, no_mac_address: Mock, caplog
+):
     """Test duplicate setup of platform."""
     await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
