@@ -34,7 +34,10 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
-        self, device: Command, api: Callable[[str], Any], gateway_id: str
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
     ) -> None:
         """Initialize a cover."""
         super().__init__(device, api, gateway_id)
@@ -45,8 +48,6 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
-        if not self._device:
-            return None
         return {ATTR_MODEL: self._device.device_info.model_number}
 
     @property
