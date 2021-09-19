@@ -52,7 +52,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     }
     zha_device = await zha_device_joined_restored(zigpy_analog_output_device)
     # one for present_value and one for the rest configuration attributes
-    assert cluster.read_attributes.call_count == 2
+    assert cluster.read_attributes.call_count == 3
     assert "max_present_value" in cluster.read_attributes.call_args[0][0]
     assert "min_present_value" in cluster.read_attributes.call_args[0][0]
     assert "relinquish_default" in cluster.read_attributes.call_args[0][0]
@@ -69,10 +69,10 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    assert cluster.read_attributes.call_count == 2
+    assert cluster.read_attributes.call_count == 3
     await async_enable_traffic(hass, [zha_device])
     await hass.async_block_till_done()
-    assert cluster.read_attributes.call_count == 4
+    assert cluster.read_attributes.call_count == 6
 
     # test that the state has changed from unavailable to 15.0
     assert hass.states.get(entity_id).state == "15.0"
@@ -89,7 +89,7 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     )
 
     # change value from device
-    assert cluster.read_attributes.call_count == 4
+    assert cluster.read_attributes.call_count == 6
     await send_attributes_report(hass, cluster, {0x0055: 15})
     assert hass.states.get(entity_id).state == "15.0"
 
@@ -111,10 +111,10 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
         cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
 
     # test rejoin
-    assert cluster.read_attributes.call_count == 4
+    assert cluster.read_attributes.call_count == 6
     await async_test_rejoin(hass, zigpy_analog_output_device, [cluster], (1,))
     assert hass.states.get(entity_id).state == "30.0"
-    assert cluster.read_attributes.call_count == 6
+    assert cluster.read_attributes.call_count == 9
 
     # update device value with failed attribute report
     cluster.PLUGGED_ATTR_READS["present_value"] = 40.0
@@ -128,5 +128,5 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == "40.0"
-    assert cluster.read_attributes.call_count == 7
+    assert cluster.read_attributes.call_count == 10
     assert "present_value" in cluster.read_attributes.call_args[0][0]

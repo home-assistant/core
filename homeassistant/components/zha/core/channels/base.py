@@ -30,6 +30,7 @@ from ..const import (
     ZHA_CHANNEL_MSG_BIND,
     ZHA_CHANNEL_MSG_CFG_RPT,
     ZHA_CHANNEL_MSG_DATA,
+    ZHA_CHANNEL_READS_PER_REQ,
 )
 from ..helpers import LogMixin, safe_read
 
@@ -372,28 +373,36 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_attributes(self, attributes, from_cache=True):
+    async def get_attributes(
+        self, attributes: list[int | str], from_cache: bool = True
+    ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
-        try:
-            result, _ = await self.cluster.read_attributes(
-                attributes,
-                allow_cache=from_cache,
-                only_cache=from_cache and not self._ch_pool.is_mains_powered,
-                manufacturer=manufacturer,
-            )
-            return result
-        except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
-            self.debug(
-                "failed to get attributes '%s' on '%s' cluster: %s",
-                attributes,
-                self.cluster.ep_attribute,
-                str(ex),
-            )
-            return {}
+        chunk = attributes[:ZHA_CHANNEL_READS_PER_REQ]
+        rest = attributes[ZHA_CHANNEL_READS_PER_REQ:]
+        result = {}
+        while chunk:
+            try:
+                r, _ = await self.cluster.read_attributes(
+                    attributes,
+                    allow_cache=from_cache,
+                    only_cache=from_cache and not self._ch_pool.is_mains_powered,
+                    manufacturer=manufacturer,
+                )
+                result.update(r)
+            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
+                self.debug(
+                    "failed to get attributes '%s' on '%s' cluster: %s",
+                    attributes,
+                    self.cluster.ep_attribute,
+                    str(ex),
+                )
+            chunk = rest[:ZHA_CHANNEL_READS_PER_REQ]
+            rest = rest[ZHA_CHANNEL_READS_PER_REQ:]
+        return result
 
     def log(self, level, msg, *args):
         """Log a message."""
