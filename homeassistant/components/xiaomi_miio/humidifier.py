@@ -176,25 +176,20 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._attr_min_humidity = 30
+        self._attr_max_humidity = 80
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
             self._attr_available_modes = AVAILABLE_MODES_CA1_CB1
-            self._attr_min_humidity = 30
-            self._attr_max_humidity = 80
             self._humidity_steps = 10
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._attr_available_modes = AVAILABLE_MODES_CA4
-            self._attr_min_humidity = 30
-            self._attr_max_humidity = 80
             self._humidity_steps = 100
         elif self._model in MODELS_HUMIDIFIER_MJJSQ:
             self._attr_available_modes = AVAILABLE_MODES_MJJSQ
-            self._attr_min_humidity = 30
-            self._attr_max_humidity = 80
             self._humidity_steps = 100
         else:
             self._attr_available_modes = AVAILABLE_MODES_OTHER
-            self._attr_min_humidity = 30
-            self._attr_max_humidity = 80
             self._humidity_steps = 10
 
         self._state = self.coordinator.data.is_on
