@@ -19,7 +19,6 @@ DOMAIN = "kraken"
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="ask",
-        entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="ask_volume",
@@ -27,7 +26,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="bid",
-        entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="bid_volume",
@@ -63,7 +61,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="low_today",
-        entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="low_last_24h",
@@ -71,7 +68,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="high_today",
-        entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="high_last_24h",
