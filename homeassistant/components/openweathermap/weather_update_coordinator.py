@@ -180,7 +180,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return forecast
 
-    def _fmt_dewpoint(self, dewpoint):
+    @staticmethod
+    def _fmt_dewpoint(dewpoint):
         if dewpoint is not None:
             return round(kelvin_to_celsius(dewpoint), 1)
         return None
