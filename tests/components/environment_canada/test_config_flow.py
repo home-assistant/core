@@ -108,8 +108,8 @@ async def test_create_same_entry_twice(hass):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "already_configured"}
 
 
 async def test_bad_station_id(hass):
@@ -128,7 +128,7 @@ async def test_bad_station_id(hass):
             {},
         )
         await hass.async_block_till_done()
-        assert result["type"] == "form"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "bad_station_id"}
 
 
