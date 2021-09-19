@@ -58,7 +58,6 @@ class SolarEdgeLocalSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
     SolarEdgeLocalSensorEntityDescription(
-        # "current_AC_voltage",
         key="gridvoltage",
         name="Grid Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
@@ -67,7 +66,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "current_DC_voltage",
         key="dcvoltage",
         name="DC Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
@@ -76,7 +74,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "current_frequency",
         key="gridfrequency",
         name="Grid Frequency",
         native_unit_of_measurement=FREQUENCY_HERTZ,
@@ -85,7 +82,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "current_power",
         key="currentPower",
         name="Current Power",
         native_unit_of_measurement=POWER_WATT,
@@ -94,7 +90,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "energy_this_month",
         key="energyThisMonth",
         name="Energy This Month",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -103,7 +98,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "energy_this_year",
         key="energyThisYear",
         name="Energy This Year",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -112,7 +106,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "energy_today",
         key="energyToday",
         name="Energy Today",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -121,7 +114,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "lifetime_energy",
         key="energyTotal",
         name="Lifetime Energy",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -130,7 +122,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "optimizer_connected",
         key="optimizers",
         name="Optimizers Online",
         native_unit_of_measurement="optimizers",
@@ -139,7 +130,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "optimizer_current",
         key="optimizercurrent",
         name="Average Optimizer Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
@@ -148,7 +138,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "optimizer_power",
         key="optimizerpower",
         name="Average Optimizer Power",
         native_unit_of_measurement=POWER_WATT,
@@ -157,7 +146,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "optimizer_temperature",
         key="optimizertemperature",
         name="Average Optimizer Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -166,7 +154,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_TEMPERATURE,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "optimizer_voltage",
         key="optimizervoltage",
         name="Average Optimizer Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
@@ -177,7 +164,6 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
 )
 
 SENSOR_TYPE_INVERTER_TEMPERATUR = SolarEdgeLocalSensorEntityDescription(
-    # "inverter_temperature",
     key="invertertemperature",
     name="Inverter Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
@@ -188,7 +174,6 @@ SENSOR_TYPE_INVERTER_TEMPERATUR = SolarEdgeLocalSensorEntityDescription(
 
 SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
     SolarEdgeLocalSensorEntityDescription(
-        # "import_current_power",
         key="currentPowerimport",
         name="current import Power",
         native_unit_of_measurement=POWER_WATT,
@@ -197,7 +182,6 @@ SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "import_meter_reading",
         key="totalEnergyimport",
         name="total import Energy",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
@@ -209,7 +193,6 @@ SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
 
 SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
     SolarEdgeLocalSensorEntityDescription(
-        # "export_current_power",
         key="currentPowerexport",
         name="current export Power",
         native_unit_of_measurement=POWER_WATT,
@@ -218,7 +201,6 @@ SENSOR_TYPES_ENERGY_EXPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = 
         device_class=None,
     ),
     SolarEdgeLocalSensorEntityDescription(
-        # "export_meter_reading",
         key="totalEnergyexport",
         name="total export Energy",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
