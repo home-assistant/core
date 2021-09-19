@@ -123,7 +123,6 @@ class OpenOrders(CoordinatorEntity, SensorEntity):
 
         self._attr_icon = "mdi:format-list-bulleted"
         self._attr_name = "Bitvavo Open Orders"
-        self._attr_unit_of_measurement = "Orders"
         self._attr_unique_id = "bitvavo_orders_open"
         self._attr_extra_state_attributes = {
             "buy orders": self._type_orders("buy"),
