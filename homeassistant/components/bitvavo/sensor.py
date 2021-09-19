@@ -55,7 +55,7 @@ class Ticker(CoordinatorEntity, SensorEntity):
             self._get_data_property("quote"), DEFAULT_COIN_ICON
         )
         self._attr_name = f"Bitvavo Ticker - {self._symbol}"
-        self._attr_native_unit_of_measurement = self._get_data_property("quote")
+        self._attr_unit_of_measurement = self._get_data_property("quote")
         self._attr_unique_id = f"bitvavo_ticker_{self._symbol})"
         self._attr_extra_state_attributes = {
             "symbol": self._symbol,
@@ -90,7 +90,7 @@ class Balance(CoordinatorEntity, SensorEntity):
             self._get_data_property("symbol"), DEFAULT_COIN_ICON
         )
         self._attr_name = f"Bitvavo Balance - {self._balance}"
-        self._attr_native_unit_of_measurement = self._get_data_property("symbol")
+        self._attr_unit_of_measurement = self._get_data_property("symbol")
         self._attr_unique_id = f"bitvavo_balance_{self._balance})"
         self._attr_extra_state_attributes = {
             "available": self._get_data_property("available"),
@@ -123,7 +123,7 @@ class OpenOrders(CoordinatorEntity, SensorEntity):
 
         self._attr_icon = "mdi:format-list-bulleted"
         self._attr_name = "Bitvavo Open Orders"
-        self._attr_native_unit_of_measurement = "Orders"
+        self._attr_unit_of_measurement = "Orders"
         self._attr_unique_id = "bitvavo_orders_open"
         self._attr_extra_state_attributes = {
             "buy orders": self._type_orders("buy"),
@@ -160,7 +160,7 @@ class TotalAssetValue(CoordinatorEntity, SensorEntity):
 
         self._attr_icon = CURRENCY_ICONS.get(self._currency, DEFAULT_COIN_ICON)
         self._attr_name = f"Bitvavo Total Asset Value - {self._currency.upper()}"
-        self._attr_native_unit_of_measurement = self._currency
+        self._attr_unit_of_measurement = self._currency
         self._attr_unique_id = f"bitvavo_total_asset_value_{self._currency.lower()}"
         self._attr_extra_state_attributes = {
             "note": f"Value is based on the last {self._currency}-{ASSET_VALUE_BASE} price of all coins in balance",
