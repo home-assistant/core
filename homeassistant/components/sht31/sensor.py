@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -56,6 +57,7 @@ SENSOR_TYPES = (
     SHT31SensorEntityDescription(
         key="humidity",
         name="Humidity",
+        device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda sensor: round(val) if (val := sensor.humidity) else None,
     ),
