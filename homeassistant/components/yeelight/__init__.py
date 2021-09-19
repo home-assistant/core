@@ -612,9 +612,6 @@ class YeelightDevice:
     @property
     def is_nightlight_enabled(self) -> bool:
         """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
         # Only ceiling lights have active_mode, from SDK docs:
         # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
         if self._active_mode is not None:
@@ -652,9 +649,6 @@ class YeelightDevice:
 
     async def _async_update_properties(self):
         """Read new properties from the device."""
-        if not self.bulb:
-            return
-
         try:
             await self.bulb.async_get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
@@ -671,8 +665,6 @@ class YeelightDevice:
             _LOGGER.debug(
                 "Unable to update device %s, %s: %s", self._host, self.name, ex
             )
-
-        return self._available
 
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""
