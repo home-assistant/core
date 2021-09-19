@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
+    CONF_PASSWORD,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -28,11 +29,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
 DEFAULT_PORT = 80
+DEFAULT_PASSWORD = ''
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     }
 )
 
@@ -41,7 +44,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
+    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT], config[CONF_PASSWORD])
     endpoint = RealTimeDataEndpoint(hass, api)
     resp = await api.get_data()
     serial = resp.serial_number
