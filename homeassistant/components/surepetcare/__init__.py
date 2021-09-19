@@ -131,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     set_pet_location_schema = vol.Schema(
         {
-            vol.Optional(ATTR_PET_NAME): vol.In(coordinator.get_pets().values()),
+            vol.Required(ATTR_PET_NAME): vol.In(coordinator.get_pets().keys()),
             vol.Required(ATTR_LOCATION): vol.In(
                 [
                     Location.INSIDE.name.title(),
@@ -198,23 +198,18 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
         await self.lock_states[state](flap_id)
         await self.async_request_refresh()
 
-    def get_pets(self) -> dict[int, str]:
+    def get_pets(self) -> dict[str, int]:
         """Get pets."""
-        names = {}
+        pets = {}
         for surepy_entity in self.data.values():
             if surepy_entity.type == EntityType.PET and surepy_entity.name:
-                names[surepy_entity.id] = surepy_entity.name
-        return names
+                pets[surepy_entity.name] = surepy_entity.id
+        return pets
 
     async def handle_set_pet_location(self, call: ServiceCall) -> None:
         """Call when setting the pet location."""
         pet_name = call.data[ATTR_PET_NAME]
         location = call.data[ATTR_LOCATION]
-        for device_id, device_name in self.get_pets().items():
-            if pet_name == device_name:
-                await self.surepy.sac.set_pet_location(
-                    device_id, Location[location.upper()]
-                )
-                await self.async_request_refresh()
-                return
-        _LOGGER.error("Unknown pet %s", pet_name)
+        device_id = self.get_pets()[pet_name]
+        await self.surepy.sac.set_pet_location(device_id, Location[location.upper()])
+        await self.async_request_refresh()
