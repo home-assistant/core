@@ -47,7 +47,7 @@ class TradfriBaseClass(Entity):
     ) -> None:
         """Initialize a device."""
         self._api = handle_error(api)
-        self._device: Command | None = None
+        self._device: Command = device
         self._device_control: SocketControl | None = None
         self._device_data: Socket | Light | Blind | None = None
         self._gateway_id = gateway_id
@@ -56,14 +56,10 @@ class TradfriBaseClass(Entity):
     @callback
     def _async_start_observe(self, exc: Exception | None = None) -> None:
         """Start observation of device."""
-        if not self._device:
-            return
         if exc:
             self.async_write_ha_state()
             _LOGGER.warning("Observation failed for %s", self._attr_name, exc_info=exc)
 
-        if not self._device:
-            return
         try:
             cmd = self._device.observe(
                 callback=self._observe_update,
@@ -100,8 +96,6 @@ class TradfriBaseDevice(TradfriBaseClass):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        if not self._device:
-            return {}
         info = self._device.device_info
         return {
             "identifiers": {(DOMAIN, self._device.id)},
