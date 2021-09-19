@@ -6,6 +6,7 @@ import logging
 from typing import Any, Callable
 
 from pytradfri.command import Command
+from pytradfri.device import Device
 from pytradfri.device.blind import Blind
 from pytradfri.device.light import Light
 from pytradfri.device.socket import Socket
@@ -24,7 +25,7 @@ def handle_error(func: Callable) -> Callable:
     """Handle tradfri api call error."""
 
     @wraps(func)
-    async def wrapper(command: str) -> None:
+    async def wrapper(command: Command) -> None:
         """Decorate api call."""
         try:
             await func(command)
@@ -43,11 +44,11 @@ class TradfriBaseClass(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, device: Command, api: Callable[[str], Any], gateway_id: str
+        self, device: Device, api: Callable[[str], Any], gateway_id: str
     ) -> None:
         """Initialize a device."""
         self._api = handle_error(api)
-        self._device: Command = device
+        self._device: Device = device
         self._device_control: SocketControl | None = None
         self._device_data: Socket | Light | Blind | None = None
         self._gateway_id = gateway_id
@@ -76,12 +77,12 @@ class TradfriBaseClass(Entity):
         self._async_start_observe()
 
     @callback
-    def _observe_update(self, device: Command) -> None:
+    def _observe_update(self, device: Device) -> None:
         """Receive new state data for this device."""
         self._refresh(device)
         self.async_write_ha_state()
 
-    def _refresh(self, device: Command) -> None:
+    def _refresh(self, device: Device) -> None:
         """Refresh the device data."""
         self._device = device
         self._attr_name = device.name
@@ -106,7 +107,7 @@ class TradfriBaseDevice(TradfriBaseClass):
             "via_device": (DOMAIN, self._gateway_id),
         }
 
-    def _refresh(self, device: Command) -> None:
+    def _refresh(self, device: Device) -> None:
         """Refresh the device data."""
         super()._refresh(device)
         self._attr_available = device.reachable
