@@ -9,4 +9,38 @@ cd /config || bashio::exit.nok "Can't find config folder!"
 if [[ -z "${DISABLE_JEMALLOC+x}" ]]; then
   export LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 fi
-exec python3 -m homeassistant --config /config
+
+function write_crash_report() {
+  # This function should write the first part of the
+  # crash report with built-ins only as there may not
+  # be enough memory to execute an external command
+  local exit_signal=${1}
+  local epoch="$(printf "%(%s)T")"
+
+  echo "Home Assistant exited with signal $exit_signal" > /config/hass_crash_report.$epoch
+  echo "Writing crash report to /config/hass_crash_report.$epoch"
+  # only built-in commands will likely work at this point if we are out of memory
+  return
+}
+
+function check_for_crash() {
+  # This function must only use built-ins as there may not be
+  # enough memory to execute an external command
+  local exit_status=${1:-}
+
+  if [ $exit_status -lt 128 ]; then
+    return
+  fi
+
+  local exit_signal=$(($exit_status - 128))
+  # Report as a crash for
+  # 4) SIGILL, 6) SIGABRT, 7) SIGBUS, 8) SIGFPE, 11) SIGSEGV
+  case "$exit_signal" in
+    4|6|7|8|11)
+      write_crash_report $exit_signal
+      ;;
+  esac
+}
+
+python3 -m homeassistant --config /config && exit_code=$? || exit_code=$?
+check_for_crash $exit_code

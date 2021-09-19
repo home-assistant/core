@@ -7,8 +7,10 @@ from datetime import datetime
 import logging
 import logging.handlers
 import os
+from pathlib import Path
 import sys
 import threading
+import time
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
@@ -55,6 +57,10 @@ COOLDOWN_TIME = 60
 
 MAX_LOAD_CONCURRENTLY = 6
 
+CRASH_REPORT_PREFIX = "hass_crash_report"
+MAX_RECENT_CRASHES_SAFE_MODE = 3
+MAX_RECENT_CRASHES_AGE = 60 * 15  # 15 minutes in seconds
+
 DEBUGGER_INTEGRATIONS = {"debugpy"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {
@@ -78,6 +84,34 @@ STAGE_1_INTEGRATIONS = {
     # be removed
     "frontend",
 }
+
+
+def _check_and_log_crash_reports(config_dir: str) -> bool:
+    """Check and log crash reports."""
+    timestamp = time.time()
+    crash_reports = []
+    for file_name in os.listdir(config_dir):
+        file_path = Path(config_dir) / file_name
+        if not file_name.startswith(f"{CRASH_REPORT_PREFIX}."):
+            continue
+        crash_timestamp_int = int(file_name.split(".")[1])
+        if crash_timestamp_int + MAX_RECENT_CRASHES_AGE < timestamp:
+            os.unlink(file_path)
+            continue
+        crash_reports.append((crash_timestamp_int, file_path, file_path.read_text()))
+
+    activate_safe_mode = len(crash_reports) >= MAX_RECENT_CRASHES_SAFE_MODE
+    for timestamp, file_path, crash_report in crash_reports:
+        _LOGGER.error(
+            "Detected crash at %s: %s",
+            dt_util.as_local(dt_util.utc_from_timestamp(timestamp)),
+            crash_report,
+        )
+        if activate_safe_mode:
+            # Make sure we do not activate it on the next restart
+            os.unlink(file_path)
+
+    return activate_safe_mode
 
 
 async def async_setup_hass(
@@ -109,8 +143,18 @@ async def async_setup_hass(
 
     config_dict = None
     basic_setup_success = False
+    safe_mode = runtime_config.safe_mode
 
-    if not (safe_mode := runtime_config.safe_mode):
+    if not safe_mode:
+        try:
+            if await hass.async_add_executor_job(
+                _check_and_log_crash_reports, runtime_config.config_dir
+            ):
+                safe_mode = True
+        except (ValueError, OSError):
+            _LOGGER.exception("Unable to check for recent crash reports")
+
+    if not safe_mode:
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
