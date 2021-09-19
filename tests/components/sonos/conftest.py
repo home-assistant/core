@@ -1,5 +1,5 @@
 """Configuration for Sonos tests."""
-from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -75,14 +75,9 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
-    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ):
-        yield
+async def autouse_mock_ssdp(mock_ssdp):
+    """Auto use mock_ssdp."""
+    yield
 
 
 @pytest.fixture(name="discover", autouse=True)

@@ -16,7 +16,7 @@ from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
-from homeassistant.components import mqtt, recorder
+from homeassistant.components import mqtt, recorder, ssdp
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -653,3 +653,65 @@ def hass_recorder(enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+
+@pytest.fixture
+async def mock_ssdp():
+    """Prevent actual SSDP scanning."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
+@pytest.fixture
+async def set_ssdp_discovery(mock_ssdp):
+    """Set ssdp discovery."""
+    discovery_info = None
+
+    async def async_register_callback(hass, callback, match_dict):
+        """Immediately do callback if discovery info is set."""
+        nonlocal discovery_info
+        if discovery_info is not None:
+            await callback(discovery_info, ssdp.SsdpChange.ALIVE)
+        return MagicMock()
+
+    async def async_get_discovery_info_by_udn_st(hass, udn, st):
+        """Fetch the discovery info cache."""
+        nonlocal discovery_info
+        return discovery_info
+
+    async def async_get_discovery_info_by_st(hass, st):
+        """Fetch all the entries matching the st."""
+        nonlocal discovery_info
+        if discovery_info is None:
+            return []
+        return [discovery_info]
+
+    async def async_get_discovery_info_by_udn(hass, udn):
+        """Fetch all the entries matching the udn."""
+        nonlocal discovery_info
+        if discovery_info is None:
+            return []
+        return [discovery_info]
+
+    def set_discovery_info(new_discovery_info):
+        nonlocal discovery_info
+        discovery_info = new_discovery_info
+
+    with patch(
+        "homeassistant.components.ssdp.async_register_callback",
+        side_effect=async_register_callback,
+    ), patch(
+        "homeassistant.components.ssdp.async_get_discovery_info_by_udn_st",
+        side_effect=async_get_discovery_info_by_udn_st,
+    ), patch(
+        "homeassistant.components.ssdp.async_get_discovery_info_by_st",
+        side_effect=async_get_discovery_info_by_st,
+    ), patch(
+        "homeassistant.components.ssdp.async_get_discovery_info_by_udn",
+        side_effect=async_get_discovery_info_by_udn,
+    ):
+        yield set_discovery_info

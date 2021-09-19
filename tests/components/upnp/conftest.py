@@ -1,4 +1,4 @@
-"""Configuration for SSDP tests."""
+"""Configuration for upnp tests."""
 from typing import Any, Mapping
 from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
@@ -140,19 +140,14 @@ def mock_setup_entry():
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
-    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ):
-        yield
+async def autouse_mock_ssdp(mock_ssdp):
+    """Auto use mock_ssdp."""
+    yield
 
 
 @pytest.fixture
 async def ssdp_instant_discovery():
-    """Instance discovery."""
+    """Trigger SSDP discovery on callback register."""
     # Set up device discovery callback.
     async def register_callback(hass, callback, match_dict):
         """Immediately do callback."""
@@ -171,7 +166,7 @@ async def ssdp_instant_discovery():
 
 @pytest.fixture
 async def ssdp_no_discovery():
-    """No discovery."""
+    """No SSDP discovery."""
     # Set up device discovery callback.
     async def register_callback(hass, callback, match_dict):
         """Don't do callback."""
