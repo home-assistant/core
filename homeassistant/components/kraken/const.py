@@ -1,17 +1,11 @@
 """Constants for the kraken integration."""
-
 from __future__ import annotations
 
-from typing import Dict, TypedDict
+from typing import Dict
+
+from homeassistant.components.sensor import SensorEntityDescription
 
 KrakenResponse = Dict[str, Dict[str, float]]
-
-
-class SensorType(TypedDict):
-    """SensorType class."""
-
-    name: str
-    enabled_by_default: bool
 
 
 DEFAULT_SCAN_INTERVAL = 60
@@ -22,21 +16,69 @@ CONF_TRACKED_ASSET_PAIRS = "tracked_asset_pairs"
 
 DOMAIN = "kraken"
 
-SENSOR_TYPES: list[SensorType] = [
-    {"name": "ask", "enabled_by_default": True},
-    {"name": "ask_volume", "enabled_by_default": False},
-    {"name": "bid", "enabled_by_default": True},
-    {"name": "bid_volume", "enabled_by_default": False},
-    {"name": "volume_today", "enabled_by_default": False},
-    {"name": "volume_last_24h", "enabled_by_default": False},
-    {"name": "volume_weighted_average_today", "enabled_by_default": False},
-    {"name": "volume_weighted_average_last_24h", "enabled_by_default": False},
-    {"name": "number_of_trades_today", "enabled_by_default": False},
-    {"name": "number_of_trades_last_24h", "enabled_by_default": False},
-    {"name": "last_trade_closed", "enabled_by_default": False},
-    {"name": "low_today", "enabled_by_default": True},
-    {"name": "low_last_24h", "enabled_by_default": False},
-    {"name": "high_today", "enabled_by_default": True},
-    {"name": "high_last_24h", "enabled_by_default": False},
-    {"name": "opening_price_today", "enabled_by_default": False},
-]
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="ask",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="ask_volume",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="bid",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="bid_volume",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="volume_today",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="volume_last_24h",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="volume_weighted_average_today",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="volume_weighted_average_last_24h",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="number_of_trades_today",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="number_of_trades_last_24h",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="last_trade_closed",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="low_today",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="low_last_24h",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="high_today",
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="high_last_24h",
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="opening_price_today",
+        entity_registry_enabled_default=False,
+    ),
+)
