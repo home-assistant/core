@@ -75,8 +75,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_SENSOR_TYPE] = ATTR_BOT
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
-        if _btle_adv_data["modelName"] == "WoCurtain":
-            data[CONF_SENSOR_TYPE] = ATTR_CURTAIN
+        if _btle_adv_data["modelName"] in SUPPORTED_MODEL_TYPES:
+            data[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[_btle_adv_data["modelName"]]
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         return self.async_abort(reason="switchbot_unsupported_type")

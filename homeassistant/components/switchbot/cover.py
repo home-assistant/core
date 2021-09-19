@@ -102,7 +102,7 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
-        if not last_state:
+        if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
             return
         if ATTR_CURRENT_POSITION in last_state.attributes:
             self._attr_current_cover_position = last_state.attributes[
@@ -111,7 +111,7 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
             self._last_run_success = last_state.attributes["last_run_success"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success, "mac_address": self._mac}
 
@@ -126,12 +126,7 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         _LOGGER.info("Switchbot to open curtain %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.open)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(await self.hass.async_add_executor_job(self._device.open))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
