@@ -56,9 +56,10 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
 
         surepy_entity: SurepyEntity = coordinator.data[_id]
 
-        _device_name = surepy_entity.type.name.capitalize().replace("_", " ")
         if surepy_entity.name:
-            _device_name = f"{_device_name} {surepy_entity.name.capitalize()}"
+            _device_name = surepy_entity.name.capitalize()
+        else:
+            _device_name = surepy_entity.type.name.capitalize().replace("_", " ")
 
         self._lock_state = lock_state.name.lower()
         self._attr_name = f"{_device_name} {self._lock_state.replace('_', ' ')}"

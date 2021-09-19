@@ -7,12 +7,12 @@ from homeassistant.setup import async_setup_component
 from . import HOUSEHOLD_ID, MOCK_CAT_FLAP, MOCK_CONFIG, MOCK_PET_FLAP
 
 EXPECTED_ENTITY_IDS = {
-    "lock.cat_flap_cat_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_in",
-    "lock.cat_flap_cat_flap_locked_out": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_out",
-    "lock.cat_flap_cat_flap_locked_all": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_all",
-    "lock.pet_flap_pet_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_PET_FLAP['id']}-locked_in",
-    "lock.pet_flap_pet_flap_locked_out": f"{HOUSEHOLD_ID}-{MOCK_PET_FLAP['id']}-locked_out",
-    "lock.pet_flap_pet_flap_locked_all": f"{HOUSEHOLD_ID}-{MOCK_PET_FLAP['id']}-locked_all",
+    "lock.cat_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_in",
+    "lock.cat_flap_locked_out": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_out",
+    "lock.cat_flap_locked_all": f"{HOUSEHOLD_ID}-{MOCK_CAT_FLAP['id']}-locked_all",
+    "lock.pet_flap_locked_in": f"{HOUSEHOLD_ID}-{MOCK_PET_FLAP['id']}-locked_in",
+    "lock.pet_flap_locked_out": f"{HOUSEHOLD_ID}-{MOCK_PET_FLAP['id']}-locked_out",
+    "lock.pet_flap_locked_all": f"{HOUSEHOLD_ID}-{MOCK_PET_FLAP['id']}-locked_all",
 }
 
 
