@@ -1,17 +1,36 @@
 """An abstract class common to all Switchbot entities."""
 from __future__ import annotations
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import MANUFACTURER
+from .coordinator import SwitchbotDataUpdateCoordinator
 
 
-class SwitchbotEntity(Entity):
+class SwitchbotEntity(CoordinatorEntity, Entity):
     """Generic entity encapsulating common features of Switchbot device."""
 
-    def __init__(self, mac_address: str, last_ran: bool | None) -> None:
+    def __init__(
+        self,
+        coordinator: SwitchbotDataUpdateCoordinator,
+        idx: str | None,
+        mac: str,
+        name: str,
+    ) -> None:
         """Initialize the entity."""
-        super().__init__()
-        self._last_run_success = last_ran
-        self._mac = mac_address
+        super().__init__(coordinator)
+        self._last_run_success: bool | None = None
+        self._idx = idx
+        self._mac = mac
+        self._attr_name = name
+        self._attr_device_info: DeviceInfo = {
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            "name": self._attr_name,
+            "model": self.coordinator.data[self._idx]["modelName"],
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def extra_state_attributes(self) -> dict:

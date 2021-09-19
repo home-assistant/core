@@ -17,13 +17,10 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_RETRY_COUNT, DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .const import CONF_RETRY_COUNT, DATA_COORDINATOR, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -54,7 +51,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotCurtain(CoordinatorEntity, SwitchbotEntity, CoverEntity, RestoreEntity):
+class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -74,18 +71,8 @@ class SwitchBotCurtain(CoordinatorEntity, SwitchbotEntity, CoverEntity, RestoreE
         retry_count: int,
     ) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator)
-        self._last_run_success: bool | None = None
-        self._idx = idx
+        super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = idx
-        self._attr_name = name
-        self._mac = mac
-        self._attr_device_info: DeviceInfo = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self._attr_name,
-            "model": self.coordinator.data[self._idx]["modelName"],
-            "manufacturer": MANUFACTURER,
-        }
         self._device = self.coordinator.switchbot_api.SwitchbotCurtain(
             mac=mac, password=password, retry_count=retry_count
         )

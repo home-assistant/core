@@ -20,24 +20,11 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_BOT,
-    CONF_RETRY_COUNT,
-    DATA_COORDINATOR,
-    DEFAULT_NAME,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import ATTR_BOT, CONF_RETRY_COUNT, DATA_COORDINATOR, DEFAULT_NAME, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -104,7 +91,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBot(CoordinatorEntity, SwitchbotEntity, SwitchEntity, RestoreEntity):
+class SwitchBot(SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -120,21 +107,11 @@ class SwitchBot(CoordinatorEntity, SwitchbotEntity, SwitchEntity, RestoreEntity)
         retry_count: int,
     ) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator)
-        self._idx = idx
-        self._last_run_success: bool | None = None
-        self._mac = mac
+        super().__init__(coordinator, idx, mac, name)
+        self._attr_unique_id = self._mac.replace(":", "")
         self._device = self.coordinator.switchbot_api.Switchbot(
             mac=mac, password=password, retry_count=retry_count
         )
-        self._attr_unique_id = self._mac.replace(":", "")
-        self._attr_name = name
-        self._attr_device_info: DeviceInfo = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": name,
-            "model": self.coordinator.data[self._idx]["modelName"],
-            "manufacturer": MANUFACTURER,
-        }
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
