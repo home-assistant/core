@@ -126,6 +126,7 @@ class ECBaseEntity(CoordinatorEntity):
         self._coordinator = coordinator
         self._config = config
         self._name = name
+        self._unique_id_tail = ""
 
     def get_value(self, key):
         """Get the value for a weather attribute."""
@@ -138,6 +139,12 @@ class ECBaseEntity(CoordinatorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        # The combination of station and language are unique for all EC weather reporting
+        return f"{self._config[CONF_STATION]}-{self._config[CONF_LANGUAGE]}-{self._unique_id_tail}"
 
     @property
     def attribution(self):
@@ -164,10 +171,10 @@ class ECBaseEntity(CoordinatorEntity):
     def device_info(self):
         """Device info."""
         return {
-            "identifiers": {(DOMAIN,)},
+            "identifiers": {(DOMAIN, self._config[CONF_STATION])},
             "manufacturer": "Environment Canada",
             "model": "Weather",
-            "default_name": "Weather",
+            "default_name": "Environment Canada Weather",
             "entry_type": "service",
         }
 
