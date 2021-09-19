@@ -64,7 +64,10 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
     _attr_supported_features = SUPPORTED_GROUP_FEATURES
 
     def __init__(
-        self, device: Command, api: Callable[[str], Any], gateway_id: str
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
     ) -> None:
         """Initialize a Group."""
         super().__init__(device, api, gateway_id)
@@ -78,34 +81,24 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
 
         This method is required for groups to update properly.
         """
-        if not self._device:
-            return None
         await self._api(self._device.update())
 
     @property
     def is_on(self) -> bool:
         """Return true if group lights are on."""
-        if not self._device:
-            return False
         return cast(bool, self._device.state)
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the group lights."""
-        if not self._device:
-            return None
         return cast(int, self._device.dimmer)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the group lights to turn off."""
-        if not self._device:
-            return None
         await self._api(self._device.set_state(0))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the group lights to turn on, or dim."""
-        if not self._device:
-            return None
         keys = {}
         if ATTR_TRANSITION in kwargs:
             keys["transition_time"] = int(kwargs[ATTR_TRANSITION]) * 10
@@ -123,7 +116,10 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
-        self, device: Command, api: Callable[[str], Any], gateway_id: str
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
     ) -> None:
         """Initialize a Light."""
         super().__init__(device, api, gateway_id)
