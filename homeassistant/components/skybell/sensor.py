@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 
+from skybellpy.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import DOMAIN, SkybellDevice
+from . import DOMAIN, SkybellEntity
 from .const import DATA_COORDINATOR, DATA_DEVICES
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -31,7 +31,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2021.9
+# Deprecated in Home Assistant 2021.10
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
@@ -61,13 +61,13 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class SkybellSensor(SkybellDevice, SensorEntity):
+class SkybellSensor(SkybellEntity, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        device: Any,
+        device: SkybellDevice,
         description: SensorEntityDescription,
         server_unique_id: str,
     ) -> None:

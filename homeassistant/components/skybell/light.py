@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from skybellpy.device import SkybellDevice
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_HS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.color as color_util
 
-from . import SkybellDevice
+from . import SkybellEntity
 from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN
 
 
@@ -51,20 +53,20 @@ async def async_setup_entry(
     async_add_entities(lights)
 
 
-class SkybellLight(SkybellDevice, LightEntity):
+class SkybellLight(SkybellEntity, LightEntity):
     """A light implementation for Skybell devices."""
 
-    _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS, COLOR_MODE_HS}
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        device: Any,
-        light: Any,
+        device: SkybellDevice,
+        _: Any,
         server_unique_id: str,
     ) -> None:
         """Initialize a light for a Skybell device."""
-        super().__init__(coordinator, device, light, server_unique_id)
+        super().__init__(coordinator, device, _, server_unique_id)
         self._attr_name = device.name
         self._attr_unique_id = f"{server_unique_id}/{self.name}"
 

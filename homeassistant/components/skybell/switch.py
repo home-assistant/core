@@ -1,8 +1,7 @@
 """Switch support for the Skybell HD Doorbell."""
 from __future__ import annotations
 
-from typing import Any
-
+from skybellpy.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -17,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SkybellDevice
+from . import SkybellEntity
 from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
@@ -31,7 +30,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     ),
 )
 
-# Deprecated in Home Assistant 2021.9
+# Deprecated in Home Assistant 2021.10
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
@@ -72,13 +71,13 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-class SkybellSwitch(SkybellDevice, SwitchEntity):
+class SkybellSwitch(SkybellEntity, SwitchEntity):
     """A switch implementation for Skybell devices."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        device: Any,
+        device: SkybellDevice,
         description: SwitchEntityDescription,
         server_unique_id: str,
     ) -> None:

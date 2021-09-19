@@ -26,12 +26,12 @@ class SkybellFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input: dict[str, str] = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
         if user_input is not None:
-            email = user_input[CONF_EMAIL]
+            email = user_input[CONF_EMAIL].lower()
             password = user_input[CONF_PASSWORD]
 
             self._async_abort_entries_match({CONF_EMAIL: email})

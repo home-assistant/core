@@ -26,25 +26,25 @@ def _patch_setup():
     )
 
 
+@patch("skybellpy.UTILS")
 async def test_flow_user(hass: HomeAssistant):
     """Test that the user step works."""
-    with patch("skybellpy.UTILS"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with _patch_skybell():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_CONFIG_FLOW,
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-
-        with _patch_skybell():
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input=CONF_CONFIG_FLOW,
-            )
-
-            assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == "user"
-            assert result["data"] == CONF_CONFIG_FLOW
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "user"
+        assert result["data"] == CONF_CONFIG_FLOW
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant):
@@ -134,6 +134,7 @@ async def test_flow_import_already_configured(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
 
 
+@patch("skybellpy.UTILS")
 async def test_step_reauth(hass: HomeAssistant):
     """Test the reauth flow."""
     entry = MockConfigEntry(
@@ -142,24 +143,22 @@ async def test_step_reauth(hass: HomeAssistant):
 
     entry.add_to_hass(hass)
 
-    with patch("skybellpy.UTILS"):
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data=entry.data,
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=entry.data,
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with _patch_skybell():
+        new_conf = {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password2"}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=new_conf,
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-
-        with _patch_skybell():
-            new_conf = {CONF_EMAIL: "user@email.com", CONF_PASSWORD: "password2"}
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input=new_conf,
-            )
-
-            assert result2["type"] == RESULT_TYPE_ABORT
-            assert result2["reason"] == "reauth_successful"
-            assert entry.data == new_conf
+        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["reason"] == "reauth_successful"
+        assert entry.data == new_conf

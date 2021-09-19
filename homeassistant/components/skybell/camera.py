@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import requests
+from requests.models import Response
+from skybellpy.device import SkybellDevice
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SkybellDevice
+from . import SkybellEntity
 from .const import (
     CAMERA_TYPES,
     CONF_ACTIVITY_NAME,
@@ -29,7 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# Deprecated in Home Assistant 2021.9
+# Deprecated in Home Assistant 2021.10
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA.extend(
@@ -66,13 +67,13 @@ async def async_setup_entry(
     async_add_entities(cameras)
 
 
-class SkybellCamera(SkybellDevice, Camera):
+class SkybellCamera(SkybellEntity, Camera):
     """A camera implementation for Skybell devices."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        device: Any,
+        device: SkybellDevice,
         camera: str,
         server_unique_id: str,
     ) -> None:
@@ -88,7 +89,7 @@ class SkybellCamera(SkybellDevice, Camera):
         self._camera = camera
         self._device = device
         self._url = ""
-        self._response = None
+        self._response: Response | None = None
 
     @property
     def image_url(self) -> str:
@@ -105,9 +106,7 @@ class SkybellCamera(SkybellDevice, Camera):
             self._url = self.image_url
 
             try:
-                self._response = requests.get(
-                    self._url, stream=True, timeout=10
-                )  # type: ignore
+                self._response = requests.get(self._url, stream=True, timeout=10)
 
             except requests.HTTPError as err:
                 _LOGGER.warning("Failed to get camera image: %s", err)

@@ -1,12 +1,14 @@
 """Support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
 from logging import getLogger
 from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import Skybell
+from skybellpy.device import SkybellDevice
 from skybellpy.exceptions import SkybellAuthenticationException
 import voluptuous as vol
-from voluptuous.schema_builder import Object
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import DOMAIN as CAMERA
@@ -52,7 +54,7 @@ PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2021.9
+        # Deprecated in Home Assistant 2021.10
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
@@ -72,19 +74,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     entry_config = {}
-    if DOMAIN in config:
-        for parameter in config[DOMAIN]:
-            if parameter == CONF_USERNAME:
-                entry_config[CONF_EMAIL] = config[DOMAIN][parameter]
-            else:
-                entry_config[parameter] = config[DOMAIN][parameter]
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=entry_config,
-                )
+    if DOMAIN not in config:
+        return True
+    for parameter in config[DOMAIN]:
+        if parameter == CONF_USERNAME:
+            entry_config[CONF_EMAIL] = config[DOMAIN][parameter]
+        else:
+            entry_config[parameter] = config[DOMAIN][parameter]
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=entry_config,
             )
+        )
 
     return True
 
@@ -141,13 +144,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SkybellDevice(CoordinatorEntity):
+class SkybellEntity(CoordinatorEntity):
     """An HA implementation for Skybell devices."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        device: Object,
+        device: SkybellDevice,
         _: Any,
         server_unique_id: str,
     ) -> None:
