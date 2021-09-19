@@ -89,9 +89,6 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    if entry.data[CONF_SENSOR_TYPE] != ATTR_BOT:
-        return
-
     async_add_entities(
         [
             SwitchBot(
@@ -184,7 +181,7 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
         return self.coordinator.data[self._idx]["data"]["isOn"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
             "last_run_success": self._last_run_success,

@@ -4,10 +4,13 @@ from asyncio import Lock
 import switchbot  # pylint: disable=import-error
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    ATTR_BOT,
+    ATTR_CURTAIN,
     BTLE_LOCK,
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
@@ -82,6 +85,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
+
+    if entry.data[CONF_SENSOR_TYPE] == ATTR_BOT:
+        PLATFORMS.remove("cover")
+
+    if entry.data[CONF_SENSOR_TYPE] == ATTR_CURTAIN:
+        PLATFORMS.remove("switch")
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

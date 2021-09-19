@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -23,13 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_CURTAIN,
-    CONF_RETRY_COUNT,
-    DATA_COORDINATOR,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import CONF_RETRY_COUNT, DATA_COORDINATOR, DOMAIN, MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 # Initialize the logger
@@ -44,9 +38,6 @@ async def async_setup_entry(
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
-
-    if entry.data[CONF_SENSOR_TYPE] != ATTR_CURTAIN:
-        return
 
     async_add_entities(
         [
@@ -104,11 +95,9 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
             return
-        if ATTR_CURRENT_POSITION in last_state.attributes:
-            self._attr_current_cover_position = last_state.attributes[
-                ATTR_CURRENT_POSITION
-            ]
-            self._last_run_success = last_state.attributes["last_run_success"]
+
+        self._attr_current_cover_position = last_state.attributes[ATTR_CURRENT_POSITION]
+        self._last_run_success = last_state.attributes["last_run_success"]
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -126,7 +115,9 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         _LOGGER.info("Switchbot to open curtain %s", self._mac)
 
         async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self.hass.async_add_executor_job(self._device.open))
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.open)
+            )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
@@ -134,12 +125,9 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         _LOGGER.info("Switchbot to close the curtain %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.close)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.close)
+            )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
@@ -147,12 +135,9 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         _LOGGER.info("Switchbot to stop %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.stop)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.stop)
+            )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
@@ -161,14 +146,11 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
         _LOGGER.info("Switchbot to move at %d %s", position, self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(
-                self._device.set_position, position
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(
+                    self._device.set_position, position
+                )
             )
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
 
     @property
     def current_cover_position(self) -> int:
