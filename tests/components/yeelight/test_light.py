@@ -1,6 +1,7 @@
 """Test the Yeelight light."""
 import asyncio
 import logging
+import socket
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -498,6 +499,16 @@ async def test_services(hass: HomeAssistant, caplog):
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=asyncio.TimeoutError)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
+            blocking=True,
+        )
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=socket.error)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
