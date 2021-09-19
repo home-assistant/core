@@ -87,7 +87,7 @@ class Balance(CoordinatorEntity, SensorEntity):
         self._balance = balance
 
         self._attr_icon = CURRENCY_ICONS.get(
-            self._get_data_property("quote"), DEFAULT_COIN_ICON
+            self._get_data_property("symbol"), DEFAULT_COIN_ICON
         )
         self._attr_name = f"Bitvavo Balance - {self._balance}"
         self._attr_native_unit_of_measurement = self._get_data_property("symbol")
