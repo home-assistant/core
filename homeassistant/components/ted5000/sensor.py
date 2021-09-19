@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Ted5000 sensor."""
+    """Set up the Ted5000 platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -73,13 +73,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for mtu in gateway.data:
         dev.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
         dev.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
-        if lvl[mode] >= 2: # advanced or extended
+        if lvl[mode] >= 2:  # advanced or extended
             dev.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_WATT_HOUR))
             dev.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_WATT_HOUR))
             dev.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
     
     # Create utility sensors
-    if lvl[mode] >= 3: # extended only
+    if lvl[mode] >= 3:  # extended only
         dev.append(Ted5000Utility(gateway, name, 0, ATTR_HIDDEN))       # MTUs Quantity
         dev.append(Ted5000Utility(gateway, name, 1, CURRENCY_DOLLAR))   # Current Rate $/kWh
         dev.append(Ted5000Utility(gateway, name, 2, TIME_DAYS))         # Days left in billing cycle
@@ -95,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class Ted5000Sensor(SensorEntity):
-    """Implementation of a Ted5000 sensor."""
+    """Implementation of a Ted5000 MTU sensor."""
 
     def __init__(self, gateway, name, mtu, id, unit):
         """Initialize the sensor."""
