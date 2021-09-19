@@ -60,15 +60,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_STATION] = info["title"]
                 user_input[CONF_NAME] = info["name"]
 
-                if already_configured(self.hass, user_input):
-                    return self.async_abort(reason="already_configured")
+                if not already_configured(self.hass, user_input):
+                    self._data = user_input
+                    return await self.async_step_name()
 
-                self._data = user_input
-                return await self.async_step_name()
+                errors["base"] = "already_configured"
+
+                # if already_configured(self.hass, user_input):
+                #     return self.async_abort(reason="already_configured")
+
+                # self._data = user_input
+                # return await self.async_step_name()
 
             except BadStationId:
                 errors["base"] = "bad_station_id"
-            except aiohttp.ClientResponseError:
+            except aiohttp.ClientResponseError as err:
+                _LOGGER.exception(err)
                 errors["base"] = "cannot_connect"
             except vol.error.MultipleInvalid:
                 errors["base"] = "config_error"
