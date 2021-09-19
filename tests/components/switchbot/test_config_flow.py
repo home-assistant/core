@@ -193,7 +193,7 @@ async def test_user_form_exception(hass, switchbot_config_flow):
 
 async def test_options_flow(hass):
     """Test updating options."""
-    with patch("homeassistant.components.switchbot.PLATFORMS", []):
+    with patch("homeassistant.components.switchbot.PLATFORMS_BY_TYPE", []):
         entry = await init_integration(hass)
 
     assert entry.options["update_time"] == 60
