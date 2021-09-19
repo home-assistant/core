@@ -289,16 +289,16 @@ class Ted5000Gateway:
 
             """MTU data"""
             for mtu in range(1, mtus + 1):
-                power
-                    = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
-                voltage
-                    = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
-                pf
-                    = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
-                energy_daily
-                    = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
-                energy_monthly
-                    = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
+                power =
+                    int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
+                voltage =
+                    int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
+                pf =
+                    int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
+                energy_daily =
+                    int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
+                energy_monthly =
+                    int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
 
                 self.data[mtu] = {
                     0: power,
@@ -309,33 +309,33 @@ class Ted5000Gateway:
                 }
 
             """Utility Data"""
-            CurrentRate
-                = int(doc["LiveData"]["Utility"]["CurrentRate"])
-            DaysLeftInBillingCycle
-                = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
-            PlanType
-                = int(doc["LiveData"]["Utility"]["PlanType"])
-            PlanTypeString
-                = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
-            CarbonRate
-                = int(doc["LiveData"]["Utility"]["CarbonRate"])
-            MeterReadDate
-                = int(doc["LiveData"]["Utility"]["MeterReadDate"])
+            CurrentRate =
+                int(doc["LiveData"]["Utility"]["CurrentRate"])
+            DaysLeftInBillingCycle =
+                int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
+            PlanType =
+                int(doc["LiveData"]["Utility"]["PlanType"])
+            PlanTypeString =
+                {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
+            CarbonRate =
+                int(doc["LiveData"]["Utility"]["CarbonRate"])
+            MeterReadDate =
+                int(doc["LiveData"]["Utility"]["MeterReadDate"])
 
             if PlanType == 0 or PlanType == 2:
                 CurrentTier = 0
             else:
-                CurrentTier
-                    = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
+                CurrentTier =
+                    int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
 
             if PlanType < 2:
                 CurrentTOU = 0
                 CurrentTOUDescription = "Not Configured"
             else:
-                CurrentTOU
-                    = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
-                CurrentTOUDescription
-                    = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
+                CurrentTOU =
+                    int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
+                CurrentTOUDescription =
+                    doc["LiveData"]["Utility"]["CurrentTOUDescription"]
 
             self.dataUtility = {
                 0: mtus,
