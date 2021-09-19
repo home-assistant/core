@@ -11,7 +11,6 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA,
     SwitchEntity,
 )
-from homeassistant.components.switchbot.entity import SwitchbotEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_MAC,
@@ -40,6 +39,7 @@ from .const import (
     MANUFACTURER,
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotEntity
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)

@@ -14,7 +14,6 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
-from homeassistant.components.switchbot.entity import SwitchbotEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -26,6 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_RETRY_COUNT, DATA_COORDINATOR, DOMAIN, MANUFACTURER
 from .coordinator import SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotEntity
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
