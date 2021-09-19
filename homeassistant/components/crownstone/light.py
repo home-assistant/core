@@ -85,18 +85,15 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
 
     _attr_icon = "mdi:power-socket-de"
 
-    def __init__(self, crownstone_data: Crownstone, usb: CrownstoneUart = None) -> None:
+    def __init__(
+        self, crownstone_data: Crownstone, usb: CrownstoneUart | None = None
+    ) -> None:
         """Initialize the crownstone."""
         super().__init__(crownstone_data)
         self.usb = usb
         # Entity class attributes
         self._attr_name = str(self.device.name)
         self._attr_unique_id = f"{self.cloud_id}-{CROWNSTONE_SUFFIX}"
-
-    @property
-    def usb_available(self) -> bool:
-        """Return if this entity can use a usb dongle."""
-        return self.usb is not None and self.usb.is_ready()
 
     @property
     def brightness(self) -> int | None:
@@ -120,7 +117,7 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         """State attributes for Crownstone devices."""
         attributes: dict[str, Any] = {}
         # switch method
-        if self.usb_available:
+        if self.usb is not None and self.usb.is_ready():
             attributes["switch_method"] = "Crownstone USB Dongle"
         else:
             attributes["switch_method"] = "Crownstone Cloud"
@@ -156,7 +153,7 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on this light via dongle or cloud."""
         if ATTR_BRIGHTNESS in kwargs:
-            if self.usb_available:
+            if self.usb is not None and self.usb.is_ready():
                 await self.hass.async_add_executor_job(
                     partial(
                         self.usb.dim_crownstone,
@@ -177,7 +174,7 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
             self.device.state = hass_to_crownstone_state(kwargs[ATTR_BRIGHTNESS])
             self.async_write_ha_state()
 
-        elif self.usb_available:
+        elif self.usb is not None and self.usb.is_ready():
             await self.hass.async_add_executor_job(
                 partial(self.usb.switch_crownstone, self.device.unique_id, on=True)
             )
@@ -191,7 +188,7 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off this device via dongle or cloud."""
-        if self.usb_available:
+        if self.usb is not None and self.usb.is_ready():
             await self.hass.async_add_executor_job(
                 partial(self.usb.switch_crownstone, self.device.unique_id, on=False)
             )
