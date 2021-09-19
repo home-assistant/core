@@ -679,9 +679,6 @@ async def test_removed_ignored(hass, mock_async_zeroconf):
         await hass.async_block_till_done()
 
     assert len(mock_service_info.mock_calls) == 2
-    import pprint
-
-    pprint.pprint(mock_service_info.mock_calls[0][1])
     assert mock_service_info.mock_calls[0][1][0] == "_service.added.local."
     assert mock_service_info.mock_calls[1][1][0] == "_service.updated.local."
 
