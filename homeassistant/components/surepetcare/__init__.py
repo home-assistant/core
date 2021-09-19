@@ -131,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     set_pet_location_schema = vol.Schema(
         {
-            vol.Optional(ATTR_PET_NAME): vol.In(coordinator.get_pets().keys()),
+            vol.Required(ATTR_PET_NAME): vol.In(coordinator.get_pets().keys()),
             vol.Required(ATTR_LOCATION): vol.In(
                 [
                     Location.INSIDE.name.title(),
