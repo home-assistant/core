@@ -51,43 +51,13 @@ class Ticker(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._symbol = symbol
 
-        self._name = f"Bitvavo Ticker - {self._symbol}"
-        self._unique_id = f"bitvavo_ticker_{self._symbol})"
-        self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
-
-    def _get_data_property(self, property_name):
-        """Return the property from self.coordinator.data."""
-        return self.coordinator.data[CONF_TICKERS][self._symbol][property_name]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return round(float(self._get_data_property("price")), 4)
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._get_data_property("quote")
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional sensor state attributes."""
-        return {
+        self._attr_icon = CURRENCY_ICONS.get(
+            self._get_data_property("quote"), DEFAULT_COIN_ICON
+        )
+        self._attr_name = f"Bitvavo Ticker - {self._symbol}"
+        self._attr_native_unit_of_measurement = self._get_data_property("quote")
+        self._attr_unique_id = f"bitvavo_ticker_{self._symbol})"
+        self._attr_extra_state_attributes = {
             "symbol": self._symbol,
             "bid_price": self._get_data_property("bid"),
             "ask_price": self._get_data_property("ask"),
@@ -98,6 +68,15 @@ class Ticker(CoordinatorEntity, SensorEntity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
+    def _get_data_property(self, property_name):
+        """Return the property from self.coordinator.data."""
+        return self.coordinator.data[CONF_TICKERS][self._symbol][property_name]
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return round(float(self._get_data_property("price")), 4)
+
 
 class Balance(CoordinatorEntity, SensorEntity):
     """Implementation of the balance sensor."""
@@ -107,18 +86,24 @@ class Balance(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._balance = balance
 
-        self._name = f"Bitvavo Balance - {self._balance}"
-        self._unique_id = f"bitvavo_balance_{self._balance})"
-        self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
+        self._attr_icon = CURRENCY_ICONS.get(
+            self._get_data_property("quote"), DEFAULT_COIN_ICON
+        )
+        self._attr_name = f"Bitvavo Balance - {self._balance}"
+        self._attr_native_unit_of_measurement = self._get_data_property("symbol")
+        self._attr_unique_id = f"bitvavo_balance_{self._balance})"
+        self._attr_extra_state_attributes = {
+            "available": self._get_data_property("available"),
+            "in order": self._get_data_property("inOrder"),
+            f"{ASSET_VALUE_BASE}_value".lower(): float(
+                self._get_data_property("asset_value_in_base_asset")
+            ),
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
         return self.coordinator.data[CONF_BALANCES][self._balance][property_name]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def state(self):
@@ -128,33 +113,6 @@ class Balance(CoordinatorEntity, SensorEntity):
         )
         return round(state, 4)
 
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._get_data_property("symbol")
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional sensor state attributes."""
-        return {
-            "available": self._get_data_property("available"),
-            "in order": self._get_data_property("inOrder"),
-            f"{ASSET_VALUE_BASE}_value".lower(): float(
-                self._get_data_property("asset_value_in_base_asset")
-            ),
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
-
 
 class OpenOrders(CoordinatorEntity, SensorEntity):
     """Implementation of the open orders sensor."""
@@ -163,8 +121,15 @@ class OpenOrders(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        self._name = "Bitvavo Open Orders"
-        self._unique_id = "bitvavo_orders_open"
+        self._attr_icon = "mdi:format-list-bulleted"
+        self._attr_name = "Bitvavo Open Orders"
+        self._attr_native_unit_of_measurement = "Orders"
+        self._attr_unique_id = "bitvavo_orders_open"
+        self._attr_extra_state_attributes = {
+            "buy orders": self._type_orders("buy"),
+            "sell orders": self._type_orders("sell"),
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     def _get_orders(self):
         """Return the data from self.coordinator.data."""
@@ -180,33 +145,9 @@ class OpenOrders(CoordinatorEntity, SensorEntity):
         return number
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return len(self._get_orders())
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return "Orders"
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional sensor state attributes."""
-        return {
-            "buy orders": self._type_orders("buy"),
-            "sell orders": self._type_orders("sell"),
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
 
 
 class TotalAssetValue(CoordinatorEntity, SensorEntity):
@@ -217,14 +158,14 @@ class TotalAssetValue(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._currency = currency
 
-        self._name = f"Bitvavo Total Asset Value - {self._currency.upper()}"
-        self._unique_id = f"bitvavo_total_asset_value_{self._currency.lower()}"
-        self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_icon = CURRENCY_ICONS.get(self._currency, DEFAULT_COIN_ICON)
+        self._attr_name = f"Bitvavo Total Asset Value - {self._currency.upper()}"
+        self._attr_native_unit_of_measurement = self._currency
+        self._attr_unique_id = f"bitvavo_total_asset_value_{self._currency.lower()}"
+        self._attr_extra_state_attributes = {
+            "note": f"Value is based on the last {self._currency}-{ASSET_VALUE_BASE} price of all coins in balance",
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     @property
     def state(self):
@@ -244,26 +185,3 @@ class TotalAssetValue(CoordinatorEntity, SensorEntity):
             total_asset_value = total_base_asset_value / last_price
 
         return round(total_asset_value, 4)
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._currency
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional sensor state attributes."""
-        return {
-            "note": f"Value is based on the last {self._currency}-{ASSET_VALUE_BASE} price of all coins in balance",
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }

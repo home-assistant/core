@@ -91,6 +91,7 @@ omit =
     homeassistant/components/bbox/sensor.py
     homeassistant/components/bh1750/sensor.py
     homeassistant/components/bitcoin/sensor.py
+    homeassistant/components/bitvavo/__init__.py
     homeassistant/components/bitvavo/sensor.py
     homeassistant/components/bizkaibus/sensor.py
     homeassistant/components/blink/__init__.py
