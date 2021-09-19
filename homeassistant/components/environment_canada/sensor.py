@@ -4,12 +4,13 @@ import datetime
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_NAME,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
-    LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRESSURE_HPA,
     PRESSURE_INHG,
-    PRESSURE_PA,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -87,12 +88,12 @@ class ECSensor(ECBaseEntity, SensorEntity):
             return value
 
         unit_of_measurement = self._entity_description.unit_convert
-        if unit_of_measurement == SPEED_MILES_PER_HOUR:
-            value = round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
-        elif unit_of_measurement == LENGTH_MILES:
-            value = round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
+        if unit_of_measurement in [SPEED_MILES_PER_HOUR, LENGTH_MILES]:
+            value = round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES), 2)
+        elif unit_of_measurement == LENGTH_INCHES:
+            value = round(convert_distance(value, LENGTH_MILLIMETERS, LENGTH_INCHES), 2)
         elif unit_of_measurement == PRESSURE_INHG:
-            value = round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
+            value = round(convert_pressure(value, PRESSURE_HPA, PRESSURE_INHG), 2)
         elif unit_of_measurement == TEMP_CELSIUS:
             value = round(value, 1)
         elif unit_of_measurement == PERCENTAGE:
