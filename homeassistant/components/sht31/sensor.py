@@ -82,6 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     name = config[CONF_NAME]
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     i2c_address = config[CONF_I2C_ADDRESS]
     sensor = SHT31(address=i2c_address)
 
@@ -94,7 +95,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_client = SHTClient(sensor)
 
     entities = [
-        SHTSensor(sensor_client, name, description) for description in SENSOR_TYPES
+        SHTSensor(sensor_client, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
     ]
 
     add_entities(entities)
