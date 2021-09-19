@@ -12,10 +12,12 @@ from homeassistant.components.shelly import BlockDeviceWrapper
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    ATTR_EVENT,
     BLOCK,
     CONF_SUBTYPE,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    EVENT_SHELLY_BUTTON,
     EVENT_SHELLY_CLICK,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -30,8 +32,8 @@ from tests.common import (
 )
 
 
-async def test_get_triggers(hass, coap_wrapper):
-    """Test we get the expected triggers from a shelly."""
+async def test_get_triggers_block_device(hass, coap_wrapper):
+    """Test we get the expected triggers from a shelly block device."""
     assert coap_wrapper
     expected_triggers = [
         {
@@ -52,6 +54,54 @@ async def test_get_triggers(hass, coap_wrapper):
 
     triggers = await async_get_device_automations(
         hass, "trigger", coap_wrapper.device_id
+    )
+
+    assert_lists_same(triggers, expected_triggers)
+
+
+async def test_get_triggers_rpc_device(hass, rpc_wrapper):
+    """Test we get the expected triggers from a shelly RPC device."""
+    assert rpc_wrapper
+    expected_triggers = [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: rpc_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "btn_down",
+            CONF_SUBTYPE: "button1",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: rpc_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "btn_up",
+            CONF_SUBTYPE: "button1",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: rpc_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "single_push",
+            CONF_SUBTYPE: "button1",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: rpc_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "double_push",
+            CONF_SUBTYPE: "button1",
+        },
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: rpc_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "long_push",
+            CONF_SUBTYPE: "button1",
+        },
+    ]
+
+    triggers = await async_get_device_automations(
+        hass, "trigger", rpc_wrapper.device_id
     )
 
     assert_lists_same(triggers, expected_triggers)
@@ -136,8 +186,8 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg, coap_wrapper
         await async_get_device_automations(hass, "trigger", invalid_device.id)
 
 
-async def test_if_fires_on_click_event(hass, calls, coap_wrapper):
-    """Test for click_event trigger firing."""
+async def test_if_fires_on_click_event_block_device(hass, calls, coap_wrapper):
+    """Test for click_event trigger firing for block device."""
     assert coap_wrapper
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -175,8 +225,47 @@ async def test_if_fires_on_click_event(hass, calls, coap_wrapper):
     assert calls[0].data["some"] == "test_trigger_single_click"
 
 
-async def test_validate_trigger_config_no_device(hass, calls, coap_wrapper):
-    """Test for click_event with no device."""
+async def test_if_fires_on_click_event_rpc_device(hass, calls, rpc_wrapper):
+    """Test for click_event trigger firing for rpc device."""
+    assert rpc_wrapper
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: rpc_wrapper.device_id,
+                        CONF_TYPE: "single_push",
+                        CONF_SUBTYPE: "button1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_single_push"},
+                    },
+                },
+            ]
+        },
+    )
+
+    message = {
+        CONF_DEVICE_ID: rpc_wrapper.device_id,
+        ATTR_EVENT: "single_push",
+        ATTR_CHANNEL: 1,
+    }
+    hass.bus.async_fire(EVENT_SHELLY_BUTTON, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_single_push"
+
+
+async def test_validate_trigger_block_device_not_ready(hass, calls, coap_wrapper):
+    """Test validate trigger config when block device is not ready."""
     assert coap_wrapper
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -189,7 +278,7 @@ async def test_validate_trigger_config_no_device(hass, calls, coap_wrapper):
                     "trigger": {
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
-                        CONF_DEVICE_ID: "no_device",
+                        CONF_DEVICE_ID: "device_not_ready",
                         CONF_TYPE: "single",
                         CONF_SUBTYPE: "button1",
                     },
@@ -201,12 +290,54 @@ async def test_validate_trigger_config_no_device(hass, calls, coap_wrapper):
             ]
         },
     )
-    message = {CONF_DEVICE_ID: "no_device", ATTR_CLICK_TYPE: "single", ATTR_CHANNEL: 1}
+    message = {
+        CONF_DEVICE_ID: "device_not_ready",
+        ATTR_CLICK_TYPE: "single",
+        ATTR_CHANNEL: 1,
+    }
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "test_trigger_single_click"
+
+
+async def test_validate_trigger_rpc_device_not_ready(hass, calls, rpc_wrapper):
+    """Test validate trigger config when RPC device is not ready."""
+    assert rpc_wrapper
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: "device_not_ready",
+                        CONF_TYPE: "single_push",
+                        CONF_SUBTYPE: "button1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_single_push"},
+                    },
+                },
+            ]
+        },
+    )
+    message = {
+        CONF_DEVICE_ID: "device_not_ready",
+        ATTR_EVENT: "single_push",
+        ATTR_CHANNEL: 1,
+    }
+    hass.bus.async_fire(EVENT_SHELLY_BUTTON, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_validate_trigger_invalid_triggers(hass, coap_wrapper):

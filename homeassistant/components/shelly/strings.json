@@ -33,7 +33,8 @@
           "button": "Button",
           "button1": "First button",
           "button2": "Second button",
-          "button3": "Third button"
+          "button3": "Third button",
+          "button4": "Fourth button"
       },
       "trigger_type": {
           "single": "{subtype} single clicked",

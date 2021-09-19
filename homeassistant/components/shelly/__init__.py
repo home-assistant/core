@@ -31,6 +31,7 @@ from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
+    ATTR_EVENT,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLOCK,
     CONF_COAP_PORT,
@@ -38,12 +39,14 @@ from .const import (
     DEFAULT_COAP_PORT,
     DEVICE,
     DOMAIN,
+    EVENT_SHELLY_BUTTON,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC,
+    RPC_INPUTS_EVENTS_TYPES,
     RPC_RECONNECT_INTERVAL,
     SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
@@ -435,27 +438,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def get_device_wrapper(
+def get_block_device_wrapper(
     hass: HomeAssistant, device_id: str
-) -> BlockDeviceWrapper | RpcDeviceWrapper | None:
-    """Get a Shelly device wrapper for the given device id."""
+) -> BlockDeviceWrapper | None:
+    """Get a Shelly block device wrapper for the given device id."""
     if not hass.data.get(DOMAIN):
         return None
 
-    for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-        block_wrapper: BlockDeviceWrapper | None = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry
-        ].get(BLOCK)
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(device_id):
+        for config_entry in device.config_entries:
+            if not hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry):
+                continue
 
-        if block_wrapper and block_wrapper.device_id == device_id:
-            return block_wrapper
+            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(BLOCK):
+                return cast(BlockDeviceWrapper, wrapper)
 
-        rpc_wrapper: RpcDeviceWrapper | None = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry
-        ].get(RPC)
+    return None
 
-        if rpc_wrapper and rpc_wrapper.device_id == device_id:
-            return rpc_wrapper
+
+def get_rpc_device_wrapper(
+    hass: HomeAssistant, device_id: str
+) -> RpcDeviceWrapper | None:
+    """Get a Shelly RPC device wrapper for the given device id."""
+    if not hass.data.get(DOMAIN):
+        return None
+
+    dev_reg = device_registry.async_get(hass)
+    if device := dev_reg.async_get(device_id):
+        for config_entry in device.config_entries:
+            if not hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry):
+                continue
+
+            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(RPC):
+                return cast(RpcDeviceWrapper, wrapper)
 
     return None
 
@@ -479,9 +495,40 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
+        self._async_remove_device_updates_handler = self.async_add_listener(
+            self._async_device_updates_handler
+        )
+        self._last_event: dict[str, Any] | None = None
+
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+
+    @callback
+    def _async_device_updates_handler(self) -> None:
+        """Handle device updates."""
+        if (
+            not self.device.initialized
+            or not self.device.event
+            or self.device.event == self._last_event
+        ):
+            return
+
+        self._last_event = self.device.event
+
+        for event in self.device.event["events"]:
+            if event.get("event") not in RPC_INPUTS_EVENTS_TYPES:
+                continue
+
+            self.hass.bus.async_fire(
+                EVENT_SHELLY_BUTTON,
+                {
+                    ATTR_DEVICE_ID: self.device_id,
+                    ATTR_DEVICE: self.device.hostname,
+                    ATTR_CHANNEL: event["id"] + 1,
+                    ATTR_EVENT: event["event"],
+                },
+            )
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
