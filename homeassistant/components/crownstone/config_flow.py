@@ -223,7 +223,6 @@ class CrownstoneOptionsFlowHandler(OptionsFlow):
                 and spheres[user_input[CONF_USB_SPHERE_OPTION]] != usb_sphere
             ):
                 sphere_id = spheres[user_input[CONF_USB_SPHERE_OPTION]]
-                user_input[CONF_USB_SPHERE_OPTION] = sphere_id
                 self.updated_options[CONF_USB_SPHERE] = sphere_id
 
             return self.async_create_entry(title="", data=self.updated_options)
