@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
     PLATFORM_SCHEMA,
     SwitchEntity,
 )
+from homeassistant.components.switchbot.entity import SwitchbotEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_MAC,
@@ -103,7 +104,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
+class SwitchBot(CoordinatorEntity, SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -184,7 +185,6 @@ class SwitchBot(CoordinatorEntity, SwitchEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
-            "last_run_success": self._last_run_success,
-            "mac_address": self._mac,
+            **super().extra_state_attributes,
             "switch_mode": self.coordinator.data[self._idx]["data"]["switchMode"],
         }

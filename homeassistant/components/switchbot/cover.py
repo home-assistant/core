@@ -14,6 +14,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
+from homeassistant.components.switchbot.entity import SwitchbotEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -53,7 +54,7 @@ async def async_setup_entry(
     )
 
 
-class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
+class SwitchBotCurtain(CoordinatorEntity, SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -102,7 +103,7 @@ class SwitchBotCurtain(CoordinatorEntity, CoverEntity, RestoreEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
-        return {"last_run_success": self._last_run_success, "mac_address": self._mac}
+        return {**super().extra_state_attributes}
 
     @property
     def is_closed(self) -> bool | None:

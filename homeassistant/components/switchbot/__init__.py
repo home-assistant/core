@@ -26,7 +26,10 @@ from .const import (
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
 
-PLATFORMS = ["cover", "switch"]
+PLATFORMS_BY_TYPE = {
+    ATTR_BOT: ["switch"],
+    ATTR_CURTAIN: ["cover"],
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -86,20 +89,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
 
-    if entry.data[CONF_SENSOR_TYPE] == ATTR_BOT:
-        PLATFORMS.remove("cover")
+    sensor_type = entry.data[CONF_SENSOR_TYPE]
 
-    if entry.data[CONF_SENSOR_TYPE] == ATTR_CURTAIN:
-        PLATFORMS.remove("switch")
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS_BY_TYPE[sensor_type])
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    sensor_type = entry.data[CONF_SENSOR_TYPE]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS_BY_TYPE[sensor_type]
+    )
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
