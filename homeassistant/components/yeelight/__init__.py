@@ -164,8 +164,8 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
-BULB_NETWORK_EXCEPTIONS = (socket.error, asyncio.TimeoutError)
-BULB_EXCEPTIONS = (BulbException, *BULB_NETWORK_EXCEPTIONS)
+BULB_NETWORK_EXCEPTIONS = (socket.error,)
+BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError, *BULB_NETWORK_EXCEPTIONS)
 
 
 PLATFORMS = ["binary_sensor", "light"]
