@@ -84,6 +84,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dev.append(Ted5000Utility(gateway, name, 4, ATTR_HIDDEN))       # Current Tier (0 = Disabled)
         dev.append(Ted5000Utility(gateway, name, 5, ATTR_HIDDEN))       # Current TOU (0 = Disabled)
         dev.append(Ted5000Utility(gateway, name, 6, ATTR_HIDDEN))       # Current TOU Description (if Current TOU is 0 => Not Configured)
+        dev.append(Ted5000Utility(gateway, name, 7, ATTR_HIDDEN))       # Carbon Rate lbs/kW
+        dev.append(Ted5000Utility(gateway, name, 8, ATTR_HIDDEN))       # Meter read date
         
     add_entities(dev)
     return True
@@ -144,11 +146,12 @@ class Ted5000Utility(SensorEntity):
         """Initialize the sensor."""
         dclass = {ATTR_HIDDEN: ATTR_HIDDEN, CURRENCY_DOLLAR: DEVICE_CLASS_MONETARY, TIME_DAYS: ATTR_HIDDEN}
         sclass = {ATTR_HIDDEN: ATTR_HIDDEN, CURRENCY_DOLLAR: STATE_CLASS_MEASUREMENT, TIME_DAYS: ATTR_HIDDEN}
-        suffix = {0: "MTUs", 1: "CurrentRate", 2: "DaysLeftInBillingCycle", 3: "PlanType", 4: "CurrentTier", 5: "CurrentTOU", 6: "CurrentTOUDescription"}
+        units = {0: ATTR_HIDDEN, 1: "$/kWh", 2: TIME_DAYS, 3: ATTR_HIDDEN, 4: ATTR_HIDDEN, 5: ATTR_HIDDEN, 6: ATTR_HIDDEN, 7: "lbs/kW", 8: ATTR_HIDDEN}
+        suffix = {0: "MTUs", 1: "CurrentRate", 2: "DaysLeftInBillingCycle", 3: "PlanType", 4: "CurrentTier", 5: "CurrentTOU", 6: "CurrentTOUDescription", 7: "CarbonRate", 8: "MeterReadDate"}
         self._gateway = gateway
         self._name = f"{name} Utility {suffix[id]}"
         self._id = id
-        self._unit = unit
+        self._unit = units[id]
         self._dclass = dclass[unit]
         self._sclass = sclass[unit]
         self.update()
@@ -230,6 +233,8 @@ class Ted5000Gateway:
             DaysLeftInBillingCycle = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
             PlanType = int(doc["LiveData"]["Utility"]["PlanType"])
             PlanTypeString = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
+            CarbonRate = int(doc["LiveData"]["Utility"]["CarbonRate"])
+            MeterReadDate = int(doc["LiveData"]["Utility"]["MeterReadDate"])
             
             if PlanType == 0 or PlanType == 2:
                 CurrentTier = 0
@@ -251,5 +256,7 @@ class Ted5000Gateway:
                 4: CurrentTier,
                 5: CurrentTOU,
                 6: CurrentTOUDescription,
+                7: CarbonRate/100,
+                8: MeterReadDate,
             }
             
