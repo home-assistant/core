@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 from functools import wraps
+from http import HTTPStatus
 import logging
 import secrets
 
@@ -30,8 +31,6 @@ from homeassistant.const import (
     ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES,
     CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-    HTTP_CREATED,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
@@ -158,7 +157,7 @@ async def handle_webhook(
         req_data = await request.json()
     except ValueError:
         _LOGGER.warning("Received invalid JSON from mobile_app device: %s", device_name)
-        return empty_okay_response(status=HTTP_BAD_REQUEST)
+        return empty_okay_response(status=HTTPStatus.BAD_REQUEST)
 
     if (
         ATTR_WEBHOOK_ENCRYPTED not in req_data
@@ -265,7 +264,7 @@ async def webhook_stream_camera(hass, config_entry, data):
         return webhook_response(
             {"success": False},
             registration=config_entry.data,
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     resp = {"mjpeg_path": f"/api/camera_proxy_stream/{camera.entity_id}"}
@@ -435,7 +434,7 @@ async def webhook_register_sensor(hass, config_entry, data):
     return webhook_response(
         {"success": True},
         registration=config_entry.data,
-        status=HTTP_CREATED,
+        status=HTTPStatus.CREATED,
     )
 
 
