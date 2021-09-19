@@ -661,12 +661,16 @@ class YeelightDevice:
             if not self._initialized:
                 self._initialized = True
                 async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
-        except BULB_EXCEPTIONS as ex:
+        except BULB_NETWORK_EXCEPTIONS as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
                 )
             self._available = False
+        except BULB_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Unable to update device %s, %s: %s", self._host, self.name, ex
+            )
 
         return self._available
 
