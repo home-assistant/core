@@ -106,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Ted5000Sensor(SensorEntity):
     """Implementation of a Ted5000 MTU sensor."""
 
-    def __init__(self, gateway, name, mtu, id, unit):
+    def __init__(self, gateway, name, mtu, ptr, unit):
         """Initialize the sensor."""
         dclass = {
             POWER_WATT: DEVICE_CLASS_POWER,
@@ -128,9 +128,9 @@ class Ted5000Sensor(SensorEntity):
             4: "pf",
         }
         self._gateway = gateway
-        self._name = f"{name} mtu{mtu} {suffix[id]}"
+        self._name = f"{name} mtu{mtu} {suffix[ptr]}"
         self._mtu = mtu
-        self._id = id
+        self._ptr = ptr
         self._unit = unit
         self._dclass = dclass[unit]
         self._sclass = sclass[unit]
@@ -160,7 +160,7 @@ class Ted5000Sensor(SensorEntity):
     def native_value(self):
         """Return the state of the resources."""
         with suppress(KeyError):
-            return self._gateway.data[self._mtu][self._id]
+            return self._gateway.data[self._mtu][self._ptr]
 
     def update(self):
         """Get the latest data from REST API."""
@@ -170,7 +170,7 @@ class Ted5000Sensor(SensorEntity):
 class Ted5000Utility(SensorEntity):
     """Implementation of a Ted5000 utility sensors."""
 
-    def __init__(self, gateway, name, id, unit):
+    def __init__(self, gateway, name, ptr, unit):
         """Initialize the sensor."""
         dclass = {
             ATTR_HIDDEN: ATTR_HIDDEN,
@@ -205,9 +205,9 @@ class Ted5000Utility(SensorEntity):
             8: "MeterReadDate",
         }
         self._gateway = gateway
-        self._name = f"{name} Utility {suffix[id]}"
-        self._id = id
-        self._unit = units[id]
+        self._name = f"{name} Utility {suffix[ptr]}"
+        self._ptr = ptr
+        self._unit = units[ptr]
         self._dclass = dclass[unit]
         self._sclass = sclass[unit]
         self.update()
@@ -239,7 +239,7 @@ class Ted5000Utility(SensorEntity):
     def native_value(self):
         """Return the state of the resources."""
         with suppress(KeyError):
-            return self._gateway.dataUtility[self._id]
+            return self._gateway.data_utility[self._ptr]
 
     def update(self):
         """Get the latest data from REST API."""
@@ -254,7 +254,7 @@ class Ted5000Gateway:
         self.url = url
         MIN_TIME_BETWEEN_UPDATES = interval
         self.data = {}
-        self.dataUtility = {}
+        self.data_utility = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -268,11 +268,11 @@ class Ted5000Gateway:
             doc = xmltodict.parse(request.text)
             mtus = int(doc["LiveData"]["System"]["NumberMTU"])
 
-            """MTU data"""
+            # MTU data
             for mtu in range(1, mtus + 1):
                 power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
                 voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
-                pf = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
+                power_factor = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
                 energy_daily = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
                 energy_monthly = int(
                     doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"]
@@ -283,41 +283,39 @@ class Ted5000Gateway:
                     1: voltage / 10,
                     2: energy_daily,
                     3: energy_monthly,
-                    4: pf / 10,
+                    4: power_factor / 10,
                 }
 
-            """Utility Data"""
-            CurrentRate = int(doc["LiveData"]["Utility"]["CurrentRate"])
-            DaysLeftInBillingCycle = int(
+            # Utility Data
+            current_rate = int(doc["LiveData"]["Utility"]["CurrentRate"])
+            days_left = int(
                 doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"]
             )
-            PlanType = int(doc["LiveData"]["Utility"]["PlanType"])
-            PlanTypeString = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
-            CarbonRate = int(doc["LiveData"]["Utility"]["CarbonRate"])
-            MeterReadDate = int(doc["LiveData"]["Utility"]["MeterReadDate"])
+            plan_type = int(doc["LiveData"]["Utility"]["PlanType"])
+            plan_type_str = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
+            carbon_rate = int(doc["LiveData"]["Utility"]["CarbonRate"])
+            read_date = int(doc["LiveData"]["Utility"]["MeterReadDate"])
 
-            if PlanType == 0 or PlanType == 2:
-                CurrentTier = 0
+            if plan_type in (0, 2):
+                current_tier = 0
             else:
-                CurrentTier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
+                current_tier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
 
-            if PlanType < 2:
-                CurrentTOU = 0
-                CurrentTOUDescription = "Not Configured"
+            if plan_type < 2:
+                current_tou = 0
+                current_tou_str = "Not Configured"
             else:
-                CurrentTOU = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
-                CurrentTOUDescription = doc["LiveData"]["Utility"][
-                    "CurrentTOUDescription"
-                ]
+                current_tou = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
+                current_tou_str = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
 
-            self.dataUtility = {
+            self.data_utility = {
                 0: mtus,
-                1: CurrentRate / 100000,
-                2: DaysLeftInBillingCycle,
-                3: PlanTypeString[PlanType],
-                4: CurrentTier,
-                5: CurrentTOU,
-                6: CurrentTOUDescription,
-                7: CarbonRate / 100,
-                8: MeterReadDate,
+                1: current_rate / 100000,
+                2: days_left,
+                3: plan_type_str[plan_type],
+                4: current_tier,
+                5: current_tou,
+                6: current_tou_str,
+                7: carbon_rate / 100,
+                8: read_date,
             }
