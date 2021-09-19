@@ -17,14 +17,7 @@ from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
 from . import ECBaseEntity
-from .const import (
-    AQHI_SENSOR,
-    CONF_LANGUAGE,
-    CONF_STATION,
-    DEFAULT_NAME,
-    DOMAIN,
-    SENSOR_TYPES,
-)
+from .const import AQHI_SENSOR, DEFAULT_NAME, DOMAIN, SENSOR_TYPES
 
 ALERTS = [
     ("advisories", "Advisory", "mdi:bell-alert"),
@@ -72,6 +65,7 @@ class ECSensor(ECBaseEntity, SensorEntity):
         else:
             self._attr_native_unit_of_measurement = description.unit_convert
         self._attr_device_class = description.device_class
+        self._unique_id_tail = self._entity_description.key
 
     @property
     def native_value(self):
@@ -106,13 +100,6 @@ class ECSensor(ECBaseEntity, SensorEntity):
         return value
 
     @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        station = self._config[CONF_STATION]
-        lang = self._config[CONF_LANGUAGE]
-        return f"{station}-{lang}-{self._entity_description.key}"
-
-    @property
     def icon(self):
         """Return the icon."""
         return self._entity_description.icon
@@ -128,6 +115,7 @@ class ECAlertSensor(ECBaseEntity, SensorEntity):
 
         self._alert_name = alert_name
         self._alert_attrs = None
+        self._unique_id_tail = self._alert_name[0]
 
     @property
     def native_value(self):
@@ -145,13 +133,6 @@ class ECAlertSensor(ECBaseEntity, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._alert_attrs
-
-    @property
-    def unique_id(self):
-        """Return a unique_id for this entity."""
-        station = self._config[CONF_STATION]
-        lang = self._config[CONF_LANGUAGE]
-        return f"{station}-{lang}-{self._alert_name[0]}"
 
     @property
     def icon(self):

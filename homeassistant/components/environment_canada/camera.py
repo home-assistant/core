@@ -6,16 +6,11 @@ import datetime
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import entity_platform
 
 from . import ECBaseEntity
-from .const import ATTR_OBSERVATION_TIME, CONF_LANGUAGE, DEFAULT_NAME, DOMAIN
+from .const import ATTR_OBSERVATION_TIME, DEFAULT_NAME, DOMAIN
 
 ATTR_UPDATED = "updated"
 
@@ -56,6 +51,7 @@ class ECCamera(ECBaseEntity, Camera):
         self.content_type = "image/gif"
         self.image = None
         self.timestamp = None
+        self._unique_id_tail = "radar"
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -76,23 +72,6 @@ class ECCamera(ECBaseEntity, Camera):
         """Set the type of radar to display."""
         self._coordinator.ec_data.precip_type = radar_type.lower()
         await self._coordinator.async_config_entry_first_refresh()
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        # The combination of coords and language are unique for all EC weather reporting
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}-{self._config[CONF_LANGUAGE]}-radar"
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return {
-            "identifiers": {(DOMAIN,)},
-            "manufacturer": "Environment Canada",
-            "model": "Weather Radar",
-            "default_name": "Weather Radar",
-            "entry_type": "service",
-        }
 
     @property
     def icon(self):

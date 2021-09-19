@@ -25,13 +25,7 @@ from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
 from . import ECBaseEntity
-from .const import (
-    CONF_LANGUAGE,
-    CONF_STATION,
-    DEFAULT_NAME,
-    DOMAIN,
-    EC_ICON_TO_HA_CONDITION_MAP,
-)
+from .const import DEFAULT_NAME, DOMAIN, EC_ICON_TO_HA_CONDITION_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,14 +64,7 @@ class ECWeather(ECBaseEntity, WeatherEntity):
 
         self._is_metric = is_metric
         self._hourly = hourly
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        suffix = "-hourly" if self._hourly else ""
-
-        # The combination of station and language are unique for all EC weather reporting
-        return f"{self._config[CONF_STATION]}-{self._config[CONF_LANGUAGE]}-weather{suffix}"
+        self._unique_id_tail = f'weather{"-hourly" if self._hourly else ""}'
 
     @property
     def entity_registry_enabled_default(self) -> bool:
