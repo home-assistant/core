@@ -150,24 +150,18 @@ class SwitchBot(CoordinatorEntity, SwitchbotEntity, SwitchEntity, RestoreEntity)
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.turn_on)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.turn_on)
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
 
         async with self.coordinator.api_lock:
-            update_ok = await self.hass.async_add_executor_job(self._device.turn_off)
-
-        if update_ok:
-            self._last_run_success = True
-        else:
-            self._last_run_success = False
+            self._last_run_success = bool(
+                await self.hass.async_add_executor_job(self._device.turn_off)
+            )
 
     @property
     def assumed_state(self) -> bool:
