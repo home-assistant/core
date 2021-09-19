@@ -20,6 +20,12 @@ USER_INPUT = {
     CONF_MAC: "e7:89:43:99:99:99",
 }
 
+USER_INPUT_CURTAIN = {
+    CONF_NAME: "test-name",
+    CONF_PASSWORD: "test-password",
+    CONF_MAC: "e7:89:43:90:90:90",
+}
+
 USER_INPUT_UNSUPPORTED_DEVICE = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",

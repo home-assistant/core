@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     USER_INPUT,
+    USER_INPUT_CURTAIN,
     USER_INPUT_INVALID,
     USER_INPUT_UNSUPPORTED_DEVICE,
     YAML_CONFIG,
@@ -70,6 +71,33 @@ async def test_user_form_valid_mac(hass):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured_device"
+
+    # test curtain device creation.
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_CURTAIN,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test-name"
+    assert result["data"] == {
+        CONF_MAC: "e7:89:43:90:90:90",
+        CONF_NAME: "test-name",
+        CONF_PASSWORD: "test-password",
+        CONF_SENSOR_TYPE: "curtain",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_form_unsupported_device(hass):
