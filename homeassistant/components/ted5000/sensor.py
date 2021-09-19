@@ -287,9 +287,7 @@ class Ted5000Gateway:
                 }
 
             """Utility Data"""
-            CurrentRate = int(
-                doc["LiveData"]["Utility"]["CurrentRate"]
-            )
+            CurrentRate = int(doc["LiveData"]["Utility"]["CurrentRate"])
             DaysLeftInBillingCycle = int(
                 doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"]
             )
