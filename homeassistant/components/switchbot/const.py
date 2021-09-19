@@ -4,6 +4,7 @@ MANUFACTURER = "switchbot"
 
 # Config Attributes
 ATTR_BOT = "bot"
+ATTR_CURTAIN = "curtain"
 DEFAULT_NAME = "Switchbot"
 
 # Config Defaults
