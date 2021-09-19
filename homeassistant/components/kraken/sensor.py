@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
@@ -17,6 +18,8 @@ from .const import (
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
     SENSOR_TYPES,
+    KrakenResponse,
+    KrakenSensorEntityDescription,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,14 +78,16 @@ async def async_setup_entry(
     )
 
 
-class KrakenSensor(CoordinatorEntity, SensorEntity):
+class KrakenSensor(CoordinatorEntity[Optional[KrakenResponse]], SensorEntity):
     """Define a Kraken sensor."""
+
+    entity_description: KrakenSensorEntityDescription
 
     def __init__(
         self,
         kraken_data: KrakenData,
         tracked_asset_pair: str,
-        description: SensorEntityDescription,
+        description: KrakenSensorEntityDescription,
     ) -> None:
         """Initialize."""
         assert kraken_data.coordinator is not None
@@ -125,71 +130,9 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
 
     def _update_internal_state(self) -> None:
         try:
-            sensor_type = self.entity_description.key
-            if sensor_type == "last_trade_closed":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["last_trade_closed"][0]
-            if sensor_type == "ask":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["ask"][0]
-            if sensor_type == "ask_volume":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["ask"][1]
-            if sensor_type == "bid":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["bid"][0]
-            if sensor_type == "bid_volume":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["bid"][1]
-            if sensor_type == "volume_today":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["volume"][0]
-            if sensor_type == "volume_last_24h":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["volume"][1]
-            if sensor_type == "volume_weighted_average_today":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["volume_weighted_average"][0]
-            if sensor_type == "volume_weighted_average_last_24h":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["volume_weighted_average"][1]
-            if sensor_type == "number_of_trades_today":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["number_of_trades"][0]
-            if sensor_type == "number_of_trades_last_24h":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["number_of_trades"][1]
-            if sensor_type == "low_today":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["low"][0]
-            if sensor_type == "low_last_24h":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["low"][1]
-            if sensor_type == "high_today":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["high"][0]
-            if sensor_type == "high_last_24h":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["high"][1]
-            if sensor_type == "opening_price_today":
-                self._attr_native_value = self.coordinator.data[
-                    self.tracked_asset_pair_wsname
-                ]["opening_price"]
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator, self.tracked_asset_pair_wsname  # type: ignore[arg-type]
+            )
             self._received_data_at_least_once = True  # Received data at least one time.
         except TypeError:
             if self._received_data_at_least_once:
