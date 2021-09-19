@@ -1012,6 +1012,7 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchbot/binary_sensor.py
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/entity.py

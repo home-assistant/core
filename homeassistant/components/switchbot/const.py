@@ -1,4 +1,6 @@
 """Constants for the switchbot integration."""
+from enum import Enum
+
 DOMAIN = "switchbot"
 MANUFACTURER = "switchbot"
 
@@ -24,3 +26,10 @@ CONF_SCAN_TIMEOUT = "scan_timeout"
 DATA_COORDINATOR = "coordinator"
 BTLE_LOCK = "btle_lock"
 COMMON_OPTIONS = "common_options"
+
+
+class BinarySensorType(Enum):
+    """Binary_sensors and their types to expose in HA."""
+
+    # pylint: disable=invalid-name
+    calibration = "None"
