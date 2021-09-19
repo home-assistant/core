@@ -256,7 +256,7 @@ class Ted5000Gateway:
                 4: CurrentTier,
                 5: CurrentTOU,
                 6: CurrentTOUDescription,
-                7: CarbonRate/100,
+                7: CarbonRate / 100,
                 8: MeterReadDate,
             }
             
