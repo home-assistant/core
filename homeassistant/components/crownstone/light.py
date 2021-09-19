@@ -33,7 +33,7 @@ from .const import (
     SIG_CROWNSTONE_STATE_UPDATE,
     SIG_UART_STATE_CHANGE,
 )
-from .devices import CrownstoneDevice
+from .devices import CrownstoneBaseEntity
 from .helpers import map_from_to
 
 if TYPE_CHECKING:
@@ -76,14 +76,13 @@ def hass_to_crownstone_state(value: int) -> int:
     return map_from_to(value, 0, 255, 0, 100)
 
 
-class CrownstoneEntity(CrownstoneDevice, LightEntity):
+class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
     """
     Representation of a crownstone.
 
     Light platform is used to support dimming.
     """
 
-    _attr_should_poll = False
     _attr_icon = "mdi:power-socket-de"
 
     def __init__(self, crownstone_data: Crownstone, usb: CrownstoneUart = None) -> None:
