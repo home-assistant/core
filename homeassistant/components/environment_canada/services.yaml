@@ -1,9 +1,9 @@
 set_radar_type:
   name: Set radar type
-  description: Set the type of radar to display for this camera.
+  description: Set the type of radar image to retrieve.
   target:
     entity:
-      integration: environment_canada2
+      integration: environment_canada
       domain: camera
   fields:
     radar_type:
