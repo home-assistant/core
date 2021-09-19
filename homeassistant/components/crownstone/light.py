@@ -1,17 +1,12 @@
 """Support for Crownstone devices."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
-from crownstone_cloud.const import (
-    DIMMING_ABILITY,
-    SWITCHCRAFT_ABILITY,
-    TAP_TO_TOGGLE_ABILITY,
-)
+from crownstone_cloud.const import DIMMING_ABILITY
 from crownstone_cloud.exceptions import CrownstoneAbilityError
 from crownstone_uart import CrownstoneUart
 
@@ -26,7 +21,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ABILITY_STATE,
     CROWNSTONE_INCLUDE_TYPES,
     CROWNSTONE_SUFFIX,
     DOMAIN,
@@ -111,29 +105,6 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
         if self.device.abilities.get(DIMMING_ABILITY).is_enabled:
             return SUPPORT_BRIGHTNESS
         return 0
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """State attributes for Crownstone devices."""
-        attributes: dict[str, Any] = {}
-        # switch method
-        if self.usb is not None and self.usb.is_ready():
-            attributes["switch_method"] = "Crownstone USB Dongle"
-        else:
-            attributes["switch_method"] = "Crownstone Cloud"
-
-        # crownstone abilities
-        attributes["dimming"] = ABILITY_STATE.get(
-            self.device.abilities.get(DIMMING_ABILITY).is_enabled
-        )
-        attributes["tap_to_toggle"] = ABILITY_STATE.get(
-            self.device.abilities.get(TAP_TO_TOGGLE_ABILITY).is_enabled
-        )
-        attributes["switchcraft"] = ABILITY_STATE.get(
-            self.device.abilities.get(SWITCHCRAFT_ABILITY).is_enabled
-        )
-
-        return attributes
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
