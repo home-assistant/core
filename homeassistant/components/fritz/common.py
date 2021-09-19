@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, Callable, TypedDict, ValuesView
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
@@ -35,6 +35,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
     TRACKER_SCAN_INTERVAL,
@@ -299,6 +300,39 @@ class FritzBoxTools:
                     "WANIPConn1",
                     "ForceTermination",
                 )
+            elif service == SERVICE_CLEANUP:
+                device_hosts_list: list = await self.hass.async_add_executor_job(
+                    self.fritz_hosts.get_hosts_info
+                )
+                ha_hosts_list: ValuesView[
+                    FritzDevice
+                ] = await self.hass.async_add_executor_job(
+                    lambda: self.devices.values()
+                )
+
+                found: bool = False
+                for ha_host in ha_hosts_list:
+                    for device in device_hosts_list:
+                        if (
+                            ha_host.hostname == device["name"]
+                            and ha_host.mac_address == device["mac"]
+                        ):
+                            found = True
+                            break
+                    if not found:
+                        # delete entity!
+                        _LOGGER.warning(
+                            "TODO - Device %s [%s] deleted from HA",
+                            ha_host.hostname,
+                            ha_host.mac_address,
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "Device %s [%s] present on device and Ha",
+                            ha_host.hostname,
+                            ha_host.mac_address,
+                        )
+
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError("Service or parameter unknown") from ex
         except FritzConnectionException as ex:
