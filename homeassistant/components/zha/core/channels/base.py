@@ -92,6 +92,11 @@ class ZigbeeChannel(LogMixin):
     REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
     BIND: bool = True
 
+    # Dict of attributes to read on channel initialization.
+    # Dict keys -- attribute ID or names, with bool value indicating whether a cached
+    # attribute read is acceptable.
+    ZCL_INIT_ATTRS: dict[int | str, bool] = {}
+
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
