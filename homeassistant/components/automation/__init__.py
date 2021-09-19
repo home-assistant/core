@@ -1,6 +1,7 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any, Awaitable, Callable, Dict, TypedDict, cast
 
@@ -68,7 +69,7 @@ from homeassistant.helpers.trace import (
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util.dt import parse_datetime
+from homeassistant.util.dt import parse_datetime, utcnow
 
 from .config import AutomationConfig, async_validate_config_item
 from .const import (
@@ -320,12 +321,13 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
+        self._last_triggered: datetime | None = None
 
     @property
     def extra_state_attributes(self):
         """Return the entity state attributes."""
         attrs = {
-            ATTR_LAST_TRIGGERED: self.action_script.last_triggered,
+            ATTR_LAST_TRIGGERED: self._last_triggered,
             ATTR_MODE: self.action_script.script_mode,
             ATTR_CUR: self.action_script.runs,
         }
@@ -398,7 +400,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             enable_automation = state.state == STATE_ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
-                self.action_script.last_triggered = parse_datetime(last_triggered)
+                self._last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
                 "Loaded automation %s with state %s from state "
                 " storage last state %s",
@@ -442,6 +444,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         This method is a coroutine.
         """
+        self._last_triggered = utcnow()
+
         reason = ""
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
             reason = f' by {run_variables["trigger"]["description"]}'

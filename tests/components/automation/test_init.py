@@ -82,7 +82,7 @@ async def test_service_specify_data(hass, calls):
 
     time = dt_util.utcnow()
 
-    with patch("homeassistant.helpers.script.utcnow", return_value=time):
+    with patch("homeassistant.components.automation.utcnow", return_value=time):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
