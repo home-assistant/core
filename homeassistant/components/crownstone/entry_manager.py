@@ -20,6 +20,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_S
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_USB_PATH,
@@ -114,8 +115,7 @@ class CrownstoneEntryManager:
         async with sse_client as client:
             async for event in client:
                 if event is not None:
-                    # Make SSE updates, like ability change, available to the user
-                    self.hass.bus.async_fire(f"{DOMAIN}_{event.type}", event.data)
+                    async_dispatcher_send(self.hass, f"{DOMAIN}_{event.type}", event)
 
     async def async_setup_usb(self) -> None:
         """Attempt setup of a Crownstone usb dongle."""
