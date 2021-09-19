@@ -23,8 +23,8 @@ from homeassistant.const import (
     CURRENCY_DOLLAR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -68,15 +68,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     gateway.update()
 
     dev = []
+    
+    # Create MTU sensors
     for mtu in gateway.data:
         dev.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
         dev.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
-        if lvl[mode] >= 2: #advanced or extended
+        if lvl[mode] >= 2: # advanced or extended
             dev.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_WATT_HOUR))
             dev.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_WATT_HOUR))
             dev.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
-        
-    if lvl[mode] >= 3: #extended only
+    
+    # Create utility sensors
+    if lvl[mode] >= 3: # extended only
         dev.append(Ted5000Utility(gateway, name, 0, ATTR_HIDDEN))       # MTUs Quantity
         dev.append(Ted5000Utility(gateway, name, 1, CURRENCY_DOLLAR))   # Current Rate $/kWh
         dev.append(Ted5000Utility(gateway, name, 2, TIME_DAYS))         # Days left in billing cycle
@@ -157,7 +160,7 @@ class Ted5000Utility(SensorEntity):
         self.update()
         
     @property
-    def name (self):
+    def name(self):
         """Return the friendly_name of the sensor."""
         return self._name
 
@@ -239,13 +242,13 @@ class Ted5000Gateway:
             if PlanType == 0 or PlanType == 2:
                 CurrentTier = 0
             else:
-                CurrentTier = int(doc["LiveData"]["Utility"]["CurrentTier"])+1
+                CurrentTier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
                 
             if PlanType < 2:
                 CurrentTOU = 0
                 CurrentTOUDescription = "Not Configured"
             else:
-                CurrentTOU = int(doc["LiveData"]["Utility"]["CurrentTOU"])+1
+                CurrentTOU = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
                 CurrentTOUDescription = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
             
             self.dataUtility = {
@@ -259,4 +262,3 @@ class Ted5000Gateway:
                 7: CarbonRate / 100,
                 8: MeterReadDate,
             }
-            
