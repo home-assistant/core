@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
+from typing import cast
 
 from surepy.entities import SurepyEntity
+from surepy.entities.pet import Pet as SurepyPet
 from surepy.enums import EntityType, Location
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +14,9 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PRESENCE,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -23,10 +27,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Sure PetCare Flaps binary sensors based on a config entry."""
 
-    entities: list[SurepyEntity | Pet | Hub | DeviceConnectivity] = []
+    entities: list[SurePetcareBinarySensor] = []
 
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -75,7 +81,7 @@ class SurePetcareBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @abstractmethod
     @callback
-    def _update_attr(self, surepy_entity) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state and attributes."""
 
     @callback
@@ -96,7 +102,7 @@ class Hub(SurePetcareBinarySensor):
         return super().available and bool(self._attr_is_on)
 
     @callback
-    def _update_attr(self, surepy_entity) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
         state = surepy_entity.raw_data()["status"]
         self._attr_is_on = self._attr_available = bool(state["online"])
@@ -118,8 +124,9 @@ class Pet(SurePetcareBinarySensor):
     _attr_device_class = DEVICE_CLASS_PRESENCE
 
     @callback
-    def _update_attr(self, surepy_entity) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
+        surepy_entity = cast(SurepyPet, surepy_entity)
         state = surepy_entity.location
         try:
             self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
@@ -153,7 +160,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         )
 
     @callback
-    def _update_attr(self, surepy_entity):
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         state = surepy_entity.raw_data()["status"]
         self._attr_is_on = bool(state)
         if state:
