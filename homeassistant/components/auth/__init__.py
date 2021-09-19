@@ -133,7 +133,7 @@ from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN, HTTP_OK
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -273,15 +273,15 @@ class TokenView(HomeAssistantView):
         token = data.get("token")
 
         if token is None:
-            return web.Response(status=HTTP_OK)
+            return web.Response()
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
-            return web.Response(status=HTTP_OK)
+            return web.Response()
 
         await hass.auth.async_remove_refresh_token(refresh_token)
-        return web.Response(status=HTTP_OK)
+        return web.Response()
 
     async def _async_handle_auth_code(self, hass, data, remote_addr):
         """Handle authorization code request."""
