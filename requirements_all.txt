@@ -49,7 +49,7 @@ PyRMVtransport==0.3.2
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.8.0
+# PySwitchbot==0.11.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -243,7 +243,7 @@ aiorecollect==1.0.8
 aioshelly==0.6.4
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.5
+aioswitcher==2.0.6
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -276,7 +276,7 @@ ambee==0.3.0
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.9.2
+amcrest==1.9.3
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.60
@@ -369,7 +369,7 @@ beautifulsoup4==4.9.3
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.27.0
+bellows==0.28.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.20
@@ -1319,7 +1319,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.19.0
+pyTibber==0.19.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1385,7 +1385,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==9.2.0
+pychromecast==9.2.1
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1418,7 +1418,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==83
+pydeconz==84
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -2466,7 +2466,7 @@ youtube_dl==2021.04.26
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.3
+zeroconf==0.36.5
 
 # homeassistant.components.zha
 zha-quirks==0.0.61

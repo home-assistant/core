@@ -7,7 +7,7 @@ from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -38,9 +38,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_refresh()
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, async_finish_startup)
-    )
+    if hass.state == CoreState.running:
+        await async_finish_startup(None)
+    else:
+        entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, async_finish_startup
+            )
+        )
 
     return True
 

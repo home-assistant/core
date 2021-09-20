@@ -6,6 +6,7 @@ import contextlib
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
+import socket
 from urllib.parse import urlparse
 
 from async_upnp_client.search import SsdpSearchListener
@@ -70,8 +71,8 @@ ACTION_RECOVER = "recover"
 ACTION_STAY = "stay"
 ACTION_OFF = "off"
 
-ACTIVE_MODE_NIGHTLIGHT = "1"
-ACTIVE_COLOR_FLOWING = "1"
+ACTIVE_MODE_NIGHTLIGHT = 1
+ACTIVE_COLOR_FLOWING = 1
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
@@ -163,7 +164,9 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
-BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError)
+BULB_NETWORK_EXCEPTIONS = (socket.error, asyncio.TimeoutError)
+BULB_EXCEPTIONS = (BulbException, *BULB_NETWORK_EXCEPTIONS)
+
 
 PLATFORMS = ["binary_sensor", "light"]
 
@@ -582,6 +585,11 @@ class YeelightDevice:
         """Return true is device is available."""
         return self._available
 
+    @callback
+    def async_mark_unavailable(self):
+        """Set unavailable on api call failure due to a network issue."""
+        self._available = False
+
     @property
     def model(self):
         """Return configured/autodetected device model."""
@@ -610,7 +618,7 @@ class YeelightDevice:
         # Only ceiling lights have active_mode, from SDK docs:
         # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
         if self._active_mode is not None:
-            return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
+            return int(self._active_mode) == ACTIVE_MODE_NIGHTLIGHT
 
         if self._nightlight_brightness is not None:
             return int(self._nightlight_brightness) > 0
@@ -620,7 +628,7 @@ class YeelightDevice:
     @property
     def is_color_flow_enabled(self) -> bool:
         """Return true / false if color flow is currently running."""
-        return self._color_flow == ACTIVE_COLOR_FLOWING
+        return int(self._color_flow) == ACTIVE_COLOR_FLOWING
 
     @property
     def _active_mode(self):
@@ -641,26 +649,6 @@ class YeelightDevice:
             self._device_type = self.bulb.bulb_type
 
         return self._device_type
-
-    async def async_turn_on(
-        self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None
-    ):
-        """Turn on device."""
-        try:
-            await self.bulb.async_turn_on(
-                duration=duration, light_type=light_type, power_mode=power_mode
-            )
-        except BULB_EXCEPTIONS as ex:
-            _LOGGER.error("Unable to turn the bulb on: %s", ex)
-
-    async def async_turn_off(self, duration=DEFAULT_TRANSITION, light_type=None):
-        """Turn off device."""
-        try:
-            await self.bulb.async_turn_off(duration=duration, light_type=light_type)
-        except BULB_EXCEPTIONS as ex:
-            _LOGGER.error(
-                "Unable to turn the bulb off: %s, %s: %s", self._host, self.name, ex
-            )
 
     async def _async_update_properties(self):
         """Read new properties from the device."""

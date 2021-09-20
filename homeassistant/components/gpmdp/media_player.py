@@ -1,8 +1,11 @@
 """Support for Google Play Music Desktop Player."""
+from __future__ import annotations
+
 import json
 import logging
 import socket
 import time
+from typing import Any
 
 import voluptuous as vol
 from websocket import _exceptions, create_connection
@@ -28,7 +31,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-_CONFIGURING = {}
+_CONFIGURING: dict[str, Any] = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"

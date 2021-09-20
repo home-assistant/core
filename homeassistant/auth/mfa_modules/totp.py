@@ -92,9 +92,7 @@ class TotpAuthModule(MultiFactorAuthModule):
             if self._users is not None:
                 return
 
-            data = await self._user_store.async_load()
-
-            if data is None:
+            if (data := await self._user_store.async_load()) is None:
                 data = {STORAGE_USERS: {}}
 
             self._users = data.get(STORAGE_USERS, {})
@@ -163,8 +161,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Validate two factor authentication code."""
         import pyotp  # pylint: disable=import-outside-toplevel
 
-        ota_secret = self._users.get(user_id)  # type: ignore
-        if ota_secret is None:
+        if (ota_secret := self._users.get(user_id)) is None:  # type: ignore
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
             pyotp.TOTP(DUMMY_SECRET).verify(code, valid_window=1)
