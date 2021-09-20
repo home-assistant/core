@@ -350,7 +350,10 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
         """Fetch state from the device."""
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
-            {attribute: None for attribute in self._available_attributes}
+            {
+                key: getattr(self.coordinator.data, value)
+                for key, value in self._available_attributes.items()
+            }
         )
         self._mode = self.coordinator.data.mode.value
         self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
@@ -412,7 +415,10 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
 
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
-            {attribute: None for attribute in self._available_attributes}
+            {
+                key: getattr(self.coordinator.data, value)
+                for key, value in self._available_attributes.items()
+            }
         )
         self._mode = self.coordinator.data.mode.value
         self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
@@ -599,7 +605,10 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
 
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
-            {attribute: None for attribute in self._available_attributes}
+            {
+                key: getattr(self.coordinator.data, value)
+                for key, value in self._available_attributes.items()
+            }
         )
         self._mode = self.coordinator.data.mode.value
 
