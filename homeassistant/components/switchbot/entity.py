@@ -1,6 +1,9 @@
 """An abstract class common to all Switchbot entities."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -34,9 +37,10 @@ class SwitchbotEntity(CoordinatorEntity, Entity):
 
     @property
     def data(self) -> dict[str, Any]:
-        return self.coordinator.data[self._idx]["data"]    
+        """Return coordinator data for this entity."""
+        return self.coordinator.data[self._idx]
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> Mapping[Any, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success, "mac_address": self._mac}

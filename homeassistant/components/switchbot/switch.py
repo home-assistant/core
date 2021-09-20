@@ -84,7 +84,7 @@ async def async_setup_entry(
                 entry.unique_id,
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
-                entry.data.get(CONF_PASSWORD, None),
+                entry.data.get(CONF_PASSWORD),
                 entry.options[CONF_RETRY_COUNT],
             )
         ]
@@ -103,7 +103,7 @@ class SwitchBot(SwitchbotEntity, SwitchEntity, RestoreEntity):
         idx: str | None,
         mac: str,
         name: str,
-        password: str,
+        password: str | None,
         retry_count: int,
     ) -> None:
         """Initialize the Switchbot."""
@@ -143,19 +143,19 @@ class SwitchBot(SwitchbotEntity, SwitchEntity, RestoreEntity):
     @property
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
-        if not self.coordinator.data[self._idx]["data"]["switchMode"]:
+        if not self.data["data"]["switchMode"]:
             return True
         return False
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.data["isOn"]
+        return self.data["data"]["isOn"]
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
             **super().extra_state_attributes,
-            "switch_mode": self.data["switchMode"],
+            "switch_mode": self.data["data"]["switchMode"],
         }

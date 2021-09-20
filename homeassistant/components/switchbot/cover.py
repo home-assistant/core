@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -67,7 +67,7 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
         idx: str | None,
         mac: str,
         name: str,
-        password: str,
+        password: str | None,
         retry_count: int,
     ) -> None:
         """Initialize the Switchbot."""
@@ -86,11 +86,7 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         self._attr_current_cover_position = last_state.attributes[ATTR_CURRENT_POSITION]
         self._last_run_success = last_state.attributes["last_run_success"]
-
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        return self.coordinator.data[self._idx]["data"]["position"] <= 20
+        self._attr_is_closed = last_state.attributes[ATTR_CURRENT_POSITION] <= 20
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
@@ -135,11 +131,9 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
                 )
             )
 
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_cover_position = self.data["position"]
-        self._attr_is_closed = self.data["position"] <= 20
+        self._attr_current_cover_position = self.data["data"]["position"]
+        self._attr_is_closed = self.data["data"]["position"] <= 20
         self.async_write_ha_state()
-
