@@ -180,7 +180,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         # This allows transitioning to off, but resets the brightness
         # to 1 for the next set_state(True) command
         if not self._device_control:
-            return None
+            return
         transition_time = None
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
@@ -193,7 +193,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not self._device_control:
-            return None
+            return
         transition_time = None
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
