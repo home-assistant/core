@@ -17,7 +17,7 @@ def get_url(hass):
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
 
-async def setup_image_processing(hass, aiohttp_unused_port, enable_custom_integrations):
+async def setup_image_processing(hass, aiohttp_unused_port):
     """Set up things to be run when tests are started."""
     await async_setup_component(
         hass,
@@ -77,7 +77,7 @@ async def test_get_image_from_camera(
     mock_camera_read, hass, aiohttp_unused_port, enable_custom_integrations
 ):
     """Grab an image from camera entity."""
-    await setup_image_processing(hass, aiohttp_unused_port, enable_custom_integrations)
+    await setup_image_processing(hass, aiohttp_unused_port)
 
     common.async_scan(hass, entity_id="image_processing.test")
     await hass.async_block_till_done()
@@ -97,7 +97,7 @@ async def test_get_image_without_exists_camera(
     mock_image, hass, aiohttp_unused_port, enable_custom_integrations
 ):
     """Try to get image without exists camera."""
-    await setup_image_processing(hass, aiohttp_unused_port, enable_custom_integrations)
+    await setup_image_processing(hass, aiohttp_unused_port)
 
     hass.states.async_remove("camera.demo_camera")
 
