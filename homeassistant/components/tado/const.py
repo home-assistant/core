@@ -48,10 +48,28 @@ CONF_FALLBACK = "fallback"
 DATA = "data"
 UPDATE_TRACK = "update_track"
 
+# Weather
+CONDITIONS_MAP = {
+    "clear-night": {"NIGHT_CLEAR"},
+    "cloudy": {"CLOUDY", "CLOUDY_MOSTLY", "NIGHT_CLOUDY"},
+    "fog": {"FOGGY"},
+    "hail": {"HAIL", "RAIN_HAIL"},
+    "lightning": {"THUNDERSTORM"},
+    "partlycloudy": {"CLOUDY_PARTLY"},
+    "rainy": {"DRIZZLE", "RAIN", "SCATTERED_RAIN"},
+    "snowy": {"FREEZING", "SCATTERED_SNOW", "SNOW"},
+    "snowy-rainy": {"RAIN_SNOW", "SCATTERED_RAIN_SNOW"},
+    "sunny": {"SUN"},
+    "windy": {"WIND"},
+}
+
 # Types
 TYPE_AIR_CONDITIONING = "AIR_CONDITIONING"
 TYPE_HEATING = "HEATING"
 TYPE_HOT_WATER = "HOT_WATER"
+
+TYPE_BATTERY = "BATTERY"
+TYPE_POWER = "POWER"
 
 # Base modes
 CONST_MODE_OFF = "OFF"
@@ -72,7 +90,9 @@ CONST_FAN_HIGH = "HIGH"
 
 
 # When we change the temperature setting, we need an overlay mode
-CONST_OVERLAY_TADO_MODE = "TADO_MODE"  # wait until tado changes the mode automatic
+CONST_OVERLAY_TADO_MODE = (
+    "NEXT_TIME_BLOCK"  # wait until tado changes the mode automatic
+)
 CONST_OVERLAY_MANUAL = "MANUAL"  # the user has change the temperature or mode manually
 CONST_OVERLAY_TIMER = "TIMER"  # the temperature will be reset after a timespan
 
@@ -144,6 +164,19 @@ UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"
 
-TADO_BRIDGE = "Tado Bridge"
+TADO_HOME = "Home"
+TADO_ZONE = "Zone"
 
 UPDATE_LISTENER = "update_listener"
+
+# Constants for Temperature Offset
+INSIDE_TEMPERATURE_MEASUREMENT = "INSIDE_TEMPERATURE_MEASUREMENT"
+TEMP_OFFSET = "temperatureOffset"
+TADO_OFFSET_CELSIUS = "celsius"
+HA_OFFSET_CELSIUS = "offset_celsius"
+TADO_OFFSET_FAHRENHEIT = "fahrenheit"
+HA_OFFSET_FAHRENHEIT = "offset_fahrenheit"
+TADO_TO_HA_OFFSET_MAP = {
+    TADO_OFFSET_CELSIUS: HA_OFFSET_CELSIUS,
+    TADO_OFFSET_FAHRENHEIT: HA_OFFSET_FAHRENHEIT,
+}

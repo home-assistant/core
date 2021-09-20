@@ -10,7 +10,7 @@
             "default": "Authentifi\u00e9 avec succ\u00e8s \u00e0 Withings pour le profil s\u00e9lectionn\u00e9."
         },
         "error": {
-            "profile_exists": "Le profil utilisateur est d\u00e9j\u00e0 configur\u00e9. Veuillez fournir un nom de profil unique."
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
         },
         "flow_title": "Withings: {profile}",
         "step": {

@@ -35,7 +35,7 @@ class UpdaterBinary(CoordinatorEntity, BinarySensorEntity):
         return self.coordinator.data.update_available
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         if not self.coordinator.data:
             return None

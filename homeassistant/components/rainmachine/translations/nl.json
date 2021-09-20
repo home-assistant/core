@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze RainMachine controller is al geconfigureerd."
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "identifier_exists": "Account bestaat al",
-            "invalid_credentials": "Ongeldige gebruikersgegevens"
+            "invalid_auth": "Ongeldige authenticatie"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -15,6 +15,16 @@
                     "port": "Poort"
                 },
                 "title": "Vul uw gegevens in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Standaardlooptijd van de zone (in seconden)"
+                },
+                "title": "Configureer RainMachine"
             }
         }
     }

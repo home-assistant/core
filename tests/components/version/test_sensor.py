@@ -1,7 +1,7 @@
 """The test for the version sensor platform."""
-from homeassistant.setup import async_setup_component
+from unittest.mock import patch
 
-from tests.async_mock import patch
+from homeassistant.setup import async_setup_component
 
 MOCK_VERSION = "10.0"
 

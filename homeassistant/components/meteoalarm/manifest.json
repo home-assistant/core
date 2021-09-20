@@ -3,5 +3,6 @@
   "name": "MeteoAlarm",
   "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
   "requirements": ["meteoalertapi==0.1.6"],
-  "codeowners": ["@rolfberkenbosch"]
+  "codeowners": ["@rolfberkenbosch"],
+  "iot_class": "local_polling"
 }

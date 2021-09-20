@@ -15,7 +15,7 @@
                     "api_key": "Klucz API",
                     "url": "URL"
                 },
-                "description": "- URL: adres url Twojej instancji Nightscout. Np: https://myhomeassistant.duckdns.org:5423\n- Klucz API (opcjonalny): u\u017cywaj tylko wtedy, gdy Twoja instancja jest chroniona (auth_default_roles! = readable).",
+                "description": "- URL: adres URL Twojej instancji Nightscout. Np: https://m\u00f3jhomeassistant.duckdns.org:5423\n- Klucz API (opcjonalny): u\u017cywaj tylko wtedy, gdy Twoja instancja jest chroniona (auth_default_roles! = readable).",
                 "title": "Wprowad\u017a informacje o serwerze Nightscout."
             }
         }

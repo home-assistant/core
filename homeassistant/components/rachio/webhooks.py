@@ -1,7 +1,4 @@
 """Webhooks used by rachio."""
-
-import logging
-
 from aiohttp import web
 
 from homeassistant.const import URL_API
@@ -78,9 +75,6 @@ SIGNAL_MAP = {
     TYPE_SCHEDULE_STATUS: SIGNAL_RACHIO_SCHEDULE_UPDATE,
     TYPE_ZONE_STATUS: SIGNAL_RACHIO_ZONE_UPDATE,
 }
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback

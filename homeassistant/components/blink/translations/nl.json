@@ -1,6 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_access_token": "Ongeldig toegangstoken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -8,7 +14,7 @@
                 "data": {
                     "2fa": "Twee-factor code"
                 },
-                "description": "Voer de pincode in die naar uw e-mail is gestuurd. Als de e-mail geen pincode bevat, laat u dit leeg",
+                "description": "Voer de pincode in die naar uw e-mail is gestuurd.",
                 "title": "Tweestapsverificatie"
             },
             "user": {
@@ -17,6 +23,17 @@
                     "username": "Gebruikersnaam"
                 },
                 "title": "Aanmelden met Blink account"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scaninterval (seconden)"
+                },
+                "description": "Configureer Blink-integratie",
+                "title": "Blink opties"
             }
         }
     }

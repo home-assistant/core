@@ -7,7 +7,11 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
+        "flow_title": "{model} {host}",
         "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {model} ({host})?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Device"
@@ -15,8 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "IP Address"
+                    "host": "Host"
                 },
                 "description": "If you leave the host empty, discovery will be used to find devices."
             }
@@ -35,6 +38,5 @@
                 "description": "If you leave model empty, it will be automatically detected."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

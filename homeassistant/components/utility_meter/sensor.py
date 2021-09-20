@@ -5,9 +5,17 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
+    DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -36,6 +44,7 @@ from .const import (
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
+    QUARTER_HOURLY,
     QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
@@ -49,8 +58,12 @@ ATTR_SOURCE_ID = "source"
 ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
-ATTR_LAST_RESET = "last_reset"
 ATTR_TARIFF = "tariff"
+
+DEVICE_CLASS_MAP = {
+    ENERGY_WATT_HOUR: DEVICE_CLASS_ENERGY,
+    ENERGY_KILO_WATT_HOUR: DEVICE_CLASS_ENERGY,
+}
 
 ICON = "mdi:counter"
 
@@ -92,7 +105,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(meters)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
@@ -101,7 +114,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class UtilityMeterSensor(RestoreEntity):
+class UtilityMeterSensor(RestoreEntity, SensorEntity):
     """Representation of an utility meter sensor."""
 
     def __init__(
@@ -118,7 +131,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._sensor_source_id = source_entity
         self._state = 0
         self._last_period = 0
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._collecting = None
         if name:
             self._name = name
@@ -144,13 +157,7 @@ class UtilityMeterSensor(RestoreEntity):
         ):
             return
 
-        if (
-            self._unit_of_measurement is None
-            and new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
-        ):
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         try:
             diff = Decimal(new_state.state) - Decimal(old_state.state)
@@ -174,7 +181,11 @@ class UtilityMeterSensor(RestoreEntity):
         new_state = event.data.get("new_state")
         if new_state is None:
             return
-        if self._tariff == new_state.state:
+
+        self._change_status(new_state.state)
+
+    def _change_status(self, tariff):
+        if self._tariff == tariff:
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
@@ -226,7 +237,7 @@ class UtilityMeterSensor(RestoreEntity):
         if self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
-        self._last_reset = dt_util.now()
+        self._last_reset = dt_util.utcnow()
         self._last_period = str(self._state)
         self._state = 0
         self.async_write_ha_state()
@@ -241,7 +252,16 @@ class UtilityMeterSensor(RestoreEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._period == HOURLY:
+        if self._period == QUARTER_HOURLY:
+            for quarter in range(4):
+                async_track_time_change(
+                    self.hass,
+                    self._async_reset_meter,
+                    minute=(quarter * 15)
+                    + self._period_offset.seconds % (15 * 60) // 60,
+                    second=self._period_offset.seconds % 60,
+                )
+        elif self._period == HOURLY:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
@@ -264,26 +284,29 @@ class UtilityMeterSensor(RestoreEntity):
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
-            self._last_reset = state.attributes.get(ATTR_LAST_RESET)
-            self.async_write_ha_state()
-            if state.attributes.get(ATTR_STATUS) == PAUSED:
-                # Fake cancellation function to init the meter paused
+            self._last_reset = dt_util.as_utc(
+                dt_util.parse_datetime(state.attributes.get(ATTR_LAST_RESET))
+            )
+            if state.attributes.get(ATTR_STATUS) == COLLECTING:
+                # Fake cancellation function to init the meter in similar state
                 self._collecting = lambda: None
 
         @callback
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
             if self._tariff_entity is not None:
-                _LOGGER.debug("Track %s", self._tariff_entity)
+                _LOGGER.debug(
+                    "<%s> tracks utility meter %s", self.name, self._tariff_entity
+                )
                 async_track_state_change_event(
                     self.hass, [self._tariff_entity], self.async_tariff_change
                 )
 
                 tariff_entity_state = self.hass.states.get(self._tariff_entity)
-                if self._tariff != tariff_entity_state.state:
-                    return
+                self._change_status(tariff_entity_state.state)
+                return
 
-            _LOGGER.debug("tracking source: %s", self._sensor_source_id)
+            _LOGGER.debug("<%s> collecting from %s", self.name, self._sensor_source_id)
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
@@ -303,6 +326,16 @@ class UtilityMeterSensor(RestoreEntity):
         return self._state
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_MAP.get(self.unit_of_measurement)
+
+    @property
+    def state_class(self):
+        """Return the device class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
@@ -313,13 +346,12 @@ class UtilityMeterSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: self._last_period,
-            ATTR_LAST_RESET: self._last_reset,
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
@@ -331,3 +363,8 @@ class UtilityMeterSensor(RestoreEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset."""
+        return self._last_reset

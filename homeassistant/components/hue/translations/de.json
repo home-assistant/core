@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Alle Philips Hue Bridges sind bereits konfiguriert",
-            "already_configured": "Bridge ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt.",
-            "cannot_connect": "Verbindung zur Bridge nicht m\u00f6glich",
-            "discover_timeout": "Nicht in der Lage Hue Bridges zu entdecken",
-            "no_bridges": "Keine Philips Hue Bridges entdeckt",
+            "all_configured": "Es sind bereits alle Philips Hue Bridges konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "discover_timeout": "Es k\u00f6nnen keine Hue Bridges erkannt werden",
+            "no_bridges": "Keine Philips Hue Bridges erkannt",
             "not_hue_bridge": "Keine Philips Hue Bridge entdeckt",
             "unknown": "Unbekannter Fehler ist aufgetreten"
         },
         "error": {
-            "linking": "Unbekannter Link-Fehler aufgetreten.",
+            "linking": "Unerwarteter Fehler",
             "register_failed": "Registrieren fehlgeschlagen, bitte versuche es erneut"
         },
         "step": {
@@ -22,7 +22,7 @@
                 "title": "W\u00e4hle eine Hue Bridge"
             },
             "link": {
-                "description": "Dr\u00fccke den Knopf auf der Bridge, um Philips Hue mit Home Assistant zu registrieren.\n\n![Position des Buttons auf der Bridge](/static/images/config_philips_hue.jpg)",
+                "description": "Dr\u00fccke den Knopf auf der Bridge, um Philips Hue mit Home Assistant zu verkn\u00fcpfen.\n\n![Position des Buttons auf der Bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Hub verbinden"
             },
             "manual": {
@@ -58,8 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_hue_groups": "Erlaube Hue Gruppen",
-                    "allow_unreachable": "Erlauben Sie unerreichbaren Gl\u00fchbirnen, ihren Zustand korrekt zu melden"
+                    "allow_hue_groups": "Hue-Gruppen erlauben",
+                    "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden"
                 }
             }
         }

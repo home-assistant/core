@@ -93,7 +93,7 @@ class RingCam(RingEntityMixin, Camera):
         return self._device.id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -103,7 +103,7 @@ class RingCam(RingEntityMixin, Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
+        ffmpeg = ImageFrame(self._ffmpeg.binary)
 
         if self._video_url is None:
             return
@@ -121,7 +121,7 @@ class RingCam(RingEntityMixin, Camera):
         if self._video_url is None:
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(self._video_url)
 
         try:

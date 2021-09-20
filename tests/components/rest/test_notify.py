@@ -1,5 +1,8 @@
 """The tests for the rest.notify platform."""
 from os import path
+from unittest.mock import patch
+
+import respx
 
 from homeassistant import config as hass_config
 import homeassistant.components.notify as notify
@@ -7,11 +10,11 @@ from homeassistant.components.rest import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 
-
+@respx.mock
 async def test_reload_notify(hass):
     """Verify we can reload the notify service."""
+    respx.get("http://localhost") % 200
 
     assert await async_setup_component(
         hass,

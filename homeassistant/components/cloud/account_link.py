@@ -94,7 +94,7 @@ async def _get_services(hass):
 class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
     """Cloud implementation of the OAuth2 flow."""
 
-    def __init__(self, hass: HomeAssistant, service: str):
+    def __init__(self, hass: HomeAssistant, service: str) -> None:
         """Initialize cloud OAuth2 implementation."""
         self.hass = hass
         self.service = service

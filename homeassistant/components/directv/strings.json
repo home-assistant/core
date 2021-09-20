@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "DirecTV: {name}",
+    "flow_title": "{name}",
     "step": {
       "ssdp_confirm": {
         "data": {},

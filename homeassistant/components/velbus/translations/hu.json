@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "port_exists": "Ez a port m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "port_exists": "Ez a port m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         }
     }
 }

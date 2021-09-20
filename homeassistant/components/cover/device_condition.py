@@ -1,5 +1,7 @@
 """Provides device automations for Cover."""
-from typing import Any, Dict, List
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -65,10 +67,10 @@ STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 CONDITION_SCHEMA = vol.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_conditions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device conditions for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
-    conditions: List[Dict[str, Any]] = []
+    conditions: list[dict[str, Any]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):

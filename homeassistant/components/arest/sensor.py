@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -16,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         def _render(value):
             try:
-                return value_template.async_render({"value": value})
+                return value_template.async_render({"value": value}, parse_result=False)
             except TemplateError:
                 _LOGGER.exception("Error parsing value")
                 return value
@@ -124,7 +123,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class ArestSensor(Entity):
+class ArestSensor(SensorEntity):
     """Implementation of an aREST sensor for exposed variables."""
 
     def __init__(

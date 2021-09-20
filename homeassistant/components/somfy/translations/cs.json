@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "M\u016f\u017eete nastavit pouze jeden \u00fa\u010det Somfy.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
             "no_url_available": "Nen\u00ed k dispozici \u017e\u00e1dn\u00e1 adresa URL. Informace o t\u00e9to chyb\u011b naleznete [v sekci n\u00e1pov\u011bdy]({docs_url})",

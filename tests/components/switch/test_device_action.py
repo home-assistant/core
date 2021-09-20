@@ -16,6 +16,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -69,7 +70,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert actions == expected_actions
 
 
-async def test_action(hass, calls):
+async def test_action(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

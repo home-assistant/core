@@ -1,5 +1,6 @@
 """Test Google http services."""
 from datetime import datetime, timedelta, timezone
+from unittest.mock import ANY, patch
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
@@ -11,8 +12,6 @@ from homeassistant.components.google_assistant.http import (
     _get_homegraph_jwt,
     _get_homegraph_token,
 )
-
-from tests.async_mock import ANY, patch
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {

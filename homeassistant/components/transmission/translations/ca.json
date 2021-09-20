@@ -6,8 +6,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "name_exists": "Nom ja existeix",
-            "wrong_credentials": "Nom d'usuari o contrasenya incorrectes"
+            "name_exists": "Nom ja existeix"
         },
         "step": {
             "user": {

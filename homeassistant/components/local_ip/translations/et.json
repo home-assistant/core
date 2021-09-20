@@ -5,9 +5,7 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "Anduri nimi"
-                },
+                "description": "Kas soovid alustada seadistamist?",
                 "title": "Kohalik IP-aadress"
             }
         }

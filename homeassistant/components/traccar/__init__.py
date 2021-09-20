@@ -3,7 +3,12 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.const import CONF_WEBHOOK_ID, HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
+from homeassistant.const import (
+    ATTR_ID,
+    CONF_WEBHOOK_ID,
+    HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
+)
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -13,13 +18,15 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_BATTERY,
     ATTR_BEARING,
-    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_SPEED,
     ATTR_TIMESTAMP,
     DOMAIN,
 )
+
+PLATFORMS = [DEVICE_TRACKER]
+
 
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
@@ -89,9 +96,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, "Traccar", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -99,8 +104,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

@@ -44,10 +44,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "television":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.TELEVISION:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitTelevision(conn, info)], True)
         return True
 
@@ -93,9 +93,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             if TargetMediaStateValues.STOP in self.supported_media_states:
                 features |= SUPPORT_STOP
 
-        if self.service.has(CharacteristicsTypes.REMOTE_KEY):
-            if RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys:
-                features |= SUPPORT_PAUSE | SUPPORT_PLAY
+        if (
+            self.service.has(CharacteristicsTypes.REMOTE_KEY)
+            and RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys
+        ):
+            features |= SUPPORT_PAUSE | SUPPORT_PLAY
 
         return features
 

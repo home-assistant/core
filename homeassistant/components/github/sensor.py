@@ -5,7 +5,7 @@ import logging
 import github
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_NAME,
     CONF_ACCESS_TOKEN,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_URL,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class GitHubSensor(Entity):
+class GitHubSensor(SensorEntity):
     """Representation of a GitHub sensor."""
 
     def __init__(self, github_data):
@@ -119,7 +118,7 @@ class GitHubSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_PATH: self._repository_path,
@@ -228,17 +227,24 @@ class GitHubData:
             self.stargazers = repo.stargazers_count
             self.forks = repo.forks_count
 
-            open_issues = repo.get_issues(state="open", sort="created")
-            if open_issues is not None:
-                self.open_issue_count = open_issues.totalCount
-                if open_issues.totalCount > 0:
-                    self.latest_open_issue_url = open_issues[0].html_url
-
             open_pull_requests = repo.get_pulls(state="open", sort="created")
             if open_pull_requests is not None:
                 self.pull_request_count = open_pull_requests.totalCount
                 if open_pull_requests.totalCount > 0:
                     self.latest_open_pr_url = open_pull_requests[0].html_url
+
+            open_issues = repo.get_issues(state="open", sort="created")
+            if open_issues is not None:
+                if self.pull_request_count is None:
+                    self.open_issue_count = open_issues.totalCount
+                else:
+                    # pull requests are treated as issues too so we need to reduce the received count
+                    self.open_issue_count = (
+                        open_issues.totalCount - self.pull_request_count
+                    )
+
+                if open_issues.totalCount > 0:
+                    self.latest_open_issue_url = open_issues[0].html_url
 
             latest_commit = repo.get_commits()[0]
             self.latest_commit_sha = latest_commit.sha

@@ -1,13 +1,40 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "Kunne ikke hente informasjon om OpenZWave-tillegg",
+            "addon_install_failed": "Kunne ikke installere OpenZWave-tillegg",
+            "addon_set_config_failed": "Kunne ikke angi OpenZWave-konfigurasjon",
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "mqtt_required": "MQTT-integrasjonen er ikke satt opp",
-            "one_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
+        "error": {
+            "addon_start_failed": "Kunne ikke starte OpenZWave-tillegg. Sjekk konfigurasjonen."
+        },
+        "progress": {
+            "install_addon": "Vent mens installasjonen av OpenZWave-tillegg er ferdig. Dette kan ta flere minutter."
+        },
         "step": {
-            "user": {
-                "title": "Bekreft oppsett"
+            "hassio_confirm": {
+                "title": "Sett opp OpenZWave-integrasjon med OpenZWave-tillegg"
+            },
+            "install_addon": {
+                "title": "Installasjonen av OpenZWave-tillegg har startet"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Bruk OpenZWave Supervisor-tillegg"
+                },
+                "description": "\u00d8nsker du \u00e5 bruke OpenZWave Supervisor-tillegg?",
+                "title": "Velg tilkoblingsmetode"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Nettverksn\u00f8kkel",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "Angi konfigurasjon for OpenZWave-tillegg"
             }
         }
     }

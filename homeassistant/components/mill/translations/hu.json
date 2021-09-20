@@ -4,7 +4,7 @@
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "connection_error": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "user": {

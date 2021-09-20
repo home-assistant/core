@@ -1,10 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
         "error": {
-            "connection_error": "Hiba a csatlakoz\u00e1skor; ellen\u0151rizd a h\u00e1l\u00f3zatot \u00e9s pr\u00f3b\u00e1ld \u00fajra",
-            "identifier_exists": "Az e-mail c\u00edm m\u00e1r regisztr\u00e1lva van",
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok",
-            "unknown_error": "Ismeretlen hiba, k\u00e9rlek jelentsd a napl\u00f3f\u00e1jlban l\u00e9v\u0151 adatokat"
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
             "user": {

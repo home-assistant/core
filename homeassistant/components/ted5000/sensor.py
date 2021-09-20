@@ -1,4 +1,5 @@
 """Support gathering ted5000 information."""
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -6,10 +7,9 @@ import requests
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT, VOLT
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,14 +49,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class Ted5000Sensor(Entity):
+class Ted5000Sensor(SensorEntity):
     """Implementation of a Ted5000 sensor."""
 
     def __init__(self, gateway, name, mtu, unit):
         """Initialize the sensor."""
         units = {POWER_WATT: "power", VOLT: "voltage"}
         self._gateway = gateway
-        self._name = "{} mtu{} {}".format(name, mtu, units[unit])
+        self._name = f"{name} mtu{mtu} {units[unit]}"
         self._mtu = mtu
         self._unit = unit
         self.update()
@@ -74,10 +74,8 @@ class Ted5000Sensor(Entity):
     @property
     def state(self):
         """Return the state of the resources."""
-        try:
+        with suppress(KeyError):
             return self._gateway.data[self._mtu][self._unit]
-        except KeyError:
-            pass
 
     def update(self):
         """Get the latest data from REST API."""

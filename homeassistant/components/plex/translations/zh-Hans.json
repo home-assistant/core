@@ -1,4 +1,14 @@
 {
+    "config": {
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "\u670d\u52a1\u5668"
+                },
+                "title": "\u9009\u62e9 Plex \u670d\u52a1\u5668"
+            }
+        }
+    },
     "options": {
         "step": {
             "plex_mp_settings": {

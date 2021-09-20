@@ -6,7 +6,11 @@ import pylacrosse
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ID,
@@ -19,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -64,7 +68,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LaCrosse sensors."""
-
     usb_device = config.get(CONF_DEVICE)
     baud = int(config.get(CONF_BAUD))
     expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -78,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning("Unable to open serial port: %s", exc)
         return False
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lacrosse.close)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())
 
     if CONF_JEELINK_LED in config:
         lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
@@ -108,7 +111,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class LaCrosseSensor(Entity):
+class LaCrosseSensor(SensorEntity):
     """Implementation of a Lacrosse sensor."""
 
     _temperature = None
@@ -123,28 +126,22 @@ class LaCrosseSensor(Entity):
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
         self._config = config
-        self._name = name
         self._value = None
         self._expire_after = expire_after
         self._expiration_trigger = None
+        self._attr_name = name
 
         lacrosse.register_callback(
             int(self._config["id"]), self._callback_lacrosse, None
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attributes = {
+        return {
             "low_battery": self._low_battery,
             "new_battery": self._new_battery,
         }
-        return attributes
 
     def _callback_lacrosse(self, lacrosse_sensor, user_data):
         """Handle a function that is called from pylacrosse with new values."""
@@ -177,10 +174,7 @@ class LaCrosseSensor(Entity):
 class LaCrosseTemperature(LaCrosseSensor):
     """Implementation of a Lacrosse temperature sensor."""
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    _attr_unit_of_measurement = TEMP_CELSIUS
 
     @property
     def state(self):
@@ -191,20 +185,13 @@ class LaCrosseTemperature(LaCrosseSensor):
 class LaCrosseHumidity(LaCrosseSensor):
     """Implementation of a Lacrosse humidity sensor."""
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return PERCENTAGE
+    _attr_unit_of_measurement = PERCENTAGE
+    _attr_icon = "mdi:water-percent"
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._humidity
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:water-percent"
 
 
 class LaCrosseBattery(LaCrosseSensor):
@@ -214,23 +201,19 @@ class LaCrosseBattery(LaCrosseSensor):
     def state(self):
         """Return the state of the sensor."""
         if self._low_battery is None:
-            state = None
-        elif self._low_battery is True:
-            state = "low"
-        else:
-            state = "ok"
-        return state
+            return None
+        if self._low_battery is True:
+            return "low"
+        return "ok"
 
     @property
     def icon(self):
         """Icon to use in the frontend."""
         if self._low_battery is None:
-            icon = "mdi:battery-unknown"
-        elif self._low_battery is True:
-            icon = "mdi:battery-alert"
-        else:
-            icon = "mdi:battery"
-        return icon
+            return "mdi:battery-unknown"
+        if self._low_battery is True:
+            return "mdi:battery-alert"
+        return "mdi:battery"
 
 
 TYPE_CLASSES = {

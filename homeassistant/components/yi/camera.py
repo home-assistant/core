@@ -123,12 +123,11 @@ class YiCamera(Camera):
         """Return a still image response from the camera."""
         url = await self._get_latest_video_url()
         if url and url != self._last_url:
-            ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
+            ffmpeg = ImageFrame(self._manager.binary)
             self._last_image = await asyncio.shield(
                 ffmpeg.get_image(
                     url, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments
                 ),
-                loop=self.hass.loop,
             )
             self._last_url = url
 
@@ -139,7 +138,7 @@ class YiCamera(Camera):
         if not self._is_on:
             return
 
-        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._manager.binary)
         await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)
 
         try:

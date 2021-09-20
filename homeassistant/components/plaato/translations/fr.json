@@ -1,17 +1,53 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Votre instance de Home Assistant doit \u00eatre accessible depuis Internet pour recevoir les messages de Plaato Airlock.",
-            "one_instance_allowed": "Une seule instance est n\u00e9cessaire.",
-            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+            "already_configured": "Le compte est d\u00e9ja configur\u00e9",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible.",
+            "webhook_not_internet_accessible": "Votre installation de Home Assistant doit \u00eatre accessible depuis internet pour recevoir des messages webhook."
         },
         "create_entry": {
             "default": "Pour envoyer des \u00e9v\u00e9nements \u00e0 Home Assistant, vous devez configurer la fonction Webhook dans Plaato Airlock. \n\n Remplissez les informations suivantes: \n\n - URL: ` {webhook_url} ` \n - M\u00e9thode: POST \n\n Voir [la documentation] ( {docs_url} ) pour plus de d\u00e9tails."
         },
+        "error": {
+            "invalid_webhook_device": "Vous avez s\u00e9lectionn\u00e9 un appareil qui ne prend pas en charge l'envoi de donn\u00e9es vers un webhook. Il n'est disponible que pour le sas",
+            "no_api_method": "Vous devez ajouter un jeton d'authentification ou s\u00e9lectionner un webhook",
+            "no_auth_token": "Vous devez ajouter un jeton d'authentification"
+        },
         "step": {
+            "api_method": {
+                "data": {
+                    "token": "Collez le jeton d'authentification ici",
+                    "use_webhook": "Utiliser le webhook"
+                },
+                "description": "Pour pouvoir interroger l'API, un \u00abauth_token\u00bb est n\u00e9cessaire. Il peut \u00eatre obtenu en suivant [ces] instructions (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) \n\n Appareil s\u00e9lectionn\u00e9: ** {device_type} ** \n\n Si vous pr\u00e9f\u00e9rez utiliser la m\u00e9thode Webhook int\u00e9gr\u00e9e (Airlock uniquement), veuillez cocher la case ci-dessous et laisser le jeton d'authentification vide",
+                "title": "S\u00e9lectionnez la m\u00e9thode API"
+            },
             "user": {
+                "data": {
+                    "device_name": "Nommez votre appareil",
+                    "device_type": "Type d'appareil Plaato"
+                },
                 "description": "\u00cates-vous s\u00fbr de vouloir installer le Plaato Airlock ?",
                 "title": "Configurer le Webhook Plaato"
+            },
+            "webhook": {
+                "description": "Pour envoyer des \u00e9v\u00e9nements \u00e0 Home Assistant, vous devez configurer la fonction Webhook dans Plaato Airlock. \n\n Remplissez les informations suivantes: \n\n - URL: ` {webhook_url} ` \n - M\u00e9thode: POST \n\n Voir [la documentation] ( {docs_url} ) pour plus de d\u00e9tails.",
+                "title": "Webhook \u00e0 utiliser"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Intervalle de mise \u00e0 jour (minutes)"
+                },
+                "description": "D\u00e9finir l'intervalle de mise \u00e0 jour (minutes)",
+                "title": "Options pour Plaato"
+            },
+            "webhook": {
+                "description": "Informations sur le webhook: \n\n - URL: ` {webhook_url} `\n - M\u00e9thode: POST \n\n",
+                "title": "Options pour Plaato Airlock"
             }
         }
     }

@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "no_uuid": "Instans Kodi tidak memiliki ID yang unik. Ini kemungkinan besar karena versi Kodi lama (17.x atau sebelumnya). Anda dapat mengonfigurasi integrasi secara manual atau meningkatkan ke versi Kodi yang lebih baru.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan nama pengguna dan kata sandi Kodi Anda. Ini dapat ditemukan di dalam Sistem/Setelan/Jaringan/Layanan."
+            },
+            "discovery_confirm": {
+                "description": "Ingin menambahkan Kodi (`{name}`) to Home Assistant?",
+                "title": "Kodi yang ditemukan"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "Menggunakan sertifikat SSL"
+                },
+                "description": "Informasi koneksi Kodi. Pastikan untuk mengaktifkan \"Izinkan kontrol Kodi melalui HTTP\" di Sistem/Pengaturan/Jaringan/Layanan."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "Port WebSocket (kadang-kadang disebut port TCP di Kodi). Untuk terhubung melalui WebSocket, Anda perlu mengaktifkan \"Izinkan program... untuk mengontrol Kodi\" dalam Sistem/Pengaturan/Jaringan/Layanan. Jika WebSocket tidak diaktifkan, hapus port dan biarkan kosong."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} diminta untuk dimatikan",
+            "turn_on": "{entity_name} diminta untuk dinyalakan"
+        }
+    }
+}

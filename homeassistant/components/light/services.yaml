@@ -1,127 +1,581 @@
 # Describes the format for available light services
 
 turn_on:
-  description: Turn a light on.
+  name: Turn on
+  description: >
+    Turn on one or more lights and adjust properties of the light, even when
+    they are turned on already.
+  target:
+    entity:
+      domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on
-      example: "light.kitchen"
     transition:
-      description: Duration in seconds it takes to get to next state
-      example: 60
+      name: Transition
+      description: Duration it takes to get to next state.
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
     rgb_color:
-      description: Color for the light in RGB-format.
+      name: RGB-color
+      description: A list containing three integers between 0 and 255 representing the RGB (red, green, blue) color for the light.
+      advanced: true
       example: "[255, 100, 100]"
+      selector:
+        object:
+    rgbw_color:
+      name: RGBW-color
+      description: A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color for the light.
+      advanced: true
+      example: "[255, 100, 100, 50]"
+      selector:
+        object:
+    rgbww_color:
+      name: RGBWW-color
+      description: A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color for the light.
+      advanced: true
+      example: "[255, 100, 100, 50, 70]"
+      selector:
+        object:
     color_name:
+      name: Color name
       description: A human readable color name.
-      example: "red"
+      advanced: true
+      selector:
+        select:
+          options:
+            - "homeassistant"
+            - "aliceblue"
+            - "antiquewhite"
+            - "aqua"
+            - "aquamarine"
+            - "azure"
+            - "beige"
+            - "bisque"
+            - "black"
+            - "blanchedalmond"
+            - "blue"
+            - "blueviolet"
+            - "brown"
+            - "burlywood"
+            - "cadetblue"
+            - "chartreuse"
+            - "chocolate"
+            - "coral"
+            - "cornflowerblue"
+            - "cornsilk"
+            - "crimson"
+            - "cyan"
+            - "darkblue"
+            - "darkcyan"
+            - "darkgoldenrod"
+            - "darkgray"
+            - "darkgreen"
+            - "darkgrey"
+            - "darkkhaki"
+            - "darkmagenta"
+            - "darkolivegreen"
+            - "darkorange"
+            - "darkorchid"
+            - "darkred"
+            - "darksalmon"
+            - "darkseagreen"
+            - "darkslateblue"
+            - "darkslategray"
+            - "darkslategrey"
+            - "darkturquoise"
+            - "darkviolet"
+            - "deeppink"
+            - "deepskyblue"
+            - "dimgray"
+            - "dimgrey"
+            - "dodgerblue"
+            - "firebrick"
+            - "floralwhite"
+            - "forestgreen"
+            - "fuchsia"
+            - "gainsboro"
+            - "ghostwhite"
+            - "gold"
+            - "goldenrod"
+            - "gray"
+            - "green"
+            - "greenyellow"
+            - "grey"
+            - "honeydew"
+            - "hotpink"
+            - "indianred"
+            - "indigo"
+            - "ivory"
+            - "khaki"
+            - "lavender"
+            - "lavenderblush"
+            - "lawngreen"
+            - "lemonchiffon"
+            - "lightblue"
+            - "lightcoral"
+            - "lightcyan"
+            - "lightgoldenrodyellow"
+            - "lightgray"
+            - "lightgreen"
+            - "lightgrey"
+            - "lightpink"
+            - "lightsalmon"
+            - "lightseagreen"
+            - "lightskyblue"
+            - "lightslategray"
+            - "lightslategrey"
+            - "lightsteelblue"
+            - "lightyellow"
+            - "lime"
+            - "limegreen"
+            - "linen"
+            - "magenta"
+            - "maroon"
+            - "mediumaquamarine"
+            - "mediumblue"
+            - "mediumorchid"
+            - "mediumpurple"
+            - "mediumseagreen"
+            - "mediumslateblue"
+            - "mediumspringgreen"
+            - "mediumturquoise"
+            - "mediumvioletred"
+            - "midnightblue"
+            - "mintcream"
+            - "mistyrose"
+            - "moccasin"
+            - "navajowhite"
+            - "navy"
+            - "navyblue"
+            - "oldlace"
+            - "olive"
+            - "olivedrab"
+            - "orange"
+            - "orangered"
+            - "orchid"
+            - "palegoldenrod"
+            - "palegreen"
+            - "paleturquoise"
+            - "palevioletred"
+            - "papayawhip"
+            - "peachpuff"
+            - "peru"
+            - "pink"
+            - "plum"
+            - "powderblue"
+            - "purple"
+            - "red"
+            - "rosybrown"
+            - "royalblue"
+            - "saddlebrown"
+            - "salmon"
+            - "sandybrown"
+            - "seagreen"
+            - "seashell"
+            - "sienna"
+            - "silver"
+            - "skyblue"
+            - "slateblue"
+            - "slategray"
+            - "slategrey"
+            - "snow"
+            - "springgreen"
+            - "steelblue"
+            - "tan"
+            - "teal"
+            - "thistle"
+            - "tomato"
+            - "turquoise"
+            - "violet"
+            - "wheat"
+            - "white"
+            - "whitesmoke"
+            - "yellow"
+            - "yellowgreen"
     hs_color:
+      name: Hue/Sat color
       description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      advanced: true
       example: "[300, 70]"
+      selector:
+        object:
     xy_color:
+      name: XY-color
       description: Color for the light in XY-format.
+      advanced: true
       example: "[0.52, 0.43]"
+      selector:
+        object:
     color_temp:
+      name: Color temperature (mireds)
       description: Color temperature for the light in mireds.
-      example: 250
+      advanced: true
+      selector:
+        number:
+          min: 153
+          max: 500
+          unit_of_measurement: mireds
     kelvin:
+      name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
-      example: 4000
-    white_value:
-      description: Number between 0..255 indicating level of white.
-      example: "250"
+      advanced: true
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 100
+          unit_of_measurement: K
     brightness:
-      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
-      example: 120
+      name: Brightness value
+      description:
+        Number indicating brightness, where 0 turns the light
+        off, 1 is the minimum brightness and 255 is the maximum brightness
+        supported by the light.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
     brightness_pct:
-      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
-      example: 47
+      name: Brightness
+      description:
+        Number indicating percentage of full brightness, where 0
+        turns the light off, 1 is the minimum brightness and 100 is the maximum
+        brightness supported by the light.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
     brightness_step:
-      description: Change brightness by an amount. Should be between -255..255.
-      example: -25.5
+      name: Brightness step value
+      description: Change brightness by an amount.
+      advanced: true
+      selector:
+        number:
+          min: -225
+          max: 255
     brightness_step_pct:
-      description: Change brightness by a percentage. Should be between -100..100.
-      example: -10
+      name: Brightness step
+      description: Change brightness by a percentage.
+      selector:
+        number:
+          min: -100
+          max: 100
+          unit_of_measurement: "%"
     profile:
+      name: Profile
       description: Name of a light profile to use.
+      advanced: true
       example: relax
+      selector:
+        text:
     flash:
-      description: If the light should flash. Valid values are short and long.
-      example: short
-      values:
-        - short
-        - long
+      name: Flash
+      description: If the light should flash.
+      advanced: true
+      selector:
+        select:
+          options:
+            - long
+            - short
     effect:
+      name: Effect
       description: Light effect.
-      example: random
-      values:
-        - colorloop
-        - random
+      selector:
+        select:
+          options:
+            - colorloop
+            - random
+            - white
 
 turn_off:
-  description: Turn a light off.
+  name: Turn off
+  description: Turns off one or more lights.
+  target:
+    entity:
+      domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to turn off.
-      example: "light.kitchen"
     transition:
-      description: Duration in seconds it takes to get to next state.
-      example: 60
+      name: Transition
+      description: Duration it takes to get to next state.
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
     flash:
-      description: If the light should flash. Valid values are short and long.
-      example: short
-      values:
-        - short
-        - long
+      name: Flash
+      description: If the light should flash.
+      advanced: true
+      selector:
+        select:
+          options:
+            - long
+            - short
 
 toggle:
-  description: Toggles a light.
+  name: Toggle
+  description: >
+    Toggles one or more lights, from on to off, or, off to on, based on their
+    current state.
+  target:
+    entity:
+      domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on
-      example: "light.kitchen"
     transition:
-      description: Duration in seconds it takes to get to next state
-      example: 60
+      name: Transition
+      description: Duration it takes to get to next state.
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
     rgb_color:
+      name: RGB-color
       description: Color for the light in RGB-format.
+      advanced: true
       example: "[255, 100, 100]"
+      selector:
+        object:
     color_name:
+      name: Color name
       description: A human readable color name.
-      example: "red"
+      advanced: true
+      selector:
+        select:
+          options:
+            - "homeassistant"
+            - "aliceblue"
+            - "antiquewhite"
+            - "aqua"
+            - "aquamarine"
+            - "azure"
+            - "beige"
+            - "bisque"
+            - "black"
+            - "blanchedalmond"
+            - "blue"
+            - "blueviolet"
+            - "brown"
+            - "burlywood"
+            - "cadetblue"
+            - "chartreuse"
+            - "chocolate"
+            - "coral"
+            - "cornflowerblue"
+            - "cornsilk"
+            - "crimson"
+            - "cyan"
+            - "darkblue"
+            - "darkcyan"
+            - "darkgoldenrod"
+            - "darkgray"
+            - "darkgreen"
+            - "darkgrey"
+            - "darkkhaki"
+            - "darkmagenta"
+            - "darkolivegreen"
+            - "darkorange"
+            - "darkorchid"
+            - "darkred"
+            - "darksalmon"
+            - "darkseagreen"
+            - "darkslateblue"
+            - "darkslategray"
+            - "darkslategrey"
+            - "darkturquoise"
+            - "darkviolet"
+            - "deeppink"
+            - "deepskyblue"
+            - "dimgray"
+            - "dimgrey"
+            - "dodgerblue"
+            - "firebrick"
+            - "floralwhite"
+            - "forestgreen"
+            - "fuchsia"
+            - "gainsboro"
+            - "ghostwhite"
+            - "gold"
+            - "goldenrod"
+            - "gray"
+            - "green"
+            - "greenyellow"
+            - "grey"
+            - "honeydew"
+            - "hotpink"
+            - "indianred"
+            - "indigo"
+            - "ivory"
+            - "khaki"
+            - "lavender"
+            - "lavenderblush"
+            - "lawngreen"
+            - "lemonchiffon"
+            - "lightblue"
+            - "lightcoral"
+            - "lightcyan"
+            - "lightgoldenrodyellow"
+            - "lightgray"
+            - "lightgreen"
+            - "lightgrey"
+            - "lightpink"
+            - "lightsalmon"
+            - "lightseagreen"
+            - "lightskyblue"
+            - "lightslategray"
+            - "lightslategrey"
+            - "lightsteelblue"
+            - "lightyellow"
+            - "lime"
+            - "limegreen"
+            - "linen"
+            - "magenta"
+            - "maroon"
+            - "mediumaquamarine"
+            - "mediumblue"
+            - "mediumorchid"
+            - "mediumpurple"
+            - "mediumseagreen"
+            - "mediumslateblue"
+            - "mediumspringgreen"
+            - "mediumturquoise"
+            - "mediumvioletred"
+            - "midnightblue"
+            - "mintcream"
+            - "mistyrose"
+            - "moccasin"
+            - "navajowhite"
+            - "navy"
+            - "navyblue"
+            - "oldlace"
+            - "olive"
+            - "olivedrab"
+            - "orange"
+            - "orangered"
+            - "orchid"
+            - "palegoldenrod"
+            - "palegreen"
+            - "paleturquoise"
+            - "palevioletred"
+            - "papayawhip"
+            - "peachpuff"
+            - "peru"
+            - "pink"
+            - "plum"
+            - "powderblue"
+            - "purple"
+            - "red"
+            - "rosybrown"
+            - "royalblue"
+            - "saddlebrown"
+            - "salmon"
+            - "sandybrown"
+            - "seagreen"
+            - "seashell"
+            - "sienna"
+            - "silver"
+            - "skyblue"
+            - "slateblue"
+            - "slategray"
+            - "slategrey"
+            - "snow"
+            - "springgreen"
+            - "steelblue"
+            - "tan"
+            - "teal"
+            - "thistle"
+            - "tomato"
+            - "turquoise"
+            - "violet"
+            - "wheat"
+            - "white"
+            - "whitesmoke"
+            - "yellow"
+            - "yellowgreen"
     hs_color:
+      name: Hue/Sat color
       description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      advanced: true
       example: "[300, 70]"
+      selector:
+        object:
     xy_color:
+      name: XY-color
       description: Color for the light in XY-format.
+      advanced: true
       example: "[0.52, 0.43]"
+      selector:
+        object:
     color_temp:
+      name: Color temperature (mireds)
       description: Color temperature for the light in mireds.
-      example: 250
+      advanced: true
+      selector:
+        number:
+          min: 153
+          max: 500
+          unit_of_measurement: mireds
     kelvin:
+      name: Color temperature (Kelvin)
       description: Color temperature for the light in Kelvin.
-      example: 4000
+      advanced: true
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 100
+          unit_of_measurement: K
     white_value:
-      description: Number between 0..255 indicating level of white.
-      example: "250"
+      name: White level
+      description: Number indicating level of white.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
     brightness:
-      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
-      example: 120
+      name: Brightness value
+      description: Number indicating brightness, where 0 turns the light
+        off, 1 is the minimum brightness and 255 is the maximum brightness
+        supported by the light.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
     brightness_pct:
-      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
-      example: 47
+      name: Brightness
+      description:
+        Number indicating percentage of full brightness, where 0
+        turns the light off, 1 is the minimum brightness and 100 is the maximum
+        brightness supported by the light.
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
     profile:
+      name: Profile
       description: Name of a light profile to use.
+      advanced: true
       example: relax
+      selector:
+        text:
     flash:
-      description: If the light should flash. Valid values are short and long.
-      example: short
-      values:
-        - short
-        - long
+      name: Flash
+      description: If the light should flash.
+      advanced: true
+      selector:
+        select:
+          options:
+            - long
+            - short
     effect:
+      name: Effect
       description: Light effect.
-      example: random
-      values:
-        - colorloop
-        - random
+      selector:
+        text:

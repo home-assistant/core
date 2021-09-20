@@ -1,5 +1,6 @@
 """Tests for the NZBGet integration."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.const import (
@@ -13,7 +14,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {

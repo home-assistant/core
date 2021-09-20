@@ -98,6 +98,10 @@
             "off": "Normal",
             "on": "Schwach"
         },
+        "battery_charging": {
+            "off": "L\u00e4dt nicht",
+            "on": "L\u00e4dt"
+        },
         "cold": {
             "off": "Normal",
             "on": "Kalt"
@@ -122,6 +126,10 @@
             "off": "Normal",
             "on": "Hei\u00df"
         },
+        "light": {
+            "off": "Kein Licht",
+            "on": "Licht erkannt"
+        },
         "lock": {
             "off": "Verriegelt",
             "on": "Entriegelt"
@@ -134,6 +142,10 @@
             "off": "Ruhig",
             "on": "Bewegung erkannt"
         },
+        "moving": {
+            "off": "Bewegt sich nicht",
+            "on": "Bewegt sich"
+        },
         "occupancy": {
             "off": "Frei",
             "on": "Belegt"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Geschlossen",
             "on": "Offen"
+        },
+        "plug": {
+            "off": "Ausgesteckt",
+            "on": "Eingesteckt"
         },
         "presence": {
             "off": "Abwesend",

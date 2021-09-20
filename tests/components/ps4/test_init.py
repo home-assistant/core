@@ -1,4 +1,6 @@
 """Tests for the PS4 Integration."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.media_player.const import (
@@ -27,7 +29,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, mock_registry
 
 MOCK_HOST = "192.168.0.1"
@@ -45,6 +46,7 @@ MOCK_FLOW_RESULT = {
     "type": data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
     "title": "test_ps4",
     "data": MOCK_DATA,
+    "options": {},
 }
 
 MOCK_ENTRY_ID = "SomeID"
@@ -54,7 +56,6 @@ MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY
 MOCK_LOCATION = location.LocationInfo(
     "0.0.0.0",
     "US",
-    "United States",
     "CA",
     "California",
     "San Diego",
@@ -169,7 +170,7 @@ async def test_config_flow_entry_migrate(hass):
     assert mock_entity.device_id == MOCK_DEVICE_ID
 
     # Test that last four of credentials is appended to the unique_id.
-    assert mock_entity.unique_id == "{}_{}".format(MOCK_UNIQUE_ID, MOCK_CREDS[-4:])
+    assert mock_entity.unique_id == f"{MOCK_UNIQUE_ID}_{MOCK_CREDS[-4:]}"
 
     # Test that config entry is at the current version.
     assert mock_entry.version == VERSION

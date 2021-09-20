@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_only": "Denne integration underst\u00f8tter i \u00f8jeblikket kun en ecobee-instans."
-        },
         "error": {
             "pin_request_failed": "Fejl ved anmodning om pinkode fra ecobee. Kontroller at API-n\u00f8glen er korrekt.",
             "token_request_failed": "Fejl ved anmodning om tokens fra ecobee. Pr\u00f8v igen."

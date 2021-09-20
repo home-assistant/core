@@ -8,11 +8,12 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
 )
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, callback
 from homeassistant.helpers import condition, config_validation as cv, location
 from homeassistant.helpers.event import async_track_state_change_event
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-incomplete-defs, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -32,8 +33,11 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type: str = "zone"
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
@@ -55,7 +59,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
         zone_state = hass.states.get(zone_entity_id)
         from_match = condition.zone(hass, zone_state, from_s) if from_s else False
-        to_match = condition.zone(hass, zone_state, to_s)
+        to_match = condition.zone(hass, zone_state, to_s) if to_s else False
 
         if (
             event == EVENT_ENTER
@@ -70,13 +74,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 job,
                 {
                     "trigger": {
-                        "platform": "zone",
+                        "platform": platform_type,
                         "entity_id": entity,
                         "from_state": from_s,
                         "to_state": to_s,
                         "zone": zone_state,
                         "event": event,
                         "description": description,
+                        "id": trigger_id,
                     }
                 },
                 to_s.context,

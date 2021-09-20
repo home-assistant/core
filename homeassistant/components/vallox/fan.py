@@ -83,7 +83,7 @@ class ValloxFan(FanEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_PROFILE_FAN_SPEED_HOME["description"]: self._fan_speed_home,
@@ -137,7 +137,20 @@ class ValloxFan(FanEntity):
             self._available = False
             _LOGGER.error("Error updating fan: %s", err)
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn the device on."""
         _LOGGER.debug("Turn on: %s", speed)
 

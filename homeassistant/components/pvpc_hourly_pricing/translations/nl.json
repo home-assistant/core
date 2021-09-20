@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integratie is al geconfigureerd met een bestaande sensor met dat tarief"
+            "already_configured": "Service is al geconfigureerd"
         },
         "step": {
             "user": {

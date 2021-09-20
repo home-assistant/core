@@ -1,11 +1,11 @@
 """Test the SmartHab config flow."""
+from unittest.mock import patch
+
 import pysmarthab
 
 from homeassistant import config_entries, setup
 from homeassistant.components.smarthab import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -28,6 +28,7 @@ async def test_form(hass):
             result["flow_id"],
             {CONF_EMAIL: "mock@example.com", CONF_PASSWORD: "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "mock@example.com"
@@ -35,7 +36,6 @@ async def test_form(hass):
         CONF_EMAIL: "mock@example.com",
         CONF_PASSWORD: "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -115,6 +115,7 @@ async def test_import(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=imported_conf
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "mock@example.com"
@@ -122,6 +123,5 @@ async def test_import(hass):
         CONF_EMAIL: "mock@example.com",
         CONF_PASSWORD: "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

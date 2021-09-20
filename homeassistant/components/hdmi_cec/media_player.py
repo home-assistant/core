@@ -1,12 +1,8 @@
 """Support for HDMI CEC devices as media players."""
 import logging
 
-from pycec.commands import (  # pylint: disable=import-error
-    CecCommand,
-    KeyPressCommand,
-    KeyReleaseCommand,
-)
-from pycec.const import (  # pylint: disable=import-error
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
+from pycec.const import (
     KEY_BACKWARD,
     KEY_FORWARD,
     KEY_MUTE_TOGGLE,

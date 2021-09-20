@@ -2,9 +2,10 @@
 from datetime import datetime
 import math
 import random
+from unittest.mock import patch
 
 import pytest
-import pytz
+import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import async_process_ha_core_config
@@ -12,25 +13,17 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_METERS,
     MASS_GRAMS,
-    MATCH_ALL,
     PRESSURE_PA,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
-from tests.async_mock import Mock, patch
-
-
-@pytest.fixture()
-def allow_extract_entities():
-    """Allow extract entities."""
-    with patch("homeassistant.helpers.template.report"):
-        yield
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 
 def _set_up_units(hass):
@@ -353,7 +346,7 @@ def test_tan(hass):
         (0, 0.0),
         (math.pi, -0.0),
         (math.pi / 180 * 45, 1.0),
-        (math.pi / 180 * 90, 1.633123935319537e16),
+        (math.pi / 180 * 90, "1.633123935319537e+16"),
         (math.pi / 180 * 135, -1.0),
         ("'error'", "error"),
     ]
@@ -573,11 +566,15 @@ def test_from_json(hass):
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
+    assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
+    assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
+    assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
+    assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
 
 
 def test_ord(hass):
@@ -765,7 +762,7 @@ def test_render_with_possible_json_value_non_string_value(hass):
         hass,
     )
     value = datetime(2019, 1, 18, 12, 13, 14)
-    expected = str(pytz.utc.localize(value))
+    expected = str(value.replace(tzinfo=dt_util.UTC))
     assert tpl.async_render_with_possible_json_value(value) == expected
 
 
@@ -886,41 +883,38 @@ def test_relative_time(mock_is_safe, hass):
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     with patch("homeassistant.util.dt.now", return_value=now):
-        assert (
-            "1 hour"
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
-                hass,
-            ).async_render()
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result1 = str(
+            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
         )
-        assert (
-            "2 hours"
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 hour"
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-                hass,
-            ).async_render()
-        )
-        assert (
-            str(template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-                hass,
-            ).async_render()
-        )
-        assert (
-            "string"
-            == template.Template(
-                '{{relative_time("string")}}',
-                hass,
-            ).async_render()
-        )
+        result2 = template.Template(
+            '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            '{{relative_time("string")}}',
+            hass,
+        ).async_render()
+        assert result == "string"
 
 
 @patch(
@@ -931,55 +925,46 @@ def test_timedelta(mock_is_safe, hass):
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     with patch("homeassistant.util.dt.now", return_value=now):
-        assert (
-            "0:02:00"
-            == template.Template(
-                "{{timedelta(seconds=120)}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day, 0:00:00"
-            == template.Template(
-                "{{timedelta(seconds=86400)}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day, 4:00:00"
-            == template.Template(
-                "{{timedelta(days=1, hours=4)}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 hour"
-            == template.Template(
-                "{{relative_time(now() - timedelta(seconds=3600))}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day"
-            == template.Template(
-                "{{relative_time(now() - timedelta(seconds=86400))}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day"
-            == template.Template(
-                "{{relative_time(now() - timedelta(seconds=86401))}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "15 days"
-            == template.Template(
-                "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
-                hass,
-            ).async_render()
-        )
+        result = template.Template(
+            "{{timedelta(seconds=120)}}",
+            hass,
+        ).async_render()
+        assert result == "0:02:00"
+
+        result = template.Template(
+            "{{timedelta(seconds=86400)}}",
+            hass,
+        ).async_render()
+        assert result == "1 day, 0:00:00"
+
+        result = template.Template(
+            "{{timedelta(days=1, hours=4)}}", hass
+        ).async_render()
+        assert result == "1 day, 4:00:00"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(seconds=3600))}}",
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(seconds=86400))}}",
+            hass,
+        ).async_render()
+        assert result == "1 day"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(seconds=86401))}}",
+            hass,
+        ).async_render()
+        assert result == "1 day"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
+            hass,
+        ).async_render()
+        assert result == "15 days"
 
 
 def test_regex_match(hass):
@@ -1017,6 +1002,17 @@ def test_regex_match(hass):
     assert tpl.async_render() is True
 
 
+def test_match_test(hass):
+    """Test match test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is match('(\\d{3})-(\\d{3})-(\\d{4})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
 def test_regex_search(hass):
     """Test regex_search method."""
     tpl = template.Template(
@@ -1046,6 +1042,17 @@ def test_regex_search(hass):
     tpl = template.Template(
         """
 {{ ['Home Assistant test'] | regex_search('Assist') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
+def test_search_test(hass):
+    """Test search test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
             """,
         hass,
     )
@@ -1478,6 +1485,79 @@ async def test_expand(hass):
     assert info.rate_limit is None
 
 
+async def test_device_entities(hass):
+    """Test expand function."""
+    config_entry = MockConfigEntry(domain="light")
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    # Test non existing device ids
+    info = render_to_info(hass, "{{ device_entities('abc123') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ device_entities(56) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test device without entities
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test device with single entity, which has no state
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
+    assert_result_info(info, ["light.hue_5678"], [])
+    assert info.rate_limit is None
+    info = render_to_info(
+        hass,
+        f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
+    )
+    assert_result_info(info, "", ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test device with single entity, with state
+    hass.states.async_set("light.hue_5678", "happy")
+    info = render_to_info(
+        hass,
+        f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
+    )
+    assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
+    assert info.rate_limit is None
+
+    # Test device with multiple entities, which have a state
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "ABCD",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    hass.states.async_set("light.hue_abcd", "camper")
+    info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
+    assert_result_info(info, ["light.hue_5678", "light.hue_abcd"], [])
+    assert info.rate_limit is None
+    info = render_to_info(
+        hass,
+        f"{{{{ device_entities('{device_entry.id}') | expand | map(attribute='entity_id') | join(', ') }}}}",
+    )
+    assert_result_info(
+        info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
+    )
+    assert info.rate_limit is None
+
+
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
     hass.states.async_set(
@@ -1869,48 +1949,6 @@ def test_closest_function_no_location_states(hass):
     )
 
 
-def test_extract_entities_none_exclude_stuff(hass, allow_extract_entities):
-    """Test extract entities function with none or exclude stuff."""
-    assert template.extract_entities(hass, None) == []
-
-    assert template.extract_entities(hass, "mdi:water") == []
-
-    assert (
-        template.extract_entities(
-            hass,
-            "{{ closest(states.zone.far_away, states.test_domain.xxx).entity_id }}",
-        )
-        == MATCH_ALL
-    )
-
-    assert (
-        template.extract_entities(
-            hass, '{{ distance("123", states.test_object_2.user) }}'
-        )
-        == MATCH_ALL
-    )
-
-
-def test_extract_entities_no_match_entities(hass, allow_extract_entities):
-    """Test extract entities function with none entities stuff."""
-    assert (
-        template.extract_entities(
-            hass, "{{ value_json.tst | timestamp_custom('%Y' True) }}"
-        )
-        == MATCH_ALL
-    )
-
-    info = render_to_info(
-        hass,
-        """
-{% for state in states.sensor %}
-{{ state.entity_id }}={{ state.state }},d
-{% endfor %}
-            """,
-    )
-    assert_result_info(info, "", domains=["sensor"])
-
-
 def test_generate_filter_iterators(hass):
     """Test extract entities function with none entities stuff."""
     info = render_to_info(
@@ -2027,252 +2065,6 @@ async def test_async_render_to_info_in_conditional(hass):
     tmp = template.Template(template_str, hass)
     info = tmp.async_render_to_info()
     assert_result_info(info, "oink", ["sensor.xyz", "sensor.pig"], [])
-
-
-async def test_extract_entities_match_entities(hass, allow_extract_entities):
-    """Test extract entities function with entities stuff."""
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{% if is_state('device_tracker.phone_1', 'home') %}
-Ha, Hercules is home!
-{% else %}
-Hercules is at {{ states('device_tracker.phone_1') }}.
-{% endif %}
-        """,
-        )
-        == ["device_tracker.phone_1"]
-    )
-
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{{ as_timestamp(states.binary_sensor.garage_door.last_changed) }}
-        """,
-        )
-        == ["binary_sensor.garage_door"]
-    )
-
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{{ states("binary_sensor.garage_door") }}
-        """,
-        )
-        == ["binary_sensor.garage_door"]
-    )
-
-    hass.states.async_set("device_tracker.phone_2", "not_home", {"battery": 20})
-
-    assert (
-        template.extract_entities(
-            hass,
-            """
-{{ is_state_attr('device_tracker.phone_2', 'battery', 40) }}
-        """,
-        )
-        == ["device_tracker.phone_2"]
-    )
-
-    assert sorted(["device_tracker.phone_1", "device_tracker.phone_2"]) == sorted(
-        template.extract_entities(
-            hass,
-            """
-{% if is_state('device_tracker.phone_1', 'home') %}
-Ha, Hercules is home!
-{% elif states.device_tracker.phone_2.attributes.battery < 40 %}
-Hercules you power goes done!.
-{% endif %}
-        """,
-        )
-    )
-
-    assert sorted(["sensor.pick_humidity", "sensor.pick_temperature"]) == sorted(
-        template.extract_entities(
-            hass,
-            """
-{{
-states.sensor.pick_temperature.state ~ "°C (" ~
-states.sensor.pick_humidity.state ~ " %"
-}}
-        """,
-        )
-    )
-
-    assert sorted(
-        ["sensor.luftfeuchtigkeit_mean", "input_number.luftfeuchtigkeit"]
-    ) == sorted(
-        template.extract_entities(
-            hass,
-            "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
-            " > (states('input_number.luftfeuchtigkeit') | int +1.5)"
-            " %}true{% endif %}",
-        )
-    )
-
-    assert await async_setup_component(hass, "group", {})
-    await hass.async_block_till_done()
-    await group.Group.async_create_group(hass, "empty group", [])
-
-    assert ["group.empty_group"] == template.extract_entities(
-        hass, "{{ expand('group.empty_group') | list | length }}"
-    )
-
-    hass.states.async_set("test_domain.object", "exists")
-    await group.Group.async_create_group(hass, "expand group", ["test_domain.object"])
-
-    assert sorted(["group.expand_group", "test_domain.object"]) == sorted(
-        template.extract_entities(
-            hass, "{{ expand('group.expand_group') | list | length }}"
-        )
-    )
-    assert ["test_domain.entity"] == template.Template(
-        '{{ is_state("test_domain.entity", "on") }}', hass
-    ).extract_entities()
-
-    # No expand, extract finds the group
-    assert template.extract_entities(hass, "{{ states('group.empty_group') }}") == [
-        "group.empty_group"
-    ]
-
-
-def test_extract_entities_with_variables(hass, allow_extract_entities):
-    """Test extract entities function with variables and entities stuff."""
-    hass.states.async_set("input_boolean.switch", "on")
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass, "{{ is_state('input_boolean.switch', 'off') }}", {}
-    )
-
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass,
-        "{{ is_state(trigger.entity_id, 'off') }}",
-        {"trigger": {"entity_id": "input_boolean.switch"}},
-    )
-
-    assert MATCH_ALL == template.extract_entities(
-        hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
-    )
-
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass, "{{ is_state(data, 'off') }}", {"data": "input_boolean.switch"}
-    )
-
-    assert ["input_boolean.switch"] == template.extract_entities(
-        hass,
-        "{{ is_state(trigger.entity_id, 'off') }}",
-        {"trigger": {"entity_id": "input_boolean.switch"}},
-    )
-
-    hass.states.async_set("media_player.livingroom", "off")
-    assert {"media_player.livingroom"} == extract_entities(
-        hass,
-        "{{ is_state('media_player.' ~ where , 'playing') }}",
-        {"where": "livingroom"},
-    )
-
-
-def test_extract_entities_domain_states_inner(hass, allow_extract_entities):
-    """Test extract entities function by domain."""
-    hass.states.async_set("light.switch", "on")
-    hass.states.async_set("light.switch2", "on")
-    hass.states.async_set("light.switch3", "off")
-
-    assert (
-        set(
-            template.extract_entities(
-                hass,
-                "{{ states['light'] | selectattr('state','eq','on') | list | count > 0 }}",
-                {},
-            )
-        )
-        == {"light.switch", "light.switch2", "light.switch3"}
-    )
-
-
-def test_extract_entities_domain_states_outer(hass, allow_extract_entities):
-    """Test extract entities function by domain."""
-    hass.states.async_set("light.switch", "on")
-    hass.states.async_set("light.switch2", "on")
-    hass.states.async_set("light.switch3", "off")
-
-    assert (
-        set(
-            template.extract_entities(
-                hass,
-                "{{ states.light | selectattr('state','eq','off') | list | count > 0 }}",
-                {},
-            )
-        )
-        == {"light.switch", "light.switch2", "light.switch3"}
-    )
-
-
-def test_extract_entities_domain_states_outer_with_group(hass, allow_extract_entities):
-    """Test extract entities function by domain."""
-    hass.states.async_set("light.switch", "on")
-    hass.states.async_set("light.switch2", "on")
-    hass.states.async_set("light.switch3", "off")
-    hass.states.async_set("switch.pool_light", "off")
-    hass.states.async_set("group.lights", "off", {"entity_id": ["switch.pool_light"]})
-
-    assert (
-        set(
-            template.extract_entities(
-                hass,
-                "{{ states.light | selectattr('entity_id', 'in', state_attr('group.lights', 'entity_id')) }}",
-                {},
-            )
-        )
-        == {"light.switch", "light.switch2", "light.switch3", "group.lights"}
-    )
-
-
-def test_extract_entities_blocked_from_core_code(hass):
-    """Test extract entities is blocked from core code."""
-    with pytest.raises(RuntimeError):
-        template.extract_entities(
-            hass,
-            "{{ states.light }}",
-            {},
-        )
-
-
-def test_extract_entities_warns_and_logs_from_an_integration(hass, caplog):
-    """Test extract entities works from a custom_components with a log message."""
-
-    correct_frame = Mock(
-        filename="/config/custom_components/burncpu/light.py",
-        lineno="23",
-        line="self.light.is_on",
-    )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/dev/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/dev/mdns/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
-    ):
-        template.extract_entities(
-            hass,
-            "{{ states.light }}",
-            {},
-        )
-
-    assert "custom_components/burncpu/light.py" in caplog.text
-    assert "23" in caplog.text
-    assert "self.light.is_on" in caplog.text
 
 
 def test_jinja_namespace(hass):
@@ -2500,9 +2292,6 @@ async def test_template_timeout(hass):
     tmp = template.Template("{{ states | count }}", hass)
     assert await tmp.async_render_will_timeout(3) is False
 
-    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
-    assert await tmp2.async_render_will_timeout(3) is False
-
     tmp3 = template.Template("static", hass)
     assert await tmp3.async_render_will_timeout(3) is False
 
@@ -2518,6 +2307,13 @@ async def test_template_timeout(hass):
 """
     tmp5 = template.Template(slow_template_str, hass)
     assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_template_timeout_raise(hass):
+    """Test we can raise from."""
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    with pytest.raises(TemplateError):
+        assert await tmp2.async_render_will_timeout(3) is False
 
 
 async def test_lights(hass):
@@ -2650,4 +2446,93 @@ async def test_legacy_templates(hass):
     assert (
         template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
         == "12"
+    )
+
+
+async def test_no_result_parsing(hass):
+    """Test if templates results are not parsed."""
+    hass.states.async_set("sensor.temperature", "12")
+
+    assert (
+        template.Template("{{ states.sensor.temperature.state }}", hass).async_render(
+            parse_result=False
+        )
+        == "12"
+    )
+
+    assert (
+        template.Template("{{ false }}", hass).async_render(parse_result=False)
+        == "False"
+    )
+
+    assert (
+        template.Template("{{ [1, 2, 3] }}", hass).async_render(parse_result=False)
+        == "[1, 2, 3]"
+    )
+
+
+async def test_is_static_still_ast_evals(hass):
+    """Test is_static still convers to native type."""
+    tpl = template.Template("[1, 2]", hass)
+    assert tpl.is_static
+    assert tpl.async_render() == [1, 2]
+
+
+async def test_result_wrappers(hass):
+    """Test result wrappers."""
+    for text, native, orig_type, schema in (
+        ("[1, 2]", [1, 2], list, vol.Schema([int])),
+        ("{1, 2}", {1, 2}, set, vol.Schema({int})),
+        ("(1, 2)", (1, 2), tuple, vol.ExactSequence([int, int])),
+        ('{"hello": True}', {"hello": True}, dict, vol.Schema({"hello": bool})),
+    ):
+        tpl = template.Template(text, hass)
+        result = tpl.async_render()
+        assert isinstance(result, orig_type)
+        assert isinstance(result, template.ResultWrapper)
+        assert result == native
+        assert result.render_result == text
+        schema(result)  # should not raise
+        # Result with render text stringifies to original text
+        assert str(result) == text
+        # Result without render text stringifies same as original type
+        assert str(template.RESULT_WRAPPERS[orig_type](native)) == str(
+            orig_type(native)
+        )
+
+
+async def test_parse_result(hass):
+    """Test parse result."""
+    for tpl, result in (
+        ('{{ "{{}}" }}', "{{}}"),
+        ("not-something", "not-something"),
+        ("2a", "2a"),
+        ("123E5", "123E5"),
+        ("1j", "1j"),
+        ("1e+100", "1e+100"),
+        ("0xface", "0xface"),
+        ("123", 123),
+        ("10", 10),
+        ("123.0", 123.0),
+        (".5", 0.5),
+        ("0.5", 0.5),
+        ("-1", -1),
+        ("-1.0", -1.0),
+        ("+1", 1),
+        ("5.", 5.0),
+        ("123_123_123", "123_123_123"),
+        # ("+48100200300", "+48100200300"),  # phone number
+        ("010", "010"),
+        ("0011101.00100001010001", "0011101.00100001010001"),
+    ):
+        assert template.Template(tpl, hass).async_render() == result
+
+
+async def test_undefined_variable(hass, caplog):
+    """Test a warning is logged on undefined variables."""
+    tpl = template.Template("{{ no_such_variable }}", hass)
+    assert tpl.async_render() == ""
+    assert (
+        "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
+        in caplog.text
     )

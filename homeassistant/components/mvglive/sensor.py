@@ -6,10 +6,9 @@ import logging
 import MVGLive
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class MVGLiveSensor(Entity):
+class MVGLiveSensor(SensorEntity):
     """Implementation of an MVG Live sensor."""
 
     def __init__(
@@ -114,7 +113,7 @@ class MVGLiveSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         dep = self.data.departures
         if not dep:

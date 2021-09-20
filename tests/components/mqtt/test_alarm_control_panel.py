@@ -1,6 +1,7 @@
 """The tests the MQTT alarm control panel component."""
 import copy
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -43,7 +44,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.alarm_control_panel import common
 
@@ -397,9 +397,9 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
     """
     config = copy.deepcopy(DEFAULT_CONFIG_CODE)
     config[alarm_control_panel.DOMAIN]["code"] = "0123"
-    config[alarm_control_panel.DOMAIN]["command_template"] = (
-        '{"action":"{{ action }}",' '"code":"{{ code }}"}'
-    )
+    config[alarm_control_panel.DOMAIN][
+        "command_template"
+    ] = '{"action":"{{ action }}","code":"{{ code }}"}'
     assert await async_setup_component(
         hass,
         alarm_control_panel.DOMAIN,
@@ -409,7 +409,7 @@ async def test_disarm_publishes_mqtt_with_template(hass, mqtt_mock):
 
     await common.async_alarm_disarm(hass, "0123")
     mqtt_mock.async_publish.assert_called_once_with(
-        "alarm/command", {"action": "DISARM", "code": "0123"}, 0, False
+        "alarm/command", '{"action":"DISARM","code":"0123"}', 0, False
     )
 
 

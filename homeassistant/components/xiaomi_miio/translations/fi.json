@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connect_error": "Yhteyden muodostaminen ep\u00e4onnistui. Yrit\u00e4 uudelleen",
             "no_device_selected": "Ei valittuja laitteita. Ole hyv\u00e4 ja valitse yksi."
         },
         "step": {

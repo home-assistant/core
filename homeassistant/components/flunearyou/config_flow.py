@@ -7,14 +7,13 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an FluNearYou config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
     def data_schema(self):
@@ -29,10 +28,6 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ): cv.longitude,
             }
         )
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""

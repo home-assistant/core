@@ -12,7 +12,7 @@
             "wrong_password": "Nieprawid\u0142owe has\u0142o",
             "wrong_server_type": "Integracja forked-daapd wymaga serwera forked-daapd w wersji >= 27.0"
         },
-        "flow_title": "Serwer forked-daapd: {name} ( {host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -21,7 +21,7 @@
                     "password": "Has\u0142o API (pozostaw puste, je\u015bli nie ma has\u0142a)",
                     "port": "Port API"
                 },
-                "title": "Skonfiguruj urz\u0105dzenie forked-daapd"
+                "title": "Konfiguracja urz\u0105dzenia forked-daapd"
             }
         }
     },

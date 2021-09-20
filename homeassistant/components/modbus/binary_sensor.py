@@ -1,123 +1,67 @@
 """Support for Modbus Coil and Discrete Input sensors."""
-from typing import Optional
+from __future__ import annotations
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
-import voluptuous as vol
+import logging
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    CALL_TYPE_COIL,
-    CALL_TYPE_DISCRETE,
-    CONF_ADDRESS,
-    CONF_COILS,
-    CONF_HUB,
-    CONF_INPUT_TYPE,
-    CONF_INPUTS,
-    DEFAULT_HUB,
-    MODBUS_DOMAIN,
-)
+from .base_platform import BasePlatform
+from .const import MODBUS_DOMAIN
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_COILS, CONF_INPUTS),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_INPUTS): [
-                vol.All(
-                    cv.deprecated(CALL_TYPE_COIL, CONF_ADDRESS),
-                    vol.Schema(
-                        {
-                            vol.Required(CONF_ADDRESS): cv.positive_int,
-                            vol.Required(CONF_NAME): cv.string,
-                            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                            vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                            vol.Optional(CONF_SLAVE): cv.positive_int,
-                            vol.Optional(
-                                CONF_INPUT_TYPE, default=CALL_TYPE_COIL
-                            ): vol.In([CALL_TYPE_COIL, CALL_TYPE_DISCRETE]),
-                        }
-                    ),
-                )
-            ]
-        }
-    ),
-)
+PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: DiscoveryInfoType | None = None,
+):
     """Set up the Modbus binary sensors."""
     sensors = []
-    for entry in config[CONF_INPUTS]:
-        hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
-        sensors.append(
-            ModbusBinarySensor(
-                hub,
-                entry[CONF_NAME],
-                entry.get(CONF_SLAVE),
-                entry[CONF_ADDRESS],
-                entry.get(CONF_DEVICE_CLASS),
-                entry[CONF_INPUT_TYPE],
-            )
-        )
 
-    add_entities(sensors)
+    if discovery_info is None:  # pragma: no cover
+        return
+
+    for entry in discovery_info[CONF_BINARY_SENSORS]:
+        hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        sensors.append(ModbusBinarySensor(hub, entry))
+
+    async_add_entities(sensors)
 
 
-class ModbusBinarySensor(BinarySensorEntity):
+class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
-    def __init__(self, hub, name, slave, address, device_class, input_type):
-        """Initialize the Modbus binary sensor."""
-        self._hub = hub
-        self._name = name
-        self._slave = int(slave) if slave else None
-        self._address = int(address)
-        self._device_class = device_class
-        self._input_type = input_type
-        self._value = None
-        self._available = True
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._value = state.state == STATE_ON
+        else:
+            self._value = None
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
         return self._value
 
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    def update(self):
+    async def async_update(self, now=None):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == CALL_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        except ConnectionException:
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, 1, self._input_type
+        )
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
+            self.async_write_ha_state()
             return
 
         self._value = result.bits[0] & 1
         self._available = True
+        self.async_write_ha_state()

@@ -1,14 +1,18 @@
 """This platform allows several lights to be grouped into one light."""
+from __future__ import annotations
+
 import asyncio
 from collections import Counter
+from collections.abc import Iterator
 import itertools
-from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
@@ -16,16 +20,22 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
+    ATTR_XY_COLOR,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
+    color_supported,
+    color_temp_supported,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -35,10 +45,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import color as color_util
 
 from . import GroupEntity
@@ -56,18 +66,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 SUPPORT_GROUP_LIGHT = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
-    | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
-    | SUPPORT_WHITE_VALUE
+    SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_WHITE_VALUE
 )
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
     async_add_entities(
@@ -78,21 +82,27 @@ async def async_setup_platform(
 class LightGroup(GroupEntity, light.LightEntity):
     """Representation of a light group."""
 
-    def __init__(self, name: str, entity_ids: List[str]) -> None:
+    def __init__(self, name: str, entity_ids: list[str]) -> None:
         """Initialize a light group."""
         self._name = name
         self._entity_ids = entity_ids
         self._is_on = False
         self._available = False
         self._icon = "mdi:lightbulb-group"
-        self._brightness: Optional[int] = None
-        self._hs_color: Optional[Tuple[float, float]] = None
-        self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 154
-        self._max_mireds: Optional[int] = 500
-        self._white_value: Optional[int] = None
-        self._effect_list: Optional[List[str]] = None
-        self._effect: Optional[str] = None
+        self._brightness: int | None = None
+        self._color_mode: str | None = None
+        self._hs_color: tuple[float, float] | None = None
+        self._rgb_color: tuple[int, int, int] | None = None
+        self._rgbw_color: tuple[int, int, int, int] | None = None
+        self._rgbww_color: tuple[int, int, int, int, int] | None = None
+        self._xy_color: tuple[float, float] | None = None
+        self._color_temp: int | None = None
+        self._min_mireds: int = 154
+        self._max_mireds: int = 500
+        self._white_value: int | None = None
+        self._effect_list: list[str] | None = None
+        self._effect: str | None = None
+        self._supported_color_modes: set[str] | None = None
         self._supported_features: int = 0
 
     async def async_added_to_hass(self) -> None:
@@ -103,7 +113,6 @@ class LightGroup(GroupEntity, light.LightEntity):
             self.async_set_context(event.context)
             await self.async_defer_or_update_ha_state()
 
-        assert self.hass
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_ids, async_state_changed_listener
@@ -137,44 +146,74 @@ class LightGroup(GroupEntity, light.LightEntity):
         return self._icon
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light group between 0..255."""
         return self._brightness
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        return self._color_mode
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the HS color value [float, float]."""
         return self._hs_color
 
     @property
-    def color_temp(self) -> Optional[int]:
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the rgb color value [int, int, int]."""
+        return self._rgb_color
+
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the rgbw color value [int, int, int, int]."""
+        return self._rgbw_color
+
+    @property
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return the rgbww color value [int, int, int, int, int]."""
+        return self._rgbww_color
+
+    @property
+    def xy_color(self) -> tuple[float, float] | None:
+        """Return the xy color value [float, float]."""
+        return self._xy_color
+
+    @property
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return self._color_temp
 
     @property
-    def min_mireds(self) -> Optional[int]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light group supports."""
         return self._min_mireds
 
     @property
-    def max_mireds(self) -> Optional[int]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light group supports."""
         return self._max_mireds
 
     @property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int | None:
         """Return the white value of this light group between 0..255."""
         return self._white_value
 
     @property
-    def effect_list(self) -> Optional[List[str]]:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
 
     @property
-    def effect(self) -> Optional[str]:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return self._effect
+
+    @property
+    def supported_color_modes(self) -> set | None:
+        """Flag supported color modes."""
+        return self._supported_color_modes
 
     @property
     def supported_features(self) -> int:
@@ -187,7 +226,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the light group."""
         return {ATTR_ENTITY_ID: self._entity_ids}
 
@@ -202,6 +241,18 @@ class LightGroup(GroupEntity, light.LightEntity):
         if ATTR_HS_COLOR in kwargs:
             data[ATTR_HS_COLOR] = kwargs[ATTR_HS_COLOR]
 
+        if ATTR_RGB_COLOR in kwargs:
+            data[ATTR_RGB_COLOR] = kwargs[ATTR_RGB_COLOR]
+
+        if ATTR_RGBW_COLOR in kwargs:
+            data[ATTR_RGBW_COLOR] = kwargs[ATTR_RGBW_COLOR]
+
+        if ATTR_RGBWW_COLOR in kwargs:
+            data[ATTR_RGBWW_COLOR] = kwargs[ATTR_RGBWW_COLOR]
+
+        if ATTR_XY_COLOR in kwargs:
+            data[ATTR_XY_COLOR] = kwargs[ATTR_XY_COLOR]
+
         if ATTR_COLOR_TEMP in kwargs:
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
 
@@ -213,11 +264,9 @@ class LightGroup(GroupEntity, light.LightEntity):
                 state = self.hass.states.get(entity_id)
                 if not state:
                     continue
-                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                support = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
                 # Only pass color temperature to supported entity_ids
-                if bool(support & SUPPORT_COLOR) and not bool(
-                    support & SUPPORT_COLOR_TEMP
-                ):
+                if color_supported(support) and not color_temp_supported(support):
                     emulate_color_temp_entity_ids.append(entity_id)
                     updated_entities.remove(entity_id)
                     data[ATTR_ENTITY_ID] = updated_entities
@@ -289,7 +338,7 @@ class LightGroup(GroupEntity, light.LightEntity):
     async def async_update(self):
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states: List[State] = list(filter(None, all_states))
+        states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0
@@ -298,6 +347,16 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
         self._hs_color = _reduce_attribute(on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
+        self._rgb_color = _reduce_attribute(
+            on_states, ATTR_RGB_COLOR, reduce=_mean_tuple
+        )
+        self._rgbw_color = _reduce_attribute(
+            on_states, ATTR_RGBW_COLOR, reduce=_mean_tuple
+        )
+        self._rgbww_color = _reduce_attribute(
+            on_states, ATTR_RGBWW_COLOR, reduce=_mean_tuple
+        )
+        self._xy_color = _reduce_attribute(on_states, ATTR_XY_COLOR, reduce=_mean_tuple)
 
         self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
@@ -314,6 +373,10 @@ class LightGroup(GroupEntity, light.LightEntity):
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
+            self._effect_list.sort()
+            if "None" in self._effect_list:
+                self._effect_list.remove("None")
+                self._effect_list.insert(0, "None")
 
         self._effect = None
         all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
@@ -321,6 +384,25 @@ class LightGroup(GroupEntity, light.LightEntity):
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
+
+        self._color_mode = None
+        all_color_modes = list(_find_state_attributes(on_states, ATTR_COLOR_MODE))
+        if all_color_modes:
+            # Report the most common color mode, select brightness and onoff last
+            color_mode_count = Counter(itertools.chain(all_color_modes))
+            if COLOR_MODE_ONOFF in color_mode_count:
+                color_mode_count[COLOR_MODE_ONOFF] = -1
+            if COLOR_MODE_BRIGHTNESS in color_mode_count:
+                color_mode_count[COLOR_MODE_BRIGHTNESS] = 0
+            self._color_mode = color_mode_count.most_common(1)[0][0]
+
+        self._supported_color_modes = None
+        all_supported_color_modes = list(
+            _find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
+        )
+        if all_supported_color_modes:
+            # Merge all color modes.
+            self._supported_color_modes = set().union(*all_supported_color_modes)
 
         self._supported_features = 0
         for support in _find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
@@ -332,7 +414,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._supported_features &= SUPPORT_GROUP_LIGHT
 
 
-def _find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+def _find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
         value = state.attributes.get(key)
@@ -351,9 +433,9 @@ def _mean_tuple(*args):
 
 
 def _reduce_attribute(
-    states: List[State],
+    states: list[State],
     key: str,
-    default: Optional[Any] = None,
+    default: Any | None = None,
     reduce: Callable[..., Any] = _mean_int,
 ) -> Any:
     """Find the first attribute matching key from states.

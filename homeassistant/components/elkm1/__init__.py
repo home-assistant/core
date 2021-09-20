@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_PASSWORD,
+    CONF_PREFIX,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
     TEMP_CELSIUS,
@@ -38,7 +39,6 @@ from .const import (
     CONF_KEYPAD,
     CONF_OUTPUT,
     CONF_PLC,
-    CONF_PREFIX,
     CONF_SETTING,
     CONF_TASK,
     CONF_THERMOSTAT,
@@ -52,7 +52,7 @@ SYNC_TIMEOUT = 120
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = [
+PLATFORMS = [
     "alarm_control_panel",
     "climate",
     "light",
@@ -195,9 +195,8 @@ def _async_find_matching_config_entry(hass, prefix):
             return entry
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
-
     conf = entry.data
 
     _LOGGER.debug("Setting up elkm1 %s", conf["host"])
@@ -249,18 +248,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for keypad in elk.keypads:  # pylint: disable=no-member
         keypad.add_callback(_element_changed)
 
-    if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT):
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            SYNC_TIMEOUT,
-            conf[CONF_HOST],
-        )
-        elk.disconnect()
-        raise ConfigEntryNotReady
-
-    if elk.invalid_auth:
-        _LOGGER.error("Authentication failed for ElkM1")
-        return False
+    try:
+        if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT, conf[CONF_HOST]):
+            return False
+    except asyncio.TimeoutError as exc:
+        raise ConfigEntryNotReady from exc
 
     hass.data[DOMAIN][entry.entry_id] = {
         "elk": elk,
@@ -270,10 +262,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "keypads": {},
     }
 
-    for component in SUPPORTED_DOMAINS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -294,14 +283,7 @@ def _find_elk_by_prefix(hass, prefix):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SUPPORTED_DOMAINS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # disconnect cleanly
     hass.data[DOMAIN][entry.entry_id]["elk"].disconnect()
@@ -312,16 +294,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(elk, timeout):
-    """Wait until the elk system has finished sync."""
+async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
+    """Wait until the elk has finished sync. Can fail login or timeout."""
+
+    def login_status(succeeded):
+        nonlocal success
+
+        success = succeeded
+        if succeeded:
+            _LOGGER.debug("ElkM1 login succeeded")
+        else:
+            elk.disconnect()
+            _LOGGER.error("ElkM1 login failed; invalid username or password")
+            event.set()
+
+    def sync_complete():
+        event.set()
+
+    success = True
+    event = asyncio.Event()
+    elk.add_handler("login", login_status)
+    elk.add_handler("sync_complete", sync_complete)
     try:
         with async_timeout.timeout(timeout):
-            await elk.sync_complete()
-            return True
+            await event.wait()
     except asyncio.TimeoutError:
+        _LOGGER.error(
+            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
+            timeout,
+            conf_host,
+        )
         elk.disconnect()
+        raise
 
-    return False
+    return success
 
 
 def _create_elk_services(hass):
@@ -413,7 +419,7 @@ class ElkEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the default attributes of the element."""
         return {**self._element.as_dict(), **self.initial_attrs()}
 

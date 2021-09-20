@@ -77,7 +77,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class YamahaConfigInfo:
     """Configuration Info for Yamaha Receivers."""
 
-    def __init__(self, config: None, discovery_info: None):
+    def __init__(self, config: None, discovery_info: None) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
         self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
@@ -152,7 +152,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
     # Register Service 'select_scene'
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SELECT_SCENE,
         {vol.Required(ATTR_SCENE): cv.string},

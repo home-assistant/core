@@ -6,17 +6,14 @@
             "not_huawei_lte": "Nejedn\u00e1 se o za\u0159\u00edzen\u00ed Huawei LTE"
         },
         "error": {
-            "connection_failed": "P\u0159ipojen\u00ed se nezda\u0159ilo",
             "connection_timeout": "\u010casov\u00fd limit spojen\u00ed",
             "incorrect_password": "Nespr\u00e1vn\u00e9 heslo",
             "incorrect_username": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no",
-            "incorrect_username_or_password": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "invalid_url": "Neplatn\u00e1 adresa URL",
             "login_attempts_exceeded": "Maxim\u00e1ln\u00ed pokus o p\u0159ihl\u00e1\u0161en\u00ed byl p\u0159ekro\u010den, zkuste to znovu pozd\u011bji",
             "response_error": "Nezn\u00e1m\u00e1 chyba ze za\u0159\u00edzen\u00ed",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
-            "unknown_connection_error": "Nezn\u00e1m\u00e1 chyba p\u0159i p\u0159ipojov\u00e1n\u00ed k za\u0159\u00edzen\u00ed"
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {
@@ -26,6 +23,7 @@
                     "url": "URL",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
+                "description": "Zadejte podrobnosti o p\u0159\u00edstupu k za\u0159\u00edzen\u00ed. Zad\u00e1n\u00ed u\u017eivatelsk\u00e9ho jm\u00e9na a hesla je voliteln\u00e9, ale umo\u017e\u0148uje podporu dal\u0161\u00edch funkc\u00ed integrace. Na druhou stranu m\u016f\u017ee pou\u017eit\u00ed autorizovan\u00e9ho p\u0159ipojen\u00ed zp\u016fsobit probl\u00e9my s p\u0159\u00edstupem k webov\u00e9mu rozhran\u00ed Home Assistant zven\u010d\u00ed, kdy\u017e je integrace aktivn\u00ed, a naopak.",
                 "title": "Konfigurovat Huawei LTE"
             }
         }

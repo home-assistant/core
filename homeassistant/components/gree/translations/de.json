@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?"
+            }
+        }
+    }
+}

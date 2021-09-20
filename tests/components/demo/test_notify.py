@@ -1,6 +1,7 @@
 """The tests for the notify demo platform."""
 
 import logging
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,8 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_capture_events
 
 CONFIG = {notify.DOMAIN: {"platform": "demo"}}
 
@@ -20,9 +20,7 @@ CONFIG = {notify.DOMAIN: {"platform": "demo"}}
 @pytest.fixture
 def events(hass):
     """Fixture that catches notify events."""
-    events = []
-    hass.bus.async_listen(demo.EVENT_NOTIFY, callback(lambda e: events.append(e)))
-    yield events
+    return async_capture_events(hass, demo.EVENT_NOTIFY)
 
 
 @pytest.fixture
@@ -108,7 +106,7 @@ async def test_sending_templated_message(hass, events):
     await hass.async_block_till_done()
     last_event = events[-1]
     assert last_event.data[notify.ATTR_TITLE] == "temperature"
-    assert last_event.data[notify.ATTR_MESSAGE] == 10
+    assert last_event.data[notify.ATTR_MESSAGE] == "10"
 
 
 async def test_method_forwards_correct_data(hass, events):

@@ -91,7 +91,9 @@ async def test_observable_collection():
     assert coll.async_items() == [1]
 
     changes = track_changes(coll)
-    await coll.notify_change("mock_type", "mock_id", {"mock": "item"})
+    await coll.notify_changes(
+        [collection.CollectionChangeSet("mock_type", "mock_id", {"mock": "item"})]
+    )
     assert len(changes) == 1
     assert changes[0] == ("mock_type", "mock_id", {"mock": "item"})
 
@@ -224,27 +226,37 @@ async def test_attach_entity_component_collection(hass):
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     coll = collection.ObservableCollection(_LOGGER)
-    collection.attach_entity_component_collection(ent_comp, coll, MockEntity)
+    collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
 
-    await coll.notify_change(
-        collection.CHANGE_ADDED,
-        "mock_id",
-        {"id": "mock_id", "state": "initial", "name": "Mock 1"},
+    await coll.notify_changes(
+        [
+            collection.CollectionChangeSet(
+                collection.CHANGE_ADDED,
+                "mock_id",
+                {"id": "mock_id", "state": "initial", "name": "Mock 1"},
+            )
+        ],
     )
 
     assert hass.states.get("test.mock_1").name == "Mock 1"
     assert hass.states.get("test.mock_1").state == "initial"
 
-    await coll.notify_change(
-        collection.CHANGE_UPDATED,
-        "mock_id",
-        {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
+    await coll.notify_changes(
+        [
+            collection.CollectionChangeSet(
+                collection.CHANGE_UPDATED,
+                "mock_id",
+                {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
+            )
+        ],
     )
 
     assert hass.states.get("test.mock_1").name == "Mock 1 updated"
     assert hass.states.get("test.mock_1").state == "second"
 
-    await coll.notify_change(collection.CHANGE_REMOVED, "mock_id", None)
+    await coll.notify_changes(
+        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+    )
 
     assert hass.states.get("test.mock_1") is None
 

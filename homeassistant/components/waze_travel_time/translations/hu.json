@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "\u00c9rkez\u00e9s helye",
+                    "origin": "Indul\u00e1s helye",
+                    "region": "R\u00e9gi\u00f3"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Ker\u00fclje kompokat?",
+                    "avoid_subscription_roads": "Ker\u00fclje el az utakat, amelyekre matrica / el\u0151fizet\u00e9s sz\u00fcks\u00e9ges?",
+                    "avoid_toll_roads": "Ker\u00fclje a fizet\u0151s utakat?",
+                    "realtime": "Val\u00f3s idej\u0171 utaz\u00e1si id\u0151?",
+                    "vehicle_type": "J\u00e1rm\u0171 t\u00edpus"
+                }
+            }
+        }
+    },
+    "title": "Waze Travel Time"
+}

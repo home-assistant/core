@@ -1,8 +1,14 @@
 """Define fixtures available for all tests."""
+from unittest.mock import MagicMock, patch
+
 from canary.api import Api
 from pytest import fixture
 
-from tests.async_mock import MagicMock, patch
+
+@fixture(autouse=True)
+def mock_ffmpeg(hass):
+    """Mock ffmpeg is loaded."""
+    hass.config.components.add("ffmpeg")
 
 
 @fixture

@@ -167,7 +167,7 @@ def setup(hass, config):
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
 
-        url = "http://{}".format(repetier[CONF_HOST])
+        url = f"http://{repetier[CONF_HOST]}"
         port = repetier[CONF_PORT]
         api_key = repetier[CONF_API_KEY]
 

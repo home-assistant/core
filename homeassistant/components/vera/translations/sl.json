@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Krmilnik je \u017ee konfiguriran.",
             "cannot_connect": "Ni mogo\u010de vzpostaviti povezave s krmilnikom z URL-jem {base_url}"
         },
         "step": {

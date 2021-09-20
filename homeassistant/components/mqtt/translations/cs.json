@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Povolit automatick\u00e9 vyhled\u00e1v\u00e1n\u00ed za\u0159\u00edzen\u00ed"
                 },
-                "description": "Chcete nakonfigurovat Home Assistant pro p\u0159ipojen\u00ed k MQTT poskytovan\u00e9mu dopl\u0148kem {addon} z Hass.io?",
-                "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat Home Assistant pro p\u0159ipojen\u00ed k MQTT poskytovan\u00e9mu dopl\u0148kem {addon} z Supervisor?",
+                "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Supervisor"
             }
         }
     },
@@ -38,13 +38,13 @@
             "turn_on": "Zapnout"
         },
         "trigger_type": {
-            "button_double_press": "Dvakr\u00e1t stisknuto \"{subtype}\"",
+            "button_double_press": "\"{subtype}\" stisknuto dvakr\u00e1t",
             "button_long_release": "Uvoln\u011bno \"{subtype}\" po dlouh\u00e9m stisku",
-            "button_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto \"{subtype}\"",
-            "button_quintuple_press": "P\u011btkr\u00e1t stisknuto \"{subtype}\"",
-            "button_short_press": "Stiknuto \"{subtype}\"",
+            "button_quadruple_press": "\"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "button_quintuple_press": "\"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "button_short_press": "\"{subtype}\" stisknuto",
             "button_short_release": "Uvoln\u011bno \"{subtype}\"",
-            "button_triple_press": "T\u0159ikr\u00e1t stisknuto \"{subtype}\""
+            "button_triple_press": "\"{subtype}\" stisknuto t\u0159ikr\u00e1t"
         }
     },
     "options": {
@@ -63,7 +63,11 @@
             "options": {
                 "data": {
                     "birth_enable": "Povolit zpr\u00e1vu p\u0159i p\u0159ipojen\u00ed",
-                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed"
+                    "discovery": "Povolit zji\u0161\u0165ov\u00e1n\u00ed",
+                    "will_payload": "Obsah zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_qos": "QoS zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_retain": "Zachov\u00e1n\u00ed zpr\u00e1vy se z\u00e1v\u011bt\u00ed",
+                    "will_topic": "T\u00e9ma zpr\u00e1vy se z\u00e1v\u011bt\u00ed (will message)"
                 },
                 "description": "Zvolte mo\u017enosti MQTT."
             }

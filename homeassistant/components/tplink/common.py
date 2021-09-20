@@ -1,6 +1,8 @@
 """Common code for tplink."""
+from __future__ import annotations
+
 import logging
-from typing import List
+from typing import Callable
 
 from pyHS100 import (
     Discover,
@@ -11,7 +13,9 @@ from pyHS100 import (
     SmartStrip,
 )
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN as TPLINK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,23 +32,23 @@ class SmartDevices:
     """Hold different kinds of devices."""
 
     def __init__(
-        self, lights: List[SmartDevice] = None, switches: List[SmartDevice] = None
-    ):
+        self, lights: list[SmartDevice] = None, switches: list[SmartDevice] = None
+    ) -> None:
         """Initialize device holder."""
         self._lights = lights or []
         self._switches = switches or []
 
     @property
-    def lights(self):
+    def lights(self) -> list[SmartDevice]:
         """Get the lights."""
         return self._lights
 
     @property
-    def switches(self):
+    def switches(self) -> list[SmartDevice]:
         """Get the switches."""
         return self._switches
 
-    def has_device_with_host(self, host):
+    def has_device_with_host(self, host: str) -> bool:
         """Check if a devices exists with a specific host."""
         for device in self.lights + self.switches:
             if device.host == host:
@@ -53,18 +57,17 @@ class SmartDevices:
         return False
 
 
-async def async_get_discoverable_devices(hass):
+async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Return if there are devices that can be discovered."""
 
-    def discover():
-        devs = Discover.discover()
-        return devs
+    def discover() -> dict[str, SmartDevice]:
+        return Discover.discover()
 
     return await hass.async_add_executor_job(discover)
 
 
 async def async_discover_devices(
-    hass: HomeAssistantType, existing_devices: SmartDevices
+    hass: HomeAssistant, existing_devices: SmartDevices
 ) -> SmartDevices:
     """Get devices through discovery."""
     _LOGGER.debug("Discovering devices")
@@ -74,7 +77,7 @@ async def async_discover_devices(
     lights = []
     switches = []
 
-    def process_devices():
+    def process_devices() -> None:
         for dev in devices.values():
             # If this device already exists, ignore dynamic setup.
             if existing_devices.has_device_with_host(dev.host):
@@ -127,3 +130,31 @@ def get_static_devices(config_data) -> SmartDevices:
                     "Failed to setup device %s due to %s; not retrying", host, sde
                 )
     return SmartDevices(lights, switches)
+
+
+def add_available_devices(
+    hass: HomeAssistant, device_type: str, device_class: Callable
+) -> list:
+    """Get sysinfo for all devices."""
+
+    devices = hass.data[TPLINK_DOMAIN][device_type]
+
+    if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
+        devices = hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"]
+
+    entities_ready = []
+    devices_unavailable = []
+    for device in devices:
+        try:
+            device.get_sysinfo()
+            entities_ready.append(device_class(device))
+        except SmartDeviceException as ex:
+            devices_unavailable.append(device)
+            _LOGGER.warning(
+                "Unable to communicate with device %s: %s",
+                device.host,
+                ex,
+            )
+
+    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = devices_unavailable
+    return entities_ready

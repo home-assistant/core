@@ -4,11 +4,12 @@ Climate on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import enum
 import functools
 from random import randint
-from typing import List, Optional, Tuple
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -30,13 +31,16 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
@@ -48,6 +52,8 @@ from .core.const import (
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    PRESET_COMPLEX,
+    PRESET_SCHEDULE,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -185,7 +191,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._thrm.local_temp / ZCL_TEMP
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         data = {}
         if self.hvac_mode:
@@ -212,7 +218,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return data
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return current FAN mode."""
         if self._thrm.running_state is None:
             return FAN_AUTO
@@ -224,14 +230,14 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return FAN_AUTO
 
     @property
-    def fan_modes(self) -> Optional[List[str]]:
+    def fan_modes(self) -> list[str] | None:
         """Return supported FAN modes."""
         if not self._fan:
             return None
         return [FAN_AUTO, FAN_ON]
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current HVAC action."""
         if (
             self._thrm.pi_heating_demand is None
@@ -241,7 +247,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._pi_demand_action
 
     @property
-    def _rm_rs_action(self) -> Optional[str]:
+    def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
         running_mode = self._thrm.running_mode
@@ -260,7 +266,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return CURRENT_HVAC_OFF
 
     @property
-    def _pi_demand_action(self) -> Optional[str]:
+    def _pi_demand_action(self) -> str | None:
         """Return the current HVAC action based on pi_demands."""
 
         heating_demand = self._thrm.pi_heating_demand
@@ -275,27 +281,27 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return CURRENT_HVAC_OFF
 
     @property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return HVAC operation mode."""
         return SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode)
 
     @property
-    def hvac_modes(self) -> Tuple[str, ...]:
+    def hvac_modes(self) -> tuple[str, ...]:
         """Return the list of available HVAC operation modes."""
         return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF,))
 
     @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self._preset
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return supported preset modes."""
         return self._presets
 
@@ -442,15 +448,22 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if self.preset_mode not in (preset_mode, PRESET_NONE):
-            if not await self.async_preset_handler(self.preset_mode, enable=False):
-                self.debug("Couldn't turn off '%s' preset", self.preset_mode)
-                return
+        if (
+            self.preset_mode
+            not in (
+                preset_mode,
+                PRESET_NONE,
+            )
+            and not await self.async_preset_handler(self.preset_mode, enable=False)
+        ):
+            self.debug("Couldn't turn off '%s' preset", self.preset_mode)
+            return
 
-        if preset_mode != PRESET_NONE:
-            if not await self.async_preset_handler(preset_mode, enable=True):
-                self.debug("Couldn't turn on '%s' preset", preset_mode)
-                return
+        if preset_mode != PRESET_NONE and not await self.async_preset_handler(
+            preset_mode, enable=True
+        ):
+            self.debug("Couldn't turn on '%s' preset", preset_mode)
+            return
         self._preset = preset_mode
         self.async_write_ha_state()
 
@@ -566,7 +579,7 @@ class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
 
     @property
-    def _rm_rs_action(self) -> Optional[str]:
+    def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
         running_state = self._thrm.running_state
@@ -594,3 +607,88 @@ class ZenWithinThermostat(Thermostat):
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TZE200_ckud7u2l",
+        "_TZE200_ywdxldoj",
+        "_TYST11_ckud7u2l",
+        "_TYST11_ywdxldoj",
+    },
+)
+class MoesThermostat(Thermostat):
+    """Moes Thermostat implementation."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            PRESET_AWAY,
+            PRESET_SCHEDULE,
+            PRESET_COMFORT,
+            PRESET_ECO,
+            PRESET_BOOST,
+            PRESET_COMPLEX,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_AWAY
+            if record.value == 1:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 2:
+                self._preset = PRESET_NONE
+            if record.value == 3:
+                self._preset = PRESET_COMFORT
+            if record.value == 4:
+                self._preset = PRESET_ECO
+            if record.value == 5:
+                self._preset = PRESET_BOOST
+            if record.value == 6:
+                self._preset = PRESET_COMPLEX
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 2}, manufacturer=mfg_code
+            )
+        if preset == PRESET_AWAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+        if preset == PRESET_COMFORT:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 3}, manufacturer=mfg_code
+            )
+        if preset == PRESET_ECO:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 4}, manufacturer=mfg_code
+            )
+        if preset == PRESET_BOOST:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 5}, manufacturer=mfg_code
+            )
+        if preset == PRESET_COMPLEX:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 6}, manufacturer=mfg_code
+            )
+
+        return False

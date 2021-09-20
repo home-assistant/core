@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import sanitize_filename
+from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,8 @@ def setup(hass, config):
                 overwrite = service.data.get(ATTR_OVERWRITE)
 
                 if subdir:
-                    subdir = sanitize_filename(subdir)
+                    # Check the path
+                    raise_if_invalid_path(subdir)
 
                 final_path = None
 
@@ -79,7 +80,7 @@ def setup(hass, config):
 
                 if req.status_code != HTTP_OK:
                     _LOGGER.warning(
-                        "downloading '%s' failed, status_code=%d", url, req.status_code
+                        "Downloading '%s' failed, status_code=%d", url, req.status_code
                     )
                     hass.bus.fire(
                         f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
@@ -101,8 +102,8 @@ def setup(hass, config):
                     if not filename:
                         filename = "ha_download"
 
-                    # Remove stuff to ruin paths
-                    filename = sanitize_filename(filename)
+                    # Check the filename
+                    raise_if_invalid_filename(filename)
 
                     # Do we want to download to subdir, create if needed
                     if subdir:
@@ -143,6 +144,16 @@ def setup(hass, config):
 
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
+                hass.bus.fire(
+                    f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
+                    {"url": url, "filename": filename},
+                )
+
+                # Remove file if we started downloading but failed
+                if final_path and os.path.isfile(final_path):
+                    os.remove(final_path)
+            except ValueError:
+                _LOGGER.exception("Invalid value")
                 hass.bus.fire(
                     f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                     {"url": url, "filename": filename},

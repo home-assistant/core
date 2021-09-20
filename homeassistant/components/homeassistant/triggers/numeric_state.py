@@ -32,6 +32,9 @@ def validate_above_below(value):
     if above is None or below is None:
         return value
 
+    if isinstance(above, str) or isinstance(below, str):
+        return value
+
     if above > below:
         raise vol.Invalid(
             f"A value can never be above {above} and below {below} at the same time. You probably want two different triggers.",
@@ -45,8 +48,8 @@ TRIGGER_SCHEMA = vol.All(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
+            vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
+            vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_FOR): cv.positive_time_period_template,
             vol.Optional(CONF_ATTRIBUTE): cv.match_all,
@@ -63,44 +66,62 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="numeric_state"
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_id = config.get(CONF_ENTITY_ID)
+    entity_ids = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unsub_track_same = {}
-    entities_triggered = set()
+    armed_entities = set()
     period: dict = {}
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    _variables = {}
+    if automation_info:
+        _variables = automation_info.get("variables") or {}
+
     if value_template is not None:
         value_template.hass = hass
 
-    @callback
-    def check_numeric_state(entity, from_s, to_s):
-        """Return True if criteria are now met."""
-        if to_s is None:
-            return False
-
-        variables = {
+    def variables(entity_id):
+        """Return a dict with trigger variables."""
+        trigger_info = {
             "trigger": {
                 "platform": "numeric_state",
-                "entity_id": entity,
+                "entity_id": entity_id,
                 "below": below,
                 "above": above,
                 "attribute": attribute,
             }
         }
+        return {**_variables, **trigger_info}
+
+    @callback
+    def check_numeric_state(entity_id, from_s, to_s):
+        """Return whether the criteria are met, raise ConditionError if unknown."""
         return condition.async_numeric_state(
-            hass, to_s, below, above, value_template, variables, attribute
+            hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
+
+    # Each entity that starts outside the range is already armed (ready to fire).
+    for entity_id in entity_ids:
+        try:
+            if not check_numeric_state(entity_id, None, entity_id):
+                armed_entities.add(entity_id)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning(
+                "Error initializing '%s' trigger: %s",
+                automation_info["name"],
+                ex,
+            )
 
     @callback
     def state_automation_listener(event):
         """Listen for state changes and calls action."""
-        entity = event.data.get("entity_id")
+        entity_id = event.data.get("entity_id")
         from_s = event.data.get("old_state")
         to_s = event.data.get("new_state")
 
@@ -112,38 +133,45 @@ async def async_attach_trigger(
                 {
                     "trigger": {
                         "platform": platform_type,
-                        "entity_id": entity,
+                        "entity_id": entity_id,
                         "below": below,
                         "above": above,
                         "from_state": from_s,
                         "to_state": to_s,
-                        "for": time_delta if not time_delta else period[entity],
-                        "description": f"numeric state of {entity}",
+                        "for": time_delta if not time_delta else period[entity_id],
+                        "description": f"numeric state of {entity_id}",
+                        "id": trigger_id,
                     }
                 },
                 to_s.context,
             )
 
-        matching = check_numeric_state(entity, from_s, to_s)
+        @callback
+        def check_numeric_state_no_raise(entity_id, from_s, to_s):
+            """Return True if the criteria are now met, False otherwise."""
+            try:
+                return check_numeric_state(entity_id, from_s, to_s)
+            except exceptions.ConditionError:
+                # This is an internal same-state listener so we just drop the
+                # error. The same error will be reached and logged by the
+                # primary async_track_state_change_event() listener.
+                return False
+
+        try:
+            matching = check_numeric_state(entity_id, from_s, to_s)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in '%s' trigger: %s", automation_info["name"], ex)
+            return
 
         if not matching:
-            entities_triggered.discard(entity)
-        elif entity not in entities_triggered:
-            entities_triggered.add(entity)
+            armed_entities.add(entity_id)
+        elif entity_id in armed_entities:
+            armed_entities.discard(entity_id)
 
             if time_delta:
-                variables = {
-                    "trigger": {
-                        "platform": "numeric_state",
-                        "entity_id": entity,
-                        "below": below,
-                        "above": above,
-                    }
-                }
-
                 try:
-                    period[entity] = cv.positive_time_period(
-                        template.render_complex(time_delta, variables)
+                    period[entity_id] = cv.positive_time_period(
+                        template.render_complex(time_delta, variables(entity_id))
                     )
                 except (exceptions.TemplateError, vol.Invalid) as ex:
                     _LOGGER.error(
@@ -151,20 +179,19 @@ async def async_attach_trigger(
                         automation_info["name"],
                         ex,
                     )
-                    entities_triggered.discard(entity)
                     return
 
-                unsub_track_same[entity] = async_track_same_state(
+                unsub_track_same[entity_id] = async_track_same_state(
                     hass,
-                    period[entity],
+                    period[entity_id],
                     call_action,
-                    entity_ids=entity,
-                    async_check_same_func=check_numeric_state,
+                    entity_ids=entity_id,
+                    async_check_same_func=check_numeric_state_no_raise,
                 )
             else:
                 call_action()
 
-    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_ids, state_automation_listener)
 
     @callback
     def async_remove():

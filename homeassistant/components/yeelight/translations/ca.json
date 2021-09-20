@@ -7,7 +7,11 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
+        "flow_title": "{model} {host}",
         "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar {model} ({host})?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Dispositiu"
@@ -15,8 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3",
-                    "ip_address": "Adre\u00e7a IP"
+                    "host": "Amfitri\u00f3"
                 },
                 "description": "Si deixes l'amfitri\u00f3 buit, s'utilitzar\u00e0 el descobriment per cercar dispositius."
             }
@@ -35,6 +38,5 @@
                 "description": "Si deixes el model buit, es detectar\u00e0 autom\u00e0ticament."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

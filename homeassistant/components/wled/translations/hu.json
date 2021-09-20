@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ez a WLED eszk\u00f6z m\u00e1r konfigur\u00e1lva van.",
-            "connection_error": "Nem siker\u00fclt csatlakozni a WLED eszk\u00f6zh\u00f6z."
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "error": {
-            "connection_error": "Nem siker\u00fclt csatlakozni a WLED eszk\u00f6zh\u00f6z."
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "flow_title": "WLED: {name}",
         "step": {

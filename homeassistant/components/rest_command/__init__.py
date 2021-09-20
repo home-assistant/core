@@ -93,17 +93,22 @@ async def async_setup(hass, config):
             payload = None
             if template_payload:
                 payload = bytes(
-                    template_payload.async_render(variables=service.data), "utf-8"
+                    template_payload.async_render(
+                        variables=service.data, parse_result=False
+                    ),
+                    "utf-8",
                 )
 
-            request_url = template_url.async_render(variables=service.data)
+            request_url = template_url.async_render(
+                variables=service.data, parse_result=False
+            )
 
             headers = None
             if template_headers:
                 headers = {}
                 for header_name, template_header in template_headers.items():
                     headers[header_name] = template_header.async_render(
-                        variables=service.data
+                        variables=service.data, parse_result=False
                     )
 
             if content_type:

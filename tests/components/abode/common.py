@@ -1,9 +1,10 @@
 """Common methods used across tests for Abode."""
+from unittest.mock import patch
+
 from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -15,7 +16,7 @@ async def setup_platform(hass, platform):
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.abode.ABODE_PLATFORMS", [platform]), patch(
+    with patch("homeassistant.components.abode.PLATFORMS", [platform]), patch(
         "abodepy.event_controller.sio"
     ), patch("abodepy.utils.save_cache"):
         assert await async_setup_component(hass, ABODE_DOMAIN, {})

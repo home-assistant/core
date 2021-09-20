@@ -1,14 +1,17 @@
 """Config flow for 1-Wire component."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant import exceptions
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_MOUNT_DIR,
-    CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_HOST,
@@ -16,7 +19,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
-from .onewirehub import OneWireHub
+from .onewirehub import CannotConnect, InvalidPath, OneWireHub
 
 DATA_SCHEMA_USER = vol.Schema(
     {vol.Required(CONF_TYPE): vol.In([CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS])}
@@ -34,7 +37,9 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
 )
 
 
-async def validate_input_owserver(hass: HomeAssistantType, data):
+async def validate_input_owserver(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA_OWSERVER with values provided by the user.
@@ -44,26 +49,16 @@ async def validate_input_owserver(hass: HomeAssistantType, data):
 
     host = data[CONF_HOST]
     port = data[CONF_PORT]
-    if not await hub.can_connect(host, port):
-        raise CannotConnect
+    # Raises CannotConnect exception on failure
+    await hub.connect(host, port)
 
     # Return info that you want to store in the config entry.
     return {"title": host}
 
 
-def is_duplicate_owserver_entry(hass: HomeAssistantType, user_input):
-    """Check existing entries for matching host and port."""
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER
-            and config_entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and config_entry.data[CONF_PORT] == str(user_input[CONF_PORT])
-        ):
-            return True
-    return False
-
-
-async def validate_input_mount_dir(hass: HomeAssistantType, data):
+async def validate_input_mount_dir(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA_MOUNTDIR with values provided by the user.
@@ -71,8 +66,9 @@ async def validate_input_mount_dir(hass: HomeAssistantType, data):
     hub = OneWireHub(hass)
 
     mount_dir = data[CONF_MOUNT_DIR]
-    if not await hub.is_valid_mount_dir(mount_dir):
-        raise InvalidPath
+
+    # Raises InvalidDir exception on failure
+    await hub.check_mount_dir(mount_dir)
 
     # Return info that you want to store in the config entry.
     return {"title": mount_dir}
@@ -82,18 +78,19 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize 1-Wire config flow."""
-        self.onewire_config = {}
+        self.onewire_config: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle 1-Wire config flow start.
 
         Let user manually input configuration.
         """
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self.onewire_config.update(user_input)
             if CONF_TYPE_OWSERVER == user_input[CONF_TYPE]:
@@ -107,13 +104,20 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_owserver(self, user_input=None):
+    async def async_step_owserver(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle OWServer configuration."""
         errors = {}
         if user_input:
             # Prevent duplicate entries
-            if is_duplicate_owserver_entry(self.hass, user_input):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {
+                    CONF_TYPE: CONF_TYPE_OWSERVER,
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
 
             self.onewire_config.update(user_input)
 
@@ -132,7 +136,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_mount_dir(self, user_input=None):
+    async def async_step_mount_dir(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle SysBus configuration."""
         errors = {}
         if user_input:
@@ -159,7 +165,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, platform_config):
+    async def async_step_import(self, platform_config: dict[str, Any]) -> FlowResult:
         """Handle import configuration from YAML."""
         # OWServer
         if platform_config[CONF_TYPE] == CONF_TYPE_OWSERVER:
@@ -167,29 +173,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
                 platform_config[CONF_PORT] = DEFAULT_OWSERVER_PORT
             return await self.async_step_owserver(platform_config)
 
-        # OWFS
-        if platform_config[CONF_TYPE] == CONF_TYPE_OWFS:  # pragma: no cover
-            # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-            # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-            await self.async_set_unique_id(
-                f"{CONF_TYPE_OWFS}:{platform_config[CONF_MOUNT_DIR]}"
-            )
-            self._abort_if_unique_id_configured(
-                updates=platform_config, reload_on_update=True
-            )
-            return self.async_create_entry(
-                title=platform_config[CONF_MOUNT_DIR], data=platform_config
-            )
-
         # SysBus
         if CONF_MOUNT_DIR not in platform_config:
             platform_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
         return await self.async_step_mount_dir(platform_config)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidPath(exceptions.HomeAssistantError):
-    """Error to indicate the path is invalid."""

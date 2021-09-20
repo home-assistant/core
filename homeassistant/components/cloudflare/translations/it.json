@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_zone": "Zona non valida"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Record"
+                },
+                "title": "Scegliere i record da aggiornare"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token API"
+                },
+                "description": "Questa integrazione richiede un Token API creato con i permessi Zone:Zone:Read e Zone:DNS:Edit per tutte le zone del tuo account.",
+                "title": "Connettiti a Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zona"
+                },
+                "title": "Scegliere la zona da aggiornare"
+            }
+        }
+    }
+}

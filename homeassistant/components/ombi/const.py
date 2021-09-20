@@ -1,5 +1,4 @@
 """Support for Ombi."""
-ATTR_NAME = "name"
 ATTR_SEASON = "season"
 
 CONF_URLBASE = "urlbase"

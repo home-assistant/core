@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "unknown": "Tundmatu viga"
         },
         "error": {
@@ -8,7 +9,7 @@
             "invalid_auth": "Tuvastamise viga",
             "invalid_zone": "Sobimatu ala"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "records": {
                 "data": {

@@ -3,6 +3,10 @@
         "condition_type": {
             "is_home": "{entity_name} \u00e8 in casa",
             "is_not_home": "{entity_name} non \u00e8 in casa"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} entra in una zona",
+            "leaves": "{entity_name} lascia una zona"
         }
     },
     "state": {
@@ -11,5 +15,5 @@
             "not_home": "Fuori casa"
         }
     },
-    "title": "Tracciatore dispositivo"
+    "title": "Localizzatore di dispositivi"
 }

@@ -1,10 +1,10 @@
 """Test the zerproc config flow."""
+from unittest.mock import patch
+
 import pyzerproc
 
 from homeassistant import config_entries, setup
 from homeassistant.components.zerproc.config_flow import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_flow_success(hass):
@@ -29,12 +29,12 @@ async def test_flow_success(hass):
             result["flow_id"],
             {},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Zerproc"
     assert result2["data"] == {}
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Neplatn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo",
             "no_devices": "V \u00fa\u010dtu nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
         },
         "step": {

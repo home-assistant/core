@@ -1,13 +1,13 @@
 """Config flow for SMS integration."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
         raise CannotConnect
     try:
         imei = await gateway.get_imei_async()
-    except gammu.GSMError as err:  # pylint: disable=no-member
+    except gammu.GSMError as err:
         raise CannotConnect from err
     finally:
         await gateway.terminate_async()
@@ -40,7 +40,6 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMS integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

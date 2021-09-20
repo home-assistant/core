@@ -6,7 +6,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {},
-    "flow_title": "Arcam FMJ on {host}",
+    "flow_title": "{host}",
     "step": {
       "confirm": {
         "description": "Do you want to add Arcam FMJ on `{host}` to Home Assistant?"

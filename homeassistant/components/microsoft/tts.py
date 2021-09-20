@@ -6,7 +6,7 @@ from pycsspeechtts import pycsspeechtts
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY, CONF_TYPE, PERCENTAGE
+from homeassistant.const import CONF_API_KEY, CONF_REGION, CONF_TYPE, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 
 CONF_GENDER = "gender"
@@ -15,8 +15,6 @@ CONF_RATE = "rate"
 CONF_VOLUME = "volume"
 CONF_PITCH = "pitch"
 CONF_CONTOUR = "contour"
-CONF_REGION = "region"
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_LANGUAGES = [
@@ -56,6 +54,7 @@ SUPPORTED_LANGUAGES = [
     "ro-ro",
     "ru-ru",
     "sk-sk",
+    "sl-si",
     "sv-se",
     "th-th",
     "tr-tr",

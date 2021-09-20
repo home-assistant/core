@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "error": {
+            "open_failed": "valitud jadaporti ei saa avada."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "\u00dchenda LiteJeti RS232-2 port arvutiga ja sisesta jadapordi seadme tee.\n\nLiteJet MCP peab olema konfigureeritud: 19200 boodi, 8 andmebitti, 1 stopp bitt, paarsus puudub ja edastada \"CR\" p\u00e4rast iga vastust.",
+                "title": "Loo \u00fchendus LiteJetiga"
+            }
+        }
+    }
+}

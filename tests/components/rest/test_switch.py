@@ -3,11 +3,13 @@ import asyncio
 
 import aiohttp
 
+from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_NAME,
+    CONF_PARAMS,
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONTENT_TYPE_JSON,
@@ -28,18 +30,19 @@ RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
 HEADERS = {"Content-type": CONTENT_TYPE_JSON}
 AUTH = None
+PARAMS = None
 
 
 async def test_setup_missing_config(hass):
     """Test setup with configuration missing required entries."""
-    assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: rest.DOMAIN}, None)
+    assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
 
 
 async def test_setup_missing_schema(hass):
     """Test setup with resource missing schema."""
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "localhost"},
+        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"},
         None,
     )
 
@@ -49,7 +52,7 @@ async def test_setup_failed_connect(hass, aioclient_mock):
     aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
         None,
     )
 
@@ -59,7 +62,7 @@ async def test_setup_timeout(hass, aioclient_mock):
     aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
         None,
     )
 
@@ -73,11 +76,33 @@ async def test_setup_minimum(hass, aioclient_mock):
             SWITCH_DOMAIN,
             {
                 SWITCH_DOMAIN: {
-                    CONF_PLATFORM: rest.DOMAIN,
+                    CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                 }
             },
         )
+        await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1
+
+
+async def test_setup_query_params(hass, aioclient_mock):
+    """Test setup with query params."""
+    aioclient_mock.get("http://localhost/?search=something", status=HTTP_OK)
+    with assert_setup_component(1, SWITCH_DOMAIN):
+        assert await async_setup_component(
+            hass,
+            SWITCH_DOMAIN,
+            {
+                SWITCH_DOMAIN: {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_RESOURCE: "http://localhost",
+                    CONF_PARAMS: {"search": "something"},
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    print(aioclient_mock)
     assert aioclient_mock.call_count == 1
 
 
@@ -89,7 +114,7 @@ async def test_setup(hass, aioclient_mock):
         SWITCH_DOMAIN,
         {
             SWITCH_DOMAIN: {
-                CONF_PLATFORM: rest.DOMAIN,
+                CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
                 CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
@@ -98,6 +123,7 @@ async def test_setup(hass, aioclient_mock):
             }
         },
     )
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
 
@@ -111,7 +137,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
         SWITCH_DOMAIN,
         {
             SWITCH_DOMAIN: {
-                CONF_PLATFORM: rest.DOMAIN,
+                CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
                 rest.CONF_STATE_RESOURCE: "http://localhost/state",
@@ -121,6 +147,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
             }
         },
     )
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
 
@@ -137,6 +164,7 @@ def _setup_test_switch(hass):
         STATE_RESOURCE,
         METHOD,
         HEADERS,
+        PARAMS,
         AUTH,
         body_on,
         body_off,
@@ -151,7 +179,7 @@ def _setup_test_switch(hass):
 def test_name(hass):
     """Test the name."""
     switch, body_on, body_off = _setup_test_switch(hass)
-    assert NAME == switch.name
+    assert switch.name == NAME
 
 
 def test_is_on_before_update(hass):

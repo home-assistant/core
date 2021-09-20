@@ -6,10 +6,9 @@ import neurio
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, POWER_WATT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_API_SECRET): cv.string,
-        vol.Optional(CONF_SENSOR_ID): cv.string,
+        vol.Required(CONF_SENSOR_ID): cv.string,
     }
 )
 
@@ -82,14 +81,6 @@ class NeurioData:
         neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
         self.neurio_client = neurio.Client(token_provider=neurio_tp)
 
-        if not self.sensor_id:
-            user_info = self.neurio_client.get_user_information()
-            _LOGGER.warning(
-                "Sensor ID auto-detected: %s",
-                user_info["locations"][0]["sensors"][0]["sensorId"],
-            )
-            self.sensor_id = user_info["locations"][0]["sensors"][0]["sensorId"]
-
     @property
     def daily_usage(self):
         """Return latest daily usage value."""
@@ -131,7 +122,7 @@ class NeurioData:
         self._daily_usage = round(kwh, 2)
 
 
-class NeurioEnergy(Entity):
+class NeurioEnergy(SensorEntity):
     """Implementation of a Neurio energy sensor."""
 
     def __init__(self, data, name, sensor_type, update_call):

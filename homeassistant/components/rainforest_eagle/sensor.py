@@ -7,14 +7,13 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 from uEagle import Eagle as LegacyReader
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 CONF_CLOUD_ID = "cloud_id"
@@ -56,14 +55,18 @@ def hwtest(cloud_id, install_code, ip_address):
     response = reader.get_network_info()
 
     # Branch to test if target is Legacy Model
-    if "NetworkInfo" in response:
-        if response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE":
-            return reader
+    if (
+        "NetworkInfo" in response
+        and response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE"
+    ):
+        return reader
 
     # Branch to test if target is Eagle-200 Model
-    if "Response" in response:
-        if response["Response"].get("Command", None) == "get_network_info":
-            return EagleReader(ip_address, cloud_id, install_code)
+    if (
+        "Response" in response
+        and response["Response"].get("Command", None) == "get_network_info"
+    ):
+        return EagleReader(ip_address, cloud_id, install_code)
 
     # Catch-all if hardware ID tests fail
     raise ValueError("Couldn't determine device model.")
@@ -95,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class EagleSensor(Entity):
+class EagleSensor(SensorEntity):
     """Implementation of the Rainforest Eagle-200 sensor."""
 
     def __init__(self, eagle_data, sensor_type, name, unit):
@@ -160,7 +163,7 @@ class EagleData:
         return state
 
 
-class LeagleReader(LegacyReader):
+class LeagleReader(LegacyReader, SensorEntity):
     """Wraps uEagle to make it behave like eagle_reader, offering update()."""
 
     def update(self):

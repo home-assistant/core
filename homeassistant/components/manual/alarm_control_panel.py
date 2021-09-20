@@ -385,14 +385,16 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(
+                parse_result=False, from_state=self._state, to_state=state
+            )
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
         return check
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
             return {

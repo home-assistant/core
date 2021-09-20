@@ -12,16 +12,16 @@ from hatasmota.discovery import (
 )
 
 import homeassistant.components.sensor as sensor
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 ALREADY_DISCOVERED = "tasmota_discovered_components"
-TASMOTA_DISCOVERY_DEVICE = "tasmota_discovery_device"
 TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}_{}"
 TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
@@ -29,6 +29,9 @@ TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
 
 def clear_discovery_hash(hass, discovery_hash):
     """Clear entry in ALREADY_DISCOVERED list."""
+    if ALREADY_DISCOVERED not in hass.data:
+        # Discovery is shutting down
+        return
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
@@ -38,7 +41,7 @@ def set_discovery_hash(hass, discovery_hash):
 
 
 async def async_start(
-    hass: HomeAssistantType, discovery_topic, config_entry, tasmota_mqtt
+    hass: HomeAssistant, discovery_topic, config_entry, tasmota_mqtt, setup_device
 ) -> bool:
     """Start Tasmota device discovery."""
 
@@ -92,9 +95,7 @@ async def async_start(
 
         _LOGGER.debug("Received discovery data for tasmota device: %s", mac)
         tasmota_device_config = tasmota_get_device_config(payload)
-        async_dispatcher_send(
-            hass, TASMOTA_DISCOVERY_DEVICE, tasmota_device_config, mac
-        )
+        setup_device(tasmota_device_config, mac)
 
         if not payload:
             return
@@ -136,7 +137,9 @@ async def async_start(
 
         device_registry = await hass.helpers.device_registry.async_get_registry()
         entity_registry = await hass.helpers.entity_registry.async_get_registry()
-        device = device_registry.async_get_device(set(), {("mac", mac)})
+        device = device_registry.async_get_device(
+            set(), {(dev_reg.CONNECTION_NETWORK_MAC, mac)}
+        )
 
         if device is None:
             _LOGGER.warning("Got sensors for unknown device mac: %s", mac)
@@ -144,7 +147,9 @@ async def async_start(
 
         orphaned_entities = {
             entry.unique_id
-            for entry in async_entries_for_device(entity_registry, device.id)
+            for entry in async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            )
             if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
         }
         for (tasmota_sensor_config, discovery_hash) in sensors:
@@ -166,7 +171,7 @@ async def async_start(
     hass.data[TASMOTA_DISCOVERY_INSTANCE] = tasmota_discovery
 
 
-async def async_stop(hass: HomeAssistantType) -> bool:
+async def async_stop(hass: HomeAssistant) -> bool:
     """Stop Tasmota device discovery."""
     hass.data.pop(ALREADY_DISCOVERED)
     tasmota_discovery = hass.data.pop(TASMOTA_DISCOVERY_INSTANCE)

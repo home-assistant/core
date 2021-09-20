@@ -1,13 +1,13 @@
 {
   "config": {
-    "flow_title": "UltraSync Hub: {name}",
+    "flow_title": "Interlogix UltraSync Hub: {name}",
     "step": {
       "user": {
-        "title": "Connect to UltraSync Hub",
+        "title": "Connect to Interlogix UltraSync Hub",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "id": "[%key:common::config_flow::data::id%]",
+          "username": "[%key:common::config_flow::data::username%]",
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       }

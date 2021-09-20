@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "additional_account": {
+                "title": "Agrega otra cuenta al puerto actual."
+            },
+            "user": {
+                "data": {
+                    "account": "ID de la cuenta",
+                    "additional_account": "Cuentas adicionales",
+                    "encryption_key": "Clave de encriptaci\u00f3n",
+                    "ping_interval": "Intervalo de ping (min)",
+                    "protocol": "Protocolo",
+                    "zones": "N\u00famero de zonas de la cuenta"
+                },
+                "title": "Cree una conexi\u00f3n para sistemas de alarma basados en SIA."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Ignore la verificaci\u00f3n de la marca de tiempo de los eventos SIA"
+                },
+                "description": "Configure las opciones para la cuenta: {account}",
+                "title": "Opciones para la configuraci\u00f3n de SIA."
+            }
+        }
+    },
+    "title": "Sistemas de alarma SIA"
+}

@@ -1,0 +1,278 @@
+{
+    "source": "controller",
+    "event": "node removed",
+    "node": {
+        "nodeId": 67,
+        "index": 0,
+        "status": 4,
+        "ready": true,
+        "deviceClass": {
+            "basic": {"key": 2, "label":"Static Controller"},
+            "generic": {"key": 8, "label":"Thermostat"},
+            "specific": {"key": 6, "label":"Thermostat General V2"},
+            "mandatorySupportedCCs": [],
+            "mandatoryControlCCs": []
+        },
+        "isListening": false,
+        "isFrequentListening": true,
+        "isRouting": true,
+        "maxBaudRate": 40000,
+        "isSecure": false,
+        "version": 4,
+        "isBeaming": true,
+        "deviceConfig": {
+            "manufacturerId": 335,
+            "manufacturer": "Nortek Security & Control LLC",
+            "label": "GoControl GC-TBZ48",
+            "description": "Z-Wave Plus Thermostat",
+            "devices": [
+                {
+                    "productType": "0x5442",
+                    "productId": "0x5431"
+                },
+                {
+                    "productType": "0x5442",
+                    "productId": "0x5436"
+                },
+                {
+                    "productType": "0x5442",
+                    "productId": "0x5437"
+                }
+            ],
+            "firmwareVersion": {
+                "min": "0.0",
+                "max": "255.255"
+            },
+            "paramInformation": {
+                "_map": {}
+            }
+        },
+        "label": "GoControl GC-TBZ48",
+        "neighbors": [
+            1,
+            32,
+            39,
+            52
+        ],
+        "interviewAttempts": 1,
+        "endpoints": [
+            {
+                "nodeId": 67,
+                "index": 0
+            }
+        ],
+        "commandClasses": [],
+        "values": [
+            {
+                "commandClassName": "Manufacturer Specific",
+                "commandClass": 114,
+                "endpoint": 0,
+                "property": "manufacturerId",
+                "propertyName": "manufacturerId",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": false,
+                    "min": 0,
+                    "max": 65535,
+                    "label": "Manufacturer ID"
+                }
+            },
+            {
+                "commandClassName": "Manufacturer Specific",
+                "commandClass": 114,
+                "endpoint": 0,
+                "property": "productType",
+                "propertyName": "productType",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": false,
+                    "min": 0,
+                    "max": 65535,
+                    "label": "Product type"
+                }
+            },
+            {
+                "commandClassName": "Manufacturer Specific",
+                "commandClass": 114,
+                "endpoint": 0,
+                "property": "productId",
+                "propertyName": "productId",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": false,
+                    "min": 0,
+                    "max": 65535,
+                    "label": "Product ID"
+                }
+            },
+            {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": true,
+                    "min": 0,
+                    "max": 31,
+                    "label": "Thermostat mode"
+                }
+            },
+            {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "manufacturerData",
+                "propertyName": "manufacturerData",
+                "metadata": {
+                    "type": "any",
+                    "readable": true,
+                    "writeable": true
+                }
+            },
+            {
+                "commandClassName": "Version",
+                "commandClass": 134,
+                "endpoint": 0,
+                "property": "libraryType",
+                "propertyName": "libraryType",
+                "metadata": {
+                    "type": "any",
+                    "readable": true,
+                    "writeable": false,
+                    "label": "Library type"
+                }
+            },
+            {
+                "commandClassName": "Version",
+                "commandClass": 134,
+                "endpoint": 0,
+                "property": "protocolVersion",
+                "propertyName": "protocolVersion",
+                "metadata": {
+                    "type": "any",
+                    "readable": true,
+                    "writeable": false,
+                    "label": "Z-Wave protocol version"
+                }
+            },
+            {
+                "commandClassName": "Version",
+                "commandClass": 134,
+                "endpoint": 0,
+                "property": "firmwareVersions",
+                "propertyName": "firmwareVersions",
+                "metadata": {
+                    "type": "any",
+                    "readable": true,
+                    "writeable": false,
+                    "label": "Z-Wave chip firmware versions"
+                }
+            },
+            {
+                "commandClassName": "Version",
+                "commandClass": 134,
+                "endpoint": 0,
+                "property": "hardwareVersion",
+                "propertyName": "hardwareVersion",
+                "metadata": {
+                    "type": "any",
+                    "readable": true,
+                    "writeable": false,
+                    "label": "Z-Wave chip hardware version"
+                }
+            },
+            {
+                "commandClassName": "Thermostat Operating State",
+                "commandClass": 66,
+                "endpoint": 0,
+                "property": "state",
+                "propertyName": "state",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": false,
+                    "min": 0,
+                    "max": 255,
+                    "label": "Operating state",
+                    "states": {
+                        "0": "Idle",
+                        "1": "Heating",
+                        "2": "Cooling",
+                        "3": "Fan Only",
+                        "4": "Pending Heat",
+                        "5": "Pending Cool",
+                        "6": "Vent/Economizer",
+                        "7": "Aux Heating",
+                        "8": "2nd Stage Heating",
+                        "9": "2nd Stage Cooling",
+                        "10": "2nd Stage Aux Heat",
+                        "11": "3rd Stage Aux Heat"
+                    }
+                }
+            },
+            {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": false,
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                    "label": "Battery level"
+                }
+            },
+            {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "isLow",
+                "propertyName": "isLow",
+                "metadata": {
+                    "type": "boolean",
+                    "readable": true,
+                    "writeable": false,
+                    "label": "Low battery level"
+                }
+            },
+            {
+                "commandClassName": "Scene Activation",
+                "commandClass": 43,
+                "endpoint": 0,
+                "property": "sceneId",
+                "propertyName": "sceneId",
+                "metadata": {
+                    "type": "number",
+                    "readable": true,
+                    "writeable": true,
+                    "min": 1,
+                    "max": 255,
+                    "label": "Scene ID"
+                }
+            },
+            {
+                "commandClassName": "Scene Activation",
+                "commandClass": 43,
+                "endpoint": 0,
+                "property": "dimmingDuration",
+                "propertyName": "dimmingDuration",
+                "metadata": {
+                    "type": "any",
+                    "readable": true,
+                    "writeable": true,
+                    "label": "Dimming duration"
+                }
+            }
+        ]
+    }
+}

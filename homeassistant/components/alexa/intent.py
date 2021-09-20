@@ -271,7 +271,7 @@ class AlexaResponse:
 
         self.reprompt = {
             "type": speech_type.value,
-            key: text.async_render(self.variables),
+            key: text.async_render(self.variables, parse_result=False),
         }
 
     def as_dict(self):

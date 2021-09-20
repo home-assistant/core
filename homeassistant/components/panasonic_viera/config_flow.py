@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     ATTR_DEVICE_INFO,
     ATTR_FRIENDLY_NAME,
     ATTR_UDN,
@@ -29,7 +29,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Panasonic Viera."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Panasonic Viera config flow."""

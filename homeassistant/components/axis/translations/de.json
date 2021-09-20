@@ -2,15 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "bad_config_file": "Fehlerhafte Daten aus der Konfigurationsdatei",
             "link_local_address": "Link-local Adressen werden nicht unterst\u00fctzt",
             "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t"
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
-            "device_unavailable": "Ger\u00e4t ist nicht verf\u00fcgbar",
-            "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "flow_title": "Achsenger\u00e4t: {name} ({host})",
         "step": {
@@ -22,6 +21,16 @@
                     "username": "Benutzername"
                 },
                 "title": "Axis Ger\u00e4t einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Zu verwendendes Stream-Profil ausw\u00e4hlen"
+                },
+                "title": "Optionen des Axis Videostream-Ger\u00e4ts"
             }
         }
     }

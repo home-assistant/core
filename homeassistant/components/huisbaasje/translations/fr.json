@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 "
+        },
+        "error": {
+            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "Authentification invalide ",
+            "unknown": "Erreur inatendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

@@ -30,6 +30,9 @@
         "abort": {
             "not_konn_panel": "Nejedn\u00e1 se o rozpoznan\u00e9 Konnected.io za\u0159\u00edzen\u00ed"
         },
+        "error": {
+            "bad_host": "Neplatn\u00e1 p\u0159epsan\u00e1 URL adresa API hostitele"
+        },
         "step": {
             "options_binary": {
                 "data": {
@@ -58,7 +61,8 @@
                     "5": "Z\u00f3na 5",
                     "6": "Z\u00f3na 6",
                     "7": "Z\u00f3na 7"
-                }
+                },
+                "title": "Nastaven\u00ed vstupu/v\u00fdstupu"
             },
             "options_io_ext": {
                 "data": {
@@ -71,8 +75,15 @@
                     "alarm2_out2": "OUT2/ALARM2"
                 }
             },
+            "options_misc": {
+                "data": {
+                    "api_host": "P\u0159epsat URL adresu API hostitele (voliteln\u00e9)",
+                    "override_api_host": "P\u0159epsat v\u00fdchoz\u00ed URL adresu API hostitelsk\u00e9ho panelu Home Assistant"
+                }
+            },
             "options_switch": {
                 "data": {
+                    "more_states": "Nastavte dal\u0161\u00ed stavy t\u00e9to z\u00f3ny",
                     "name": "Jm\u00e9no (voliteln\u00e9)"
                 },
                 "description": "Mo\u017enosti {zone} : stav {state}"

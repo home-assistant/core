@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "step": {
+            "user": {
+                "description": "Vuoi iniziare la configurazione?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di aggiornamento",
+                    "tracked_asset_pairs": "Coppie di attivit\u00e0 monitorate"
+                }
+            }
+        }
+    }
+}

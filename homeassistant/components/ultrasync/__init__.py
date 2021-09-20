@@ -1,69 +1,35 @@
-"""The Informix UltraSync Hub component."""
+"""The Interlogix/Hills ComNav UltraSync Hub component."""
 
 import asyncio
-
-import voluptuous as vol
+from datetime import timedelta
 
 from ultrasync import AlarmScene
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
-    SERVICE_AWAY,
-    SERVICE_STAY,
-    SERVICE_DISARM,
-    DEFAULT_SCAN_INTERVAL,
-)
-
-from homeassistant.const import (
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
-    CONF_HOST,
-    CONF_ID,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    SENSORS,
+    SERVICE_AWAY,
+    SERVICE_DISARM,
+    SERVICE_STAY,
 )
-
 from .coordinator import UltraSyncDataUpdateCoordinator
 
 PLATFORMS = ["sensor"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PIN): cv.string,
-                vol.Optional(CONF_ID): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     """Set up the UltraSync integration."""
     hass.data.setdefault(DOMAIN, {})
-
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
 
     return True
 
@@ -93,7 +59,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+        DATA_UNDO_UPDATE_LISTENER: [undo_listener],
+        SENSORS: {},
     }
 
     for component in PLATFORMS:
@@ -118,7 +85,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     )
 
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
+        for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]:
+            unsub()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -132,15 +100,15 @@ def _async_register_services(
 
     def away(call) -> None:
         """Service call to set alarm system to 'away' mode in UltraSync Hub."""
-        coordinator.hub.set(state=AlarmScene.AWAY)
+        coordinator.hub.set_alarm(state=AlarmScene.AWAY)
 
     def stay(call) -> None:
         """Service call to set alarm system to 'stay' mode in UltraSync Hub."""
-        coordinator.hub.set(state=AlarmScene.STAY)
+        coordinator.hub.set_alarm(state=AlarmScene.STAY)
 
     def disarm(call) -> None:
         """Service call to disable alarm in UltraSync Hub."""
-        coordinator.hub.set(state=AlarmScene.DISARMED)
+        coordinator.hub.set_alarm(state=AlarmScene.DISARMED)
 
     hass.services.async_register(DOMAIN, SERVICE_AWAY, away, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_STAY, stay, schema=vol.Schema({}))
@@ -149,7 +117,13 @@ def _async_register_services(
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    if entry.options[CONF_SCAN_INTERVAL]:
+        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+        coordinator.update_interval = timedelta(
+            seconds=entry.options[CONF_SCAN_INTERVAL]
+        )
+
+        await coordinator.async_refresh()
 
 
 class UltraSyncEntity(CoordinatorEntity):

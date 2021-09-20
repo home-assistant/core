@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "address_already_configured": "Ein BleBox-Ger\u00e4t ist bereits unter {address} konfiguriert.",
-            "already_configured": "Dieses BleBox-Ger\u00e4t ist bereits konfiguriert."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung mit dem BleBox-Ger\u00e4t nicht m\u00f6glich. (\u00dcberpr\u00fcfen Sie die Protokolle auf Fehler).",
-            "unknown": "Unbekannter Fehler beim Anschlie\u00dfen an das BleBox-Ger\u00e4t. (Pr\u00fcfen Sie die Protokolle auf Fehler).",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler",
             "unsupported_version": "Das BleBox-Ger\u00e4t hat eine veraltete Firmware. Bitte aktualisieren Sie es zuerst."
         },
         "flow_title": "BleBox-Ger\u00e4t: {name} ( {host} )",

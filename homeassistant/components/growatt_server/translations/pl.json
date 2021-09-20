@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "no_plants": "Nie znaleziono plantacji na tym koncie"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "Plantacja"
+                },
+                "title": "Wybierz swoj\u0105 plantacj\u0119"
+            },
+            "user": {
+                "data": {
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Wprowad\u017a dane Growatt."
+            }
+        }
+    },
+    "title": "Serwer Growatt"
+}

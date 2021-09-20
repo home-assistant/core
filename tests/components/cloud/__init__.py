@@ -1,10 +1,10 @@
 """Tests for the cloud component."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, patch
 
 
 async def mock_cloud(hass, config=None):

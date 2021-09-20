@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Ayn\u0131 ada veya ba\u011flant\u0131 noktas\u0131na sahip bir aksesuar veya k\u00f6pr\u00fc zaten yap\u0131land\u0131r\u0131lm\u0131\u015f."
+        },
+        "step": {
+            "pairing": {
+                "description": "{name} haz\u0131r olur olmaz e\u015fle\u015ftirme, \"Bildirimler\" i\u00e7inde \"HomeKit K\u00f6pr\u00fc Kurulumu\" olarak mevcut olacakt\u0131r.",
+                "title": "HomeKit'i E\u015fle\u015ftir"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "cameras": {
+                "data": {
+                    "camera_copy": "Yerel H.264 ak\u0131\u015flar\u0131n\u0131 destekleyen kameralar"
+                },
+                "description": "Yerel H.264 ak\u0131\u015flar\u0131n\u0131 destekleyen t\u00fcm kameralar\u0131 kontrol edin. Kamera bir H.264 ak\u0131\u015f\u0131 vermezse, sistem videoyu HomeKit i\u00e7in H.264'e d\u00f6n\u00fc\u015ft\u00fcr\u00fcr. Kod d\u00f6n\u00fc\u015ft\u00fcrme, y\u00fcksek performansl\u0131 bir CPU gerektirir ve tek kartl\u0131 bilgisayarlarda \u00e7al\u0131\u015fma olas\u0131l\u0131\u011f\u0131 d\u00fc\u015f\u00fckt\u00fcr.",
+                "title": "Kamera video codec bile\u015fenini se\u00e7in."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Varl\u0131klar",
+                    "mode": "Mod"
+                },
+                "title": "Dahil edilecek varl\u0131klar\u0131 se\u00e7in"
+            },
+            "init": {
+                "data": {
+                    "mode": "Mod"
+                }
+            }
+        }
+    }
+}

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Impossible de se connecter au p\u00e9riph\u00e9rique ZHA."
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "S\u00e9lectionnez le port s\u00e9rie de la radio Zigbee",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code requis pour les actions d'armement",
+            "alarm_failed_tries": "Le nombre de codes erron\u00e9s cons\u00e9cutifs pour d\u00e9clencher l'alarme",
+            "alarm_master_code": "Code principal pour le(s) panneau(x) de contr\u00f4le d'alarme",
+            "title": "Options du panneau de contr\u00f4le d'alarme"
+        },
+        "zha_options": {
+            "default_light_transition": "Temps de transition de la lumi\u00e8re par d\u00e9faut (en secondes)",
+            "enable_identify_on_join": "Activer l'effet d'identification quand les appareils rejoignent le r\u00e9seau",
+            "title": "Options g\u00e9n\u00e9rales"
         }
     },
     "device_automation": {

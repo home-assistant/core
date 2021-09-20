@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flunearyou",
   "requirements": ["pyflunearyou==1.0.7"],
-  "codeowners": ["@bachya"]
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_polling"
 }

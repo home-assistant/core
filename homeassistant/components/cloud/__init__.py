@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
+    CONF_DESCRIPTION,
     CONF_MODE,
     CONF_NAME,
     CONF_REGION,
@@ -49,7 +50,7 @@ SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
-        vol.Optional(alexa_const.CONF_DESCRIPTION): cv.string,
+        vol.Optional(CONF_DESCRIPTION): cv.string,
         vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
         vol.Optional(CONF_NAME): cv.string,
     }

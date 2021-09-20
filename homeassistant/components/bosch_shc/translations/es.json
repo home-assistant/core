@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Par\u00e1metros de autenticaci\u00f3n SHC"
+            }
+        }
+    },
+    "title": "Bosch SHC"
+}

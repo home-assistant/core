@@ -1,10 +1,9 @@
 """Test the Hi-Link HLK-SW16 config flow."""
 import asyncio
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hlk_sw16.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 class MockSW16Client:
@@ -77,6 +76,7 @@ async def test_form(hass):
             result["flow_id"],
             conf,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "127.0.0.1:8080"
@@ -84,7 +84,6 @@ async def test_form(hass):
         "host": "127.0.0.1",
         "port": 8080,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -105,9 +104,8 @@ async def test_form(hass):
         conf,
     )
 
-    assert result4["type"] == "form"
-    assert result4["errors"] == {"base": "already_configured"}
-    await hass.async_block_till_done()
+    assert result4["type"] == "abort"
+    assert result4["reason"] == "already_configured"
 
 
 async def test_import(hass):
@@ -139,6 +137,7 @@ async def test_import(hass):
             result["flow_id"],
             conf,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "127.0.0.1:8080"
@@ -146,7 +145,6 @@ async def test_import(hass):
         "host": "127.0.0.1",
         "port": 8080,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

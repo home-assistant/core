@@ -1,6 +1,9 @@
 """The sentry integration."""
+from __future__ import annotations
+
 import re
-from typing import Dict, Union
+from types import MappingProxyType
+from typing import Any
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -33,15 +36,10 @@ from .const import (
     ENTITY_COMPONENTS,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.117")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Sentry component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -80,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         }
 
+    # pylint: disable=abstract-class-instantiated
     sentry_sdk.init(
         dsn=entry.data[CONF_DSN],
         environment=entry.options.get(CONF_ENVIRONMENT),
@@ -123,19 +122,19 @@ def get_channel(version: str) -> str:
 
 def process_before_send(
     hass: HomeAssistant,
-    options,
+    options: MappingProxyType[str, Any],
     channel: str,
     huuid: str,
-    system_info: Dict[str, Union[bool, str]],
-    custom_components: Dict[str, Integration],
-    event,
-    hint,
+    system_info: dict[str, bool | str],
+    custom_components: dict[str, Integration],
+    event: dict[str, Any],
+    hint: dict[str, Any],
 ):
     """Process a Sentry event before sending it to Sentry."""
     # Filter out handled events by default
     if (
         "tags" in event
-        and event.tags.get("handled", "no") == "yes"
+        and event["tags"].get("handled", "no") == "yes"
         and not options.get(CONF_EVENT_HANDLED)
     ):
         return None
@@ -207,7 +206,7 @@ def process_before_send(
                 "channel": channel,
                 "custom_components": "\n".join(sorted(custom_components)),
                 "integrations": "\n".join(sorted(integrations)),
-                **system_info,
+                **system_info,  # type: ignore[arg-type]
             },
         }
     )

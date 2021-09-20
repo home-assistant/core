@@ -5,9 +5,22 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "no_results": "\u017d\u00e1dn\u00e9 v\u00fdsledky. Zkuste pou\u017e\u00edt jinou stanici/adresu"
         },
         "step": {
+            "station": {
+                "data": {
+                    "station": "Stanice/adresa"
+                },
+                "title": "Zadejte stanici/adresu"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Stanice/adresa"
+                },
+                "title": "Vyberte stanici/adresu"
+            },
             "user": {
                 "data": {
                     "host": "Hostitel",
@@ -22,7 +35,9 @@
         "step": {
             "init": {
                 "data": {
-                    "offset": "Posun (v minut\u00e1ch)"
+                    "filter": "Vyberte linky",
+                    "offset": "Posun (v minut\u00e1ch)",
+                    "real_time": "Pou\u017e\u00edt data v re\u00e1ln\u00e9m \u010dase"
                 },
                 "title": "Mo\u017enosti"
             }

@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
@@ -37,7 +37,7 @@ DISARMED = "disarmed"
 
 ICON = "mdi:security"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOME_MODE_NAME, default=ARMED): cv.string,
         vol.Optional(CONF_AWAY_MODE_NAME, default=ARMED): cv.string,
@@ -136,7 +136,7 @@ class ArloBaseStation(AlarmControlPanelEntity):
         return self._base_station.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

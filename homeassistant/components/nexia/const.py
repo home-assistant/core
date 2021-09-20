@@ -7,6 +7,8 @@ ATTRIBUTION = "Data provided by mynexia.com"
 NOTIFICATION_ID = "nexia_notification"
 NOTIFICATION_TITLE = "Nexia Setup"
 
+CONF_BRAND = "brand"
+
 NEXIA_DEVICE = "device"
 NEXIA_SCAN_INTERVAL = "scan_interval"
 
@@ -29,3 +31,6 @@ MANUFACTURER = "Trane"
 
 SIGNAL_ZONE_UPDATE = "NEXIA_CLIMATE_ZONE_UPDATE"
 SIGNAL_THERMOSTAT_UPDATE = "NEXIA_CLIMATE_THERMOSTAT_UPDATE"
+
+BRAND_NEXIA_NAME = "Nexia"
+BRAND_ASAIR_NAME = "American Standard"

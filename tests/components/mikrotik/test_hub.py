@@ -1,4 +1,6 @@
 """Test Mikrotik hub."""
+from unittest.mock import patch
+
 import librouteros
 
 from homeassistant import config_entries
@@ -6,7 +8,6 @@ from homeassistant.components import mikrotik
 
 from . import ARP_DATA, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -85,7 +86,7 @@ async def test_hub_setup_failed(hass):
 
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-        assert config_entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+        assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
 
     # error when username or password is invalid
     config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)

@@ -1,6 +1,4 @@
 """Support for Notion binary sensors."""
-from typing import Callable
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -11,11 +9,13 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NotionEntity
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
+    LOGGER,
     SENSOR_BATTERY,
     SENSOR_DOOR,
     SENSOR_GARAGE_DOOR,
@@ -43,7 +43,7 @@ BINARY_SENSOR_TYPES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     """Set up Notion sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
@@ -77,15 +77,23 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        self._state = self.coordinator.data["tasks"][self._task_id]["status"]["value"]
+        task = self.coordinator.data["tasks"][self.task_id]
+
+        if "value" in task["status"]:
+            self._state = task["status"]["value"]
+        elif task["status"].get("insights", {}).get("primary"):
+            self._state = task["status"]["insights"]["primary"]["to_state"]
+        else:
+            LOGGER.warning("Unknown data payload: %s", task["status"])
+            self._state = None
 
     @property
     def is_on(self) -> bool:
         """Return whether the sensor is on or off."""
-        task = self.coordinator.data["tasks"][self._task_id]
+        task = self.coordinator.data["tasks"][self.task_id]
 
         if task["task_type"] == SENSOR_BATTERY:
-            return self._state != "battery_good"
+            return self._state == "critical"
         if task["task_type"] in (
             SENSOR_DOOR,
             SENSOR_GARAGE_DOOR,

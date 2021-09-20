@@ -10,9 +10,18 @@ from homeassistant.const import (
     VOLT,
 )
 
+PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
+
 DOMAIN = "lcn"
 DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"
+
+CONNECTION = "connection"
+CONF_HARDWARE_SERIAL = "hardware_serial"
+CONF_SOFTWARE_SERIAL = "software_serial"
+CONF_HARDWARE_TYPE = "hardware_type"
+CONF_RESOURCE = "resource"
+CONF_DOMAIN_DATA = "domain_data"
 
 CONF_CONNECTIONS = "connections"
 CONF_SK_NUM_TRIES = "sk_num_tries"
@@ -25,7 +34,6 @@ CONF_LOCKABLE = "lockable"
 CONF_VARIABLE = "variable"
 CONF_VALUE = "value"
 CONF_RELVARREF = "value_reference"
-CONF_SOURCE = "source"
 CONF_SETPOINT = "setpoint"
 CONF_LED = "led"
 CONF_KEYS = "keys"
@@ -40,7 +48,6 @@ CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_SCENES = "scenes"
 CONF_REGISTER = "register"
-CONF_SCENE = "scene"
 CONF_OUTPUTS = "outputs"
 CONF_REVERSE_TIME = "reverse_time"
 

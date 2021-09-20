@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "timeout": "Tidsavbrudd for tilkobling til Tibber"
         },
@@ -18,6 +17,5 @@
                 "title": ""
             }
         }
-    },
-    "title": ""
+    }
 }

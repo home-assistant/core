@@ -6,12 +6,14 @@ from homeassistant.const import PERCENTAGE
 DOMAIN = "pi_hole"
 
 CONF_LOCATION = "location"
+CONF_STATISTICS_ONLY = "statistics_only"
 
 DEFAULT_LOCATION = "admin"
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "Pi-Hole"
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
+DEFAULT_STATISTICS_ONLY = True
 
 SERVICE_DISABLE = "disable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"

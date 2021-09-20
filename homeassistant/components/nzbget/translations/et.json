@@ -5,9 +5,9 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_auth": "Tuvastamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -15,6 +15,7 @@
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
                     "port": "",
+                    "ssl": "Kasutab SSL serti",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },

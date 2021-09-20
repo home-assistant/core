@@ -7,7 +7,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DATE,
     CONF_NAME,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +144,7 @@ class EmailReader:
         return None
 
 
-class EmailContentSensor(Entity):
+class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
 
     def __init__(self, hass, email_reader, name, allowed_senders, value_template):
@@ -171,7 +170,7 @@ class EmailContentSensor(Entity):
         return self._message
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other state attributes for the message."""
         return self._state_attributes
 
@@ -183,7 +182,7 @@ class EmailContentSensor(Entity):
             ATTR_DATE: email_message["Date"],
             ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
         }
-        return self._value_template.render(variables)
+        return self._value_template.render(variables, parse_result=False)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""
@@ -221,9 +220,11 @@ class EmailContentSensor(Entity):
             elif part.get_content_type() == "text/html":
                 if message_html is None:
                     message_html = part.get_payload()
-            elif part.get_content_type().startswith("text"):
-                if message_untyped_text is None:
-                    message_untyped_text = part.get_payload()
+            elif (
+                part.get_content_type().startswith("text")
+                and message_untyped_text is None
+            ):
+                message_untyped_text = part.get_payload()
 
         if message_text is not None:
             return message_text

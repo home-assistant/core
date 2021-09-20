@@ -1,5 +1,4 @@
 """Provides the constants needed for component."""
-
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
 MODE_AWAY = "away"
@@ -10,7 +9,6 @@ MODE_SLEEP = "sleep"
 MODE_AUTO = "auto"
 MODE_BABY = "baby"
 
-ATTR_MODE = "mode"
 ATTR_AVAILABLE_MODES = "available_modes"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"

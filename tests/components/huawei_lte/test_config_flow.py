@@ -1,5 +1,7 @@
 """Tests for the Huawei LTE config flow."""
 
+from unittest.mock import patch
+
 from huawei_lte_api.enums.client import ResponseCodeEnum
 from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTypeEnum
 import pytest
@@ -17,7 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {

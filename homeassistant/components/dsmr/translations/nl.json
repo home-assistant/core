@@ -2,6 +2,24 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "one": "Leeg",
+            "other": "Leeg"
+        },
+        "step": {
+            "one": "Leeg",
+            "other": "Leeg"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimumtijd tussen entiteitsupdates [s]"
+                },
+                "title": "DSMR-opties"
+            }
         }
     }
 }

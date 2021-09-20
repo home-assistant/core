@@ -17,15 +17,21 @@
         },
         "description": "Please check your {login_method} ({username}) and enter the verification code below"
       },
-      "user": {
+      "user_validate": {
         "description": "If the Login Method is 'email', Username is the email address. If the Login Method is 'phone', Username is the phone number in the format '+NNNNNNNNN'.",
         "data": {
-          "timeout": "Timeout (seconds)",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
           "login_method": "Login Method"
         },
         "title": "Setup an August account"
+      },
+      "reauth_validate": {
+        "description": "Enter the password for {username}.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "title": "Reauthenticate an August account"
       }
     }
   }

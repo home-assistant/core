@@ -1,14 +1,15 @@
 """The tests for the MQTT discovery."""
 import copy
 import json
+from unittest.mock import patch
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG
+from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 
@@ -20,6 +21,25 @@ async def test_subscribing_config_topic(hass, mqtt_mock, setup_tasmota):
     call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
     assert call_args[0] == discovery_topic + "/#"
     assert call_args[2] == 0
+
+
+async def test_future_discovery_message(hass, mqtt_mock, caplog):
+    """Test we handle backwards compatible discovery messages."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["future_option"] = "BEST_SINCE_SLICED_BREAD"
+    config["so"]["another_future_option"] = "EVEN_BETTER"
+
+    with patch(
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config",
+        return_value={},
+    ) as mock_tasmota_get_device_config:
+        await setup_tasmota_helper(hass)
+
+        async_fire_mqtt_message(
+            hass, f"{DEFAULT_PREFIX}/00000049A3BC/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+        assert mock_tasmota_get_device_config.called
 
 
 async def test_valid_discovery_message(hass, mqtt_mock, caplog):
@@ -97,7 +117,9 @@ async def test_correct_config_discovery(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
     entity_entry = entity_reg.async_get("switch.test")
     assert entity_entry is not None
@@ -124,7 +146,34 @@ async def test_device_discover(
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert device_entry is not None
+    assert device_entry.manufacturer == "Tasmota"
+    assert device_entry.model == config["md"]
+    assert device_entry.name == config["dn"]
+    assert device_entry.sw_version == config["sw"]
+
+
+async def test_device_discover_deprecated(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
+    """Test setting up a device with deprecated discovery message."""
+    config = copy.deepcopy(DEFAULT_CONFIG_9_0_0_3)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    # Verify device and registry entries are created
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
     assert device_entry.manufacturer == "Tasmota"
     assert device_entry.model == config["md"]
@@ -150,7 +199,9 @@ async def test_device_update(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
 
     # Update device parameters
@@ -166,7 +217,9 @@ async def test_device_update(
     await hass.async_block_till_done()
 
     # Verify device entry is updated
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
     assert device_entry.model == "Another model"
     assert device_entry.name == "Another name"
@@ -188,7 +241,9 @@ async def test_device_remove(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
 
     async_fire_mqtt_message(
@@ -199,7 +254,9 @@ async def test_device_remove(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
 
@@ -212,18 +269,22 @@ async def test_device_remove_stale(hass, mqtt_mock, caplog, device_reg, setup_ta
     # Create a device
     device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
     )
 
     # Verify device entry was created
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
 
     # Remove the device
     device_reg.async_remove_device(device_entry.id)
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
 
@@ -242,7 +303,9 @@ async def test_device_rediscover(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry1 = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry1 = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry1 is not None
 
     async_fire_mqtt_message(
@@ -253,7 +316,9 @@ async def test_device_rediscover(
     await hass.async_block_till_done()
 
     # Verify device entry is removed
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is None
 
     async_fire_mqtt_message(
@@ -264,7 +329,9 @@ async def test_device_rediscover(
     await hass.async_block_till_done()
 
     # Verify device entry is created, and id is reused
-    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
     assert device_entry is not None
     assert device_entry1.id == device_entry.id
 

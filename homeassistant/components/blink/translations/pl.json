@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Kod uwierzytelniania dwusk\u0142adnikowego"
                 },
-                "description": "Wpisz kod PIN wys\u0142any na Tw\u00f3j adres e-mail. Je\u015bli.",
+                "description": "Wprowad\u017a kod PIN wys\u0142any na Tw\u00f3j adres e-mail.",
                 "title": "Uwierzytelnianie dwusk\u0142adnikowe"
             },
             "user": {
@@ -22,7 +22,7 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "title": "Zaloguj si\u0119 za pomoc\u0105 konta Blink"
+                "title": "Logowanie za pomoc\u0105 konta Blink"
             }
         }
     },

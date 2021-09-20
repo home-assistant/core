@@ -1,4 +1,6 @@
 """Support for SleepIQ sensors."""
+from homeassistant.components.sensor import SensorEntity
+
 from . import SleepIQSensor
 from .const import DOMAIN, SENSOR_TYPES, SIDES, SLEEP_NUMBER
 
@@ -21,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class SleepNumberSensor(SleepIQSensor):
+class SleepNumberSensor(SleepIQSensor, SensorEntity):
     """Implementation of a SleepIQ sensor."""
 
     def __init__(self, sleepiq_data, bed_id, side):

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Already configured. Only a single configuration possible.",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {

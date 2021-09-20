@@ -1,5 +1,6 @@
 """The tests for the Datadog component."""
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import homeassistant.components.datadog as datadog
 from homeassistant.const import (
@@ -11,7 +12,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component
 
 
@@ -37,8 +37,8 @@ async def test_datadog_setup_full(hass):
         assert mock_init.call_args == mock.call(statsd_host="host", statsd_port=123)
 
     assert hass.bus.listen.called
-    assert EVENT_LOGBOOK_ENTRY == hass.bus.listen.call_args_list[0][0][0]
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[1][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_LOGBOOK_ENTRY
+    assert hass.bus.listen.call_args_list[1][0][0] == EVENT_STATE_CHANGED
 
 
 async def test_datadog_setup_defaults(hass):

@@ -23,7 +23,8 @@ async def test_get_platforms_from_mailbox(mock_http_client):
     req = await mock_http_client.get(url)
     assert req.status == 200
     result = await req.json()
-    assert len(result) == 1 and "DemoMailbox" == result[0].get("name", None)
+    assert len(result) == 1
+    assert result[0].get("name") == "DemoMailbox"
 
 
 async def test_get_messages_from_mailbox(mock_http_client):

@@ -1,12 +1,15 @@
 """ruamel.yaml utility functions."""
+from __future__ import annotations
+
 from collections import OrderedDict
+from contextlib import suppress
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
-from typing import Dict, List, Optional, Union
+from typing import Union
 
 import ruamel.yaml
-from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
@@ -16,13 +19,13 @@ from homeassistant.util.yaml import secret_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
+JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
 
 
 class ExtSafeConstructor(SafeConstructor):
     """Extended SafeConstructor."""
 
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class UnsupportedYamlError(HomeAssistantError):
@@ -77,7 +80,7 @@ def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
     yaml = YAML(typ="rt")
     try:
-        result: Union[List, Dict, str] = yaml.load(data)
+        result: list | dict | str = yaml.load(data)
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
@@ -88,7 +91,7 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if round_trip:
         yaml = YAML(typ="rt")
-        yaml.preserve_quotes = True
+        yaml.preserve_quotes = True  # type: ignore[assignment]
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname
@@ -126,10 +129,8 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
             yaml.dump(data, temp_file)
         os.replace(tmp_fname, fname)
         if hasattr(os, "chown") and file_stat.st_ctime > -1:
-            try:
+            with suppress(OSError):
                 os.chown(fname, file_stat.st_uid, file_stat.st_gid)
-            except OSError:
-                pass
     except YAMLError as exc:
         _LOGGER.error(str(exc))
         raise HomeAssistantError(exc) from exc

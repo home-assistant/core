@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "account_locked": "Konto gesperrt. Bitte versuchen Sie es sp\u00e4ter erneut.",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort",
+                    "region": "Region"
+                },
+                "description": "Bitte geben Sie die E-Mail-Adresse und das Passwort ein, die Sie f\u00fcr die Anmeldung bei der MyMazda Mobile App verwenden.",
+                "title": "Mazda Connected Services - Konto hinzuf\u00fcgen"
+            }
+        }
+    },
+    "title": "Mazda Connected Services"
+}

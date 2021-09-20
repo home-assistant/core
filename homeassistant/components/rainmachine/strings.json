@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{ip}",
     "step": {
       "user": {
         "title": "Fill in your information",
@@ -15,6 +16,16 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure RainMachine",
+        "data": {
+          "zone_run_time": "Default zone run time (in seconds)"
+        }
+      }
     }
   }
 }

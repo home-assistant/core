@@ -1,5 +1,6 @@
 """Tests the Home Assistant workday binary sensor."""
 from datetime import date
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -7,7 +8,6 @@ import voluptuous as vol
 import homeassistant.components.workday.binary_sensor as binary_sensor
 from homeassistant.setup import setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 FUNCTION_PATH = "homeassistant.components.workday.binary_sensor.get_date"
@@ -72,6 +72,16 @@ class TestWorkdaySetup:
                 "workdays": ["mon", "wed", "fri"],
                 "excludes": ["sat", "sun", "holiday"],
                 "add_holidays": ["2020-02-24"],
+            }
+        }
+
+        self.config_remove_holidays = {
+            "binary_sensor": {
+                "platform": "workday",
+                "country": "US",
+                "workdays": ["mon", "tue", "wed", "thu", "fri"],
+                "excludes": ["sat", "sun", "holiday"],
+                "remove_holidays": ["2020-12-25", "2020-11-26"],
             }
         }
 
@@ -298,3 +308,15 @@ class TestWorkdaySetup:
         assert binary_sensor.day_to_string(1) == "tue"
         assert binary_sensor.day_to_string(7) == "holiday"
         assert binary_sensor.day_to_string(8) is None
+
+    # Freeze time to test Fri, but remove holiday - December 25, 2020
+    @patch(FUNCTION_PATH, return_value=date(2020, 12, 25))
+    def test_config_remove_holidays_xmas(self, mock_date):
+        """Test if removed holidays are reported correctly."""
+        with assert_setup_component(1, "binary_sensor"):
+            setup_component(self.hass, "binary_sensor", self.config_remove_holidays)
+
+        self.hass.start()
+
+        entity = self.hass.states.get("binary_sensor.workday_sensor")
+        assert entity.state == "on"

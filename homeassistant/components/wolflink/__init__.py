@@ -2,13 +2,14 @@
 from datetime import timedelta
 import logging
 
-from httpcore import ConnectError, ConnectTimeout
+from httpx import ConnectError, ConnectTimeout
 from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import WolfClient
+from wolf_smartset.wolf_client import FetchFailed, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -22,14 +23,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Wolf SmartSet Service component."""
-    hass.data[DOMAIN] = {}
-    return True
+PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wolf SmartSet Service from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
@@ -37,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_id = entry.data[DEVICE_ID]
     gateway_id = entry.data[DEVICE_GATEWAY]
     _LOGGER.debug(
-        "Setting up wolflink integration for device: %s (id: %s, gateway: %s)",
+        "Setting up wolflink integration for device: %s (ID: %s, gateway: %s)",
         device_name,
         device_id,
         gateway_id,
@@ -45,7 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     wolf_client = WolfClient(username, password)
 
-    parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+    try:
+        parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+    except InvalidAuth:
+        _LOGGER.debug("Authentication failed")
+        return False
 
     async def async_update_data():
         """Update all stored entities for Wolf SmartSet."""
@@ -55,6 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except ConnectError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
+            ) from exception
+        except FetchFailed as exception:
+            raise UpdateFailed(
+                f"Could not fetch values from server due to: {exception}"
             ) from exception
         except InvalidAuth as exception:
             raise UpdateFailed("Invalid authentication during update.") from exception
@@ -69,21 +74,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
     hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -99,7 +103,7 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
     try:
         fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
         return [param for param in fetched_parameters if param.name != "Reglertyp"]
-    except (ConnectError, ConnectTimeout) as exception:
-        raise UpdateFailed(f"Error communicating with API: {exception}") from exception
-    except InvalidAuth as exception:
-        raise UpdateFailed("Invalid authentication during update") from exception
+    except (ConnectError, ConnectTimeout, FetchFailed) as exception:
+        raise ConfigEntryNotReady(
+            f"Error communicating with API: {exception}"
+        ) from exception

@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "auth_new_token_not_granted_error": "\uc0c8\ub85c \uc0dd\uc131\ub41c \ud1a0\ud070\uc774 Hyperion UI\uc5d0\uc11c \uc2b9\uc778\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4",
+            "auth_new_token_not_work_error": "\uc0c8\ub85c \uc0dd\uc131\ub41c \ud1a0\ud070\uc744 \uc0ac\uc6a9\ud558\uc5ec \uc778\uc99d\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "auth_required_error": "\uc778\uc99d\uc774 \ud544\uc694\ud55c\uc9c0 \ud655\uc778\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "no_id": "Hyperion Amblight \uc778\uc2a4\ud134\uc2a4\uac00 \ud574\ub2f9 ID\ub97c \ubcf4\uace0\ud558\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_access_token": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "\uc0c8\ub85c\uc6b4 \ud1a0\ud070\uc744 \uc790\ub3d9\uc73c\ub85c \uc0dd\uc131\ud558\uae30",
+                    "token": "\ub610\ub294 \uae30\uc874 \ud1a0\ud070 \uc81c\uacf5\ud558\uae30"
+                },
+                "description": "Hyperion Amblight \uc11c\ubc84\uc5d0 \ub300\ud55c \uad8c\ud55c \uad6c\uc131\ud558\uae30"
+            },
+            "confirm": {
+                "description": "\uc774 Hyperion Amblight\ub97c Home Assistant\uc5d0 \ucd94\uac00\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?\n\n**\ud638\uc2a4\ud2b8**: {host}\n**\ud3ec\ud2b8**: {port}\n**ID**: {id}",
+                "title": "Hyperion Amblight \uc11c\ube44\uc2a4 \ucd94\uac00 \ud655\uc778\ud558\uae30"
+            },
+            "create_token": {
+                "description": "\uc544\ub798 **\ud655\uc778**\uc744 \uc120\ud0dd\ud558\uc5ec \uc0c8\ub85c\uc6b4 \uc778\uc99d \ud1a0\ud070\uc744 \uc694\uccad\ud574\uc8fc\uc138\uc694. \uc694\uccad\uc744 \uc2b9\uc778\ud558\ub3c4\ub85d Hyperion UI\ub85c \ub9ac\ub514\ub809\uc158\ub429\ub2c8\ub2e4. \ud45c\uc2dc\ub41c ID\uac00 \"{auth_id}\"\uc778\uc9c0 \ud655\uc778\ud574\uc8fc\uc138\uc694",
+                "title": "\uc0c8\ub85c\uc6b4 \uc778\uc99d \ud1a0\ud070\uc744 \uc790\ub3d9\uc73c\ub85c \uc0dd\uc131\ud558\uae30"
+            },
+            "create_token_external": {
+                "title": "Hyperion UI\uc5d0\uc11c \uc0c8\ub85c\uc6b4 \ud1a0\ud070 \uc218\ub77d\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "port": "\ud3ec\ud2b8"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "\ucd9c\ub825\ud560 Hyperion \ud6a8\uacfc",
+                    "priority": "\uc0c9\uc0c1 \ubc0f \ud6a8\uacfc\uc5d0 \uc0ac\uc6a9\ud560 Hyperion \uc6b0\uc120 \uc21c\uc704"
+                }
+            }
+        }
+    }
+}

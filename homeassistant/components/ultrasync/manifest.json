@@ -1,8 +1,9 @@
 {
   "domain": "ultrasync",
-  "name": "Informix Ultrasync Hub",
+  "name": "UltraSync Alarm Panel",
   "documentation": "https://www.home-assistant.io/integrations/ultrasync",
-  "requirements": ["ultrasync==0.8.0"],
+  "issue_tracker": "https://github.com/caronc/ha-ultrasync/issues",
+  "requirements": ["ultrasync==0.9.3"],
   "codeowners": ["@caronc"],
   "config_flow": true
 }

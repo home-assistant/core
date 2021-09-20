@@ -61,7 +61,7 @@ class TestFFmpegNoiseSetup:
         entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
         assert entity.state == "off"
 
-        self.hass.add_job(mock_ffmpeg.call_args[0][2], True)
+        self.hass.add_job(mock_ffmpeg.call_args[0][1], True)
         self.hass.block_till_done()
 
         entity = self.hass.states.get("binary_sensor.ffmpeg_noise")
@@ -123,7 +123,7 @@ class TestFFmpegMotionSetup:
         entity = self.hass.states.get("binary_sensor.ffmpeg_motion")
         assert entity.state == "off"
 
-        self.hass.add_job(mock_ffmpeg.call_args[0][2], True)
+        self.hass.add_job(mock_ffmpeg.call_args[0][1], True)
         self.hass.block_till_done()
 
         entity = self.hass.states.get("binary_sensor.ffmpeg_motion")

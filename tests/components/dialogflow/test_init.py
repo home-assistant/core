@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dialogflow, intent_script
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
@@ -84,7 +84,7 @@ async def fixture(hass, aiohttp_client):
     )
 
     result = await hass.config_entries.flow.async_init(
-        "dialogflow", context={"source": "user"}
+        "dialogflow", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 

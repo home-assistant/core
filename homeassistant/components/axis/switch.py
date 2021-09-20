@@ -22,7 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if event.CLASS == CLASS_OUTPUT:
             async_add_entities([AxisSwitch(event, device)])
 
-    device.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_switch)
     )
 

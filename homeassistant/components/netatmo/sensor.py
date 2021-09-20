@@ -1,13 +1,14 @@
 """Support for the Netatmo Weather Service."""
 import logging
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -15,10 +16,12 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_MBAR,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -50,7 +53,7 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, True],
     "temp_trend": ["Temperature trend", None, "mdi:trending-up", None, False],
-    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None, True],
+    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, None, DEVICE_CLASS_CO2, True],
     "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE, True],
     "pressure_trend": ["Pressure trend", None, "mdi:trending-up", None, False],
     "noise": ["Noise", "dB", "mdi:volume-high", None, True],
@@ -91,9 +94,21 @@ SENSOR_TYPES = {
     ],
     "reachable": ["Reachability", None, "mdi:signal", None, False],
     "rf_status": ["Radio", None, "mdi:signal", None, False],
-    "rf_status_lvl": ["Radio Level", "", None, DEVICE_CLASS_SIGNAL_STRENGTH, False],
+    "rf_status_lvl": [
+        "Radio Level",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        False,
+    ],
     "wifi_status": ["Wifi", None, "mdi:wifi", None, False],
-    "wifi_status_lvl": ["Wifi Level", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH, False],
+    "wifi_status_lvl": [
+        "Wifi Level",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        False,
+    ],
     "health_idx": ["Health", None, "mdi:cloud", None, True],
 }
 
@@ -115,15 +130,17 @@ PUBLIC = "public"
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+    platform_not_ready = False
 
     async def find_entities(data_class_name):
         """Find all entities."""
-        await data_handler.register_data_class(data_class_name, data_class_name, None)
-
         all_module_infos = {}
         data = data_handler.data
 
-        if not data.get(data_class_name):
+        if data_class_name not in data:
+            return []
+
+        if data[data_class_name] is None:
             return []
 
         data_class = data[data_class_name]
@@ -140,11 +157,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 _LOGGER.debug("Skipping module %s", module.get("module_name"))
                 continue
 
-            _LOGGER.debug(
-                "Adding module %s %s",
-                module.get("module_name"),
-                module.get("_id"),
-            )
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
@@ -161,12 +173,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
 
+        _LOGGER.debug("Adding weather sensors %s", entities)
         return entities
 
     for data_class_name in [
         WEATHERSTATION_DATA_CLASS_NAME,
         HOMECOACH_DATA_CLASS_NAME,
     ]:
+        await data_handler.register_data_class(data_class_name, data_class_name, None)
+        data_class = data_handler.data.get(data_class_name)
+
+        if not data_class or not data_class.raw_data:
+            platform_not_ready = True
+
         async_add_entities(await find_entities(data_class_name), True)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -202,10 +221,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 PUBLICDATA_DATA_CLASS_NAME,
                 signal_name,
                 None,
-                LAT_NE=area.lat_ne,
-                LON_NE=area.lon_ne,
-                LAT_SW=area.lat_sw,
-                LON_SW=area.lon_sw,
+                lat_ne=area.lat_ne,
+                lon_ne=area.lon_ne,
+                lat_sw=area.lat_sw,
+                lon_sw=area.lon_sw,
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 new_entities.append(
@@ -222,17 +241,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
     )
 
-    entry.add_update_listener(async_config_entry_updated)
-
     await add_public_entities(False)
 
-
-async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle signals of config entry being updated."""
-    async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
+    if platform_not_ready:
+        raise PlatformNotReady
 
 
-class NetatmoSensor(NetatmoBase):
+class NetatmoSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     def __init__(self, data_handler, data_class_name, module_info, sensor_type):
@@ -304,7 +319,7 @@ class NetatmoSensor(NetatmoBase):
         return self._enabled_default
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self):  # noqa: C901
         """Update the entity's state."""
         if self._data is None:
             if self._state is None:
@@ -380,6 +395,8 @@ class NetatmoSensor(NetatmoBase):
                 _LOGGER.debug("No %s data found for %s", self.type, self._device_name)
             self._state = None
             return
+
+        self.async_write_ha_state()
 
 
 def fix_angle(angle: int) -> int:
@@ -461,7 +478,7 @@ def process_wifi(strength):
     return "Full"
 
 
-class NetatmoPublicSensor(NetatmoBase):
+class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
     def __init__(self, data_handler, area, sensor_type):
@@ -473,10 +490,10 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes.append(
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
-                "LAT_NE": area.lat_ne,
-                "LON_NE": area.lon_ne,
-                "LAT_SW": area.lat_sw,
-                "LON_SW": area.lon_sw,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
                 "area_name": area.area_name,
                 SIGNAL_NAME: self._signal_name,
             }
@@ -508,7 +525,7 @@ class NetatmoPublicSensor(NetatmoBase):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
         attrs = {}
 
@@ -563,10 +580,10 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes = [
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
-                "LAT_NE": area.lat_ne,
-                "LON_NE": area.lon_ne,
-                "LAT_SW": area.lat_sw,
-                "LON_SW": area.lon_sw,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
                 "area_name": area.area_name,
                 SIGNAL_NAME: self._signal_name,
             }
@@ -577,22 +594,15 @@ class NetatmoPublicSensor(NetatmoBase):
             PUBLICDATA_DATA_CLASS_NAME,
             self._signal_name,
             self.async_update_callback,
-            LAT_NE=area.lat_ne,
-            LON_NE=area.lon_ne,
-            LAT_SW=area.lat_sw,
-            LON_SW=area.lon_sw,
+            lat_ne=area.lat_ne,
+            lon_ne=area.lon_ne,
+            lat_sw=area.lat_sw,
+            lon_sw=area.lon_sw,
         )
 
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        if self._data is None:
-            if self._state is None:
-                return
-            _LOGGER.warning("No data from update")
-            self._state = None
-            return
-
         data = None
 
         if self.type == "temperature":
@@ -612,7 +622,7 @@ class NetatmoPublicSensor(NetatmoBase):
         elif self.type == "guststrength":
             data = self._data.get_latest_gust_strengths()
 
-        if not data:
+        if data is None:
             if self._state is None:
                 return
             _LOGGER.debug(
@@ -621,8 +631,10 @@ class NetatmoPublicSensor(NetatmoBase):
             self._state = None
             return
 
-        values = [x for x in data.values() if x is not None]
-        if self._mode == "avg":
-            self._state = round(sum(values) / len(values), 1)
-        elif self._mode == "max":
-            self._state = max(values)
+        if values := [x for x in data.values() if x is not None]:
+            if self._mode == "avg":
+                self._state = round(sum(values) / len(values), 1)
+            elif self._mode == "max":
+                self._state = max(values)
+
+        self.async_write_ha_state()

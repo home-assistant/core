@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Avion switch."""
-    # pylint: disable=no-member
     avion = importlib.import_module("avion")
 
     lights = []
@@ -111,7 +110,6 @@ class AvionLight(LightEntity):
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        # pylint: disable=no-member
         avion = importlib.import_module("avion")
 
         # Bluetooth LE is unreliable, and the connection may drop at any

@@ -1,7 +1,12 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Mapping
+from contextlib import suppress
 import logging
 import time
+from typing import Any
 
 from pyHS100 import SmartDeviceException, SmartPlug
 
@@ -10,11 +15,16 @@ from homeassistant.components.switch import (
     ATTR_TODAY_ENERGY_KWH,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
+from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
 
@@ -27,28 +37,27 @@ MAX_ATTEMPTS = 300
 SLEEP_TIME = 2
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches."""
-    devices = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    entities = []
+    entities = await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_SWITCH, SmartPlugSwitch
+    )
 
-    await hass.async_add_executor_job(get_devices_sysinfo, devices)
-    for device in devices:
-        entities.append(SmartPlugSwitch(device))
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
-    async_add_entities(entities, update_before_add=True)
-
-
-def get_devices_sysinfo(devices):
-    """Get sysinfo for all devices."""
-    for device in devices:
-        device.get_sysinfo()
+    if hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_remaining"]:
+        raise PlatformNotReady
 
 
 class SmartPlugSwitch(SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug: SmartPlug):
+    def __init__(self, smartplug: SmartPlug) -> None:
         """Initialize the switch."""
         self.smartplug = smartplug
         self._sysinfo = None
@@ -64,17 +73,17 @@ class SmartPlugSwitch(SwitchEntity):
         self._host = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._device_id
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the Smart Plug."""
         return self._alias
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
             "name": self._alias,
@@ -90,37 +99,37 @@ class SmartPlugSwitch(SwitchEntity):
         return self._is_available
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.smartplug.turn_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.smartplug.turn_off()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the device."""
         return self._emeter_params
 
     @property
-    def _plug_from_context(self):
+    def _plug_from_context(self) -> Any:
         """Return the plug from the context."""
         children = self.smartplug.sys_info["children"]
         return next(c for c in children if c["id"] == self.smartplug.context)
 
-    def update_state(self):
+    def update_state(self) -> None:
         """Update the TP-Link switch's state."""
         if self.smartplug.context is None:
             self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
         else:
             self._state = self._plug_from_context["state"] == 1
 
-    def attempt_update(self, update_attempt):
+    def attempt_update(self, update_attempt: int) -> bool:
         """Attempt to get details from the TP-Link switch."""
         try:
             if not self._sysinfo:
@@ -140,27 +149,24 @@ class SmartPlugSwitch(SwitchEntity):
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
-                    emeter_readings["power"]
+                self._emeter_params[ATTR_CURRENT_POWER_W] = round(
+                    float(emeter_readings["power"]), 2
                 )
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
-                    emeter_readings["total"]
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = round(
+                    float(emeter_readings["total"]), 3
                 )
-                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
-                    emeter_readings["voltage"]
+                self._emeter_params[ATTR_VOLTAGE] = round(
+                    float(emeter_readings["voltage"]), 1
                 )
-                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
-                    emeter_readings["current"]
+                self._emeter_params[ATTR_CURRENT_A] = round(
+                    float(emeter_readings["current"]), 2
                 )
 
                 emeter_statics = self.smartplug.get_emeter_daily()
-                try:
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
-                        emeter_statics[int(time.strftime("%e"))]
+                with suppress(KeyError):  # Device returned no daily history
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = round(
+                        float(emeter_statics[int(time.strftime("%e"))]), 3
                     )
-                except KeyError:
-                    # Device returned no daily history
-                    pass
             return True
         except (SmartDeviceException, OSError) as ex:
             if update_attempt == 0:
@@ -173,7 +179,7 @@ class SmartPlugSwitch(SwitchEntity):
                 )
             return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the TP-Link switch's state."""
         for update_attempt in range(MAX_ATTEMPTS):
             is_ready = await self.hass.async_add_executor_job(

@@ -1,16 +1,20 @@
 """Support for HomematicIP Cloud binary sensor."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncAccelerationSensor,
     AsyncContactInterface,
     AsyncDevice,
     AsyncFullFlushContactInterface,
+    AsyncFullFlushContactInterface6,
     AsyncMotionDetectorIndoor,
     AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton,
     AsyncPluggableMainsFailureSurveillance,
     AsyncPresenceDetectorIndoor,
+    AsyncRainSensor,
     AsyncRotaryHandleSensor,
     AsyncShutterContact,
     AsyncShutterContactMagnetic,
@@ -40,10 +44,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .generic_entity import async_add_base_multi_area_device
 from .hap import HomematicipHAP
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
@@ -77,7 +81,7 @@ SAM_DEVICE_ATTRIBUTES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -88,12 +92,14 @@ async def async_setup_entry(
         if isinstance(device, AsyncTiltVibrationSensor):
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, AsyncWiredInput32):
-            await async_add_base_multi_area_device(hass, config_entry, device)
             for channel in range(1, 33):
                 entities.append(
-                    HomematicipMultiContactInterface(
-                        hap, device, channel=channel, is_multi_area=True
-                    )
+                    HomematicipMultiContactInterface(hap, device, channel=channel)
+                )
+        elif isinstance(device, AsyncFullFlushContactInterface6):
+            for channel in range(1, 7):
+                entities.append(
+                    HomematicipMultiContactInterface(hap, device, channel=channel)
                 )
         elif isinstance(
             device, (AsyncContactInterface, AsyncFullFlushContactInterface)
@@ -125,7 +131,9 @@ async def async_setup_entry(
             entities.append(HomematicipSmokeDetector(hap, device))
         if isinstance(device, AsyncWaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
-        if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
+        if isinstance(
+            device, (AsyncRainSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+        ):
             entities.append(HomematicipRainSensor(hap, device))
         if isinstance(
             device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
@@ -150,10 +158,18 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
-        super().__init__(hap, hap.home, "Cloud Connection")
+        super().__init__(hap, hap.home)
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def name(self) -> str:
+        """Return the name cloud connection entity."""
+
+        name = "Cloud Connection"
+        # Add a prefix to the name if the homematic ip home has a name.
+        return name if not self._home.name else f"{self._home.name} {name}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
         return {
@@ -197,9 +213,9 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
         return self._device.accelerationSensorTriggered
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the acceleration sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         for attr, attr_key in SAM_DEVICE_ATTRIBUTES.items():
             attr_value = getattr(self._device, attr, None)
@@ -221,10 +237,16 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
     """Representation of the HomematicIP multi room/area contact interface."""
 
     def __init__(
-        self, hap: HomematicipHAP, device, channel: int, is_multi_area: bool = False
+        self,
+        hap: HomematicipHAP,
+        device,
+        channel=1,
+        is_multi_channel=True,
     ) -> None:
         """Initialize the multi contact entity."""
-        super().__init__(hap, device, channel=channel, is_multi_area=is_multi_area)
+        super().__init__(
+            hap, device, channel=channel, is_multi_channel=is_multi_channel
+        )
 
     @property
     def device_class(self) -> str:
@@ -242,30 +264,22 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         )
 
 
-class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):
+class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):
     """Representation of the HomematicIP contact interface."""
 
-    @property
-    def device_class(self) -> str:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_OPENING
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the contact interface is on/open."""
-        if self._device.windowState is None:
-            return None
-        return self._device.windowState != WindowState.CLOSED
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the multi contact entity."""
+        super().__init__(hap, device, is_multi_channel=False)
 
 
-class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
+class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEntity):
     """Representation of the HomematicIP shutter contact."""
 
     def __init__(
         self, hap: HomematicipHAP, device, has_additional_state: bool = False
     ) -> None:
         """Initialize the shutter contact."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, is_multi_channel=False)
         self.has_additional_state = has_additional_state
 
     @property
@@ -274,16 +288,9 @@ class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
         return DEVICE_CLASS_DOOR
 
     @property
-    def is_on(self) -> bool:
-        """Return true if the shutter contact is on/open."""
-        if self._device.windowState is None:
-            return None
-        return self._device.windowState != WindowState.CLOSED
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Shutter Contact."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self.has_additional_state:
             window_state = getattr(self._device, "windowState", None)
@@ -408,9 +415,9 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
         return self._device.sunshine
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the illuminance sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         today_sunshine_duration = getattr(self._device, "todaySunshineDuration", None)
         if today_sunshine_duration:
@@ -478,9 +485,9 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         return True
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the security zone group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         for attr, attr_key in GROUP_ATTRIBUTES.items():
             attr_value = getattr(self._device, attr, None)
@@ -522,9 +529,9 @@ class HomematicipSecuritySensorGroup(
         super().__init__(hap, device, post="Sensors")
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the security group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         smoke_detector_at = getattr(self._device, "smokeDetectorAlarmType", None)
         if smoke_detector_at:

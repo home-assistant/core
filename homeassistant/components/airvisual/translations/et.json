@@ -8,17 +8,27 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "general_error": "Tundmatu viga",
             "invalid_api_key": "Vale API v\u00f5ti",
-            "unable_to_connect": "Node / Pro-seadmega ei saa \u00fchendust luua."
+            "location_not_found": "Asukohta ei leitud"
         },
         "step": {
-            "geography": {
+            "geography_by_coords": {
                 "data": {
                     "api_key": "API v\u00f5ti",
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
                 },
-                "description": "Kasutage AirVisual pilve API-t geograafilise asukoha j\u00e4lgimiseks.",
-                "title": "Seadista Geography"
+                "description": "Kasuta AirVisual pilve API-t pikkus/laiuskraadi j\u00e4lgimiseks.",
+                "title": "Seadista Geography sidumine"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "city": "Linn",
+                    "country": "Riik",
+                    "state": "olek"
+                },
+                "description": "Kasuta AirVisual pilve API-t linna/osariigi/riigi j\u00e4lgimiseks.",
+                "title": "Seadista Geography sidumine"
             },
             "node_pro": {
                 "data": {
@@ -35,11 +45,6 @@
                 "title": "Taastuvasta AirVisual"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geograafiline asukoht",
-                    "node_pro": "",
-                    "type": "Sidumise t\u00fc\u00fcp"
-                },
                 "description": "Vali millist t\u00fc\u00fcpi AirVisuali andmeid soovid j\u00e4lgida.",
                 "title": "Seadista AirVisual"
             }

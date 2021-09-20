@@ -1,0 +1,43 @@
+{
+    "thermostatList": [
+        {"name": "ecobee",
+            "program": {
+                "climates": [
+                    {"name": "Climate1", "climateRef": "c1"},
+                    {"name": "Climate2", "climateRef": "c2"}
+                ],
+                "currentClimateRef": "c1"
+            },
+            "runtime": {
+                "actualTemperature": 300,
+                "actualHumidity": 15,
+                "desiredHeat": 400,
+                "desiredCool": 200,
+                "desiredFanMode": "on",
+                "desiredHumidity": 40
+            },
+            "settings": {
+                "hvacMode": "auto",
+                "heatStages": 1,
+                "coolStages": 1,
+                "fanMinOnTime": 10,
+                "heatCoolMinDelta": 50,
+                "holdAction": "nextTransition",
+                "hasHumidifier": true,
+                "humidifierMode": "off",
+                "humidity": "30"
+            },
+            "equipmentStatus": "fan",
+            "events": [
+                {
+                    "name": "Event1",
+                    "running": true,
+                    "type": "hold",
+                    "holdClimateRef": "away",
+                    "endDate": "2022-01-01 10:00:00",
+                    "startDate": "2022-02-02 11:00:00"
+                }
+            ]}
+    ]
+
+}

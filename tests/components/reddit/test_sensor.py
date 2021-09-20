@@ -1,5 +1,6 @@
 """The tests for the Reddit platform."""
 import copy
+from unittest.mock import patch
 
 from homeassistant.components.reddit.sensor import (
     ATTR_BODY,
@@ -22,8 +23,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 VALID_CONFIG = {
     "sensor": {

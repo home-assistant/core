@@ -1,33 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Insteon \u6578\u64da\u6a5f\u9023\u7dda\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "select_single": "\u9078\u64c7\u9078\u9805\u3002"
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Hub IP \u4f4d\u5740",
-                    "port": "IP \u57e0"
-                },
-                "description": "\u8a2d\u5b9a Insteon Hub \u7b2c 1 \u7248\uff082014 \u5e74\u4ee5\u524d\uff09\u3002",
-                "title": "Insteon Hub \u7b2c 1 \u7248"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Hub IP \u4f4d\u5740",
-                    "password": "\u5bc6\u78bc",
-                    "port": "IP \u57e0",
-                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
-                },
-                "description": "\u8a2d\u5b9a Insteon Hub \u7b2c 2 \u7248\u3002",
-                "title": "Insteon Hub  \u7b2c 2 \u7248"
-            },
             "hubv1": {
                 "data": {
                     "host": "IP \u4f4d\u5740",
@@ -46,18 +27,9 @@
                 "description": "\u8a2d\u5b9a Insteon Hub \u7b2c 2 \u7248\u3002",
                 "title": "Insteon Hub  \u7b2c 2 \u7248"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Insteon Hub \u7b2c 1 \u7248\uff082014 \u5e74\u4ee5\u524d\uff09",
-                    "hubv2": "Insteon Hub  \u7b2c 2 \u7248",
-                    "plm": "PowerLink Modem (PLM)"
-                },
-                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u578b\u3002",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
-                    "device": "USB \u8a2d\u5099\u8def\u5f91"
+                    "device": "USB \u88dd\u7f6e\u8def\u5f91"
                 },
                 "description": "\u8a2d\u5b9a PowerLink Modem (PLM)\u3002",
                 "title": "Insteon PLM"
@@ -72,10 +44,6 @@
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "Insteon \u6578\u64da\u6a5f\u9023\u7dda\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Insteon \u6578\u64da\u6a5f\u3002"
-        },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "input_error": "\u5be6\u9ad4\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u503c\u3002",
@@ -84,18 +52,18 @@
         "step": {
             "add_override": {
                 "data": {
-                    "address": "\u8a2d\u5099\u4f4d\u5740\uff08\u4f8b\u5982 1a2b3c\uff09",
-                    "cat": "\u8a2d\u5099\u5b50\u985e\u5225\uff08\u4f8b\u5982 0x10\uff09",
-                    "subcat": "\u8a2d\u5099\u5b50\u985e\u5225\uff08\u4f8b\u5982 0x0a\uff09"
+                    "address": "\u88dd\u7f6e\u4f4d\u5740\uff08\u4f8b\u5982 1a2b3c\uff09",
+                    "cat": "\u88dd\u7f6e\u5b50\u985e\u5225\uff08\u4f8b\u5982 0x10\uff09",
+                    "subcat": "\u88dd\u7f6e\u5b50\u985e\u5225\uff08\u4f8b\u5982 0x0a\uff09"
                 },
-                "description": "\u65b0\u589e\u8a2d\u5099\u8986\u5beb\u3002",
+                "description": "\u65b0\u589e\u88dd\u7f6e\u8986\u5beb\u3002",
                 "title": "Insteon"
             },
             "add_x10": {
                 "data": {
                     "housecode": "Housecode (a - p)",
                     "platform": "\u5e73\u53f0",
-                    "steps": "\u8abf\u5149\u968e\u6bb5\uff08\u50c5\u9069\u7528\u7167\u660e\u8a2d\u5099\u3001\u9810\u8a2d\u503c\u70ba 22\uff09",
+                    "steps": "\u8abf\u5149\u968e\u6bb5\uff08\u50c5\u9069\u7528\u7167\u660e\u88dd\u7f6e\u3001\u9810\u8a2d\u503c\u70ba 22\uff09",
                     "unitcode": "Unitcode (1 - 16)"
                 },
                 "description": "\u8b8a\u66f4 Insteon Hub \u5bc6\u78bc\u3002",
@@ -108,32 +76,32 @@
                     "port": "\u901a\u8a0a\u57e0",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8b8a\u66f4 Insteon Hub \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 Hub \u8a2d\u5099\u672c\u8eab\u7684\u8a2d\u5b9a\uff0c\u5982\u6b32\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3001\u5247\u8acb\u4f7f\u7528 Hub app\u3002",
+                "description": "\u8b8a\u66f4 Insteon Hub \u9023\u7dda\u8cc7\u8a0a\u3002\u65bc\u8b8a\u66f4\u4e4b\u5f8c\u3001\u5fc5\u9808\u91cd\u555f Home Assistant\u3002\u6b64\u4e9b\u8a2d\u5b9a\u4e0d\u6703\u8b8a\u66f4 Hub \u88dd\u7f6e\u672c\u8eab\u7684\u8a2d\u5b9a\uff0c\u5982\u6b32\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3001\u5247\u8acb\u4f7f\u7528 Hub app\u3002",
                 "title": "Insteon"
             },
             "init": {
                 "data": {
-                    "add_override": "\u65b0\u589e\u8a2d\u5099\u8986\u5beb\u3002",
-                    "add_x10": "\u65b0\u589e X10 \u8a2d\u5099\u3002",
+                    "add_override": "\u65b0\u589e\u88dd\u7f6e\u8986\u5beb\u3002",
+                    "add_x10": "\u65b0\u589e X10 \u88dd\u7f6e\u3002",
                     "change_hub_config": "\u8b8a\u66f4 Hub \u8a2d\u5b9a\u3002",
-                    "remove_override": "\u79fb\u9664\u8a2d\u5099\u8986\u5beb",
-                    "remove_x10": "\u79fb\u9664 X10 \u8a2d\u5099\u3002"
+                    "remove_override": "\u79fb\u9664\u88dd\u7f6e\u8986\u5beb",
+                    "remove_x10": "\u79fb\u9664 X10 \u88dd\u7f6e\u3002"
                 },
                 "description": "\u9078\u64c7\u9078\u9805\u4ee5\u8a2d\u5b9a",
                 "title": "Insteon"
             },
             "remove_override": {
                 "data": {
-                    "address": "\u9078\u64c7\u8a2d\u5099\u4f4d\u5740\u4ee5\u79fb\u9664"
+                    "address": "\u9078\u64c7\u88dd\u7f6e\u4f4d\u5740\u4ee5\u79fb\u9664"
                 },
-                "description": "\u79fb\u9664\u8a2d\u5099\u8986\u5beb",
+                "description": "\u79fb\u9664\u88dd\u7f6e\u8986\u5beb",
                 "title": "Insteon"
             },
             "remove_x10": {
                 "data": {
-                    "address": "\u9078\u64c7\u8a2d\u5099\u4f4d\u5740\u4ee5\u79fb\u9664"
+                    "address": "\u9078\u64c7\u88dd\u7f6e\u4f4d\u5740\u4ee5\u79fb\u9664"
                 },
-                "description": "\u79fb\u9664 X10 \u8a2d\u5099",
+                "description": "\u79fb\u9664 X10 \u88dd\u7f6e",
                 "title": "Insteon"
             }
         }

@@ -1,5 +1,6 @@
 """Support for IKEA Tradfri sensors."""
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 
 from .base_class import TradfriBaseDevice
@@ -25,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(TradfriSensor(sensor, api, gateway_id) for sensor in sensors)
 
 
-class TradfriSensor(TradfriBaseDevice):
+class TradfriSensor(TradfriBaseDevice, SensorEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):

@@ -65,7 +65,7 @@ class AccessoryAidStorage:
     persist over reboots.
     """
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Create a new entity map store."""
         self.hass = hass
         self.allocations = {}

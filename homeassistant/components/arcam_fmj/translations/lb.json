@@ -2,9 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "already_in_progress": "Konfiguratioun's Oflaf fir den Apparat ass schonn am gaangen.",
-            "cannot_connect": "Feeler beim verbannen",
-            "unable_to_connect": "Keng Verbindung mam Apparat m\u00e9iglech."
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
+            "cannot_connect": "Feeler beim verbannen"
         },
         "flow_title": "Arcam FMJ um {host}",
         "step": {

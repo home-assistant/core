@@ -1,12 +1,6 @@
 {
     "options": {
         "step": {
-            "init": {
-                "data": {
-                    "one": "uno",
-                    "other": "altri"
-                }
-            },
             "options_1": {
                 "data": {
                     "bool": "Valore booleano facoltativo",

@@ -1,12 +1,10 @@
 {
-  "title": "Atag",
   "config": {
     "step": {
       "user": {
         "title": "Connect to the device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "email": "[%key:common::config_flow::data::email%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
       }

@@ -64,11 +64,11 @@
                     "off_delay": "Off delay",
                     "off_delay_enabled": "Enable off delay",
                     "replace_device": "Select device to replace",
-                    "signal_repetitions": "Number of signal repetitions"
+                    "signal_repetitions": "Number of signal repetitions",
+                    "venetian_blind_mode": "Venetian blind mode"
                 },
                 "title": "Configure device options"
             }
         }
-    },
-    "title": "Rfxtrx"
+    }
 }

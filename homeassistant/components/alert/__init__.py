@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_REPEAT,
     CONF_STATE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -33,7 +34,6 @@ DOMAIN = "alert"
 
 CONF_CAN_ACK = "can_acknowledge"
 CONF_NOTIFIERS = "notifiers"
-CONF_REPEAT = "repeat"
 CONF_SKIP_FIRST = "skip_first"
 CONF_ALERT_MESSAGE = "message"
 CONF_DONE_MESSAGE = "done_message"
@@ -276,7 +276,7 @@ class Alert(ToggleEntity):
             self._send_done_message = True
 
             if self._message_template is not None:
-                message = self._message_template.async_render()
+                message = self._message_template.async_render(parse_result=False)
             else:
                 message = self._name
 
@@ -291,7 +291,7 @@ class Alert(ToggleEntity):
         if self._done_message_template is None:
             return
 
-        message = self._done_message_template.async_render()
+        message = self._done_message_template.async_render(parse_result=False)
 
         await self._send_notification_message(message)
 
@@ -300,7 +300,7 @@ class Alert(ToggleEntity):
         msg_payload = {ATTR_MESSAGE: message}
 
         if self._title_template is not None:
-            title = self._title_template.async_render()
+            title = self._title_template.async_render(parse_result=False)
             msg_payload.update({ATTR_TITLE: title})
         if self._data:
             msg_payload.update({ATTR_DATA: self._data})

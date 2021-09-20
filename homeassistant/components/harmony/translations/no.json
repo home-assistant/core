@@ -1,14 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert",
-            "already_configured_device": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "link": {
                 "description": "Vil du konfigurere {name} ({host})?",

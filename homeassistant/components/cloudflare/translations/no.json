@@ -9,7 +9,7 @@
             "invalid_auth": "Ugyldig godkjenning",
             "invalid_zone": "Ugyldig sone"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "records": {
                 "data": {
@@ -21,7 +21,7 @@
                 "data": {
                     "api_token": "API-token"
                 },
-                "description": "Denne integreringen krever et API-token som er opprettet med Zone:Zone:Read og Zone:DNS:Edit-tillatelser for alle soner i kontoen din.",
+                "description": "Denne integreringen krever et API-token som er opprettet med Zone:Zone:Read og Zone:DNS:Edit-tillatelser for alle soner i kontoen din",
                 "title": "Koble til Cloudflare"
             },
             "zone": {

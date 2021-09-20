@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Authentification invalide",
-            "conn_error": "\u00c9chec de connexion",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_auth": "Authentification invalide",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
-            "auth_failed": "Authentification invalide"
+            "invalid_auth": "Authentification invalide"
         },
         "flow_title": "Configuration Tuya",
         "step": {
@@ -19,6 +19,46 @@
                 },
                 "description": "Saisissez vos informations d'identification Tuya.",
                 "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Impossible de se connecter"
+        },
+        "error": {
+            "dev_multi_type": "Plusieurs p\u00e9riph\u00e9riques s\u00e9lectionn\u00e9s \u00e0 configurer doivent \u00eatre du m\u00eame type",
+            "dev_not_config": "Type d'appareil non configurable",
+            "dev_not_found": "Appareil non trouv\u00e9"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Plage de luminosit\u00e9 utilis\u00e9e par l'appareil",
+                    "curr_temp_divider": "Diviseur de valeur de temp\u00e9rature actuelle (0 = utiliser la valeur par d\u00e9faut)",
+                    "max_kelvin": "Temp\u00e9rature de couleur maximale prise en charge en Kelvin",
+                    "max_temp": "Temp\u00e9rature cible maximale (utilisez min et max = 0 par d\u00e9faut)",
+                    "min_kelvin": "Temp\u00e9rature de couleur minimale prise en charge en kelvin",
+                    "min_temp": "Temp\u00e9rature cible minimale (utilisez min et max = 0 par d\u00e9faut)",
+                    "set_temp_divided": "Utilisez la valeur de temp\u00e9rature divis\u00e9e pour la commande de temp\u00e9rature d\u00e9finie",
+                    "support_color": "Forcer la prise en charge des couleurs",
+                    "temp_divider": "Diviseur de valeurs de temp\u00e9rature (0 = utiliser la valeur par d\u00e9faut)",
+                    "temp_step_override": "Pas de temp\u00e9rature cible",
+                    "tuya_max_coltemp": "Temp\u00e9rature de couleur maximale rapport\u00e9e par l'appareil",
+                    "unit_of_measurement": "Unit\u00e9 de temp\u00e9rature utilis\u00e9e par l'appareil"
+                },
+                "description": "Configurer les options pour ajuster les informations affich\u00e9es pour l'appareil {device_type} ` {device_name} `",
+                "title": "Configurer l'appareil Tuya"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Intervalle de d\u00e9couverte de l'appareil en secondes",
+                    "list_devices": "S\u00e9lectionnez les appareils \u00e0 configurer ou laissez vide pour enregistrer la configuration",
+                    "query_device": "S\u00e9lectionnez l'appareil qui utilisera la m\u00e9thode de requ\u00eate pour une mise \u00e0 jour plus rapide de l'\u00e9tat",
+                    "query_interval": "Intervalle d'interrogation de l'appareil en secondes"
+                },
+                "description": "Ne d\u00e9finissez pas des valeurs d'intervalle d'interrogation trop faibles ou les appels \u00e9choueront \u00e0 g\u00e9n\u00e9rer un message d'erreur dans le journal",
+                "title": "Configurer les options de Tuya"
             }
         }
     }

@@ -158,7 +158,7 @@ class NiluData:
 class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
-    def __init__(self, api_data: NiluData, name: str, show_on_map: bool):
+    def __init__(self, api_data: NiluData, name: str, show_on_map: bool) -> None:
         """Initialize the sensor."""
         self._api = api_data
         self._name = f"{name} {api_data.data.name}"
@@ -175,7 +175,7 @@ class NiluSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
 

@@ -3,5 +3,6 @@
   "name": "Digital Ocean",
   "documentation": "https://www.home-assistant.io/integrations/digital_ocean",
   "requirements": ["python-digitalocean==1.13.2"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_polling"
 }

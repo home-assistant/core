@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane z takim adresem",
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {

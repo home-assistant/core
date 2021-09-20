@@ -1,12 +1,12 @@
 """Test the JuiceNet config flow."""
+from unittest.mock import MagicMock, patch
+
 import aiohttp
 from pyjuicenet import TokenError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.juicenet.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
-
-from tests.async_mock import MagicMock, patch
 
 
 def _mock_juicenet_return_value(get_devices=None):
@@ -35,11 +35,11 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "JuiceNet"
     assert result2["data"] == {CONF_ACCESS_TOKEN: "access_token"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -114,10 +114,10 @@ async def test_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_ACCESS_TOKEN: "access_token"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "JuiceNet"
     assert result["data"] == {CONF_ACCESS_TOKEN: "access_token"}
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

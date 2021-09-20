@@ -1,9 +1,21 @@
 start_irrigation:
+  name: Start irrigation
   description: Start the irrigation
   fields:
     entity_id:
+      name: Entity
       description: Name of a single irrigation to turn on
-      example: "switch.sprinkler_1"
+      required: true
+      selector:
+        entity:
+          integration: rainbird
+          domain: switch
     duration:
+      name: Duration
       description: Duration for this sprinkler to be turned on
-      example: 1
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: "minutes"

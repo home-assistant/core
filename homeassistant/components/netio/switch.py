@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def dispose(event):
     """Close connections to Netio Devices."""
-    for _, value in DEVICES.items():
+    for value in DEVICES.values():
         value.netio.stop()
 
 
@@ -169,7 +169,7 @@ class NetioSwitch(SwitchEntity):
         self.netio.update()
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,

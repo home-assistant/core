@@ -7,6 +7,8 @@ service-label-index despite not being linked to a service-label.
 https://github.com/home-assistant/core/pull/39090
 """
 
+from homeassistant.helpers import entity_registry as er
+
 from tests.common import assert_lists_same, async_get_device_automations
 from tests.components.homekit_controller.common import (
     setup_accessories_from_file,
@@ -19,7 +21,7 @@ async def test_aqara_switch_setup(hass):
     accessories = await setup_accessories_from_file(hass, "aqara_switch.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     battery_id = "sensor.programmable_switch_battery"
     battery = entity_registry.async_get(battery_id)

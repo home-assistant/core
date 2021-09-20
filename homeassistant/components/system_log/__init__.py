@@ -1,5 +1,4 @@
 """Support for system log."""
-import asyncio
 from collections import OrderedDict, deque
 import logging
 import queue
@@ -165,8 +164,6 @@ class LogErrorQueueHandler(logging.handlers.QueueHandler):
         """Emit a log record."""
         try:
             self.enqueue(record)
-        except asyncio.CancelledError:
-            raise
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
 

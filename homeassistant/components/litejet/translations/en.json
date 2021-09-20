@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "open_failed": "Cannot open the specified serial port."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Connect the LiteJet's RS232-2 port to your computer and enter the path to the serial port device.\n\nThe LiteJet MCP must be configured for 19.2 K baud, 8 data bits, 1 stop bit, no parity, and to transmit a 'CR' after each response.",
+                "title": "Connect To LiteJet"
+            }
+        }
+    }
+}

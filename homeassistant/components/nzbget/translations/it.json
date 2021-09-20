@@ -5,10 +5,9 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "invalid_auth": "Autenticazione non valida"
+            "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

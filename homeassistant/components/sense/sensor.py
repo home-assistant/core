@@ -1,4 +1,5 @@
 """Support for monitoring a Sense energy sensor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_POWER,
@@ -8,7 +9,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ACTIVE_NAME,
@@ -118,7 +118,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices)
 
 
-class SenseActiveSensor(Entity):
+class SenseActiveSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(
@@ -163,7 +163,7 @@ class SenseActiveSensor(Entity):
         return POWER_WATT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -195,16 +195,19 @@ class SenseActiveSensor(Entity):
     @callback
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
-        self._state = round(
+        new_state = round(
             self._data.active_solar_power
             if self._is_production
             else self._data.active_power
         )
+        if self._available and self._state == new_state:
+            return
+        self._state = new_state
         self._available = True
         self.async_write_ha_state()
 
 
-class SenseVoltageSensor(Entity):
+class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
     def __init__(
@@ -244,7 +247,7 @@ class SenseVoltageSensor(Entity):
         return VOLT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -276,12 +279,15 @@ class SenseVoltageSensor(Entity):
     @callback
     def _async_update_from_data(self):
         """Update the sensor from the data. Must not do I/O."""
-        self._state = round(self._data.active_voltage[self._voltage_index], 1)
+        new_state = round(self._data.active_voltage[self._voltage_index], 1)
+        if self._available and self._state == new_state:
+            return
         self._available = True
+        self._state = new_state
         self.async_write_ha_state()
 
 
-class SenseTrendsSensor(Entity):
+class SenseTrendsSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(
@@ -327,7 +333,7 @@ class SenseTrendsSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -364,7 +370,7 @@ class SenseTrendsSensor(Entity):
         self.async_on_remove(self._coordinator.async_add_listener(self._async_update))
 
 
-class SenseEnergyDevice(Entity):
+class SenseEnergyDevice(SensorEntity):
     """Implementation of a Sense energy device."""
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
@@ -409,7 +415,7 @@ class SenseEnergyDevice(Entity):
         return POWER_WATT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -438,8 +444,11 @@ class SenseEnergyDevice(Entity):
         """Get the latest data, update state. Must not do I/O."""
         device_data = self._sense_devices_data.get_device_by_id(self._id)
         if not device_data or "w" not in device_data:
-            self._state = 0
+            new_state = 0
         else:
-            self._state = int(device_data["w"])
+            new_state = int(device_data["w"])
+        if self._available and self._state == new_state:
+            return
+        self._state = new_state
         self._available = True
         self.async_write_ha_state()

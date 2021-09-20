@@ -20,7 +20,6 @@ from . import (
     USER_INPUT,
     USER_INPUT_RECORDS,
     USER_INPUT_ZONE,
-    _patch_async_setup,
     _patch_async_setup_entry,
 )
 
@@ -58,7 +57,7 @@ async def test_user_form(hass, cfupdate_flow):
     assert result["step_id"] == "records"
     assert result["errors"] == {}
 
-    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT_RECORDS,
@@ -76,7 +75,6 @@ async def test_user_form(hass, cfupdate_flow):
     assert result["result"]
     assert result["result"].unique_id == USER_INPUT_ZONE[CONF_ZONE]
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

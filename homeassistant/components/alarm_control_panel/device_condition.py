@@ -1,5 +1,7 @@
 """Provide the device automations for Alarm control panel."""
-from typing import Dict, List
+from __future__ import annotations
+
+from typing import Final
 
 import voluptuous as vol
 
@@ -39,7 +41,7 @@ from .const import (
     CONDITION_TRIGGERED,
 )
 
-CONDITION_TYPES = {
+CONDITION_TYPES: Final[set[str]] = {
     CONDITION_TRIGGERED,
     CONDITION_DISARMED,
     CONDITION_ARMED_HOME,
@@ -48,7 +50,7 @@ CONDITION_TYPES = {
     CONDITION_ARMED_CUSTOM_BYPASS,
 }
 
-CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
+CONDITION_SCHEMA: Final = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
@@ -58,7 +60,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []

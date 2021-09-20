@@ -6,7 +6,8 @@
             "open": "Open {entity_name}",
             "open_tilt": "Open de kanteling {entity_name}",
             "set_position": "Stel de positie van {entity_name} in",
-            "set_tilt_position": "Stel de {entity_name} kantelpositie in"
+            "set_tilt_position": "Stel de {entity_name} kantelpositie in",
+            "stop": "Stop {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} is gesloten",
@@ -28,7 +29,7 @@
     "state": {
         "_": {
             "closed": "Gesloten",
-            "closing": "Sluit",
+            "closing": "Sluiten",
             "open": "Open",
             "opening": "Opent",
             "stopped": "Gestopt"

@@ -3,5 +3,15 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minim\u00e1lis id\u0151 az entit\u00e1sfriss\u00edt\u00e9sek k\u00f6z\u00f6tt [mp]"
+                },
+                "title": "DSMR opci\u00f3k"
+            }
+        }
     }
 }

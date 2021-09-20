@@ -1,6 +1,5 @@
 """Sensor platform support for yeelight."""
 import logging
-from typing import Optional
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +18,7 @@ async def async_setup_entry(
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
     if device.is_nightlight_supported:
         _LOGGER.debug("Adding nightlight mode sensor for %s", device.name)
-        async_add_entities([YeelightNightlightModeSensor(device)])
+        async_add_entities([YeelightNightlightModeSensor(device, config_entry)])
 
 
 class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
@@ -36,14 +35,9 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
         )
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str:
         """Return a unique ID."""
-        unique = self._device.unique_id
-
-        if unique:
-            return unique + "-nightlight_sensor"
-
-        return None
+        return f"{self._unique_id}-nightlight_sensor"
 
     @property
     def name(self):

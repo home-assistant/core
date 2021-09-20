@@ -1,10 +1,10 @@
 """Sensors flow for Withings."""
-from typing import Callable, List, Union
+from __future__ import annotations
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import BaseWithingsSensor, async_create_entities
 
@@ -12,7 +12,7 @@ from .common import BaseWithingsSensor, async_create_entities
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
 
@@ -26,10 +26,15 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WithingsHealthSensor(BaseWithingsSensor):
+class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     """Implementation of a Withings sensor."""
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> None | str | int | float:
         """Return the state of the entity."""
         return self._state_data
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._attribute.unit_of_measurement

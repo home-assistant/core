@@ -3,15 +3,14 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "cannot_connect": "Kunne ikke koble til, vennligst pr\u00f8v igjen. Det kan hjelpe \u00e5 koble fra str\u00f8m- og Ethernet-kabler og koble dem til igjen",
-            "connection_error": "Kunne ikke koble til, vennligst pr\u00f8v igjen. Det kan hjelpe \u00e5 koble fra str\u00f8m- og Ethernet-kabler og koble dem til igjen",
+            "cannot_connect": "[%key:component::denonavr::config::abort::connection_error%]",
             "not_denonavr_manufacturer": "Ikke en Denon AVR Network Receiver, oppdaget manafucturer stemte ikke overens",
             "not_denonavr_missing": "Ikke en Denon AVR Network Receiver, oppdagelsesinformasjon ikke fullf\u00f8rt"
         },
         "error": {
             "discovery_error": "Kunne ikke oppdage en Denon AVR Network Receiver"
         },
-        "flow_title": "Denon AVR nettverksmottaker: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Bekreft at du legger til mottakeren",
@@ -38,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Vis alle kilder",
+                    "update_audyssey": "Oppdater Audyssey-innstillingene",
                     "zone2": "Sett opp sone 2",
                     "zone3": "Sett opp sone 3"
                 },

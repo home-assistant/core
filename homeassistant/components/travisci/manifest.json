@@ -3,5 +3,6 @@
   "name": "Travis-CI",
   "documentation": "https://www.home-assistant.io/integrations/travisci",
   "requirements": ["TravisPy==0.3.5"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

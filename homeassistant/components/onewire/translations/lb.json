@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_path": "Dossier net fonnt"
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "type": "Typ vun der Verbindung"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,46 @@
+{
+    "config": {
+        "step": {
+            "pairing": {
+                "title": "HomeKit p\u00e1ros\u00edt\u00e1s"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Felvenni k\u00edv\u00e1nt domainek"
+                },
+                "title": "Felvenni k\u00edv\u00e1nt domainek kiv\u00e1laszt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "title": "Halad\u00f3 be\u00e1ll\u00edt\u00e1sok"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "A nat\u00edv H.264 streameket t\u00e1mogat\u00f3 kamer\u00e1k"
+                },
+                "title": "V\u00e1laszd ki a kamera vide\u00f3 kodekj\u00e9t."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e1sok",
+                    "mode": "M\u00f3d"
+                },
+                "title": "V\u00e1laszd ki a felvenni k\u00edv\u00e1nt entit\u00e1sokat"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Felvenni k\u00edv\u00e1nt domainek",
+                    "mode": "M\u00f3d"
+                },
+                "title": "V\u00e1laszd ki a felvenni k\u00edv\u00e1nt domaineket."
+            },
+            "yaml": {
+                "description": "Ez a bejegyz\u00e9s YAML-en kereszt\u00fcl vez\u00e9relhet\u0151",
+                "title": "HomeKit be\u00e1ll\u00edt\u00e1sok m\u00f3dos\u00edt\u00e1sa"
+            }
+        }
+    }
+}
