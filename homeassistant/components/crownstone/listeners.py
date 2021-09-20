@@ -9,6 +9,7 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING, cast
 
+from crownstone_cloud.exceptions import CrownstoneNotFoundError
 from crownstone_core.packets.serviceDataParsers.containers.AdvExternalCrownstoneState import (
     AdvExternalCrownstoneState,
 )
@@ -51,7 +52,7 @@ def async_update_crwn_state_sse(
     """Update the state of a Crownstone when switched externally."""
     try:
         updated_crownstone = manager.cloud.get_crownstone_by_id(switch_event.cloud_id)
-    except KeyError:
+    except CrownstoneNotFoundError:
         return
 
     # only update on change.
@@ -67,7 +68,7 @@ def async_update_crwn_ability(
     """Update the ability information of a Crownstone."""
     try:
         updated_crownstone = manager.cloud.get_crownstone_by_id(ability_event.cloud_id)
-    except KeyError:
+    except CrownstoneNotFoundError:
         return
 
     ability_type = ability_event.ability_type
@@ -104,7 +105,7 @@ def update_crwn_state_uart(
         updated_crownstone = manager.cloud.get_crownstone_by_uid(
             data.crownstoneId, manager.usb_sphere_id
         )
-    except KeyError:
+    except CrownstoneNotFoundError:
         return
 
     if data.switchState is None:
