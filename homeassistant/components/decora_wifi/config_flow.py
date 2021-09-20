@@ -95,8 +95,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth", data_schema=vol.Schema(data_schema), errors=errors
             )
 
-        # Login attempt succeeded. Save the reauthed session in hass.data and update the config entry.
-        self.hass.data[DOMAIN].update({self.entry.entry_id: self.session})
+        # Login attempt succeeded. Update the config entry.
         self.hass.config_entries.async_update_entry(
             self.entry, title=f"{CONF_TITLE} - {CONF_USERNAME}", data=self.data
         )
