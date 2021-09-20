@@ -102,6 +102,7 @@ VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
 
 VALID_IMAGES: Final = [
     "default",
+    "generic-x86-64",
     "intel-nuc",
     "odroid-c2",
     "odroid-n2",
