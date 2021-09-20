@@ -47,10 +47,12 @@ class BlinkCamera(Camera):
     def enable_motion_detection(self):
         """Enable motion detection for the camera."""
         self._camera.arm = True
+        self.data.refresh()
 
     def disable_motion_detection(self):
         """Disable motion detection for the camera."""
         self._camera.arm = False
+        self.data.refresh()
 
     @property
     def motion_detection_enabled(self):
