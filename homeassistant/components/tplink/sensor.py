@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from kasa import SmartBulb, SmartPlug
+from kasa import SmartBulb, SmartDevice, SmartPlug
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -25,14 +25,10 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .common import CoordinatedTPLinkEntity
 from .const import (
     CONF_EMETER_PARAMS,
     CONF_LIGHT,
@@ -108,21 +104,27 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SmartPlugSensor(CoordinatorEntity, SensorEntity):
+class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
 
     def __init__(
         self,
-        smartplug: SmartPlug,
+        device: SmartDevice,
         coordinator: DataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
-        # TODO: rename smartplug to dev
-        super().__init__(coordinator)
-        self.smartplug = smartplug
+        super().__init__(device, coordinator)
+        self.device = device
         self.entity_description = description
-        self._attr_name = f"{self.smartplug.alias} {description.name}"
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the Smart Plug.
+
+        Overridden to include the description.
+        """
+        return f"{self.device.alias} {self.entity_description.name}"
 
     @property
     def data(self) -> dict[str, Any]:
@@ -137,15 +139,4 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"{self.smartplug.device_id}_{self.entity_description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
-            "name": self.smartplug.alias,
-            "model": self.smartplug.model,
-            "manufacturer": "TP-Link",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.smartplug.device_id)},
-            "sw_version": self.smartplug.hw_info["sw_ver"],
-        }
+        return f"{self.device.device_id}_{self.entity_description.key}"

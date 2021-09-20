@@ -21,18 +21,14 @@ from homeassistant.components.light import (
 from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
+from .common import CoordinatedTPLinkEntity
 from .const import CONF_LIGHT, COORDINATORS, DOMAIN as TPLINK_DOMAIN
 
 PARALLEL_UPDATES = 0
@@ -76,41 +72,15 @@ def brightness_from_percentage(percent):
     return round((percent * 255.0) / 100.0)
 
 
-class TPLinkSmartBulb(CoordinatorEntity, LightEntity):
+class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     def __init__(
         self, smartbulb: SmartBulb, coordinator: DataUpdateCoordinator
     ) -> None:
         """Initialize the bulb."""
-        super().__init__(coordinator)
-        self.smartbulb = smartbulb
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self.smartbulb.device_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the Smart Bulb."""
-        return self.smartbulb.alias
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return {
-            "name": self.smartbulb.alias,
-            "model": self.smartbulb.model,
-            "manufacturer": "TP-Link",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.smartbulb.device_id)},
-            "sw_version": self.smartbulb.hw_info["sw_ver"],
-        }
+        super().__init__(smartbulb, coordinator)
+        self.device = smartbulb
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -125,7 +95,7 @@ class TPLinkSmartBulb(CoordinatorEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs:
             color_tmp = mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP]))
             _LOGGER.info("Changing color temp to %s", color_tmp)
-            await self.smartbulb.set_color_temp(
+            await self.device.set_color_temp(
                 color_tmp, brightness=brightness, transition=transition
             )
             return
@@ -135,49 +105,44 @@ class TPLinkSmartBulb(CoordinatorEntity, LightEntity):
             # TP-Link requires integers.
             hue_sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
             hue, sat = hue_sat
-            await self.smartbulb.set_hsv(hue, sat, brightness, transition=transition)
+            await self.device.set_hsv(hue, sat, brightness, transition=transition)
             return
 
         # Fallback to adjusting brightness or turning the bulb on
         if brightness is not None:
-            await self.smartbulb.set_brightness(brightness, transition=transition)
+            await self.device.set_brightness(brightness, transition=transition)
         else:
-            await self.smartbulb.turn_on(transition=transition)
+            await self.device.turn_on(transition=transition)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.smartbulb.turn_off(transition=kwargs.get(ATTR_TRANSITION))
+        await self.device.turn_off(transition=kwargs.get(ATTR_TRANSITION))
 
     @property
     def min_mireds(self) -> int:
         """Return minimum supported color temperature."""
-        return kelvin_to_mired(self.smartbulb.valid_temperature_range.max)
+        return kelvin_to_mired(self.device.valid_temperature_range.max)
 
     @property
     def max_mireds(self) -> int:
         """Return maximum supported color temperature."""
-        return kelvin_to_mired(self.smartbulb.valid_temperature_range.min)
+        return kelvin_to_mired(self.device.valid_temperature_range.min)
 
     @property
     def color_temp(self) -> int | None:
         """Return the color temperature of this light in mireds for HA."""
-        return kelvin_to_mired(self.smartbulb.color_temp)
+        return kelvin_to_mired(self.device.color_temp)
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return brightness_from_percentage(self.smartbulb.brightness)
+        return brightness_from_percentage(self.device.brightness)
 
     @property
     def hs_color(self) -> tuple[int, int] | None:
         """Return the color."""
-        h, s, _ = self.smartbulb.hsv
+        h, s, _ = self.device.hsv
         return h, s
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if device is on."""
-        return self.smartbulb.is_on
 
     @property
     def supported_features(self) -> int:
@@ -188,11 +153,11 @@ class TPLinkSmartBulb(CoordinatorEntity, LightEntity):
     def supported_color_modes(self) -> set[str] | None:
         """Return list of available color modes."""
         modes = set()
-        if self.smartbulb.is_variable_color_temp:
+        if self.device.is_variable_color_temp:
             modes.add(COLOR_MODE_COLOR_TEMP)
-        if self.smartbulb.is_color:
+        if self.device.is_color:
             modes.add(COLOR_MODE_HS)
-        if self.smartbulb.is_dimmable:
+        if self.device.is_dimmable:
             modes.add(COLOR_MODE_BRIGHTNESS)
 
         return modes
@@ -200,12 +165,12 @@ class TPLinkSmartBulb(CoordinatorEntity, LightEntity):
     @property
     def color_mode(self) -> str | None:
         """Return the active color mode."""
-        if self.smartbulb.is_color:
-            if self.smartbulb.color_temp:
+        if self.device.is_color:
+            if self.device.color_temp:
                 return COLOR_MODE_COLOR_TEMP
             else:
                 return COLOR_MODE_HS
-        elif self.smartbulb.is_variable_color_temp:
+        elif self.device.is_variable_color_temp:
             return COLOR_MODE_COLOR_TEMP
 
         return COLOR_MODE_BRIGHTNESS
