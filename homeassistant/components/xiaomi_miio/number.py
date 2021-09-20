@@ -26,14 +26,16 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN,
     FEATURE_FLAGS_FAN_P5,
+    FEATURE_FLAGS_FAN_ZA5,
     FEATURE_SET_DELAY_OFF_COUNTDOWN,
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_FAVORITE_RPM,
     FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
-    FEATURE_SET_OSCILLATION_ANGLE,
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_140,
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_1,
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_30,
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_140_STEP_30,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -54,6 +56,7 @@ from .const import (
     MODEL_FAN_ZA1,
     MODEL_FAN_ZA3,
     MODEL_FAN_ZA4,
+    MODEL_FAN_ZA5,
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
 )
@@ -119,7 +122,7 @@ NUMBER_TYPES = {
         step=1,
         method="async_set_volume",
     ),
-    FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_1: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
         name="Oscillation Angle",
         icon="mdi:angle-acute",
@@ -129,7 +132,17 @@ NUMBER_TYPES = {
         step=1,
         method="async_set_oscillation_angle",
     ),
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_140: XiaomiMiioNumberDescription(
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_30: XiaomiMiioNumberDescription(
+        key=ATTR_OSCILLATION_ANGLE,
+        name="Oscillation Angle",
+        icon="mdi:angle-acute",
+        unit_of_measurement=DEGREE,
+        min_value=1,
+        max_value=120,
+        step=30,
+        method="async_set_oscillation_angle",
+    ),
+    FEATURE_SET_OSCILLATION_ANGLE_MAX_140_STEP_30: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
         name="Oscillation Angle",
         icon="mdi:angle-acute",
@@ -188,6 +201,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_FAN_ZA1: FEATURE_FLAGS_FAN,
     MODEL_FAN_ZA3: FEATURE_FLAGS_FAN,
     MODEL_FAN_ZA4: FEATURE_FLAGS_FAN,
+    MODEL_FAN_ZA5: FEATURE_FLAGS_FAN_ZA5,
 }
 
 
