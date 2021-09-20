@@ -62,7 +62,6 @@ from .device import XiaomiCoordinatedMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Xiaomi Miio Device"
 DATA_KEY = "fan.xiaomi_miio"
 
 CONF_MODEL = "model"
