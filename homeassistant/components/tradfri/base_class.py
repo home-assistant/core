@@ -8,7 +8,10 @@ from typing import Any, Callable
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.device.blind import Blind
+from pytradfri.device.blind_control import BlindControl
 from pytradfri.device.light import Light
+from pytradfri.device.light_control import LightControl
+from pytradfri.device.signal_repeater_control import SignalRepeaterControl
 from pytradfri.device.socket import Socket
 from pytradfri.device.socket_control import SocketControl
 from pytradfri.error import PytradfriError
@@ -21,11 +24,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def handle_error(func: Callable) -> Callable:
+def handle_error(
+    func: Callable[[Command | list[Command]], Any]
+) -> Callable[[str], Any]:
     """Handle tradfri api call error."""
 
     @wraps(func)
-    async def wrapper(command: Command) -> None:
+    async def wrapper(command: Command | list[Command]) -> None:
         """Decorate api call."""
         try:
             await func(command)
@@ -44,12 +49,17 @@ class TradfriBaseClass(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, device: Device, api: Callable[[str], Any], gateway_id: str
+        self,
+        device: Device,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
     ) -> None:
         """Initialize a device."""
         self._api = handle_error(api)
         self._device: Device = device
-        self._device_control: SocketControl | None = None
+        self._device_control: BlindControl | LightControl | SocketControl | SignalRepeaterControl | None = (
+            None
+        )
         self._device_data: Socket | Light | Blind | None = None
         self._gateway_id = gateway_id
         self._refresh(device)
