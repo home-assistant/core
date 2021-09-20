@@ -4,12 +4,10 @@ from unittest.mock import PropertyMock, patch
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import DATA_CUSTOM_COMPONENTS
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_instance_port
+from tests.common import assert_setup_component, async_capture_events
 from tests.components.image_processing import common
 
 
@@ -19,14 +17,12 @@ def get_url(hass):
     return f"{hass.config.internal_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
 
-async def setup_image_processing(hass):
+async def setup_image_processing(hass, aiohttp_unused_port, enable_custom_integrations):
     """Set up things to be run when tests are started."""
-    hass.data.pop(DATA_CUSTOM_COMPONENTS)
-
     await async_setup_component(
         hass,
         http.DOMAIN,
-        {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}},
+        {http.DOMAIN: {http.CONF_SERVER_PORT: aiohttp_unused_port()}},
     )
 
     config = {ip.DOMAIN: {"platform": "test"}, "camera": {"platform": "demo"}}
@@ -39,48 +35,20 @@ async def setup_image_processing_alpr(hass):
     """Set up things to be run when tests are started."""
     config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
 
-    with patch(
-        "homeassistant.components.demo.image_processing."
-        "DemoImageProcessingAlpr.should_poll",
-        new_callable=PropertyMock(return_value=False),
-    ):
-        await async_setup_component(hass, ip.DOMAIN, config)
-        await hass.async_block_till_done()
+    await async_setup_component(hass, ip.DOMAIN, config)
+    await hass.async_block_till_done()
 
-    alpr_events = []
-
-    @callback
-    def mock_alpr_event(event):
-        """Mock event."""
-        alpr_events.append(event)
-
-    hass.bus.async_listen("image_processing.found_plate", mock_alpr_event)
-
-    return alpr_events
+    return async_capture_events(hass, "image_processing.found_plate")
 
 
 async def setup_image_processing_face(hass):
     """Set up things to be run when tests are started."""
     config = {ip.DOMAIN: {"platform": "demo"}, "camera": {"platform": "demo"}}
 
-    with patch(
-        "homeassistant.components.demo.image_processing."
-        "DemoImageProcessingFace.should_poll",
-        new_callable=PropertyMock(return_value=False),
-    ):
-        await async_setup_component(hass, ip.DOMAIN, config)
-        await hass.async_block_till_done()
+    await async_setup_component(hass, ip.DOMAIN, config)
+    await hass.async_block_till_done()
 
-    face_events = []
-
-    @callback
-    def mock_face_event(event):
-        """Mock event."""
-        face_events.append(event)
-
-    hass.bus.async_listen("image_processing.detect_face", mock_face_event)
-
-    return face_events
+    return async_capture_events(hass, "image_processing.detect_face")
 
 
 async def test_setup_component(hass):
@@ -105,9 +73,11 @@ async def test_setup_component_with_service(hass):
     "homeassistant.components.demo.camera.Path.read_bytes",
     return_value=b"Test",
 )
-async def test_get_image_from_camera(mock_camera_read, hass):
+async def test_get_image_from_camera(
+    mock_camera_read, hass, aiohttp_unused_port, enable_custom_integrations
+):
     """Grab an image from camera entity."""
-    await setup_image_processing(hass)
+    await setup_image_processing(hass, aiohttp_unused_port, enable_custom_integrations)
 
     common.async_scan(hass, entity_id="image_processing.test")
     await hass.async_block_till_done()
@@ -123,9 +93,11 @@ async def test_get_image_from_camera(mock_camera_read, hass):
     "homeassistant.components.camera.async_get_image",
     side_effect=HomeAssistantError(),
 )
-async def test_get_image_without_exists_camera(mock_image, hass):
+async def test_get_image_without_exists_camera(
+    mock_image, hass, aiohttp_unused_port, enable_custom_integrations
+):
     """Try to get image without exists camera."""
-    await setup_image_processing(hass)
+    await setup_image_processing(hass, aiohttp_unused_port, enable_custom_integrations)
 
     hass.states.async_remove("camera.demo_camera")
 
