@@ -33,6 +33,10 @@ class SwitchbotEntity(CoordinatorEntity, Entity):
         }
 
     @property
+    def data(self) -> dict[str, Any]:
+        return self.coordinator.data[self._idx]["data"]    
+
+    @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success, "mac_address": self._mac}
