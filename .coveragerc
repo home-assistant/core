@@ -171,6 +171,13 @@ omit =
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
+    homeassistant/components/crownstone/__init__.py
+    homeassistant/components/crownstone/const.py
+    homeassistant/components/crownstone/listeners.py
+    homeassistant/components/crownstone/helpers.py
+    homeassistant/components/crownstone/devices.py
+    homeassistant/components/crownstone/entry_manager.py
+    homeassistant/components/crownstone/light.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
     homeassistant/components/daikin/*
@@ -368,7 +375,6 @@ omit =
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
-    homeassistant/components/generic_hygrostat/*
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -699,7 +705,10 @@ omit =
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/legacy/*
     homeassistant/components/netdata/sensor.py
+    homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/device_tracker.py
+    homeassistant/components/netgear/router.py
+    homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
@@ -864,9 +873,6 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
-    homeassistant/components/rituals_perfume_genie/binary_sensor.py
-    homeassistant/components/rituals_perfume_genie/number.py
-    homeassistant/components/rituals_perfume_genie/select.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -990,7 +996,6 @@ omit =
     homeassistant/components/squeezebox/__init__.py
     homeassistant/components/squeezebox/browse_media.py
     homeassistant/components/squeezebox/media_player.py
-    homeassistant/components/ssdp/util.py
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
@@ -1007,6 +1012,9 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchbot/__init__.py
+    homeassistant/components/switchbot/const.py
+    homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
@@ -1032,6 +1040,8 @@ omit =
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
+    homeassistant/components/tautulli/const.py
+    homeassistant/components/tautulli/coordinator.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py
     homeassistant/components/telegram/notify.py
@@ -1047,14 +1057,6 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
-    homeassistant/components/tesla/__init__.py
-    homeassistant/components/tesla/binary_sensor.py
-    homeassistant/components/tesla/climate.py
-    homeassistant/components/tesla/const.py
-    homeassistant/components/tesla/device_tracker.py
-    homeassistant/components/tesla/lock.py
-    homeassistant/components/tesla/sensor.py
-    homeassistant/components/tesla/switch.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
@@ -1093,7 +1095,6 @@ omit =
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py
-    homeassistant/components/trackr/device_tracker.py
     homeassistant/components/tractive/__init__.py
     homeassistant/components/tractive/device_tracker.py
     homeassistant/components/tractive/entity.py
@@ -1283,5 +1284,6 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
 
-    # TYPE_CHECKING block is never executed during pytest run
+    # TYPE_CHECKING and @overload blocks are never executed during pytest run
     if TYPE_CHECKING:
+    @overload

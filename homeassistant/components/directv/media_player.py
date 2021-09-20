@@ -67,7 +67,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
     entities = []
@@ -98,7 +98,6 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         self._attr_name = name
         self._attr_device_class = DEVICE_CLASS_RECEIVER
         self._attr_available = False
-        self._attr_assumed_state = None
 
         self._is_recorded = None
         self._is_standby = True

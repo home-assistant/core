@@ -74,16 +74,28 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         yield mock_soco
 
 
+@pytest.fixture(autouse=True)
+async def silent_ssdp_scanner(hass):
+    """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
+    with patch(
+        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
+    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
+        "homeassistant.components.ssdp.Scanner.async_scan"
+    ):
+        yield
+
+
 @pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""
 
-    def do_callback(hass, callback, *args, **kwargs):
-        callback(
+    async def do_callback(hass, callback, *args, **kwargs):
+        await callback(
             {
                 ssdp.ATTR_UPNP_UDN: soco.uid,
                 ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
-            }
+            },
+            ssdp.SsdpChange.ALIVE,
         )
         return MagicMock()
 
@@ -190,3 +202,9 @@ def alarm_event_fixture(soco):
     }
 
     return SonosMockEvent(soco, soco.alarmClock, variables)
+
+
+@pytest.fixture(autouse=True)
+def mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip in all sonos tests."""
+    return mock_get_source_ip

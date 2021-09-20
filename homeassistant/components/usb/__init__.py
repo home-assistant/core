@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+import fnmatch
 import logging
 import os
 import sys
@@ -72,6 +73,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _fnmatch_lower(name: str | None, pattern: str) -> bool:
+    """Match a lowercase version of the name."""
+    if name is None:
+        return False
+    return fnmatch.fnmatch(name.lower(), pattern)
+
+
 class USBDiscovery:
     """Manage USB Discovery."""
 
@@ -104,7 +112,7 @@ class USBDiscovery:
         if not sys.platform.startswith("linux"):
             return
         info = await system_info.async_get_system_info(self.hass)
-        if info.get("docker") and not info.get("hassio"):
+        if info.get("docker"):
             return
 
         from pyudev import (  # pylint: disable=import-outside-toplevel
@@ -119,7 +127,13 @@ class USBDiscovery:
             return
 
         monitor = Monitor.from_netlink(context)
-        monitor.filter_by(subsystem="tty")
+        try:
+            monitor.filter_by(subsystem="tty")
+        except ValueError as ex:  # this fails on WSL
+            _LOGGER.debug(
+                "Unable to setup pyudev filtering; This is expected on WSL: %s", ex
+            )
+            return
         observer = MonitorObserver(
             monitor, callback=self._device_discovered, name="usb-observer"
         )
@@ -147,11 +161,38 @@ class USBDiscovery:
         if device_tuple in self.seen:
             return
         self.seen.add(device_tuple)
+        matched = []
         for matcher in self.usb:
             if "vid" in matcher and device.vid != matcher["vid"]:
                 continue
             if "pid" in matcher and device.pid != matcher["pid"]:
                 continue
+            if "serial_number" in matcher and not _fnmatch_lower(
+                device.serial_number, matcher["serial_number"]
+            ):
+                continue
+            if "manufacturer" in matcher and not _fnmatch_lower(
+                device.manufacturer, matcher["manufacturer"]
+            ):
+                continue
+            if "description" in matcher and not _fnmatch_lower(
+                device.description, matcher["description"]
+            ):
+                continue
+            matched.append(matcher)
+
+        if not matched:
+            return
+
+        sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
+        most_matched_fields = len(sorted_by_most_targeted[0])
+
+        for matcher in sorted_by_most_targeted:
+            # If there is a less targeted match, we only
+            # want the most targeted match
+            if len(matcher) < most_matched_fields:
+                break
+
             flow: USBFlow = {
                 "domain": matcher["domain"],
                 "context": {"source": config_entries.SOURCE_USB},

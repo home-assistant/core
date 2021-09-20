@@ -221,7 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # Only communicate changes to the state or attribute tracked
             if (
-                "old_state" in event.data
+                event.data.get("old_state") is not None
                 and "new_state" in event.data
                 and (
                     (
@@ -805,6 +805,7 @@ def esphome_state_property(func: _PropT) -> _PropT:
     @property  # type: ignore[misc]
     @functools.wraps(func)
     def _wrapper(self):  # type: ignore[no-untyped-def]
+        # pylint: disable=protected-access
         if not self._has_state:
             return None
         val = func(self)

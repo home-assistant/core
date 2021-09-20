@@ -24,7 +24,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     def __init__(self, device, api, gateway_id):
         """Initialize a cover."""
         super().__init__(device, api, gateway_id)
-        self._unique_id = f"{gateway_id}-{device.id}"
+        self._attr_unique_id = f"{gateway_id}-{device.id}"
 
         self._refresh(device)
 

@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -51,8 +52,12 @@ from .const import (
     PLATFORMS,
     RTUOVERTCP,
     SERIAL,
+    SERVICE_RESTART,
+    SERVICE_STOP,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
+    SIGNAL_START_ENTITY,
+    SIGNAL_STOP_ENTITY,
     TCP,
     UDP,
 )
@@ -107,7 +112,11 @@ PYMODBUS_CALL = [
 
 
 async def async_modbus_setup(
-    hass, config, service_write_register_schema, service_write_coil_schema
+    hass,
+    config,
+    service_write_register_schema,
+    service_write_coil_schema,
+    service_stop_start_schema,
 ):
     """Set up Modbus component."""
 
@@ -131,9 +140,9 @@ async def async_modbus_setup(
     async def async_stop_modbus(event):
         """Stop Modbus service."""
 
+        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
         for client in hub_collect.values():
             await client.async_close()
-            del client
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
@@ -142,15 +151,15 @@ async def async_modbus_setup(
         unit = int(float(service.data[ATTR_UNIT]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
-        client_name = (
+        hub = hub_collect[
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
-        )
+        ]
         if isinstance(value, list):
-            await hub_collect[client_name].async_pymodbus_call(
+            await hub.async_pymodbus_call(
                 unit, address, [int(float(i)) for i in value], CALL_TYPE_WRITE_REGISTERS
             )
         else:
-            await hub_collect[client_name].async_pymodbus_call(
+            await hub.async_pymodbus_call(
                 unit, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
             )
 
@@ -166,30 +175,42 @@ async def async_modbus_setup(
         unit = service.data[ATTR_UNIT]
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
-        client_name = (
+        hub = hub_collect[
             service.data[ATTR_HUB] if ATTR_HUB in service.data else DEFAULT_HUB
-        )
+        ]
         if isinstance(state, list):
-            await hub_collect[client_name].async_pymodbus_call(
-                unit, address, state, CALL_TYPE_WRITE_COILS
-            )
+            await hub.async_pymodbus_call(unit, address, state, CALL_TYPE_WRITE_COILS)
         else:
-            await hub_collect[client_name].async_pymodbus_call(
-                unit, address, state, CALL_TYPE_WRITE_COIL
-            )
+            await hub.async_pymodbus_call(unit, address, state, CALL_TYPE_WRITE_COIL)
 
     hass.services.async_register(
         DOMAIN, SERVICE_WRITE_COIL, async_write_coil, schema=service_write_coil_schema
+    )
+
+    async def async_stop_hub(service):
+        """Stop Modbus hub."""
+        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
+        hub = hub_collect[service.data[ATTR_HUB]]
+        await hub.async_close()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_STOP, async_stop_hub, schema=service_stop_start_schema
+    )
+
+    async def async_restart_hub(service):
+        """Restart Modbus hub."""
+        async_dispatcher_send(hass, SIGNAL_START_ENTITY)
+        hub = hub_collect[service.data[ATTR_HUB]]
+        await hub.async_restart()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESTART, async_restart_hub, schema=service_stop_start_schema
     )
     return True
 
 
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
-
-    name: str
-
-    entity_timers: list[CALLBACK_TYPE] = []
 
     def __init__(self, hass, client_config):
         """Initialize the Modbus hub."""
@@ -243,7 +264,7 @@ class ModbusHub:
             self._msg_wait = 0
 
     def _log_error(self, text: str, error_state=True):
-        log_text = f"Pymodbus: {text}"
+        log_text = f"Pymodbus: {self.name}: {text}"
         if self._in_error:
             _LOGGER.debug(log_text)
         else:
@@ -285,28 +306,40 @@ class ModbusHub:
         self._async_cancel_listener = None
         self._config_delay = 0
 
+    async def async_restart(self):
+        """Reconnect client."""
+        if self._client:
+            await self.async_close()
+
+        await self.async_setup()
+
     async def async_close(self):
         """Disconnect client."""
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
-        for call in self.entity_timers:
-            call()
-        self.entity_timers = []
-        if self._client:
-            try:
-                self._client.close()
-            except ModbusException as exception_error:
-                self._log_error(str(exception_error))
-        self._client = None
+        async with self._lock:
+            if self._client:
+                try:
+                    self._client.close()
+                except ModbusException as exception_error:
+                    self._log_error(str(exception_error))
+                del self._client
+                self._client = None
+                message = f"modbus {self.name} communication closed"
+                _LOGGER.warning(message)
 
     def _pymodbus_connect(self):
         """Connect client."""
         try:
-            return self._client.connect()
+            self._client.connect()
         except ModbusException as exception_error:
             self._log_error(str(exception_error), error_state=False)
             return False
+        else:
+            message = f"modbus {self.name} communication open"
+            _LOGGER.warning(message)
+            return True
 
     def _pymodbus_call(self, unit, address, value, use_call):
         """Call sync. pymodbus."""
@@ -327,9 +360,9 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
-        if not self._client:
-            return None
         async with self._lock:
+            if not self._client:
+                return None
             result = await self.hass.async_add_executor_job(
                 self._pymodbus_call, unit, address, value, use_call
             )

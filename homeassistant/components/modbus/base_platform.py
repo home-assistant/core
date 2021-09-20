@@ -5,7 +5,7 @@ from abc import abstractmethod
 from datetime import timedelta
 import logging
 import struct
-from typing import Any
+from typing import Any, Callable
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -21,11 +21,14 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     STATE_ON,
 )
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    ACTIVE_SCAN_INTERVAL,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -50,6 +53,8 @@ from .const import (
     CONF_VERIFY,
     CONF_WRITE_TYPE,
     DATA_TYPE_STRING,
+    SIGNAL_START_ENTITY,
+    SIGNAL_STOP_ENTITY,
 )
 from .modbus import ModbusHub
 
@@ -73,6 +78,8 @@ class BasePlatform(Entity):
         self._value = None
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._call_active = False
+        self._cancel_timer: Callable[[], None] | None = None
+        self._cancel_call: Callable[[], None] | None = None
 
         self._attr_name = entry[CONF_NAME]
         self._attr_should_poll = False
@@ -86,13 +93,41 @@ class BasePlatform(Entity):
     async def async_update(self, now=None):
         """Virtual function to be overwritten."""
 
-    async def async_base_added_to_hass(self):
-        """Handle entity which will be added."""
+    @callback
+    def async_run(self) -> None:
+        """Remote start entity."""
+        self.async_hold(update=False)
+        if self._scan_interval == 0 or self._scan_interval > ACTIVE_SCAN_INTERVAL:
+            self._cancel_call = async_call_later(self.hass, 1, self.async_update)
         if self._scan_interval > 0:
-            cancel_func = async_track_time_interval(
+            self._cancel_timer = async_track_time_interval(
                 self.hass, self.async_update, timedelta(seconds=self._scan_interval)
             )
-            self._hub.entity_timers.append(cancel_func)
+        self._attr_available = True
+        self.async_write_ha_state()
+
+    @callback
+    def async_hold(self, update=True) -> None:
+        """Remote stop entity."""
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
+        if self._cancel_timer:
+            self._cancel_timer()
+            self._cancel_timer = None
+        if update:
+            self._attr_available = False
+            self.async_write_ha_state()
+
+    async def async_base_added_to_hass(self):
+        """Handle entity which will be added."""
+        self.async_run()
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_run)
+        )
 
 
 class BaseStructPlatform(BasePlatform, RestoreEntity):

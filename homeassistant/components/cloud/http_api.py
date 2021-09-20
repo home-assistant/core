@@ -6,7 +6,7 @@ import logging
 import aiohttp
 import async_timeout
 import attr
-from hass_nabucasa import Cloud, auth, thingtalk
+from hass_nabucasa import Cloud, auth, cloud_api, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
@@ -24,7 +24,6 @@ from homeassistant.const import (
     HTTP_BAD_GATEWAY,
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_OK,
     HTTP_UNAUTHORIZED,
 )
 
@@ -45,30 +44,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-WS_TYPE_STATUS = "cloud/status"
-SCHEMA_WS_STATUS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_STATUS}
-)
-
-
-WS_TYPE_SUBSCRIPTION = "cloud/subscription"
-SCHEMA_WS_SUBSCRIPTION = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SUBSCRIPTION}
-)
-
-
-WS_TYPE_HOOK_CREATE = "cloud/cloudhook/create"
-SCHEMA_WS_HOOK_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_HOOK_CREATE, vol.Required("webhook_id"): str}
-)
-
-
-WS_TYPE_HOOK_DELETE = "cloud/cloudhook/delete"
-SCHEMA_WS_HOOK_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_HOOK_DELETE, vol.Required("webhook_id"): str}
-)
 
 
 _CLOUD_ERRORS = {
@@ -94,17 +69,11 @@ _CLOUD_ERRORS = {
 async def async_setup(hass):
     """Initialize the HTTP API."""
     async_register_command = hass.components.websocket_api.async_register_command
-    async_register_command(WS_TYPE_STATUS, websocket_cloud_status, SCHEMA_WS_STATUS)
-    async_register_command(
-        WS_TYPE_SUBSCRIPTION, websocket_subscription, SCHEMA_WS_SUBSCRIPTION
-    )
+    async_register_command(websocket_cloud_status)
+    async_register_command(websocket_subscription)
     async_register_command(websocket_update_prefs)
-    async_register_command(
-        WS_TYPE_HOOK_CREATE, websocket_hook_create, SCHEMA_WS_HOOK_CREATE
-    )
-    async_register_command(
-        WS_TYPE_HOOK_DELETE, websocket_hook_delete, SCHEMA_WS_HOOK_DELETE
-    )
+    async_register_command(websocket_hook_create)
+    async_register_command(websocket_hook_delete)
     async_register_command(websocket_remote_connect)
     async_register_command(websocket_remote_disconnect)
 
@@ -311,6 +280,7 @@ class CloudForgotPasswordView(HomeAssistantView):
 
 
 @websocket_api.async_response
+@websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
 async def websocket_cloud_status(hass, connection, msg):
     """Handle request for account info.
 
@@ -344,36 +314,19 @@ def _require_cloud_login(handler):
 
 @_require_cloud_login
 @websocket_api.async_response
+@websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
-
     cloud = hass.data[DOMAIN]
-
-    with async_timeout.timeout(REQUEST_TIMEOUT):
-        response = await cloud.fetch_subscription_info()
-
-    if response.status != HTTP_OK:
-        connection.send_message(
-            websocket_api.error_message(
-                msg["id"], "request_failed", "Failed to request subscription"
-            )
+    try:
+        with async_timeout.timeout(REQUEST_TIMEOUT):
+            data = await cloud_api.async_subscription_info(cloud)
+    except aiohttp.ClientError:
+        connection.send_error(
+            msg["id"], "request_failed", "Failed to request subscription"
         )
-
-    data = await response.json()
-
-    # Check if a user is subscribed but local info is outdated
-    # In that case, let's refresh and reconnect
-    if data.get("provider") and not cloud.is_connected:
-        _LOGGER.debug("Found disconnected account with valid subscriotion, connecting")
-        await cloud.auth.async_renew_access_token()
-
-        # Cancel reconnect in progress
-        if cloud.iot.state != STATE_DISCONNECTED:
-            await cloud.iot.disconnect()
-
-        hass.async_create_task(cloud.iot.connect())
-
-    connection.send_message(websocket_api.result_message(msg["id"], data))
+    else:
+        connection.send_result(msg["id"], data)
 
 
 @_require_cloud_login
@@ -429,6 +382,12 @@ async def websocket_update_prefs(hass, connection, msg):
 @_require_cloud_login
 @websocket_api.async_response
 @_ws_handle_cloud_errors
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/cloudhook/create",
+        vol.Required("webhook_id"): str,
+    }
+)
 async def websocket_hook_create(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
@@ -439,6 +398,12 @@ async def websocket_hook_create(hass, connection, msg):
 @_require_cloud_login
 @websocket_api.async_response
 @_ws_handle_cloud_errors
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/cloudhook/delete",
+        vol.Required("webhook_id"): str,
+    }
+)
 async def websocket_hook_delete(hass, connection, msg):
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]

@@ -4,22 +4,21 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.26.0",
+    "bellows==0.28.0",
     "pyserial==3.5",
     "pyserial-asyncio==0.5",
-    "zha-quirks==0.0.59",
-    "zigpy-cc==0.5.2",
-    "zigpy-deconz==0.12.1",
-    "zigpy==0.36.1",
-    "zigpy-xbee==0.13.0",
+    "zha-quirks==0.0.61",
+    "zigpy-deconz==0.13.0",
+    "zigpy==0.38.0",
+    "zigpy-xbee==0.14.0",
     "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.5.3"
+    "zigpy-znp==0.5.4"
   ],
   "usb": [
-   {"vid":"10C4","pid":"EA60","known_devices":["slae.sh cc2652rb stick"]},
-   {"vid":"1CF1","pid":"0030","known_devices":["Conbee II"]},
-   {"vid":"1A86","pid":"7523","known_devices":["Electrolama zig-a-zig-ah"]},
-   {"vid":"10C4","pid":"8A2A","known_devices":["Nortek HUSBZB-1"]}
+   {"vid":"10C4","pid":"EA60","description":"*2652*","known_devices":["slae.sh cc2652rb stick"]},
+   {"vid":"10C4","pid":"EA60","description":"*tubeszb*","known_devices":["TubesZB Coordinator"]},
+   {"vid":"1CF1","pid":"0030","description":"*conbee*","known_devices":["Conbee II"]},
+   {"vid":"10C4","pid":"8A2A","description":"*zigbee*","known_devices":["Nortek HUSBZB-1"]}
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
