@@ -51,7 +51,13 @@ from .const import (
     STANDARD_RGB_EFFECTS,
 )
 from .entity import ShellyBlockEntity, ShellyRpcEntity
-from .utils import async_remove_shelly_entity, get_device_entry_gen, get_rpc_key_ids
+from .utils import (
+    async_remove_shelly_entity,
+    get_device_entry_gen,
+    get_rpc_key_ids,
+    is_block_channel_type_light,
+    is_rpc_channel_type_light,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -82,10 +88,9 @@ async def async_setup_block_entry(
         if block.type == "light":
             blocks.append(block)
         elif block.type == "relay":
-            app_type = wrapper.device.settings["relays"][int(block.channel)].get(
-                "appliance_type"
-            )
-            if not app_type or app_type.lower() != "light":
+            if not is_block_channel_type_light(
+                wrapper.device.settings, int(block.channel)
+            ):
                 continue
 
             blocks.append(block)
@@ -110,8 +115,7 @@ async def async_setup_rpc_entry(
 
     switch_ids = []
     for id_ in switch_key_ids:
-        con_types = wrapper.device.config["sys"]["ui_data"].get("consumption_types")
-        if con_types is None or con_types[id_] != "lights":
+        if not is_rpc_channel_type_light(wrapper.device.config, id_):
             continue
 
         switch_ids.append(id_)

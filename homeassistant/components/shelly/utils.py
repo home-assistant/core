@@ -302,3 +302,15 @@ def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
 def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
     """Return true if rpc input button settings is set to a momentary type."""
     return cast(bool, config[key]["type"] == "button")
+
+
+def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+    """Return true if block channel appliance type is set to light."""
+    app_type = settings["relays"][channel].get("appliance_type")
+    return app_type is not None and app_type.lower().startswith("light")
+
+
+def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
+    """Return true if rpc channel consumption type is set to light."""
+    con_types = config["sys"]["ui_data"].get("consumption_types")
+    return con_types is not None and con_types[channel].lower().startswith("light")
