@@ -1404,8 +1404,8 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return dt_util.as_timestamp(value)
     except (ValueError, TypeError):
         if default is _SENTINEL:
-            warn_no_default("as_timestamp", value, value)
-            return value
+            warn_no_default("as_timestamp", value, None)
+            return None
         return default
 
 
