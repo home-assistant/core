@@ -109,7 +109,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==8.0.0
+aioesphomeapi==9.1.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -1389,13 +1389,13 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.4
+yeelight==0.7.5
 
 # homeassistant.components.youless
 youless-api==0.12
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.5
+zeroconf==0.36.6
 
 # homeassistant.components.zha
 zha-quirks==0.0.61

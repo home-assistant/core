@@ -6,7 +6,11 @@ from numbers import Number
 from pyflume import FlumeData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -93,16 +97,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         coordinator = _create_flume_device_coordinator(hass, flume_device)
 
-        for flume_query_sensor in FLUME_QUERIES_SENSOR.items():
-            flume_entity_list.append(
+        flume_entity_list.extend(
+            [
                 FlumeSensor(
                     coordinator,
                     flume_device,
-                    flume_query_sensor,
-                    f"{device_friendly_name} {flume_query_sensor[1]['friendly_name']}",
+                    device_friendly_name,
                     device_id,
+                    description,
                 )
-            )
+                for description in FLUME_QUERIES_SENSOR
+            ]
+        )
 
     if flume_entity_list:
         async_add_entities(flume_entity_list)
@@ -111,49 +117,36 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FlumeSensor(CoordinatorEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, coordinator, flume_device, flume_query_sensor, name, device_id):
+    def __init__(
+        self,
+        coordinator,
+        flume_device,
+        name,
+        device_id,
+        description: SensorEntityDescription,
+    ):
         """Initialize the Flume sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._flume_device = flume_device
-        self._flume_query_sensor = flume_query_sensor
-        self._name = name
-        self._device_id = device_id
-        self._state = None
 
-    @property
-    def device_info(self):
-        """Device info for the flume sensor."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._device_id)},
+        self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = f"{description.key}_{device_id}"
+        self._attr_device_info = {
+            "name": self.name,
+            "identifiers": {(DOMAIN, device_id)},
             "manufacturer": "Flume, Inc.",
             "model": "Flume Smart Water Monitor",
         }
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
-        sensor_key = self._flume_query_sensor[0]
+        sensor_key = self.entity_description.key
         if sensor_key not in self._flume_device.values:
             return None
 
         return _format_state_value(self._flume_device.values[sensor_key])
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        # This is in gallons per SCAN_INTERVAL
-        return self._flume_query_sensor[1]["unit_of_measurement"]
-
-    @property
-    def unique_id(self):
-        """Flume query and Device unique ID."""
-        return f"{self._flume_query_sensor[0]}_{self._device_id}"
 
     async def async_added_to_hass(self):
         """Request an update when added."""
