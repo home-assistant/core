@@ -42,11 +42,17 @@ class FanChannel(ZigbeeChannel):
     _value_attribute = 0
 
     REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
+    ZCL_INIT_ATTRS = {"fan_mode_sequence": True}
 
     @property
     def fan_mode(self) -> int | None:
         """Return current fan mode."""
         return self.cluster.get("fan_mode")
+
+    @property
+    def fan_mode_sequence(self) -> int | None:
+        """Return possible fan mode speeds."""
+        return self.cluster.get("fan_mode_sequence")
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
