@@ -656,7 +656,7 @@ def hass_recorder(enable_statistics, hass_storage):
 
 
 @pytest.fixture
-async def mock_ssdp():
+def mock_ssdp(hass):
     """Prevent actual SSDP scanning."""
     with patch(
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
@@ -667,7 +667,7 @@ async def mock_ssdp():
 
 
 @pytest.fixture
-async def set_ssdp_discovery(mock_ssdp):
+async def set_ssdp_discovery(hass, mock_ssdp):
     """Set ssdp discovery."""
     discovery_info = None
 
