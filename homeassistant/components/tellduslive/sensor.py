@@ -1,8 +1,6 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 from __future__ import annotations
 
-from functools import cached_property
-
 from homeassistant.components import sensor, tellduslive
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
@@ -122,6 +120,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     """Representation of a Telldus Live sensor."""
 
+    def __init__(self, client, device_id):
+        """Initialize TelldusLiveSensor."""
+        super().__init__(client, device_id)
+        if desc := SENSOR_TYPES.get(self._type):
+            self.entity_description = desc
+
     @property
     def device_id(self):
         """Return id of the device."""
@@ -131,11 +135,6 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     def _type(self):
         """Return the type of the sensor."""
         return self._id[1]
-
-    @cached_property
-    def entity_description(self) -> SensorEntityDescription:  # type: ignore[override]
-        """Return entity description for type."""
-        return SENSOR_TYPES[self._type]
 
     @property
     def _value(self):
@@ -160,7 +159,10 @@ class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(super().name, self.entity_description.name or "").strip()
+        quantity_name = (
+            self.entity_description.name if hasattr(self, "entity_description") else ""
+        )
+        return "{} {}".format(super().name, quantity_name or "").strip()
 
     @property
     def native_value(self):
