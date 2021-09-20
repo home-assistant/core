@@ -9,7 +9,7 @@ from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
 from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
-from async_upnp_client.profiles.dlna import TransportState
+from async_upnp_client.profiles.dlna import PlayMode, TransportState
 import pytest
 
 from homeassistant import const as ha_const
@@ -61,6 +61,16 @@ async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry)
     entity_id = entries[0].entity_id
 
     return entity_id
+
+
+async def get_attrs(hass: HomeAssistant, entity_id: str) -> Mapping[str, Any]:
+    """Get updated device attributes."""
+    await async_update_entity(hass, entity_id)
+    entity_state = hass.states.get(entity_id)
+    assert entity_state is not None
+    attrs = entity_state.attributes
+    assert attrs is not None
+    return attrs
 
 
 @pytest.fixture
@@ -428,34 +438,59 @@ async def test_available_device(
     assert attrs[mp_const.ATTR_MEDIA_SEASON] is dmr_device_mock.media_season_number
     assert attrs[mp_const.ATTR_MEDIA_EPISODE] is dmr_device_mock.media_episode_number
     assert attrs[mp_const.ATTR_MEDIA_CHANNEL] is dmr_device_mock.media_channel_name
+    assert attrs[mp_const.ATTR_SOUND_MODE_LIST] is dmr_device_mock.preset_names
+
     # Entity picture is cached, won't correspond to remote image
     assert isinstance(attrs[ha_const.ATTR_ENTITY_PICTURE], str)
+
     # media_title depends on what is available
     assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_program_title
     dmr_device_mock.media_program_title = None
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_title
+
     # media_content_type is mapped from UPnP class to MediaPlayer type
     dmr_device_mock.media_class = "object.item.audioItem.musicTrack"
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MUSIC
     dmr_device_mock.media_class = "object.item.videoItem.movie"
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MOVIE
     dmr_device_mock.media_class = "object.item.videoItem.videoBroadcast"
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_TVSHOW
+
     # media_season & media_episode have a special case
     dmr_device_mock.media_season_number = "0"
     dmr_device_mock.media_episode_number = "123"
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_SEASON] == "1"
     assert attrs[mp_const.ATTR_MEDIA_EPISODE] == "23"
     dmr_device_mock.media_season_number = "0"
     dmr_device_mock.media_episode_number = "S1E23"  # Unexpected and not parsed
-    attrs = await get_attrs()
+    attrs = await get_attrs(hass, mock_entity_id)
     assert attrs[mp_const.ATTR_MEDIA_SEASON] == "0"
     assert attrs[mp_const.ATTR_MEDIA_EPISODE] == "S1E23"
+
+    # shuffle and repeat is based on device's play mode
+    for play_mode, shuffle, repeat in [
+        (PlayMode.NORMAL, False, mp_const.REPEAT_MODE_OFF),
+        (PlayMode.SHUFFLE, True, mp_const.REPEAT_MODE_OFF),
+        (PlayMode.REPEAT_ONE, False, mp_const.REPEAT_MODE_ONE),
+        (PlayMode.REPEAT_ALL, False, mp_const.REPEAT_MODE_ALL),
+        (PlayMode.RANDOM, True, mp_const.REPEAT_MODE_ALL),
+        (PlayMode.DIRECT_1, False, mp_const.REPEAT_MODE_OFF),
+        (PlayMode.INTRO, False, mp_const.REPEAT_MODE_OFF),
+    ]:
+        dmr_device_mock.play_mode = play_mode
+        attrs = await get_attrs(hass, mock_entity_id)
+        assert attrs[mp_const.ATTR_MEDIA_SHUFFLE] is shuffle
+        assert attrs[mp_const.ATTR_MEDIA_REPEAT] == repeat
+    for bad_play_mode in [None, PlayMode.VENDOR_DEFINED]:
+        dmr_device_mock.play_mode = bad_play_mode
+        attrs = await get_attrs(hass, mock_entity_id)
+        assert mp_const.ATTR_MEDIA_SHUFFLE not in attrs
+        assert mp_const.ATTR_MEDIA_REPEAT not in attrs
 
     # Check supported feature flags, one at a time.
     # tuple(async_upnp_client feature check property, HA feature flag)
@@ -469,6 +504,8 @@ async def test_available_device(
         ("can_next", mp_const.SUPPORT_NEXT_TRACK),
         ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA),
         ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
+        ("has_play_mode", mp_const.SUPPORT_SHUFFLE_SET | mp_const.SUPPORT_REPEAT_SET),
+        ("has_presets", mp_const.SUPPORT_SELECT_SOUND_MODE),
     ]
     # Clear all feature properties
     for feat_prop, _ in FEATURE_FLAGS:
@@ -599,6 +636,93 @@ async def test_available_device(
     dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
     dmr_device_mock.async_play.assert_not_awaited()
 
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_SELECT_SOUND_MODE,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_SOUND_MODE: "Default"},
+        blocking=True,
+    )
+    dmr_device_mock.async_select_preset.assert_awaited_once_with("Default")
+
+    # Test shuffle with all variations of existing play mode
+    dmr_device_mock.valid_play_modes = {mode.value for mode in PlayMode}
+    for init_mode, shuffle_set, expect_mode in [
+        (PlayMode.NORMAL, False, PlayMode.NORMAL),
+        (PlayMode.SHUFFLE, False, PlayMode.NORMAL),
+        (PlayMode.REPEAT_ONE, False, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ALL, False, PlayMode.REPEAT_ALL),
+        (PlayMode.RANDOM, False, PlayMode.REPEAT_ALL),
+        (PlayMode.NORMAL, True, PlayMode.SHUFFLE),
+        (PlayMode.SHUFFLE, True, PlayMode.SHUFFLE),
+        (PlayMode.REPEAT_ONE, True, PlayMode.RANDOM),
+        (PlayMode.REPEAT_ALL, True, PlayMode.RANDOM),
+        (PlayMode.RANDOM, True, PlayMode.RANDOM),
+    ]:
+        dmr_device_mock.play_mode = init_mode
+        await hass.services.async_call(
+            MP_DOMAIN,
+            ha_const.SERVICE_SHUFFLE_SET,
+            {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_SHUFFLE: shuffle_set},
+            blocking=True,
+        )
+        dmr_device_mock.async_set_play_mode.assert_awaited_with(expect_mode)
+
+    # Test repeat with all variations of existing play mode
+    for init_mode, repeat_set, expect_mode in [
+        (PlayMode.NORMAL, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
+        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_OFF, PlayMode.SHUFFLE),
+        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
+        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
+        (PlayMode.RANDOM, mp_const.REPEAT_MODE_OFF, PlayMode.SHUFFLE),
+        (PlayMode.NORMAL, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.RANDOM, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.NORMAL, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_ALL, PlayMode.RANDOM),
+        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.RANDOM, mp_const.REPEAT_MODE_ALL, PlayMode.RANDOM),
+    ]:
+        dmr_device_mock.play_mode = init_mode
+        await hass.services.async_call(
+            MP_DOMAIN,
+            ha_const.SERVICE_REPEAT_SET,
+            {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_REPEAT: repeat_set},
+            blocking=True,
+        )
+        dmr_device_mock.async_set_play_mode.assert_awaited_with(expect_mode)
+
+    # Test shuffle when the device doesn't support the desired play mode.
+    # Trying to go from RANDOM -> REPEAT_MODE_ALL, but nothing in the list is supported.
+    dmr_device_mock.async_set_play_mode.reset_mock()
+    dmr_device_mock.play_mode = PlayMode.RANDOM
+    dmr_device_mock.valid_play_modes = {PlayMode.SHUFFLE, PlayMode.RANDOM}
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_SHUFFLE_SET,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_SHUFFLE: False},
+        blocking=True,
+    )
+    dmr_device_mock.async_set_play_mode.assert_not_awaited()
+
+    # Test repeat when the device doesn't support the desired play mode.
+    # Trying to go from RANDOM -> SHUFFLE, but nothing in the list is supported.
+    dmr_device_mock.async_set_play_mode.reset_mock()
+    dmr_device_mock.play_mode = PlayMode.RANDOM
+    dmr_device_mock.valid_play_modes = {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_REPEAT: mp_const.REPEAT_MODE_OFF,
+        },
+        blocking=True,
+    )
+    dmr_device_mock.async_set_play_mode.assert_not_awaited()
+
 
 async def test_unavailable_device(
     hass: HomeAssistant,
@@ -660,6 +784,7 @@ async def test_unavailable_device(
 
     assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
     assert attrs[ha_const.ATTR_SUPPORTED_FEATURES] == 0
+    assert mp_const.ATTR_SOUND_MODE_LIST not in attrs
 
     # Check service calls do nothing
     SERVICES: list[tuple[str, dict]] = [
@@ -679,6 +804,9 @@ async def test_unavailable_device(
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
         ),
+        (mp_const.SERVICE_SELECT_SOUND_MODE, {mp_const.ATTR_SOUND_MODE: "Default"}),
+        (ha_const.SERVICE_SHUFFLE_SET, {mp_const.ATTR_MEDIA_SHUFFLE: True}),
+        (ha_const.SERVICE_REPEAT_SET, {mp_const.ATTR_MEDIA_REPEAT: "all"}),
     ]
     for service, data in SERVICES:
         await hass.services.async_call(
@@ -1281,6 +1409,9 @@ async def test_disappearing_device(
     # media_image_url is normally hidden by entity_picture, but we want a direct check
     assert entity.media_image_url is None
 
+    # Check attributes that are normally pre-checked
+    assert entity.sound_mode_list is None
+
     # Test service calls
     await entity.async_set_volume_level(0.1)
     await entity.async_mute_volume(True)
@@ -1291,6 +1422,9 @@ async def test_disappearing_device(
     await entity.async_play_media("", "")
     await entity.async_media_previous_track()
     await entity.async_media_next_track()
+    await entity.async_set_shuffle(True)
+    await entity.async_set_repeat(mp_const.REPEAT_MODE_ALL)
+    await entity.async_select_sound_mode("Default")
 
 
 async def test_resubscribe_failure(

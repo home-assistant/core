@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping, Sequence
+import contextlib
 from datetime import datetime, timedelta
 import functools
 from typing import Any, Callable, TypeVar, cast
 
 from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
-from async_upnp_client.profiles.dlna import DmrDevice, TransportState
+from async_upnp_client.profiles.dlna import DmrDevice, PlayMode, TransportState
 from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
 
@@ -17,12 +18,18 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
+    SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
@@ -249,11 +256,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
                 # can ignore subsequent ssdp:alive messages
-                try:
+                with contextlib.suppress(KeyError, ValueError):
                     next_bootid_str = info[ssdp.ATTR_SSDP_NEXTBOOTID]
                     self._bootid = int(next_bootid_str, 10)
-                except (KeyError, ValueError):
-                    pass
             # Nothing left to do until ssdp:alive comes through
             return
 
@@ -510,6 +515,15 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if self._device.can_seek_rel_time:
             supported_features |= SUPPORT_SEEK
 
+        play_modes = self._device.valid_play_modes
+        if play_modes & {PlayMode.RANDOM, PlayMode.SHUFFLE}:
+            supported_features |= SUPPORT_SHUFFLE_SET
+        if play_modes & {PlayMode.REPEAT_ONE, PlayMode.REPEAT_ALL}:
+            supported_features |= SUPPORT_REPEAT_SET
+
+        if self._device.has_presets:
+            supported_features |= SUPPORT_SELECT_SOUND_MODE
+
         return supported_features
 
     @property
@@ -600,6 +614,170 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Send next track command."""
         assert self._device is not None
         await self._device.async_next()
+
+    @property
+    def shuffle(self) -> bool | None:
+        """Boolean if shuffle is enabled."""
+        if not self._device:
+            return None
+
+        play_mode = self._device.play_mode
+        if not play_mode:
+            return None
+
+        if play_mode == PlayMode.VENDOR_DEFINED:
+            return None
+
+        return play_mode in (PlayMode.SHUFFLE, PlayMode.RANDOM)
+
+    @catch_request_errors
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Enable/disable shuffle mode."""
+        assert self._device is not None
+
+        # Map a combination of shuffle & repeat to a list of play modes in
+        # order of suitability. Fall back to PlayMode.NORMAL in any case.
+        POTENTIAL_PLAY_MODES: dict[tuple[bool, str], list[PlayMode]] = {
+            (False, REPEAT_MODE_OFF): [
+                PlayMode.NORMAL,
+            ],
+            (False, REPEAT_MODE_ONE): [
+                PlayMode.REPEAT_ONE,
+                PlayMode.REPEAT_ALL,
+                PlayMode.NORMAL,
+            ],
+            (False, REPEAT_MODE_ALL): [
+                PlayMode.REPEAT_ALL,
+                PlayMode.REPEAT_ONE,
+                PlayMode.NORMAL,
+            ],
+            (True, REPEAT_MODE_OFF): [
+                PlayMode.SHUFFLE,
+                PlayMode.RANDOM,
+                PlayMode.NORMAL,
+            ],
+            (True, REPEAT_MODE_ONE): [
+                PlayMode.RANDOM,
+                PlayMode.SHUFFLE,
+                PlayMode.REPEAT_ONE,
+                PlayMode.NORMAL,
+            ],
+            (True, REPEAT_MODE_ALL): [
+                PlayMode.RANDOM,
+                PlayMode.SHUFFLE,
+                PlayMode.REPEAT_ALL,
+                PlayMode.NORMAL,
+            ],
+        }
+
+        repeat = self.repeat or REPEAT_MODE_OFF
+        potential_play_modes = POTENTIAL_PLAY_MODES[(shuffle, repeat)]
+
+        valid_play_modes = self._device.valid_play_modes
+
+        for mode in potential_play_modes:
+            if mode in valid_play_modes:
+                await self._device.async_set_play_mode(mode)
+                return
+
+        _LOGGER.debug(
+            "Couldn't find a suitable mode for shuffle=%s, repeat=%s", shuffle, repeat
+        )
+
+    @property
+    def repeat(self) -> str | None:
+        """Return current repeat mode."""
+        if not self._device:
+            return None
+
+        play_mode = self._device.play_mode
+        if not play_mode:
+            return None
+
+        if play_mode == PlayMode.VENDOR_DEFINED:
+            return None
+
+        if play_mode == PlayMode.REPEAT_ONE:
+            return REPEAT_MODE_ONE
+
+        if play_mode in (PlayMode.REPEAT_ALL, PlayMode.RANDOM):
+            return REPEAT_MODE_ALL
+
+        return REPEAT_MODE_OFF
+
+    @catch_request_errors
+    async def async_set_repeat(self, repeat: str) -> None:
+        """Set repeat mode."""
+        assert self._device is not None
+
+        # Map a combination of shuffle & repeat to a list of play modes in
+        # order of suitability. Fall back to PlayMode.NORMAL in any case.
+        # NOTE: This list is slightly different to that in async_set_shuffle,
+        # due to fallback behaviour when turning on repeat modes.
+        POTENTIAL_PLAY_MODES: dict[tuple[bool, str], list[PlayMode]] = {
+            (False, REPEAT_MODE_OFF): [
+                PlayMode.NORMAL,
+            ],
+            (False, REPEAT_MODE_ONE): [
+                PlayMode.REPEAT_ONE,
+                PlayMode.REPEAT_ALL,
+                PlayMode.NORMAL,
+            ],
+            (False, REPEAT_MODE_ALL): [
+                PlayMode.REPEAT_ALL,
+                PlayMode.REPEAT_ONE,
+                PlayMode.NORMAL,
+            ],
+            (True, REPEAT_MODE_OFF): [
+                PlayMode.SHUFFLE,
+                PlayMode.RANDOM,
+                PlayMode.NORMAL,
+            ],
+            (True, REPEAT_MODE_ONE): [
+                PlayMode.REPEAT_ONE,
+                PlayMode.RANDOM,
+                PlayMode.SHUFFLE,
+                PlayMode.NORMAL,
+            ],
+            (True, REPEAT_MODE_ALL): [
+                PlayMode.RANDOM,
+                PlayMode.REPEAT_ALL,
+                PlayMode.SHUFFLE,
+                PlayMode.NORMAL,
+            ],
+        }
+
+        shuffle = self.shuffle or False
+        potential_play_modes = POTENTIAL_PLAY_MODES[(shuffle, repeat)]
+
+        valid_play_modes = self._device.valid_play_modes
+
+        for mode in potential_play_modes:
+            if mode in valid_play_modes:
+                await self._device.async_set_play_mode(mode)
+                return
+
+        _LOGGER.debug(
+            "Couldn't find a suitable mode for shuffle=%s, repeat=%s", shuffle, repeat
+        )
+
+    @property
+    def sound_mode(self) -> str | None:
+        """Name of the current sound mode, not supported by DLNA."""
+        return None
+
+    @property
+    def sound_mode_list(self) -> list[str] | None:
+        """List of available sound modes."""
+        if not self._device:
+            return None
+        return self._device.preset_names
+
+    @catch_request_errors
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select sound mode."""
+        assert self._device is not None
+        await self._device.async_select_preset(sound_mode)
 
     @property
     def media_title(self) -> str | None:
@@ -700,12 +878,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             not self._device.media_season_number
             or self._device.media_season_number == "0"
         ) and self._device.media_episode_number:
-            try:
+            with contextlib.suppress(ValueError):
                 episode = int(self._device.media_episode_number, 10)
                 if episode > 100:
                     return str(episode // 100)
-            except ValueError:
-                pass
         return self._device.media_season_number
 
     @property
@@ -718,12 +894,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             not self._device.media_season_number
             or self._device.media_season_number == "0"
         ) and self._device.media_episode_number:
-            try:
+            with contextlib.suppress(ValueError):
                 episode = int(self._device.media_episode_number, 10)
                 if episode > 100:
                     return str(episode % 100)
-            except ValueError:
-                pass
         return self._device.media_episode_number
 
     @property
