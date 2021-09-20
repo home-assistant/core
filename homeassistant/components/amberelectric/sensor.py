@@ -1,5 +1,7 @@
-# import amberelectric
-from typing import Any, List, Mapping, Union
+"""Amber Electric Sensor definitions."""
+from __future__ import annotations
+
+from typing import Any, Mapping
 
 import amberelectric
 from amberelectric.api import amber_api
@@ -11,7 +13,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import slugify
 
 from .const import CONF_API_TOKEN, CONF_SITE_ID, LOGGER
@@ -21,6 +26,7 @@ ATTRIBUTION = "Data provided by Amber Electric"
 
 
 def friendly_channel_type(channel_type: str) -> str:
+    """Return a human readable version of the channel type."""
     if channel_type == ChannelType.GENERAL:
         return "General"
     if channel_type == ChannelType.CONTROLLED_LOAD:
@@ -37,15 +43,16 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
         site_id: str,
         channel_type: str,
         data_service: AmberDataService,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
-        super().__init__(data_service.coordinator)
+        super().__init__(coordinator)
         self._site_id = site_id
         self._channel_type = channel_type
         self._platform_name = platform_name
         self._data_service = data_service
 
     @property
-    def name(self) -> Union[str, None]:
+    def name(self) -> str | None:
         return (
             self._platform_name
             + " - "
@@ -55,7 +62,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def unique_id(self) -> Union[str, None]:
+    def unique_id(self) -> str | None:
         return slugify(
             self._site_id + " " + friendly_channel_type(self._channel_type) + " Price"
         )
@@ -74,7 +81,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
         return "¢/kWh"
 
     @property
-    def state(self) -> Union[str, None]:
+    def state(self) -> str | None:
         channel = self._data_service.current_prices.get(self._channel_type)
         if channel:
             if self._channel_type == ChannelType.FEED_IN:
@@ -82,7 +89,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
             return round(channel.per_kwh, 0)
 
     @property
-    def device_state_attributes(self) -> Union[Mapping[str, Any], None]:
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
         meta = self._data_service.current_prices.get(self._channel_type)
         data = {}
         if meta is not None:
@@ -115,15 +122,16 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
         site_id: str,
         channel_type: str,
         data_service: AmberDataService,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
-        super().__init__(data_service.coordinator)
+        super().__init__(coordinator)
         self._site_id = site_id
         self._channel_type = channel_type
         self._platform_name = platform_name
         self._data_service = data_service
 
     @property
-    def name(self) -> Union[str, None]:
+    def name(self) -> str | None:
         return (
             self._platform_name
             + " - "
@@ -133,7 +141,7 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def unique_id(self) -> Union[str, None]:
+    def unique_id(self) -> str | None:
         return slugify(
             self._site_id
             + " "
@@ -151,37 +159,42 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
         return "mdi:transmission-tower"
 
     @property
-    def device_class(self) -> Union[str, None]:
+    def device_class(self) -> str | None:
         return DEVICE_CLASS_MONETARY
 
     @property
-    def unit_of_measurement(self) -> Union[str, None]:
+    def unit_of_measurement(self) -> str | None:
         return "AUD"
 
     @property
-    def state(self) -> Union[str, None]:
+    def state(self) -> str | None:
         channel = self._data_service.current_prices.get(self._channel_type)
         if channel:
             if self._channel_type == ChannelType.FEED_IN:
                 return round(channel.per_kwh, 0) / 100 * -1
             return round(channel.per_kwh, 0) / 100
+        return None
 
 
 class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
     def __init__(
-        self, platform_name: str, site_id: str, data_service: AmberDataService
+        self,
+        platform_name: str,
+        site_id: str,
+        data_service: AmberDataService,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
-        super().__init__(data_service.coordinator)
+        super().__init__(coordinator)
         self._site_id = site_id
         self._platform_name = platform_name
         self._data_service = data_service
 
     @property
-    def name(self) -> Union[str, None]:
+    def name(self) -> str | None:
         return self._platform_name + " - Renewables"
 
     @property
-    def unique_id(self) -> Union[str, None]:
+    def unique_id(self) -> str | None:
         return slugify(self._site_id + " Renewables")
 
     @property
@@ -193,13 +206,13 @@ class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
         return "%"
 
     @property
-    def state(self) -> Union[str, None]:
+    def state(self) -> str | None:
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel:
             return round(channel.renewables, 0)
 
     @property
-    def device_state_attributes(self) -> Union[Mapping[str, Any], None]:
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
         data = {}
         data[ATTR_ATTRIBUTION] = ATTRIBUTION
         return data
@@ -212,15 +225,16 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         site_id: str,
         channel_type: str,
         data_service: AmberDataService,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
-        super().__init__(data_service.coordinator)
+        super().__init__(coordinator)
         self._site_id = site_id
         self._channel_type = channel_type
         self._platform_name = platform_name
         self._data_service = data_service
 
     @property
-    def name(self) -> Union[str, None]:
+    def name(self) -> str | None:
         return (
             self._platform_name
             + " - "
@@ -230,7 +244,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def unique_id(self) -> Union[str, None]:
+    def unique_id(self) -> str | None:
         return slugify(
             self._site_id
             + " "
@@ -251,7 +265,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         return "¢/kWh"
 
     @property
-    def state(self) -> Union[str, None]:
+    def state(self) -> str | None:
         forecasts = self._data_service.forecasts.get(self._channel_type)
         if forecasts and len(forecasts) > 0:
             if self._channel_type == ChannelType.FEED_IN:
@@ -259,7 +273,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
             return round(forecasts[0].per_kwh, 0)
 
     @property
-    def device_state_attributes(self) -> Union[Mapping[str, Any], None]:
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
         forecasts = self._data_service.forecasts.get(self._channel_type)
         data = {}
         data["forecasts"] = []
@@ -292,23 +306,27 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
 class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
     def __init__(
-        self, platform_name: str, site_id: str, data_service: AmberDataService
+        self,
+        platform_name: str,
+        site_id: str,
+        data_service: AmberDataService,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
-        super().__init__(data_service.coordinator)
+        super().__init__(coordinator)
         self._platform_name = platform_name
         self._site_id = site_id
         self._data_service = data_service
 
     @property
-    def name(self) -> Union[str, None]:
+    def name(self) -> str | None:
         return self._platform_name + " - Price Spike"
 
     @property
-    def unique_id(self) -> Union[str, None]:
+    def unique_id(self) -> str | None:
         return slugify(self._site_id + " Price Spike")
 
     @property
-    def state(self) -> Union[str, None]:
+    def state(self) -> bool:
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel is not None:
             return channel.spike_status == SpikeStatus.SPIKE
@@ -325,7 +343,7 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
         return "mdi:power-plug"
 
     @property
-    def device_state_attributes(self) -> Union[Mapping[str, Any], None]:
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
         data = {}
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel is not None:
@@ -346,23 +364,26 @@ class AmberFactory:
         self.data_service = AmberDataService(hass, api, site_id)
         self._site_id = site_id
 
-    def build_sensors(self) -> List[SensorEntity]:
+    def build_sensors(self) -> list[SensorEntity]:
         sensors: list[
-            Union[
-                AmberPriceSensor,
-                AmberEnergyPriceSensor,
-                AmberForecastSensor,
-                AmberRenewablesSensor,
-                AmberPriceSensor,
-            ]
+            AmberPriceSensor
+            | AmberEnergyPriceSensor
+            | AmberForecastSensor
+            | AmberRenewablesSensor
+            | AmberPriceSensor
         ] = []
-        if self.data_service.site is not None:
+
+        if (
+            self.data_service.site is not None
+            and self.data_service.coordinator is not None
+        ):
             sensors.append(
                 AmberPriceSensor(
                     self._platform_name,
                     self._site_id,
                     ChannelType.GENERAL,
                     self.data_service,
+                    self.data_service.coordinator,
                 )
             )
 
@@ -372,6 +393,7 @@ class AmberFactory:
                     self._site_id,
                     ChannelType.GENERAL,
                     self.data_service,
+                    self.data_service.coordinator,
                 )
             )
 
@@ -381,6 +403,7 @@ class AmberFactory:
                     self._site_id,
                     ChannelType.GENERAL,
                     self.data_service,
+                    self.data_service.coordinator,
                 )
             )
 
@@ -401,6 +424,7 @@ class AmberFactory:
                         self._site_id,
                         ChannelType.FEED_IN,
                         self.data_service,
+                        self.data_service.coordinator,
                     )
                 )
 
@@ -410,6 +434,7 @@ class AmberFactory:
                         self._site_id,
                         ChannelType.FEED_IN,
                         self.data_service,
+                        self.data_service.coordinator,
                     )
                 )
 
@@ -419,6 +444,7 @@ class AmberFactory:
                         self._site_id,
                         ChannelType.FEED_IN,
                         self.data_service,
+                        self.data_service.coordinator,
                     )
                 )
 
@@ -439,6 +465,7 @@ class AmberFactory:
                         self._site_id,
                         ChannelType.CONTROLLED_LOAD,
                         self.data_service,
+                        self.data_service.coordinator,
                     )
                 )
 
@@ -448,6 +475,7 @@ class AmberFactory:
                         self._site_id,
                         ChannelType.CONTROLLED_LOAD,
                         self.data_service,
+                        self.data_service.coordinator,
                     )
                 )
 
@@ -457,18 +485,25 @@ class AmberFactory:
                         self._site_id,
                         ChannelType.CONTROLLED_LOAD,
                         self.data_service,
+                        self.data_service.coordinator,
                     )
                 )
 
             sensors.append(
                 AmberRenewablesSensor(
-                    self._platform_name, self._site_id, self.data_service
+                    self._platform_name,
+                    self._site_id,
+                    self.data_service,
+                    self.data_service.coordinator,
                 )
             )
 
             sensors.append(
                 AmberPriceSpikeSensor(
-                    self._platform_name, self._site_id, self.data_service
+                    self._platform_name,
+                    self._site_id,
+                    self.data_service,
+                    self.data_service.coordinator,
                 )
             )
 
@@ -476,10 +511,6 @@ class AmberFactory:
         else:
             LOGGER.error("No site found!")
         return sensors
-
-
-def setup_platform(hass: HomeAssistant, config, add_entities, discovery_info=None):
-    return True
 
 
 async def async_setup_entry(
@@ -492,15 +523,26 @@ async def async_setup_entry(
     )
 
     api_instance = amber_api.AmberApi.create(configuration)
+
     # Do a sites enquiry, and get all the channels...
     LOGGER.debug("Initializing AmberFactory...")
-    factory = AmberFactory(
-        hass, entry.title, entry.data.get(CONF_SITE_ID), api_instance
-    )
-    LOGGER.debug("AmberFactory initialized. Setting up...")
-    factory.data_service.async_setup()
-    LOGGER.debug("AmberFactory Setup. Trigging manual fetch...")
-    await factory.data_service.coordinator.async_refresh()
-    LOGGER.debug("Fetch complete. Adding entities...")
-    async_add_entities(factory.build_sensors())
-    LOGGER.debug("Entry setup complete.")
+    site_id = entry.data.get(CONF_SITE_ID)
+    if site_id is not None:
+        factory = AmberFactory(hass, entry.title, str(site_id), api_instance)
+        LOGGER.debug("AmberFactory initialized. Setting up...")
+        factory.data_service.async_setup()
+        LOGGER.debug("AmberFactory Setup. Trigging manual fetch...")
+
+        if (
+            factory is not None
+            and factory.data_service is not None
+            and factory.data_service.coordinator is not None
+        ):
+            await factory.data_service.coordinator.async_refresh()
+            LOGGER.debug("Fetch complete. Adding entities...")
+            async_add_entities(factory.build_sensors())
+            LOGGER.debug("Entry setup complete.")
+        else:
+            LOGGER.error("Data service is not set up!")
+    else:
+        LOGGER.error("Site ID is not defined!")

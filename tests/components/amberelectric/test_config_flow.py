@@ -68,15 +68,12 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     assert enter_api_key_result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     assert enter_api_key_result.get("step_id") == "site"
 
-    print(enter_api_key_result["flow_id"])
-
     select_site_result = await hass.config_entries.flow.async_configure(
         enter_api_key_result["flow_id"],
         {CONF_SITE_NMI: "11111111111", CONF_SITE_NAME: "Home"},
     )
 
     # Show available sites
-    print(select_site_result)
     assert select_site_result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert select_site_result.get("title") == "Home"
     data = select_site_result.get("data")

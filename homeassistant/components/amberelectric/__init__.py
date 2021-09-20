@@ -28,13 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.error("Site not found")
             raise ConfigEntryNotReady
 
-    except ApiException as e:
-        if e.status == 403:
+    except ApiException as api_exception:
+        if api_exception.status == 403:
             LOGGER.error("API KEY Invalid")
-            raise ConfigEntryNotReady
-        else:
-            LOGGER.error("Unknown error")
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from api_exception
+
+        LOGGER.error("Unknown error")
+        raise ConfigEntryNotReady from api_exception
 
     hass.data[DOMAIN] = {"entry": entry}
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

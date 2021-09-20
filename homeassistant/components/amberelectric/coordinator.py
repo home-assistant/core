@@ -1,5 +1,7 @@
-from datetime import datetime, timedelta
-from typing import List, Union
+"""Amber Electric Coordinator."""
+from __future__ import annotations
+
+from datetime import timedelta
 
 from amberelectric import ApiException
 from amberelectric.api import amber_api
@@ -15,62 +17,64 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import LOGGER
 
 
-def is_current(
-    interval: Union[ActualInterval, CurrentInterval, ForecastInterval]
-) -> bool:
+def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
+    """Return true if the supplied interval is a CurrentInterval."""
     return interval.__class__ == CurrentInterval
 
 
-def is_forecast(
-    interval: Union[ActualInterval, CurrentInterval, ForecastInterval]
-) -> bool:
+def is_forecast(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
+    """Return true if the supplied interval is a ForecastInterval."""
     return interval.__class__ == ForecastInterval
 
 
-def is_general(
-    interval: Union[ActualInterval, CurrentInterval, ForecastInterval]
-) -> bool:
+def is_general(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
+    """Return true if the supplied interval is on the general channel."""
     return interval.channel_type == ChannelType.GENERAL
 
 
 def is_controlled_load(
-    interval: Union[ActualInterval, CurrentInterval, ForecastInterval]
+    interval: ActualInterval | CurrentInterval | ForecastInterval,
 ) -> bool:
+    """Return true if the supplied interval is on the controlled load channel."""
     return interval.channel_type == ChannelType.CONTROLLED_LOAD
 
 
-def is_feed_in(
-    interval: Union[ActualInterval, CurrentInterval, ForecastInterval]
-) -> bool:
+def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
+    """Return true if the supplied interval is on the feed in channel."""
     return interval.channel_type == ChannelType.FEED_IN
 
 
 def first(
-    intervals: Union[ActualInterval, CurrentInterval, ForecastInterval]
-) -> Union[ActualInterval, CurrentInterval, ForecastInterval, None]:
+    intervals: ActualInterval | CurrentInterval | ForecastInterval,
+) -> ActualInterval | CurrentInterval | ForecastInterval | None:
+    """Return the first element if it exists, otherwise return None."""
     if len(intervals) > 0:
         return intervals[0]
-    else:
-        return None
+    return None
 
 
 class AmberDataService:
-    def __init__(self, hass: HomeAssistant, api: amber_api.AmberApi, site_id: str):
+    """AmberDataService - In charge of downloading the data for a site, which all the sensors read."""
+
+    def __init__(
+        self, hass: HomeAssistant, api: amber_api.AmberApi, site_id: str
+    ) -> None:
+        """Initialise the data service."""
         self._hass = hass
         self._api = api
         self._site_id = site_id
-        self.coordinator: Union[DataUpdateCoordinator, None] = None
+        self.coordinator: DataUpdateCoordinator | None = None
 
-        self.data: List[Union[ActualInterval, CurrentInterval, ForecastInterval]]
+        self.data: list[ActualInterval | CurrentInterval | ForecastInterval]
 
-        self.site: Union[Site, None] = None
-        self.current_prices: dict[str, Union[CurrentInterval, None]] = {
+        self.site: Site | None = None
+        self.current_prices: dict[str, CurrentInterval | None] = {
             ChannelType.GENERAL: None,
             ChannelType.CONTROLLED_LOAD: None,
             ChannelType.FEED_IN: None,
         }
 
-        self.forecasts: dict[str, Union[List[ForecastInterval], None]] = {
+        self.forecasts: dict[str, list[ForecastInterval] | None] = {
             ChannelType.GENERAL: None,
             ChannelType.CONTROLLED_LOAD: None,
             ChannelType.FEED_IN: None,
@@ -78,6 +82,7 @@ class AmberDataService:
 
     @callback
     def async_setup(self) -> None:
+        """Set up the data service."""
         self.coordinator = DataUpdateCoordinator(
             self._hass,
             LOGGER,
@@ -88,21 +93,11 @@ class AmberDataService:
 
     @property
     def update_interval(self) -> timedelta:
+        """Update interval property."""
         return timedelta(minutes=1)
 
     def update(self) -> None:
-        self.current_prices = {
-            ChannelType.GENERAL: None,
-            ChannelType.CONTROLLED_LOAD: None,
-            ChannelType.FEED_IN: None,
-        }
-
-        self.forecasts = {
-            ChannelType.GENERAL: None,
-            ChannelType.CONTROLLED_LOAD: None,
-            ChannelType.FEED_IN: None,
-        }
-
+        """Update callback."""
         try:
             sites = list(
                 filter(lambda site: site.id == self._site_id, self._api.get_sites())
@@ -110,12 +105,18 @@ class AmberDataService:
             if len(sites) > 0:
                 self.site = sites[0]
 
-            start_date = (datetime.today() - timedelta(hours=12, minutes=0)).date()
-            end_date = (datetime.today() + timedelta(hours=12, minutes=0)).date()
+            self.data = self._api.get_current_price(self._site_id, next=48)
+            self.current_prices = {
+                ChannelType.GENERAL: None,
+                ChannelType.CONTROLLED_LOAD: None,
+                ChannelType.FEED_IN: None,
+            }
 
-            self.data = self._api.get_prices(
-                self._site_id, start_date=start_date, end_date=end_date
-            )
+            self.forecasts = {
+                ChannelType.GENERAL: None,
+                ChannelType.CONTROLLED_LOAD: None,
+                ChannelType.FEED_IN: None,
+            }
 
             current = list(filter(is_current, self.data))
             forecasts = list(filter(is_forecast, self.data))
@@ -132,20 +133,17 @@ class AmberDataService:
                 list(filter(is_feed_in, current))
             )
 
-            self.forecasts[ChannelType.GENERAL] = list(filter(is_general, forecasts))[
-                0:23
-            ]
+            self.forecasts[ChannelType.GENERAL] = list(filter(is_general, forecasts))
             self.forecasts[ChannelType.CONTROLLED_LOAD] = list(
                 filter(is_controlled_load, forecasts)
-            )[0:23]
-            self.forecasts[ChannelType.FEED_IN] = list(filter(is_feed_in, forecasts))[
-                0:23
-            ]
+            )
+            self.forecasts[ChannelType.FEED_IN] = list(filter(is_feed_in, forecasts))
 
             LOGGER.debug("Fetched new Amber data: %s", self.data)
 
-        except ApiException as e:
-            raise UpdateFailed("Missing price data, skipping update") from e
+        except ApiException as api_exception:
+            raise UpdateFailed("Missing price data, skipping update") from api_exception
 
     async def async_update_data(self) -> None:
+        """Async update wrapper."""
         await self._hass.async_add_executor_job(self.update)

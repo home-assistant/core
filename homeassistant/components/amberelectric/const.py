@@ -1,3 +1,4 @@
+"""Amber Electric Constants."""
 import logging
 
 DOMAIN = "amberelectric"

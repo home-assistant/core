@@ -44,10 +44,9 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if len(sites) == 0:
                 self._errors[CONF_API_TOKEN] = "no_site"
                 return None
-            else:
-                return sites
-        except amberelectric.ApiException as e:
-            if e.status == 403:
+            return sites
+        except amberelectric.ApiException as api_exception:
+            if api_exception.status == 403:
                 self._errors[CONF_API_TOKEN] = "invalid_api_token"
             else:
                 self._errors[CONF_API_TOKEN] = "unknown_error"
