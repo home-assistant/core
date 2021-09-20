@@ -26,9 +26,10 @@ class SurePetcareEntity(CoordinatorEntity):
 
         surepy_entity: SurepyEntity = coordinator.data[_id]
 
-        self._device_name = surepy_entity.type.name.capitalize().replace("_", " ")
         if surepy_entity.name:
-            self._device_name = f"{self._device_name} {surepy_entity.name.capitalize()}"
+            self._device_name = surepy_entity.name.capitalize()
+        else:
+            self._device_name = surepy_entity.type.name.capitalize().replace("_", " ")
 
         self._device_id = f"{surepy_entity.household_id}-{_id}"
         self._update_attr(coordinator.data[_id])

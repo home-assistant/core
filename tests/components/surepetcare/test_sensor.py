@@ -6,9 +6,9 @@ from homeassistant.setup import async_setup_component
 from . import HOUSEHOLD_ID, MOCK_CONFIG
 
 EXPECTED_ENTITY_IDS = {
-    "sensor.pet_flap_pet_flap_battery_level": f"{HOUSEHOLD_ID}-13576-battery",
-    "sensor.cat_flap_cat_flap_battery_level": f"{HOUSEHOLD_ID}-13579-battery",
-    "sensor.feeder_feeder_battery_level": f"{HOUSEHOLD_ID}-12345-battery",
+    "sensor.pet_flap_battery_level": f"{HOUSEHOLD_ID}-13576-battery",
+    "sensor.cat_flap_battery_level": f"{HOUSEHOLD_ID}-13579-battery",
+    "sensor.feeder_battery_level": f"{HOUSEHOLD_ID}-12345-battery",
 }
 
 
