@@ -15,9 +15,6 @@ from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_MAC,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -39,8 +36,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_EMETER_PARAMS,
     CONF_LIGHT,
-    CONF_MODEL,
-    CONF_SW_VERSION,
     CONF_SWITCH,
     COORDINATORS,
     DOMAIN as TPLINK_DOMAIN,
@@ -123,10 +118,11 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
+        # TODO: rename smartplug to dev
         super().__init__(coordinator)
         self.smartplug = smartplug
         self.entity_description = description
-        self._attr_name = f"{coordinator.data[CONF_ALIAS]} {description.name}"
+        self._attr_name = f"{self.smartplug.alias} {description.name}"
 
     @property
     def data(self) -> dict[str, Any]:
@@ -141,15 +137,15 @@ class SmartPlugSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"{self.data[CONF_DEVICE_ID]}_{self.entity_description.key}"
+        return f"{self.smartplug.device_id}_{self.entity_description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
-            "name": self.data[CONF_ALIAS],
-            "model": self.data[CONF_MODEL],
+            "name": self.smartplug.alias,
+            "model": self.smartplug.model,
             "manufacturer": "TP-Link",
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.data[CONF_MAC])},
-            "sw_version": self.data[CONF_SW_VERSION],
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.smartplug.device_id)},
+            "sw_version": self.smartplug.hw_info["sw_ver"],
         }
