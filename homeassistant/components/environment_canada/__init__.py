@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import aiohttp
 from env_canada import ECAirQuality, ECRadar, ECWeather
 
 from homeassistant.const import (
@@ -103,6 +104,7 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize global EC data updater."""
         self.ec_data = ec_data
         self._name = name
+        self._update_error = False
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
@@ -110,10 +112,24 @@ class ECDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
-        except Exception as err:
-            raise ECUpdateFailed(
-                f"Environment Canada {self._name} update failed: {err}"
-            ) from err
+            self._update_error = False
+        except Exception as exc:  # pylint: disable=broad-except
+            if not self._update_error:  # Quelch errors
+                self._update_error = True
+                if isinstance(exc, aiohttp.ClientConnectionError):
+                    _LOGGER.error(
+                        "Cannot connect to Environment Canada %s service", self._name
+                    )
+                elif isinstance(exc, aiohttp.ClientResponseError):
+                    if exc.status == 404:
+                        _LOGGER.error(
+                            "Station ID is bad or no longer exists. Check your configuration."
+                        )
+                    else:
+                        _LOGGER.exception("Unexpected exception")
+                else:
+                    _LOGGER.exception("Unexpected exception")
+
         return self.ec_data
 
 
