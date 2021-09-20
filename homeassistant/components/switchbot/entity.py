@@ -28,11 +28,11 @@ class SwitchbotEntity(CoordinatorEntity, Entity):
         self._attr_device_info: DeviceInfo = {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "name": self._attr_name,
-            "model": self.coordinator.data[self._idx]["modelName"],
+            "model": self.data["modelName"],
             "manufacturer": MANUFACTURER,
         }
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success, "mac_address": self._mac}

@@ -44,7 +44,7 @@ async def async_setup_entry(
                 entry.unique_id,
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
-                entry.data.get(CONF_PASSWORD, None),
+                entry.data.get(CONF_PASSWORD),
                 entry.options[CONF_RETRY_COUNT],
             )
         ]
@@ -88,11 +88,6 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._last_run_success = last_state.attributes["last_run_success"]
 
     @property
-    def extra_state_attributes(self) -> dict:
-        """Return the state attributes."""
-        return {**super().extra_state_attributes}
-
-    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return self.coordinator.data[self._idx]["data"]["position"] <= 20
@@ -100,7 +95,7 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
 
-        _LOGGER.info("Switchbot to open curtain %s", self._mac)
+        _LOGGER.debug("Switchbot to open curtain %s", self._mac)
 
         async with self.coordinator.api_lock:
             self._last_run_success = bool(
@@ -110,7 +105,7 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
-        _LOGGER.info("Switchbot to close the curtain %s", self._mac)
+        _LOGGER.debug("Switchbot to close the curtain %s", self._mac)
 
         async with self.coordinator.api_lock:
             self._last_run_success = bool(
@@ -120,7 +115,7 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
-        _LOGGER.info("Switchbot to stop %s", self._mac)
+        _LOGGER.debug("Switchbot to stop %s", self._mac)
 
         async with self.coordinator.api_lock:
             self._last_run_success = bool(
@@ -131,7 +126,7 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
 
-        _LOGGER.info("Switchbot to move at %d %s", position, self._mac)
+        _LOGGER.debug("Switchbot to move at %d %s", position, self._mac)
 
         async with self.coordinator.api_lock:
             self._last_run_success = bool(
@@ -140,7 +135,11 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
                 )
             )
 
-    @property
-    def current_cover_position(self) -> int:
-        """Return the current position of cover shutter."""
-        return self.coordinator.data[self._idx]["data"]["position"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_current_cover_position = self.data["position"]
+        self._attr_is_closed = self.data["position"] <= 20
+        self.async_write_ha_state()
+

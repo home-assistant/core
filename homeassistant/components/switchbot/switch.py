@@ -150,12 +150,12 @@ class SwitchBot(SwitchbotEntity, SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.coordinator.data[self._idx]["data"]["isOn"]
+        return self.data["isOn"]
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return {
             **super().extra_state_attributes,
-            "switch_mode": self.coordinator.data[self._idx]["data"]["switchMode"],
+            "switch_mode": self.data["switchMode"],
         }
