@@ -44,16 +44,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "# firmware: (.*)", discovery_info["payload"]
         )[0]
 
-        _LOGGER.info(
-            f"Discovered new flukso {data[CONF_DEVICE_SERIAL]} ({data[CONF_DEVICE_HASH]}) with firmware {data[CONF_DEVICE_FIRMWARE]}"
-        )
-
         unique_id = (
             DOMAIN + "_" + data[CONF_DEVICE_HASH] + "_" + data[CONF_DEVICE_SERIAL]
         )
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
+
+        _LOGGER.info(
+            f"Discovered new flukso {data[CONF_DEVICE_SERIAL]} ({data[CONF_DEVICE_HASH]}) with firmware {data[CONF_DEVICE_FIRMWARE]}"
+        )
 
         return self.async_create_entry(
             title=f"Flukso {data[CONF_DEVICE_SERIAL]}", data=data
@@ -76,6 +76,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
+
+            _LOGGER.info(
+                f"Manually adding new flukso {data[CONF_DEVICE_SERIAL]} ({data[CONF_DEVICE_HASH]}) with firmware {data[CONF_DEVICE_FIRMWARE]}"
+            )
 
             return self.async_create_entry(
                 title=f"Flukso {data[CONF_DEVICE_SERIAL]}", data=data

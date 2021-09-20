@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DEVICE_FIRMWARE, CONF_DEVICE_HASH, CONF_DEVICE_SERIAL, DOMAIN
+from .discovery import async_get_configs
 
 PLATFORMS: list[str] = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
@@ -30,13 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "flx": {},
     }
 
-    _LOGGER.debug(hass.data[DOMAIN])
+    # get all sensor configs
+    await async_get_configs(hass, entry)
 
-    # await async_discover_sensors(hass, entry)
-
-    # hass.data[DOMAIN][entry.entry_id] = "8cd3deb530d25404d77238bc24194cbc"
-
-    # hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -46,5 +44,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.data[CONF_DEVICE_HASH])}
+    )
+
+    if device is not None:
+        device_registry.async_remove_device(device.id)
 
     return unload_ok

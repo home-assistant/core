@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Flukso",
+        "description": "Vul je Flukso serienummer en hash in.",
+        "data": {
+          "device_serial": "Serienummer",
+          "device_hash": "Hash",
+          "device_firmware": "Versie"
+        }
+      }
+    },
+    "abort": {
+      "invalid_discovery_info": "Ongeldige configuratie ontdekt"
+    }
+  }
+}
