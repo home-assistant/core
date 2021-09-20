@@ -36,7 +36,10 @@ class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(
-        self, device: Command, api: Callable[[str], Any], gateway_id: str
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
     ) -> None:
         """Initialize a switch."""
         super().__init__(device, api, gateway_id)
