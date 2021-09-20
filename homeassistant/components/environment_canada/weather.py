@@ -89,11 +89,10 @@ class ECWeather(ECBaseEntity, WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        if self.get_value("pressure") is None:
+        value = self.get_value("pressure")
+        if value is None:
             return None
-        pressure_hpa = 10 * float(
-            self._coordinator.data.conditions["pressure"]["value"]
-        )
+        pressure_hpa = 10 * value
         if self._is_metric:
             return pressure_hpa
 

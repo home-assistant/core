@@ -12,10 +12,10 @@
         }
       },
       "name": {
-        "title": "Enironment Canada: entity name prefix",
-        "description": "Set the prefix for weather entities",
+        "title": "Enironment Canada: name prefix",
+        "description": "All weather entities will use this value as a prefix for their name. Defaults to the weather station's name.",
         "data": {
-          "name": "Prefix of entity names"
+          "name": "Name prefix"
         }
       }
     },
