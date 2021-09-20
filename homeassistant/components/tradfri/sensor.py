@@ -45,7 +45,10 @@ class TradfriSensor(TradfriBaseDevice, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
-        self, device: Command, api: Callable[[str], Any], gateway_id: str
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
     ) -> None:
         """Initialize the device."""
         super().__init__(device, api, gateway_id)
