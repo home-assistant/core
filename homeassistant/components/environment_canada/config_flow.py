@@ -36,6 +36,7 @@ async def validate_input(data):
         station_id=station, coordinates=(latitude, longitude), language=language.lower()
     )
     await env_canada.update()
+
     if env_canada.station_id is None:
         raise BadStationId
 
@@ -66,17 +67,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 errors["base"] = "already_configured"
 
-                # if already_configured(self.hass, user_input):
-                #     return self.async_abort(reason="already_configured")
-
-                # self._data = user_input
-                # return await self.async_step_name()
-
             except BadStationId:
                 errors["base"] = "bad_station_id"
-            except aiohttp.ClientResponseError as err:
-                _LOGGER.exception(err)
+            except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
+            except aiohttp.ClientResponseError as err:
+                if err.status == 404:
+                    errors["base"] = "bad_station_id"
+                else:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
             except vol.error.MultipleInvalid:
                 errors["base"] = "config_error"
             except Exception:  # pylint: disable=broad-except
