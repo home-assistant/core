@@ -64,18 +64,28 @@ INPUTS_EVENTS_DICT: Final = {
 # List of battery devices that maintain a permanent WiFi connection
 BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
 
+# Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
 
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
+ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
 SHBTN_INPUTS_EVENTS_TYPES: Final = {"single", "double", "triple", "long"}
 
-SUPPORTED_INPUTS_EVENTS_TYPES: Final = {
+RPC_INPUTS_EVENTS_TYPES: Final = {
+    "btn_down",
+    "btn_up",
+    "single_push",
+    "double_push",
+    "long_push",
+}
+
+BLOCK_INPUTS_EVENTS_TYPES: Final = {
     "single",
     "double",
     "triple",
@@ -84,9 +94,15 @@ SUPPORTED_INPUTS_EVENTS_TYPES: Final = {
     "long_single",
 }
 
-SHIX3_1_INPUTS_EVENTS_TYPES = SUPPORTED_INPUTS_EVENTS_TYPES
+SHIX3_1_INPUTS_EVENTS_TYPES = BLOCK_INPUTS_EVENTS_TYPES
 
-INPUTS_EVENTS_SUBTYPES: Final = {"button": 1, "button1": 1, "button2": 2, "button3": 3}
+INPUTS_EVENTS_SUBTYPES: Final = {
+    "button": 1,
+    "button1": 1,
+    "button2": 2,
+    "button3": 3,
+    "button4": 4,
+}
 
 SHBTN_MODELS: Final = ["SHBTN-1", "SHBTN-2"]
 

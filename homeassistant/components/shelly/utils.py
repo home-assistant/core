@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     MAX_RPC_KEY_INSTANCES,
+    RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
@@ -162,7 +163,9 @@ def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
     return last_uptime
 
 
-def get_input_triggers(device: BlockDevice, block: Block) -> list[tuple[str, str]]:
+def get_block_input_triggers(
+    device: BlockDevice, block: Block
+) -> list[tuple[str, str]]:
     """Return list of input triggers for block."""
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []
@@ -187,6 +190,16 @@ def get_input_triggers(device: BlockDevice, block: Block) -> list[tuple[str, str
 
     for trigger_type in trigger_types:
         triggers.append((trigger_type, subtype))
+
+    return triggers
+
+
+def get_shbtn_input_triggers() -> list[tuple[str, str]]:
+    """Return list of input triggers for SHBTN models."""
+    triggers = []
+
+    for trigger_type in SHBTN_INPUTS_EVENTS_TYPES:
+        triggers.append((trigger_type, "button"))
 
     return triggers
 
@@ -314,3 +327,21 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"]["ui_data"].get("consumption_types")
     return con_types is not None and con_types[channel].lower().startswith("light")
+
+
+def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
+    """Return list of input triggers for RPC device."""
+    triggers = []
+
+    key_ids = get_rpc_key_ids(device.config, "input")
+
+    for id_ in key_ids:
+        key = f"input:{id_}"
+        if not is_rpc_momentary_input(device.config, key):
+            continue
+
+        for trigger_type in RPC_INPUTS_EVENTS_TYPES:
+            subtype = f"button{id_+1}"
+            triggers.append((trigger_type, subtype))
+
+    return triggers
