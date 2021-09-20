@@ -314,9 +314,14 @@ class ZigbeeChannel(LogMixin):
             return
 
         self.debug("initializing channel: from_cache: %s", from_cache)
-        attributes = [cfg["attr"] for cfg in self.REPORT_CONFIG]
-        if attributes:
-            await self.get_attributes(attributes, from_cache=from_cache)
+        cached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if cached]
+        uncached = [a for a, cached in self.ZCL_INIT_ATTRS.items() if not cached]
+        uncached.extend([cfg["attr"] for cfg in self.REPORT_CONFIG])
+
+        if cached:
+            await self.get_attributes(cached, from_cache=True)
+        if uncached:
+            await self.get_attributes(uncached, from_cache=from_cache)
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:

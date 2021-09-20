@@ -15,14 +15,13 @@ from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from ..helpers import retryable_req
 from .base import ZigbeeChannel
 
 AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
@@ -97,34 +96,17 @@ class ThermostatChannel(ZigbeeChannel):
         {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
         {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
     )
-
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
-        """Init Thermostat channel instance."""
-        super().__init__(cluster, ch_pool)
-        self._init_attrs = {
-            "abs_min_heat_setpoint_limit": True,
-            "abs_max_heat_setpoint_limit": True,
-            "abs_min_cool_setpoint_limit": True,
-            "abs_max_cool_setpoint_limit": True,
-            "ctrl_seqe_of_oper": False,
-            "local_temp": False,
-            "max_cool_setpoint_limit": True,
-            "max_heat_setpoint_limit": True,
-            "min_cool_setpoint_limit": True,
-            "min_heat_setpoint_limit": True,
-            "occupancy": False,
-            "occupied_cooling_setpoint": False,
-            "occupied_heating_setpoint": False,
-            "pi_cooling_demand": False,
-            "pi_heating_demand": False,
-            "running_mode": False,
-            "running_state": False,
-            "system_mode": False,
-            "unoccupied_heating_setpoint": False,
-            "unoccupied_cooling_setpoint": False,
-        }
+    ZCL_INIT_ATTRS: dict[int | str, bool] = {
+        "abs_min_heat_setpoint_limit": True,
+        "abs_max_heat_setpoint_limit": True,
+        "abs_min_cool_setpoint_limit": True,
+        "abs_max_cool_setpoint_limit": True,
+        "ctrl_seqe_of_oper": False,
+        "max_cool_setpoint_limit": True,
+        "max_heat_setpoint_limit": True,
+        "min_cool_setpoint_limit": True,
+        "min_heat_setpoint_limit": True,
+    }
 
     @property
     def abs_max_cool_setpoint_limit(self) -> int:
@@ -249,32 +231,6 @@ class ThermostatChannel(ZigbeeChannel):
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
             AttributeUpdateRecord(attrid, attr_name, value),
         )
-
-    async def _chunk_attr_read(self, attrs, cached=False):
-        chunk, attrs = attrs[:4], attrs[4:]
-        while chunk:
-            res, fail = await self.cluster.read_attributes(chunk, allow_cache=cached)
-            self.debug("read attributes: Success: %s. Failed: %s", res, fail)
-            for attr in chunk:
-                self._init_attrs.pop(attr, None)
-                if attr in fail:
-                    continue
-                self.async_send_signal(
-                    f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-                    AttributeUpdateRecord(None, attr, res[attr]),
-                )
-
-            chunk, attrs = attrs[:4], attrs[4:]
-
-    @retryable_req(delays=(1, 1, 3))
-    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
-        """Initialize channel."""
-
-        cached = [a for a, cached in self._init_attrs.items() if cached]
-        uncached = [a for a, cached in self._init_attrs.items() if not cached]
-
-        await self._chunk_attr_read(cached, cached=True)
-        await self._chunk_attr_read(uncached, cached=False)
 
     async def async_set_operation_mode(self, mode) -> bool:
         """Set Operation mode."""
