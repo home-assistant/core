@@ -13,7 +13,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
 from .entity import ShellyBlockEntity, ShellyRpcEntity
-from .utils import async_remove_shelly_entity, get_device_entry_gen, get_rpc_key_ids
+from .utils import (
+    async_remove_shelly_entity,
+    get_device_entry_gen,
+    get_rpc_key_ids,
+    is_block_channel_type_light,
+    is_rpc_channel_type_light,
+)
 
 
 async def async_setup_entry(
@@ -46,13 +52,9 @@ async def async_setup_block_entry(
     relay_blocks = []
     assert wrapper.device.blocks
     for block in wrapper.device.blocks:
-        if block.type != "relay":
-            continue
-
-        app_type = wrapper.device.settings["relays"][int(block.channel)].get(
-            "appliance_type"
-        )
-        if app_type and app_type.lower() == "light":
+        if block.type != "relay" or is_block_channel_type_light(
+            wrapper.device.settings, int(block.channel)
+        ):
             continue
 
         relay_blocks.append(block)
@@ -76,8 +78,7 @@ async def async_setup_rpc_entry(
 
     switch_ids = []
     for id_ in switch_key_ids:
-        con_types = wrapper.device.config["sys"]["ui_data"].get("consumption_types")
-        if con_types is not None and con_types[id_] == "lights":
+        if is_rpc_channel_type_light(wrapper.device.config, id_):
             continue
 
         switch_ids.append(id_)
