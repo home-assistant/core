@@ -31,6 +31,7 @@ from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
+    ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLOCK,
     CONF_COAP_PORT,
@@ -307,6 +308,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                         ATTR_DEVICE: self.device.settings["device"]["hostname"],
                         ATTR_CHANNEL: channel,
                         ATTR_CLICK_TYPE: INPUTS_EVENTS_DICT[event_type],
+                        ATTR_GENERATION: 1,
                     },
                 )
             else:
@@ -524,6 +526,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     ATTR_DEVICE: self.device.hostname,
                     ATTR_CHANNEL: event["id"] + 1,
                     ATTR_CLICK_TYPE: event["event"],
+                    ATTR_GENERATION: 2,
                 },
             )
 

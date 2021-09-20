@@ -70,6 +70,7 @@ EVENT_SHELLY_CLICK: Final = "shelly.click"
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
+ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
