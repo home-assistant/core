@@ -133,6 +133,7 @@ async def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
+# TODO is this still needed?
 async def add_available_devices(
     hass: HomeAssistant, device_type: str, device_class: Callable
 ) -> list[Entity]:
