@@ -24,6 +24,7 @@
       "bad_station_id": "Station ID is invalid, missing, or not found in the station ID database",
       "cannot_connect": "Failed to connect to Environment Canada service",
       "config_error": "Configuration invalid; check station ID or coordinates",
+      "error_response": "Response from Environment Canada in error",
       "unknown": "Unexpected error"
     }
   }

@@ -135,7 +135,8 @@ async def test_bad_station_id(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
+        (aiohttp.ClientResponseError(Mock(), (), status=404), "bad_station_id"),
+        (aiohttp.ClientResponseError(Mock(), (), status=400), "error_response"),
         (vol.error.MultipleInvalid, "config_error"),
         (ValueError, "unknown"),
     ],

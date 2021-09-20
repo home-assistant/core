@@ -75,8 +75,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if err.status == 404:
                     errors["base"] = "bad_station_id"
                 else:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
+                    _LOGGER.exception("Error response from EC")
+                    errors["base"] = "error_response"
             except vol.error.MultipleInvalid:
                 errors["base"] = "config_error"
             except Exception:  # pylint: disable=broad-except
