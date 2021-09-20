@@ -56,6 +56,7 @@ MOCK_BLOCKS = [
 ]
 
 MOCK_CONFIG = {
+    "input:0": {"id": 0, "type": "button"},
     "switch:0": {"name": "test switch_0"},
     "sys": {"ui_data": {}},
     "wifi": {
@@ -147,6 +148,7 @@ async def rpc_wrapper(hass):
     device = Mock(
         call_rpc=AsyncMock(),
         config=MOCK_CONFIG,
+        event={},
         shelly=MOCK_SHELLY,
         status=MOCK_STATUS,
         firmware_version="some fw string",
