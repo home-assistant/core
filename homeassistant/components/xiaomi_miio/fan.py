@@ -1,6 +1,6 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
+from abc import abstractmethod
 import asyncio
-from enum import Enum
 import logging
 import math
 
@@ -258,19 +258,12 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         self._state_attrs = {}
         self._device_features = 0
         self._supported_features = 0
-        self._speed_count = 100
         self._preset_modes = []
-        self._operation_mode_class = Enum
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
-
-    @property
-    def speed_count(self):
-        """Return the number of speeds of the fan supported."""
-        return self._speed_count
 
     @property
     def preset_modes(self) -> list:
@@ -283,15 +276,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return None
 
     @property
-    def preset_mode(self):
-        """Get the active preset mode."""
-        if self._state:
-            preset_mode = self._operation_mode_class(self._mode).name
-            return preset_mode if preset_mode in self._preset_modes else None
-
-        return None
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
@@ -300,17 +284,6 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @callback
-    def _handle_coordinator_update(self):
-        """Fetch state from the device."""
-        self._state = self.coordinator.data.is_on
-        self._state_attrs.update(
-            {attribute: None for attribute in self._available_attributes}
-        )
-        self._mode = self.coordinator.data.mode.value
-        self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
-        self.async_write_ha_state()
 
     async def async_turn_on(
         self,
@@ -345,7 +318,47 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             self.async_write_ha_state()
 
 
-class XiaomiAirPurifier(XiaomiGenericDevice):
+class XiaomiGenericAirPurifier(XiaomiGenericDevice):
+    """Representation of a generic AirPurifier device."""
+
+    def __init__(self, name, device, entry, unique_id, coordinator):
+        """Initialize the generic AirPurifier device."""
+        super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._speed_count = 100
+
+    @property
+    @abstractmethod
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+
+    @property
+    def speed_count(self):
+        """Return the number of speeds of the fan supported."""
+        return self._speed_count
+
+    @property
+    def preset_mode(self):
+        """Get the active preset mode."""
+        if self._state:
+            preset_mode = self.operation_mode_class(self._mode).name
+            return preset_mode if preset_mode in self._preset_modes else None
+
+        return None
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        self._state = self.coordinator.data.is_on
+        self._state_attrs.update(
+            {attribute: None for attribute in self._available_attributes}
+        )
+        self._mode = self.coordinator.data.mode.value
+        self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
+        self.async_write_ha_state()
+
+
+class XiaomiAirPurifier(XiaomiGenericAirPurifier):
     """Representation of a Xiaomi Air Purifier."""
 
     SPEED_MODE_MAPPING = {
@@ -367,42 +380,36 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            self._operation_mode_class = AirpurifierOperationMode
         elif self._model == MODEL_AIRPURIFIER_PRO_V7:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO_V7
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO_V7
             self._preset_modes = PRESET_MODES_AIRPURIFIER_PRO_V7
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            self._operation_mode_class = AirpurifierOperationMode
         elif self._model in [MODEL_AIRPURIFIER_2S, MODEL_AIRPURIFIER_2H]:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON
             self._preset_modes = PRESET_MODES_AIRPURIFIER_2S
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            self._operation_mode_class = AirpurifierOperationMode
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIOT
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_MIOT
             self._preset_modes = PRESET_MODES_AIRPURIFIER_MIOT
             self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
             self._speed_count = 3
-            self._operation_mode_class = AirpurifierMiotOperationMode
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3
             self._preset_modes = PRESET_MODES_AIRPURIFIER_V3
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            self._operation_mode_class = AirpurifierOperationMode
         else:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_MIIO
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
             self._preset_modes = PRESET_MODES_AIRPURIFIER
             self._supported_features = SUPPORT_PRESET_MODE
             self._speed_count = 1
-            self._operation_mode_class = AirpurifierOperationMode
 
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
@@ -412,10 +419,15 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
 
     @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return AirpurifierOperationMode
+
+    @property
     def percentage(self):
         """Return the current percentage based speed."""
         if self._state:
-            mode = self._operation_mode_class(self._mode)
+            mode = self.operation_mode_class(self._mode)
             if mode in self.REVERSE_SPEED_MODE_MAPPING:
                 return ranged_value_to_percentage(
                     (1, self._speed_count), self.REVERSE_SPEED_MODE_MAPPING[mode]
@@ -439,7 +451,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             await self._try_command(
                 "Setting operation mode of the miio device failed.",
                 self._device.set_mode,
-                self._operation_mode_class(self.SPEED_MODE_MAPPING[speed_mode]),
+                self.operation_mode_class(self.SPEED_MODE_MAPPING[speed_mode]),
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -453,9 +465,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self._operation_mode_class[preset_mode],
+            self.operation_mode_class[preset_mode],
         ):
-            self._mode = self._operation_mode_class[preset_mode].value
+            self._mode = self.operation_mode_class[preset_mode].value
             self.async_write_ha_state()
 
     async def async_set_extra_features(self, features: int = 1):
@@ -482,6 +494,11 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
 class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     """Representation of a Xiaomi Air Purifier (MiOT protocol)."""
+
+    @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return AirpurifierMiotOperationMode
 
     @property
     def percentage(self):
@@ -514,7 +531,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
             self.async_write_ha_state()
 
 
-class XiaomiAirPurifierMB4(XiaomiGenericDevice):
+class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
     """Representation of a Xiaomi Air Purifier MB4."""
 
     def __init__(self, name, device, entry, unique_id, coordinator):
@@ -524,10 +541,14 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
         self._preset_modes = PRESET_MODES_AIRPURIFIER_3C
         self._supported_features = SUPPORT_PRESET_MODE
-        self._operation_mode_class = AirpurifierMiotOperationMode
 
         self._state = self.coordinator.data.is_on
         self._mode = self.coordinator.data.mode.value
+
+    @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return AirpurifierMiotOperationMode
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
@@ -537,9 +558,9 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self._operation_mode_class[preset_mode],
+            self.operation_mode_class[preset_mode],
         ):
-            self._mode = self._operation_mode_class[preset_mode].value
+            self._mode = self.operation_mode_class[preset_mode].value
             self.async_write_ha_state()
 
     @callback
@@ -550,7 +571,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericDevice):
         self.async_write_ha_state()
 
 
-class XiaomiAirFresh(XiaomiGenericDevice):
+class XiaomiAirFresh(XiaomiGenericAirPurifier):
     """Representation of a Xiaomi Air Fresh."""
 
     SPEED_MODE_MAPPING = {
@@ -576,13 +597,17 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         self._speed_count = 4
         self._preset_modes = PRESET_MODES_AIRFRESH
         self._supported_features = SUPPORT_SET_SPEED | SUPPORT_PRESET_MODE
-        self._operation_mode_class = AirfreshOperationMode
 
         self._state = self.coordinator.data.is_on
         self._state_attrs.update(
             {attribute: None for attribute in self._available_attributes}
         )
         self._mode = self.coordinator.data.mode.value
+
+    @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return AirfreshOperationMode
 
     @property
     def percentage(self):
@@ -626,9 +651,9 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self._operation_mode_class[preset_mode],
+            self.operation_mode_class[preset_mode],
         ):
-            self._mode = self._operation_mode_class[preset_mode].value
+            self._mode = self.operation_mode_class[preset_mode].value
             self.async_write_ha_state()
 
     async def async_set_extra_features(self, features: int = 1):
