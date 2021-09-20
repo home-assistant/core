@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from enum import Enum
-from functools import wraps
+from functools import partialmethod, wraps
 import logging
 from typing import Any
 
@@ -32,7 +32,7 @@ from ..const import (
     ZHA_CHANNEL_MSG_DATA,
     ZHA_CHANNEL_READS_PER_REQ,
 )
-from ..helpers import LogMixin, safe_read
+from ..helpers import LogMixin, retryable_req, safe_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -307,6 +307,7 @@ class ZigbeeChannel(LogMixin):
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
+    @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         if not from_cache and self._ch_pool.skip_configuration:
@@ -319,9 +320,9 @@ class ZigbeeChannel(LogMixin):
         uncached.extend([cfg["attr"] for cfg in self.REPORT_CONFIG])
 
         if cached:
-            await self.get_attributes(cached, from_cache=True)
+            await self._get_attributes(True, cached, from_cache=True)
         if uncached:
-            await self.get_attributes(uncached, from_cache=from_cache)
+            await self._get_attributes(True, uncached, from_cache=from_cache)
 
         ch_specific_init = getattr(self, "async_initialize_channel_specific", None)
         if ch_specific_init:
@@ -378,8 +379,11 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_attributes(
-        self, attributes: list[int | str], from_cache: bool = True
+    async def _get_attributes(
+        self,
+        raise_exceptions: bool,
+        attributes: list[int | str],
+        from_cache: bool = True,
     ) -> dict[int | str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
@@ -405,9 +409,13 @@ class ZigbeeChannel(LogMixin):
                     self.cluster.ep_attribute,
                     str(ex),
                 )
+                if raise_exceptions:
+                    raise
             chunk = rest[:ZHA_CHANNEL_READS_PER_REQ]
             rest = rest[ZHA_CHANNEL_READS_PER_REQ:]
         return result
+
+    get_attributes = partialmethod(_get_attributes, False)
 
     def log(self, level, msg, *args):
         """Log a message."""
