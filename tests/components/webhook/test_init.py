@@ -122,6 +122,25 @@ async def test_webhook_put(hass, mock_client):
     assert hooks[0][2].method == "PUT"
 
 
+async def test_webhook_get(hass, mock_client):
+    """Test sending a get request to a webhook."""
+    hooks = []
+    webhook_id = hass.components.webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append(args)
+
+    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+
+    resp = await mock_client.get(f"/api/webhook/{webhook_id}")
+    assert resp.status == 200
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
+    assert hooks[0][2].method == "GET"
+
+
 async def test_webhook_head(hass, mock_client):
     """Test sending a head request to a webhook."""
     hooks = []
