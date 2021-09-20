@@ -1206,7 +1206,7 @@ def warn_no_default(function, value, default):
     template = template_cv.get() or ""
     _LOGGER.warning(
         (
-            "Template warning: '%s' got illegal input '%s' when rendering template '%s' "
+            "Template warning: '%s' got invalid input '%s' when rendering template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
             "to render in Home Assistant core 2021.12"
         ),
