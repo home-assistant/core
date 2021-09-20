@@ -248,7 +248,7 @@ SWITCH_TYPES = (
         key=ATTR_IONIZER,
         feature=FEATURE_SET_IONIZER,
         name="Ionizer",
-        icon="mdi:led-outline",
+        icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
     ),
