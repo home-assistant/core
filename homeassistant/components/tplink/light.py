@@ -114,9 +114,12 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         else:
             await self.device.turn_on(transition=transition)
 
+        await self.coordinator.async_refresh()
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.device.turn_off(transition=kwargs.get(ATTR_TRANSITION))
+        await self.coordinator.async_refresh()
 
     @property
     def min_mireds(self) -> int:
