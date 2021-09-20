@@ -29,11 +29,9 @@ from . import get_block_device_wrapper, get_rpc_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
-    ATTR_EVENT,
     BLOCK_INPUTS_EVENTS_TYPES,
     CONF_SUBTYPE,
     DOMAIN,
-    EVENT_SHELLY_BUTTON,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_SUBTYPES,
     RPC_INPUTS_EVENTS_TYPES,
@@ -143,27 +141,15 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if config[CONF_TYPE] in RPC_INPUTS_EVENTS_TYPES:
-        event_config = {
-            event_trigger.CONF_PLATFORM: CONF_EVENT,
-            event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_BUTTON,
-            event_trigger.CONF_EVENT_DATA: {
-                ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
-                ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
-                ATTR_EVENT: config[CONF_TYPE],
-            },
-        }
-
-    elif config[CONF_TYPE] in BLOCK_INPUTS_EVENTS_TYPES:
-        event_config = {
-            event_trigger.CONF_PLATFORM: CONF_EVENT,
-            event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,
-            event_trigger.CONF_EVENT_DATA: {
-                ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
-                ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
-                ATTR_CLICK_TYPE: config[CONF_TYPE],
-            },
-        }
+    event_config = {
+        event_trigger.CONF_PLATFORM: CONF_EVENT,
+        event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,
+        event_trigger.CONF_EVENT_DATA: {
+            ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
+            ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
+            ATTR_CLICK_TYPE: config[CONF_TYPE],
+        },
+    }
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(

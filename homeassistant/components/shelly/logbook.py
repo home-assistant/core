@@ -12,10 +12,10 @@ from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
-    ATTR_EVENT,
+    BLOCK_INPUTS_EVENTS_TYPES,
     DOMAIN,
-    EVENT_SHELLY_BUTTON,
     EVENT_SHELLY_CLICK,
+    RPC_INPUTS_EVENTS_TYPES,
 )
 from .utils import get_block_device_name, get_rpc_entity_name
 
@@ -30,41 +30,26 @@ def async_describe_events(
     @callback
     def async_describe_shelly_click_event(event: EventType) -> dict[str, str]:
         """Describe shelly.click logbook event (block device)."""
-        wrapper = get_block_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
-
-        if wrapper and wrapper.device.initialized:
-            device_name = get_block_device_name(wrapper.device)
-        else:
-            device_name = event.data[ATTR_DEVICE]
-
-        channel = event.data[ATTR_CHANNEL]
+        device_id = event.data[ATTR_DEVICE_ID]
         click_type = event.data[ATTR_CLICK_TYPE]
+        channel = event.data[ATTR_CHANNEL]
+        input_name = f"{event.data[ATTR_DEVICE]} channel {channel}"
+
+        if click_type in RPC_INPUTS_EVENTS_TYPES:
+            rpc_wrapper = get_rpc_device_wrapper(hass, device_id)
+            if rpc_wrapper and rpc_wrapper.device.initialized:
+                key = f"input:{channel-1}"
+                input_name = get_rpc_entity_name(rpc_wrapper.device, key)
+
+        elif click_type in BLOCK_INPUTS_EVENTS_TYPES:
+            block_wrapper = get_block_device_wrapper(hass, device_id)
+            if block_wrapper and block_wrapper.device.initialized:
+                device_name = get_block_device_name(block_wrapper.device)
+                input_name = f"{device_name} channel {channel}"
 
         return {
             "name": "Shelly",
-            "message": f"'{click_type}' click event for {device_name} channel {channel} was fired.",
-        }
-
-    @callback
-    def async_describe_shelly_button_event(event: EventType) -> dict[str, str]:
-        """Describe shelly.button logbook event (rpc device)."""
-        wrapper = get_rpc_device_wrapper(hass, event.data[ATTR_DEVICE_ID])
-
-        if wrapper and wrapper.device.initialized:
-            key = f"input:{event.data[ATTR_CHANNEL]-1}"
-            input_name = get_rpc_entity_name(wrapper.device, key, "Input")
-        else:
-            device_name = event.data[ATTR_DEVICE]
-            input_name = f"{device_name} switch_{event.data[ATTR_CHANNEL]} Input"
-
-        event = event.data[ATTR_EVENT]
-
-        return {
-            "name": "Shelly",
-            "message": f"'{event}' button event for {input_name} was fired.",
+            "message": f"'{click_type}' click event for {input_name} Input was fired.",
         }
 
     async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_shelly_click_event)
-    async_describe_event(
-        DOMAIN, EVENT_SHELLY_BUTTON, async_describe_shelly_button_event
-    )

@@ -12,12 +12,10 @@ from homeassistant.components.shelly import BlockDeviceWrapper
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
-    ATTR_EVENT,
     BLOCK,
     CONF_SUBTYPE,
     DATA_CONFIG_ENTRY,
     DOMAIN,
-    EVENT_SHELLY_BUTTON,
     EVENT_SHELLY_CLICK,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -254,10 +252,10 @@ async def test_if_fires_on_click_event_rpc_device(hass, calls, rpc_wrapper):
 
     message = {
         CONF_DEVICE_ID: rpc_wrapper.device_id,
-        ATTR_EVENT: "single_push",
+        ATTR_CLICK_TYPE: "single_push",
         ATTR_CHANNEL: 1,
     }
-    hass.bus.async_fire(EVENT_SHELLY_BUTTON, message)
+    hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -330,10 +328,10 @@ async def test_validate_trigger_rpc_device_not_ready(hass, calls, rpc_wrapper):
     )
     message = {
         CONF_DEVICE_ID: "device_not_ready",
-        ATTR_EVENT: "single_push",
+        ATTR_CLICK_TYPE: "single_push",
         ATTR_CHANNEL: 1,
     }
-    hass.bus.async_fire(EVENT_SHELLY_BUTTON, message)
+    hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
     assert len(calls) == 1

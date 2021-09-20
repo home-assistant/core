@@ -64,16 +64,12 @@ INPUTS_EVENTS_DICT: Final = {
 # List of battery devices that maintain a permanent WiFi connection
 BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
 
-# Click events for Block devices
+# Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
-
-# Button events for RPC devices
-EVENT_SHELLY_BUTTON: Final = "shelly.button"
 
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
-ATTR_EVENT = "event"
 CONF_SUBTYPE: Final = "subtype"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}

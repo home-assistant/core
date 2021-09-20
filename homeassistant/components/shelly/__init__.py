@@ -31,7 +31,6 @@ from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
-    ATTR_EVENT,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLOCK,
     CONF_COAP_PORT,
@@ -39,7 +38,6 @@ from .const import (
     DEFAULT_COAP_PORT,
     DEVICE,
     DOMAIN,
-    EVENT_SHELLY_BUTTON,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
     POLLING_TIMEOUT_SEC,
@@ -253,8 +251,8 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._async_remove_device_updates_handler = self.async_add_listener(
-            self._async_device_updates_handler
+        entry.async_on_unload(
+            self.async_add_listener(self._async_device_updates_handler)
         )
         self._last_input_events_count: dict = {}
 
@@ -359,7 +357,6 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     def shutdown(self) -> None:
         """Shutdown the wrapper."""
         self.device.shutdown()
-        self._async_remove_device_updates_handler()
 
     @callback
     def _handle_ha_stop(self, _event: Event) -> None:
@@ -495,8 +492,8 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._async_remove_device_updates_handler = self.async_add_listener(
-            self._async_device_updates_handler
+        entry.async_on_unload(
+            self.async_add_listener(self._async_device_updates_handler)
         )
         self._last_event: dict[str, Any] | None = None
 
@@ -521,12 +518,12 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 continue
 
             self.hass.bus.async_fire(
-                EVENT_SHELLY_BUTTON,
+                EVENT_SHELLY_CLICK,
                 {
                     ATTR_DEVICE_ID: self.device_id,
                     ATTR_DEVICE: self.device.hostname,
                     ATTR_CHANNEL: event["id"] + 1,
-                    ATTR_EVENT: event["event"],
+                    ATTR_CLICK_TYPE: event["event"],
                 },
             )
 
