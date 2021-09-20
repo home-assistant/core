@@ -1201,7 +1201,24 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def forgiving_round(value, precision=0, method="common"):
+def warn_no_default(function, value, default):
+    """Log warning if no default is specified."""
+    template = template_cv.get() or ""
+    _LOGGER.warning(
+        (
+            "Template warning: '%s' got illegal input '%s' when rendering template '%s' "
+            "but no default was specified. '%s' will return '%s', the template will fail "
+            "to render in Home Assistant core 2021.12"
+        ),
+        function,
+        value,
+        template,
+        function,
+        default,
+    )
+
+
+def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
     """Round accepted strings."""
     try:
         # support rounding methods like jinja
@@ -1218,75 +1235,102 @@ def forgiving_round(value, precision=0, method="common"):
         return int(value) if precision == 0 else value
     except (ValueError, TypeError):
         # If value can't be converted to float
-        return value
+        if default is _SENTINEL:
+            warn_no_default("round", value, value)
+            return value
+        return default
 
 
-def multiply(value, amount):
+def multiply(value, amount, default=_SENTINEL):
     """Filter to convert value to float and multiply it."""
     try:
         return float(value) * amount
     except (ValueError, TypeError):
         # If value can't be converted to float
-        return value
+        if default is _SENTINEL:
+            warn_no_default("multiply", value, value)
+            return value
+        return default
 
 
-def logarithm(value, base=math.e):
+def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter to get logarithm of the value with a specific base."""
     try:
         return math.log(float(value), float(base))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("log", value, value)
+            return value
+        return default
 
 
-def sine(value):
+def sine(value, default=_SENTINEL):
     """Filter to get sine of the value."""
     try:
         return math.sin(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("sin", value, value)
+            return value
+        return default
 
 
-def cosine(value):
+def cosine(value, default=_SENTINEL):
     """Filter to get cosine of the value."""
     try:
         return math.cos(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("cos", value, value)
+            return value
+        return default
 
 
-def tangent(value):
+def tangent(value, default=_SENTINEL):
     """Filter to get tangent of the value."""
     try:
         return math.tan(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("tan", value, value)
+            return value
+        return default
 
 
-def arc_sine(value):
+def arc_sine(value, default=_SENTINEL):
     """Filter to get arc sine of the value."""
     try:
         return math.asin(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("asin", value, value)
+            return value
+        return default
 
 
-def arc_cosine(value):
+def arc_cosine(value, default=_SENTINEL):
     """Filter to get arc cosine of the value."""
     try:
         return math.acos(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("acos", value, value)
+            return value
+        return default
 
 
-def arc_tangent(value):
+def arc_tangent(value, default=_SENTINEL):
     """Filter to get arc tangent of the value."""
     try:
         return math.atan(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("atan", value, value)
+            return value
+        return default
 
 
-def arc_tangent2(*args):
+def arc_tangent2(*args, default=_SENTINEL):
     """Filter to calculate four quadrant arc tangent of y / x."""
     try:
         if len(args) == 1 and isinstance(args[0], (list, tuple)):
@@ -1294,18 +1338,24 @@ def arc_tangent2(*args):
 
         return math.atan2(float(args[0]), float(args[1]))
     except (ValueError, TypeError):
-        return args
+        if default is _SENTINEL:
+            warn_no_default("atan2", args, args)
+            return args
+        return default
 
 
-def square_root(value):
+def square_root(value, default=_SENTINEL):
     """Filter to get square root of the value."""
     try:
         return math.sqrt(float(value))
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("sqrt", value, value)
+            return value
+        return default
 
 
-def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True):
+def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
     """Filter to convert given timestamp to format."""
     try:
         date = dt_util.utc_from_timestamp(value)
@@ -1316,10 +1366,13 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True):
         return date.strftime(date_format)
     except (ValueError, TypeError):
         # If timestamp can't be converted
-        return value
+        if default is _SENTINEL:
+            warn_no_default("timestamp_custom", value, value)
+            return value
+        return default
 
 
-def timestamp_local(value):
+def timestamp_local(value, default=_SENTINEL):
     """Filter to convert given timestamp to local date/time."""
     try:
         return dt_util.as_local(dt_util.utc_from_timestamp(value)).strftime(
@@ -1327,32 +1380,44 @@ def timestamp_local(value):
         )
     except (ValueError, TypeError):
         # If timestamp can't be converted
-        return value
+        if default is _SENTINEL:
+            warn_no_default("timestamp_local", value, value)
+            return value
+        return default
 
 
-def timestamp_utc(value):
+def timestamp_utc(value, default=_SENTINEL):
     """Filter to convert given timestamp to UTC date/time."""
     try:
         return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
     except (ValueError, TypeError):
         # If timestamp can't be converted
-        return value
+        if default is _SENTINEL:
+            warn_no_default("timestamp_utc", value, value)
+            return value
+        return default
 
 
-def forgiving_as_timestamp(value):
+def forgiving_as_timestamp(value, default=_SENTINEL):
     """Try to convert value to timestamp."""
     try:
         return dt_util.as_timestamp(value)
     except (ValueError, TypeError):
-        return None
+        if default is _SENTINEL:
+            warn_no_default("as_timestamp", value, value)
+            return value
+        return default
 
 
-def strptime(string, fmt):
+def strptime(string, fmt, default=_SENTINEL):
     """Parse a time string to datetime."""
     try:
         return datetime.strptime(string, fmt)
     except (ValueError, AttributeError, TypeError):
-        return string
+        if default is _SENTINEL:
+            warn_no_default("strptime", string, string)
+            return string
+        return default
 
 
 def fail_when_undefined(value):
@@ -1362,12 +1427,26 @@ def fail_when_undefined(value):
     return value
 
 
-def forgiving_float(value):
+def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
         return float(value)
     except (ValueError, TypeError):
-        return value
+        if default is _SENTINEL:
+            warn_no_default("float", value, value)
+            return value
+        return default
+
+
+def forgiving_float_filter(value, default=_SENTINEL):
+    """Try to convert value to a float."""
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            warn_no_default("float", value, 0)
+            return 0
+        return default
 
 
 def is_number(value):
@@ -1587,6 +1666,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bitwise_or"] = bitwise_or
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
+        self.filters["float"] = forgiving_float_filter
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
