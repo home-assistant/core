@@ -53,6 +53,7 @@ from .const import (
     FEATURE_SET_CHILD_LOCK,
     FEATURE_SET_CLEAN,
     FEATURE_SET_DRY,
+    FEATURE_SET_IONIZER,
     FEATURE_SET_LEARN_MODE,
     FEATURE_SET_LED,
     KEY_COORDINATOR,
@@ -110,6 +111,7 @@ ATTR_CLEAN = "clean_mode"
 ATTR_DRY = "dry"
 ATTR_LEARN_MODE = "learn_mode"
 ATTR_LED = "led"
+ATTR_IONIZER = "ionizer"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
 ATTR_POWER = "power"
@@ -241,6 +243,14 @@ SWITCH_TYPES = (
         name="Auto Detect",
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
+    ),
+    XiaomiMiioSwitchDescription(
+        key=ATTR_IONIZER,
+        feature=FEATURE_SET_IONIZER,
+        name="Ionizer",
+        icon="mdi:led-outline",
+        method_on="async_set_ionizer_on",
+        method_off="async_set_ionizer_off",
     ),
 )
 
@@ -578,6 +588,22 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
         return await self._try_command(
             "Turning auto detect of the miio device off failed.",
             self._device.set_auto_detect,
+            False,
+        )
+
+    async def async_set_ionizer_on(self) -> bool:
+        """Turn ionizer on."""
+        return await self._try_command(
+            "Turning ionizer of the miio device on failed.",
+            self._device.set_ionizer,
+            True,
+        )
+
+    async def async_set_ionizer_off(self) -> bool:
+        """Turn ionizer off."""
+        return await self._try_command(
+            "Turning ionizer of the miio device off failed.",
+            self._device.set_ionizer,
             False,
         )
 
