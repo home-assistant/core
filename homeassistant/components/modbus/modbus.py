@@ -8,6 +8,7 @@ import logging
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
@@ -356,7 +357,13 @@ class ModbusHub:
         self._in_error = False
         return result
 
-    async def async_pymodbus_call(self, unit, address, value, use_call):
+    async def async_pymodbus_call(
+        self,
+        unit: str | int | None,
+        address: int,
+        value: str | int,
+        use_call: str | None,
+    ) -> ModbusResponse | None:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None
