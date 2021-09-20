@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
+from .common import FritzBoxTools
 from .const import (
     DOMAIN,
     FRITZ_SERVICES,
@@ -38,10 +39,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 f"Failed to call service '{service_call.service}'. Config entry for target not found"
             )
 
-        for entry in fritzbox_entry_ids:
+        for entry_id in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
-            fritz_tools = hass.data[DOMAIN][entry]
-            await fritz_tools.service_fritzbox(service_call.service)
+            fritz_tools: FritzBoxTools = hass.data[DOMAIN][entry_id]
+            config_entry = hass.config_entries.async_get_entry(entry_id)
+            assert config_entry
+            await fritz_tools.service_fritzbox(service_call, config_entry),
 
     for service in SERVICE_LIST:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
