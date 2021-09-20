@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Any, Callable
 
 from kasa import Discover, SmartDevice, SmartDeviceException
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_DIMMER,
@@ -162,3 +167,49 @@ async def add_available_devices(
 
     hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = devices_unavailable
     return entities_ready
+
+
+class CoordinatedTPLinkEntity(CoordinatorEntity):
+    """Common base class for all coordinated tplink entities."""
+
+    def __init__(self, device: SmartDevice, coordinator: DataUpdateCoordinator) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator)
+        self.device = device
+
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return data from DataUpdateCoordinator."""
+        return self.coordinator.data
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self.device.device_id
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the Smart Plug."""
+        return self.device.alias
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        data = {
+            "name": self.device.alias,
+            "model": self.device.model,
+            "manufacturer": "TP-Link",
+            # Note: mac instead of device_id here to connect subdevices to the main device
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            "sw_version": self.device.hw_info["sw_ver"],
+        }
+        # TODO: add parent/child_id to smartdevice?
+        if getattr(self.device, "child_id", None) is not None:
+            data["via_device"] = self.device.parent.device_id
+
+        return data
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.device.is_on
