@@ -703,4 +703,4 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 # The ID of the Home Assistant Media Player Cast App
 CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
 # The ID of the Home Assistant Lovelace Cast App
-CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "B12CE3CA"
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
