@@ -90,6 +90,8 @@ async def async_setup_entry(
 class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
     """Defines a Fronius coordinator entity."""
 
+    coordinator: _FroniusUpdateCoordinator
+
     def __init__(
         self,
         coordinator: _FroniusUpdateCoordinator,
@@ -104,7 +106,7 @@ class _FroniusSensorEntity(CoordinatorEntity, SensorEntity):
 
     def _device_data(self) -> dict[str, Any]:
         """Extract information for SolarNet device from coordinator data."""
-        return self.coordinator.data[self.solar_net_id]  # type: ignore[no-any-return]
+        return self.coordinator.data[self.solar_net_id]
 
     def _get_entity_value(self) -> Any:
         """Extract entity value from coordinator. Raises KeyError if not included in latest update."""
