@@ -1,6 +1,5 @@
 """The Interlogix/Hills ComNav UltraSync Hub component."""
 
-import asyncio
 from datetime import timedelta
 
 from ultrasync import AlarmScene
@@ -8,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -36,6 +34,8 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up UltraSync from a config entry."""
+
+    hass.data.setdefault(DOMAIN, {})
     if not entry.options:
         options = {
             CONF_SCAN_INTERVAL: entry.data.get(
@@ -50,39 +50,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         options=entry.options,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
-    undo_listener = entry.add_update_listener(_async_update_listener)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_COORDINATOR: coordinator,
-        DATA_UNDO_UPDATE_LISTENER: [undo_listener],
         SENSORS: {},
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
-    _async_register_services(hass, coordinator)
-
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         for unsub in hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]:

@@ -1,6 +1,7 @@
 """Config flow for the Interlogix/Hills ComNav UltraSync Hub."""
 import logging
 from typing import Any, Dict, Optional
+import homeassistant.helpers.config_validation as cv
 
 import ultrasync
 import voluptuous as vol
@@ -40,8 +41,6 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     if not usync.login():
         # report our connection issue
         raise AuthFailureException()
-
-    return True
 
 
 class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -92,7 +91,8 @@ class UltraSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PIN): str,
+                    vol.Required(CONF_PIN): vol.All(vol.Coerce(str),
+                        vol.Match(r"\d{4}")),
                 }
             ),
             errors=errors,
@@ -117,7 +117,7 @@ class UltraSyncOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
-            ): int,
+            ): cv.positive_int,
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

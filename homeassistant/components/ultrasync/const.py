@@ -3,7 +3,7 @@
 DOMAIN = "ultrasync"
 
 # Scan Time (in seconds)
-DEFAULT_SCAN_INTERVAL = 1
+DEFAULT_SCAN_INTERVAL = 5
 
 DEFAULT_NAME = "UltraSync"
 
