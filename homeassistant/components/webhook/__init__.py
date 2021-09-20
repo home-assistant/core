@@ -160,6 +160,7 @@ class WebhookView(HomeAssistantView):
     head = _handle
     post = _handle
     put = _handle
+    get = _handle
 
 
 @websocket_api.websocket_command(
