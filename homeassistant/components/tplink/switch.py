@@ -79,7 +79,7 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
             "name": self.smartplug.alias,
             "model": self.smartplug.model,
             "manufacturer": "TP-Link",
-            # Note: mac instead of device_id here to connect subdevices to the main one
+            # Note: mac instead of device_id here to connect subdevices to the main device
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.smartplug.mac)},
             "sw_version": self.data[CONF_SW_VERSION],
         }

@@ -243,7 +243,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
 
             # Check if the device has emeter
             if self.device.has_emeter:
-                emeter_readings = await self.device.get_emeter_realtime()
+                emeter_readings = self.device.emeter_realtime
                 data[CONF_EMETER_PARAMS] = {
                     # Power is always available, also on bulbs
                     ATTR_CURRENT_POWER_W: emeter_readings["power"],
@@ -251,6 +251,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_VOLTAGE: emeter_readings.get("voltage", None),
                     ATTR_CURRENT_A: emeter_readings.get("current", None),
                 }
+                # TODO: check if the property getter can be used here
                 emeter_statics = await self.device.get_emeter_daily()
                 if emeter_statics.get(int(time.strftime("%e"))):
                     data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
