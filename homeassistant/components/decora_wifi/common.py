@@ -121,12 +121,6 @@ class DecoraWifiPlatform:
             platform = DecoraWifiPlatform.classify_device(switch)
             self._iot_switches[platform].append(switch)
 
-    def reauth(self):
-        """Reauthenticate this object's session."""
-        self._api_logout()
-        self._session = DecoraWiFiSession()
-        self._api_login()
-
     def refresh_devices(self):
         """Refresh this object's devices."""
         self._iot_switches: dict[str, IotSwitch] = {

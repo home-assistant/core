@@ -48,11 +48,6 @@ async def test_platform_works(hass):
         # Check that getdevices left platform object in expected state
         assert len(instance.lights) == 6
 
-        # Check object reauth
-        instance.reauth()
-        mock_person_logout.assert_called_once()
-        mock_person_logout.reset_mock()
-
         # Clear the _iot_switches dict and check that refresh_devices recreates it.
         instance._iot_switches = {}
         instance.refresh_devices()

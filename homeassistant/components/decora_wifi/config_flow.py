@@ -20,9 +20,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         self.entry = None
 
-    # Disable pylint error about number of arguments in step_user
-    # pylint: disable=arguments-differ
-    async def async_step_user(self, user_input=None, errors=None):
+    async def async_step_user(self, user_input=None):
         """Prompt for user input to setup decora_wifi."""
 
         data_schema = {
@@ -39,14 +37,12 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Update flow state
         self.data.update(user_input)
 
-        # Shouldn't need errors anymore after this point.
-        errors = {}
-
         # Get user from existing entry and abort if already setup.
         self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
 
         # Attempt to log in with the credentials provided by the user.
+        errors = {}
         try:
             self.session = await DecoraWifiPlatform.async_setup_decora_wifi(
                 self.hass,
@@ -70,9 +66,7 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{CONF_TITLE} - {self.data[CONF_USERNAME]}", data=self.data
         )
 
-    # Disable pylint error about number of arguments in step_reauth
-    # pylint: disable=arguments-differ
-    async def async_step_reauth(self, user_input=None, errors=None):
+    async def async_step_reauth(self, user_input=None):
         """Re-authenticate a user."""
         data_schema = {
             vol.Required(CONF_USERNAME): str,
@@ -85,7 +79,6 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME].lower())
 
-        # Shouldn't need errors anymore after this point.
         errors = {}
         try:
             self.session = await DecoraWifiPlatform.async_setup_decora_wifi(
