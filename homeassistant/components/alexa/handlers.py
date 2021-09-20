@@ -2,6 +2,8 @@
 import logging
 import math
 
+import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 from homeassistant import core as ha
 from homeassistant.components import (
     camera,
@@ -44,11 +46,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers import network
-import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
-import homeassistant.util.dt as dt_util
 from homeassistant.util.temperature import convert as convert_temperature
-
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
@@ -56,6 +55,7 @@ from .const import (
     API_THERMOSTAT_PRESETS,
     Cause,
     Inputs,
+    DATE_FORMAT,
 )
 from .entities import async_get_entities
 from .errors import (
@@ -318,7 +318,7 @@ async def async_api_activate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+        "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
     }
 
     return directive.response(
@@ -342,7 +342,7 @@ async def async_api_deactivate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+        "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
     }
 
     return directive.response(

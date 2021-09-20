@@ -3,8 +3,8 @@ from uuid import uuid4
 
 from homeassistant.components.alexa import config, smart_home
 from homeassistant.core import Context, callback
-
 from tests.common import async_mock_service
+import re
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
@@ -162,7 +162,8 @@ async def assert_scene_controller_works(
     )
     assert response["event"]["payload"]["cause"]["type"] == "VOICE_INTERACTION"
     assert "timestamp" in response["event"]["payload"]
-
+    pattern = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
+    assert re.search(pattern, response["event"]["payload"]["timestamp"])
     if deactivate_service:
         await assert_request_calls_service(
             "Alexa.SceneController",
@@ -175,6 +176,7 @@ async def assert_scene_controller_works(
         cause_type = response["event"]["payload"]["cause"]["type"]
         assert cause_type == "VOICE_INTERACTION"
         assert "timestamp" in response["event"]["payload"]
+        assert re.search(pattern, response["event"]["payload"]["timestamp"])
 
 
 async def reported_properties(hass, endpoint):
