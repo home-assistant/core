@@ -12,14 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_STATE,
-)
+from homeassistant.const import ATTR_VOLTAGE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -36,9 +29,7 @@ from .const import (
     CONF_DISCOVERY,
     CONF_EMETER_PARAMS,
     CONF_LIGHT,
-    CONF_MODEL,
     CONF_STRIP,
-    CONF_SW_VERSION,
     CONF_SWITCH,
     COORDINATORS,
     PLATFORMS,
@@ -228,18 +219,8 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
         try:
-            data = {
-                CONF_HOST: self.device.host,
-                CONF_MAC: self.device.device_id,
-                CONF_MODEL: self.device.model,
-                CONF_SW_VERSION: self.device.hw_info["sw_ver"],
-                CONF_ALIAS: self.device.alias,
-                CONF_DEVICE_ID: self.device.device_id,
-                CONF_STATE: self.device.is_on,
-            }
-            # TODO: add parent/child_id to smartdevice?
-            if getattr(self.device, "child_id", None) is not None:
-                data["via_device"] = self.device.parent.device_id
+            await self.device.update()
+            data = {}
 
             # Check if the device has emeter
             if self.device.has_emeter:
@@ -267,5 +248,5 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
 
-        self.name = data[CONF_ALIAS]
+        self.name = self.device.alias
         return data

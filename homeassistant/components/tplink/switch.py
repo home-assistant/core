@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_SW_VERSION, CONF_SWITCH, COORDINATORS, DOMAIN as TPLINK_DOMAIN
+from .const import CONF_SWITCH, COORDINATORS, DOMAIN as TPLINK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,8 +81,11 @@ class SmartPlugSwitch(CoordinatorEntity, SwitchEntity):
             "manufacturer": "TP-Link",
             # Note: mac instead of device_id here to connect subdevices to the main device
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.smartplug.mac)},
-            "sw_version": self.data[CONF_SW_VERSION],
+            "sw_version": self.smartplug.hw_info["sw_ver"],
         }
+        # TODO: add parent/child_id to smartdevice?
+        if getattr(self.smartplug, "child_id", None) is not None:
+            data["via_device"] = self.smartplug.parent.device_id
 
         return data
 
