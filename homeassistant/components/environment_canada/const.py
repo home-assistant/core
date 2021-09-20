@@ -101,10 +101,6 @@ EC_ICON_TO_HA_CONDITION_MAP = {
 class ECSensorEntityDescription(SensorEntityDescription):
     """Class describing ECSensor entities."""
 
-    # key: str | None = None
-    # name: str | None = None
-    # icon: str | None = None
-    # device_class: str | None = None
     unit_convert: str | None = None
 
 
