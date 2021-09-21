@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from switchbot import Switchbot  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -79,19 +80,22 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            SwitchBot(
+            SwitchBotBotEntity(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
-                entry.data.get(CONF_PASSWORD),
-                entry.options[CONF_RETRY_COUNT],
+                coordinator.switchbot_api.Switchbot(
+                    mac=entry.data[CONF_MAC],
+                    password=entry.data.get(CONF_PASSWORD),
+                    retry_count=entry.options[CONF_RETRY_COUNT],
+                ),
             )
         ]
     )
 
 
-class SwitchBot(SwitchbotEntity, SwitchEntity, RestoreEntity):
+class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -103,15 +107,12 @@ class SwitchBot(SwitchbotEntity, SwitchEntity, RestoreEntity):
         idx: str | None,
         mac: str,
         name: str,
-        password: str | None,
-        retry_count: int,
+        device: Switchbot,
     ) -> None:
         """Initialize the Switchbot."""
         super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = self._mac.replace(":", "")
-        self._device = self.coordinator.switchbot_api.Switchbot(
-            mac=mac, password=password, retry_count=retry_count
-        )
+        self._device = device
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""

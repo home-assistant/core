@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from switchbot import SwitchbotCurtain  # pylint: disable=import-error
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -39,19 +41,22 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            SwitchBotCurtain(
+            SwitchBotCurtainEntity(
                 coordinator,
                 entry.unique_id,
                 entry.data[CONF_MAC],
                 entry.data[CONF_NAME],
-                entry.data.get(CONF_PASSWORD),
-                entry.options[CONF_RETRY_COUNT],
+                coordinator.switchbot_api.SwitchbotCurtain(
+                    mac=entry.data[CONF_MAC],
+                    password=entry.data.get(CONF_PASSWORD),
+                    retry_count=entry.options[CONF_RETRY_COUNT],
+                ),
             )
         ]
     )
 
 
-class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
+class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -67,15 +72,12 @@ class SwitchBotCurtain(SwitchbotEntity, CoverEntity, RestoreEntity):
         idx: str | None,
         mac: str,
         name: str,
-        password: str | None,
-        retry_count: int,
+        device: SwitchbotCurtain,
     ) -> None:
         """Initialize the Switchbot."""
         super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = idx
-        self._device = self.coordinator.switchbot_api.SwitchbotCurtain(
-            mac=mac, password=password, retry_count=retry_count
-        )
+        self._device = device
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
