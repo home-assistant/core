@@ -122,6 +122,7 @@ class HoneywellData:
                 somecomfort.client.APIRateLimited,
                 OSError,
                 somecomfort.client.ConnectionTimeout,
+                somecomfort.client.ConnectionError,
             ) as exp:
                 retries -= 1
                 if retries == 0:
