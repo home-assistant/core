@@ -203,8 +203,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             "sw_version": self.device.hw_info["sw_ver"],
         }
-        # TODO: add parent/child_id to smartdevice?
-        if getattr(self.device, "child_id", None) is not None:
+        if self.device.is_strip_socket:
             data["via_device"] = self.device.parent.device_id
 
         return data
