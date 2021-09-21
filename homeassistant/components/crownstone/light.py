@@ -17,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -138,8 +139,7 @@ class CrownstoneEntity(CrownstoneBaseEntity, LightEntity):
                         hass_to_crownstone_state(kwargs[ATTR_BRIGHTNESS])
                     )
                 except CrownstoneAbilityError as ability_error:
-                    _LOGGER.error(ability_error)
-                    return
+                    raise HomeAssistantError(ability_error) from ability_error
 
             # assume brightness is set on device
             self.device.state = hass_to_crownstone_state(kwargs[ATTR_BRIGHTNESS])
