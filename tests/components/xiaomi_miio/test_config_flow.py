@@ -304,7 +304,7 @@ async def test_config_flow_gateway_cloud_login_error(hass):
 
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
-        side_effect=MiCloudAccessDenied({}),
+        side_effect=MiCloudAccessDenied(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
