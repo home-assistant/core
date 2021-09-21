@@ -46,6 +46,7 @@ CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_WAIT_FOR_ACK = "wait_for_ack"
 CONF_KEEPALIVE_IDLE = "tcp_keepalive_idle_timer"
+CONF_BAUD = "baud"
 
 DATA_DEVICE_REGISTER = "rflink_device_register"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
@@ -88,6 +89,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
                 vol.Optional(CONF_HOST): cv.string,
+                vol.Optional(CONF_BAUD, default=57600): cv.positive_int,
                 vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
                 vol.Optional(
                     CONF_KEEPALIVE_IDLE, default=DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
@@ -212,6 +214,8 @@ async def async_setup(hass, config):
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
+    # Custom baudrate when connecting to serial port (optional)
+    baud = config[DOMAIN].get(CONF_BAUD)
     # TCP port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 
@@ -262,6 +266,7 @@ async def async_setup(hass, config):
         connection = create_rflink_connection(
             port=port,
             host=host,
+            baud=baud,
             keepalive=keepalive_idle_timer,
             event_callback=event_callback,
             disconnect_callback=reconnect,
