@@ -9,8 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -52,14 +50,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         name="Energy Usage",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     CONF_AMOUNT: SensorEntityDescription(
         key=CONF_AMOUNT,
         name="Energy Consumed",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_BUDGET: SensorEntityDescription(
         key=CONF_BUDGET,
@@ -69,14 +65,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=CONF_COST,
         name="Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_CURRENT_VALUES: SensorEntityDescription(
         key=CONF_CURRENT_VALUES,
         name="Per-Device Usage",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
 
