@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "coordinates": {
+        "description": "Input the latitude and longitude to monitor:",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "location": {
+        "description": "Pick a location to monitor:",
+        "data": {
+          "location_type": "[%key:common::config_flow::data::location%]"
+        }
+      },
+      "user": {
+        "description": "Input your username and password:",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_coordinates": "No data for latitude/longitude"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
