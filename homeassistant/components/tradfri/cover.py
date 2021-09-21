@@ -75,7 +75,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(100))
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
