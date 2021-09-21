@@ -14,7 +14,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    ATTR_BOT,
     BTLE_LOCK,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
@@ -25,6 +24,7 @@ from .const import (
     DEFAULT_SCAN_TIMEOUT,
     DEFAULT_TIME_BETWEEN_UPDATE_COMMAND,
     DOMAIN,
+    SUPPORTED_MODEL_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,8 +70,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _btle_connect, data[CONF_MAC]
             )
 
-        if _btle_adv_data["modelName"] == "WoHand":
-            data[CONF_SENSOR_TYPE] = ATTR_BOT
+        if _btle_adv_data["modelName"] in SUPPORTED_MODEL_TYPES:
+            data[CONF_SENSOR_TYPE] = SUPPORTED_MODEL_TYPES[_btle_adv_data["modelName"]]
             return self.async_create_entry(title=data[CONF_NAME], data=data)
 
         return self.async_abort(reason="switchbot_unsupported_type")

@@ -25,6 +25,21 @@ class MocGetSwitchbotDevices:
             "model": "H",
             "modelName": "WoHand",
         }
+        self._curtain_all_services_data = {
+            "mac_address": "e7:89:43:90:90:90",
+            "Flags": "06",
+            "Manufacturer": "5900e78943d9fe7c",
+            "Complete 128b Services": "cba20d00-224d-11e6-9fb8-0002a5d5c51b",
+            "data": {
+                "calibration": True,
+                "battery": 74,
+                "position": 100,
+                "lightLevel": 2,
+                "rssi": -73,
+            },
+            "model": "c",
+            "modelName": "WoCurtain",
+        }
         self._unsupported_device = {
             "mac_address": "test",
             "Flags": "06",
@@ -50,6 +65,8 @@ class MocGetSwitchbotDevices:
             return self._all_services_data
         if mac == "test":
             return self._unsupported_device
+        if mac == "e7:89:43:90:90:90":
+            return self._curtain_all_services_data
 
         return None
 
