@@ -138,7 +138,13 @@ def _cancel_all_tasks_with_timeout(
     for task in to_cancel:
         if task.cancelled():
             continue
-        if task.exception() is not None:
+        if not task.done():
+            _LOGGER.warning(
+                "Task could not be canceled and was still running after shutdown: %s",
+                task,
+            )
+            continue
+        elif task.exception() is not None:
             loop.call_exception_handler(
                 {
                     "message": "unhandled exception during shutdown",
@@ -146,9 +152,3 @@ def _cancel_all_tasks_with_timeout(
                     "task": task,
                 }
             )
-        elif not task.done():
-            _LOGGER.warning(
-                "Task could not be canceled and was still running after shutdown: %s",
-                task,
-            )
-            continue
