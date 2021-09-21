@@ -1,0 +1,21 @@
+{
+  "manufacturer": "Acorn",
+  "supportedModels": [
+    "Unknown"
+  ],
+  "supportedController": "Broadlink",
+  "commandsEncoding": "Base64",
+  "speed": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "commands": {
+    "off": "sgcyABgJCBkZCRkJGQkIGQgZCBkZCQgaCBkIGQgZCBkIGRgJGQkYCRkJCBoIGQj8GQkYCQgaAAAAAAAA",
+    "default": {
+      "low": "sgsyABkJGQkIGRkJCRkZCRkJGQkIGQkZCRkZCQkZCBkJGQgZGAkZCRkJGQkIGQkZGQkZCQn7AAAAAAAA",
+      "medium": "sgkyABkJCRkZCQgZGQkZCRkJCBkIGQgZGQkJGQgZCRkJGQkZCBoYCRkJCBkJGRkJGQkJ+xkJAAAAAAAA",
+      "high": "sggyABgJGAoIGRkJCBkZCRkJGAkJGQgaCBkZCQkaCBkIGQgZGQkZCQgaCBkZCRkJCBkJGQj7AAAAAAAA"
+    }
+  }
+}

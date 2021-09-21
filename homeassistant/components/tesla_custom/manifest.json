@@ -1,0 +1,32 @@
+{
+  "domain": "tesla_custom",
+  "name": "Tesla Custom Integration",
+  "config_flow": true,
+  "documentation": "https://github.com/alandtse/tesla",
+  "issue_tracker": "https://github.com/alandtse/tesla/issues",
+  "requirements": [
+    "teslajsonpy~=0.19.0"
+  ],
+  "codeowners": [
+    "@alandtse"
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "dhcp": [
+    {
+      "hostname": "tesla_*",
+      "macaddress": "4CFCAA*"
+    },
+    {
+      "hostname": "tesla_*",
+      "macaddress": "044EAF*"
+    },
+    {
+      "hostname": "tesla_*",
+      "macaddress": "98ED5C*"
+    }
+  ],
+  "iot_class": "cloud_polling",
+  "version": "0.2.0"
+}
