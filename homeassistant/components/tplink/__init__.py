@@ -154,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             break
 
     # prepare DataUpdateCoordinators
-    hass_data[COORDINATORS] = {}
+    hass_data[COORDINATORS]: dict[str, TPLinkDataUpdateCoordinator] = {}
     for dev in switches + lights:
         try:
             _ = await dev.update()

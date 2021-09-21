@@ -51,7 +51,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     entities: list[TPLinkSmartBulb] = []
-    coordinators: list[TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
+    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
     devs: list[SmartBulb] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
