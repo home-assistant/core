@@ -19,7 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_TYPE_OWSERVER, DOMAIN, READ_MODE_BOOL
+from .const import (
+    CONF_TYPE_OWSERVER,
+    DEVICE_KEYS_0_7,
+    DEVICE_KEYS_A_B,
+    DOMAIN,
+    READ_MODE_BOOL,
+)
 from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
@@ -38,129 +44,45 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             read_mode=READ_MODE_BOOL,
         ),
     ),
-    "12": (
-        OneWireSwitchEntityDescription(
-            key="PIO.A",
-            entity_registry_enabled_default=False,
-            name="PIO A",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.B",
-            entity_registry_enabled_default=False,
-            name="PIO B",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.A",
-            entity_registry_enabled_default=False,
-            name="Latch A",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.B",
-            entity_registry_enabled_default=False,
-            name="Latch B",
-            read_mode=READ_MODE_BOOL,
-        ),
+    "12": tuple(
+        [
+            OneWireSwitchEntityDescription(
+                key=f"PIO.{id}",
+                entity_registry_enabled_default=False,
+                name=f"PIO {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_A_B
+        ]
+        + [
+            OneWireSwitchEntityDescription(
+                key=f"latch.{id}",
+                entity_registry_enabled_default=False,
+                name=f"Latch {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_A_B
+        ]
     ),
-    "29": (
-        OneWireSwitchEntityDescription(
-            key="PIO.0",
-            entity_registry_enabled_default=False,
-            name="PIO 0",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.1",
-            entity_registry_enabled_default=False,
-            name="PIO 1",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.2",
-            entity_registry_enabled_default=False,
-            name="PIO 2",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.3",
-            entity_registry_enabled_default=False,
-            name="PIO 3",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.4",
-            entity_registry_enabled_default=False,
-            name="PIO 4",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.5",
-            entity_registry_enabled_default=False,
-            name="PIO 5",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.6",
-            entity_registry_enabled_default=False,
-            name="PIO 6",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="PIO.7",
-            entity_registry_enabled_default=False,
-            name="PIO 7",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.0",
-            entity_registry_enabled_default=False,
-            name="Latch 0",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.1",
-            entity_registry_enabled_default=False,
-            name="Latch 1",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.2",
-            entity_registry_enabled_default=False,
-            name="Latch 2",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.3",
-            entity_registry_enabled_default=False,
-            name="Latch 3",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.4",
-            entity_registry_enabled_default=False,
-            name="Latch 4",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.5",
-            entity_registry_enabled_default=False,
-            name="Latch 5",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.6",
-            entity_registry_enabled_default=False,
-            name="Latch 6",
-            read_mode=READ_MODE_BOOL,
-        ),
-        OneWireSwitchEntityDescription(
-            key="latch.7",
-            entity_registry_enabled_default=False,
-            name="Latch 7",
-            read_mode=READ_MODE_BOOL,
-        ),
+    "29": tuple(
+        [
+            OneWireSwitchEntityDescription(
+                key=f"PIO.{id}",
+                entity_registry_enabled_default=False,
+                name=f"PIO {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_0_7
+        ]
+        + [
+            OneWireSwitchEntityDescription(
+                key=f"latch.{id}",
+                entity_registry_enabled_default=False,
+                name=f"Latch {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_0_7
+        ]
     ),
 }
 

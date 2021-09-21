@@ -8,7 +8,7 @@ from homeassistant import core
 from homeassistant.components.bond.const import (
     ATTR_POWER_STATE,
     DOMAIN as BOND_DOMAIN,
-    SERVICE_SET_POWER_BELIEF,
+    SERVICE_SET_POWER_TRACKED_STATE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
@@ -93,7 +93,7 @@ async def test_switch_set_power_belief(hass: core.HomeAssistant):
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             BOND_DOMAIN,
-            SERVICE_SET_POWER_BELIEF,
+            SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
@@ -115,7 +115,7 @@ async def test_switch_set_power_belief_api_error(hass: core.HomeAssistant):
     ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
         await hass.services.async_call(
             BOND_DOMAIN,
-            SERVICE_SET_POWER_BELIEF,
+            SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )

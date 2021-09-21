@@ -18,15 +18,15 @@ class DeconzBase:
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return self._device.uniqueid
+        return self._device.unique_id
 
     @property
     def serial(self):
         """Return a serial number for this device."""
-        if self._device.uniqueid is None or self._device.uniqueid.count(":") != 7:
+        if self._device.unique_id is None or self._device.unique_id.count(":") != 7:
             return None
 
-        return self._device.uniqueid.split("-", 1)[0]
+        return self._device.unique_id.split("-", 1)[0]
 
     @property
     def device_info(self):
@@ -38,10 +38,10 @@ class DeconzBase:
             "connections": {(CONNECTION_ZIGBEE, self.serial)},
             "identifiers": {(DECONZ_DOMAIN, self.serial)},
             "manufacturer": self._device.manufacturer,
-            "model": self._device.modelid,
+            "model": self._device.model_id,
             "name": self._device.name,
-            "sw_version": self._device.swversion,
-            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridgeid),
+            "sw_version": self._device.software_version,
+            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
         }
 
 

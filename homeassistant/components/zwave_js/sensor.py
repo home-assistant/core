@@ -105,7 +105,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT: ZwaveSensorEntityDescription(
-        ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
+        ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
@@ -471,6 +471,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
+        # pylint: disable=no-self-use
         raise ValueError("There is no value to poll for this entity")
 
     @callback
