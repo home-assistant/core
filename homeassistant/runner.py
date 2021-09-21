@@ -116,7 +116,7 @@ def run(runtime_config: RuntimeConfig) -> int:
         try:
             _cancel_all_tasks_with_timeout(loop, TASK_CANCELATION_TIMEOUT)
             loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.run_until_complete(loop.shutdown_default_executor())  # type: ignore
+            loop.run_until_complete(_shutdown_default_executor(loop))
         finally:
             asyncio.set_event_loop(None)
             loop.close()
@@ -152,3 +152,22 @@ def _cancel_all_tasks_with_timeout(
                     "task": task,
                 }
             )
+
+
+async def _shutdown_default_executor(loop: asyncio.AbstractEventLoop) -> None:
+    """Schedule the shutdown of the default executor."""
+    future = loop.create_future()
+
+    def _do_shutdown() -> None:
+        try:
+            loop._default_executor.shutdown(wait=True)  # type: ignore
+            loop.call_soon_threadsafe(future.set_result, None)
+        except Exception as ex:
+            loop.call_soon_threadsafe(future.set_exception, ex)
+
+    thread = threading.Thread(target=_do_shutdown, args=(future,))
+    thread.start()
+    try:
+        await future
+    finally:
+        thread.join()
