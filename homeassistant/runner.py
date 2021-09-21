@@ -104,7 +104,8 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
     exit_code = await hass.async_run()
 
     running_tasks = asyncio.all_tasks(hass.loop)
-    _LOGGER.debug("Tasks still running at shutdown: %s", running_tasks)
+    if running_tasks:
+        _LOGGER.warning("Tasks still running at shutdown: %s", running_tasks)
 
     return exit_code
 
