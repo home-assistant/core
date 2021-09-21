@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import namedtuple
 import logging
 import struct
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -154,13 +154,11 @@ def number_validator(value: Any) -> int | float:
         return value
 
     try:
-        value = int(value)
-        return cast(int, value)
+        return int(value)
     except (TypeError, ValueError):
         pass
     try:
-        value = float(value)
-        return cast(float, value)
+        return float(value)
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
 
