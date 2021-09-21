@@ -144,7 +144,7 @@ def _cancel_all_tasks_with_timeout(
                 task,
             )
             continue
-        elif task.exception() is not None:
+        if task.exception() is not None:
             loop.call_exception_handler(
                 {
                     "message": "unhandled exception during shutdown",
@@ -160,9 +160,9 @@ async def _shutdown_default_executor(loop: asyncio.AbstractEventLoop) -> None:
 
     def _do_shutdown() -> None:
         try:
-            loop._default_executor.shutdown(wait=True)  # type: ignore
+            loop._default_executor.shutdown(wait=True)  # type: ignore  # pylint: disable=protected-access
             loop.call_soon_threadsafe(future.set_result, None)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             loop.call_soon_threadsafe(future.set_exception, ex)
 
     thread = threading.Thread(target=_do_shutdown, args=(future,))
