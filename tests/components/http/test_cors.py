@@ -44,7 +44,7 @@ async def test_cors_middleware_loaded_from_config(hass):
 
 async def mock_handler(request):
     """Return if request was authenticated."""
-    return web.Response(status=200)
+    return web.Response()
 
 
 @pytest.fixture
