@@ -24,7 +24,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
     ATTR_MODE,
+    ATTR_MODEL,
     ATTR_NAME,
     CONF_DEVICES,
     CONF_HOST,
@@ -40,9 +43,6 @@ from homeassistant.util import Throttle
 import homeassistant.util.color as color_util
 
 from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     CONF_AUTOMATIC_ADD,
     CONF_EFFECT_SPEED,
     DEFAULT_EFFECT_SPEED,
