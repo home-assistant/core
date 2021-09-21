@@ -12,6 +12,7 @@ from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import HTTP_OK
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
@@ -82,7 +83,7 @@ class HassIOAuth(HassIOBaseAuth):
         except auth_ha.InvalidAuth:
             raise HTTPNotFound() from None
 
-        return web.Response()
+        return web.Response(status=HTTP_OK)
 
 
 class HassIOPasswordReset(HassIOBaseAuth):
@@ -112,4 +113,4 @@ class HassIOPasswordReset(HassIOBaseAuth):
         except auth_ha.InvalidUser as err:
             raise HTTPNotFound() from err
 
-        return web.Response()
+        return web.Response(status=HTTP_OK)
