@@ -12,12 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
-from .const import (
-    CONF_AUTOMATIC_ADD,
-    DEFAULT_NETWORK_SCAN_INTERVAL,
-    DOMAIN,
-    SIGNAL_ADD_DEVICE,
-)
+from .const import CONF_AUTOMATIC_ADD, DEFAULT_NETWORK_SCAN_INTERVAL, SIGNAL_ADD_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
