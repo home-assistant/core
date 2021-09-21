@@ -11,7 +11,10 @@ from miio.fan import (
     MoveDirection as FanMoveDirection,
     OperationMode as FanOperationMode,
 )
-from miio.fan_miot import OperationMode as FanMiotOperationMode
+from miio.fan_miot import (
+    OperationMode as FanMiotOperationMode,
+    OperationModeFanZA5 as FanZA5OperationMode,
+)
 import voluptuous as vol
 
 from homeassistant.components.fan import (
@@ -42,7 +45,10 @@ from .const import (
     FEATURE_FLAGS_AIRPURIFIER_PRO_V7,
     FEATURE_FLAGS_AIRPURIFIER_V3,
     FEATURE_FLAGS_FAN,
+    FEATURE_FLAGS_FAN_1C,
     FEATURE_FLAGS_FAN_P5,
+    FEATURE_FLAGS_FAN_P9,
+    FEATURE_FLAGS_FAN_P10_P11,
     FEATURE_FLAGS_FAN_ZA5,
     FEATURE_RESET_FILTER,
     FEATURE_SET_EXTRA_FEATURES,
@@ -56,7 +62,12 @@ from .const import (
     MODEL_AIRPURIFIER_V3,
     MODEL_FAN_P5,
     MODEL_FAN_ZA5,
+    MODELS_FAN_1C,
     MODELS_FAN_MIIO,
+    MODELS_FAN_MIOT,
+    MODELS_FAN_P9,
+    MODELS_FAN_P10,
+    MODELS_FAN_P11,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
@@ -201,6 +212,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif model in MODELS_FAN_MIIO:
         entity = XiaomiFan(name, device, config_entry, unique_id, coordinator)
     elif model == MODEL_FAN_ZA5:
+        entity = XiaomiFanZA5(name, device, config_entry, unique_id, coordinator)
+    elif model in MODELS_FAN_MIOT:
         entity = XiaomiFanMiot(name, device, config_entry, unique_id, coordinator)
     else:
         return
@@ -270,6 +283,11 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return self._supported_features
 
     @property
+    @abstractmethod
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+
+    @property
     def preset_modes(self) -> list:
         """Get the list of available preset modes."""
         return self._preset_modes
@@ -330,11 +348,6 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
         super().__init__(name, device, entry, unique_id, coordinator)
 
         self._speed_count = 100
-
-    @property
-    @abstractmethod
-    def operation_mode_class(self):
-        """Hold operation mode class."""
 
     @property
     def speed_count(self):
@@ -703,6 +716,15 @@ class XiaomiGenericFan(XiaomiGenericDevice):
             self._preset_modes = [mode.name for mode in FanOperationMode]
         elif self._model == MODEL_FAN_ZA5:
             self._device_features = FEATURE_FLAGS_FAN_ZA5
+            self._preset_modes = [mode.name for mode in FanZA5OperationMode]
+        elif self._model == MODELS_FAN_1C:
+            self._device_features = FEATURE_FLAGS_FAN_1C
+            self._preset_modes = [mode.name for mode in FanMiotOperationMode]
+        elif self._model == MODELS_FAN_P9:
+            self._device_features = FEATURE_FLAGS_FAN_P9
+            self._preset_modes = [mode.name for mode in FanMiotOperationMode]
+        elif self._model in (MODELS_FAN_P10, MODELS_FAN_P11):
+            self._device_features = FEATURE_FLAGS_FAN_P10_P11
             self._preset_modes = [mode.name for mode in FanMiotOperationMode]
         else:
             self._device_features = FEATURE_FLAGS_FAN
@@ -771,6 +793,11 @@ class XiaomiFan(XiaomiGenericFan):
             self._percentage = self.coordinator.data.natural_speed
         else:
             self._percentage = self.coordinator.data.direct_speed
+
+    @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        pass
 
     @property
     def preset_mode(self):
@@ -851,6 +878,11 @@ class XiaomiFanP5(XiaomiGenericFan):
         self._oscillating = self.coordinator.data.oscillate
         self._percentage = self.coordinator.data.speed
 
+    @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return FanOperationMode
+
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
@@ -869,7 +901,7 @@ class XiaomiFanP5(XiaomiGenericFan):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            FanOperationMode[preset_mode],
+            self.operation_mode_class[preset_mode],
         )
         self._preset_mode = preset_mode
         self.async_write_ha_state()
@@ -898,6 +930,11 @@ class XiaomiFanMiot(XiaomiGenericFan):
     """Representation of a Xiaomi Fan Miot."""
 
     @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return FanMiotOperationMode
+
+    @property
     def preset_mode(self):
         """Get the active preset mode."""
         return self._preset_mode
@@ -924,7 +961,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            FanOperationMode[preset_mode],
+            self.operation_mode_class[preset_mode],
         )
         self._preset_mode = preset_mode
         self.async_write_ha_state()
@@ -947,3 +984,12 @@ class XiaomiFanMiot(XiaomiGenericFan):
             await self.async_turn_on()
         else:
             self.async_write_ha_state()
+
+
+class XiaomiFanZA5(XiaomiGenericFan):
+    """Representation of a Xiaomi Fan ZA5."""
+
+    @property
+    def operation_mode_class(self):
+        """Hold operation mode class."""
+        return FanZA5OperationMode
