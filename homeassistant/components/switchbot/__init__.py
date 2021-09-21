@@ -26,7 +26,10 @@ from .const import (
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
 
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS_BY_TYPE = {
+    ATTR_BOT: ["switch", "sensor"],
+    ATTR_CURTAIN: ["cover", "sensor"],
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
