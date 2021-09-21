@@ -163,7 +163,7 @@ async def assert_scene_controller_works(
     )
     assert response["event"]["payload"]["cause"]["type"] == "VOICE_INTERACTION"
     assert "timestamp" in response["event"]["payload"]
-    pattern = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"
+    pattern = r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.0Z"
     assert re.search(pattern, response["event"]["payload"]["timestamp"])
     if deactivate_service:
         await assert_request_calls_service(
