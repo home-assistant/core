@@ -229,7 +229,7 @@ async def test_media_lookups(
             },
             True,
         )
-        search.assert_called_with(**{"movie.title": "Movie 1", "libtype": "movie"})
+        search.assert_called_with(**{"movie.title": "Movie 1", "libtype": None})
 
         assert await hass.services.async_call(
             MP_DOMAIN,
@@ -241,7 +241,7 @@ async def test_media_lookups(
             },
             True,
         )
-        search.assert_called_with(**{"movie.title": "Movie 1", "libtype": "movie"})
+        search.assert_called_with(**{"title": "Movie 1", "libtype": None})
 
     # TV show searches
     with pytest.raises(HomeAssistantError) as excinfo:

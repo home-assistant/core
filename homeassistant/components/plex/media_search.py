@@ -3,11 +3,6 @@ import logging
 
 from plexapi.exceptions import BadRequest, NotFound
 
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_VIDEO,
-)
-
 LEGACY_PARAM_MAPPING = {
     "show_name": "show.title",
     "season_number": "season.index",
@@ -39,16 +34,12 @@ def search_media(media_type, library_section, **kwargs):
                 "Legacy parameter '%s' used, consider using '%s'", legacy_key, key
             )
             search_query[key] = value
-    if media_type in [MEDIA_TYPE_MOVIE, MEDIA_TYPE_VIDEO]:
-        if title := kwargs.pop("title", None):
-            search_query["movie.title"] = title
 
     search_query.update(**kwargs)
 
     if not libtype:
         # Default to a sane libtype if not explicitly provided
         for libtype in (
-            "movie",
             "episode",
             "season",
             "show",
