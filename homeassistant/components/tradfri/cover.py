@@ -69,7 +69,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(0))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
