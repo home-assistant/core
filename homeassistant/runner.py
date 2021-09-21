@@ -108,8 +108,7 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
-    # Backport of cpython 3.9 asyncio.run with
-    # a _cancel_all_tasks that times out
+    # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()
     try:
         asyncio.set_event_loop(loop)
