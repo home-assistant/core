@@ -32,6 +32,7 @@ load-plugins = [
     "hass_constructor",
     "hass_imports",
     "hass_logger",
+    "hass_return",
 ]
 persistent = false
 extension-pkg-allow-list = [
