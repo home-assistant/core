@@ -95,6 +95,6 @@ class SkybellLight(SkybellEntity, LightEntity):
         return _to_hass_level(self._device.led_intensity)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the color of the light."""
         return color_util.color_RGB_to_hs(*self._device.led_rgb)

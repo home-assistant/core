@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from skybellpy import exceptions
+from skybellpy.helpers.errors import LOGIN_FAILED
 
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
@@ -56,9 +57,8 @@ async def test_flow_user_already_configured(hass: HomeAssistant):
 
     entry.add_to_hass(hass)
 
-    service_info = CONF_CONFIG_FLOW
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=service_info
+        DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -79,8 +79,10 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
 
 async def test_invalid_credentials(hass: HomeAssistant):
     """Test that invalid credentials throws an error."""
-    with _patch_skybell() as skybellmock:
-        skybellmock.side_effect = exceptions.SkybellAuthenticationException
+    with patch("homeassistant.components.skybell.Skybell.login") as skybellmock:
+        skybellmock.side_effect = exceptions.SkybellAuthenticationException(
+            LOGIN_FAILED
+        )
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )

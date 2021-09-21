@@ -1,12 +1,13 @@
 """Constants for the Skybell HD Doorbell."""
 from datetime import timedelta
+from typing import Final
 
 from homeassistant.const import __version__
 
 DATA_COORDINATOR = "coordinator"
 DATA_DEVICES = "devices"
 
-DOMAIN = "skybell"
+DOMAIN: Final = "skybell"
 DEFAULT_NAME = "SkyBell"
 
 ATTRIBUTION = "Data provided by Skybell.com"
