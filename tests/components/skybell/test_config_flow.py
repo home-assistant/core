@@ -79,7 +79,9 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant):
 
 async def test_invalid_credentials(hass: HomeAssistant):
     """Test that invalid credentials throws an error."""
-    with patch("homeassistant.components.skybell.Skybell.login") as skybellmock:
+    with patch("homeassistant.components.skybell.Skybell.login") as skybellmock, patch(
+        "skybellpy.UTILS"
+    ):
         skybellmock.side_effect = exceptions.SkybellAuthenticationException(
             LOGIN_FAILED
         )
