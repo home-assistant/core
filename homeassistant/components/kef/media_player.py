@@ -127,7 +127,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if mac is None:
         raise PlatformNotReady("Cannot get the ip address of kef speaker.")
 
-    unique_id = f"kef-{mac}" if mac is not None else None
+    unique_id = f"kef-{mac}"
 
     media_player = KefMediaPlayer(
         name,
