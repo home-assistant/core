@@ -70,8 +70,12 @@ async def test_media_player_playback(
             )
     assert f"Media could not be found: {payload}" in str(excinfo.value)
 
+    movie1 = MockPlexMedia("Movie", "movie")
+    movie2 = MockPlexMedia("Movie II", "movie")
+    movie3 = MockPlexMedia("Movie III", "movie")
+
     # Test movie success
-    movies = [MockPlexMedia("Movie 1", "movie")]
+    movies = [movie1]
     with patch("plexapi.library.LibrarySection.search", return_value=movies):
         assert await hass.services.async_call(
             MP_DOMAIN,
@@ -85,8 +89,10 @@ async def test_media_player_playback(
         )
 
     # Test multiple choices with exact match
-    movies = [MockPlexMedia("Movie", "movie"), MockPlexMedia("Movie II", "movie")]
-    with patch("plexapi.library.LibrarySection.search", return_value=movies):
+    movies = [movie1, movie2]
+    with patch("plexapi.library.LibrarySection.search", return_value=movies), patch(
+        "homeassistant.components.plex.server.PlexServer.create_playqueue"
+    ) as mock_create_playqueue:
         assert await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -97,9 +103,10 @@ async def test_media_player_playback(
             },
             True,
         )
+        assert mock_create_playqueue.call_args.args == (movie1,)
 
     # Test multiple choices without exact match
-    movies = [MockPlexMedia("Movie II", "movie"), MockPlexMedia("Movie III", "movie")]
+    movies = [movie2, movie3]
     with pytest.raises(HomeAssistantError) as excinfo:
         payload = '{"library_name": "Movies", "title": "Movie" }'
         with patch("plexapi.library.LibrarySection.search", return_value=movies):
@@ -115,3 +122,20 @@ async def test_media_player_playback(
             )
     assert f"Media could not be found: {payload}" in str(excinfo.value)
     assert "Multiple matches, make content_id more specific" in caplog.text
+
+    # Test multiple choices with allow_multiple
+    movies = [movie1, movie2, movie3]
+    with patch("plexapi.library.LibrarySection.search", return_value=movies), patch(
+        "homeassistant.components.plex.server.PlexServer.create_playqueue"
+    ) as mock_create_playqueue:
+        assert await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: media_player,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MOVIE,
+                ATTR_MEDIA_CONTENT_ID: '{"library_name": "Movies", "title": "Movie", "allow_multiple": true }',
+            },
+            True,
+        )
+        assert mock_create_playqueue.call_args.args == (movies,)

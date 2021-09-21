@@ -19,10 +19,12 @@ LEGACY_PARAM_MAPPING = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def search_media(media_type, library_section, **kwargs):
+def search_media(media_type, library_section, allow_multiple=False, **kwargs):
     """Search for specified Plex media in the provided library section.
 
     Returns a single media item or None.
+
+    If `allow_multiple` is `True`, return a list of matching items.
     """
     search_query = {}
     libtype = kwargs.pop("libtype", None)
@@ -64,6 +66,9 @@ def search_media(media_type, library_section, **kwargs):
         return None
 
     if len(results) > 1:
+        if allow_multiple:
+            return results
+
         if title := search_query.get("title") or search_query.get("movie.title"):
             exact_matches = [x for x in results if x.title.lower() == title.lower()]
             if len(exact_matches) == 1:
