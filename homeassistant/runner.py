@@ -165,7 +165,7 @@ async def _shutdown_default_executor(loop: asyncio.AbstractEventLoop) -> None:
         except Exception as ex:  # pylint: disable=broad-except
             loop.call_soon_threadsafe(future.set_exception, ex)
 
-    thread = threading.Thread(target=_do_shutdown, args=(future,))
+    thread = threading.Thread(target=_do_shutdown)
     thread.start()
     try:
         await future
