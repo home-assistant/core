@@ -23,7 +23,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "time_invalid": "Time must be HH:MM",
       "time_range": "Polling must cease after polling starts",
-      "capability_invalid": "Invalid - See documentation for capability"
+      "capability_invalid": "Invalid - See documentation for capability",
+      "unexpected_response": "Unexpected response from Inverter",
+      "invalid_host": "IP address or FQDN is invalid"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

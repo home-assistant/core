@@ -3,7 +3,7 @@
   "name": "EnaSolar Solar Inverter",
   "documentation": "https://www.home-assistant.io/integrations/enasolar",
   "requirements": [
-      "pyenasolar==0.1.4"
+      "pyenasolar==0.1.5"
   ],
   "codeowners": ["@geustace"],
   "iot_class": "local_polling",

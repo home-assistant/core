@@ -7,8 +7,10 @@
             "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect",
             "capability_invalid": "Invalid - See documentation for capability",
+            "invalid_host": "IP address or FQDN is invalid",
             "time_invalid": "Time must be HH:MM",
-            "time_range": "Polling must cease after polling starts"
+            "time_range": "Polling must cease after polling starts",
+            "unexpected_response": "Unexpected response from Inverter"
         },
         "step": {
             "inverter": {

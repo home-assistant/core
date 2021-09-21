@@ -26,7 +26,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
@@ -63,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         await enasolar.interogate_inverter(host)
     except Exception as conerr:
         _LOGGER.error("Connection to EnaSolar Inverter '%s' failed (%s)", host, conerr)
-        raise PlatformNotReady from conerr
+        raise ConfigEntryNotReady from conerr
 
     if config_entry.options != {}:
         enasolar.sun_up = dt_util.parse_time(config_entry.options[CONF_SUN_UP])

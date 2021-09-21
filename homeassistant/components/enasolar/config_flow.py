@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import logging
+import socket
 from typing import Any
 
+import aiohttp
 import pyenasolar
 import voluptuous as vol
 
@@ -33,6 +35,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_ip(host):
+    """Get the ip address from the host name."""
+    try:
+        return socket.gethostbyname(host)
+    except socket.gaierror:
+        return None
+
+
 class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """User Configuration of EnaSolar Integration."""
 
@@ -40,10 +50,10 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._enasolar = pyenasolar.EnaSolar()  # Only exposes methods, no significant
+        # Only exposes methods, no significant
         # code is executed during instantiation
+        self._enasolar = pyenasolar.EnaSolar()
         self._data: dict[str, Any] = {}
-        self._errors: dict[str, str] = {}
 
     def _conf_for_inverter_exists(self, serial) -> bool:
         """Return True if inverter exists in configuration."""
@@ -54,16 +64,8 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _try_connect(self, host):
-        try:
-            await self._enasolar.interogate_inverter(host)
-            return True
-
-        except Exception as conerr:  # pylint: disable=broad-except
-            self._errors[CONF_HOST] = "cannot_connect"
-            _LOGGER.error(
-                "Connection to EnaSolar inverter '%s' failed (%s)", host, conerr
-            )
-        return False
+        """Needed to mock connection when running tests."""
+        await self._enasolar.interogate_inverter(host)
 
     def get_name(self):
         """Needed to mock name when running tests."""
@@ -84,14 +86,27 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _errors = {}
 
         if user_input is not None:
-            self._data[CONF_HOST] = user_input[CONF_HOST]
-            self._data[CONF_NAME] = user_input[CONF_NAME]
-            if await self._try_connect(self._data[CONF_HOST]):
-                if self._conf_for_inverter_exists(self.get_serial_no()):
-                    return self.async_abort(reason="already_configured")
-                await self.async_set_unique_id(self.get_serial_no())
-                return await self.async_step_inverter()
-            _errors = self._errors
+            ip_address = await self.hass.async_add_executor_job(
+                _get_ip, user_input[CONF_HOST]
+            )
+            if not ip_address:
+                _errors[CONF_NAME] = "invalid_host"
+            else:
+                self._data[CONF_HOST] = user_input[CONF_HOST]
+                self._data[CONF_NAME] = user_input[CONF_NAME]
+                try:
+                    await self._try_connect(self._data[CONF_HOST])
+                    if self._conf_for_inverter_exists(self.get_serial_no()):
+                        return self.async_abort(reason="already_configured")
+                    await self.async_set_unique_id(self.get_serial_no())
+                    return await self.async_step_inverter()
+                except aiohttp.client_exceptions.ClientConnectorError:
+                    _errors[CONF_HOST] = "cannot_connect"
+                except aiohttp.client_exceptions.ClientResponseError:
+                    _errors[CONF_HOST] = "unexpected_response"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    _errors["base"] = "unknown"
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME
