@@ -1,4 +1,4 @@
-cryptography==3.4.8PyJWT==2.1.0
+PyJWT==2.1.0
 PyNaCl==1.4.0
 aiodiscover==1.4.2
 aiohttp==3.7.4.post0
