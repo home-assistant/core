@@ -1,7 +1,7 @@
 """Plugin for return statements."""
 from __future__ import annotations
 
-from astroid import Const, FunctionDef, Return
+from astroid import AsyncFunctionDef, Const, FunctionDef, Return
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 from pylint.lint import PyLinter
@@ -23,26 +23,21 @@ class HassReturnFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def __init__(self, linter: PyLinter | None = None) -> None:
-        super().__init__(linter)
-        self.returns_none = False
-
-    def visit_functiondef(self, node: FunctionDef) -> None:
-        """Called when a FunctionDef node is visited."""
-
-        # Check that return type is specified and it is "None".
-        self.returns_none = (
-            isinstance(node.returns, Const) and node.returns.value is None
-        )
-
     def visit_return(self, node: Return) -> None:
         """Called when a Return node is visited."""
-        if (
-            self.returns_none
-            and isinstance(node.value, Const)
-            and node.value.value is None
-        ):
-            self.add_message("hass-return-none", node=node)
+        if isinstance(node.value, Const) and node.value.value is None:
+            # Find enclosing function
+            parent = node.parent
+            while (
+                parent is not None
+                and not isinstance(parent, FunctionDef)
+                and not isinstance(parent, AsyncFunctionDef)
+            ):
+                parent = parent.parent
+            if parent is None:
+                return
+            if isinstance(parent.returns, Const) and parent.returns.value is None:
+                self.add_message("hass-return-none", node=node)
 
 
 def register(linter: PyLinter) -> None:
