@@ -137,7 +137,7 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
             + " - "
             + friendly_channel_type(self._channel_type)
             + " "
-            + " Energy Price"
+            + "Energy Price"
         )
 
     @property
@@ -240,7 +240,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
             + " - "
             + friendly_channel_type(self._channel_type)
             + " "
-            + " Forecast"
+            + "Forecast"
         )
 
     @property
@@ -275,7 +275,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
         forecasts = self._data_service.forecasts.get(self._channel_type)
-        data = {}
+        data: dict[str, Any] = {}
         data["forecasts"] = []
         data["channel_type"] = self._channel_type.value
 
@@ -283,7 +283,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
             for meta in forecasts:
                 datum = {}
                 datum["duration"] = meta.duration
-                data["date"] = meta.date.isoformat()
+                datum["date"] = meta.date.isoformat()
                 datum["nem_date"] = meta.nem_time.isoformat()
                 datum["per_kwh"] = round(meta.per_kwh)
                 if self._channel_type == ChannelType.FEED_IN:
