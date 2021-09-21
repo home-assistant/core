@@ -51,7 +51,7 @@ class ConnectXiaomiDevice:
                 raise ConfigEntryAuthFailed(error) from error
 
             raise ConfigEntryNotReady(
-                "DeviceException during setup of xiaomi device with host {host}"
+                f"DeviceException during setup of xiaomi device with host {host}"
             ) from error
 
         _LOGGER.debug(
