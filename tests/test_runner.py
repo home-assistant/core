@@ -1,7 +1,10 @@
 """Test the runner."""
 
+import asyncio
 import threading
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import core, runner
 from homeassistant.util import executor, thread
@@ -37,3 +40,80 @@ async def test_setup_and_run_hass(hass, tmpdir):
         assert threading._shutdown == thread.deadlock_safe_shutdown
 
     assert mock_run.called
+
+
+def test_run(hass, tmpdir):
+    """Test we can run."""
+    test_dir = tmpdir.mkdir("config")
+    default_config = runner.RuntimeConfig(test_dir)
+
+    with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), patch(
+        "homeassistant.bootstrap.async_setup_hass", return_value=hass
+    ), patch("threading._shutdown"), patch(
+        "homeassistant.core.HomeAssistant.async_run"
+    ) as mock_run:
+        runner.run(default_config)
+
+    assert mock_run.called
+
+
+def test_run_executor_shutdown_throws(hass, tmpdir):
+    """Test we can run and we still shutdown if the executor shutdown throws."""
+    test_dir = tmpdir.mkdir("config")
+    default_config = runner.RuntimeConfig(test_dir)
+
+    with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), pytest.raises(
+        RuntimeError
+    ), patch("homeassistant.bootstrap.async_setup_hass", return_value=hass), patch(
+        "threading._shutdown"
+    ), patch(
+        "homeassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
+        side_effect=RuntimeError,
+    ) as mock_shutdown, patch(
+        "homeassistant.core.HomeAssistant.async_run"
+    ) as mock_run:
+        runner.run(default_config)
+
+    assert mock_shutdown.called
+    assert mock_run.called
+
+
+def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
+    """Test we can shutdown and not block forever."""
+    test_dir = tmpdir.mkdir("config")
+    default_config = runner.RuntimeConfig(test_dir)
+    created_tasks = False
+
+    async def _async_create_tasks(*_):
+        nonlocal created_tasks
+
+        async def async_raise(*_):
+            try:
+                await asyncio.sleep(2)
+            except asyncio.CancelledError:
+                raise Exception
+
+        async def async_shielded(*_):
+            try:
+                await asyncio.sleep(2)
+            except asyncio.CancelledError:
+                await asyncio.sleep(2)
+
+        asyncio.ensure_future(asyncio.shield(async_shielded()))
+        asyncio.ensure_future(asyncio.sleep(2))
+        asyncio.ensure_future(async_raise())
+        await asyncio.sleep(0.1)
+        created_tasks = True
+        return 0
+
+    with patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1), patch(
+        "homeassistant.bootstrap.async_setup_hass", return_value=hass
+    ), patch("threading._shutdown"), patch(
+        "homeassistant.core.HomeAssistant.async_run", _async_create_tasks
+    ):
+        runner.run(default_config)
+
+    assert created_tasks is True
+    assert (
+        "Task could not be canceled and was still running after shutdown" in caplog.text
+    )
