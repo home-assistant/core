@@ -1,0 +1,30 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "url_not_detected": "Home Assistant External URL not detected. Please set in Configuration -> General"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "user": {
+        "description": "The next step will forward to the proxy for Tesla authentication. Tesla protects the login with a web application firewall (WAF) which may require a refresh to get or receive data. Please be cautious with multiple refreshes in a short period of time.",
+        "title": "Tesla - Configuration"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Seconds between scans",
+          "enable_wake_on_start": "Force cars awake on startup"
+        }
+      }
+    }
+  }
+}

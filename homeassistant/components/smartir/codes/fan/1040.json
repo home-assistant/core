@@ -1,0 +1,21 @@
+{
+  "manufacturer": "Lucci Air",
+  "supportedModels": [
+    "Aria"
+  ],
+  "supportedController": "Broadlink",
+  "commandsEncoding": "Base64",
+  "speed": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "commands": {
+    "off": "JgAiASgPKRAMKSkQKA8pDwwrDSkNKikOKRAM8CsOKA8MKykPKQ8pDw0rDCgNKSsOKBAM8CsOKA8MKisOKA8pGgwqDSkMKSsOKBAK8igQKA8NKioOKBEnEAwqDSkMKykQKBAL7ysOKA8MKyoPKA8qDwwqDCkNKSoPKA8M",
+    "default": {
+      "low": "JgDCACkPKRAMKSsOKA8MKwwrKQ8MKQwqDCsM8CkQKBAMKSkPKg4MKQwrKBANKAwqDCsM8ygPKw4MKigPKw4MKQwpJxENKQwqDCsN8CsOKg0NKSkQKw0MKQwpKRAMKQwqDSkN7i0NKw4MKigPKw0NKA0pKQ8NKQ0oDSkN8CkQKQ4OKCkPKw0NKQwqKQ8LKw0oDSkN",
+      "medium": "JgCSACgPKQ8LLCgPKRAMLAwpDCsnEQwrCyoN8ikOKBAMKikQKA8MKwwqDCsoDw0pDCoM8SkPKRALKykQKQ0MKw0pDCkpDwwqDCkM8yoOKQ8MKikQKA8MKwwpDigqDwkrDCoM8SkPKRALLCgPKA8MKwwqDSwoDwwqDSkM8ikQKBALKikPKQ8MKwwqDCorDgkrDCsNAA0FAAAAAAAA",
+      "high": "JgDaACgPKRALKSsOKQ4MKioNDCoMKgwqDCoM7ysOKQ4MKSoPKA8MKisODCgMKgwpDSkM8S0OKQ4MKikPKQ4NKScRDCoMKQwqDCkM8isNKQ4LKykQKA8MKSoPDSoLKQwqDCkO7ysOKQ8MKikOKQ4MKioPCykNKgwoDCoM8ycPKw4MKSkPKw0NKSkODCkNKQ0oDSkM"
+    }
+  }
+}

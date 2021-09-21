@@ -1,0 +1,30 @@
+{
+    "manufacturer": "Philips",
+    "supportedModels": [
+      "26PFL560H"
+    ],
+    "supportedController": "Broadlink",
+    "commandsEncoding": "Base64",
+    "commands": {
+        "off": "JgAaAB0dOx4cHhweHR4cHhw8HR0dHhweOzsdAA0FAAAAAAAAAAAAAAAAAAA=",
+        "on": "JgAcABweHR07HhweHR0dHhw8HR0dHhweHB4dHhwADQUAAAAAAAAAAAAAAAA=",
+        "previousChannel": "JgAaAB0eHB46Hh0eHB4cHh07Ox4cHh0dHTwcAA0FAAAAAAAAAAAAAAAAAAA=",
+        "nextChannel": "JgAaAB0dHR47HR0dHR4dHRw8Ox4cHhweHR0dAA0FAAAAAAAAAAAAAAAAAAA=",
+        "volumeDown": "JgAaABwePBwfHBweHB4dHR0eHDw9Gx0eHDwdAA0FAAAAAAAAAAAAAAAAAAA=",
+        "volumeUp": "JgAaABweOx0fHBweHB4dHhweHDw7HR0eHB4dAA0FAAAAAAAAAAAAAAAAAAA=",
+        "mute": "JgAaAB0dOx4cHh0dHR4cHh0dHR4cPBwePDsdAA0FAAAAAAAAAAAAAAAAAAA=",
+        "sources": {
+            "EXT1": "JgAYAB8bHxs9HB4cHzkfHDwcHxsfOjwcHwANBQ==",
+            "EXT2": "JgAaAB8bPRsfHB4cHxsfHB46HxsfHDwcHzkfAA0FAAAAAAAAAAAAAAAAAAA=",
+            "VGA": "JgAaAB8bHxw8HB8bHzoeHB8bHxweHD0bHxsfAA0FAAAAAAAAAAAAAAAAAAA=",
+            "HDMI": "JgAaAB8cHxs9Gx8cHzkfGx8cHhwfGz0cHjofAA0FAAAAAAAAAAAAAAAAAAA=",
+            "HDMI Side": "JgAYAD06PBwfGx85HxwfGx8bHxw9OR8bHwANBQ==",
+            "AV Side": "JgAYAB8bPRwfGx8bHzoeHD0bHxweOh8bPQANBQ==",
+            "Channel 1": "JgAcAB8cPBweHB8bHxweHB4cHxweHB4cHxweOh4ADQUAAAAAAAAAAAAAAAA=",
+            "Channel 11": [
+                "JgAcAB8cPBweHB8bHxweHB4cHxweHB4cHxweOh4ADQUAAAAAAAAAAAAAAAA=",
+                "JgAcAB8cPBweHB8bHxweHB4cHxweHB4cHxweOh4ADQUAAAAAAAAAAAAAAAA="
+            ]
+        }
+    }
+}
