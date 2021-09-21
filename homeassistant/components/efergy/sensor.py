@@ -184,7 +184,5 @@ class EfergySensor(SensorEntity):
                     if self.sid == sensor["sid"]:
                         measurement = next(iter(sensor["data"][0].values()))
                         self._attr_native_value = measurement
-            else:
-                self._attr_native_value = None
         except (requests.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
