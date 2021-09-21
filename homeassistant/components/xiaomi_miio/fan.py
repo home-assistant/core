@@ -713,22 +713,16 @@ class XiaomiGenericFan(XiaomiGenericDevice):
 
         if self._model == MODEL_FAN_P5:
             self._device_features = FEATURE_FLAGS_FAN_P5
-            self._preset_modes = [mode.name for mode in FanOperationMode]
         elif self._model == MODEL_FAN_ZA5:
             self._device_features = FEATURE_FLAGS_FAN_ZA5
-            self._preset_modes = [mode.name for mode in FanZA5OperationMode]
         elif self._model == MODEL_FAN_1C:
             self._device_features = FEATURE_FLAGS_FAN_1C
-            self._preset_modes = [mode.name for mode in FanMiotOperationMode]
         elif self._model == MODEL_FAN_P9:
             self._device_features = FEATURE_FLAGS_FAN_P9
-            self._preset_modes = [mode.name for mode in FanMiotOperationMode]
         elif self._model in (MODEL_FAN_P10, MODEL_FAN_P11):
             self._device_features = FEATURE_FLAGS_FAN_P10_P11
-            self._preset_modes = [mode.name for mode in FanMiotOperationMode]
         else:
             self._device_features = FEATURE_FLAGS_FAN
-            self._preset_modes = [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
         self._supported_features = (
             SUPPORT_SET_SPEED
             | SUPPORT_OSCILLATE
@@ -743,6 +737,11 @@ class XiaomiGenericFan(XiaomiGenericDevice):
     def preset_mode(self):
         """Get the active preset mode."""
         return self._preset_mode
+
+    @property
+    def preset_modes(self) -> list:
+        """Get the list of available preset modes."""
+        return [mode.name for mode in self.operation_mode_class]
 
     @property
     def percentage(self):
@@ -803,6 +802,11 @@ class XiaomiFan(XiaomiGenericFan):
     def preset_mode(self):
         """Get the active preset mode."""
         return ATTR_MODE_NATURE if self._nature_mode else ATTR_MODE_NORMAL
+
+    @property
+    def preset_modes(self) -> list:
+        """Get the list of available preset modes."""
+        return [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
 
     @callback
     def _handle_coordinator_update(self):
