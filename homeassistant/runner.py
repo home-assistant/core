@@ -26,6 +26,9 @@ from homeassistant.util.thread import deadlock_safe_shutdown
 # use case.
 #
 MAX_EXECUTOR_WORKERS = 64
+TASK_CANCELATION_TIMEOUT = 5
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -105,4 +108,70 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
-    return asyncio.run(setup_and_run_hass(runtime_config))
+    # Backport of cpython 3.9 asyncio.run with
+    # a _cancel_all_tasks that times out
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(setup_and_run_hass(runtime_config))
+    finally:
+        try:
+            _cancel_all_tasks_with_timeout(loop, TASK_CANCELATION_TIMEOUT)
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            # Once cpython 3.8 is no longer supported we can use the
+            # the built-in loop.shutdown_default_executor
+            loop.run_until_complete(_shutdown_default_executor(loop))
+        finally:
+            asyncio.set_event_loop(None)
+            loop.close()
+
+
+def _cancel_all_tasks_with_timeout(
+    loop: asyncio.AbstractEventLoop, timeout: int
+) -> None:
+    """Adapted _cancel_all_tasks from python 3.9 with a timeout."""
+    to_cancel = asyncio.all_tasks(loop)
+    if not to_cancel:
+        return
+
+    for task in to_cancel:
+        task.cancel()
+
+    loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
+
+    for task in to_cancel:
+        if task.cancelled():
+            continue
+        if not task.done():
+            _LOGGER.warning(
+                "Task could not be canceled and was still running after shutdown: %s",
+                task,
+            )
+            continue
+        if task.exception() is not None:
+            loop.call_exception_handler(
+                {
+                    "message": "unhandled exception during shutdown",
+                    "exception": task.exception(),
+                    "task": task,
+                }
+            )
+
+
+async def _shutdown_default_executor(loop: asyncio.AbstractEventLoop) -> None:
+    """Backport of cpython 3.9 schedule the shutdown of the default executor."""
+    future = loop.create_future()
+
+    def _do_shutdown() -> None:
+        try:
+            loop._default_executor.shutdown(wait=True)  # type: ignore  # pylint: disable=protected-access
+            loop.call_soon_threadsafe(future.set_result, None)
+        except Exception as ex:  # pylint: disable=broad-except
+            loop.call_soon_threadsafe(future.set_exception, ex)
+
+    thread = threading.Thread(target=_do_shutdown)
+    thread.start()
+    try:
+        await future
+    finally:
+        thread.join()
