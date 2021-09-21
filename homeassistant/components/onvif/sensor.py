@@ -20,16 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities.values())
 
     @callback
-    def async_check_entities():
-        """Check if we have added an entity for the event."""
-        new_entities = []
-        for event in device.events.get_platform("sensor"):
-            if event.uid not in entities:
-                entities[event.uid] = ONVIFSensor(event.uid, device)
-                new_entities.append(entities[event.uid])
-        async_add_entities(new_entities)
 
-    device.events.async_add_listener(async_check_entities)
 
     return True
 

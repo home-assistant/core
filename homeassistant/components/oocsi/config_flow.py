@@ -3,7 +3,12 @@ from __future__ import annotations
 
 import logging
 
-from oocsi import OOCSI, OOCSIDisconnect
+# import socket
+from typing import Any
+
+from oocsi import OOCSI
+
+# , OOCSIDisconnect
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,10 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-# import socket
-from typing import Any
-
-
 # import homeassistant.helpers.config_validation as cv
 
 
@@ -27,8 +28,8 @@ from typing import Any
 # RANDOMISED = petname
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = "prototype"
-DEFAULT_HOST = "localhost"
+PLATFORMS = "SWITCH"
+DEFAULT_HOST = "131.155.106.81"
 DEFAULT_PORT = 4444
 
 
@@ -51,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-
+        errors = {}
         if user_input is None:
             return self._async_show_form_popup()
 
@@ -59,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._connect_to_oocsi(user_input)
             except OOCSIDisconnect:
-                return self._async_show_form_popup({"base": "cannot find oocsi"})
+                errors["base"] = "cannot_connect"
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
                 data={
@@ -68,6 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PORT: self.port,
                 },
             )
+        return self._async_show_form_popup()
 
     #    return self.async_show_form(step_id="user", data_schema=USER_CONFIG_SCHEMA, errors=errors)
 
@@ -84,6 +86,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.port = user_input[CONF_PORT]
         oocsiconnect = OOCSI(self.name, self.host, self.port)
         print(oocsiconnect.handle)
+        oocsiconnect.stop()
+
+    # async def async_unload_entry(self) -> bool:
+    #     if self._connect_to_oocsi = True
+    #     await oocsiconnect.stop()
 
 
 class CannotConnect(HomeAssistantError):

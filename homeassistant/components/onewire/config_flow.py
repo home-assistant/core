@@ -91,6 +91,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         Let user manually input configuration.
         """
         errors: dict[str, str] = {}
+        #pick between 2 states options
         if user_input is not None:
             self.onewire_config.update(user_input)
             if CONF_TYPE_OWSERVER == user_input[CONF_TYPE]:

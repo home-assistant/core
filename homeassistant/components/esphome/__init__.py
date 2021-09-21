@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 import functools
 import logging
 import math
-from typing import Any, Callable, Generic, TypeVar, cast, overload
+from typing Anyimport , Callable, Generic, TypeVar, cast, overload
 
 from aioesphomeapi import (
     APIClient,
