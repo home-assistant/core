@@ -254,6 +254,9 @@ aiotractive==0.5.2
 # homeassistant.components.unifi
 aiounifi==26
 
+# homeassistant.components.watttime
+aiowatttime==0.1.1
+
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
 
