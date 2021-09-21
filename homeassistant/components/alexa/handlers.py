@@ -54,6 +54,7 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
+    DATE_FORMAT,
     Cause,
     Inputs,
 )
@@ -318,7 +319,7 @@ async def async_api_activate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+        "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
     }
 
     return directive.response(
@@ -342,7 +343,7 @@ async def async_api_deactivate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+        "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
     }
 
     return directive.response(

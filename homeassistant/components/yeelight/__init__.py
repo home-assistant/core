@@ -314,9 +314,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
     entry_data = data_config_entries[entry.entry_id]
+    unload_ok = True
     if entry_data[DATA_PLATFORMS_LOADED]:
-        if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-            return False
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if DATA_DEVICE in entry_data:
         device = entry_data[DATA_DEVICE]
@@ -325,7 +325,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
-    return True
+    return unload_ok
 
 
 @callback

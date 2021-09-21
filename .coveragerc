@@ -1177,6 +1177,8 @@ omit =
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
     homeassistant/components/watson_tts/tts.py
+    homeassistant/components/watttime/__init__.py
+    homeassistant/components/watttime/sensor.py
     homeassistant/components/waze_travel_time/__init__.py
     homeassistant/components/waze_travel_time/helpers.py
     homeassistant/components/waze_travel_time/sensor.py

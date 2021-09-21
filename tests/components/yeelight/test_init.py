@@ -366,6 +366,26 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     assert config_entry.options[CONF_MODEL] == MODEL
 
 
+async def test_unload_before_discovery(hass, caplog):
+    """Test unloading before discovery."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(cannot_connect=True)
+
+    with _patch_discovery(no_device=True), patch(
+        f"{MODULE}.AsyncBulb", return_value=mocked_bulb
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
     """Test the async listen error."""
     config_entry = MockConfigEntry(
