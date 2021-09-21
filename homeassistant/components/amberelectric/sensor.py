@@ -58,7 +58,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
             + " - "
             + friendly_channel_type(self._channel_type)
             + " "
-            + " Price"
+            + "Price"
         )
 
     @property
@@ -371,6 +371,7 @@ class AmberFactory:
             | AmberForecastSensor
             | AmberRenewablesSensor
             | AmberPriceSensor
+            | AmberPriceSpikeSensor
         ] = []
 
         if (

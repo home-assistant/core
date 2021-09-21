@@ -21,6 +21,42 @@ from tests.components.amberelectric.helpers import (
 )
 
 
+@pytest.fixture(name="current_price_api")
+def mock_api_current_price() -> Generator:
+    """Return an authentication error."""
+    instance = Mock()
+
+    general_site = Site(
+        GENERAL_ONLY_SITE_ID,
+        "11111111111",
+        [Channel(identifier="E1", type=ChannelType.GENERAL)],
+    )
+    general_and_controlled_load = Site(
+        GENERAL_AND_CONTROLLED_SITE_ID,
+        "11111111112",
+        [
+            Channel(identifier="E1", type=ChannelType.GENERAL),
+            Channel(identifier="E2", type=ChannelType.CONTROLLED_LOAD),
+        ],
+    )
+    general_and_feed_in = Site(
+        GENERAL_AND_FEED_IN_SITE_ID,
+        "11111111113",
+        [
+            Channel(identifier="E1", type=ChannelType.GENERAL),
+            Channel(identifier="E2", type=ChannelType.FEED_IN),
+        ],
+    )
+    instance.get_sites.return_value = [
+        general_site,
+        general_and_controlled_load,
+        general_and_feed_in,
+    ]
+
+    with patch("amberelectric.api.AmberApi.create", return_value=instance):
+        yield instance
+
+
 async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) -> None:
     """Test fetching a site with only a general channel."""
 
@@ -71,42 +107,6 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
     assert data_service.forecasts[ChannelType.CONTROLLED_LOAD] == []
     assert data_service.current_prices[ChannelType.FEED_IN] is None
     assert data_service.forecasts[ChannelType.FEED_IN] == []
-
-
-@pytest.fixture(name="current_price_api")
-def mock_api_current_price() -> Generator:
-    """Return an authentication error."""
-    instance = Mock()
-
-    general_site = Site(
-        GENERAL_ONLY_SITE_ID,
-        "11111111111",
-        [Channel(identifier="E1", type=ChannelType.GENERAL)],
-    )
-    general_and_controlled_load = Site(
-        GENERAL_AND_CONTROLLED_SITE_ID,
-        "11111111112",
-        [
-            Channel(identifier="E1", type=ChannelType.GENERAL),
-            Channel(identifier="E2", type=ChannelType.CONTROLLED_LOAD),
-        ],
-    )
-    general_and_feed_in = Site(
-        GENERAL_AND_FEED_IN_SITE_ID,
-        "11111111113",
-        [
-            Channel(identifier="E1", type=ChannelType.GENERAL),
-            Channel(identifier="E2", type=ChannelType.FEED_IN),
-        ],
-    )
-    instance.get_sites.return_value = [
-        general_site,
-        general_and_controlled_load,
-        general_and_feed_in,
-    ]
-
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
-        yield instance
 
 
 async def test_fetch_general_and_controlled_load_site(
