@@ -343,28 +343,27 @@ class NetatmoCamera(NetatmoBase, Camera):
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
         person = kwargs.get(ATTR_PERSON)
-        person_id = None
-        if person:
-            for pid, data in self._data.persons[self._home_id].items():
-                if data.get("pseudo") == person:
-                    person_id = pid
+        person_id = next(
+            (
+                pid
+                for pid, data in self._data.persons[self._home_id].items()
+                if person and data.get("pseudo") == person
+            ),
+            None,
+        )
 
-            if person_id is None:
-                _LOGGER.debug('"%s" is not registered', person)
-                raise HomeAssistantError("Person is not registered")
+        if person and person_id is None:
+            _LOGGER.debug('"%s" is not registered', person)
+            raise HomeAssistantError("Person is not registered")
+
+        await self._data.async_set_persons_away(
+            person_id=person_id,
+            home_id=self._home_id,
+        )
 
         if person_id:
-            await self._data.async_set_persons_away(
-                person_id=person_id,
-                home_id=self._home_id,
-            )
             _LOGGER.debug("Set %s as away", person)
-
         else:
-            await self._data.async_set_persons_away(
-                person_id=person_id,
-                home_id=self._home_id,
-            )
             _LOGGER.debug("Set home as empty")
 
     async def _service_set_camera_light(self, **kwargs: Any) -> None:
