@@ -81,7 +81,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.trigger_blind())
 
     @property
