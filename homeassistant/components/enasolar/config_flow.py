@@ -65,7 +65,17 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect(self, host):
         """Needed to mock connection when running tests."""
-        await self._enasolar.interogate_inverter(host)
+        error = None
+        try:
+            await self._enasolar.interogate_inverter(host)
+        except aiohttp.client_exceptions.ClientConnectorError:
+            error = "cannot_connect"
+        except aiohttp.client_exceptions.ClientResponseError:
+            error = "unexpected_response"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            error = "unknown"
+        return error
 
     def get_name(self):
         """Needed to mock name when running tests."""
@@ -94,19 +104,14 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 self._data[CONF_HOST] = user_input[CONF_HOST]
                 self._data[CONF_NAME] = user_input[CONF_NAME]
-                try:
-                    await self._try_connect(self._data[CONF_HOST])
+                error = await self._try_connect(self._data[CONF_HOST])
+                if error is not None:
+                    _errors[CONF_HOST] = error
+                else:
                     if self._conf_for_inverter_exists(self.get_serial_no()):
                         return self.async_abort(reason="already_configured")
                     await self.async_set_unique_id(self.get_serial_no())
                     return await self.async_step_inverter()
-                except aiohttp.client_exceptions.ClientConnectorError:
-                    _errors[CONF_HOST] = "cannot_connect"
-                except aiohttp.client_exceptions.ClientResponseError:
-                    _errors[CONF_HOST] = "unexpected_response"
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
-                    _errors["base"] = "unknown"
         else:
             user_input = {}
             user_input[CONF_NAME] = DEFAULT_NAME

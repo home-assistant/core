@@ -235,10 +235,7 @@ class EnaSolarSensor(SensorEntity):
             return DEVICE_CLASS_POWER
         if self._attr_native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             return DEVICE_CLASS_ENERGY
-        if (
-            self._attr_unit_of_measurement == TEMP_CELSIUS
-            or self._attr_unit_of_measurement == TEMP_FAHRENHEIT
-        ):
+        if self._attr_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             return DEVICE_CLASS_TEMPERATURE
 
     @callback
