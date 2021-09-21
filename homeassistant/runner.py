@@ -27,6 +27,8 @@ from homeassistant.util.thread import deadlock_safe_shutdown
 #
 MAX_EXECUTOR_WORKERS = 64
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclasses.dataclass
 class RuntimeConfig:
@@ -99,7 +101,12 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
     # threading._shutdown can deadlock forever
     threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined] # pylint: disable=protected-access
 
-    return await hass.async_run()
+    exit_code = await hass.async_run()
+
+    running_tasks = asyncio.all_tasks(hass.loop)
+    _LOGGER.debug("Tasks still running at shutdown: %s", running_tasks)
+
+    return exit_code
 
 
 def run(runtime_config: RuntimeConfig) -> int:
