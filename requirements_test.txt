@@ -32,7 +32,6 @@ types-croniter==1.0.0
 types-backports==0.1.3
 types-certifi==0.1.4
 types-chardet==0.1.5
-types-cryptography==3.3.2
 types-decorator==0.1.7
 types-emoji==1.2.4
 types-enum34==0.1.8
