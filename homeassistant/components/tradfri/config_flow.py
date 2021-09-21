@@ -10,8 +10,9 @@ from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
@@ -46,13 +47,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth()
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle the authentication with a gateway."""
         errors: dict[str, str] = {}
 
@@ -91,9 +92,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_homekit(
-        self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResult:
+    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(discovery_info["properties"]["id"])
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
@@ -115,9 +114,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = host
         return await self.async_step_auth()
 
-    async def async_step_import(
-        self, user_input: dict[str, Any]
-    ) -> data_entry_flow.FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
         self._async_abort_entries_match({CONF_HOST: user_input["host"]})
 
@@ -144,9 +141,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._host = user_input["host"]
             return await self.async_step_auth()
 
-    async def _entry_from_data(
-        self, data: dict[str, Any]
-    ) -> data_entry_flow.FlowResult:
+    async def _entry_from_data(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry from data."""
         host = data[CONF_HOST]
         gateway_id = data[CONF_GATEWAY_ID]
