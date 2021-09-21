@@ -38,7 +38,7 @@ class PushChannel:
         confirm_id = random_uuid_hex()
         data["hass_confirm_id"] = confirm_id
 
-        async def handle_push_failed():
+        async def handle_push_failed(_=None):
             """Handle a failed local push notification."""
             # Remove this handler from the pending dict
             # If it didn't exist we hit a race condition between call_later and another
