@@ -52,9 +52,6 @@ async def test_setup_automatic_add(hass):
             }
         ],
     ), patch(
-        "homeassistant.components.flux_led.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.flux_led.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -73,7 +70,6 @@ async def test_setup_automatic_add(hass):
         CONF_DEVICES: {"1_1_1_1": {CONF_NAME: "1.1.1.1", CONF_HOST: "1.1.1.1"}},
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -85,9 +81,6 @@ async def test_setup_manual_add(hass):
     )
 
     with patch(
-        "homeassistant.components.flux_led.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.flux_led.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -106,7 +99,6 @@ async def test_setup_manual_add(hass):
         CONF_DEVICES: {},
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -154,9 +146,6 @@ async def test_import_automatic_add(hass):
             }
         ],
     ), patch(
-        "homeassistant.components.flux_led.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.flux_led.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -174,7 +163,6 @@ async def test_import_automatic_add(hass):
         CONF_DEVICES: {"1_1_1_1": {CONF_NAME: "1.1.1.1", CONF_HOST: "1.1.1.1"}},
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -217,9 +205,6 @@ async def test_import_manual(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.flux_led.async_setup",
-        return_value=True,
-    ) as mock_setup, patch(
         "homeassistant.components.flux_led.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -249,8 +234,6 @@ async def test_import_manual(hass):
             }
         },
     }
-
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -321,10 +304,7 @@ async def test_options_set_global_options(hass):
         "homeassistant.components.flux_led.light.WifiLedBulb.connect",
         return_value=True,
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -375,10 +355,7 @@ async def test_options_add_and_remove_new_light(hass):
         "homeassistant.components.flux_led.light.WifiLedBulb.connect",
         return_value=True,
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
@@ -474,10 +451,7 @@ async def test_options_configure_light(hass):
         "homeassistant.components.flux_led.light.WifiLedBulb.connect",
         return_value=True,
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "prompt_options"
