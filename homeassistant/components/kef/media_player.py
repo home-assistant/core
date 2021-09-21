@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -123,6 +124,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
+    if mac is None:
+        raise PlatformNotReady("Cannot get the ip address of kef speaker.")
+
     unique_id = f"kef-{mac}" if mac is not None else None
 
     media_player = KefMediaPlayer(
