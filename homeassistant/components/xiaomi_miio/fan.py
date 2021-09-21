@@ -60,14 +60,14 @@ from .const import (
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
+    MODEL_FAN_1C,
     MODEL_FAN_P5,
+    MODEL_FAN_P9,
+    MODEL_FAN_P10,
+    MODEL_FAN_P11,
     MODEL_FAN_ZA5,
-    MODELS_FAN_1C,
     MODELS_FAN_MIIO,
     MODELS_FAN_MIOT,
-    MODELS_FAN_P9,
-    MODELS_FAN_P10,
-    MODELS_FAN_P11,
     MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
@@ -717,13 +717,13 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         elif self._model == MODEL_FAN_ZA5:
             self._device_features = FEATURE_FLAGS_FAN_ZA5
             self._preset_modes = [mode.name for mode in FanZA5OperationMode]
-        elif self._model == MODELS_FAN_1C:
+        elif self._model == MODEL_FAN_1C:
             self._device_features = FEATURE_FLAGS_FAN_1C
             self._preset_modes = [mode.name for mode in FanMiotOperationMode]
-        elif self._model == MODELS_FAN_P9:
+        elif self._model == MODEL_FAN_P9:
             self._device_features = FEATURE_FLAGS_FAN_P9
             self._preset_modes = [mode.name for mode in FanMiotOperationMode]
-        elif self._model in (MODELS_FAN_P10, MODELS_FAN_P11):
+        elif self._model in (MODEL_FAN_P10, MODEL_FAN_P11):
             self._device_features = FEATURE_FLAGS_FAN_P10_P11
             self._preset_modes = [mode.name for mode in FanMiotOperationMode]
         else:
