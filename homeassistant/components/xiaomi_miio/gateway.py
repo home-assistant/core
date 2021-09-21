@@ -126,7 +126,7 @@ class ConnectXiaomiGateway:
                 ) from error
             except DeviceException as error:
                 raise ConfigEntryNotReady(
-                    "DeviceException during setup of xiaomi gateway with host {self._host}"
+                    f"DeviceException during setup of xiaomi gateway with host {self._host}"
                 ) from error
 
         return True
