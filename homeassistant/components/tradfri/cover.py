@@ -63,7 +63,7 @@ class TradfriCover(TradfriBaseDevice, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(100 - kwargs[ATTR_POSITION]))
 
     async def async_open_cover(self, **kwargs: Any) -> None:
