@@ -64,11 +64,11 @@ class TradfriSwitch(TradfriBaseDevice, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(False))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(True))

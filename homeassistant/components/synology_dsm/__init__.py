@@ -250,7 +250,6 @@ async def async_setup_entry(  # noqa: C901
             await api.async_update()
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return None
 
     async def async_coordinator_update_data_switches() -> dict[
         str, dict[str, Any]

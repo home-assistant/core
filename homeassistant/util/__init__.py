@@ -218,13 +218,13 @@ class Throttle:
 
             async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""
-                return None
+                return None  # pylint: disable=hass-return-none
 
         else:
 
             def throttled_value() -> None:  # type: ignore
                 """Stand-in function for when real func is being throttled."""
-                return None
+                return None  # pylint: disable=hass-return-none
 
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)

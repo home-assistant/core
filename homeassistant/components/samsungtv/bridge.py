@@ -197,7 +197,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_TIMEOUT: 1,
         }
 
-    def mac_from_device(self) -> None:
+    def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
         return None
 
@@ -228,7 +228,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
-    def device_info(self) -> None:
+    def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this device."""
         return None
 
