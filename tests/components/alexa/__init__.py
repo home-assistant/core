@@ -1,10 +1,11 @@
 """Tests for the Alexa integration."""
+import re
 from uuid import uuid4
 
 from homeassistant.components.alexa import config, smart_home
 from homeassistant.core import Context, callback
+
 from tests.common import async_mock_service
-import re
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
