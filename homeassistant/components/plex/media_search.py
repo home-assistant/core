@@ -73,7 +73,10 @@ def search_media(media_type, library_section, allow_multiple=False, **kwargs):
             exact_matches = [x for x in results if x.title.lower() == title.lower()]
             if len(exact_matches) == 1:
                 return exact_matches[0]
-        _LOGGER.warning("Multiple matches, make content_id more specific: %s", results)
+        _LOGGER.warning(
+            "Multiple matches, make content_id more specific or use `allow_multiple`: %s",
+            results,
+        )
         return None
 
     return results[0]
