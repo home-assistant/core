@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 
-from .const import API_CHANGE, DOMAIN, Cause
+from .const import API_CHANGE, DATE_FORMAT, DOMAIN, Cause
 from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .messages import AlexaResponse
 
@@ -252,7 +252,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
         namespace="Alexa.DoorbellEventSource",
         payload={
             "cause": {"type": Cause.PHYSICAL_INTERACTION},
-            "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
+            "timestamp": dt_util.utcnow().strftime(DATE_FORMAT),
         },
     )
 
