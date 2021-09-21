@@ -395,13 +395,13 @@ class ZigbeeChannel(LogMixin):
         result = {}
         while chunk:
             try:
-                r, _ = await self.cluster.read_attributes(
+                read, _ = await self.cluster.read_attributes(
                     attributes,
                     allow_cache=from_cache,
                     only_cache=from_cache and not self._ch_pool.is_mains_powered,
                     manufacturer=manufacturer,
                 )
-                result.update(r)
+                result.update(read)
             except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
                 self.debug(
                     "failed to get attributes '%s' on '%s' cluster: %s",
