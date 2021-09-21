@@ -1,0 +1,13 @@
+{
+  "domain": "goodwe",
+  "name": "GoodWe Inverter",
+  "documentation": "https://www.home-assistant.io/integrations/goodwe",
+  "dependencies": [],
+  "codeowners": [
+    "@mletenay",
+    "@starkillerOG"
+  ],
+  "requirements": ["goodwe==0.2.7"],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}

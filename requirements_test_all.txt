@@ -436,6 +436,9 @@ glances_api==0.2.0
 # homeassistant.components.goalzero
 goalzero==0.2.0
 
+# homeassistant.components.goodwe
+goodwe==0.2.7
+
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
