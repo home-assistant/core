@@ -185,6 +185,19 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 
         return fetched_data
 
+    async def _async_write_data(self, module_id: str, value: Dict[str, str]) -> bool:
+        client = self._plenticore.client
+
+        if not self._fetch or client is None:
+            return False
+
+        try:
+            await client.set_setting_values(module_id, value)
+        except:
+            return False
+        else:
+            return True
+
 
 class PlenticoreDataFormatter:
     """Provides method to format values of process or settings data."""
