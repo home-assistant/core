@@ -428,6 +428,185 @@ async def test_setup_hass(
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
 
 
+DIR_LIST_WITH_CRASHES = [
+    "configuration.yaml",
+    "hass_crash_report.1632335290",
+    "hass_crash_report.1632335291",
+    "hass_crash_report.1632335292",
+]
+
+
+async def test_setup_hass_ends_up_in_safe_mode_after_crashes(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+    caplog,
+    loop,
+):
+    """Test that after 3 crashes we startup in safe mode."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
+    ), patch("homeassistant.bootstrap._slurp_file", return_value="Crash!"), patch(
+        "homeassistant.bootstrap.time.time", return_value=1632335297
+    ), patch(
+        "homeassistant.bootstrap.os.unlink"
+    ) as mock_unlink, patch(
+        "homeassistant.bootstrap.os.listdir", return_value=DIR_LIST_WITH_CRASHES
+    ), patch.object(
+        bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=verbose,
+                log_rotate_days=log_rotate_days,
+                log_file=log_file,
+                log_no_color=log_no_color,
+                skip_pip=True,
+                safe_mode=False,
+            ),
+        )
+
+    assert "Waiting on integrations to complete setup" not in caplog.text
+    assert "Crash!" in caplog.text
+
+    assert "safe_mode" in hass.config.components
+
+    assert len(mock_enable_logging.mock_calls) == 1
+    assert mock_enable_logging.mock_calls[0][1] == (
+        hass,
+        verbose,
+        log_rotate_days,
+        log_file,
+        log_no_color,
+    )
+    assert len(mock_ensure_config_exists.mock_calls) == 1
+    assert len(mock_unlink.mock_calls) == 3
+
+
+async def test_setup_hass_continues_if_cannot_determine_if_crashed(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+    caplog,
+    loop,
+):
+    """Test we continue on if we cannot determine if there were multiple crashes."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
+    ), patch("homeassistant.bootstrap._slurp_file", side_effect=ValueError), patch(
+        "homeassistant.bootstrap.time.time", return_value=1632335297
+    ), patch(
+        "homeassistant.bootstrap.os.unlink"
+    ) as mock_unlink, patch(
+        "homeassistant.bootstrap.os.listdir", return_value=DIR_LIST_WITH_CRASHES
+    ), patch.object(
+        bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=verbose,
+                log_rotate_days=log_rotate_days,
+                log_file=log_file,
+                log_no_color=log_no_color,
+                skip_pip=True,
+                safe_mode=False,
+            ),
+        )
+
+    assert "Waiting on integrations to complete setup" not in caplog.text
+
+    assert "browser" in hass.config.components
+    assert "safe_mode" not in hass.config.components
+
+    assert len(mock_enable_logging.mock_calls) == 1
+    assert mock_enable_logging.mock_calls[0][1] == (
+        hass,
+        verbose,
+        log_rotate_days,
+        log_file,
+        log_no_color,
+    )
+    assert len(mock_mount_local_lib_path.mock_calls) == 1
+    assert len(mock_ensure_config_exists.mock_calls) == 1
+    assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+    assert len(mock_unlink.mock_calls) == 0
+
+
+async def test_setup_hass_ignores_and_removes_old_crash_reports(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+    caplog,
+    loop,
+):
+    """Test we do not startup in safe mode if crash reports are too old."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
+    ), patch("homeassistant.bootstrap._slurp_file", return_value="Crash!"), patch(
+        "homeassistant.bootstrap.time.time", return_value=1732335297
+    ), patch(
+        "homeassistant.bootstrap.os.unlink"
+    ) as mock_unlink, patch(
+        "homeassistant.bootstrap.os.listdir", return_value=DIR_LIST_WITH_CRASHES
+    ), patch.object(
+        bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 5000
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=verbose,
+                log_rotate_days=log_rotate_days,
+                log_file=log_file,
+                log_no_color=log_no_color,
+                skip_pip=True,
+                safe_mode=False,
+            ),
+        )
+
+    assert "Waiting on integrations to complete setup" not in caplog.text
+    assert "browser" in hass.config.components
+    assert "safe_mode" not in hass.config.components
+
+    assert len(mock_enable_logging.mock_calls) == 1
+    assert mock_enable_logging.mock_calls[0][1] == (
+        hass,
+        verbose,
+        log_rotate_days,
+        log_file,
+        log_no_color,
+    )
+    assert len(mock_mount_local_lib_path.mock_calls) == 1
+    assert len(mock_ensure_config_exists.mock_calls) == 1
+    assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+    assert len(mock_unlink.mock_calls) == 3
+
+
 async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_enable_logging,
     mock_is_virtual_env,

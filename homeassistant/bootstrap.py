@@ -86,6 +86,12 @@ STAGE_1_INTEGRATIONS = {
 }
 
 
+def _slurp_file(dir: str, file_name: str) -> str:
+    """Read a file."""
+    file_path = Path(dir) / file_name
+    return file_path.read_text()
+
+
 def _check_and_log_crash_reports(config_dir: str) -> bool:
     """Check and log crash reports."""
     timestamp = time.time()
@@ -98,7 +104,9 @@ def _check_and_log_crash_reports(config_dir: str) -> bool:
         if crash_timestamp_int + MAX_RECENT_CRASHES_AGE < timestamp:
             os.unlink(file_path)
             continue
-        crash_reports.append((crash_timestamp_int, file_path, file_path.read_text()))
+        crash_reports.append(
+            (crash_timestamp_int, file_path, _slurp_file(config_dir, file_name))
+        )
 
     activate_safe_mode = len(crash_reports) >= MAX_RECENT_CRASHES_SAFE_MODE
     for timestamp, file_path, crash_report in crash_reports:
