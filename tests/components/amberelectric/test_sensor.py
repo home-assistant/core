@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from amberelectric.model.channel import Channel, ChannelType
 from amberelectric.model.interval import SpikeStatus
+from amberelectric.model.range import Range
 from amberelectric.model.site import Site
 from dateutil import parser
 
@@ -28,6 +29,7 @@ from tests.components.amberelectric.helpers import (
     GENERAL_CHANNEL,
     GENERAL_ONLY_SITE_ID,
     generate_current_interval,
+    generate_forecast_interval,
 )
 
 
@@ -291,8 +293,65 @@ def test_amber_general_price_sensor(hass: HomeAssistant) -> None:
     assert attributes["attribution"] == "Data provided by Amber Electric"
 
 
+def test_amber_general_price_sensor_with_range(hass: HomeAssistant) -> None:
+    """Testing the Amber sensors attributes when there is a range."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    general_channel = generate_current_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
+    )
+    general_channel.range = Range(0.5, 1.6)
+    api.get_current_price.return_value = [general_channel]
+    factory = AmberFactory(hass, "Home", GENERAL_ONLY_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberPriceSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[0]
+    assert general_price_sensor.name == "Home - General Price"
+    assert general_price_sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_general_price"
+    assert general_price_sensor.icon == "mdi:transmission-tower"
+    assert general_price_sensor.unit_of_measurement == "¢/kWh"
+    assert general_price_sensor.native_value == 8
+
+    attributes = general_price_sensor.device_state_attributes
+    assert attributes is not None
+    assert attributes["range_min"] == 0.5
+    assert attributes["range_max"] == 1.6
+
+
+def test_amber_general_price_sensor_no_data(hass: HomeAssistant) -> None:
+    """Testing the price sensor when there is no data."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = []
+    factory = AmberFactory(hass, "Home", GENERAL_ONLY_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberPriceSensor, sensors)
+    )
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberPriceSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[0]
+    assert general_price_sensor.name == "Home - General Price"
+    assert general_price_sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_general_price"
+    assert general_price_sensor.icon == "mdi:transmission-tower"
+    assert general_price_sensor.unit_of_measurement == "¢/kWh"
+    assert general_price_sensor.native_value is None
+    attributes = general_price_sensor.device_state_attributes
+    assert attributes is not None
+    assert attributes["attribution"] == "Data provided by Amber Electric"
+
+
 def test_amber_controlled_load_price_sensor(hass: HomeAssistant) -> None:
-    """Testing the creation of all the Amber sensors when there is only general channels."""
+    """Testing the creation of all the Amber sensors when there is general and controlled load channels."""
     api = Mock()
     api.get_sites.return_value = sites()
     general = generate_current_interval(
@@ -334,7 +393,7 @@ def test_amber_controlled_load_price_sensor(hass: HomeAssistant) -> None:
 
 
 def test_amber_solar_price_sensor(hass: HomeAssistant) -> None:
-    """Testing the creation of all the Amber sensors when there is only general channels."""
+    """Testing the creation of all the Amber sensors when there is general and feed in channels."""
     api = Mock()
     api.get_sites.return_value = sites()
     general = generate_current_interval(
@@ -416,6 +475,134 @@ def test_amber_general_forecast_sensor(hass: HomeAssistant) -> None:
     assert attributes["attribution"] == "Data provided by Amber Electric"
 
 
+def test_amber_general_forecast_sensor_with_range(hass: HomeAssistant) -> None:
+    """Testing the Amber sensors attributes when there is a range."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    general_channel = generate_forecast_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T09:00:00+10:00")
+    )
+    general_channel.range = Range(0.1, 4.2)
+    print(general_channel)
+    api.get_current_price.return_value = [general_channel]
+    factory = AmberFactory(hass, "Home", GENERAL_ONLY_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberForecastSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[0]
+    assert general_price_sensor.name == "Home - General Forecast"
+    assert (
+        general_price_sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_general_forecast"
+    )
+    assert general_price_sensor.icon == "mdi:transmission-tower"
+    assert general_price_sensor.unit_of_measurement == "¢/kWh"
+    assert general_price_sensor.native_value == 9
+
+    attributes = general_price_sensor.device_state_attributes
+    assert attributes is not None
+    assert attributes["channel_type"] == "general"
+
+    assert len(attributes["forecasts"]) == 1
+    first_forecast = attributes["forecasts"][0]
+    assert first_forecast["duration"] == 30
+    assert first_forecast["date"] == "2021-09-21"
+    assert first_forecast["per_kwh"] == 9
+    assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
+    assert first_forecast["spot_per_kwh"] == 1
+    assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
+    assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
+    assert first_forecast["renewables"] == 50
+    assert first_forecast["spike_status"] == "none"
+    assert first_forecast["range_min"] == 0.1
+    assert first_forecast["range_max"] == 4.2
+    assert attributes["attribution"] == "Data provided by Amber Electric"
+
+
+def test_amber_controlled_load_forecast_sensor(hass: HomeAssistant) -> None:
+    """Testing the creation of the controlled load Amber forecast sensor."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
+    factory = AmberFactory(hass, "Home", GENERAL_AND_CONTROLLED_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberForecastSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[1]
+    assert general_price_sensor.name == "Home - Controlled Load Forecast"
+    assert (
+        general_price_sensor.unique_id
+        == "01fg2mc8rf7gbc4kjxp3yfz162_controlled_load_forecast"
+    )
+    assert general_price_sensor.icon == "mdi:clock-outline"
+    assert general_price_sensor.unit_of_measurement == "¢/kWh"
+    assert general_price_sensor.native_value == 9
+
+    attributes = general_price_sensor.device_state_attributes
+    assert attributes is not None
+    assert attributes["channel_type"] == "controlledLoad"
+
+    assert len(attributes["forecasts"]) == 1
+    first_forecast = attributes["forecasts"][0]
+    assert first_forecast["duration"] == 30
+    assert first_forecast["date"] == "2021-09-21"
+    assert first_forecast["per_kwh"] == 9
+    assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
+    assert first_forecast["spot_per_kwh"] == 1
+    assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
+    assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
+    assert first_forecast["renewables"] == 50
+    assert first_forecast["spike_status"] == "none"
+    assert attributes["attribution"] == "Data provided by Amber Electric"
+
+
+def test_amber_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
+    """Testing the creation of the feed in Amber forecast sensor."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = GENERAL_CHANNEL + FEED_IN_CHANNEL
+    factory = AmberFactory(hass, "Home", GENERAL_AND_FEED_IN_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberForecastSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[1]
+    assert general_price_sensor.name == "Home - Feed In Forecast"
+    assert (
+        general_price_sensor.unique_id == "01fg2mcd8ktrzr9mnnw84vp50s_feed_in_forecast"
+    )
+    assert general_price_sensor.icon == "mdi:solar-power"
+    assert general_price_sensor.unit_of_measurement == "¢/kWh"
+    assert general_price_sensor.native_value == -9
+
+    attributes = general_price_sensor.device_state_attributes
+    assert attributes is not None
+    assert attributes["channel_type"] == "feedIn"
+
+    assert len(attributes["forecasts"]) == 1
+    first_forecast = attributes["forecasts"][0]
+    assert first_forecast["duration"] == 30
+    assert first_forecast["date"] == "2021-09-21"
+    assert first_forecast["per_kwh"] == -9
+    assert first_forecast["nem_date"] == "2021-09-21T09:00:00+10:00"
+    assert first_forecast["spot_per_kwh"] == 1
+    assert first_forecast["start_time"] == "2021-09-21T08:30:00+10:00"
+    assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
+    assert first_forecast["renewables"] == 50
+    assert first_forecast["spike_status"] == "none"
+    assert attributes["attribution"] == "Data provided by Amber Electric"
+
+
 def test_amber_general_energy_price_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the general Amber energy price sensor."""
     api = Mock()
@@ -441,6 +628,73 @@ def test_amber_general_energy_price_sensor(hass: HomeAssistant) -> None:
     assert general_price_sensor.native_value == 0.08
 
 
+def test_amber_controlled_load_energy_price_sensor(hass: HomeAssistant) -> None:
+    """Testing the creation of the controlled load Amber energy price sensor."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
+    factory = AmberFactory(hass, "Home", GENERAL_AND_CONTROLLED_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberEnergyPriceSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[1]
+    assert general_price_sensor.name == "Home - Controlled Load Energy Price"
+    assert (
+        general_price_sensor.unique_id
+        == "01fg2mc8rf7gbc4kjxp3yfz162_controlled_load_energy_price"
+    )
+    assert general_price_sensor.icon == "mdi:clock-outline"
+    assert general_price_sensor.device_class == DEVICE_CLASS_MONETARY
+    assert general_price_sensor.unit_of_measurement == "AUD"
+    assert general_price_sensor.native_value == 0.08
+
+
+def test_amber_feed_in_energy_price_sensor(hass: HomeAssistant) -> None:
+    """Testing the creation of the feed in Amber energy price sensor."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = GENERAL_CHANNEL + FEED_IN_CHANNEL
+    factory = AmberFactory(hass, "Home", GENERAL_AND_FEED_IN_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberEnergyPriceSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[1]
+    assert general_price_sensor.name == "Home - Feed In Energy Price"
+    assert (
+        general_price_sensor.unique_id
+        == "01fg2mcd8ktrzr9mnnw84vp50s_feed_in_energy_price"
+    )
+    assert general_price_sensor.icon == "mdi:solar-power"
+    assert general_price_sensor.device_class == DEVICE_CLASS_MONETARY
+    assert general_price_sensor.unit_of_measurement == "AUD"
+    assert general_price_sensor.native_value == -0.08
+
+
+def test_amber_energy_price_sensor_no_data(hass: HomeAssistant) -> None:
+    """Testing the Amber sensors attributes when there is no data."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = []
+    factory = AmberFactory(hass, "Home", GENERAL_ONLY_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberEnergyPriceSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[0]
+    assert general_price_sensor.native_value is None
+
+
 def test_amber_general_renewable_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
     api = Mock()
@@ -460,6 +714,26 @@ def test_amber_general_renewable_sensor(hass: HomeAssistant) -> None:
     assert general_price_sensor.icon == "mdi:solar-power"
     assert general_price_sensor.unit_of_measurement == "%"
     assert general_price_sensor.native_value == 51
+    attributes = general_price_sensor.device_state_attributes
+    assert attributes is not None
+    assert attributes["attribution"] == "Data provided by Amber Electric"
+
+
+def test_amber_general_renewable_sensor_no_data(hass: HomeAssistant) -> None:
+    """Testing the creation of the Amber renewables sensor when there is no data."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = []
+    factory = AmberFactory(hass, "Home", GENERAL_ONLY_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    amber_price_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberRenewablesSensor, sensors)
+    )
+    general_price_sensor = amber_price_sensors[0]
+    assert general_price_sensor.native_value is None
     attributes = general_price_sensor.device_state_attributes
     assert attributes is not None
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -546,4 +820,25 @@ def test_amber_general_price_spike_sensor_spike(hass: HomeAssistant) -> None:
     attributes = sensor.device_state_attributes
     assert attributes is not None
     assert attributes["spike_status"] == "spike"
+    assert attributes["attribution"] == "Data provided by Amber Electric"
+
+
+def test_amber_general_price_spike_sensor_no_data(hass: HomeAssistant) -> None:
+    """Testing the creation of the Amber price spike sensor when there is no data."""
+    api = Mock()
+    api.get_sites.return_value = sites()
+    api.get_current_price.return_value = []
+
+    factory = AmberFactory(hass, "Home", GENERAL_ONLY_SITE_ID, api)
+    factory.data_service.async_setup()
+    factory.data_service.update()
+    sensors = factory.build_sensors()
+
+    filtered_sensors = list(
+        filter(lambda sensor: sensor.__class__ == AmberPriceSpikeSensor, sensors)
+    )
+    sensor = filtered_sensors[0]
+    assert sensor.native_value is False
+    attributes = sensor.device_state_attributes
+    assert attributes is not None
     assert attributes["attribution"] == "Data provided by Amber Electric"

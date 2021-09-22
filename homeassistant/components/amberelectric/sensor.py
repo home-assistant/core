@@ -28,13 +28,11 @@ ATTRIBUTION = "Data provided by Amber Electric"
 
 def friendly_channel_type(channel_type: str) -> str:
     """Return a human readable version of the channel type."""
-    if channel_type == ChannelType.GENERAL:
-        return "General"
     if channel_type == ChannelType.CONTROLLED_LOAD:
         return "Controlled Load"
     if channel_type == ChannelType.FEED_IN:
         return "Feed In"
-    return channel_type
+    return "General"
 
 
 class AmberPriceSensor(CoordinatorEntity, SensorEntity):
