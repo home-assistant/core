@@ -8,6 +8,7 @@ from crownstone_cloud.exceptions import (
     CrownstoneAuthenticationError,
     CrownstoneUnknownError,
 )
+import pytest
 from serial.tools.list_ports_common import ListPortInfo
 
 from homeassistant import data_entry_flow
@@ -26,6 +27,35 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="crownstone_setup")
+def crownstone_setup():
+    """Mock Crownstone entry setup."""
+    with patch(
+        "homeassistant.components.crownstone.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+@pytest.fixture(name="pyserial_comports")
+def usb_comports():
+    """Mock pyserial comports."""
+    with patch(
+        "serial.tools.list_ports.comports",
+        MagicMock(return_value=[get_mocked_com_port()]),
+    ):
+        yield
+
+
+@pytest.fixture(name="usb_path")
+def usb_path():
+    """Mock usb serial path."""
+    with patch(
+        "homeassistant.components.usb.get_serial_by_id",
+        return_value="/dev/serial/by-id/crownstone-usb",
+    ):
+        yield
 
 
 def get_mocked_crownstone_entry_manager(mocked_cloud: MagicMock):
@@ -119,6 +149,7 @@ async def start_options_flow(
     return await hass.config_entries.options.async_init(entry_id)
 
 
+@pytest.mark.usefixtures("crownstone_setup")
 async def test_no_user_input(hass: HomeAssistant):
     """Test the flow done in the correct way."""
     # test if a form is returned if no input is provided
@@ -130,6 +161,7 @@ async def test_no_user_input(hass: HomeAssistant):
     assert result["step_id"] == "user"
 
 
+@pytest.mark.usefixtures("crownstone_setup")
 async def test_abort_if_configured(hass: HomeAssistant):
     """Test flow with correct login input and abort if sphere already configured."""
     # create mock entry conf
@@ -157,6 +189,7 @@ async def test_abort_if_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("crownstone_setup")
 async def test_authentication_errors(hass: HomeAssistant):
     """Test flow with wrong auth errors."""
     cloud = get_mocked_crownstone_cloud()
@@ -181,6 +214,7 @@ async def test_authentication_errors(hass: HomeAssistant):
     assert result["errors"] == {"base": "account_not_verified"}
 
 
+@pytest.mark.usefixtures("crownstone_setup")
 async def test_unknown_error(hass: HomeAssistant):
     """Test flow with unknown error."""
     cloud = get_mocked_crownstone_cloud()
@@ -193,6 +227,7 @@ async def test_unknown_error(hass: HomeAssistant):
     assert result["errors"] == {"base": "unknown_error"}
 
 
+@pytest.mark.usefixtures("crownstone_setup")
 async def test_successful_login_no_usb(hass: HomeAssistant):
     """Test a successful login without configuring a USB."""
     entry_data_without_usb = create_mocked_entry_data_conf(
@@ -218,14 +253,8 @@ async def test_successful_login_no_usb(hass: HomeAssistant):
     assert result["options"] == entry_options_without_usb
 
 
-@patch(
-    "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
-)
-@patch(
-    "homeassistant.components.usb.get_serial_by_id",
-    return_value="/dev/serial/by-id/crownstone-usb",
-)
-async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssistant):
+@pytest.mark.usefixtures("crownstone_setup", "pyserial_comports", "usb_path")
+async def test_successful_login_with_usb(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
     entry_data_with_usb = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -260,7 +289,6 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "usb_sphere_config"
-    assert serial_mock.call_count == 1
 
     # select a sphere
     result = await hass.config_entries.flow.async_configure(
@@ -271,9 +299,7 @@ async def test_successful_login_with_usb(serial_mock: MagicMock, hass: HomeAssis
     assert result["options"] == entry_options_with_usb
 
 
-@patch(
-    "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
-)
+@pytest.mark.usefixtures("crownstone_setup", "pyserial_comports")
 async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
     entry_data_with_manual_usb = create_mocked_entry_data_conf(
@@ -313,14 +339,8 @@ async def test_successful_login_with_manual_usb_path(hass: HomeAssistant):
     assert result["options"] == entry_options_with_manual_usb
 
 
-@patch(
-    "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
-)
-@patch(
-    "homeassistant.components.usb.get_serial_by_id",
-    return_value="/dev/serial/by-id/crownstone-usb",
-)
-async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistant):
+@pytest.mark.usefixtures("pyserial_comports", "usb_path")
+async def test_options_flow_setup_usb(hass: HomeAssistant):
     """Test options flow init."""
     configured_entry_data = create_mocked_entry_data_conf(
         email="example@homeassistant.com",
@@ -382,7 +402,6 @@ async def test_options_flow_setup_usb(serial_mock: MagicMock, hass: HomeAssistan
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "usb_sphere_config"
-    assert serial_mock.call_count == 1
 
     # select a sphere
     result = await hass.config_entries.options.async_configure(
@@ -445,9 +464,7 @@ async def test_options_flow_remove_usb(hass: HomeAssistant):
     )
 
 
-@patch(
-    "serial.tools.list_ports.comports", MagicMock(return_value=[get_mocked_com_port()])
-)
+@pytest.mark.usefixtures("pyserial_comports")
 async def test_options_flow_manual_usb_path(hass: HomeAssistant):
     """Test flow with correct login and usb configuration."""
     configured_entry_data = create_mocked_entry_data_conf(
