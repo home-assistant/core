@@ -332,12 +332,22 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
                     "value": None,
                 },
                 {
+                    "type": "entity_not_defined",
+                    "identifier": "sensor.grid_cost_1",
+                    "value": None,
+                },
+                {
                     "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.grid_production_1",
                     "value": "beers",
                 },
                 {
                     "type": "recorder_untracked",
+                    "identifier": "sensor.grid_compensation_1",
+                    "value": None,
+                },
+                {
+                    "type": "entity_not_defined",
                     "identifier": "sensor.grid_compensation_1",
                     "value": None,
                 },
@@ -555,6 +565,11 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                 },
                 {
                     "type": "recorder_untracked",
+                    "identifier": "sensor.gas_cost_1",
+                    "value": None,
+                },
+                {
+                    "type": "entity_not_defined",
                     "identifier": "sensor.gas_cost_1",
                     "value": None,
                 },
