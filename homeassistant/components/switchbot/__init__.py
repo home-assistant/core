@@ -4,10 +4,13 @@ from asyncio import Lock
 import switchbot  # pylint: disable=import-error
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    ATTR_BOT,
+    ATTR_CURTAIN,
     BTLE_LOCK,
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
@@ -23,7 +26,10 @@ from .const import (
 )
 from .coordinator import SwitchbotDataUpdateCoordinator
 
-PLATFORMS = ["switch"]
+PLATFORMS_BY_TYPE = {
+    ATTR_BOT: ["switch"],
+    ATTR_CURTAIN: ["cover"],
+}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,14 +89,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {DATA_COORDINATOR: coordinator}
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    sensor_type = entry.data[CONF_SENSOR_TYPE]
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS_BY_TYPE[sensor_type])
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    sensor_type = entry.data[CONF_SENSOR_TYPE]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS_BY_TYPE[sensor_type]
+    )
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

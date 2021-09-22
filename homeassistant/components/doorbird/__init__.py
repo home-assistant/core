@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    HTTP_OK,
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -348,7 +347,7 @@ class DoorBirdRequestView(HomeAssistantView):
             hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
             message = f"HTTP Favorites cleared for {device.slug}"
-            return web.Response(status=HTTP_OK, text=message)
+            return web.Response(text=message)
 
         event_data[ATTR_ENTITY_ID] = hass.data[DOMAIN][
             DOOR_STATION_EVENT_ENTITY_IDS
@@ -357,4 +356,4 @@ class DoorBirdRequestView(HomeAssistantView):
         _LOGGER.warning("doorbird_event: %s %s", f"{DOMAIN}_{event}", event_data)
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
-        return web.Response(status=HTTP_OK, text="OK")
+        return web.Response(text="OK")
