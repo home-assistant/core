@@ -146,10 +146,13 @@ class ECBaseEntity(CoordinatorEntity):
 
     def get_value(self, key):
         """Get the value for a weather attribute."""
-        value = self._coordinator.data.conditions.get(key, {}).get("value")
-        if value:
-            return value
-        return self._coordinator.data.hourly_forecasts[0].get(key)
+        try:
+            value = self._coordinator.data.conditions.get(key, {}).get("value")
+            if value:
+                return value
+            return self._coordinator.data.hourly_forecasts[0].get(key)
+        except IndexError:
+            return None
 
     @property
     def name(self):

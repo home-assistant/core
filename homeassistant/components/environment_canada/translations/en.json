@@ -22,10 +22,10 @@
     "error": {
       "already_configured": "Station or station for coordinates specified is already configured",
       "bad_station_id": "Station ID is invalid, missing, or not found in the station ID database",
-      "cannot_connect": "Failed to connect to Environment Canada service",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "config_error": "Configuration invalid; check station ID or coordinates",
       "error_response": "Response from Environment Canada in error",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

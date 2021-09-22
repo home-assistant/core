@@ -12,7 +12,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
 )
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
@@ -89,15 +88,19 @@ class ECSensor(ECBaseEntity, SensorEntity):
 
         unit_of_measurement = self._entity_description.unit_convert
         if unit_of_measurement in [SPEED_MILES_PER_HOUR, LENGTH_MILES]:
-            value = round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES), 2)
+            value = round(
+                convert_distance(float(value), LENGTH_KILOMETERS, LENGTH_MILES), 2
+            )
         elif unit_of_measurement == LENGTH_INCHES:
-            value = round(convert_distance(value, LENGTH_MILLIMETERS, LENGTH_INCHES), 2)
+            value = round(
+                convert_distance(float(value), LENGTH_MILLIMETERS, LENGTH_INCHES), 2
+            )
         elif unit_of_measurement == PRESSURE_INHG:
-            value = round(convert_pressure(value, PRESSURE_HPA, PRESSURE_INHG), 2)
-        elif unit_of_measurement == TEMP_CELSIUS:
-            value = round(value, 1)
+            value = round(
+                convert_pressure(float(value), PRESSURE_HPA, PRESSURE_INHG), 2
+            )
         elif unit_of_measurement == PERCENTAGE:
-            value = round(value)
+            value = round(float(value))
         return value
 
     @property
@@ -122,6 +125,8 @@ class ECAlertSensor(ECBaseEntity, SensorEntity):
     def native_value(self):
         """Return the state."""
         value = self._coordinator.data.alerts.get(self._alert_name[0], {}).get("value")
+        if not value:
+            return None
 
         self._alert_attrs = {}
         for index, alert in enumerate(value, start=1):
