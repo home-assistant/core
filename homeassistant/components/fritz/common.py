@@ -367,9 +367,9 @@ class FritzBoxTools:
             )
 
             for device in device_list:
-                if device.disabled and (
-                    device.domain == DEVICE_TRACKER_DOMAIN
-                    or device.domain == DEVICE_SWITCH_DOMAIN
+                if (device.domain == DEVICE_TRACKER_DOMAIN and device.disabled) or (
+                    device.domain == DEVICE_SWITCH_DOMAIN
+                    and device.entity_id.endwith("internet")
                 ):
                     _LOGGER.warning("Removing entity: %s", device.entity_id)
                     entity_reg.async_remove(device.entity_id)
