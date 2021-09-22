@@ -308,7 +308,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 await self._device.async_subscribe_services(auto_resubscribe=True)
             except UpnpError as err:
                 # Don't leave the device half-constructed
+                self._device.on_event = None
                 self._device = None
+                await domain_data.async_release_event_notifier(self._event_addr)
                 _LOGGER.debug("Error while subscribing during device connect: %s", err)
                 raise
 
