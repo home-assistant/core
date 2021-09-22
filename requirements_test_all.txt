@@ -23,6 +23,9 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.3.2
 
+# homeassistant.components.switchbot
+# PySwitchbot==0.11.0
+
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
@@ -106,7 +109,7 @@ aioeagle==1.1.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==8.0.0
+aioesphomeapi==9.1.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -161,10 +164,10 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==0.6.4
+aioshelly==1.0.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.5
+aioswitcher==2.0.6
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -174,6 +177,9 @@ aiotractive==0.5.2
 
 # homeassistant.components.unifi
 aiounifi==26
+
+# homeassistant.components.watttime
+aiowatttime==0.1.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
@@ -227,7 +233,7 @@ azure-eventhub==5.5.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.27.0
+bellows==0.28.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.20
@@ -453,7 +459,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.49.0
+hass-nabucasa==0.50.0
 
 # homeassistant.components.tasmota
 hatasmota==0.2.20
@@ -764,7 +770,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
-pyTibber==0.19.0
+pyTibber==0.19.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -788,7 +794,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==5.2.3
+pyatmo==6.0.0
 
 # homeassistant.components.apple_tv
 pyatv==0.8.2
@@ -818,7 +824,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==83
+pydeconz==84
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -1104,7 +1110,7 @@ python-smarttub==0.0.25
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.10.0
+python-tado==0.12.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
@@ -1389,13 +1395,13 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.4
+yeelight==0.7.5
 
 # homeassistant.components.youless
 youless-api==0.12
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.3
+zeroconf==0.36.6
 
 # homeassistant.components.zha
 zha-quirks==0.0.61

@@ -202,3 +202,9 @@ def alarm_event_fixture(soco):
     }
 
     return SonosMockEvent(soco, soco.alarmClock, variables)
+
+
+@pytest.fixture(autouse=True)
+def mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip in all sonos tests."""
+    return mock_get_source_ip

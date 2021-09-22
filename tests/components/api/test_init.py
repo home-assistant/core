@@ -395,7 +395,7 @@ async def test_api_error_log(
     assert resp.status == 401
 
     with patch(
-        "aiohttp.web.FileResponse", return_value=web.Response(status=200, text="Hello")
+        "aiohttp.web.FileResponse", return_value=web.Response(text="Hello")
     ) as mock_file:
         resp = await client.get(
             const.URL_API_ERROR_LOG,

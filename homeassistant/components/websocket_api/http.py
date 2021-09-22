@@ -42,6 +42,7 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
+        # pylint: disable=no-self-use
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
@@ -230,7 +231,7 @@ class WebSocketHandler:
             unsub_stop()
 
             if connection is not None:
-                connection.async_close()
+                connection.async_handle_close()
 
             try:
                 self._to_write.put_nowait(None)

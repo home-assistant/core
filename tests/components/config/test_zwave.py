@@ -455,7 +455,7 @@ async def test_set_protection_value(hass, client):
     assert resp.status == 200
     result = await resp.json()
     assert node.set_protection.called
-    assert result == {"message": "Protection setting succsessfully set"}
+    assert result == {"message": "Protection setting successfully set"}
 
 
 async def test_set_protection_value_failed(hass, client):
