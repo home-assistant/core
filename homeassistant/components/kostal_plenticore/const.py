@@ -626,3 +626,19 @@ SENSOR_SETTINGS_DATA = [
         "format_round",
     ),
 ]
+SWITCH_SETTINGS_DATA = [
+    (
+        "devices:local",
+        "Battery:SmartBatteryControl:Enable",
+        "Battery SmartBatteryControl Enable",
+        {},
+        "format_round",
+    ),
+    (
+        "devices:local",
+        "Battery:TimeControl:Enable",
+        "Battery TimeControl Enable",
+        {},
+        "format_round",
+    ),
+]
