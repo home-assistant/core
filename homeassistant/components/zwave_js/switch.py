@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.const import TARGET_VALUE_PROPERTY
 from zwave_js_server.const.command_class.barrier_operator import (
     BarrierEventSignalingSubsystemState,
 )
@@ -65,13 +66,13 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        target_value = self.get_zwave_value("targetValue")
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         if target_value is not None:
             await self.info.node.async_set_value(target_value, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        target_value = self.get_zwave_value("targetValue")
+        target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
         if target_value is not None:
             await self.info.node.async_set_value(target_value, False)
 
