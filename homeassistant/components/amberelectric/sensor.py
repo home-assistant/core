@@ -1,7 +1,8 @@
 """Amber Electric Sensor definitions."""
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import amberelectric
 from amberelectric.api import amber_api
@@ -406,7 +407,7 @@ class AmberFactory:
         platform_name: str,
         site_id: str,
         api: amber_api.AmberApi,
-    ):
+    ) -> None:
         """Initialise the factory."""
         self._platform_name = platform_name
         self.data_service = AmberDataService(hass, api, site_id)
@@ -550,7 +551,7 @@ class AmberFactory:
                 )
             )
 
-            LOGGER.debug("Adding " + str(len(sensors)) + " sensors")
+            LOGGER.debug("Adding %s sensors", str(len(sensors)))
         else:
             LOGGER.error("No site found!")
         return sensors
@@ -569,13 +570,13 @@ async def async_setup_entry(
     api_instance = amber_api.AmberApi.create(configuration)
 
     # Do a sites enquiry, and get all the channels...
-    LOGGER.debug("Initializing AmberFactory...")
+    LOGGER.debug("Initializing AmberFactory")
     site_id = entry.data.get(CONF_SITE_ID)
     if site_id is not None:
         factory = AmberFactory(hass, entry.title, str(site_id), api_instance)
-        LOGGER.debug("AmberFactory initialized. Setting up...")
+        LOGGER.debug("AmberFactory initialized. Setting up")
         factory.data_service.async_setup()
-        LOGGER.debug("AmberFactory Setup. Trigging manual fetch...")
+        LOGGER.debug("AmberFactory Setup. Trigging manual fetch")
 
         if (
             factory is not None
@@ -583,9 +584,9 @@ async def async_setup_entry(
             and factory.data_service.coordinator is not None
         ):
             await factory.data_service.coordinator.async_refresh()
-            LOGGER.debug("Fetch complete. Adding entities...")
+            LOGGER.debug("Fetch complete. Adding entities")
             async_add_entities(factory.build_sensors())
-            LOGGER.debug("Entry setup complete.")
+            LOGGER.debug("Entry setup complete")
         else:
             LOGGER.error("Data service is not set up!")
     else:
