@@ -39,8 +39,8 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_UPNP
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -48,6 +48,7 @@ from .const import (
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
     DEFAULT_NAME,
+    DOMAIN,
     LOGGER as _LOGGER,
 )
 from .data import EventListenAddr, get_domain_data
@@ -113,7 +114,7 @@ async def async_setup_entry(
         entry.add_update_listener(entity.async_config_update_listener)
     )
 
-    async_add_entities([entity], True)
+    async_add_entities([entity])
 
 
 class DlnaDmrEntity(MediaPlayerEntity):
@@ -226,7 +227,17 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         if change == ssdp.SsdpChange.ALIVE and not self._device:
             location = info[ssdp.ATTR_SSDP_LOCATION]
-            await self._device_connect(location)
+            try:
+                await self._device_connect(location)
+            except UpnpError as err:
+                _LOGGER.warn(
+                    "Failed connecting to recently alive device at %s: %s",
+                    location,
+                    err,
+                )
+
+        # Device could have been de/re-connected, state probably changed
+        self.schedule_update_ha_state()
 
     async def async_config_update_listener(
         self, hass: HomeAssistant, entry: config_entries.ConfigEntry
@@ -260,6 +271,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             except UpnpError as err:
                 _LOGGER.debug("Couldn't (re)connect: %s", err)
 
+            # Device was de/re-connected, state might have changed
+            self.schedule_update_ha_state()
+
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""
         _LOGGER.debug("Connecting to device at %s", location)
@@ -285,17 +299,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
             # Create profile wrapper
             self._device = DmrDevice(upnp_device, event_handler)
 
-            # Set hass device information now that it's known.
-            self._attr_device_info = {
-                "name": self._device.name,
-                # Connection is based on the root device's UDN, which is
-                # currently equivalent to our UDN (embedded devices aren't
-                # supported by async_upnp_client)
-                "connections": {(CONNECTION_UPNP, self._device.udn)},
-                "manufacturer": self._device.manufacturer,
-                "model": self._device.model_name,
-            }
-
             self.location = location
 
             # Subscribe to event notifications
@@ -307,6 +310,34 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 self._device = None
                 _LOGGER.debug("Error while subscribing during device connect: %s", err)
                 raise
+
+        if (
+            self.registry_entry
+            and self.registry_entry.config_entry_id
+            and not self.registry_entry.device_id
+        ):
+            # Create linked HA DeviceEntry now the information is known.
+            dev_reg = device_registry.async_get(self.hass)
+            device_entry = dev_reg.async_get_or_create(
+                config_entry_id=self.registry_entry.config_entry_id,
+                # Connection is based on the root device's UDN, which is
+                # currently equivalent to our UDN (embedded devices aren't
+                # supported by async_upnp_client)
+                connections={(device_registry.CONNECTION_UPNP, self._device.udn)},
+                identifiers={(DOMAIN, self.unique_id)},
+                manufacturer=self._device.manufacturer,
+                model=self._device.model_name,
+                name=self._device.name,
+            )
+
+            # Update entity registry to link to the device
+            ent_reg = entity_registry.async_get(self.hass)
+            ent_reg.async_get_or_create(
+                self.registry_entry.domain,
+                self.registry_entry.platform,
+                self.unique_id,
+                device_id=device_entry.id,
+            )
 
     async def _device_disconnect(self) -> None:
         """Destroy connections to the device now that it's not available.
