@@ -22,12 +22,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidToken as err:
         raise ConfigEntryAuthFailed from err
 
-    info = nanoleaf._info
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DEVICE: nanoleaf,
-        NAME: info["name"],
-        SERIAL_NO: info["serialNo"],
+        NAME: nanoleaf.name,
+        SERIAL_NO: nanoleaf.serial_no,
     }
 
     hass.async_create_task(
