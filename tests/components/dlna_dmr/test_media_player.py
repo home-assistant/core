@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
-from typing import Any
-from unittest.mock import Mock, create_autospec, patch
+from collections.abc import AsyncIterable
+from datetime import timedelta
+from types import MappingProxyType
+from unittest.mock import ANY, DEFAULT, Mock, patch
 
-import aiohttp
-import defusedxml.ElementTree as DET
+from async_upnp_client.exceptions import UpnpConnectionError, UpnpError
+from async_upnp_client.profiles.dlna import TransportState
+import pytest
 
+from homeassistant import const as ha_const
 from homeassistant.components import ssdp
 from homeassistant.components.dlna_dmr import media_player
 from homeassistant.components.dlna_dmr.const import (
@@ -17,812 +20,1192 @@ from homeassistant.components.dlna_dmr.const import (
     CONF_POLL_AVAILABILITY,
     DOMAIN as DLNA_DOMAIN,
 )
-from homeassistant.components.dlna_dmr.data import get_domain_data
-from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE, CONF_URL
+from homeassistant.components.dlna_dmr.data import EventListenAddr
+from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import async_get as async_get_dr
+from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_er,
+)
 from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
 
 from .conftest import (
-    GOOD_DEVICE_BASE_URL,
-    GOOD_DEVICE_LOCATION,
-    GOOD_DEVICE_NAME,
-    GOOD_DEVICE_TYPE,
-    GOOD_DEVICE_UDN,
-    GOOD_DEVICE_USN,
-    SUBSCRIPTION_UUID_AVT,
-    SUBSCRIPTION_UUID_RC,
-    UNCONTACTABLE_DEVICE_LOCATION,
+    LOCAL_IP,
+    MOCK_DEVICE_LOCATION,
+    MOCK_DEVICE_NAME,
+    MOCK_DEVICE_UDN,
+    MOCK_DEVICE_USN,
+    NEW_DEVICE_LOCATION,
 )
 
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+from tests.common import MockConfigEntry
+
+# Auto-use the domain_data_mock fixture for every test in this module
+pytestmark = pytest.mark.usefixtures("domain_data_mock")
+
+
+async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry) -> str:
+    """Set up a mock DlnaDmrEntity with the given configuration."""
+    mock_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DLNA_DOMAIN, {}) is True
+    await hass.async_block_till_done()
+
+    entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)
+    assert len(entries) == 1
+    entity_id = entries[0].entity_id
+
+    return entity_id
+
+
+@pytest.fixture
+async def mock_entity_id(
+    hass: HomeAssistant,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+) -> AsyncIterable[str]:
+    """Fixture to set up a mock DlnaDmrEntity in a connected state.
+
+    Yields the entity ID. Cleans up the entity after the test is complete.
+    """
+    entity_id = await setup_mock_component(hass, config_entry_mock)
+
+    yield entity_id
+
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
+
+
+@pytest.fixture
+async def mock_disconnected_entity_id(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+) -> AsyncIterable[str]:
+    """Fixture to set up a mock DlnaDmrEntity in a disconnected state.
+
+    Yields the entity ID. Cleans up the entity after the test is complete.
+    """
+    # Cause the connection attempt to fail
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
+
+    entity_id = await setup_mock_component(hass, config_entry_mock)
+
+    yield entity_id
+
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
 
 
 async def test_setup_entry_no_options(
     hass: HomeAssistant,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
-    device_requests_mock: AiohttpClientMocker,
+    dmr_device_mock: Mock,
 ) -> None:
-    """Test async_setup_entry creates a DlnaDmrEntity when no options are set."""
-    mock_add_entities = create_autospec(AddEntitiesCallback)
-    await media_player.async_setup_entry(hass, config_entry_mock, mock_add_entities)
+    """Test async_setup_entry creates a DlnaDmrEntity when no options are set.
 
-    assert mock_add_entities.call_count == 1
-    added_entities = mock_add_entities.call_args[0][0]
-    assert len(added_entities) == 1
-    entity = added_entities[0]
-    assert isinstance(entity, media_player.DlnaDmrEntity)
-    assert entity.poll_availability is False
+    Check that the device is constructed properly as part of the test.
+    """
+    config_entry_mock.options = MappingProxyType({})
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+
+    # Check device was created from the supplied URL
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+    # Check event notifiers are acquired
+    domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
+        EventListenAddr(LOCAL_IP, 0, None), hass
+    )
+    # Check UPnP services are subscribed
+    dmr_device_mock.async_subscribe_services.assert_awaited_once_with(
+        auto_resubscribe=True
+    )
+    assert dmr_device_mock.on_event is not None
+    # Check SSDP notifications are registered
+    ssdp_scanner_mock.async_register_callback.assert_any_call(
+        ANY, {"USN": MOCK_DEVICE_USN}
+    )
+    ssdp_scanner_mock.async_register_callback.assert_any_call(
+        ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
+    )
+    # Quick check of the state to verify the entity has a connected DmrDevice
+    assert mock_state.state == media_player.STATE_IDLE
+    # Check the name matches that supplied
+    assert mock_state.name == MOCK_DEVICE_NAME
+
+    # Check that an update retrieves state from the device, but does not ping,
+    # because poll_availability is False
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_awaited_with(do_ping=False)
+
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
+
+    # Confirm SSDP notifications unregistered
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 2
+
+    # Confirm the entity has disconnected from the device
+    domain_data_mock.async_release_event_notifier.assert_awaited_once()
+    dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
+    assert dmr_device_mock.on_event is None
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
 async def test_setup_entry_with_options(
-    hass: HomeAssistant, device_requests_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
 ) -> None:
-    """Test setting options leads to a DlnaDmrEntity with custom event_handler."""
-    config_entry = MockConfigEntry(
-        unique_id=GOOD_DEVICE_USN,
-        domain=DLNA_DOMAIN,
-        data={
-            CONF_URL: GOOD_DEVICE_LOCATION,
-            CONF_DEVICE_ID: GOOD_DEVICE_UDN,
-            CONF_TYPE: GOOD_DEVICE_TYPE,
-        },
-        title=GOOD_DEVICE_NAME,
-        options={
+    """Test setting options leads to a DlnaDmrEntity with custom event_handler.
+
+    Check that the device is constructed properly as part of the test.
+    """
+    config_entry_mock.options = MappingProxyType(
+        {
             CONF_LISTEN_PORT: 2222,
             CONF_CALLBACK_URL_OVERRIDE: "http://192.88.99.10/events",
             CONF_POLL_AVAILABILITY: True,
-        },
+        }
     )
-    config_entry.add_to_hass(hass)
-    mock_add_entities = create_autospec(AddEntitiesCallback)
-    await media_player.async_setup_entry(hass, config_entry, mock_add_entities)
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
 
-    assert mock_add_entities.call_count == 1
-    added_entities = mock_add_entities.call_args[0][0]
-    assert len(added_entities) == 1
-    entity = added_entities[0]
-    assert isinstance(entity, media_player.DlnaDmrEntity)
-    assert entity.poll_availability is True
-    assert entity._event_port == 2222
-    assert entity._event_callback_url == "http://192.88.99.10/events"
-
-
-UPNP_CTRL_RESPONSE_BLANK = """<?xml version="1.0" encoding="utf-8"?><s:Envelope
-xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
-s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-<s:Body>
-    <u:{request_tag}Response xmlns:u="{namespace}">
-    </u:{request_tag}Response>
-    </s:Body>
-</s:Envelope>"""
-
-
-async def avt_ctrl_response(method, url, data):
-    """Respond to AVT control request based on request data.
-
-    AiohttpClientMockResponse can't filter based on headers, but we need to send
-    different responses depending on the request.
-    """
-    del method, url
-    # data should be a SOAP request. Determine request type based on child of
-    # Body element
-    request = DET.fromstring(data)
-    namespace, _, req_type = request.find(".//{*}Body/*").tag.rpartition("}")
-    namespace = namespace.lstrip("{")
-
-    if req_type == "GetTransportInfo":
-        return AiohttpClientMockResponse(
-            method="POST",
-            url=GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-            text=load_fixture("dlna_dmr/avt_ctrl_get_transport_info.xml"),
-        )
-    if req_type == "GetPositionInfo":
-        return AiohttpClientMockResponse(
-            method="POST",
-            url=GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-            text=load_fixture("dlna_dmr/avt_ctrl_get_position_info.xml"),
-        )
-
-    # In all other cases, use a generic blank response
-    response_text = UPNP_CTRL_RESPONSE_BLANK.format(
-        request_tag=req_type, namespace=namespace
+    # Check device was created from the supplied URL
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
     )
-    return AiohttpClientMockResponse(
-        method="POST",
-        url=GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        text=response_text,
+    # Check event notifiers are acquired with the configured port and callback URL
+    domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
+        EventListenAddr(LOCAL_IP, 2222, "http://192.88.99.10/events"), hass
     )
-
-
-async def rc_ctrl_response(method, url, data):
-    """Respond to Rendering Control request based on request data.
-
-    AiohttpClientMockResponse can't filter based on headers, but we need to send
-    different responses depending on the request.
-    """
-    del method, url
-    # data should be a SOAP request. Determine request type based on child of
-    # Body element
-    request = DET.fromstring(data)
-    namespace, _, req_type = request.find(".//{*}Body/*").tag.rpartition("}")
-    namespace = namespace.lstrip("{")
-
-    response_text = UPNP_CTRL_RESPONSE_BLANK.format(
-        request_tag=req_type, namespace=namespace
+    # Check UPnP services are subscribed
+    dmr_device_mock.async_subscribe_services.assert_awaited_once_with(
+        auto_resubscribe=True
     )
-    return AiohttpClientMockResponse(
-        method="POST",
-        url=GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        text=response_text,
+    assert dmr_device_mock.on_event is not None
+    # Check SSDP notifications are registered
+    ssdp_scanner_mock.async_register_callback.assert_any_call(
+        ANY, {"USN": MOCK_DEVICE_USN}
     )
+    ssdp_scanner_mock.async_register_callback.assert_any_call(
+        ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
+    )
+    # Quick check of the state to verify the entity has a connected DmrDevice
+    assert mock_state.state == media_player.STATE_IDLE
+    # Check the name matches that supplied
+    assert mock_state.name == MOCK_DEVICE_NAME
 
+    # Check that an update retrieves state from the device, and also pings it,
+    # because poll_availability is True
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_awaited_with(do_ping=True)
 
-async def make_dmr_entity(
-    hass: HomeAssistant,
-    data_override: Mapping[str, Any] = {},
-    options_override: Mapping[str, Any] = {},
-) -> DlnaDmrEntity:
-    """Set up the platform, the config entry, and an entity we're going to test."""
-    data: dict[str, Any] = {
-        CONF_URL: GOOD_DEVICE_LOCATION,
-        CONF_DEVICE_ID: GOOD_DEVICE_UDN,
-        CONF_TYPE: GOOD_DEVICE_TYPE,
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
     }
-    data.update(data_override)
 
-    options: dict[str, Any] = {
-        CONF_LISTEN_PORT: None,
-        CONF_CALLBACK_URL_OVERRIDE: None,
-        CONF_POLL_AVAILABILITY: False,
-    }
-    options.update(options_override)
+    # Confirm SSDP notifications unregistered
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 2
 
-    config_entry = MockConfigEntry(
-        unique_id=GOOD_DEVICE_USN,
-        domain=DLNA_DOMAIN,
-        data=data,
-        title=GOOD_DEVICE_NAME,
-        options=options,
-    )
-    config_entry.add_to_hass(hass)
-    await async_setup_component(hass, DLNA_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # Device should be fully constructed and added to hass now. Retrieve it.
-    entity_comp = hass.data["entity_components"]["media_player"]
-    assert entity_comp
-    entity: DlnaDmrEntity = entity_comp.get_entity(
-        f"media_player.{slugify(GOOD_DEVICE_NAME)}"
-    )
-    assert entity
-
-    return entity
+    # Confirm the entity has disconnected from the device
+    domain_data_mock.async_release_event_notifier.assert_awaited_once()
+    dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
+    assert dmr_device_mock.on_event is None
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
-async def send_initial_event_notifications(entity: DlnaDmrEntity) -> None:
-    """Send UPnP event notifications to update  state of entity._device.
-
-    This is expected after an event subscription is first made.
-    """
-    assert entity._device is not None
-    event_url = entity._device._event_handler.callback_url
-    rc_event_xml = load_fixture("dlna_dmr/rc_event.xml")
-    avt_event_xml = load_fixture("dlna_dmr/avt_event.xml")
-    async with aiohttp.ClientSession() as event_client:
-        await event_client.request(
-            "NOTIFY",
-            event_url,
-            headers={
-                "SID": SUBSCRIPTION_UUID_RC,
-                "NT": "upnp:event",
-                "NTS": "upnp:propchange",
-            },
-            data=rc_event_xml,
-        )
-        await event_client.request(
-            "NOTIFY",
-            event_url,
-            headers={
-                "SID": SUBSCRIPTION_UUID_AVT,
-                "NT": "upnp:event",
-                "NTS": "upnp:propchange",
-            },
-            data=avt_event_xml,
-        )
-
-
-async def test_device_available(
+async def test_event_subscribe_failure(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test _device_connect aborts when async_subscribe_services fails."""
+    dmr_device_mock.async_subscribe_services.side_effect = UpnpError
+
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+
+    # Device should not be connected
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # Device should not be unsubscribed
+    dmr_device_mock.async_unsubscribe_services.assert_not_awaited()
+
+    # Clear mocks for tear down checks
+    dmr_device_mock.async_subscribe_services.reset_mock()
+
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
+
+
+async def test_available_device(
+    hass: HomeAssistant,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
 ) -> None:
     """Test a DlnaDmrEntity with a connected DmrDevice."""
-    # The physical device should not have been contacted yet
-    assert device_requests_mock.call_count == 0
-
-    entity = await make_dmr_entity(hass, {CONF_URL: GOOD_DEVICE_LOCATION})
-
-    assert entity._device is not None
-
-    # Check device was contacted
-    assert device_requests_mock.call_count > 0
-    # Check UPnP services are subscribed
-    assert set(entity._device._subscriptions.keys()) == {
-        SUBSCRIPTION_UUID_RC,
-        SUBSCRIPTION_UUID_AVT,
-    }
-    # Check SSDP notifications are registered
-    mock_ssdp_scanner.async_register_callback.assert_any_call(
-        entity.async_ssdp_callback, {"USN": GOOD_DEVICE_USN}
-    )
-    mock_ssdp_scanner.async_register_callback.assert_any_call(
-        entity.async_ssdp_callback, {"_udn": GOOD_DEVICE_UDN, "NTS": "ssdp:byebye"}
-    )
-
-    await send_initial_event_notifications(entity)
-
-    # Check async_update will retrieve state from the device
-    device_requests_mock.clear_requests()
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        side_effect=avt_ctrl_response,
-    )
-
-    await entity.async_update()
-    assert 1 <= device_requests_mock.call_count <= 2
-
     # Check hass device information is filled in
-    assert entity.device_info == {
-        "connections": {("upnp", GOOD_DEVICE_UDN)},
-        "manufacturer": "Dummy corp",
-        "model": "Dummy model name",
-        "name": "Test Receiver Device",
-    }
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is not None
+    # Device properties are set in dmr_device_mock before the entity gets constructed
+    assert device.manufacturer == "device_manufacturer"
+    assert device.model == "device_model_name"
+    assert device.name == "device_name"
 
-    # Check all interface properties provide non-None results
-    assert entity.available is True
-    assert entity.supported_features == 0x523F  # Specific to the device fixture
-    assert entity.volume_level == 0.24
-    assert entity.is_volume_muted is False
-    assert entity.media_title == "Song of Fakeness"
-    assert entity.media_image_url == "http://192.88.99.20:8200/AlbumArt/2624-17620.jpg"
-    assert entity.state == "playing"
-    assert entity.media_duration == 226
-    assert entity.media_position == 99
+    # Check entity state gets updated when device changes state
+    for (dev_state, ent_state) in [
+        (None, ha_const.STATE_ON),
+        (TransportState.STOPPED, ha_const.STATE_IDLE),
+        (TransportState.PLAYING, ha_const.STATE_PLAYING),
+        (TransportState.TRANSITIONING, ha_const.STATE_IDLE),
+        (TransportState.PAUSED_PLAYBACK, ha_const.STATE_PAUSED),
+        (TransportState.PAUSED_RECORDING, ha_const.STATE_PAUSED),
+        (TransportState.RECORDING, ha_const.STATE_IDLE),
+        (TransportState.NO_MEDIA_PRESENT, ha_const.STATE_IDLE),
+        (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
+    ]:
+        dmr_device_mock.device.available = True
+        dmr_device_mock.transport_state = dev_state
+        await async_update_entity(hass, mock_entity_id)
+        entity_state = hass.states.get(mock_entity_id)
+        assert entity_state is not None
+        assert entity_state.state == ent_state
 
-    # Check all interface methods send a request to the device
-    device_requests_mock.clear_requests()
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        side_effect=avt_ctrl_response,
+    dmr_device_mock.device.available = False
+    dmr_device_mock.transport_state = TransportState.PLAYING
+    await async_update_entity(hass, mock_entity_id)
+    entity_state = hass.states.get(mock_entity_id)
+    assert entity_state is not None
+    assert entity_state.state == ha_const.STATE_UNAVAILABLE
+
+    dmr_device_mock.device.available = True
+    await async_update_entity(hass, mock_entity_id)
+
+    # Check attributes come directly from the device
+    entity_state = hass.states.get(mock_entity_id)
+    assert entity_state is not None
+    attrs = entity_state.attributes
+    assert attrs is not None
+
+    assert attrs[mp_const.ATTR_MEDIA_VOLUME_LEVEL] is dmr_device_mock.volume_level
+    assert attrs[mp_const.ATTR_MEDIA_VOLUME_MUTED] is dmr_device_mock.is_volume_muted
+    assert attrs[mp_const.ATTR_MEDIA_DURATION] is dmr_device_mock.media_duration
+    assert attrs[mp_const.ATTR_MEDIA_POSITION] is dmr_device_mock.media_position
+    assert (
+        attrs[mp_const.ATTR_MEDIA_POSITION_UPDATED_AT]
+        is dmr_device_mock.media_position_updated_at
     )
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/RenderingControl/ctrl", side_effect=rc_ctrl_response
-    )
-    await entity.async_set_volume_level(0.80)
-    assert device_requests_mock.call_count == 1
-    await entity.async_mute_volume(True)
-    assert device_requests_mock.call_count == 2
-    await entity.async_media_pause()
-    assert device_requests_mock.call_count == 3
-    await entity.async_media_play()
-    assert device_requests_mock.call_count == 4
-    await entity.async_media_stop()
-    assert device_requests_mock.call_count == 5
-    await entity.async_media_previous_track()
-    assert device_requests_mock.call_count == 6
-    await entity.async_media_next_track()
-    assert device_requests_mock.call_count == 7
-    await entity.async_media_seek(33)
-    assert device_requests_mock.call_count == 8
-    # play_media does 2 calls: Stop then SetTransportUri (not media_play because
-    # fake device is already "playing")
-    await entity.async_play_media(
-        "music", "http://192.88.99.20:8200/MediaItems/17621.mp3"
-    )
-    assert device_requests_mock.call_count == 10
+    assert attrs[mp_const.ATTR_MEDIA_TITLE] is dmr_device_mock.media_title
+    # Entity picture is cached, won't correspond to remote image
+    assert isinstance(attrs[ha_const.ATTR_ENTITY_PICTURE], str)
 
-    # Setup requests mock to verify UPnP services are unsubscribed
-    device_requests_mock.clear_requests()
-    device_requests_mock.request(
-        "UNSUBSCRIBE", GOOD_DEVICE_BASE_URL + "/RenderingControl/evt"
+    # Check supported feature flags, one at a time.
+    # tuple(async_upnp_client dlna has_* name, can_* name, HA feature flag)
+    FEATURE_FLAGS: list[tuple[str, str | None, int]] = [
+        ("has_volume_level", None, mp_const.SUPPORT_VOLUME_SET),
+        ("has_volume_mute", None, mp_const.SUPPORT_VOLUME_MUTE),
+        ("has_play", "can_play", mp_const.SUPPORT_PLAY),
+        ("has_pause", "can_pause", mp_const.SUPPORT_PAUSE),
+        ("has_stop", "can_stop", mp_const.SUPPORT_STOP),
+        ("has_previous", "can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
+        ("has_next", "can_next", mp_const.SUPPORT_NEXT_TRACK),
+        ("has_play_media", None, mp_const.SUPPORT_PLAY_MEDIA),
+        ("has_seek_rel_time", "can_seek_rel_time", mp_const.SUPPORT_SEEK),
+        # TODO: remaining flags when implemented
+    ]
+    # Clear all feature properties
+    for has_prop, can_prop, _ in FEATURE_FLAGS:
+        setattr(dmr_device_mock, has_prop, False)
+        if can_prop:
+            setattr(dmr_device_mock, can_prop, False)
+    await async_update_entity(hass, mock_entity_id)
+    entity_state = hass.states.get(mock_entity_id)
+    assert entity_state is not None
+    assert entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES] == 0
+    # Test the properties cumulatively
+    expected_features = 0
+    for has_prop, can_prop, flag in FEATURE_FLAGS:
+        if can_prop:
+            # Combinations of has and can
+            # has = True, can = False: no feature
+            setattr(dmr_device_mock, has_prop, True)
+            setattr(dmr_device_mock, can_prop, False)
+            await async_update_entity(hass, mock_entity_id)
+            entity_state = hass.states.get(mock_entity_id)
+            assert entity_state is not None
+            assert (
+                entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
+                == expected_features
+            )
+            # has = False, can = True: no feature
+            setattr(dmr_device_mock, has_prop, False)
+            setattr(dmr_device_mock, can_prop, True)
+            await async_update_entity(hass, mock_entity_id)
+            entity_state = hass.states.get(mock_entity_id)
+            assert entity_state is not None
+            assert (
+                entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
+                == expected_features
+            )
+            # has = True, can = True: feature enabled
+            setattr(dmr_device_mock, has_prop, True)
+            setattr(dmr_device_mock, can_prop, True)
+            # Fall through to common check below
+        else:
+            setattr(dmr_device_mock, has_prop, True)
+
+        expected_features |= flag
+        await async_update_entity(hass, mock_entity_id)
+        entity_state = hass.states.get(mock_entity_id)
+        assert entity_state is not None
+        assert (
+            entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
+            == expected_features
+        )
+
+    # Check interface methods interact directly with the device
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+        blocking=True,
     )
-    device_requests_mock.request(
-        "UNSUBSCRIBE", GOOD_DEVICE_BASE_URL + "/AVTransport/evt"
+    dmr_device_mock.async_set_volume_level.assert_awaited_once_with(0.80)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
     )
+    dmr_device_mock.async_mute_volume.assert_awaited_once_with(True)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: mock_entity_id},
+        blocking=True,
+    )
+    dmr_device_mock.async_pause.assert_awaited_once_with()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: mock_entity_id},
+        blocking=True,
+    )
+    dmr_device_mock.async_pause.assert_awaited_once_with()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_MEDIA_STOP,
+        {ATTR_ENTITY_ID: mock_entity_id},
+        blocking=True,
+    )
+    dmr_device_mock.async_stop.assert_awaited_once_with()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_MEDIA_NEXT_TRACK,
+        {ATTR_ENTITY_ID: mock_entity_id},
+        blocking=True,
+    )
+    dmr_device_mock.async_next.assert_awaited_once_with()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_MEDIA_PREVIOUS_TRACK,
+        {ATTR_ENTITY_ID: mock_entity_id},
+        blocking=True,
+    )
+    dmr_device_mock.async_previous.assert_awaited_once_with()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_MEDIA_SEEK,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_SEEK_POSITION: 33},
+        blocking=True,
+    )
+    dmr_device_mock.async_seek_rel_time.assert_awaited_once_with(timedelta(seconds=33))
 
-    # Removing entity cancels callback and disconnects from device
-    await entity.async_remove()
-    # Check device is gone
-    assert entity._device is None
-    # Verify UPnP services are unsubscribed
-    assert device_requests_mock.call_count == 2
-    # Check SSDP notifications are cleared
-    assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
+    # play_media performs a few calls to the device for setup and play
+    # Start from stopped, and device can stop too
+    dmr_device_mock.can_stop = True
+    dmr_device_mock.transport_state = TransportState.STOPPED
+    dmr_device_mock.async_stop.reset_mock()
+    dmr_device_mock.async_set_transport_uri.reset_mock()
+    dmr_device_mock.async_wait_for_can_play.reset_mock()
+    dmr_device_mock.async_play.reset_mock()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+        },
+        blocking=True,
+    )
+    dmr_device_mock.async_stop.assert_awaited_once_with()
+    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant"
+    )
+    dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
+    dmr_device_mock.async_play.assert_awaited_once_with()
+
+    # play_media again, while the device is already playing and can't stop
+    dmr_device_mock.can_stop = False
+    dmr_device_mock.transport_state = TransportState.PLAYING
+    dmr_device_mock.async_stop.reset_mock()
+    dmr_device_mock.async_set_transport_uri.reset_mock()
+    dmr_device_mock.async_wait_for_can_play.reset_mock()
+    dmr_device_mock.async_play.reset_mock()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+        },
+        blocking=True,
+    )
+    dmr_device_mock.async_stop.assert_not_awaited()
+    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant"
+    )
+    dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
+    dmr_device_mock.async_play.assert_not_awaited()
 
 
-async def test_device_unavailable(
+async def test_unavailable_device(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    config_entry_mock: MockConfigEntry,
 ) -> None:
     """Test a DlnaDmrEntity with out a connected DmrDevice."""
-    # The physical device should not have been contacted yet
-    assert device_requests_mock.call_count == 0
+    # Cause connection attempts to fail
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
-    entity = await make_dmr_entity(hass, {CONF_URL: UNCONTACTABLE_DEVICE_LOCATION})
+    with patch(
+        "homeassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
+    ) as dmr_device_constructor_mock:
+        mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+        mock_state = hass.states.get(mock_entity_id)
+        assert mock_state is not None
 
-    assert entity._device is None
+        # Check device is not created
+        dmr_device_constructor_mock.assert_not_called()
 
-    # Physical device should have been contacted only once, getting a timeout
-    assert device_requests_mock.call_count == 1
-
+    # Check attempt was made to create a device from the supplied URL
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+    # Check event notifiers are not acquired
+    domain_data_mock.async_get_event_notifier.assert_not_called()
     # Check SSDP notifications are registered
-    mock_ssdp_scanner.async_register_callback.assert_any_call(
-        entity.async_ssdp_callback, {"USN": GOOD_DEVICE_USN}
+    ssdp_scanner_mock.async_register_callback.assert_any_call(
+        ANY, {"USN": MOCK_DEVICE_USN}
     )
-    mock_ssdp_scanner.async_register_callback.assert_any_call(
-        entity.async_ssdp_callback, {"_udn": GOOD_DEVICE_UDN, "NTS": "ssdp:byebye"}
+    ssdp_scanner_mock.async_register_callback.assert_any_call(
+        ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
+    )
+    # Quick check of the state to verify the entity has no connected DmrDevice
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+    # Check the name matches that supplied
+    assert mock_state.name == MOCK_DEVICE_NAME
+
+    # Check that an update does not attempt to contact the device because
+    # poll_availability is False
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    await async_update_entity(hass, mock_entity_id)
+    domain_data_mock.upnp_factory.async_create_device.assert_not_called()
+
+    # Now set poll_availability = True and expect construction attempt
+    hass.config_entries.async_update_entry(
+        config_entry_mock, options={CONF_POLL_AVAILABILITY: True}
+    )
+    await async_update_entity(hass, mock_entity_id)
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
     )
 
-    # Check async_update will do nothing
-    device_requests_mock.clear_requests()
-    await entity.async_update()
-    assert device_requests_mock.call_count == 0
+    # Check attributes are unavailable
+    attrs = mock_state.attributes
+    for attr in ATTR_TO_PROPERTY:
+        assert attr not in attrs
 
-    # Check hass device information is missing
-    assert entity.device_info is None
-    assert entity.supported_features == 0
+    assert attrs[ha_const.ATTR_FRIENDLY_NAME] == MOCK_DEVICE_NAME
+    assert attrs[ha_const.ATTR_SUPPORTED_FEATURES] == 0
 
-    # Device is not available, and hass should know it
-    assert entity.available is False
-    assert entity.state == "off"
+    # Check service calls do nothing
+    SERVICES: list[tuple[str, dict]] = [
+        (ha_const.SERVICE_VOLUME_SET, {mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80}),
+        (ha_const.SERVICE_VOLUME_MUTE, {mp_const.ATTR_MEDIA_VOLUME_MUTED: True}),
+        (ha_const.SERVICE_MEDIA_PAUSE, {}),
+        (ha_const.SERVICE_MEDIA_PLAY, {}),
+        (ha_const.SERVICE_MEDIA_STOP, {}),
+        (ha_const.SERVICE_MEDIA_NEXT_TRACK, {}),
+        (ha_const.SERVICE_MEDIA_PREVIOUS_TRACK, {}),
+        (ha_const.SERVICE_MEDIA_SEEK, {mp_const.ATTR_MEDIA_SEEK_POSITION: 33}),
+        (
+            mp_const.SERVICE_PLAY_MEDIA,
+            {
+                mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+                mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+                mp_const.ATTR_MEDIA_ENQUEUE: False,
+            },
+        ),
+    ]
+    for service, data in SERVICES:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: mock_entity_id, **data},
+            blocking=True,
+        )
 
-    # Check all interface properties return None
-    assert entity.volume_level is None
-    assert entity.is_volume_muted is None
-    assert entity.media_title is None
-    assert entity.media_image_url is None
-    assert entity.media_duration is None
-    assert entity.media_position is None
+    # Check hass device information has not been filled in yet
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is None
 
-    # Check all interface methods do nothing
-    device_requests_mock.clear_requests()
-    await entity.async_set_volume_level(0.80)
-    await entity.async_mute_volume(True)
-    await entity.async_media_pause()
-    await entity.async_media_play()
-    await entity.async_media_stop()
-    await entity.async_media_previous_track()
-    await entity.async_media_next_track()
-    await entity.async_media_seek(33)
-    await entity.async_play_media(
-        "music", "http://192.88.99.20:8200/MediaItems/17621.mp3"
-    )
-    assert device_requests_mock.call_count == 0
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
 
-    # Removing entity cancels SSDP callback but does not contact device
-    await entity.async_remove()
-    assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
-    assert device_requests_mock.call_count == 0
+    # Confirm SSDP notifications unregistered
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 2
+
+    # Check event notifiers are not released
+    domain_data_mock.async_release_event_notifier.assert_not_called()
+
+    # Confirm the entity is still unavailable
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
 async def test_become_available(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test a device becoming available after the entity is constructed."""
-    entity: DlnaDmrEntity = await make_dmr_entity(
-        hass, {CONF_URL: UNCONTACTABLE_DEVICE_LOCATION}
-    )
+    # Cause connection attempts to fail before adding entity
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
-    # Send an SSDP notification with the new device URL
-    assert device_requests_mock.call_count == 1
-    await entity.async_ssdp_callback(
+    # Check hass device information has not been filled in yet
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is None
+
+    # Mock device is now available.
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    # Send an SSDP notification from the now alive device
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
         {
-            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
         },
         ssdp.SsdpChange.ALIVE,
     )
+    await hass.async_block_till_done()
 
-    # Device should be contacted, and entity should be updated
-    assert device_requests_mock.call_count > 1
-    assert entity.location == GOOD_DEVICE_LOCATION
-    assert entity._device is not None
-    assert entity.available is True
-    assert entity.supported_features == 0x523F
+    # Check device was created from the supplied URL
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        NEW_DEVICE_LOCATION
+    )
+    # Check event notifiers are acquired
+    domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
+        EventListenAddr(LOCAL_IP, 0, None), hass
+    )
+    # Check UPnP services are subscribed
+    dmr_device_mock.async_subscribe_services.assert_awaited_once_with(
+        auto_resubscribe=True
+    )
+    assert dmr_device_mock.on_event is not None
+    # Quick check of the state to verify the entity has a connected DmrDevice
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+    # Check hass device information is now filled in
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is not None
+    assert device.manufacturer == "device_manufacturer"
+    assert device.model == "device_model_name"
+    assert device.name == "device_name"
 
-    # Perform UPnP event notification dance
-    assert set(entity._device._subscriptions.keys()) == {
-        SUBSCRIPTION_UUID_RC,
-        SUBSCRIPTION_UUID_AVT,
+    # Unload config entry to clean up
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
     }
-    await send_initial_event_notifications(entity)
 
-    # Quick check that interface now works
-    assert entity.volume_level == 0.24
-    device_requests_mock.clear_requests()
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/RenderingControl/ctrl", side_effect=rc_ctrl_response
-    )
-    await entity.async_set_volume_level(0.80)
-    assert device_requests_mock.call_count == 1
+    # Confirm SSDP notifications unregistered
+    assert ssdp_scanner_mock.async_register_callback.return_value.call_count == 2
 
-    # Setup requests mock to verify UPnP services are unsubscribed
-    device_requests_mock.clear_requests()
-    device_requests_mock.request(
-        "UNSUBSCRIBE", GOOD_DEVICE_BASE_URL + "/RenderingControl/evt"
-    )
-    device_requests_mock.request(
-        "UNSUBSCRIBE", GOOD_DEVICE_BASE_URL + "/AVTransport/evt"
-    )
+    # Confirm the entity has disconnected from the device
+    domain_data_mock.async_release_event_notifier.assert_awaited_once()
+    dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
+    assert dmr_device_mock.on_event is None
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
-    # Removing entity cancels callback and disconnects from device
-    await entity.async_remove()
-    # Check device is gone
-    assert entity._device is None
-    # Verify UPnP services are unsubscribed
-    assert device_requests_mock.call_count == 2
-    # Check SSDP notifications are cleared
-    assert mock_ssdp_scanner.async_register_callback.return_value.call_count == 2
+
+async def test_alive_but_gone(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    mock_disconnected_entity_id: str,
+) -> None:
+    """Test a device sending an SSDP alive announcement, but not being connectable."""
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
+
+    # Send an SSDP notification from the still missing device
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
+
+    # Device should still be unavailable
+    mock_state = hass.states.get(mock_disconnected_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
 async def test_multiple_ssdp_alive(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    mock_disconnected_entity_id: str,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test multiple SSDP alive notifications is ok, only connects to device once."""
-    entity: DlnaDmrEntity = await make_dmr_entity(
-        hass, {CONF_URL: UNCONTACTABLE_DEVICE_LOCATION}
-    )
-    assert device_requests_mock.call_count == 1
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
-    domain_data = get_domain_data(hass)
-    create_device_orig = domain_data.upnp_factory.async_create_device
-
-    async def create_device_delayed(location):
+    # Contacting the device takes long enough that 2 simultaneous attempts could be made
+    async def create_device_delayed(_location):
         """Delay before continuing with async_create_device.
 
         This gives a chance for parallel calls to `_device_connect` to occur.
         """
         await asyncio.sleep(0.1)
-        return await create_device_orig(location)
+        return DEFAULT
 
-    with patch.object(
-        domain_data.upnp_factory,
-        "async_create_device",
-        side_effect=create_device_delayed,
-    ) as create_device_mock:
+    domain_data_mock.upnp_factory.async_create_device.side_effect = (
+        create_device_delayed
+    )
 
-        # Send two SSDP notifications with the new device URL
-        await entity.async_ssdp_callback(
-            {
-                ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-                ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-            },
-            ssdp.SsdpChange.ALIVE,
-        )
-        await entity.async_ssdp_callback(
-            {
-                ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-                ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-            },
-            ssdp.SsdpChange.ALIVE,
-        )
+    # Send two SSDP notifications with the new device URL
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
 
     # Check device is contacted exactly once
-    assert create_device_mock.call_count == 1
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        NEW_DEVICE_LOCATION
+    )
 
-    # Device should be contacted, and entity should be updated
-    assert device_requests_mock.call_count > 1
-    assert entity.location == GOOD_DEVICE_LOCATION
-    assert entity._device is not None
-    assert entity.available is True
-    assert entity.supported_features == 0x523F
-
-    # Clean up
-    await entity.async_remove()
-    assert entity._device is None
+    # Device should be available
+    mock_state = hass.states.get(mock_disconnected_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == media_player.STATE_IDLE
 
 
 async def test_ssdp_byebye(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    ssdp_scanner_mock: Mock,
+    mock_entity_id: str,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test device is disconnected when byebye is received."""
-    # Start with a connected device
-    entity = await make_dmr_entity(hass, {CONF_URL: GOOD_DEVICE_LOCATION})
-    assert entity._device is not None
-
     # First byebye will cause a disconnect
-    await entity.async_ssdp_callback(
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
         {
-            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-            "_udn": GOOD_DEVICE_UDN,
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            "_udn": MOCK_DEVICE_UDN,
             "NTS": "ssdp:byebye",
         },
         ssdp.SsdpChange.BYEBYE,
     )
-    assert entity._device is None
+
+    dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
+
+    # Device should be gone
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == media_player.STATE_IDLE
 
     # Second byebye will do nothing
-    last_request_count = device_requests_mock.call_count
-    await entity.async_ssdp_callback(
+    await ssdp_callback(
         {
-            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-            "_udn": GOOD_DEVICE_UDN,
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            "_udn": MOCK_DEVICE_UDN,
             "NTS": "ssdp:byebye",
         },
         ssdp.SsdpChange.BYEBYE,
     )
-    assert entity._device is None
-    assert device_requests_mock.call_count == last_request_count
 
-    # Clean up
-    await entity.async_remove()
-    assert entity._device is None
+    dmr_device_mock.async_unsubscribe_services.assert_awaited_once()
+
+
+async def test_ssdp_update(
+    ssdp_scanner_mock: Mock,
+    mock_entity_id: str,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test device does nothing when ssdp:update is received."""
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            "_udn": MOCK_DEVICE_UDN,
+            "NTS": "ssdp:update",
+            ssdp.ATTR_SSDP_BOOTID: "2",
+        },
+        ssdp.SsdpChange.UPDATE,
+    )
+
+    # Device was not reconnected, even with a new boot ID
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
 
 
 async def test_ssdp_bootid(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    mock_disconnected_entity_id: str,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test an alive with a new BOOTID.UPNP.ORG header causes a reconnect."""
     # Start with a disconnected device
-    entity: DlnaDmrEntity = await make_dmr_entity(
-        hass, {CONF_URL: UNCONTACTABLE_DEVICE_LOCATION}
-    )
-    assert entity._device is None
+    entity_id = mock_disconnected_entity_id
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # "Reconnect" the device
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    await entity.async_ssdp_callback(
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    await ssdp_callback(
         {
-            ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
             ssdp.ATTR_SSDP_BOOTID: "1",
         },
         ssdp.SsdpChange.ALIVE,
     )
+    await hass.async_block_till_done()
 
-    assert entity._device is not None
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_subscribe_services.call_count == 1
+    assert dmr_device_mock.async_unsubscribe_services.call_count == 0
 
     # Send SSDP alive with same boot ID, nothing should happen
-    with patch.object(
-        entity, "_device_connect", wraps=entity._device_connect
-    ) as mock_connect, patch.object(
-        entity, "_device_disconnect", wraps=entity._device_disconnect
-    ) as mock_disconnect:
-        await entity.async_ssdp_callback(
-            {
-                ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-                ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-                ssdp.ATTR_SSDP_BOOTID: "1",
-            },
-            ssdp.SsdpChange.ALIVE,
-        )
-        assert mock_disconnect.call_count == 0
-        assert mock_connect.call_count == 0
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "1",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
 
-    assert entity._device is not None
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+    assert dmr_device_mock.async_subscribe_services.call_count == 1
+    assert dmr_device_mock.async_unsubscribe_services.call_count == 0
 
     # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
-    with patch.object(
-        entity, "_device_connect", wraps=entity._device_connect
-    ) as mock_connect, patch.object(
-        entity, "_device_disconnect", wraps=entity._device_disconnect
-    ) as mock_disconnect:
-        await entity.async_ssdp_callback(
-            {
-                ssdp.ATTR_SSDP_USN: GOOD_DEVICE_USN,
-                ssdp.ATTR_SSDP_LOCATION: GOOD_DEVICE_LOCATION,
-                ssdp.ATTR_SSDP_BOOTID: "2",
-            },
-            ssdp.SsdpChange.ALIVE,
-        )
-        assert mock_disconnect.call_count == 1
-        assert mock_connect.call_count == 1
+    await ssdp_callback(
+        {
+            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
+            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_BOOTID: "2",
+        },
+        ssdp.SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done()
 
-    assert entity._device is not None
+    mock_state = hass.states.get(entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
 
-    # Clean up
-    await entity.async_remove()
-    assert entity._device is None
+    assert dmr_device_mock.async_subscribe_services.call_count == 2
+    assert dmr_device_mock.async_unsubscribe_services.call_count == 1
 
 
 async def test_become_unavailable(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    mock_entity_id: str,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test a device becoming unavailable."""
-    # Setup device as for test_device_available
-    entity = await make_dmr_entity(hass, {CONF_URL: GOOD_DEVICE_LOCATION})
-
-    assert entity._device is not None
-    await send_initial_event_notifications(entity)
-
     # Check async_update currently works
-    device_requests_mock.clear_requests()
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        side_effect=avt_ctrl_response,
-    )
-
-    await entity.async_update()
-    assert 1 <= device_requests_mock.call_count <= 2
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_called_with(do_ping=False)
 
     # Now break the network connection and try to contact the device
-    device_requests_mock.clear_requests()
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl", exc=asyncio.TimeoutError
-    )
-    device_requests_mock.request(
-        "UNSUBSCRIBE",
-        GOOD_DEVICE_BASE_URL + "/RenderingControl/evt",
-        exc=asyncio.TimeoutError,
-    )
-    device_requests_mock.request(
-        "UNSUBSCRIBE",
-        GOOD_DEVICE_BASE_URL + "/AVTransport/evt",
-        exc=asyncio.TimeoutError,
-    )
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/RenderingControl/ctrl", exc=asyncio.TimeoutError
-    )
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        exc=asyncio.TimeoutError,
+    dmr_device_mock.async_set_volume_level.side_effect = UpnpConnectionError
+    dmr_device_mock.async_update.reset_mock()
+
+    # Interface service calls should flag that the device is unavailable, but
+    # not disconnect it immediately
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+        blocking=True,
     )
 
-    # Interface method calls should flag that the device is unavailable, but not
-    # disconnect it immediately
-    assert entity.check_available is False
-    await entity.async_set_volume_level(0.80)
-    assert entity._device is not None
-    assert entity.check_available is True
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
 
-    # An update will cause the device to be disconnected
-    await entity.async_update()
-    assert entity._device is None
-    assert entity.check_available is False
+    # With a working connection, the state should be restored
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_any_call(do_ping=True)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
 
-    # Clean up
-    await entity.async_remove()
+    # Break the service again, and the connection too. An update will cause the
+    # device to be disconnected
+    dmr_device_mock.async_update.reset_mock()
+    dmr_device_mock.async_update.side_effect = UpnpConnectionError
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        ha_const.SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: mock_entity_id, mp_const.ATTR_MEDIA_VOLUME_LEVEL: 0.80},
+        blocking=True,
+    )
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_called_with(do_ping=True)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
 async def test_poll_availability(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test device becomes available and noticed via poll_availability."""
-    entity: DlnaDmrEntity = await make_dmr_entity(
-        hass,
-        {CONF_URL: UNCONTACTABLE_DEVICE_LOCATION},
-        {CONF_POLL_AVAILABILITY: True},
+    # Start with a disconnected device and poll_availability=True
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
+    config_entry_mock.options = MappingProxyType(
+        {
+            CONF_POLL_AVAILABILITY: True,
+        }
     )
-
-    assert entity._device is None
-    assert device_requests_mock.call_count == 2
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
     # Check that an update will poll the device for availability
-    await entity.async_update()
-    assert entity._device is None
-    assert device_requests_mock.call_count == 3
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    await async_update_entity(hass, mock_entity_id)
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
 
-    # Change the device location to use the normal device_requests_mock
-    entity.location = GOOD_DEVICE_LOCATION
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # "Reconnect" the device
+    domain_data_mock.upnp_factory.async_create_device.side_effect = None
 
     # Check that an update will notice the device and connect to it
-    device_requests_mock.post(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/ctrl",
-        side_effect=avt_ctrl_response,
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    await async_update_entity(hass, mock_entity_id)
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
     )
-    await entity.async_update()
-    assert entity._device is not None
+
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
 
     # Clean up
-    await entity.async_remove()
-    assert entity._device is None
+    assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
+        "require_restart": False
+    }
+
+
+async def test_disappearing_device(
+    hass: HomeAssistant,
+    mock_disconnected_entity_id: str,
+) -> None:
+    """Test attribute update or service call as device disappears.
+
+    Normally HA will check if the entity is available before updating attributes
+    or calling a service, but it's possible for the device to go offline in
+    between the check and the method call. Here we test by accessing the entity
+    directly to skip the availability check.
+    """
+    # Retrieve entity directly.
+    entity: media_player.DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(
+        mock_disconnected_entity_id
+    )
+
+    # Test attribute access
+    for attr in ATTR_TO_PROPERTY:
+        value = getattr(entity, attr)
+        assert value is None
+
+    # media_image_url is normally hidden by entity_picture, but we want a direct check
+    assert entity.media_image_url is None
+
+    # Test service calls
+    await entity.async_set_volume_level(0.1)
+    await entity.async_mute_volume(True)
+    await entity.async_media_pause()
+    await entity.async_media_play()
+    await entity.async_media_stop()
+    await entity.async_media_seek(22.0)
+    await entity.async_play_media("", "")
+    await entity.async_media_previous_track()
+    await entity.async_media_next_track()
 
 
 async def test_resubscribe_failure(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
+    mock_entity_id: str,
+    dmr_device_mock: Mock,
 ) -> None:
     """Test failure to resubscribe to events notifications causes an update ping."""
-    entity = await make_dmr_entity(hass, {CONF_URL: GOOD_DEVICE_LOCATION})
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_called_with(do_ping=False)
+    dmr_device_mock.async_update.reset_mock()
 
-    assert entity._device is not None
-    assert entity.check_available is False
-    entity._on_event(
-        entity._device.device.services["urn:schemas-upnp-org:service:AVTransport:1"], []
-    )
-    assert entity.check_available is True
+    on_event = dmr_device_mock.on_event
+    on_event(None, [])
+    await hass.async_block_till_done()
 
-    # Clean up
-    await entity.async_remove()
-    assert entity._device is None
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_called_with(do_ping=True)
 
 
-async def test_config_update(
+async def test_config_update_listen_port(
     hass: HomeAssistant,
-    device_requests_mock: AiohttpClientMocker,
-    mock_ssdp_scanner: Mock,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
 ) -> None:
-    """Test DlnaDmrEntity gets updated when associated ConfigEntry does."""
-    # Create a config entry and device fixture
-    config_entry = MockConfigEntry(
-        unique_id=GOOD_DEVICE_USN,
-        domain=DLNA_DOMAIN,
-        data={
-            CONF_URL: GOOD_DEVICE_LOCATION,
-            CONF_DEVICE_ID: GOOD_DEVICE_UDN,
-            CONF_TYPE: GOOD_DEVICE_TYPE,
-        },
-        title=GOOD_DEVICE_NAME,
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    await async_setup_component(hass, DLNA_DOMAIN, {})
-    await hass.async_block_till_done()
-
-    entity_comp = hass.data["entity_components"]["media_player"]
-    assert entity_comp
-    entity: DlnaDmrEntity = entity_comp.get_entity(
-        f"media_player.{slugify(GOOD_DEVICE_NAME)}"
-    )
-    assert entity._device is not None
-    assert device_requests_mock.call_count == 6
-
-    # Update the config entry one option at a time and check the device also
-    # updates. Order is important due to port binding of event listener.
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_CALLBACK_URL_OVERRIDE: "http://example.com",
-        },
-    )
-    await hass.async_block_till_done()
-    assert entity._device is not None
-    # Device will be reconnected
-    assert device_requests_mock.call_count == 14
-    assert entity._event_callback_url == "http://example.com"
+    """Test DlnaDmrEntity gets updated by ConfigEntry's CONF_LISTEN_PORT."""
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
 
     hass.config_entries.async_update_entry(
-        config_entry,
+        config_entry_mock,
         options={
-            CONF_CALLBACK_URL_OVERRIDE: "http://example.com",
             CONF_LISTEN_PORT: 1234,
         },
     )
     await hass.async_block_till_done()
-    assert entity._device is not None
+
+    # A new event listener with the changed port will be used
+    domain_data_mock.async_release_event_notifier.assert_awaited_once_with(
+        EventListenAddr(LOCAL_IP, 0, None)
+    )
+    domain_data_mock.async_get_event_notifier.assert_awaited_with(
+        EventListenAddr(LOCAL_IP, 1234, None), hass
+    )
+
     # Device will be reconnected
-    assert device_requests_mock.call_count == 22
-    assert entity._event_port == 1234
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 1
+    assert dmr_device_mock.async_subscribe_services.await_count == 2
+
+    # Check that its still connected
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+
+async def test_config_update_connect_failure(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+) -> None:
+    """Test DlnaDmrEntity gracefully handles connect failure after config change."""
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
 
     hass.config_entries.async_update_entry(
-        config_entry,
+        config_entry_mock,
         options={
-            CONF_CALLBACK_URL_OVERRIDE: "http://example.com",
             CONF_LISTEN_PORT: 1234,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Old event listener was released, new event listener was not created
+    domain_data_mock.async_release_event_notifier.assert_awaited_once_with(
+        EventListenAddr(LOCAL_IP, 0, None)
+    )
+    domain_data_mock.async_get_event_notifier.assert_awaited_once()
+
+    # There was an attempt to connect to the device
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+
+    # Check that its no longer connected
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+
+async def test_config_update_callback_url(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+) -> None:
+    """Test DlnaDmrEntity gets updated by ConfigEntry's CONF_CALLBACK_URL_OVERRIDE."""
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        options={
+            CONF_CALLBACK_URL_OVERRIDE: "http://www.example.net/notify",
+        },
+    )
+    await hass.async_block_till_done()
+
+    # A new event listener with the changed callback URL will be used
+    domain_data_mock.async_release_event_notifier.assert_awaited_once_with(
+        EventListenAddr(LOCAL_IP, 0, None)
+    )
+    domain_data_mock.async_get_event_notifier.assert_awaited_with(
+        EventListenAddr(LOCAL_IP, 0, "http://www.example.net/notify"), hass
+    )
+
+    # Device will be reconnected
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 1
+    assert dmr_device_mock.async_subscribe_services.await_count == 2
+
+    # Check that its still connected
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
+
+
+async def test_config_update_poll_availability(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+) -> None:
+    """Test DlnaDmrEntity gets updated by ConfigEntry's CONF_POLL_AVAILABILITY."""
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    # Updates of the device will not ping it yet
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_awaited_with(do_ping=False)
+
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        options={
             CONF_POLL_AVAILABILITY: True,
         },
     )
     await hass.async_block_till_done()
-    assert entity._device is not None
-    # Device will *not* be reconnected
-    assert device_requests_mock.call_count == 22
-    assert entity.poll_availability is True
 
-    # Remove the entity to clean up all resources, completing its life cycle
-    await entity.async_remove()
+    # Event listeners will not change
+    domain_data_mock.async_release_event_notifier.assert_not_awaited()
+    domain_data_mock.async_get_event_notifier.assert_awaited_once()
+
+    # Device will not be reconnected
+    domain_data_mock.upnp_factory.async_create_device.assert_not_awaited()
+    assert dmr_device_mock.async_unsubscribe_services.await_count == 0
+    assert dmr_device_mock.async_subscribe_services.await_count == 1
+
+    # Updates of the device will now ping it
+    await async_update_entity(hass, mock_entity_id)
+    dmr_device_mock.async_update.assert_awaited_with(do_ping=True)
+
+    # Check that its still connected
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_IDLE
