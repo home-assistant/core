@@ -12,7 +12,6 @@ from homeassistant.components.amberelectric.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.components.sensor import DEVICE_CLASS_MONETARY
-from typing import Generator
 
 from tests.components.amberelectric.helpers import (
     FEED_IN_CHANNEL,
@@ -27,7 +26,7 @@ from tests.components.amberelectric.helpers import (
 from amberelectric.model.channel import Channel
 from amberelectric.model.site import Site
 from amberelectric.model.channel import ChannelType
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from dateutil import parser
 
 
@@ -441,7 +440,7 @@ def test_amber_general_energy_price_sensor(hass: HomeAssistant) -> None:
     assert general_price_sensor.state == 0.08
 
 
-def test_amber_general_renewable_sensor(hass: HomeAssistantk) -> None:
+def test_amber_general_renewable_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
     api = Mock()
     api.get_sites.return_value = sites()

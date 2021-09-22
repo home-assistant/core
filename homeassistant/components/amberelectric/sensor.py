@@ -81,12 +81,13 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
         return "¢/kWh"
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         channel = self._data_service.current_prices.get(self._channel_type)
         if channel:
             if self._channel_type == ChannelType.FEED_IN:
                 return round(channel.per_kwh, 0) * -1
             return round(channel.per_kwh, 0)
+        return None
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
@@ -163,11 +164,11 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
         return DEVICE_CLASS_MONETARY
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self):
         return "AUD"
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         channel = self._data_service.current_prices.get(self._channel_type)
         if channel:
             if self._channel_type == ChannelType.FEED_IN:
@@ -206,10 +207,11 @@ class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
         return "%"
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel:
             return round(channel.renewables, 0)
+        return None
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
@@ -223,7 +225,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         self,
         platform_name: str,
         site_id: str,
-        channel_type: str,
+        channel_type: ChannelType,
         data_service: AmberDataService,
         coordinator: DataUpdateCoordinator,
     ) -> None:
@@ -265,12 +267,13 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         return "¢/kWh"
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         forecasts = self._data_service.forecasts.get(self._channel_type)
         if forecasts and len(forecasts) > 0:
             if self._channel_type == ChannelType.FEED_IN:
                 return round(forecasts[0].per_kwh, 0) * -1
             return round(forecasts[0].per_kwh, 0)
+        return None
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
@@ -326,7 +329,7 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
         return slugify(self._site_id + " Price Spike")
 
     @property
-    def state(self) -> bool:
+    def native_value(self) -> bool:
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel is not None:
             return channel.spike_status == SpikeStatus.SPIKE
@@ -365,14 +368,7 @@ class AmberFactory:
         self._site_id = site_id
 
     def build_sensors(self) -> list[SensorEntity]:
-        sensors: list[
-            AmberPriceSensor
-            | AmberEnergyPriceSensor
-            | AmberForecastSensor
-            | AmberRenewablesSensor
-            | AmberPriceSensor
-            | AmberPriceSpikeSensor
-        ] = []
+        sensors: list[SensorEntity] = []
 
         if (
             self.data_service.site is not None
