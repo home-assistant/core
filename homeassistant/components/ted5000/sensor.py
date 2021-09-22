@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CURRENCY_DOLLAR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_MONETARY,
@@ -57,12 +56,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
-    interval = config.get(CONF_SCAN_INTERVAL, MIN_TIME_BETWEEN_UPDATES)
     url = f"http://{host}:{port}/api/LiveData.xml"
 
     lvl = {"base": 1, "advanced": 2, "extended": 3}
 
-    gateway = Ted5000Gateway(url, interval)
+    gateway = Ted5000Gateway(url)
 
     # Get MTU information to create the sensors.
     gateway.update()
@@ -249,10 +247,9 @@ class Ted5000Utility(SensorEntity):
 class Ted5000Gateway:
     """The class for handling the data retrieval."""
 
-    def __init__(self, url, interval):
+    def __init__(self, url):
         """Initialize the data object."""
         self.url = url
-        MIN_TIME_BETWEEN_UPDATES = interval
         self.data = {}
         self.data_utility = {}
 
@@ -272,25 +269,21 @@ class Ted5000Gateway:
             for mtu in range(1, mtus + 1):
                 power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
                 voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
+                energy_tdy = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
+                energy_mtd = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
                 power_factor = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
-                energy_daily = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
-                energy_monthly = int(
-                    doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"]
-                )
 
                 self.data[mtu] = {
                     0: power,
                     1: voltage / 10,
-                    2: energy_daily,
-                    3: energy_monthly,
+                    2: energy_tdy,
+                    3: energy_mtd,
                     4: power_factor / 10,
                 }
 
             # Utility Data
             current_rate = int(doc["LiveData"]["Utility"]["CurrentRate"])
-            days_left = int(
-                doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"]
-            )
+            days_left = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
             plan_type = int(doc["LiveData"]["Utility"]["PlanType"])
             plan_type_str = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
             carbon_rate = int(doc["LiveData"]["Utility"]["CarbonRate"])
