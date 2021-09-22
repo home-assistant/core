@@ -231,7 +231,7 @@ class WebSocketHandler:
             unsub_stop()
 
             if connection is not None:
-                connection.async_close()
+                connection.async_handle_close()
 
             try:
                 self._to_write.put_nowait(None)
