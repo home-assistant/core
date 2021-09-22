@@ -1,12 +1,13 @@
 """Provide configuration end points for Z-Wave."""
 from collections import deque
+from http import HTTPStatus
 import logging
 
 from aiohttp.web import Response
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
-from homeassistant.const import HTTP_ACCEPTED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_OK
+from homeassistant.const import HTTP_BAD_REQUEST
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 
@@ -82,10 +83,12 @@ class ZWaveConfigWriteView(HomeAssistantView):
         hass = request.app["hass"]
         network = hass.data.get(const.DATA_NETWORK)
         if network is None:
-            return self.json_message("No Z-Wave network data found", HTTP_NOT_FOUND)
+            return self.json_message(
+                "No Z-Wave network data found", HTTPStatus.NOT_FOUND
+            )
         _LOGGER.info("Z-Wave configuration written to file")
         network.write_config()
-        return self.json_message("Z-Wave configuration saved to file", HTTP_OK)
+        return self.json_message("Z-Wave configuration saved to file")
 
 
 class ZWaveNodeValueView(HomeAssistantView):
@@ -131,7 +134,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
-            return self.json_message("Node not found", HTTP_NOT_FOUND)
+            return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
         groupdata = node.groups
         groups = {}
         for key, value in groupdata.items():
@@ -158,7 +161,7 @@ class ZWaveNodeConfigView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
-            return self.json_message("Node not found", HTTP_NOT_FOUND)
+            return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
         config = {}
         for value in node.get_values(
             class_id=const.COMMAND_CLASS_CONFIGURATION
@@ -189,7 +192,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
-            return self.json_message("Node not found", HTTP_NOT_FOUND)
+            return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
         usercodes = {}
         if not node.has_command_class(const.COMMAND_CLASS_USER_CODE):
             return self.json(usercodes)
@@ -220,7 +223,7 @@ class ZWaveProtectionView(HomeAssistantView):
             """Get protection data."""
             node = network.nodes.get(nodeid)
             if node is None:
-                return self.json_message("Node not found", HTTP_NOT_FOUND)
+                return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
             protection_options = {}
             if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
                 return self.json(protection_options)
@@ -247,16 +250,16 @@ class ZWaveProtectionView(HomeAssistantView):
             selection = protection_data["selection"]
             value_id = int(protection_data[const.ATTR_VALUE_ID])
             if node is None:
-                return self.json_message("Node not found", HTTP_NOT_FOUND)
+                return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
             if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
                 return self.json_message(
-                    "No protection commandclass on this node", HTTP_NOT_FOUND
+                    "No protection commandclass on this node", HTTPStatus.NOT_FOUND
                 )
             state = node.set_protection(value_id, selection)
             if not state:
                 return self.json_message(
-                    "Protection setting did not complete", HTTP_ACCEPTED
+                    "Protection setting did not complete", HTTPStatus.ACCEPTED
                 )
-            return self.json_message("Protection setting succsessfully set", HTTP_OK)
+            return self.json_message("Protection setting successfully set")
 
         return await hass.async_add_executor_job(_set_protection)

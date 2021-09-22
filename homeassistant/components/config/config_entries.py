@@ -1,6 +1,8 @@
 """Http views to control the config manager."""
 from __future__ import annotations
 
+from http import HTTPStatus
+
 import aiohttp.web_exceptions
 import voluptuous as vol
 
@@ -8,7 +10,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers.data_entry_flow import (
@@ -69,7 +70,7 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
         try:
             result = await hass.config_entries.async_remove(entry_id)
         except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
+            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 
         return self.json(result)
 
@@ -90,9 +91,9 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
         try:
             result = await hass.config_entries.async_reload(entry_id)
         except config_entries.OperationNotAllowed:
-            return self.json_message("Entry cannot be reloaded", HTTP_FORBIDDEN)
+            return self.json_message("Entry cannot be reloaded", HTTPStatus.FORBIDDEN)
         except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
+            return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 
         return self.json({"require_restart": not result})
 
