@@ -1,4 +1,5 @@
 """Support for DoorBird devices."""
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
@@ -332,7 +333,7 @@ class DoorBirdRequestView(HomeAssistantView):
 
         if device is None:
             return web.Response(
-                status=HTTP_UNAUTHORIZED, text="Invalid token provided."
+                status=HTTPStatus.UNAUTHORIZED.value, text="Invalid token provided."
             )
 
         if device:

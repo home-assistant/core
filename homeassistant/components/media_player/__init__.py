@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import datetime as dt
 import functools as ft
 import hashlib
+from http import HTTPStatus
 import logging
 import secrets
 from typing import final
@@ -30,7 +31,6 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
@@ -1045,7 +1045,7 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTP_UNAUTHORIZED)
+            return web.Response(status=HTTPStatus.UNAUTHORIZED.value)
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1056,7 +1056,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

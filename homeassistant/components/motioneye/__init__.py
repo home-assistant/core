@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from http import HTTPStatus
 import json
 import logging
 from types import MappingProxyType
@@ -38,13 +39,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_NAME,
-    CONF_URL,
-    CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-)
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -412,14 +407,14 @@ async def handle_webhook(
     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         return Response(
             text="Could not decode request",
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST.value,
         )
 
     for key in (ATTR_DEVICE_ID, ATTR_EVENT_TYPE):
         if key not in data:
             return Response(
                 text=f"Missing webhook parameter: {key}",
-                status=HTTP_BAD_REQUEST,
+                status=HTTPStatus.BAD_REQUEST.value,
             )
 
     event_type = data[ATTR_EVENT_TYPE]
@@ -430,7 +425,7 @@ async def handle_webhook(
     if not device:
         return Response(
             text=f"Device not found: {device_id}",
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST.value,
         )
 
     hass.bus.async_fire(

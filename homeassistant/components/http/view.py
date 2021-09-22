@@ -19,7 +19,7 @@ from aiohttp.web_urldispatcher import AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK, HTTP_SERVICE_UNAVAILABLE
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -115,7 +115,7 @@ def request_handler_factory(
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
         if request.app[KEY_HASS].is_stopping:
-            return web.Response(status=HTTP_SERVICE_UNAVAILABLE)
+            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE.value)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
