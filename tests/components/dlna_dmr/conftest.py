@@ -1,34 +1,107 @@
 """Fixtures for DLNA tests."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
-from unittest.mock import Mock, patch
+from socket import AddressFamily  # pylint: disable=no-name-in-module
+from unittest.mock import Mock, create_autospec, patch, seal
 
+from async_upnp_client import UpnpDevice, UpnpFactory
 import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
+from homeassistant.components.dlna_dmr.data import DlnaDmrData
 from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
-GOOD_DEVICE_BASE_URL = "http://192.88.99.4"
-GOOD_DEVICE_LOCATION = GOOD_DEVICE_BASE_URL + "/dmr_description.xml"
-GOOD_DEVICE_NAME = "Test Receiver Device"
-GOOD_DEVICE_TYPE = "urn:schemas-upnp-org:device:MediaRenderer:1"
-GOOD_DEVICE_UDN = "uuid:7cc6da13-7f5d-4ace-9729-58b275c52f1e"
-GOOD_DEVICE_USN = f"{GOOD_DEVICE_UDN}::{GOOD_DEVICE_TYPE}"
+MOCK_DEVICE_BASE_URL = "http://192.88.99.4"
+MOCK_DEVICE_LOCATION = MOCK_DEVICE_BASE_URL + "/dmr_description.xml"
+MOCK_DEVICE_NAME = "Test Renderer Device"
+MOCK_DEVICE_TYPE = "urn:schemas-upnp-org:device:MediaRenderer:1"
+MOCK_DEVICE_UDN = "uuid:7cc6da13-7f5d-4ace-9729-58b275c52f1e"
+MOCK_DEVICE_USN = f"{MOCK_DEVICE_UDN}::{MOCK_DEVICE_TYPE}"
 
-SUBSCRIPTION_UUID_RC = "uuid:204b8fdb-b953-4fa0-a08c-a08ad5856e93"
-SUBSCRIPTION_UUID_AVT = "uuid:05724b15-036f-4c06-ab56-c884904056c7"
+LOCAL_IP = "192.88.99.1"
+EVENT_CALLBACK_URL = "http://192.88.99.1/notify"
 
 NEW_DEVICE_LOCATION = "http://192.88.99.7" + "/dmr_description.xml"
 
-UNCONTACTABLE_DEVICE_LOCATION = "http://192.88.99.5/uncontactable.xml"
 
-WRONG_ST_DEVICE_LOCATION = "http://192.88.99.6/igd_description.xml"
+@pytest.fixture
+def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
+    """Mock the global data used by this component.
+
+    This includes network clients and library object factories. Mocking it
+    prevents network use.
+    """
+    domain_data = create_autospec(DlnaDmrData, instance=True)
+    domain_data.upnp_factory = create_autospec(
+        UpnpFactory, spec_set=True, instance=True
+    )
+
+    upnp_device = create_autospec(UpnpDevice, instance=True)
+    upnp_device.name = MOCK_DEVICE_NAME
+    upnp_device.udn = MOCK_DEVICE_UDN
+    upnp_device.device_url = MOCK_DEVICE_LOCATION
+    upnp_device.device_type = "urn:schemas-upnp-org:device:MediaRenderer:1"
+    upnp_device.available = True
+    seal(upnp_device)
+    domain_data.upnp_factory.async_create_device.return_value = upnp_device
+
+    domain_data.unmigrated_config = {}
+
+    with patch.dict(hass.data, {DLNA_DOMAIN: domain_data}):
+        yield domain_data
+
+    # Make sure the event notifiers are released
+    assert (
+        domain_data.async_get_event_notifier.await_count
+        == domain_data.async_release_event_notifier.await_count
+    )
+
+
+@pytest.fixture
+def config_entry_mock() -> Iterable[MockConfigEntry]:
+    """Mock a config entry for this platform."""
+    mock_entry = MockConfigEntry(
+        unique_id=MOCK_DEVICE_UDN,
+        domain=DLNA_DOMAIN,
+        data={
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+            CONF_TYPE: MOCK_DEVICE_TYPE,
+        },
+        title=MOCK_DEVICE_NAME,
+        options={},
+    )
+    yield mock_entry
+
+
+@pytest.fixture
+def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
+    """Mock the async_upnp_client DMR device, initially connected."""
+    with patch(
+        "homeassistant.components.dlna_dmr.media_player.DmrDevice", autospec=True
+    ) as constructor:
+        device = constructor.return_value
+        device.on_event = None
+        device.device = domain_data_mock.upnp_factory.async_create_device.return_value
+        device.media_image_url = "http://192.88.99.20:8200/AlbumArt/2624-17620.jpg"
+        device.udn = "device_udn"
+        device.manufacturer = "device_manufacturer"
+        device.model_name = "device_model_name"
+        device.name = "device_name"
+
+        yield device
+
+        # Make sure the device is disconnected
+        assert (
+            device.async_subscribe_services.await_count
+            == device.async_unsubscribe_services.await_count
+        )
+
+        assert device.on_event is None
 
 
 @pytest.fixture(name="skip_notifications", autouse=True)
@@ -41,7 +114,7 @@ def skip_notifications_fixture() -> Iterable[None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_ssdp_scanner() -> Iterable[Mock]:
+def ssdp_scanner_mock() -> Iterable[Mock]:
     """Mock the SSDP module."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
         reg_callback = mock_scanner.return_value.async_register_callback
@@ -52,67 +125,12 @@ def mock_ssdp_scanner() -> Iterable[Mock]:
         ), "Not all callbacks unregistered"
 
 
-def configure_device_requests_mock(aioclient_mock: AiohttpClientMocker) -> None:
-    """Add mock device responses to existing AiohttpClient mock."""
-    description_xml = load_fixture("dlna_dmr/dmr_description.xml")
-    aioclient_mock.get(GOOD_DEVICE_LOCATION, text=description_xml)
-    rc_desc_xml = load_fixture("dlna_dmr/rc_desc.xml")
-    aioclient_mock.get(
-        GOOD_DEVICE_BASE_URL + "/RenderingControl/desc.xml", text=rc_desc_xml
-    )
-    cm_desc_xml = load_fixture("dlna_dmr/cm_desc.xml")
-    aioclient_mock.get(
-        GOOD_DEVICE_BASE_URL + "/ConnectionManager/desc.xml", text=cm_desc_xml
-    )
-    avt_desc_xml = load_fixture("dlna_dmr/avt_desc.xml")
-    aioclient_mock.get(
-        GOOD_DEVICE_BASE_URL + "/AVTransport/desc.xml", text=avt_desc_xml
-    )
-
-    aioclient_mock.request(
-        "SUBSCRIBE",
-        GOOD_DEVICE_BASE_URL + "/RenderingControl/evt",
-        headers={"SID": SUBSCRIPTION_UUID_RC, "TIMEOUT": "Second-150"},
-    )
-    aioclient_mock.request(
-        "SUBSCRIBE",
-        GOOD_DEVICE_BASE_URL + "/AVTransport/evt",
-        headers={"SID": SUBSCRIPTION_UUID_AVT, "TIMEOUT": "Second-150"},
-    )
-    aioclient_mock.request(
-        "UNSUBSCRIBE", GOOD_DEVICE_BASE_URL + "/RenderingControl/evt"
-    )
-    aioclient_mock.request("UNSUBSCRIBE", GOOD_DEVICE_BASE_URL + "/AVTransport/evt")
-
-    aioclient_mock.get(UNCONTACTABLE_DEVICE_LOCATION, exc=asyncio.TimeoutError)
-
-    igd_desc_xml = load_fixture("dlna_dmr/igd_desc.xml")
-    aioclient_mock.get(WRONG_ST_DEVICE_LOCATION, text=igd_desc_xml)
-
-
-@pytest.fixture
-def device_requests_mock(
-    aioclient_mock: AiohttpClientMocker,
-) -> Iterable[AiohttpClientMocker]:
-    """Mock device responses to HTTP requests."""
-    configure_device_requests_mock(aioclient_mock)
-    yield aioclient_mock
-
-
-@pytest.fixture
-def config_entry_mock(hass: HomeAssistant) -> Iterable[MockConfigEntry]:
-    """Mock a config entry for this platform."""
-    config_entry = MockConfigEntry(
-        unique_id=GOOD_DEVICE_UDN,
-        domain=DLNA_DOMAIN,
-        data={
-            CONF_URL: GOOD_DEVICE_LOCATION,
-            CONF_DEVICE_ID: GOOD_DEVICE_UDN,
-            CONF_TYPE: GOOD_DEVICE_TYPE,
-        },
-        title=GOOD_DEVICE_NAME,
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-
-    yield config_entry
+@pytest.fixture(autouse=True)
+def async_get_local_ip_mock() -> Iterable[Mock]:
+    """Mock the async_get_local_ip utility function to prevent network access."""
+    with patch(
+        "homeassistant.components.dlna_dmr.media_player.async_get_local_ip",
+        autospec=True,
+    ) as func:
+        func.return_value = AddressFamily.AF_INET, LOCAL_IP
+        yield func
