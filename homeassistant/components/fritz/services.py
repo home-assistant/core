@@ -44,7 +44,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             fritz_tools: FritzBoxTools = hass.data[DOMAIN][entry_id]
             config_entry = hass.config_entries.async_get_entry(entry_id)
             assert config_entry
-            await fritz_tools.service_fritzbox(service_call, config_entry),
+            await fritz_tools.service_fritzbox(service_call, config_entry)
 
     for service in SERVICE_LIST:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
