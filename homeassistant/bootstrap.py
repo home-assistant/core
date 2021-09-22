@@ -159,7 +159,7 @@ async def async_setup_hass(
                 _check_and_log_crash_reports, runtime_config.config_dir
             ):
                 safe_mode = True
-        except (ValueError, OSError):
+        except (ValueError, OSError, FileNotFoundError):
             _LOGGER.exception("Unable to check for recent crash reports")
 
     if not safe_mode:

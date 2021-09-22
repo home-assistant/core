@@ -510,9 +510,7 @@ async def test_setup_hass_continues_if_cannot_determine_if_crashed(
     with patch(
         "homeassistant.config.async_hass_config_yaml",
         return_value={"browser": {}, "frontend": {}},
-    ), patch("homeassistant.bootstrap._slurp_file", side_effect=ValueError), patch(
-        "homeassistant.bootstrap.time.time", return_value=1632335297
-    ), patch(
+    ), patch("homeassistant.bootstrap.time.time", return_value=1632335297), patch(
         "homeassistant.bootstrap.os.unlink"
     ) as mock_unlink, patch(
         "homeassistant.bootstrap.os.listdir", return_value=DIR_LIST_WITH_CRASHES
