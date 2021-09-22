@@ -351,6 +351,10 @@ class Scanner:
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
+        # Config flows should only be created for alive messages from alive devices
+        if ssdp_change != SsdpChange.ALIVE:
+            return
+
         for domain in self._async_matching_domains(info_with_desc):
             _LOGGER.debug("Discovered %s at %s", domain, location)
 

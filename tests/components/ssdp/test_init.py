@@ -240,6 +240,75 @@ async def test_scan_not_all_match(mock_get_ssdp, hass, aioclient_mock, mock_flow
     assert not mock_flow_init.mock_calls
 
 
+@pytest.mark.usefixtures("mock_get_source_ip")
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"deviceType": "Paulus"}]},
+)
+async def test_flow_start_only_alive(
+    mock_get_ssdp, hass, aioclient_mock, mock_flow_init
+):
+    """Test config flow is only started for alive devices."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+  </device>
+</root>
+    """,
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    # Search should start a flow
+    mock_ssdp_search_response = _ssdp_headers(
+        {
+            "st": "mock-st",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+        }
+    )
+    await ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
+
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    # ssdp:alive advertisement should start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement = _ssdp_headers(
+        {
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+            "nt": "upnp:rootdevice",
+            "nts": "ssdp:alive",
+        }
+    )
+    await ssdp_listener._on_alive(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_awaited_once_with(
+        "mock-domain", context={"source": config_entries.SOURCE_SSDP}, data=ANY
+    )
+
+    # ssdp:byebye advertisement should not start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement["nts"] = "ssdp:byebye"
+    await ssdp_listener._on_byebye(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_not_called()
+
+    # ssdp:update advertisement should not start a flow
+    mock_flow_init.reset_mock()
+    mock_ssdp_advertisement["nts"] = "ssdp:update"
+    await ssdp_listener._on_update(mock_ssdp_advertisement)
+    await hass.async_block_till_done()
+    mock_flow_init.assert_not_called()
+
+
 @patch(  # XXX TODO: Isn't this duplicate with mock_get_source_ip?
     "homeassistant.components.ssdp.Scanner._async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
