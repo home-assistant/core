@@ -1,66 +1,59 @@
 """Tests for the DLNA DMR __init__ module."""
-from unittest.mock import Mock, patch
 
-from homeassistant.components.dlna_dmr.config_flow import DlnaDmrFlowHandler
-from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
+from unittest.mock import Mock
+
+from async_upnp_client import UpnpError
+
+from homeassistant.components.dlna_dmr.const import (
+    CONF_LISTEN_PORT,
+    DOMAIN as DLNA_DOMAIN,
+)
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from .conftest import GOOD_DEVICE_LOCATION
-
-from tests.common import MockConfigEntry
+from .conftest import MOCK_DEVICE_LOCATION
 
 
-async def test_import_flow_started(
-    hass: HomeAssistant, mock_ssdp_scanner: Mock
-) -> None:
+async def test_import_flow_started(hass: HomeAssistant, domain_data_mock: Mock) -> None:
     """Test import flow of YAML config is started if there's config data."""
-    mock_import_data = {
-        CONF_PLATFORM: DLNA_DOMAIN,
-        CONF_URL: GOOD_DEVICE_LOCATION,
-    }
-
     mock_config: ConfigType = {
         MEDIA_PLAYER_DOMAIN: [
             {
                 CONF_PLATFORM: DLNA_DOMAIN,
-                CONF_URL: GOOD_DEVICE_LOCATION,
+                CONF_URL: MOCK_DEVICE_LOCATION,
+                CONF_LISTEN_PORT: 1234,
             },
             {
                 CONF_PLATFORM: "other_domain",
-                CONF_URL: GOOD_DEVICE_LOCATION,
+                CONF_URL: MOCK_DEVICE_LOCATION,
                 CONF_NAME: "another device",
             },
         ]
     }
 
-    with patch.object(
-        DlnaDmrFlowHandler,
-        "async_step_import",
-        autospec=True,
-        # Not actually what should be returned, but enough to keep FlowManager happy
-        return_value={"type": "form"},
-    ) as mock_async_step_import:
-        await async_setup_component(hass, DLNA_DOMAIN, mock_config)
-        await hass.async_block_till_done()
+    # Device is not available yet
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
 
-    assert mock_async_step_import.call_count == 1
-    assert mock_async_step_import.call_args.args[1] == mock_import_data
+    # Run the setup
+    await async_setup_component(hass, DLNA_DOMAIN, mock_config)
+    await hass.async_block_till_done()
 
+    # Check config_flow has completed
+    assert hass.config_entries.flow.async_progress(include_uninitialized=True) == []
 
-async def test_setup_entry(
-    hass: HomeAssistant, config_entry_mock: MockConfigEntry, mock_ssdp_scanner: Mock
-) -> None:
-    """Test async_setup_entry eventually calls our entity setup."""
-    with patch(
-        "homeassistant.components.dlna_dmr.media_player.async_setup_entry",
-        autospec=True,
-    ) as mock_setup:
-        result = await hass.config_entries.async_setup(config_entry_mock.entry_id)
-        assert result is True
-        await hass.async_block_till_done()
-    assert mock_setup.call_count == 1
-    assert mock_setup.call_args.args[0:2] == (hass, config_entry_mock)
+    # Check device contact attempt was made
+    domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
+        MOCK_DEVICE_LOCATION
+    )
+
+    # Check the device is added to the unmigrated configs
+    assert domain_data_mock.unmigrated_config == {
+        MOCK_DEVICE_LOCATION: {
+            CONF_PLATFORM: DLNA_DOMAIN,
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_LISTEN_PORT: 1234,
+        }
+    }
