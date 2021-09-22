@@ -137,6 +137,7 @@ async def test_bad_station_id(hass):
     [
         (aiohttp.ClientResponseError(Mock(), (), status=404), "bad_station_id"),
         (aiohttp.ClientResponseError(Mock(), (), status=400), "error_response"),
+        (aiohttp.ClientConnectionError, "cannot_connect"),
         (vol.error.MultipleInvalid, "config_error"),
         (ValueError, "unknown"),
     ],
