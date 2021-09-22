@@ -327,29 +327,61 @@ async def test_available_device(
     # Entity picture is cached, won't correspond to remote image
     assert isinstance(attrs[ha_const.ATTR_ENTITY_PICTURE], str)
 
-    # Check supported feature flags, one at a time
-    FEATURE_FLAGS: list[tuple[str, int]] = [
-        ("volume_level", mp_const.SUPPORT_VOLUME_SET),
-        ("volume_mute", mp_const.SUPPORT_VOLUME_MUTE),
-        ("play", mp_const.SUPPORT_PLAY),
-        ("pause", mp_const.SUPPORT_PAUSE),
-        ("stop", mp_const.SUPPORT_STOP),
-        ("previous", mp_const.SUPPORT_PREVIOUS_TRACK),
-        ("next", mp_const.SUPPORT_NEXT_TRACK),
-        ("play_media", mp_const.SUPPORT_PLAY_MEDIA),
-        ("seek_rel_time", mp_const.SUPPORT_SEEK),
+    # Check supported feature flags, one at a time.
+    # tuple(async_upnp_client dlna has_* name, can_* name, HA feature flag)
+    FEATURE_FLAGS: list[tuple[str, str | None, int]] = [
+        ("has_volume_level", None, mp_const.SUPPORT_VOLUME_SET),
+        ("has_volume_mute", None, mp_const.SUPPORT_VOLUME_MUTE),
+        ("has_play", "can_play", mp_const.SUPPORT_PLAY),
+        ("has_pause", "can_pause", mp_const.SUPPORT_PAUSE),
+        ("has_stop", "can_stop", mp_const.SUPPORT_STOP),
+        ("has_previous", "can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
+        ("has_next", "can_next", mp_const.SUPPORT_NEXT_TRACK),
+        ("has_play_media", None, mp_const.SUPPORT_PLAY_MEDIA),
+        ("has_seek_rel_time", "can_seek_rel_time", mp_const.SUPPORT_SEEK),
+        # TODO: remaining flags when implemented
     ]
     # Clear all feature properties
-    for prop, _ in FEATURE_FLAGS:
-        setattr(dmr_device_mock, f"has_{prop}", False)
+    for has_prop, can_prop, _ in FEATURE_FLAGS:
+        setattr(dmr_device_mock, has_prop, False)
+        if can_prop:
+            setattr(dmr_device_mock, can_prop, False)
     await async_update_entity(hass, mock_entity_id)
     entity_state = hass.states.get(mock_entity_id)
     assert entity_state is not None
     assert entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES] == 0
     # Test the properties cumulatively
     expected_features = 0
-    for prop, flag in FEATURE_FLAGS:
-        setattr(dmr_device_mock, f"has_{prop}", True)
+    for has_prop, can_prop, flag in FEATURE_FLAGS:
+        if can_prop:
+            # Combinations of has and can
+            # has = True, can = False: no feature
+            setattr(dmr_device_mock, has_prop, True)
+            setattr(dmr_device_mock, can_prop, False)
+            await async_update_entity(hass, mock_entity_id)
+            entity_state = hass.states.get(mock_entity_id)
+            assert entity_state is not None
+            assert (
+                entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
+                == expected_features
+            )
+            # has = False, can = True: no feature
+            setattr(dmr_device_mock, has_prop, False)
+            setattr(dmr_device_mock, can_prop, True)
+            await async_update_entity(hass, mock_entity_id)
+            entity_state = hass.states.get(mock_entity_id)
+            assert entity_state is not None
+            assert (
+                entity_state.attributes[ha_const.ATTR_SUPPORTED_FEATURES]
+                == expected_features
+            )
+            # has = True, can = True: feature enabled
+            setattr(dmr_device_mock, has_prop, True)
+            setattr(dmr_device_mock, can_prop, True)
+            # Fall through to common check below
+        else:
+            setattr(dmr_device_mock, has_prop, True)
+
         expected_features |= flag
         await async_update_entity(hass, mock_entity_id)
         entity_state = hass.states.get(mock_entity_id)
