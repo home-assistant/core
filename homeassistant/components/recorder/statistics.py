@@ -30,7 +30,9 @@ import homeassistant.util.volume as volume_util
 
 from .const import DOMAIN
 from .models import (
+    StatisticData,
     StatisticMetaData,
+    StatisticResult,
     Statistics,
     StatisticsMeta,
     StatisticsRuns,
@@ -201,10 +203,10 @@ def _get_metadata_ids(
 def _update_or_add_metadata(
     hass: HomeAssistant,
     session: scoped_session,
-    statistic_id: str,
     new_metadata: StatisticMetaData,
 ) -> str:
     """Get metadata_id for a statistic_id, add if it doesn't exist."""
+    statistic_id = new_metadata["statistic_id"]
     old_metadata_dict = _get_metadata(hass, session, [statistic_id], None)
     if not old_metadata_dict:
         unit = new_metadata["unit_of_measurement"]
@@ -252,7 +254,7 @@ def compile_hourly_statistics(
     start_time = start.replace(minute=0)
     end_time = start_time + timedelta(hours=1)
     # Get last hour's average, min, max
-    summary = {}
+    summary: dict[str, StatisticData] = {}
     baked_query = instance.hass.data[STATISTICS_SHORT_TERM_BAKERY](
         lambda session: session.query(*QUERY_STATISTICS_SUMMARY_MEAN)
     )
@@ -272,7 +274,7 @@ def compile_hourly_statistics(
         for stat in stats:
             metadata_id, _mean, _min, _max = stat
             summary[metadata_id] = {
-                "metadata_id": metadata_id,
+                "start": start_time,
                 "mean": _mean,
                 "min": _min,
                 "max": _max,
@@ -295,19 +297,26 @@ def compile_hourly_statistics(
     if stats:
         for stat in stats:
             metadata_id, start, last_reset, state, _sum, sum_increase, _ = stat
-            summary[metadata_id] = {
-                **summary.get(metadata_id, {}),
-                **{
-                    "metadata_id": metadata_id,
+            if metadata_id in summary:
+                summary[metadata_id].update(
+                    {
+                        "last_reset": process_timestamp(last_reset),
+                        "state": state,
+                        "sum": _sum,
+                        "sum_increase": sum_increase,
+                    }
+                )
+            else:
+                summary[metadata_id] = {
+                    "start": start_time,
                     "last_reset": process_timestamp(last_reset),
                     "state": state,
                     "sum": _sum,
                     "sum_increase": sum_increase,
-                },
-            }
+                }
 
-    for stat in summary.values():
-        session.add(Statistics.from_stats(stat.pop("metadata_id"), start_time, stat))
+    for metadata_id, stat in summary.items():
+        session.add(Statistics.from_stats(metadata_id, stat))
 
 
 @retryable_database_job("statistics")
@@ -322,30 +331,27 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
             return True
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
-    platform_stats = []
+    platform_stats: list[StatisticResult] = []
     for domain, platform in instance.hass.data[DOMAIN].items():
         if not hasattr(platform, "compile_statistics"):
             continue
-        platform_stats.append(platform.compile_statistics(instance.hass, start, end))
+        platform_stat = platform.compile_statistics(instance.hass, start, end)
         _LOGGER.debug(
-            "Statistics for %s during %s-%s: %s", domain, start, end, platform_stats[-1]
+            "Statistics for %s during %s-%s: %s", domain, start, end, platform_stat
         )
+        platform_stats.extend(platform_stat)
 
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
-            for entity_id, stat in stats.items():
-                metadata_id = _update_or_add_metadata(
-                    instance.hass, session, entity_id, stat["meta"]
-                )
+            metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
+            for stat in stats["stat"]:
                 try:
-                    session.add(
-                        StatisticsShortTerm.from_stats(metadata_id, start, stat["stat"])
-                    )
+                    session.add(StatisticsShortTerm.from_stats(metadata_id, stat))
                 except SQLAlchemyError:
                     _LOGGER.exception(
                         "Unexpected exception when inserting statistics %s:%s ",
                         metadata_id,
-                        stat,
+                        stats,
                     )
 
         if start.minute == 55:
@@ -431,7 +437,7 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
 
 def list_statistic_ids(
     hass: HomeAssistant, statistic_type: str | None = None
-) -> list[StatisticMetaData | None]:
+) -> list[dict | None]:
     """Return statistic_ids and meta data."""
     units = hass.config.units
     statistic_ids = {}
