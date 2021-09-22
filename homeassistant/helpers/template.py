@@ -1337,8 +1337,14 @@ def arc_tangent(value, default=_SENTINEL):
 def arc_tangent2(*args, default=_SENTINEL):
     """Filter to calculate four quadrant arc tangent of y / x."""
     try:
-        if len(args) == 1 and isinstance(args[0], (list, tuple)):
+        if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
+            if len(args) == 2 and default is _SENTINEL:
+                # Default value passed as a positional argument
+                default = args[1]
             args = args[0]
+        elif len(args) == 3 and default is _SENTINEL:
+            # Default value passed as a positional argument
+            default = args[2]
 
         return math.atan2(float(args[0]), float(args[1]))
     except (ValueError, TypeError):
