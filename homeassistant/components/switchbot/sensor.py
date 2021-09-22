@@ -74,6 +74,6 @@ class SwitchBotSensor(CoordinatorEntity, Entity):
         }
 
     @property
-    def state(self) -> bool:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data[self._idx]["data"][self._sensor]
