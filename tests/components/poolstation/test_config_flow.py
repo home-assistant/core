@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.poolstation.const import DOMAIN, TOKEN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-TEST_EMAIL = "bob@burgers.com"
+TEST_EMAIL = "bob@example.com"
 VALID_PASSWORD = "passw0rd"
 WRONG_PASSWORD = "wrong-passw0rd"
 
