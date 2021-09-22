@@ -98,8 +98,7 @@ class ControllerDevice(ClimateEntity):
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._supported_features = SUPPORT_FAN_MODE
-        self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
 
         self._fan_to_pescea = {}
         for fan in controller.Fan:
@@ -113,8 +112,10 @@ class ControllerDevice(ClimateEntity):
         }
 
     async def async_added_to_hass(self):
-        """Call on adding to hass."""
-        # Register for connect/disconnect/update events
+        """Call on adding to hass.
+        
+        Registers for connect/disconnect/update events
+        """
         @callback
         def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
             """Disconnected from controller."""
@@ -215,10 +216,6 @@ class ControllerDevice(ClimateEntity):
         """Return the precision of the system."""
         return PRECISION_WHOLE
 
-    @property
-    def extra_state_attributes(self):
-        """Return the optional state attributes."""
-        return {}
 
     @property
     def hvac_mode(self) -> str:
