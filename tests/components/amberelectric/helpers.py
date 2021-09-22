@@ -1,12 +1,13 @@
 """Some common test functions for testing Amber components."""
 
+from datetime import datetime, timedelta
+
 from amberelectric.model.actual_interval import ActualInterval
+from amberelectric.model.channel import ChannelType
 from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
-from amberelectric.model.channel import ChannelType
 from amberelectric.model.interval import SpikeStatus
 from dateutil import parser
-from datetime import datetime, timedelta
 
 
 def generate_actual_interval(
