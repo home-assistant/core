@@ -399,7 +399,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     @property
     def supported_features(self) -> int:
-        """Flag media player features that are supported."""
+        """Flag media player features that are supported at this moment.
+
+        Supported features may change as the device enters different states.
+        """
         if not self._device:
             return 0
 
@@ -409,19 +412,19 @@ class DlnaDmrEntity(MediaPlayerEntity):
             supported_features |= SUPPORT_VOLUME_SET
         if self._device.has_volume_mute:
             supported_features |= SUPPORT_VOLUME_MUTE
-        if self._device.has_play:
+        if self._device.has_play and self._device.can_play:
             supported_features |= SUPPORT_PLAY
-        if self._device.has_pause:
+        if self._device.has_pause and self._device.can_pause:
             supported_features |= SUPPORT_PAUSE
-        if self._device.has_stop:
+        if self._device.has_stop and self._device.can_stop:
             supported_features |= SUPPORT_STOP
-        if self._device.has_previous:
+        if self._device.has_previous and self._device.can_previous:
             supported_features |= SUPPORT_PREVIOUS_TRACK
-        if self._device.has_next:
+        if self._device.has_next and self._device.can_next:
             supported_features |= SUPPORT_NEXT_TRACK
         if self._device.has_play_media:
             supported_features |= SUPPORT_PLAY_MEDIA
-        if self._device.has_seek_rel_time:
+        if self._device.has_seek_rel_time and self._device.can_seek_rel_time:
             supported_features |= SUPPORT_SEEK
 
         return supported_features
@@ -441,7 +444,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        if not self._device or not self._device.has_volume_level:
+        if not self._device:
             _LOGGER.debug("Cannot set volume level")
             return
         await self._device.async_set_volume_level(volume)
@@ -449,7 +452,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
-        if not self._device or not self._device.has_volume_mute:
+        if not self._device:
             _LOGGER.debug("Cannot get volume mute")
             return None
         return self._device.is_volume_muted
@@ -457,7 +460,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        if not self._device or not self._device.has_volume_mute:
+        if not self._device:
             _LOGGER.debug("Cannot set volume mute")
             return
 
@@ -467,7 +470,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if not self._device or not self._device.can_pause:
+        if not self._device:
             _LOGGER.debug("Cannot do Pause")
             return
 
@@ -476,7 +479,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_play(self) -> None:
         """Send play command."""
-        if not self._device or not self._device.can_play:
+        if not self._device:
             _LOGGER.debug("Cannot do Play")
             return
 
@@ -485,7 +488,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if not self._device or not self._device.can_stop:
+        if not self._device:
             _LOGGER.debug("Cannot do Stop")
             return
 
@@ -494,7 +497,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_seek(self, position: int | float) -> None:
         """Send seek command."""
-        if not self._device or not self._device.can_seek_rel_time:
+        if not self._device:
             _LOGGER.debug("Cannot do Seek/rel_time")
             return
 
@@ -509,7 +512,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         title = "Home Assistant"
 
-        if not self._device or not self._device.has_play_media:
+        if not self._device:
             _LOGGER.debug("Cannot do play / set_transport_uri")
             return
 
@@ -531,7 +534,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if not self._device or not self._device.can_previous:
+        if not self._device:
             _LOGGER.debug("Cannot do Previous")
             return
 
@@ -540,7 +543,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if not self._device or not self._device.can_next:
+        if not self._device:
             _LOGGER.debug("Cannot do Next")
             return
 
