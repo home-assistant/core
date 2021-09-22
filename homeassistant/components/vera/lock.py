@@ -1,9 +1,13 @@
 """Support for Vera locks."""
 from __future__ import annotations
 
+import logging
+
 from typing import Any
 
-import pyvera as veraApi
+import voluptuous as vol
+
+from .pyvera import pyvera as veraApi
 
 from homeassistant.components.lock import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -11,16 +15,33 @@ from homeassistant.components.lock import (
     LockEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, ATTR_CREDENTIALS, HTTP_OK, CONF_COMMAND_STATE, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform
+)
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
-
+SET_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+        vol.Required(CONF_PIN): vol.All(int, vol.Range(min=10000000, max=99999999)),
+        vol.Optional("slot"): vol.All(int, vol.Range(min=1, max=244)),
+    }
+)
+CLEAR_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
+        vol.Required("slot"):  vol.All(int, vol.Range(min=1, max=244)),
+    }
+)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,6 +57,17 @@ async def async_setup_entry(
         ],
         True,
     )
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        "setpin",
+        SET_PIN_SCHEMA,
+        "_setpin"
+    )
+    platform.async_register_entity_service(
+        "clearpin",
+        CLEAR_PIN_SCHEMA,
+        "_clearpin"
+    )
 
 
 class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
@@ -46,6 +78,7 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
     ) -> None:
         """Initialize the Vera device."""
         self._state = None
+        self._cmd_status = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
@@ -58,6 +91,28 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         """Unlock the device."""
         self.vera_device.unlock()
         self._state = STATE_UNLOCKED
+    
+    def _setpin(self, **kwargs: Any) -> None:
+        """Set pin on the device."""
+        _LOGGER.warning("calling veralock.setpin to add %s with pin %s", kwargs[CONF_NAME], kwargs[CONF_PIN])
+        result = self.vera_device.set_new_pin(name = kwargs[CONF_NAME], pin = kwargs[CONF_PIN])
+        if result.status_code == HTTP_OK:
+            self._cmd_status = "Removed"
+        else:
+            self._cmd_status = result.text
+            _LOGGER.error("Failed to call %s: %s", "veralock.setpin", result.text)
+            raise ValueError(result.text)
+    
+    def _clearpin(self, **kwargs: Any) -> None:
+        """Clear pin on the device."""
+        _LOGGER.warning("calling veralock.clearpin to clear slot %s", kwargs["slot"])
+        result = self.vera_device.clear_slot_pin(slot = kwargs["slot"])
+        if result.status_code == HTTP_OK:
+            self._cmd_status = "Removed"
+        else:
+            self._cmd_status = result.text
+            _LOGGER.error("Failed to call %s: %s", "veralock.clearpin", result.text)
+            raise ValueError(result.text)
 
     @property
     def is_locked(self) -> bool | None:
@@ -79,6 +134,8 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
             data[ATTR_LAST_USER_NAME] = last_user[1]
 
         data[ATTR_LOW_BATTERY] = self.vera_device.get_low_battery_alert()
+        data[ATTR_CREDENTIALS] = "{}".format(self.vera_device.get_pin_codes())
+        data[CONF_COMMAND_STATE] = self._cmd_status
         return data
 
     @property

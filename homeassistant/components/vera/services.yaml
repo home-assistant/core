@@ -1,0 +1,35 @@
+setpin:
+  # Service name as shown in UI
+  name: Add New Door Code To The Lock
+  # Description of the service
+  description: Adds New Door Code To The Lock.
+  # Different fields that your service accepts
+  fields:
+    name:
+      # Field name as shown in UI
+      name: Name
+      description: Name of the user you need code for
+      example: "John Doe"
+      default: "John Doe" 
+      required: true
+    pin:
+      name: Pin
+      description: 8-digit pin. Expecting Integer Value, not in String Format.
+      example: 12345678
+      default: 12345678
+      required: true
+    
+clearpin:
+  # Service name as shown in UI
+  name: Remove/Delete A Door Code From The Lock
+  # Description of the service
+  description: Removes/Deletes A Door Code From The Lock
+  # Different fields that your service accepts
+  fields:
+    slot:
+      # Field name as shown in UI
+      name: Slot
+      description: Slot number of the user/pin to be deleted. Expecting Integer Value, not in String Format.
+      example: 244
+      default: 244
+      required: true
