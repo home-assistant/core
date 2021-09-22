@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -180,7 +181,7 @@ class RainMachineEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         controller: Controller,
-        entity_type: str,
+        description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -188,7 +189,7 @@ class RainMachineEntity(CoordinatorEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, controller.mac)},
             "connections": {(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            "name": controller.name,
+            "name": str(controller.name),
             "manufacturer": "RainMachine",
             "model": (
                 f"Version {controller.hardware_version} "
@@ -200,9 +201,9 @@ class RainMachineEntity(CoordinatorEntity):
         # The colons are removed from the device MAC simply because that value
         # (unnecessarily) makes up the existing unique ID formula and we want to avoid
         # a breaking change:
-        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{entity_type}"
+        self._attr_unique_id = f"{controller.mac.replace(':', '')}_{description.key}"
         self._controller = controller
-        self._entity_type = entity_type
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:

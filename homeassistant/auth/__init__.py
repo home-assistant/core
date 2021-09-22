@@ -341,8 +341,7 @@ class AuthManager:
                 "System generated users cannot enable multi-factor auth module."
             )
 
-        module = self.get_auth_mfa_module(mfa_module_id)
-        if module is None:
+        if (module := self.get_auth_mfa_module(mfa_module_id)) is None:
             raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_setup_user(user.id, data)
@@ -356,8 +355,7 @@ class AuthManager:
                 "System generated users cannot disable multi-factor auth module."
             )
 
-        module = self.get_auth_mfa_module(mfa_module_id)
-        if module is None:
+        if (module := self.get_auth_mfa_module(mfa_module_id)) is None:
             raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_depose_user(user.id)
@@ -466,7 +464,7 @@ class AuthManager:
             },
             refresh_token.jwt_key,
             algorithm="HS256",
-        ).decode()
+        )
 
     @callback
     def _async_resolve_provider(
@@ -498,8 +496,7 @@ class AuthManager:
 
         Will raise InvalidAuthError on errors.
         """
-        provider = self._async_resolve_provider(refresh_token)
-        if provider:
+        if provider := self._async_resolve_provider(refresh_token):
             provider.async_validate_refresh_token(refresh_token, remote_ip)
 
     async def async_validate_access_token(
@@ -507,7 +504,9 @@ class AuthManager:
     ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
-            unverif_claims = jwt.decode(token, verify=False)
+            unverif_claims = jwt.decode(
+                token, algorithms=["HS256"], options={"verify_signature": False}
+            )
         except jwt.InvalidTokenError:
             return None
 

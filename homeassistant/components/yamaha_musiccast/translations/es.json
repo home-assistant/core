@@ -9,6 +9,9 @@
         "flow_title": "MusicCast: {name}",
         "step": {
             "user": {
+                "data": {
+                    "host": "Anfitri\u00f3n"
+                },
                 "description": "Configura MusicCast para integrarse con Home Assistant."
             }
         }

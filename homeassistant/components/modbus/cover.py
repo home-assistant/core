@@ -74,6 +74,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
 
         self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        self._attr_is_closed = False
 
         # If we read cover status from coil, and not from optional status register,
         # we interpret boolean value False as closed cover, and value True as open cover.
@@ -146,9 +147,14 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         )
         self._call_active = False
         if result is None:
+            if self._lazy_errors:
+                self._lazy_errors -= 1
+                return
+            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self.async_write_ha_state()
-            return None
+            return
+        self._lazy_errors = self._lazy_error_count
         self._attr_available = True
         if self._input_type == CALL_TYPE_COIL:
             self._set_attr_state(bool(result.bits[0] & 1))

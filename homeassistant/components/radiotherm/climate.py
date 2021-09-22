@@ -371,7 +371,7 @@ class RadioThermostat(ClimateEntity):
 
     def set_preset_mode(self, preset_mode):
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
-        if preset_mode in (PRESET_MODES):
+        if preset_mode in PRESET_MODES:
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else:
             _LOGGER.error(

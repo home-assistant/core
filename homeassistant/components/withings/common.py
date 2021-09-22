@@ -640,6 +640,7 @@ class DataManager:
 
         Withings' API occasionally and incorrectly throws errors. Retrying the call tends to work.
         """
+        # pylint: disable=no-self-use
         exception = None
         for attempt in range(1, attempts + 1):
             _LOGGER.debug("Attempt %s of %s", attempt, attempts)
@@ -792,6 +793,7 @@ class DataManager:
             )
             for group in groups
             for measure in group.measures
+            if measure.type in WITHINGS_MEASURE_TYPE_MAP
         }
 
     async def async_get_sleep_summary(self) -> dict[MeasureType, Any]:

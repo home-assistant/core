@@ -36,7 +36,7 @@ async def mock_handler(request):
     user = request.get("hass_user")
     user_id = user.id if user else None
 
-    return web.json_response(status=200, data={"user_id": user_id})
+    return web.json_response(data={"user_id": user_id})
 
 
 async def get_legacy_user(auth):

@@ -42,6 +42,7 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
+        # pylint: disable=no-self-use
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 

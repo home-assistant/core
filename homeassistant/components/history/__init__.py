@@ -103,7 +103,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:poll-box"
+        "history", "history", "hass:chart-box"
     )
     hass.components.websocket_api.async_register_command(
         ws_get_statistics_during_period
@@ -124,6 +124,7 @@ class LazyState(history_models.LazyState):
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
+        vol.Required("period"): vol.Any("hour", "5minute"),
     }
 )
 @websocket_api.async_response
@@ -157,6 +158,7 @@ async def ws_get_statistics_during_period(
         start_time,
         end_time,
         msg.get("statistic_ids"),
+        msg.get("period"),
     )
     connection.send_result(msg["id"], statistics)
 
@@ -167,7 +169,6 @@ async def ws_get_statistics_during_period(
         vol.Optional("statistic_type"): vol.Any("sum", "mean"),
     }
 )
-@websocket_api.require_admin
 @websocket_api.async_response
 async def ws_get_list_statistic_ids(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict

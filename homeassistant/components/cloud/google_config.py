@@ -62,7 +62,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._cloud.is_logged_in and self._prefs.google_report_state
+        return self.enabled and self._prefs.google_report_state
 
     @property
     def local_sdk_webhook_id(self):
@@ -172,6 +172,13 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
+        if not self._cloud.is_logged_in:
+            if self.is_reporting_state:
+                self.async_disable_report_state()
+            if self.is_local_sdk_active:
+                self.async_disable_local_sdk()
+            return
+
         if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
             await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 

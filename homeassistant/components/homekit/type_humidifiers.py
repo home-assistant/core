@@ -149,10 +149,12 @@ class HumidifierDehumidifier(HomeAccessory):
         Run inside the Home Assistant event loop.
         """
         if self.linked_humidity_sensor:
-            async_track_state_change_event(
-                self.hass,
-                [self.linked_humidity_sensor],
-                self.async_update_current_humidity_event,
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_humidity_sensor],
+                    self.async_update_current_humidity_event,
+                )
             )
 
         await super().run()

@@ -8,7 +8,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
 )
@@ -129,7 +128,7 @@ def _set_location(hass, data, location_name):
         data,
     )
 
-    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}")
 
 
 async def async_setup_entry(hass, entry):

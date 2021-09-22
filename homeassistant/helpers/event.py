@@ -71,8 +71,8 @@ class TrackStates:
     """
 
     all_states: bool
-    entities: set
-    domains: set
+    entities: set[str]
+    domains: set[str]
 
 
 @dataclass
@@ -175,16 +175,14 @@ def async_track_state_change(
     def state_change_filter(event: Event) -> bool:
         """Handle specific state changes."""
         if from_state is not None:
-            old_state = event.data.get("old_state")
-            if old_state is not None:
+            if (old_state := event.data.get("old_state")) is not None:
                 old_state = old_state.state
 
             if not match_from_state(old_state):
                 return False
 
         if to_state is not None:
-            new_state = event.data.get("new_state")
-            if new_state is not None:
+            if (new_state := event.data.get("new_state")) is not None:
                 new_state = new_state.state
 
             if not match_to_state(new_state):
@@ -246,8 +244,7 @@ def async_track_state_change_event(
     care about the state change events so we can
     do a fast dict lookup to route events.
     """
-    entity_ids = _async_string_to_lower_list(entity_ids)
-    if not entity_ids:
+    if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
@@ -336,8 +333,7 @@ def async_track_entity_registry_updated_event(
 
     Similar to async_track_state_change_event.
     """
-    entity_ids = _async_string_to_lower_list(entity_ids)
-    if not entity_ids:
+    if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
 
     entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
@@ -394,7 +390,7 @@ def async_track_entity_registry_updated_event(
 
 @callback
 def _async_dispatch_domain_event(
-    hass: HomeAssistant, event: Event, callbacks: dict[str, list]
+    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob]]
 ) -> None:
     domain = split_entity_id(event.data["entity_id"])[0]
 
@@ -419,8 +415,7 @@ def async_track_state_added_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is added to domains."""
-    domains = _async_string_to_lower_list(domains)
-    if not domains:
+    if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
@@ -472,8 +467,7 @@ def async_track_state_removed_domain(
     action: Callable[[Event], Any],
 ) -> Callable[[], None]:
     """Track state change events when an entity is removed from domains."""
-    domains = _async_string_to_lower_list(domains)
-    if not domains:
+    if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
 
     domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
@@ -620,7 +614,7 @@ class _TrackStateChangeFiltered:
         self._listeners.pop(listener_name)()
 
     @callback
-    def _setup_entities_listener(self, domains: set, entities: set) -> None:
+    def _setup_entities_listener(self, domains: set[str], entities: set[str]) -> None:
         if domains:
             entities = entities.copy()
             entities.update(self.hass.states.async_entity_ids(domains))
@@ -634,7 +628,7 @@ class _TrackStateChangeFiltered:
         )
 
     @callback
-    def _setup_domains_listener(self, domains: set) -> None:
+    def _setup_domains_listener(self, domains: set[str]) -> None:
         if not domains:
             return
 
@@ -1185,8 +1179,7 @@ def async_track_point_in_utc_time(
         # as measured by utcnow(). That is bad when callbacks have assumptions
         # about the current time. Thus, we rearm the timer for the remaining
         # time.
-        delta = (utc_point_in_time - now).total_seconds()
-        if delta > 0:
+        if (delta := (utc_point_in_time - now).total_seconds()) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
             cancel_callback = hass.loop.call_later(delta, run_action, job)
@@ -1520,11 +1513,9 @@ def _rate_limit_for_event(
     event: Event, info: RenderInfo, track_template_: TrackTemplate
 ) -> timedelta | None:
     """Determine the rate limit for an event."""
-    entity_id = event.data.get(ATTR_ENTITY_ID)
-
     # Specifically referenced entities are excluded
     # from the rate limit
-    if entity_id in info.entities:
+    if event.data.get(ATTR_ENTITY_ID) in info.entities:
         return None
 
     if track_template_.rate_limit is not None:

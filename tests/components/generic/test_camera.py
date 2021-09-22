@@ -50,9 +50,10 @@ async def test_fetching_url(hass, hass_client):
     assert respx.calls.call_count == 2
 
 
-async def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
+@respx.mock
+async def test_fetching_without_verify_ssl(hass, hass_client):
     """Test that it fetches the given url when ssl verify is off."""
-    aioclient_mock.get("https://example.com", text="hello world")
+    respx.get("https://example.com").respond(text="hello world")
 
     await async_setup_component(
         hass,
@@ -77,9 +78,10 @@ async def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
     assert resp.status == 200
 
 
-async def test_fetching_url_with_verify_ssl(aioclient_mock, hass, hass_client):
+@respx.mock
+async def test_fetching_url_with_verify_ssl(hass, hass_client):
     """Test that it fetches the given url when ssl verify is explicitly on."""
-    aioclient_mock.get("https://example.com", text="hello world")
+    respx.get("https://example.com").respond(text="hello world")
 
     await async_setup_component(
         hass,
@@ -169,7 +171,7 @@ async def test_limit_refetch(hass, hass_client):
     assert body == "hello planet"
 
 
-async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
+async def test_stream_source(hass, hass_client, hass_ws_client):
     """Test that the stream source is rendered."""
     assert await async_setup_component(
         hass,
@@ -209,7 +211,7 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
 
 
-async def test_stream_source_error(aioclient_mock, hass, hass_client, hass_ws_client):
+async def test_stream_source_error(hass, hass_client, hass_ws_client):
     """Test that the stream source has an error."""
     assert await async_setup_component(
         hass,
@@ -273,7 +275,7 @@ async def test_setup_alternative_options(hass, hass_ws_client):
     assert hass.data["camera"].get_entity("camera.config_test")
 
 
-async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
+async def test_no_stream_source(hass, hass_client, hass_ws_client):
     """Test a stream request without stream source option set."""
     assert await async_setup_component(
         hass,

@@ -1,28 +1,27 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
-from aiorecollect.client import PickupType
-import voluptuous as vol
+from datetime import date, datetime, time
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from aiorecollect.client import PickupType
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_FRIENDLY_NAME,
-    CONF_NAME,
     DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 from homeassistant.util.dt import as_utc
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
@@ -30,15 +29,9 @@ ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
-DEFAULT_NAME = "recollect_waste"
+DEFAULT_NAME = "Waste Pickup"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PLACE_ID): cv.string,
-        vol.Required(CONF_SERVICE_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+PLATFORM_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
@@ -54,24 +47,10 @@ def async_get_pickup_type_names(
     ]
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Recollect Waste configuration from YAML."""
-    LOGGER.warning(
-        "Loading ReCollect Waste via platform setup is deprecated; "
-        "Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
+@callback
+def async_get_utc_midnight(target_date: date) -> datetime:
+    """Get UTC midnight for a given date."""
+    return as_utc(datetime.combine(target_date, time(0)))
 
 
 async def async_setup_entry(
@@ -124,7 +103,9 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
+                ATTR_NEXT_PICKUP_DATE: async_get_utc_midnight(
+                    next_pickup_event.date
+                ).isoformat(),
             }
         )
-        self._attr_state = as_utc(pickup_event.date).isoformat()
+        self._attr_native_value = async_get_utc_midnight(pickup_event.date).isoformat()

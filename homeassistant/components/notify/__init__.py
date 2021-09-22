@@ -10,9 +10,9 @@ import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, CONF_PLATFORM
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import config_per_platform, discovery, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import async_get_integration, bind_hass
@@ -66,6 +66,19 @@ PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TITLE): cv.template,
     }
 )
+
+
+@callback
+def _check_templates_warn(hass: HomeAssistant, tpl: template.Template) -> None:
+    """Warn user that passing templates to notify service is deprecated."""
+    if tpl.is_static or hass.data.get("notify_template_warned"):
+        return
+
+    hass.data["notify_template_warned"] = True
+    _LOGGER.warning(
+        "Passing templates to notify service is deprecated and will be removed in 2021.12. "
+        "Automations and scripts handle templates automatically"
+    )
 
 
 @bind_hass
@@ -144,6 +157,7 @@ class BaseNotificationService:
         title = service.data.get(ATTR_TITLE)
 
         if title:
+            _check_templates_warn(self.hass, title)
             title.hass = self.hass
             kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
 
@@ -152,6 +166,7 @@ class BaseNotificationService:
         elif service.data.get(ATTR_TARGET) is not None:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
+        _check_templates_warn(self.hass, message)
         message.hass = self.hass
         kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
         kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
@@ -183,7 +198,6 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            # pylint: disable=no-member
             for name, target in self.targets.items():  # type: ignore
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
@@ -262,10 +276,12 @@ async def async_setup(hass, config):
         payload = {}
         message = service.data[ATTR_MESSAGE]
         message.hass = hass
+        _check_templates_warn(hass, message)
         payload[ATTR_MESSAGE] = message.async_render(parse_result=False)
 
         title = service.data.get(ATTR_TITLE)
         if title:
+            _check_templates_warn(hass, title)
             title.hass = hass
             payload[ATTR_TITLE] = title.async_render(parse_result=False)
 

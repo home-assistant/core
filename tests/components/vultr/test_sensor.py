@@ -39,12 +39,12 @@ class TestVultrSensorSetup(unittest.TestCase):
             {
                 CONF_NAME: vultr.DEFAULT_NAME,
                 CONF_SUBSCRIPTION: "576965",
-                CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
+                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
             },
             {
                 CONF_NAME: "Server {}",
                 CONF_SUBSCRIPTION: "123456",
-                CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
+                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
             },
             {
                 CONF_NAME: "VPS Charges",
@@ -126,7 +126,7 @@ class TestVultrSensorSetup(unittest.TestCase):
             vultr.PLATFORM_SCHEMA(
                 {
                     CONF_PLATFORM: base_vultr.DOMAIN,
-                    CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
+                    CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
                 }
             )
         with pytest.raises(vol.Invalid):  # Bad monitored_conditions
@@ -154,7 +154,9 @@ class TestVultrSensorSetup(unittest.TestCase):
             base_vultr.setup(self.hass, VALID_CONFIG)
 
         bad_conf = {
-            CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS
+            CONF_NAME: "Vultr {} {}",
+            CONF_SUBSCRIPTION: "",
+            CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
         }  # No subs at all
 
         no_sub_setup = vultr.setup_platform(

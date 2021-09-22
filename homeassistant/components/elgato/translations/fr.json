@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cet appareil Elgato Key Light est d\u00e9j\u00e0 configur\u00e9.",
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "cannot_connect": "\u00c9chec de connexion"
         },
         "error": {
@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "host": "H\u00f4te",
                     "port": "Port"
                 },
                 "description": "Configurez votre Elgato Key Light pour l'int\u00e9grer \u00e0 Home Assistant."

@@ -6,12 +6,14 @@ from homeassistant.components.fan import FanEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
+from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
+    MODE_OFF,
+    MODE_ON,
     SIGNAL_VALLOX_STATE_UPDATE,
 )
 
@@ -108,11 +110,7 @@ class ValloxFan(FanEntity):
         """Fetch state from the device."""
         try:
             # Fetch if the whole device is in regular operation state.
-            mode = self._state_proxy.fetch_metric(METRIC_KEY_MODE)
-            if mode == 0:
-                self._state = True
-            else:
-                self._state = False
+            self._state = self._state_proxy.fetch_metric(METRIC_KEY_MODE) == MODE_ON
 
             # Fetch the profile fan speeds.
             self._fan_speed_home = int(
@@ -131,11 +129,12 @@ class ValloxFan(FanEntity):
                 )
             )
 
-            self._available = True
-
         except (OSError, KeyError) as err:
             self._available = False
             _LOGGER.error("Error updating fan: %s", err)
+            return
+
+        self._available = True
 
     #
     # The fan entity model has changed to use percentages and preset_modes
@@ -159,32 +158,35 @@ class ValloxFan(FanEntity):
         if speed is not None:
             return
 
-        if self._state is False:
-            try:
-                await self._client.set_values({METRIC_KEY_MODE: 0})
-
-                # This state change affects other entities like sensors. Force
-                # an immediate update that can be observed by all parties
-                # involved.
-                await self._state_proxy.async_update(None)
-
-            except OSError as err:
-                self._available = False
-                _LOGGER.error("Error turning on: %s", err)
-        else:
+        if self._state is True:
             _LOGGER.error("Already on")
+            return
+
+        try:
+            await self._client.set_values({METRIC_KEY_MODE: MODE_ON})
+
+        except OSError as err:
+            self._available = False
+            _LOGGER.error("Error turning on: %s", err)
+            return
+
+        # This state change affects other entities like sensors. Force an immediate update that can
+        # be observed by all parties involved.
+        await self._state_proxy.async_update(None)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
-        if self._state is True:
-            try:
-                await self._client.set_values({METRIC_KEY_MODE: 5})
-
-                # Same as for turn_on method.
-                await self._state_proxy.async_update(None)
-
-            except OSError as err:
-                self._available = False
-                _LOGGER.error("Error turning off: %s", err)
-        else:
+        if self._state is False:
             _LOGGER.error("Already off")
+            return
+
+        try:
+            await self._client.set_values({METRIC_KEY_MODE: MODE_OFF})
+
+        except OSError as err:
+            self._available = False
+            _LOGGER.error("Error turning off: %s", err)
+            return
+
+        # Same as for turn_on method.
+        await self._state_proxy.async_update(None)
