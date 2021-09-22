@@ -37,6 +37,8 @@ def friendly_channel_type(channel_type: str) -> str:
 
 
 class AmberPriceSensor(CoordinatorEntity, SensorEntity):
+    """Amber Price Sensor."""
+
     def __init__(
         self,
         platform_name: str,
@@ -45,6 +47,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
         data_service: AmberDataService,
         coordinator: DataUpdateCoordinator,
     ) -> None:
+        """Initialize the Sensor."""
         super().__init__(coordinator)
         self._site_id = site_id
         self._channel_type = channel_type
@@ -53,6 +56,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def name(self) -> str | None:
+        """Return the friendly name of the sensor."""
         return (
             self._platform_name
             + " - "
@@ -63,6 +67,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unique_id(self) -> str | None:
+        """Return a unique id for each sensors."""
         return slugify(
             self._site_id + " " + friendly_channel_type(self._channel_type) + " Price"
         )
@@ -78,10 +83,12 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unit_of_measurement(self):
+        """Return the sensors unit of measurement."""
         return "¢/kWh"
 
     @property
     def native_value(self) -> str | None:
+        """Return the current price in c/kWh."""
         channel = self._data_service.current_prices.get(self._channel_type)
         if channel:
             if self._channel_type == ChannelType.FEED_IN:
@@ -91,6 +98,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional pieces of information about the price."""
         meta = self._data_service.current_prices.get(self._channel_type)
         data = {}
         if meta is not None:
@@ -117,6 +125,8 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
 
 
 class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
+    """Amber Price Sensor that can be used in the Energy Dashboard."""
+
     def __init__(
         self,
         platform_name: str,
@@ -125,6 +135,7 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
         data_service: AmberDataService,
         coordinator: DataUpdateCoordinator,
     ) -> None:
+        """Initialize the Sensor."""
         super().__init__(coordinator)
         self._site_id = site_id
         self._channel_type = channel_type
@@ -133,6 +144,7 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def name(self) -> str | None:
+        """Return the friendly name of the sensor."""
         return (
             self._platform_name
             + " - "
@@ -143,6 +155,7 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unique_id(self) -> str | None:
+        """Return a unique id for each sensors."""
         return slugify(
             self._site_id
             + " "
@@ -161,14 +174,17 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_class(self) -> str | None:
+        """Return the sensors device class."""
         return DEVICE_CLASS_MONETARY
 
     @property
     def native_unit_of_measurement(self):
+        """Return the sensors currency."""
         return "AUD"
 
     @property
     def native_value(self) -> str | None:
+        """Return the current price in $/kWh."""
         channel = self._data_service.current_prices.get(self._channel_type)
         if channel:
             if self._channel_type == ChannelType.FEED_IN:
@@ -178,6 +194,8 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
 
 
 class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
+    """Amber Renewable Percentage Sensor."""
+
     def __init__(
         self,
         platform_name: str,
@@ -185,6 +203,7 @@ class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
         data_service: AmberDataService,
         coordinator: DataUpdateCoordinator,
     ) -> None:
+        """Initialize the Sensor."""
         super().__init__(coordinator)
         self._site_id = site_id
         self._platform_name = platform_name
@@ -192,22 +211,27 @@ class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def name(self) -> str | None:
+        """Return the friendly name of the sensor."""
         return self._platform_name + " - Renewables"
 
     @property
     def unique_id(self) -> str | None:
+        """Return a unique id for each sensors."""
         return slugify(self._site_id + " Renewables")
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         return "mdi:solar-power"
 
     @property
     def unit_of_measurement(self):
+        """Return the sensors unit of measurement."""
         return "%"
 
     @property
     def native_value(self) -> str | None:
+        """Return the percentage of renewable energy currently in the grid."""
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel:
             return round(channel.renewables, 0)
@@ -215,12 +239,15 @@ class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional pieces of information about the sensor."""
         data = {}
         data[ATTR_ATTRIBUTION] = ATTRIBUTION
         return data
 
 
 class AmberForecastSensor(CoordinatorEntity, SensorEntity):
+    """Amber Forecast Sensor."""
+
     def __init__(
         self,
         platform_name: str,
@@ -229,6 +256,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         data_service: AmberDataService,
         coordinator: DataUpdateCoordinator,
     ) -> None:
+        """Initialize the Sensor."""
         super().__init__(coordinator)
         self._site_id = site_id
         self._channel_type = channel_type
@@ -237,6 +265,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def name(self) -> str | None:
+        """Return the friendly name of the sensor."""
         return (
             self._platform_name
             + " - "
@@ -247,6 +276,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unique_id(self) -> str | None:
+        """Return a unique id for each sensors."""
         return slugify(
             self._site_id
             + " "
@@ -256,6 +286,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         if self._channel_type == ChannelType.FEED_IN:
             return "mdi:solar-power"
         if self._channel_type == ChannelType.CONTROLLED_LOAD:
@@ -264,10 +295,12 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def unit_of_measurement(self):
+        """Return the sensors unit of measurement."""
         return "¢/kWh"
 
     @property
     def native_value(self) -> str | None:
+        """Return the current price in c/kWh."""
         forecasts = self._data_service.forecasts.get(self._channel_type)
         if forecasts and len(forecasts) > 0:
             if self._channel_type == ChannelType.FEED_IN:
@@ -277,6 +310,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional pieces of information about the forecast."""
         forecasts = self._data_service.forecasts.get(self._channel_type)
         data: dict[str, Any] = {}
         data["forecasts"] = []
@@ -308,6 +342,8 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
 
 
 class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
+    """Amber Price Spike Sensor."""
+
     def __init__(
         self,
         platform_name: str,
@@ -315,6 +351,7 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
         data_service: AmberDataService,
         coordinator: DataUpdateCoordinator,
     ) -> None:
+        """Initialize the Sensor."""
         super().__init__(coordinator)
         self._platform_name = platform_name
         self._site_id = site_id
@@ -322,14 +359,17 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def name(self) -> str | None:
+        """Return the friendly name of the sensor."""
         return self._platform_name + " - Price Spike"
 
     @property
     def unique_id(self) -> str | None:
+        """Return a unique id for each sensors."""
         return slugify(self._site_id + " Price Spike")
 
     @property
     def native_value(self) -> bool:
+        """Return the current price in c/kWh."""
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel is not None:
             return channel.spike_status == SpikeStatus.SPIKE
@@ -337,6 +377,7 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel is not None:
             if channel.spike_status == SpikeStatus.SPIKE:
@@ -347,6 +388,7 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional pieces of information about the sensor."""
         data = {}
         channel = self._data_service.current_prices.get(ChannelType.GENERAL)
         if channel is not None:
@@ -356,6 +398,8 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
 
 
 class AmberFactory:
+    """Create all the Amber sensors."""
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -363,11 +407,13 @@ class AmberFactory:
         site_id: str,
         api: amber_api.AmberApi,
     ):
+        """Initialise the factory."""
         self._platform_name = platform_name
         self.data_service = AmberDataService(hass, api, site_id)
         self._site_id = site_id
 
     def build_sensors(self) -> list[SensorEntity]:
+        """Build and return all of the Amber Sensors."""
         sensors: list[SensorEntity] = []
 
         if (
@@ -515,6 +561,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up the Amber integration."""
     configuration = amberelectric.Configuration(
         access_token=entry.data.get(CONF_API_TOKEN)
     )

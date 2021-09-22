@@ -1,7 +1,13 @@
 """Test the Amber Electric Sensors."""
 from __future__ import annotations
 
+from unittest.mock import Mock
+
+from amberelectric.model.channel import Channel, ChannelType
 from amberelectric.model.interval import SpikeStatus
+from amberelectric.model.site import Site
+from dateutil import parser
+
 from homeassistant.components.amberelectric.sensor import (
     AmberEnergyPriceSensor,
     AmberFactory,
@@ -10,27 +16,23 @@ from homeassistant.components.amberelectric.sensor import (
     AmberPriceSpikeSensor,
     AmberRenewablesSensor,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.components.sensor import DEVICE_CLASS_MONETARY
+from homeassistant.core import HomeAssistant
 
 from tests.components.amberelectric.helpers import (
+    CONTROLLED_LOAD_CHANNEL,
     FEED_IN_CHANNEL,
     GENERAL_AND_CONTROLLED_FEED_IN_SITE_ID,
-    GENERAL_CHANNEL,
-    GENERAL_ONLY_SITE_ID,
     GENERAL_AND_CONTROLLED_SITE_ID,
     GENERAL_AND_FEED_IN_SITE_ID,
-    CONTROLLED_LOAD_CHANNEL,
+    GENERAL_CHANNEL,
+    GENERAL_ONLY_SITE_ID,
     generate_current_interval,
 )
-from amberelectric.model.channel import Channel
-from amberelectric.model.site import Site
-from amberelectric.model.channel import ChannelType
-from unittest.mock import Mock
-from dateutil import parser
 
 
 def sites() -> list[Site]:
+    """Return some mock sites."""
     general_site = Site(
         GENERAL_ONLY_SITE_ID,
         "11111111111",
@@ -71,7 +73,6 @@ def sites() -> list[Site]:
 
 def test_sensor_factory_only_general_no_update(hass: HomeAssistant) -> None:
     """Testing the state of the Factory sensors before an update has completed."""
-
     api = Mock()
     api.get_sites.return_value = sites()
     api.get_current_price.return_value = GENERAL_CHANNEL
@@ -272,7 +273,7 @@ def test_amber_general_price_sensor(hass: HomeAssistant) -> None:
     assert general_price_sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_general_price"
     assert general_price_sensor.icon == "mdi:transmission-tower"
     assert general_price_sensor.unit_of_measurement == "¢/kWh"
-    assert general_price_sensor.state == 8
+    assert general_price_sensor.native_value == 8
 
     attributes = general_price_sensor.device_state_attributes
     assert attributes is not None
@@ -314,7 +315,7 @@ def test_amber_controlled_load_price_sensor(hass: HomeAssistant) -> None:
     assert sensor.unique_id == "01fg2mc8rf7gbc4kjxp3yfz162_controlled_load_price"
     assert sensor.icon == "mdi:clock-outline"
     assert sensor.unit_of_measurement == "¢/kWh"
-    assert sensor.state == 8
+    assert sensor.native_value == 8
 
     attributes = sensor.device_state_attributes
     assert attributes is not None
@@ -357,7 +358,7 @@ def test_amber_solar_price_sensor(hass: HomeAssistant) -> None:
     assert sensor.unique_id == "01fg2mcd8ktrzr9mnnw84vp50s_feed_in_price"
     assert sensor.icon == "mdi:solar-power"
     assert sensor.unit_of_measurement == "¢/kWh"
-    assert sensor.state == -8
+    assert sensor.native_value == -8
 
     attributes = sensor.device_state_attributes
     assert attributes is not None
@@ -395,7 +396,7 @@ def test_amber_general_forecast_sensor(hass: HomeAssistant) -> None:
     )
     assert general_price_sensor.icon == "mdi:transmission-tower"
     assert general_price_sensor.unit_of_measurement == "¢/kWh"
-    assert general_price_sensor.state == 9
+    assert general_price_sensor.native_value == 9
 
     attributes = general_price_sensor.device_state_attributes
     assert attributes is not None
@@ -437,7 +438,7 @@ def test_amber_general_energy_price_sensor(hass: HomeAssistant) -> None:
     assert general_price_sensor.icon == "mdi:transmission-tower"
     assert general_price_sensor.device_class == DEVICE_CLASS_MONETARY
     assert general_price_sensor.unit_of_measurement == "AUD"
-    assert general_price_sensor.state == 0.08
+    assert general_price_sensor.native_value == 0.08
 
 
 def test_amber_general_renewable_sensor(hass: HomeAssistant) -> None:
@@ -458,7 +459,7 @@ def test_amber_general_renewable_sensor(hass: HomeAssistant) -> None:
     assert general_price_sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_renewables"
     assert general_price_sensor.icon == "mdi:solar-power"
     assert general_price_sensor.unit_of_measurement == "%"
-    assert general_price_sensor.state == 51
+    assert general_price_sensor.native_value == 51
     attributes = general_price_sensor.device_state_attributes
     assert attributes is not None
     assert attributes["attribution"] == "Data provided by Amber Electric"
@@ -481,7 +482,7 @@ def test_amber_general_price_spike_sensor_no_spike(hass: HomeAssistant) -> None:
     assert general_price_sensor.name == "Home - Price Spike"
     assert general_price_sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_price_spike"
     assert general_price_sensor.icon == "mdi:power-plug"
-    assert general_price_sensor.state is False
+    assert general_price_sensor.native_value is False
     attributes = general_price_sensor.device_state_attributes
     assert attributes is not None
     assert attributes["spike_status"] == "none"
@@ -511,7 +512,7 @@ def test_amber_general_price_spike_sensor_potential_spike(hass: HomeAssistant) -
     assert sensor.name == "Home - Price Spike"
     assert sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_price_spike"
     assert sensor.icon == "mdi:power-plug-outline"
-    assert sensor.state is False
+    assert sensor.native_value is False
     attributes = sensor.device_state_attributes
     assert attributes is not None
     assert attributes["spike_status"] == "potential"
@@ -541,7 +542,7 @@ def test_amber_general_price_spike_sensor_spike(hass: HomeAssistant) -> None:
     assert sensor.name == "Home - Price Spike"
     assert sensor.unique_id == "01fg2k6v5tb6x9w0ewppmzd6mj_price_spike"
     assert sensor.icon == "mdi:power-plug-off"
-    assert sensor.state is True
+    assert sensor.native_value is True
     attributes = sensor.device_state_attributes
     assert attributes is not None
     assert attributes["spike_status"] == "spike"
