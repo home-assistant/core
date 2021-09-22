@@ -77,10 +77,6 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             error = "unknown"
         return error
 
-    def get_name(self):
-        """Needed to mock name when running tests."""
-        return self._data[CONF_NAME]
-
     def get_serial_no(self):
         """Needed to mock serial_no when running tests."""
         return self._enasolar.get_serial_no()
@@ -100,7 +96,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _get_ip, user_input[CONF_HOST]
             )
             if not ip_address:
-                _errors[CONF_NAME] = "invalid_host"
+                _errors[CONF_HOST] = "invalid_host"
             else:
                 self._data[CONF_HOST] = user_input[CONF_HOST]
                 self._data[CONF_NAME] = user_input[CONF_NAME]
@@ -140,7 +136,7 @@ class EnaSolarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _errors[CONF_CAPABILITY] = "capability_invalid"
             else:
                 self._data.update(user_input)
-                title = self.get_name()
+                title = self._data[CONF_NAME]
                 return self.async_create_entry(title=title, data=self._data)
         else:
             # Use the capability bits from the Inverter. This assumes it

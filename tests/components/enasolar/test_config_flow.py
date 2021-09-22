@@ -1,7 +1,9 @@
 """Test the enasolar config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from aiohttp.client_exceptions import ClientConnectorError, ClientResponseError
+
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.enasolar import config_flow
 from homeassistant.components.enasolar.const import (
     CONF_CAPABILITY,
@@ -13,156 +15,144 @@ from homeassistant.components.enasolar.const import (
     CONF_SUN_UP,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 TEST_NAME = "My Inverter"
 GOOD_TEST_HOST = "123.123.123.123"
+TEST_DATA = {CONF_HOST: GOOD_TEST_HOST, CONF_NAME: TEST_NAME}
+INVERTER_DATA = {CONF_MAX_OUTPUT: 3.8, CONF_DC_STRINGS: 1, CONF_CAPABILITY: 0x107}
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.enasolar.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value=None,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": GOOD_TEST_HOST,
-                "name": TEST_NAME,
-            },
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=TEST_DATA
         )
-        await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
-    assert result2["step_id"] == "inverter"
-    assert len(mock_setup_entry.mock_calls) == 1
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "inverter"
 
 
-def init_config_flow(hass):
+async def test_user(hass: HomeAssistant):
+    """Test user config."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=TEST_DATA,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "inverter"
+
+    with patch("homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=INVERTER_DATA,
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"] == {
+            CONF_MAX_OUTPUT: 3.8,
+            CONF_DC_STRINGS: 1,
+            CONF_CAPABILITY: 263,
+            CONF_HOST: GOOD_TEST_HOST,
+            CONF_NAME: TEST_NAME,
+        }
+
+
+async def test_user_invalid_host(hass: HomeAssistant):
+    """Test use config with an invalid host."""
+
+    with patch(
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter"
+    ), patch(
+        "homeassistant.components.enasolar.config_flow._get_ip", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_DATA
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"host": "invalid_host"}
+
+
+async def test_user_cannot_connect(hass: HomeAssistant):
+    """Test user config where cannot connect to inverter."""
+
+    os_error = MagicMock()
+    os_error.error = True
+    os_error.strerror = True
+
+    with patch(
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter"
+    ) as mock:
+        mock.side_effect = ClientConnectorError(connection_key=None, os_error=os_error)  # type: ignore
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_DATA
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"host": "cannot_connect"}
+
+
+async def test_user_unexpected_response(hass: HomeAssistant):
+    """Test user config where unexpected response."""
+
+    with patch(
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter",
+    ) as mock:
+        mock.side_effect = ClientResponseError(request_info=None, history=None)  # type: ignore
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_DATA
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"host": "unexpected_response"}
+
+
+async def test_user_unknown(hass: HomeAssistant):
+    """Test user config unknown response."""
+    with patch(
+        "homeassistant.components.enasolar.config_flow.pyenasolar.EnaSolar.interogate_inverter",
+    ) as mock:
+        mock.side_effect = Exception
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=TEST_DATA
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"host": "unknown"}
+
+
+def init_config_flow(hass: HomeAssistant):
     """Init a configuration flow."""
     flow = config_flow.EnaSolarConfigFlow()
     flow.hass = hass
     return flow
 
 
-async def test_user(hass):
-    """Test user config."""
-    flow = init_config_flow(hass)
-    result = await flow.async_step_user()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    test_data = {CONF_HOST: GOOD_TEST_HOST, CONF_NAME: TEST_NAME}
-
-    with patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value=None,
-    ):
-        result = await flow.async_step_user(test_data)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "inverter"
-
-    # Fail with Bad data
-    with patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value=None,
-    ):
-        result = await flow.async_step_user(
-            {
-                CONF_HOST: "1234.1234.1234.1234",
-                CONF_NAME: TEST_NAME,
-            }
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"name": "invalid_host"}
-
-    # Fail with connection error
-    with patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value="cannot_connect",
-    ):
-        result = await flow.async_step_user(test_data)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"host": "cannot_connect"}
-
-
-async def test_inverter(hass):
-    """Test user config."""
-    flow = init_config_flow(hass)
-    MockConfigEntry(
-        domain="enasolar",
-        data={
-            CONF_NAME: TEST_NAME,
-            CONF_HOST: GOOD_TEST_HOST,
-        },
-    ).add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value=None,
-    ):
-        result = await flow.async_step_inverter()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "inverter"
-
-    # test with all provided
-    with patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.async_set_unique_id",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow._try_connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.enasolar.config_flow.EnaSolarConfigFlow.get_name",
-        return_value="My Inverter",
-    ):
-        result = await flow.async_step_inverter(
-            {
-                CONF_MAX_OUTPUT: 3.8,
-                CONF_DC_STRINGS: 1,
-                CONF_CAPABILITY: 256,
-            }
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "My Inverter"
-    assert result["data"] == {
-        CONF_MAX_OUTPUT: 3.8,
-        CONF_DC_STRINGS: 1,
-        CONF_CAPABILITY: 256,
-    }
-
-
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant):
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
