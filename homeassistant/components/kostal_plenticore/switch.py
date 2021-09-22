@@ -1,6 +1,7 @@
 ﻿"""Platform for Kostal Plenticore switches."""
 from __future__ import annotations
 
+from abc import ABC
 from datetime import timedelta
 import logging
 from typing import Any, Callable
@@ -60,13 +61,15 @@ async def async_setup_entry(
                 sensor_data,
                 PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
+                f"{entry.title} {name}",
+                f"{entry.entry_id}_{module_id}_{data_id}",
             )
         )
 
     async_add_entities(entities)
 
 
-class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity):
+class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity, ABC):
     def __init__(
             self,
             coordinator,
@@ -78,6 +81,8 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity):
             switch_data: dict[str, Any],
             formatter: Callable[[str], Any],
             device_info: DeviceInfo,
+            attr_name: str,
+            attr_unique_id: str,
     ):
         """Create a new switch Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -90,6 +95,8 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity):
         self._switch_name = switch_name
         self._switch_data = switch_data
         self._formatter = formatter
+        self._attr_name = attr_name
+        self._attr_unique_id = attr_unique_id
 
         self._device_info = device_info
 
@@ -137,30 +144,9 @@ class PlenticoreDataSwitch(CoordinatorEntity, SwitchEntity):
         return self._device_info
 
     @property
-    def assumed_state(self) -> bool:
-        """Return true if unable to access real state of entity."""
-        if self.coordinator.data is None:
-            raw_value = True
-            _LOGGER.debug("NO assumed_state ")
-        else:
-            raw_value = int(self.coordinator.data[self.module_id][self.data_id])
-
-        return bool(raw_value)
-
-    @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self._state)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this switch Entity."""
-        return f"{self.entry_id}_{self.module_id}_{self.data_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of this switch Entity."""
-        return f"{self.platform_name} {self._switch_name}"
 
     @property
     def icon(self) -> str | None:
