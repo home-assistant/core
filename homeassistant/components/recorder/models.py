@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import TypedDict, overload
+from typing import Iterable, TypedDict, overload
 
 from sqlalchemy import (
     Boolean,
@@ -224,10 +224,13 @@ class States(Base):  # type: ignore
 
 
 class StatisticResult(TypedDict):
-    """Statistic data class."""
+    """Statistic result data class.
+
+    Allows multiple datapoints for the same statistic_id.
+    """
 
     meta: StatisticMetaData
-    stat: tuple[StatisticData, ...]
+    stat: Iterable[StatisticData]
 
 
 class StatisticDataBase(TypedDict):
