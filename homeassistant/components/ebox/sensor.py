@@ -52,7 +52,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="balance",
         name="Balance",
         native_unit_of_measurement=PRICE,
-        icon="mdi:cash-usd",
+        icon="mdi:cash",
     ),
     SensorEntityDescription(
         key="limit",

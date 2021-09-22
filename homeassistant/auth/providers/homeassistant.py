@@ -82,9 +82,7 @@ class Data:
 
     async def async_load(self) -> None:
         """Load stored data."""
-        data = await self._store.async_load()
-
-        if data is None:
+        if (data := await self._store.async_load()) is None:
             data = {"users": []}
 
         seen: set[str] = set()
@@ -93,9 +91,7 @@ class Data:
             username = user["username"]
 
             # check if we have duplicates
-            folded = username.casefold()
-
-            if folded in seen:
+            if (folded := username.casefold()) in seen:
                 self.is_legacy = True
 
                 logging.getLogger(__name__).warning(

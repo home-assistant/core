@@ -1,6 +1,7 @@
 """Statistics helper for sensor."""
 from __future__ import annotations
 
+from collections import defaultdict
 import datetime
 import itertools
 import logging
@@ -543,3 +544,54 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         statistic_ids[entity_id] = statistics_unit
 
     return statistic_ids
+
+
+def validate_statistics(
+    hass: HomeAssistant,
+) -> dict[str, list[statistics.ValidationIssue]]:
+    """Validate statistics."""
+    validation_result = defaultdict(list)
+
+    entities = _get_entities(hass)
+
+    for (
+        entity_id,
+        _state_class,
+        device_class,
+    ) in entities:
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        if device_class not in UNIT_CONVERSIONS:
+            metadata = statistics.get_metadata(hass, entity_id)
+            if not metadata:
+                continue
+            metadata_unit = metadata["unit_of_measurement"]
+            if state_unit != metadata_unit:
+                validation_result[entity_id].append(
+                    statistics.ValidationIssue(
+                        "units_changed",
+                        {
+                            "statistic_id": entity_id,
+                            "state_unit": state_unit,
+                            "metadata_unit": metadata_unit,
+                        },
+                    )
+                )
+            continue
+
+        if state_unit not in UNIT_CONVERSIONS[device_class]:
+            validation_result[entity_id].append(
+                statistics.ValidationIssue(
+                    "unsupported_unit",
+                    {
+                        "statistic_id": entity_id,
+                        "device_class": device_class,
+                        "state_unit": state_unit,
+                    },
+                )
+            )
+
+    return validation_result

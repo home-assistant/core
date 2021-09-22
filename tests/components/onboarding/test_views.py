@@ -325,10 +325,16 @@ async def test_onboarding_integration_invalid_redirect_uri(
 
     client = await hass_client()
 
-    resp = await client.post(
-        "/api/onboarding/integration",
-        json={"client_id": CLIENT_ID, "redirect_uri": "http://invalid-redirect.uri"},
-    )
+    with patch(
+        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
+    ):
+        resp = await client.post(
+            "/api/onboarding/integration",
+            json={
+                "client_id": CLIENT_ID,
+                "redirect_uri": "http://invalid-redirect.uri",
+            },
+        )
 
     assert resp.status == 400
 

@@ -171,6 +171,13 @@ omit =
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
+    homeassistant/components/crownstone/__init__.py
+    homeassistant/components/crownstone/const.py
+    homeassistant/components/crownstone/listeners.py
+    homeassistant/components/crownstone/helpers.py
+    homeassistant/components/crownstone/devices.py
+    homeassistant/components/crownstone/entry_manager.py
+    homeassistant/components/crownstone/light.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
     homeassistant/components/daikin/*
@@ -367,7 +374,6 @@ omit =
     homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
-    homeassistant/components/generic_hygrostat/*
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -698,7 +704,10 @@ omit =
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/legacy/*
     homeassistant/components/netdata/sensor.py
+    homeassistant/components/netgear/__init__.py
     homeassistant/components/netgear/device_tracker.py
+    homeassistant/components/netgear/router.py
+    homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
@@ -863,9 +872,6 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
-    homeassistant/components/rituals_perfume_genie/binary_sensor.py
-    homeassistant/components/rituals_perfume_genie/number.py
-    homeassistant/components/rituals_perfume_genie/select.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
@@ -1005,6 +1011,11 @@ omit =
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbot/switch.py
+    homeassistant/components/switchbot/__init__.py
+    homeassistant/components/switchbot/const.py
+    homeassistant/components/switchbot/entity.py
+    homeassistant/components/switchbot/cover.py
+    homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
@@ -1168,6 +1179,8 @@ omit =
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
     homeassistant/components/watson_tts/tts.py
+    homeassistant/components/watttime/__init__.py
+    homeassistant/components/watttime/sensor.py
     homeassistant/components/waze_travel_time/__init__.py
     homeassistant/components/waze_travel_time/helpers.py
     homeassistant/components/waze_travel_time/sensor.py

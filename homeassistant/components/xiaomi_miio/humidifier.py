@@ -9,8 +9,6 @@ from miio.airhumidifier_mjjsq import OperationMode as AirhumidifierMjjsqOperatio
 
 from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MIN_HUMIDITY,
     DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
 )
@@ -117,10 +115,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
         self._state = None
         self._attributes = {}
-        self._available_modes = []
         self._mode = None
-        self._min_humidity = DEFAULT_MIN_HUMIDITY
-        self._max_humidity = DEFAULT_MAX_HUMIDITY
         self._humidity_steps = 100
         self._target_humidity = None
 
@@ -138,24 +133,9 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
         return value
 
     @property
-    def available_modes(self) -> list:
-        """Get the list of available modes."""
-        return self._available_modes
-
-    @property
     def mode(self):
         """Get the current mode."""
         return self._mode
-
-    @property
-    def min_humidity(self):
-        """Return the minimum target humidity."""
-        return self._min_humidity
-
-    @property
-    def max_humidity(self):
-        """Return the maximum target humidity."""
-        return self._max_humidity
 
     async def async_turn_on(
         self,
@@ -196,25 +176,20 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id, coordinator)
+
+        self._attr_min_humidity = 30
+        self._attr_max_humidity = 80
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
-            self._available_modes = AVAILABLE_MODES_CA1_CB1
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_CA1_CB1
             self._humidity_steps = 10
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
-            self._available_modes = AVAILABLE_MODES_CA4
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_CA4
             self._humidity_steps = 100
         elif self._model in MODELS_HUMIDIFIER_MJJSQ:
-            self._available_modes = AVAILABLE_MODES_MJJSQ
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_MJJSQ
             self._humidity_steps = 100
         else:
-            self._available_modes = AVAILABLE_MODES_OTHER
-            self._min_humidity = 30
-            self._max_humidity = 80
+            self._attr_available_modes = AVAILABLE_MODES_OTHER
             self._humidity_steps = 10
 
         self._state = self.coordinator.data.is_on
