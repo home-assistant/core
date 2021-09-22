@@ -6,7 +6,7 @@ import asyncio
 import base64
 import collections.abc
 from collections.abc import Generator, Iterable
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import partial, wraps
@@ -88,7 +88,9 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 
-template_cv: ContextVar[str | None] = ContextVar("template_cv", default=None)
+template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
+    "template_cv", default=None
+)
 
 
 @bind_hass
@@ -336,13 +338,14 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        if self.is_static or self._compiled_code is not None:
-            return
+        with set_template(self.template, "compiling"):
+            if self.is_static or self._compiled_code is not None:
+                return
 
-        try:
-            self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
-        except jinja2.TemplateError as err:
-            raise TemplateError(err) from err
+            try:
+                self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
+            except jinja2.TemplateError as err:
+                raise TemplateError(err) from err
 
     def render(
         self,
@@ -1203,15 +1206,16 @@ def utcnow(hass: HomeAssistant) -> datetime:
 
 def warn_no_default(function, value, default):
     """Log warning if no default is specified."""
-    template = template_cv.get() or ""
+    template, action = template_cv.get() or ("", "rendering or compiling")
     _LOGGER.warning(
         (
-            "Template warning: '%s' got invalid input '%s' when rendering template '%s' "
+            "Template warning: '%s' got invalid input '%s' when %s template '%s' "
             "but no default was specified. Currently '%s' will return '%s', however this template will fail "
             "to render in Home Assistant core 2021.12"
         ),
         function,
         value,
+        action,
         template,
         function,
         default,
@@ -1572,22 +1576,33 @@ def urlencode(value):
     return urllib_urlencode(value).encode("utf-8")
 
 
+@contextmanager
+def set_template(template_str: str, action: str) -> Generator:
+    """Store template being parsed or rendered in a Contextvar to aid error handling."""
+    template_cv.set((template_str, action))
+    try:
+        yield
+    finally:
+        template_cv.set(None)
+
+
 def _render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
-    template_cv.set(template_str)
-    return template.render(**kwargs)
+    with set_template(template_str, "rendering"):
+        return template.render(**kwargs)
 
 
 class LoggingUndefined(jinja2.Undefined):
     """Log on undefined variables."""
 
     def _log_message(self):
-        template = template_cv.get() or ""
+        template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.warning(
-            "Template variable warning: %s when rendering '%s'",
+            "Template variable warning: %s when %s '%s'",
             self._undefined_message,
+            action,
             template,
         )
 
@@ -1595,10 +1610,11 @@ class LoggingUndefined(jinja2.Undefined):
         try:
             return super()._fail_with_undefined_error(*args, **kwargs)
         except self._undefined_exception as ex:
-            template = template_cv.get() or ""
+            template, action = template_cv.get() or ("", "rendering or compiling")
             _LOGGER.error(
-                "Template variable error: %s when rendering '%s'",
+                "Template variable error: %s when %s '%s'",
                 self._undefined_message,
+                action,
                 template,
             )
             raise ex
