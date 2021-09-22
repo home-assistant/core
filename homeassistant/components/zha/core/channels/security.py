@@ -7,7 +7,6 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 import logging
 
 from zigpy.exceptions import ZigbeeException
@@ -345,6 +344,8 @@ class IasWd(ZigbeeChannel):
 class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
+    ZCL_INIT_ATTRS = {"zone_status": True, "zone_state": False, "zone_type": True}
+
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
@@ -404,8 +405,3 @@ class IASZoneChannel(ZigbeeChannel):
                 self.cluster.attributes.get(attrid, [attrid])[0],
                 value,
             )
-
-    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
-        """Initialize channel."""
-        attributes = ["zone_status", "zone_state", "zone_type"]
-        return self.get_attributes(attributes, from_cache=from_cache)

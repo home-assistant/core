@@ -3,6 +3,7 @@ import asyncio
 import math
 from unittest.mock import AsyncMock, Mock
 
+import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
@@ -47,11 +48,24 @@ def patch_cluster(cluster):
     cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
     cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)
     cluster.unbind = AsyncMock(return_value=[0])
-    cluster.write_attributes = AsyncMock(
+    cluster.write_attributes = AsyncMock(wraps=cluster.write_attributes)
+    cluster._write_attributes = AsyncMock(
         return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]]
     )
     if cluster.cluster_id == 4:
         cluster.add = AsyncMock(return_value=[0])
+
+
+def update_attribute_cache(cluster):
+    """Update attribute cache based on plugged attributes."""
+    if cluster.PLUGGED_ATTR_READS:
+        attrs = [
+            make_attribute(cluster.attridx.get(attr, attr), value)
+            for attr, value in cluster.PLUGGED_ATTR_READS.items()
+        ]
+        hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+        hdr.frame_control.disable_default_response = True
+        cluster.handle_message(hdr, [attrs])
 
 
 def get_zha_gateway(hass):
@@ -76,13 +90,16 @@ def send_attribute_report(hass, cluster, attrid, value):
     return send_attributes_report(hass, cluster, {attrid: value})
 
 
-async def send_attributes_report(hass, cluster: int, attributes: dict):
+async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: dict):
     """Cause the sensor to receive an attribute report from the network.
 
     This is to simulate the normal device communication that happens when a
     device is paired to the zigbee network.
     """
-    attrs = [make_attribute(attrid, value) for attrid, value in attributes.items()]
+    attrs = [
+        make_attribute(cluster.attridx.get(attr, attr), value)
+        for attr, value in attributes.items()
+    ]
     hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
     hdr.frame_control.disable_default_response = True
     cluster.handle_message(hdr, [attrs])

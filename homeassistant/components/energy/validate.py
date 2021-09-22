@@ -1,12 +1,13 @@
 """Validate the energy preferences provide valid data."""
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 import dataclasses
 from typing import Any
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
@@ -19,14 +20,16 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from . import data
 from .const import DOMAIN
 
-ENERGY_USAGE_UNITS = (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
+ENERGY_USAGE_DEVICE_CLASSES = (sensor.DEVICE_CLASS_ENERGY,)
+ENERGY_USAGE_UNITS = {
+    sensor.DEVICE_CLASS_ENERGY: (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
+}
 ENERGY_UNIT_ERROR = "entity_unexpected_unit_energy"
-GAS_USAGE_UNITS = (
-    ENERGY_WATT_HOUR,
-    ENERGY_KILO_WATT_HOUR,
-    VOLUME_CUBIC_METERS,
-    VOLUME_CUBIC_FEET,
-)
+GAS_USAGE_DEVICE_CLASSES = (sensor.DEVICE_CLASS_ENERGY, sensor.DEVICE_CLASS_GAS)
+GAS_USAGE_UNITS = {
+    sensor.DEVICE_CLASS_ENERGY: (ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+    sensor.DEVICE_CLASS_GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+}
 GAS_UNIT_ERROR = "entity_unexpected_unit_gas"
 
 
@@ -59,7 +62,8 @@ class EnergyPreferencesValidation:
 def _async_validate_usage_stat(
     hass: HomeAssistant,
     stat_value: str,
-    allowed_units: Sequence[str],
+    allowed_device_classes: Sequence[str],
+    allowed_units: Mapping[str, Sequence[str]],
     unit_error: str,
     result: list[ValidationIssue],
 ) -> None:
@@ -106,19 +110,29 @@ def _async_validate_usage_stat(
             ValidationIssue("entity_negative_state", stat_value, current_value)
         )
 
-    unit = state.attributes.get("unit_of_measurement")
+    device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+    if device_class not in allowed_device_classes:
+        result.append(
+            ValidationIssue(
+                "entity_unexpected_device_class",
+                stat_value,
+                device_class,
+            )
+        )
+    else:
+        unit = state.attributes.get("unit_of_measurement")
 
-    if unit not in allowed_units:
-        result.append(ValidationIssue(unit_error, stat_value, unit))
+        if device_class and unit not in allowed_units.get(device_class, []):
+            result.append(ValidationIssue(unit_error, stat_value, unit))
 
-    state_class = state.attributes.get("state_class")
+    state_class = state.attributes.get(sensor.ATTR_STATE_CLASS)
 
-    supported_state_classes = [
+    allowed_state_classes = [
         sensor.STATE_CLASS_MEASUREMENT,
         sensor.STATE_CLASS_TOTAL,
         sensor.STATE_CLASS_TOTAL_INCREASING,
     ]
-    if state_class not in supported_state_classes:
+    if state_class not in allowed_state_classes:
         result.append(
             ValidationIssue(
                 "entity_unexpected_state_class_total_increasing",
@@ -236,6 +250,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 _async_validate_usage_stat(
                     hass,
                     flow["stat_energy_from"],
+                    ENERGY_USAGE_DEVICE_CLASSES,
                     ENERGY_USAGE_UNITS,
                     ENERGY_UNIT_ERROR,
                     source_result,
@@ -258,6 +273,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                 _async_validate_usage_stat(
                     hass,
                     flow["stat_energy_to"],
+                    ENERGY_USAGE_DEVICE_CLASSES,
                     ENERGY_USAGE_UNITS,
                     ENERGY_UNIT_ERROR,
                     source_result,
@@ -282,6 +298,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             _async_validate_usage_stat(
                 hass,
                 source["stat_energy_from"],
+                GAS_USAGE_DEVICE_CLASSES,
                 GAS_USAGE_UNITS,
                 GAS_UNIT_ERROR,
                 source_result,
@@ -304,6 +321,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             _async_validate_usage_stat(
                 hass,
                 source["stat_energy_from"],
+                ENERGY_USAGE_DEVICE_CLASSES,
                 ENERGY_USAGE_UNITS,
                 ENERGY_UNIT_ERROR,
                 source_result,
@@ -313,6 +331,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             _async_validate_usage_stat(
                 hass,
                 source["stat_energy_from"],
+                ENERGY_USAGE_DEVICE_CLASSES,
                 ENERGY_USAGE_UNITS,
                 ENERGY_UNIT_ERROR,
                 source_result,
@@ -320,6 +339,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             _async_validate_usage_stat(
                 hass,
                 source["stat_energy_to"],
+                ENERGY_USAGE_DEVICE_CLASSES,
                 ENERGY_USAGE_UNITS,
                 ENERGY_UNIT_ERROR,
                 source_result,
@@ -331,6 +351,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
         _async_validate_usage_stat(
             hass,
             device["stat_consumption"],
+            ENERGY_USAGE_DEVICE_CLASSES,
             ENERGY_USAGE_UNITS,
             ENERGY_UNIT_ERROR,
             device_result,

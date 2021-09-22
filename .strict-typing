@@ -27,6 +27,7 @@ homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cover.*
+homeassistant.components.crownstone.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
@@ -54,6 +55,7 @@ homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
 homeassistant.components.integration.*
+homeassistant.components.iqvia.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lcn.*
@@ -85,6 +87,7 @@ homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.rituals_perfume_genie.*
+homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
 homeassistant.components.sensor.*
@@ -95,6 +98,7 @@ homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
+homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
@@ -102,6 +106,7 @@ homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
+homeassistant.components.tradfri.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*

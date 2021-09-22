@@ -4,7 +4,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import partial
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
@@ -45,6 +50,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:water-pump",
         native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
         entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
@@ -53,6 +59,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:water-pump",
         native_unit_of_measurement="liter",
         entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
@@ -69,6 +76,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:water-pump",
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
@@ -77,6 +85,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:thermometer",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
     ),
 )

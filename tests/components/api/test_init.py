@@ -395,7 +395,7 @@ async def test_api_error_log(
     assert resp.status == 401
 
     with patch(
-        "aiohttp.web.FileResponse", return_value=web.Response(status=200, text="Hello")
+        "aiohttp.web.FileResponse", return_value=web.Response(text="Hello")
     ) as mock_file:
         resp = await client.get(
             const.URL_API_ERROR_LOG,
@@ -559,3 +559,20 @@ async def test_api_call_service_bad_data(hass, mock_api_client):
         "/api/services/test_domain/test_service", json={"hello": 5}
     )
     assert resp.status == 400
+
+
+async def test_api_get_discovery_info(hass, mock_api_client):
+    """Test the return of discovery info."""
+    resp = await mock_api_client.get(const.URL_API_DISCOVERY_INFO)
+    result = await resp.json()
+
+    assert result == {
+        "base_url": "",
+        "external_url": "",
+        "installation_type": "",
+        "internal_url": "",
+        "location_name": "",
+        "requires_api_password": True,
+        "uuid": "",
+        "version": "",
+    }

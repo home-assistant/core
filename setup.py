@@ -36,7 +36,7 @@ REQUIRES = [
     "astral==2.2",
     "async_timeout==3.0.1",
     "attrs==21.2.0",
-    "awesomeversion==21.4.0",
+    "awesomeversion==21.8.1",
     'backports.zoneinfo;python_version<"3.9"',
     "bcrypt==3.1.7",
     "certifi>=2020.12.5",
@@ -45,7 +45,7 @@ REQUIRES = [
     "jinja2==3.0.1",
     "PyJWT==2.1.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==3.3.2",
+    "cryptography==3.4.8",
     "pip>=8.0.3,<20.3",
     "python-slugify==4.0.1",
     "pyyaml==5.4.1",

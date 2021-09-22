@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,11 +52,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Netatmo camera platform."""
-    if "access_camera" not in entry.data["token"]["scope"]:
-        _LOGGER.info(
-            "Cameras are currently not supported with this authentication method"
-        )
-
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     await data_handler.register_data_class(
@@ -83,10 +78,16 @@ async def async_setup_entry(
         for camera in all_cameras
     ]
 
-    for person_id, person_data in data_handler.data[
-        CAMERA_DATA_CLASS_NAME
-    ].persons.items():
-        hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(ATTR_PSEUDO)
+    for home in data_class.homes.values():
+        if home.get("id") is None:
+            continue
+
+        hass.data[DOMAIN][DATA_PERSONS][home["id"]] = {
+            person_id: person_data.get(ATTR_PSEUDO)
+            for person_id, person_data in data_handler.data[CAMERA_DATA_CLASS_NAME]
+            .persons[home["id"]]
+            .items()
+        }
 
     _LOGGER.debug("Adding cameras %s", entities)
     async_add_entities(entities, True)
@@ -309,14 +310,31 @@ class NetatmoCamera(NetatmoBase, Camera):
                 ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
         return events
 
-    async def _service_set_persons_home(self, **kwargs: Any) -> None:
-        """Service to change current home schedule."""
-        persons = kwargs.get(ATTR_PERSONS, {})
+    def fetch_person_ids(self, persons: list[str | None]) -> list[str]:
+        """Fetch matching person ids for give list of persons."""
         person_ids = []
+        person_id_errors = []
+
         for person in persons:
-            for pid, data in self._data.persons.items():
+            person_id = None
+            for pid, data in self._data.persons[self._home_id].items():
                 if data.get("pseudo") == person:
                     person_ids.append(pid)
+                    person_id = pid
+                    break
+
+            if person_id is None:
+                person_id_errors.append(person)
+
+        if person_id_errors:
+            raise HomeAssistantError(f"Person(s) not registered {person_id_errors}")
+
+        return person_ids
+
+    async def _service_set_persons_home(self, **kwargs: Any) -> None:
+        """Service to change current home schedule."""
+        persons = kwargs.get(ATTR_PERSONS, [])
+        person_ids = self.fetch_person_ids(persons)
 
         await self._data.async_set_persons_home(
             person_ids=person_ids, home_id=self._home_id
@@ -326,24 +344,17 @@ class NetatmoCamera(NetatmoBase, Camera):
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
         person = kwargs.get(ATTR_PERSON)
-        person_id = None
-        if person:
-            for pid, data in self._data.persons.items():
-                if data.get("pseudo") == person:
-                    person_id = pid
+        person_ids = self.fetch_person_ids([person] if person else [])
+        person_id = next(iter(person_ids), None)
+
+        await self._data.async_set_persons_away(
+            person_id=person_id,
+            home_id=self._home_id,
+        )
 
         if person_id:
-            await self._data.async_set_persons_away(
-                person_id=person_id,
-                home_id=self._home_id,
-            )
-            _LOGGER.debug("Set %s as away", person)
-
+            _LOGGER.debug("Set %s as away %s", person, person_id)
         else:
-            await self._data.async_set_persons_away(
-                person_id=person_id,
-                home_id=self._home_id,
-            )
             _LOGGER.debug("Set home as empty")
 
     async def _service_set_camera_light(self, **kwargs: Any) -> None:

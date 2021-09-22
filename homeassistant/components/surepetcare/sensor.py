@@ -7,8 +7,10 @@ from surepy.entities import SurepyEntity
 from surepy.enums import EntityType
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -19,14 +21,14 @@ from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Sure PetCare Flaps sensors."""
-    if discovery_info is None:
-        return
 
-    entities: list[SurepyEntity] = []
+    entities: list[SureBattery] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 
@@ -41,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class SureBattery(SensorEntity, CoordinatorEntity):
+class SureBattery(CoordinatorEntity, SensorEntity):
     """A sensor implementation for Sure Petcare Entities."""
 
     def __init__(self, _id: int, coordinator: DataUpdateCoordinator) -> None:

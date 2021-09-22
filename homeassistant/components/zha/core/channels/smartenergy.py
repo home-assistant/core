@@ -1,8 +1,6 @@
 """Smart energy channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
-
 from zigpy.zcl.clusters import smartenergy
 
 from homeassistant.const import (
@@ -63,7 +61,13 @@ class Messaging(ZigbeeChannel):
 class Metering(ZigbeeChannel):
     """Metering channel."""
 
-    REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = ({"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT},)
+    ZCL_INIT_ATTRS = {
+        "divisor": True,
+        "multiplier": True,
+        "unit_of_measure": True,
+        "demand_formatting": True,
+    }
 
     unit_of_measure_map = {
         0x00: POWER_WATT,
@@ -98,14 +102,6 @@ class Metering(ZigbeeChannel):
         """Return multiplier for the value."""
         return self.cluster.get("multiplier") or 1
 
-    def async_configure_channel_specific(self) -> Coroutine:
-        """Configure channel."""
-        return self.fetch_config(False)
-
-    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
-        """Initialize channel."""
-        return self.fetch_config(True)
-
     @callback
     def attribute_updated(self, attrid: int, value: int) -> None:
         """Handle attribute update from Metering cluster."""
@@ -119,14 +115,10 @@ class Metering(ZigbeeChannel):
         uom = self.cluster.get("unit_of_measure", 0x7F)
         return self.unit_of_measure_map.get(uom & 0x7F, "unknown")
 
-    async def fetch_config(self, from_cache: bool) -> None:
+    async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
-        results = await self.get_attributes(
-            ["divisor", "multiplier", "unit_of_measure", "demand_formatting"],
-            from_cache=from_cache,
-        )
 
-        fmting = results.get(
+        fmting = self.cluster.get(
             "demand_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
 

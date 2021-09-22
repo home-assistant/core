@@ -1,4 +1,10 @@
 """Support for IKEA Tradfri lights."""
+from __future__ import annotations
+
+from typing import Any, Callable, cast
+
+from pytradfri.command import Command
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -9,6 +15,9 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .base_class import TradfriBaseClass, TradfriBaseDevice
@@ -28,7 +37,11 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     tradfri_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -50,7 +63,12 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
 
     _attr_supported_features = SUPPORTED_GROUP_FEATURES
 
-    def __init__(self, device, api, gateway_id):
+    def __init__(
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
+    ) -> None:
         """Initialize a Group."""
         super().__init__(device, api, gateway_id)
 
@@ -58,7 +76,7 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
         self._attr_should_poll = True
         self._refresh(device)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for the group.
 
         This method is required for groups to update properly.
@@ -66,20 +84,20 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
         await self._api(self._device.update())
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if group lights are on."""
-        return self._device.state
+        return cast(bool, self._device.state)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the group lights."""
-        return self._device.dimmer
+        return cast(int, self._device.dimmer)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the group lights to turn off."""
         await self._api(self._device.set_state(0))
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the group lights to turn on, or dim."""
         keys = {}
         if ATTR_TRANSITION in kwargs:
@@ -97,7 +115,12 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
 class TradfriLight(TradfriBaseDevice, LightEntity):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, device, api, gateway_id):
+    def __init__(
+        self,
+        device: Command,
+        api: Callable[[Command | list[Command]], Any],
+        gateway_id: str,
+    ) -> None:
         """Initialize a Light."""
         super().__init__(device, api, gateway_id)
         self._attr_unique_id = f"light-{gateway_id}-{device.id}"
@@ -114,38 +137,50 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         self._attr_supported_features = _features
 
         self._refresh(device)
-        self._attr_min_mireds = self._device_control.min_mireds
-        self._attr_max_mireds = self._device_control.max_mireds
+        if self._device_control:
+            self._attr_min_mireds = self._device_control.min_mireds
+            self._attr_max_mireds = self._device_control.max_mireds
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._device_data.state
+        if not self._device_data:
+            return False
+        return cast(bool, self._device_data.state)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        return self._device_data.dimmer
+        if not self._device_data:
+            return None
+        return cast(int, self._device_data.dimmer)
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int | None:
         """Return the color temp value in mireds."""
-        return self._device_data.color_temp
+        if not self._device_data:
+            return None
+        return cast(int, self._device_data.color_temp)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """HS color of the light."""
+        if not self._device_control or not self._device_data:
+            return None
         if self._device_control.can_set_color:
             hsbxy = self._device_data.hsb_xy_color
             hue = hsbxy[0] / (self._device_control.max_hue / 360)
             sat = hsbxy[1] / (self._device_control.max_saturation / 100)
             if hue is not None and sat is not None:
                 return hue, sat
+        return None
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         # This allows transitioning to off, but resets the brightness
         # to 1 for the next set_state(True) command
+        if not self._device_control:
+            return
         transition_time = None
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
@@ -155,8 +190,10 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         else:
             await self._api(self._device_control.set_state(False))
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
+        if not self._device_control:
+            return
         transition_time = None
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
@@ -235,7 +272,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
             if command is not None:
                 await self._api(command)
 
-    def _refresh(self, device):
+    def _refresh(self, device: Command) -> None:
         """Refresh the light data."""
         super()._refresh(device)
 
