@@ -54,6 +54,8 @@ from .const import (
 )
 from .data import EventListenAddr, get_domain_data
 
+PARALLEL_UPDATES = 0
+
 # Configuration via YAML is deprecated in favour of config flow
 CONF_LISTEN_IP = "listen_ip"
 PLATFORM_SCHEMA = vol.All(
