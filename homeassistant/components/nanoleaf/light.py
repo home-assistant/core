@@ -211,8 +211,8 @@ class NanoleafLight(LightEntity):
         """Fetch new state data for this light."""
         try:
             await self._light.get_info()
-        except Unavailable as err:
-            _LOGGER.error("Could not update status for %s (%s)", self.name, err)
+        except Unavailable:
+            _LOGGER.error("Could not update status for %s", self.name)
             self._available = False
         else:
             self._available = True
