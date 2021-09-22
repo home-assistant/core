@@ -16,6 +16,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,13 +26,16 @@ from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
+    RpcAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
+    async_setup_entry_rpc,
 )
-from .utils import get_device_uptime, temperature_unit
+from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
 
 SENSORS: Final = {
     ("device", "battery"): BlockAttributeDescription(
@@ -40,7 +44,7 @@ SENSORS: Final = {
         device_class=sensor.DEVICE_CLASS_BATTERY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
-        available=lambda block: cast(bool, block.battery != -1),
+        available=lambda block: cast(int, block.battery) != -1,
     ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
@@ -162,7 +166,7 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(bool, block.extTemp != 999),
+        available=lambda block: cast(int, block.extTemp) != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
@@ -170,14 +174,14 @@ SENSORS: Final = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(bool, block.extTemp != 999),
+        available=lambda block: cast(int, block.extTemp) != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
         state_class=sensor.STATE_CLASS_MEASUREMENT,
-        available=lambda block: cast(bool, block.luminosity != -1),
+        available=lambda block: cast(int, block.luminosity) != -1,
     ),
     ("sensor", "tilt"): BlockAttributeDescription(
         name="Tilt",
@@ -191,7 +195,7 @@ SENSORS: Final = {
         icon="mdi:progress-wrench",
         value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
         extra_state_attributes=lambda block: {
-            "Operational hours": round(block.totalWorkTime / 3600, 1)
+            "Operational hours": round(cast(int, block.totalWorkTime) / 3600, 1)
         },
     ),
     ("adc", "adc"): BlockAttributeDescription(
@@ -220,7 +224,60 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestAttributeDescription(
         name="Uptime",
-        value=get_device_uptime,
+        value=lambda status, last: get_device_uptime(status["uptime"], last),
+        device_class=sensor.DEVICE_CLASS_TIMESTAMP,
+        default_enabled=False,
+    ),
+}
+
+
+RPC_SENSORS: Final = {
+    "power": RpcAttributeDescription(
+        key="switch",
+        name="Power",
+        unit=POWER_WATT,
+        value=lambda status, _: round(float(status["apower"]), 1),
+        device_class=sensor.DEVICE_CLASS_POWER,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+    ),
+    "voltage": RpcAttributeDescription(
+        key="switch",
+        name="Voltage",
+        unit=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda status, _: round(float(status["voltage"]), 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+    ),
+    "energy": RpcAttributeDescription(
+        key="switch",
+        name="Energy",
+        unit=ENERGY_KILO_WATT_HOUR,
+        value=lambda status, _: round(status["aenergy"]["total"] / 1000, 2),
+        device_class=sensor.DEVICE_CLASS_ENERGY,
+        state_class=sensor.STATE_CLASS_TOTAL_INCREASING,
+    ),
+    "temperature": RpcAttributeDescription(
+        key="switch",
+        name="Temperature",
+        unit=TEMP_CELSIUS,
+        value=lambda status, _: round(status["temperature"]["tC"], 1),
+        device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        default_enabled=False,
+    ),
+    "rssi": RpcAttributeDescription(
+        key="wifi",
+        name="RSSI",
+        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        value=lambda status, _: status["rssi"],
+        device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        default_enabled=False,
+    ),
+    "uptime": RpcAttributeDescription(
+        key="sys",
+        name="Uptime",
+        value=lambda status, last: get_device_uptime(status["uptime"], last),
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
         default_enabled=False,
     ),
@@ -233,21 +290,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
+    if get_device_entry_gen(config_entry) == 2:
+        return await async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
+        )
+
     if config_entry.data["sleep_period"]:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, SENSORS, ShellySleepingSensor
+            hass, config_entry, async_add_entities, SENSORS, BlockSleepingSensor
         )
     else:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, SENSORS, ShellySensor
+            hass, config_entry, async_add_entities, SENSORS, BlockSensor
         )
         await async_setup_entry_rest(
-            hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
+            hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
         )
 
 
-class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
-    """Represent a shelly sensor."""
+class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
+    """Represent a block sensor."""
 
     @property
     def native_value(self) -> StateType:
@@ -265,8 +327,8 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         return cast(str, self._unit)
 
 
-class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
-    """Represent a shelly REST sensor."""
+class RestSensor(ShellyRestAttributeEntity, SensorEntity):
+    """Represent a REST sensor."""
 
     @property
     def native_value(self) -> StateType:
@@ -284,8 +346,27 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
         return self.description.unit
 
 
-class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
-    """Represent a shelly sleeping sensor."""
+class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
+    """Represent a RPC sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return value of sensor."""
+        return self.attribute_value
+
+    @property
+    def state_class(self) -> str | None:
+        """State class of sensor."""
+        return self.description.state_class
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return unit of sensor."""
+        return self.description.unit
+
+
+class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
+    """Represent a block sleeping sensor."""
 
     @property
     def native_value(self) -> StateType:
