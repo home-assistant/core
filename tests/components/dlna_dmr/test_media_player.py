@@ -125,7 +125,7 @@ async def test_setup_entry_no_options(
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
-    # Check event notifiers are aquired
+    # Check event notifiers are acquired
     domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
         EventListenAddr(LOCAL_IP, 0, None), hass
     )
@@ -194,7 +194,7 @@ async def test_setup_entry_with_options(
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
-    # Check event notifiers are aquired with the configured port and callback URL
+    # Check event notifiers are acquired with the configured port and callback URL
     domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
         EventListenAddr(LOCAL_IP, 2222, "http://192.88.99.10/events"), hass
     )
@@ -525,7 +525,7 @@ async def test_unavailable_device(
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
-    # Check event notifiers are not aquired
+    # Check event notifiers are not acquired
     domain_data_mock.async_get_event_notifier.assert_not_called()
     # Check SSDP notifications are registered
     ssdp_scanner_mock.async_register_callback.assert_any_call(
@@ -650,7 +650,7 @@ async def test_become_available(
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         NEW_DEVICE_LOCATION
     )
-    # Check event notifiers are aquired
+    # Check event notifiers are acquired
     domain_data_mock.async_get_event_notifier.assert_awaited_once_with(
         EventListenAddr(LOCAL_IP, 0, None), hass
     )
