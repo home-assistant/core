@@ -104,8 +104,8 @@ class ActiveConnection:
         self.last_id = cur_id
 
     @callback
-    def async_close(self) -> None:
-        """Close down connection."""
+    def async_handle_close(self) -> None:
+        """Handle closing down connection."""
         for unsub in self.subscriptions.values():
             unsub()
 
