@@ -49,7 +49,7 @@ def format_condition(ec_icon: str) -> str | None:
     """Return condition."""
     try:
         icon_number = int(ec_icon)
-    except ValueError:
+    except (TypeError, ValueError):
         return None
     return EC_ICON_TO_HA_CONDITION_MAP.get(icon_number)
 
@@ -140,6 +140,8 @@ def get_forecast(data, hourly_forecast):
 
     if not hourly_forecast:
         half_days = data.daily_forecasts
+        if not half_days:
+            return None
 
         today = {
             ATTR_FORECAST_TIME: dt.now().isoformat(),
@@ -186,6 +188,8 @@ def get_forecast(data, hourly_forecast):
             )
 
     else:
+        if not data.hourly_forecasts:
+            return None
         for hour in data.hourly_forecasts:
             forecast_array.append(
                 {

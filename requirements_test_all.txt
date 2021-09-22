@@ -343,7 +343,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.12
+env_canada==0.5.13
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.0
