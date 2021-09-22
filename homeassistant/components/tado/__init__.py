@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from PyTado.interface import Tado
+from PyTado.zone import TadoZone
 from requests import RequestException
 import requests.exceptions
 
@@ -155,52 +156,96 @@ class TadoConnector:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
-        for device in self.devices:
-            self.update_sensor("device", device["shortSerialNo"])
-        for zone in self.zones:
-            self.update_sensor("zone", zone["id"])
+        self.update_devices()
+        self.update_zones()
         self.data["weather"] = self.tado.getWeather()
         dispatcher_send(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
         )
 
-    def update_sensor(self, sensor_type, sensor):
-        """Update the internal data from Tado."""
-        _LOGGER.debug("Updating %s %s", sensor_type, sensor)
-        try:
-            if sensor_type == "device":
-                data = self.tado.getDeviceInfo(sensor)
+    def update_devices(self):
+        """Update the device data from Tado."""
+        devices = self.tado.getDevices()
+        for device in devices:
+            device_short_serial_no = device["shortSerialNo"]
+            _LOGGER.debug("Updating device %s", device_short_serial_no)
+            try:
                 if (
                     INSIDE_TEMPERATURE_MEASUREMENT
-                    in data["characteristics"]["capabilities"]
+                    in device["characteristics"]["capabilities"]
                 ):
-                    data[TEMP_OFFSET] = self.tado.getDeviceInfo(sensor, TEMP_OFFSET)
-            elif sensor_type == "zone":
-                data = self.tado.getZoneState(sensor)
-            else:
-                _LOGGER.debug("Unknown sensor: %s", sensor_type)
+                    device[TEMP_OFFSET] = self.tado.getDeviceInfo(
+                        device_short_serial_no, TEMP_OFFSET
+                    )
+            except RuntimeError:
+                _LOGGER.error(
+                    "Unable to connect to Tado while updating device %s",
+                    device_short_serial_no,
+                )
                 return
-        except RuntimeError:
-            _LOGGER.error(
-                "Unable to connect to Tado while updating %s %s",
-                sensor_type,
-                sensor,
+
+            self.data["device"][device_short_serial_no] = device
+
+            _LOGGER.debug(
+                "Dispatching update to %s device %s: %s",
+                self.home_id,
+                device_short_serial_no,
+                device,
             )
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(
+                    self.home_id, "device", device_short_serial_no
+                ),
+            )
+
+    def update_zones(self):
+        """Update the zone data from Tado."""
+        try:
+            zone_states = self.tado.getZoneStates()["zoneStates"]
+        except RuntimeError:
+            _LOGGER.error("Unable to connect to Tado while updating zones")
             return
 
-        self.data[sensor_type][sensor] = data
+        for zone in self.zones:
+            zone_id = zone["id"]
+            _LOGGER.debug("Updating zone %s", zone_id)
+            zone_state = TadoZone(zone_states[str(zone_id)], zone_id)
+
+            self.data["zone"][zone_id] = zone_state
+
+            _LOGGER.debug(
+                "Dispatching update to %s zone %s: %s",
+                self.home_id,
+                zone_id,
+                zone_state,
+            )
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone["id"]),
+            )
+
+    def update_zone(self, zone_id):
+        """Update the internal data from Tado."""
+        _LOGGER.debug("Updating zone %s", zone_id)
+        try:
+            data = self.tado.getZoneState(zone_id)
+        except RuntimeError:
+            _LOGGER.error("Unable to connect to Tado while updating zone %s", zone_id)
+            return
+
+        self.data["zone"][zone_id] = data
 
         _LOGGER.debug(
-            "Dispatching update to %s %s %s: %s",
+            "Dispatching update to %s zone %s: %s",
             self.home_id,
-            sensor_type,
-            sensor,
+            zone_id,
             data,
         )
         dispatcher_send(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, sensor_type, sensor),
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone_id),
         )
 
     def get_capabilities(self, zone_id):
@@ -210,7 +255,7 @@ class TadoConnector:
     def reset_zone_overlay(self, zone_id):
         """Reset the zone back to the default operation."""
         self.tado.resetZoneOverlay(zone_id)
-        self.update_sensor("zone", zone_id)
+        self.update_zone(zone_id)
 
     def set_presence(
         self,
@@ -262,7 +307,7 @@ class TadoConnector:
         except RequestException as exc:
             _LOGGER.error("Could not set zone overlay: %s", exc)
 
-        self.update_sensor("zone", zone_id)
+        self.update_zone(zone_id)
 
     def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
@@ -273,7 +318,7 @@ class TadoConnector:
         except RequestException as exc:
             _LOGGER.error("Could not set zone overlay: %s", exc)
 
-        self.update_sensor("zone", zone_id)
+        self.update_zone(zone_id)
 
     def set_temperature_offset(self, device_id, offset):
         """Set temperature offset of device."""
