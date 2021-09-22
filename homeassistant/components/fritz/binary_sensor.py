@@ -2,10 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-from fritzconnection.core.exceptions import FritzConnectionException
-from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -87,31 +83,13 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
         """Update data."""
         _LOGGER.debug("Updating FRITZ!Box binary sensors")
 
-        try:
-            status: FritzStatus = self._fritzbox_tools.fritz_status
-            userinferface_x_avm: dict[
-                str, Any
-            ] = self._fritzbox_tools.connection.call_action(
-                "UserInterface", "X_AVM-DE_GetInfo"
-            )
-            userinferface1: dict[
-                str, Any
-            ] = self._fritzbox_tools.connection.call_action("UserInterface1", "GetInfo")
-            self._attr_available = True
-        except FritzConnectionException:
-            _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
-            self._attr_available = False
-            return
-
         if self.entity_description.key == "is_connected":
-            self._attr_is_on = bool(status.is_connected)
+            self._attr_is_on = bool(self._fritzbox_tools.fritz_status.is_connected)
         elif self.entity_description.key == "is_linked":
-            self._attr_is_on = bool(status.is_linked)
+            self._attr_is_on = bool(self._fritzbox_tools.fritz_status.is_linked)
         elif self.entity_description.key == "firmware_update":
-            latest_fw = userinferface1["NewX_AVM-DE_Version"]
-            installed_fw = userinferface_x_avm["NewX_AVM-DE_CurrentFwVersion"]
-            self._attr_is_on = userinferface1["NewUpgradeAvailable"]
+            self._attr_is_on = self._fritzbox_tools.update_available
             self._attr_extra_state_attributes = {
-                "installed_version": installed_fw,
-                "latest_available_version:": latest_fw,
+                "installed_version": self._fritzbox_tools.current_firmware,
+                "latest_available_version:": self._fritzbox_tools.latest_firmware,
             }
