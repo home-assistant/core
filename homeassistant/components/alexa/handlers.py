@@ -54,8 +54,8 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
-    PRESET_MODE_NA,
     DATE_FORMAT,
+    PRESET_MODE_NA,
     Cause,
     Inputs,
 )
