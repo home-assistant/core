@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import faulthandler
 import os
 import platform
 import subprocess
@@ -261,6 +262,8 @@ def try_to_restart() -> None:
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
+
+    faulthandler.enable()
 
     # Run a simple daemon runner process on Windows to handle restarts
     if os.name == "nt" and "--runner" not in sys.argv:
