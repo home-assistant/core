@@ -1,10 +1,11 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import Iterable, TypedDict, overload
+from typing import TypedDict, overload
 
 from sqlalchemy import (
     Boolean,
