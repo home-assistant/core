@@ -1358,7 +1358,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==5.2.3
+pyatmo==6.0.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1929,7 +1929,7 @@ python-sochain-api==0.0.2
 python-songpal==0.12
 
 # homeassistant.components.tado
-python-tado==0.10.0
+python-tado==0.12.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
