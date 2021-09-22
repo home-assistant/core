@@ -86,9 +86,9 @@ STAGE_1_INTEGRATIONS = {
 }
 
 
-def _slurp_file(dir: str, file_name: str) -> str:
+def _slurp_file(dir_name: str, file_name: str) -> str:
     """Read a file."""
-    file_path = Path(dir) / file_name
+    file_path = Path(dir_name) / file_name
     return file_path.read_text()
 
 
