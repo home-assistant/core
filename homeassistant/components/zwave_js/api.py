@@ -19,7 +19,7 @@ from zwave_js_server.exceptions import (
     SetValueFailed,
 )
 from zwave_js_server.firmware import begin_firmware_update
-from zwave_js_server.model.controller import ControllerStatistics
+from zwave_js_server.model.controller import ControllerStatistics, InclusionGrant
 from zwave_js_server.model.firmware import (
     FirmwareUpdateFinished,
     FirmwareUpdateProgress,
@@ -67,7 +67,9 @@ TYPE = "type"
 PROPERTY = "property"
 PROPERTY_KEY = "property_key"
 VALUE = "value"
-SECURE = "secure"
+INCLUSION_STRATEGY = "inclusion_strategy"
+INCLUSION_GRANT = "inclusion_strategy"
+PIN = "pin"
 
 # constants for log config commands
 CONFIG = "config"
@@ -171,6 +173,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_ping_node)
     websocket_api.async_register_command(hass, websocket_add_node)
+    websocket_api.async_register_command(hass, websocket_grant_security_classes)
+    websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
@@ -371,7 +375,9 @@ async def websocket_ping_node(
     {
         vol.Required(TYPE): "zwave_js/add_node",
         vol.Required(ENTRY_ID): str,
-        vol.Optional(SECURE, default=False): bool,
+        vol.Required(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
+            [strategy.value for strategy in InclusionStrategy]
+        ),
     }
 )
 @websocket_api.async_response
@@ -386,11 +392,7 @@ async def websocket_add_node(
 ) -> None:
     """Add a node to the Z-Wave network."""
     controller = client.driver.controller
-
-    if msg[SECURE]:
-        inclusion_strategy = InclusionStrategy.SECURITY_S0
-    else:
-        inclusion_strategy = InclusionStrategy.INSECURE
+    inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
 
     @callback
     def async_cleanup() -> None:
@@ -402,6 +404,26 @@ async def websocket_add_node(
     def forward_event(event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(msg[ID], {"event": event["event"]})
+        )
+
+    @callback
+    def forward_dsk(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": event["event"], "dsk": event["dsk"]}
+            )
+        )
+
+    @callback
+    def forward_requested_grant(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "requested_grant": event["requested_grant"].to_dict(),
+                },
+            )
         )
 
     @callback
@@ -452,6 +474,8 @@ async def websocket_add_node(
         controller.on("inclusion started", forward_event),
         controller.on("inclusion failed", forward_event),
         controller.on("inclusion stopped", forward_event),
+        controller.on("validate dsk and enter pin", forward_dsk),
+        controller.on("grant security classes", forward_requested_grant),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
@@ -463,6 +487,56 @@ async def websocket_add_node(
         msg[ID],
         result,
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/grant_security_classes",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(INCLUSION_GRANT): {
+            "securityClasses": [int],
+            "clientSideAuth": bool,
+        },
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_grant_security_classes(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Add a node to the Z-Wave network."""
+    inclusion_grant = InclusionGrant.from_dict(msg[INCLUSION_GRANT])
+    await client.driver.controller.async_grant_security_classes(inclusion_grant)
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/validate_dsk_and_enter_pin",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(PIN): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_validate_dsk_and_enter_pin(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Add a node to the Z-Wave network."""
+    await client.driver.controller.async_validate_dsk_and_enter_pin(msg[PIN])
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -583,7 +657,9 @@ async def websocket_remove_node(
         vol.Required(TYPE): "zwave_js/replace_failed_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(NODE_ID): int,
-        vol.Optional(SECURE, default=False): bool,
+        vol.Required(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
+            [strategy.value for strategy in InclusionStrategy]
+        ),
     }
 )
 @websocket_api.async_response
@@ -599,11 +675,7 @@ async def websocket_replace_failed_node(
     """Replace a failed node with a new node."""
     controller = client.driver.controller
     node_id = msg[NODE_ID]
-
-    if msg[SECURE]:
-        inclusion_strategy = InclusionStrategy.SECURITY_S0
-    else:
-        inclusion_strategy = InclusionStrategy.INSECURE
+    inclusion_strategy = InclusionStrategy(msg[INCLUSION_STRATEGY])
 
     @callback
     def async_cleanup() -> None:
@@ -615,6 +687,26 @@ async def websocket_replace_failed_node(
     def forward_event(event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(msg[ID], {"event": event["event"]})
+        )
+
+    @callback
+    def forward_dsk(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": event["event"], "dsk": event["dsk"]}
+            )
+        )
+
+    @callback
+    def forward_requested_grant(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "requested_grant": event["requested_grant"].to_dict(),
+                },
+            )
         )
 
     @callback
@@ -678,6 +770,8 @@ async def websocket_replace_failed_node(
         controller.on("inclusion started", forward_event),
         controller.on("inclusion failed", forward_event),
         controller.on("inclusion stopped", forward_event),
+        controller.on("validate dsk and enter pin", forward_dsk),
+        controller.on("grant security classes", forward_requested_grant),
         controller.on("node removed", node_removed),
         controller.on("node added", node_added),
         async_dispatcher_connect(
