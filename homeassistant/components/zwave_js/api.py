@@ -383,7 +383,7 @@ async def websocket_ping_node(
     {
         vol.Required(TYPE): "zwave_js/add_node",
         vol.Required(ENTRY_ID): str,
-        vol.Required(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
+        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
             [strategy.value for strategy in InclusionStrategy]
         ),
     }
@@ -502,8 +502,8 @@ async def websocket_add_node(
     {
         vol.Required(TYPE): "zwave_js/grant_security_classes",
         vol.Required(ENTRY_ID): str,
-        SECURITY_CLASSES: [int],
-        CLIENT_SIDE_AUTH: bool,
+        vol.Required(SECURITY_CLASSES): [int],
+        vol.Optional(CLIENT_SIDE_AUTH, default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -666,7 +666,7 @@ async def websocket_remove_node(
         vol.Required(TYPE): "zwave_js/replace_failed_node",
         vol.Required(ENTRY_ID): str,
         vol.Required(NODE_ID): int,
-        vol.Required(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
+        vol.Optional(INCLUSION_STRATEGY, default=InclusionStrategy.DEFAULT): vol.In(
             [strategy.value for strategy in InclusionStrategy]
         ),
     }
