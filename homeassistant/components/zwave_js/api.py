@@ -10,7 +10,12 @@ from aiohttp import hdrs, web, web_exceptions, web_request
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client
-from zwave_js_server.const import CommandClass, InclusionStrategy, LogLevel
+from zwave_js_server.const import (
+    CommandClass,
+    InclusionStrategy,
+    LogLevel,
+    SecurityClass,
+)
 from zwave_js_server.exceptions import (
     BaseZwaveJSServerError,
     FailedCommand,
@@ -68,7 +73,6 @@ PROPERTY = "property"
 PROPERTY_KEY = "property_key"
 VALUE = "value"
 INCLUSION_STRATEGY = "inclusion_strategy"
-INCLUSION_GRANT = "inclusion_grant"
 PIN = "pin"
 
 # constants for log config commands
@@ -86,6 +90,10 @@ STATUS = "status"
 # constants for data collection
 ENABLED = "enabled"
 OPTED_IN = "opted_in"
+
+# constants for granting security classes
+SECURITY_CLASSES = "security_classes"
+CLIENT_SIDE_AUTH = "client_side_auth"
 
 
 def async_get_entry(orig_func: Callable) -> Callable:
@@ -494,10 +502,8 @@ async def websocket_add_node(
     {
         vol.Required(TYPE): "zwave_js/grant_security_classes",
         vol.Required(ENTRY_ID): str,
-        vol.Required(INCLUSION_GRANT): {
-            "securityClasses": [int],
-            "clientSideAuth": bool,
-        },
+        SECURITY_CLASSES: [int],
+        CLIENT_SIDE_AUTH: bool,
     }
 )
 @websocket_api.async_response
@@ -511,7 +517,10 @@ async def websocket_grant_security_classes(
     client: Client,
 ) -> None:
     """Add a node to the Z-Wave network."""
-    inclusion_grant = InclusionGrant.from_dict(msg[INCLUSION_GRANT])
+    inclusion_grant = InclusionGrant(
+        [SecurityClass(sec_cls) for sec_cls in msg[SECURITY_CLASSES]],
+        msg[CLIENT_SIDE_AUTH],
+    )
     await client.driver.controller.async_grant_security_classes(inclusion_grant)
     connection.send_result(msg[ID])
 

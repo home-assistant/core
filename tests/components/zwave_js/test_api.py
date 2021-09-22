@@ -17,11 +17,11 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
-from zwave_js_server.model.controller import InclusionGrant
 from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    CLIENT_SIDE_AUTH,
     COMMAND_CLASS_ID,
     CONFIG,
     ENABLED,
@@ -30,7 +30,6 @@ from homeassistant.components.zwave_js.api import (
     FILENAME,
     FORCE_CONSOLE,
     ID,
-    INCLUSION_GRANT,
     INCLUSION_STRATEGY,
     LEVEL,
     LOG_TO_FILE,
@@ -39,6 +38,7 @@ from homeassistant.components.zwave_js.api import (
     PIN,
     PROPERTY,
     PROPERTY_KEY,
+    SECURITY_CLASSES,
     TYPE,
     VALUE,
 )
@@ -524,7 +524,6 @@ async def test_add_node(
 
 async def test_grant_security_classes(hass, integration, client, hass_ws_client):
     """Test the grant_security_classes websocket command."""
-    inclusion_grant = InclusionGrant([SecurityClass.S2_UNAUTHENTICATED], False)
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -535,7 +534,8 @@ async def test_grant_security_classes(hass, integration, client, hass_ws_client)
             ID: 1,
             TYPE: "zwave_js/grant_security_classes",
             ENTRY_ID: entry.entry_id,
-            INCLUSION_GRANT: inclusion_grant.to_dict(),
+            SECURITY_CLASSES: [SecurityClass.S2_UNAUTHENTICATED],
+            CLIENT_SIDE_AUTH: False,
         }
     )
 
@@ -557,7 +557,8 @@ async def test_grant_security_classes(hass, integration, client, hass_ws_client)
             ID: 4,
             TYPE: "zwave_js/grant_security_classes",
             ENTRY_ID: entry.entry_id,
-            INCLUSION_GRANT: inclusion_grant.to_dict(),
+            SECURITY_CLASSES: [SecurityClass.S2_UNAUTHENTICATED],
+            CLIENT_SIDE_AUTH: False,
         }
     )
     msg = await ws_client.receive_json()
@@ -713,7 +714,6 @@ async def test_remove_node(
         data={
             "source": "controller",
             "event": "exclusion started",
-            "secure": False,
         },
     )
     client.driver.receive_event(event)
@@ -870,7 +870,6 @@ async def test_replace_failed_node(
         data={
             "source": "controller",
             "event": "inclusion stopped",
-            "secure": False,
         },
     )
     client.driver.receive_event(event)
