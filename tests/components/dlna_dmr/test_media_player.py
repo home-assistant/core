@@ -1002,6 +1002,42 @@ async def test_poll_availability(
     }
 
 
+async def test_disappearing_device(
+    hass: HomeAssistant,
+    mock_disconnected_entity_id: str,
+) -> None:
+    """Test attribute update or service call as device disappears.
+
+    Normally HA will check if the entity is available before updating attributes
+    or calling a service, but it's possible for the device to go offline in
+    between the check and the method call. Here we test by accessing the entity
+    directly to skip the availability check.
+    """
+    # Retrieve entity directly.
+    entity: media_player.DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(
+        mock_disconnected_entity_id
+    )
+
+    # Test attribute access
+    for attr in ATTR_TO_PROPERTY:
+        value = getattr(entity, attr)
+        assert value is None
+
+    # media_image_url is normally hidden by entity_picture, but we want a direct check
+    assert entity.media_image_url is None
+
+    # Test service calls
+    await entity.async_set_volume_level(0.1)
+    await entity.async_mute_volume(True)
+    await entity.async_media_pause()
+    await entity.async_media_play()
+    await entity.async_media_stop()
+    await entity.async_media_seek(22.0)
+    await entity.async_play_media("", "")
+    await entity.async_media_previous_track()
+    await entity.async_media_next_track()
+
+
 async def test_resubscribe_failure(
     hass: HomeAssistant,
     mock_entity_id: str,
