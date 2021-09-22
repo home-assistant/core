@@ -1,5 +1,6 @@
 """Tests for the Amber config flow."""
 
+from typing import Generator
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
@@ -21,7 +22,7 @@ API_KEY = "psk_123456789"
 
 
 @pytest.fixture(name="invalid_key_api")
-def mock_invalid_key_api():
+def mock_invalid_key_api() -> Generator:
     """Return an authentication error."""
     instance = Mock()
     instance.get_sites.side_effect = ApiException(status=403)
@@ -30,8 +31,18 @@ def mock_invalid_key_api():
         yield instance
 
 
+@pytest.fixture(name="api_error")
+def mock_api_error() -> Generator:
+    """Return an authentication error."""
+    instance = Mock()
+    instance.get_sites.side_effect = ApiException(status=500)
+
+    with patch("amberelectric.api.AmberApi.create", return_value=instance):
+        yield instance
+
+
 @pytest.fixture(name="single_site_api")
-def mock_single_site_api():
+def mock_single_site_api() -> Generator:
     """Return a single site."""
     instance = Mock()
     site = Site("01FG0AGP818PXK0DWHXJRRT2DH", "11111111111", [])
@@ -42,7 +53,7 @@ def mock_single_site_api():
 
 
 @pytest.fixture(name="no_site_api")
-def mock_no_site_api():
+def mock_no_site_api() -> Generator:
     """Return no site."""
     instance = Mock()
     instance.get_sites.return_value = []
@@ -97,6 +108,33 @@ async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
     assert result.get("errors") == {"api_token": "no_site"}
 
 
+async def test_no_site_no_data(hass: HomeAssistant, no_site_api: Mock) -> None:
+    """Test no site."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "site"},
+    )
+
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    # Goes back to the user step
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"api_token": "no_site"}
+
+
+async def test_no_site_saved(hass: HomeAssistant, no_site_api: Mock) -> None:
+    """Test no site."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "site"},
+        data={CONF_API_TOKEN: "psk_123456789"},
+    )
+
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    # Goes back to the user step
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"api_token": "no_site"}
+
+
 async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     """Test invalid api key."""
     result = await hass.config_entries.flow.async_init(
@@ -115,3 +153,23 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     # Goes back to the user step
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "invalid_api_token"}
+
+
+async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
+    """Test invalid api key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("step_id") == "user"
+
+    # Test filling in API key
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_TOKEN: "psk_123456789"},
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    # Goes back to the user step
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"api_token": "unknown_error"}

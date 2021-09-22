@@ -10,18 +10,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_SITE_ID, CONF_SITE_NAME, CONF_SITE_NMI, DOMAIN
-
-
-@callback
-def amberelectric_entries(hass: HomeAssistant):
-    """Return the site_ids for the domain."""
-    return {
-        (entry.data[CONF_API_TOKEN])
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
