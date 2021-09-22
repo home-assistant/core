@@ -502,7 +502,9 @@ async def websocket_add_node(
     {
         vol.Required(TYPE): "zwave_js/grant_security_classes",
         vol.Required(ENTRY_ID): str,
-        vol.Required(SECURITY_CLASSES): [int],
+        vol.Required(SECURITY_CLASSES): [
+            vol.In([sec_cls.value for sec_cls in SecurityClass])
+        ],
         vol.Optional(CLIENT_SIDE_AUTH, default=False): bool,
     }
 )
