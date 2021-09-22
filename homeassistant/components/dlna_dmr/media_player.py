@@ -81,7 +81,12 @@ def catch_request_errors(func: Func) -> Func:
 
     @functools.wraps(func)
     async def wrapper(self: "DlnaDmrEntity", *args: Any, **kwargs: Any) -> Any:
-        """Catch UpnpError errors and check availability."""
+        """Catch UpnpError errors and check availability before and after request."""
+        if not self.available:
+            _LOGGER.warning(
+                "Device disappeared when trying to call service %s", func.__name__
+            )
+            return
         try:
             return await func(self, *args, **kwargs)
         except UpnpError as err:
@@ -231,7 +236,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             try:
                 await self._device_connect(location)
             except UpnpError as err:
-                _LOGGER.warn(
+                _LOGGER.warning(
                     "Failed connecting to recently alive device at %s: %s",
                     location,
                     err,
@@ -270,7 +275,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
             try:
                 await self._device_connect(self.location)
             except UpnpError as err:
-                _LOGGER.debug("Couldn't (re)connect: %s", err)
+                _LOGGER.warning("Couldn't (re)connect after config change: %s", err)
 
             # Device was de/re-connected, state might have changed
             self.schedule_update_ha_state()
@@ -434,75 +439,52 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if (
-            not self._device
-            or not self._device.has_volume_level
-            or self._device.volume_level is None
-        ):
-            _LOGGER.debug("Cannot get volume level")
+        if not self._device or not self._device.has_volume_level:
             return None
         return self._device.volume_level
 
     @catch_request_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        if not self._device:
-            _LOGGER.debug("Cannot set volume level")
-            return
+        assert self._device is not None
         await self._device.async_set_volume_level(volume)
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         if not self._device:
-            _LOGGER.debug("Cannot get volume mute")
             return None
         return self._device.is_volume_muted
 
     @catch_request_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        if not self._device:
-            _LOGGER.debug("Cannot set volume mute")
-            return
-
+        assert self._device is not None
         desired_mute = bool(mute)
         await self._device.async_mute_volume(desired_mute)
 
     @catch_request_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if not self._device:
-            _LOGGER.debug("Cannot do Pause")
-            return
-
+        assert self._device is not None
         await self._device.async_pause()
 
     @catch_request_errors
     async def async_media_play(self) -> None:
         """Send play command."""
-        if not self._device:
-            _LOGGER.debug("Cannot do Play")
-            return
-
+        assert self._device is not None
         await self._device.async_play()
 
     @catch_request_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if not self._device:
-            _LOGGER.debug("Cannot do Stop")
-            return
-
+        assert self._device is not None
         await self._device.async_stop()
 
     @catch_request_errors
     async def async_media_seek(self, position: int | float) -> None:
         """Send seek command."""
-        if not self._device:
-            _LOGGER.debug("Cannot do Seek/rel_time")
-            return
-
+        assert self._device is not None
         time = timedelta(seconds=position)
         await self._device.async_seek_rel_time(time)
 
@@ -514,9 +496,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         title = "Home Assistant"
 
-        if not self._device:
-            _LOGGER.debug("Cannot do play / set_transport_uri")
-            return
+        assert self._device is not None
 
         # Stop current playing media
         if self._device.can_stop:
@@ -536,19 +516,13 @@ class DlnaDmrEntity(MediaPlayerEntity):
     @catch_request_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if not self._device:
-            _LOGGER.debug("Cannot do Previous")
-            return
-
+        assert self._device is not None
         await self._device.async_previous()
 
     @catch_request_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if not self._device:
-            _LOGGER.debug("Cannot do Next")
-            return
-
+        assert self._device is not None
         await self._device.async_next()
 
     @property
