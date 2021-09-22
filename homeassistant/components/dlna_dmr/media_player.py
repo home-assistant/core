@@ -9,7 +9,7 @@ from typing import Any, Callable, TypeVar, cast
 
 from async_upnp_client import UpnpError, UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
-from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
+from async_upnp_client.profiles.dlna import DmrDevice, TransportState
 from async_upnp_client.utils import async_get_local_ip
 import voluptuous as vol
 
@@ -37,6 +37,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
@@ -521,7 +522,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play
-        if self._device.state == DeviceState.PLAYING:
+        if self._device.transport_state == TransportState.PLAYING:
             return
 
         # Play it
@@ -564,13 +565,17 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """State of the player."""
         if not self._device or not self.available:
             return STATE_OFF
-
-        if self._device.state == DeviceState.ON:
+        if self._device.transport_state is None:
             return STATE_ON
-        if self._device.state == DeviceState.PLAYING:
+        if self._device.transport_state == TransportState.PLAYING:
             return STATE_PLAYING
-        if self._device.state == DeviceState.PAUSED:
+        if self._device.transport_state in (
+            TransportState.PAUSED_PLAYBACK,
+            TransportState.PAUSED_RECORDING,
+        ):
             return STATE_PAUSED
+        if self._device.transport_state == TransportState.VENDOR_DEFINED:
+            return STATE_UNKNOWN
 
         return STATE_IDLE
 
