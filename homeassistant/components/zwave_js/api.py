@@ -68,7 +68,7 @@ PROPERTY = "property"
 PROPERTY_KEY = "property_key"
 VALUE = "value"
 INCLUSION_STRATEGY = "inclusion_strategy"
-INCLUSION_GRANT = "inclusion_strategy"
+INCLUSION_GRANT = "inclusion_grant"
 PIN = "pin"
 
 # constants for log config commands
