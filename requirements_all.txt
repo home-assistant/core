@@ -317,10 +317,12 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
+# homeassistant.components.yeelight
+async-upnp-client==0.21.2
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-# homeassistant.components.yeelight
 async-upnp-client==0.21.3
 
 # homeassistant.components.supla
