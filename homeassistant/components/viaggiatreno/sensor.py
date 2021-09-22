@@ -1,7 +1,6 @@
 """Support for the Italian train system using ViaggiaTreno API."""
 import asyncio
 import logging
-
 import time
 
 import aiohttp
@@ -96,7 +95,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._name = name
 
         self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id, train_id=train_id, timestamp=int(time.time())*1000
+            station_id=station_id, train_id=train_id, timestamp=int(time.time()) * 1000
         )
 
     @property
