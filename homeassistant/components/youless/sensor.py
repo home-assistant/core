@@ -212,6 +212,7 @@ class ExtraMeterSensor(YoulessBaseSensor):
 
         return getattr(self.coordinator.data.extra_meter, f"_{self._type}", None)
 
+
 class ExtraMeterPowerSensor(YoulessBaseSensor):
     """The Youless extra meter power value sensor (s0)."""
 
