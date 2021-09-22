@@ -614,6 +614,7 @@ class LocatorTrait(_Trait):
         )
 
 
+@register_trait
 class EnergyStorageTrait(_Trait):
     """Trait to offer EnergyStorage functionality.
 
