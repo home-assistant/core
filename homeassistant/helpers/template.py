@@ -1223,7 +1223,7 @@ def warn_no_default(function, value, default):
 
 
 def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
-    """Round accepted strings."""
+    """Filter to round a value."""
     try:
         # support rounding methods like jinja
         multiplier = float(10 ** precision)
@@ -1258,7 +1258,7 @@ def multiply(value, amount, default=_SENTINEL):
 
 
 def logarithm(value, base=math.e, default=_SENTINEL):
-    """Filter to get logarithm of the value with a specific base."""
+    """Filter and function to get logarithm of the value with a specific base."""
     try:
         return math.log(float(value), float(base))
     except (ValueError, TypeError):
@@ -1269,7 +1269,7 @@ def logarithm(value, base=math.e, default=_SENTINEL):
 
 
 def sine(value, default=_SENTINEL):
-    """Filter to get sine of the value."""
+    """Filter and function to get sine of the value."""
     try:
         return math.sin(float(value))
     except (ValueError, TypeError):
@@ -1280,7 +1280,7 @@ def sine(value, default=_SENTINEL):
 
 
 def cosine(value, default=_SENTINEL):
-    """Filter to get cosine of the value."""
+    """Filter and function to get cosine of the value."""
     try:
         return math.cos(float(value))
     except (ValueError, TypeError):
@@ -1291,7 +1291,7 @@ def cosine(value, default=_SENTINEL):
 
 
 def tangent(value, default=_SENTINEL):
-    """Filter to get tangent of the value."""
+    """Filter and function to get tangent of the value."""
     try:
         return math.tan(float(value))
     except (ValueError, TypeError):
@@ -1302,7 +1302,7 @@ def tangent(value, default=_SENTINEL):
 
 
 def arc_sine(value, default=_SENTINEL):
-    """Filter to get arc sine of the value."""
+    """Filter and function to get arc sine of the value."""
     try:
         return math.asin(float(value))
     except (ValueError, TypeError):
@@ -1313,7 +1313,7 @@ def arc_sine(value, default=_SENTINEL):
 
 
 def arc_cosine(value, default=_SENTINEL):
-    """Filter to get arc cosine of the value."""
+    """Filter and function to get arc cosine of the value."""
     try:
         return math.acos(float(value))
     except (ValueError, TypeError):
@@ -1324,7 +1324,7 @@ def arc_cosine(value, default=_SENTINEL):
 
 
 def arc_tangent(value, default=_SENTINEL):
-    """Filter to get arc tangent of the value."""
+    """Filter and function to get arc tangent of the value."""
     try:
         return math.atan(float(value))
     except (ValueError, TypeError):
@@ -1335,7 +1335,11 @@ def arc_tangent(value, default=_SENTINEL):
 
 
 def arc_tangent2(*args, default=_SENTINEL):
-    """Filter to calculate four quadrant arc tangent of y / x."""
+    """Filter and function to calculate four quadrant arc tangent of y / x.
+
+    The parameters to atan2 may be passed either in an iterable or as separate arguments
+    The default value may be passed either as a positional or in a keyword argument
+    """
     try:
         if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
             if len(args) == 2 and default is _SENTINEL:
@@ -1355,7 +1359,7 @@ def arc_tangent2(*args, default=_SENTINEL):
 
 
 def square_root(value, default=_SENTINEL):
-    """Filter to get square root of the value."""
+    """Filter and function to get square root of the value."""
     try:
         return math.sqrt(float(value))
     except (ValueError, TypeError):
@@ -1409,7 +1413,7 @@ def timestamp_utc(value, default=_SENTINEL):
 
 
 def forgiving_as_timestamp(value, default=_SENTINEL):
-    """Try to convert value to timestamp."""
+    """Filter and function which tries to convert value to timestamp."""
     try:
         return dt_util.as_timestamp(value)
     except (ValueError, TypeError):
