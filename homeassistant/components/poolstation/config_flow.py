@@ -10,11 +10,11 @@ from pypoolstation import Account, AuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DOMAIN, TOKEN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=user_input[CONF_EMAIL].lower(),
-                data={TOKEN: token},
+                data={CONF_TOKEN: token},
             )
 
         return self.async_show_form(

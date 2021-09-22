@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.poolstation.const import DOMAIN, TOKEN
+from homeassistant.components.poolstation.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -16,7 +17,7 @@ def mock_config_entry(uniqe_id: str, entry_id: str = "an_entry_id") -> MockConfi
         domain=DOMAIN,
         title="name@example.com",
         unique_id=uniqe_id,
-        data={TOKEN: "an_auth_token"},
+        data={CONF_TOKEN: "an_auth_token"},
         entry_id=entry_id,
     )
 

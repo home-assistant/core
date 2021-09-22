@@ -5,8 +5,8 @@ from aiohttp import ClientResponseError
 from pypoolstation import AuthenticationException
 
 from homeassistant import config_entries
-from homeassistant.components.poolstation.const import DOMAIN, TOKEN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.components.poolstation.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 
 TEST_EMAIL = "bob@example.com"
 VALID_PASSWORD = "passw0rd"
@@ -47,7 +47,7 @@ async def test_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_EMAIL
-    assert isinstance(result2["data"][TOKEN], str)
+    assert isinstance(result2["data"][CONF_TOKEN], str)
     assert len(mock_setup_entry.mock_calls) == 1
 
 

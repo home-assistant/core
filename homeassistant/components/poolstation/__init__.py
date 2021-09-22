@@ -6,12 +6,13 @@ import aiohttp
 from pypoolstation import Account, Pool
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import COORDINATORS, DEVICES, DOMAIN, TOKEN
+from .const import COORDINATORS, DEVICES, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -23,7 +24,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Poolstation from a config entry."""
     session = async_create_clientsession(hass, cookie_jar=aiohttp.DummyCookieJar)
-    account = Account(session, token=entry.data[TOKEN])
+    account = Account(session, token=entry.data[CONF_TOKEN])
 
     try:
         pools = await Pool.get_all_pools(session, account=account)
