@@ -244,7 +244,7 @@ async def test_service_set_person_away_invalid_person(hass, config_entry, netatm
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person 'Batman' is not registered",)
+    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
 
 async def test_service_set_persons_home_invalid_person(
@@ -272,7 +272,7 @@ async def test_service_set_persons_home_invalid_person(
         )
     await hass.async_block_till_done()
 
-    assert excinfo.value.args == ("Person(s) is/are not registered ['Batman']",)
+    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
 
 async def test_service_set_persons_home(hass, config_entry, netatmo_auth):

@@ -315,9 +315,8 @@ class NetatmoCamera(NetatmoBase, Camera):
                 ] = f"{self._vpnurl}/vod/{event['video_id']}/files/{self._quality}/index.m3u8"
         return events
 
-    async def _service_set_persons_home(self, **kwargs: Any) -> None:
-        """Service to change current home schedule."""
-        persons = kwargs.get(ATTR_PERSONS, {})
+    def fetch_person_ids(self, persons: list[str | None]) -> list[str]:
+        """Fetch matching person ids for give list of persons."""
         person_ids = []
         person_id_errors = []
 
@@ -333,9 +332,14 @@ class NetatmoCamera(NetatmoBase, Camera):
                 person_id_errors.append(person)
 
         if person_id_errors:
-            raise HomeAssistantError(
-                f"Person(s) is/are not registered {person_id_errors}"
-            )
+            raise HomeAssistantError(f"Person(s) not registered {person_id_errors}")
+
+        return person_ids
+
+    async def _service_set_persons_home(self, **kwargs: Any) -> None:
+        """Service to change current home schedule."""
+        persons = kwargs.get(ATTR_PERSONS, [])
+        person_ids = self.fetch_person_ids(persons)
 
         await self._data.async_set_persons_home(
             person_ids=person_ids, home_id=self._home_id
@@ -345,15 +349,8 @@ class NetatmoCamera(NetatmoBase, Camera):
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
         person = kwargs.get(ATTR_PERSON)
-        person_id = None
-        if person:
-            for pid, data in self._data.persons[self._home_id].items():
-                if data.get("pseudo") == person:
-                    person_id = pid
-                    break
-
-            if person_id is None:
-                raise HomeAssistantError(f"Person '{person}' is not registered")
+        person_ids = self.fetch_person_ids([person] if person else [])
+        person_id = next(iter(person_ids), None)
 
         await self._data.async_set_persons_away(
             person_id=person_id,
@@ -361,7 +358,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         )
 
         if person_id:
-            _LOGGER.debug("Set %s as away", person)
+            _LOGGER.debug("Set %s as away %s", person, person_id)
         else:
             _LOGGER.debug("Set home as empty")
 
