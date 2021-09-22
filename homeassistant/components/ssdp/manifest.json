@@ -3,8 +3,7 @@
   "name": "Simple Service Discovery Protocol (SSDP)",
   "documentation": "https://www.home-assistant.io/integrations/ssdp",
   "requirements": [
-    "defusedxml==0.7.1",
-    "async-upnp-client==0.21.3"
+    "defusedxml==0.7.1"
   ],
   "dependencies": ["network"],
   "after_dependencies": ["zeroconf"],
