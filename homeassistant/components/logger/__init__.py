@@ -129,6 +129,8 @@ def _get_logger_class(hass_overrides):
     class HassLogger(logging.Logger):
         """Home Assistant aware logger class."""
 
+        __slots__ = ()
+
         def setLevel(self, level) -> None:
             """Set the log level unless overridden."""
             if self.name in hass_overrides:

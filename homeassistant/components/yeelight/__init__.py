@@ -303,17 +303,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
-    entry_data = data_config_entries[entry.entry_id]
-
-    if entry_data[DATA_PLATFORMS_LOADED]:
-        if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-            return False
-
     if entry.data.get(CONF_ID):
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+    if entry.entry_id not in data_config_entries:
+        # Device not online
+        return True
+
+    entry_data = data_config_entries[entry.entry_id]
+    unload_ok = True
+    if entry_data[DATA_PLATFORMS_LOADED]:
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if DATA_DEVICE in entry_data:
         device = entry_data[DATA_DEVICE]
@@ -322,8 +325,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Yeelight Listener stopped")
 
     data_config_entries.pop(entry.entry_id)
-
-    return True
+    return unload_ok
 
 
 @callback
