@@ -1111,6 +1111,7 @@ omit =
     homeassistant/components/tuya/base.py
     homeassistant/components/tuya/const.py
     homeassistant/components/tuya/switch.py
+    homeassistant/components/tuya/light.py
     homeassistant/components/twentemilieu/const.py
     homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
