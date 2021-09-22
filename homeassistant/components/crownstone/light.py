@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from functools import partial
-import logging
 from typing import TYPE_CHECKING, Any
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone
@@ -33,8 +32,6 @@ from .helpers import map_from_to
 
 if TYPE_CHECKING:
     from .entry_manager import CrownstoneEntryManager
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
