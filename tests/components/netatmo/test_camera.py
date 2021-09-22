@@ -14,6 +14,7 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_PERSONS_HOME,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt
 
 from .common import fake_post_request, selected_platforms, simulate_webhook
@@ -218,6 +219,60 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
             person_id=None,
             home_id="91763b24c43d3e344f424e8b",
         )
+
+
+async def test_service_set_person_away_invalid_person(hass, config_entry, netatmo_auth):
+    """Test service to set invalid person as away."""
+    with selected_platforms(["camera"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+
+    data = {
+        "entity_id": "camera.netatmo_hall",
+        "person": "Batman",
+    }
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_PERSON_AWAY,
+            service_data=data,
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
+
+
+async def test_service_set_persons_home_invalid_person(
+    hass, config_entry, netatmo_auth
+):
+    """Test service to set invalid persons as home."""
+    with selected_platforms(["camera"]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
+
+    data = {
+        "entity_id": "camera.netatmo_hall",
+        "persons": "Batman",
+    }
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_PERSONS_HOME,
+            service_data=data,
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert excinfo.value.args == ("Person(s) not registered ['Batman']",)
 
 
 async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
