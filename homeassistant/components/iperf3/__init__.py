@@ -79,9 +79,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
                     cv.ensure_list, [vol.In(SENSOR_KEYS)]
                 ),
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL
+                ): cv.scan_interval_time_period,
                 vol.Optional(CONF_MANUAL, default=False): cv.boolean,
             }
         )

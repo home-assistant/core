@@ -442,6 +442,16 @@ positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
 positive_time_period = vol.All(time_period, positive_timedelta)
 
 
+def scan_interval_timedelta(value: timedelta) -> timedelta:
+    """Validate timedelta is >= 5 sec."""
+    if value < timedelta(seconds=5):
+        raise vol.Invalid("Scan interval should be minimum 5s")
+    return value
+
+
+scan_interval_time_period = vol.All(time_period, scan_interval_timedelta)
+
+
 def remove_falsy(value: list[T]) -> list[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
@@ -851,7 +861,7 @@ PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): string,
         vol.Optional(CONF_ENTITY_NAMESPACE): string,
-        vol.Optional(CONF_SCAN_INTERVAL): time_period,
+        vol.Optional(CONF_SCAN_INTERVAL): scan_interval_time_period,
     }
 )
 

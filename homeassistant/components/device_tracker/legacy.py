@@ -84,7 +84,7 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
 )
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_SCAN_INTERVAL): cv.scan_interval_time_period,
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
         vol.Optional(CONF_CONSIDER_HOME, default=DEFAULT_CONSIDER_HOME): vol.All(
             cv.time_period, cv.positive_timedelta

@@ -82,7 +82,7 @@ BINARY_SENSOR_SCHEMA = {
 
 COMBINED_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_SCAN_INTERVAL): cv.scan_interval_time_period,
         **RESOURCE_SCHEMA,
         vol.Optional(SENSOR_DOMAIN): vol.All(
             cv.ensure_list, [vol.Schema(SENSOR_SCHEMA)]
