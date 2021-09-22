@@ -70,7 +70,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if pump_data["data"] != 0 and "currentWatts" in pump_data:
             for pump_key in pump_data:
                 enabled = True
-                # Considerations for Intelliflow VS
+                # Assumptions for Intelliflow VF
+                if pump_data["pumpType"] == 1 and pump_key == "currentRPM":
+                    enabled = False
+                # Assumptions for Intelliflow VS
                 if pump_data["pumpType"] == 2 and pump_key == "currentGPM":
                     enabled = False
                 if pump_key in SUPPORTED_PUMP_SENSORS:
