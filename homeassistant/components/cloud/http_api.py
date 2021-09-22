@@ -452,7 +452,6 @@ async def websocket_remote_connect(hass, connection, msg):
     """Handle request for connect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=True)
-    await cloud.remote.connect()
     connection.send_result(msg["id"], await _account_data(cloud))
 
 
@@ -465,7 +464,6 @@ async def websocket_remote_disconnect(hass, connection, msg):
     """Handle request for disconnect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=False)
-    await cloud.remote.disconnect()
     connection.send_result(msg["id"], await _account_data(cloud))
 
 
