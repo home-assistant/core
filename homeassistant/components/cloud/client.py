@@ -108,8 +108,8 @@ class CloudClient(Interface):
 
         return self._google_config
 
-    async def logged_in(self) -> None:
-        """When user logs in."""
+    async def cloud_started(self) -> None:
+        """When cloud is started."""
         is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
@@ -150,7 +150,10 @@ class CloudClient(Interface):
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
 
-    async def cleanups(self) -> None:
+    async def cloud_stopped(self) -> None:
+        """When the cloud is stopped."""
+
+    async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 
@@ -168,6 +171,10 @@ class CloudClient(Interface):
         """Match cloud notification to dispatcher."""
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
+
+    async def async_cloud_connect_update(self, connect: bool) -> None:
+        """Process cloud remote message to client."""
+        await self._prefs.async_update(remote_enabled=connect)
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
         """Process cloud alexa message to client."""

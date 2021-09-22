@@ -6,12 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
     ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
-    CommandClass,
     DoorLockMode,
 )
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -103,9 +103,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             ]
         ) == int(self.info.primary_value.value)
 
-    async def _set_lock_state(
-        self, target_state: str, **kwargs: dict[str, Any]
-    ) -> None:
+    async def _set_lock_state(self, target_state: str, **kwargs: Any) -> None:
         """Set the lock state."""
         target_value: ZwaveValue = self.get_zwave_value(
             LOCK_CMD_CLASS_TO_PROPERTY_MAP[self.info.primary_value.command_class]
@@ -116,11 +114,11 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )
 
-    async def async_lock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._set_lock_state(STATE_LOCKED)
 
-    async def async_unlock(self, **kwargs: dict[str, Any]) -> None:
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._set_lock_state(STATE_UNLOCKED)
 

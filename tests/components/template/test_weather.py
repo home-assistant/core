@@ -1,4 +1,6 @@
 """The tests for the Template Weather platform."""
+import pytest
+
 from homeassistant.components.weather import (
     ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
@@ -10,14 +12,12 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN,
 )
-from homeassistant.setup import async_setup_component
 
 
-async def test_template_state_text(hass):
-    """Test the state text of a template."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
+@pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
         {
             "weather": [
                 {"weather": {"platform": "demo"}},
@@ -37,40 +37,27 @@ async def test_template_state_text(hass):
                 },
             ]
         },
-    )
-    await hass.async_block_till_done()
-
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    hass.states.async_set("sensor.attribution", "The custom attribution")
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.temperature", 22.3)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.humidity", 60)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.pressure", 1000)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.windspeed", 20)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.windbearing", 180)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.ozone", 25)
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.visibility", 4.6)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("weather.test")
-    assert state is not None
-
-    assert state.state == "sunny"
-
-    data = state.attributes
-    assert data.get(ATTR_WEATHER_ATTRIBUTION) == "The custom attribution"
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == 22.3
-    assert data.get(ATTR_WEATHER_HUMIDITY) == 60
-    assert data.get(ATTR_WEATHER_PRESSURE) == 1000
-    assert data.get(ATTR_WEATHER_WIND_SPEED) == 20
-    assert data.get(ATTR_WEATHER_WIND_BEARING) == 180
-    assert data.get(ATTR_WEATHER_OZONE) == 25
-    assert data.get(ATTR_WEATHER_VISIBILITY) == 4.6
+    ],
+)
+async def test_template_state_text(hass, start_ha):
+    """Test the state text of a template."""
+    for attr, v_attr, value in [
+        (
+            "sensor.attribution",
+            ATTR_WEATHER_ATTRIBUTION,
+            "The custom attribution",
+        ),
+        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
+        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
+        ("sensor.pressure", ATTR_WEATHER_PRESSURE, 1000),
+        ("sensor.windspeed", ATTR_WEATHER_WIND_SPEED, 20),
+        ("sensor.windbearing", ATTR_WEATHER_WIND_BEARING, 180),
+        ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
+        ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
+    ]:
+        hass.states.async_set(attr, value)
+        await hass.async_block_till_done()
+        state = hass.states.get("weather.test")
+        assert state is not None
+        assert state.state == "sunny"
+        assert state.attributes.get(v_attr) == value

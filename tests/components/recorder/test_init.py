@@ -25,7 +25,13 @@ from homeassistant.components.recorder import (
     run_information_with_session,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import Events, RecorderRuns, States
+from homeassistant.components.recorder.models import (
+    Events,
+    RecorderRuns,
+    States,
+    StatisticsRuns,
+    process_timestamp,
+)
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -694,45 +700,108 @@ def test_auto_statistics(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
-    # Statistics is scheduled to happen at *:12am every hour. Exercise this behavior by
+    # Statistics is scheduled to happen every 5 minutes. Exercise this behavior by
     # firing time changed events and advancing the clock around this time. Pick an
     # arbitrary year in the future to avoid boundary conditions relative to the current
     # date.
     #
-    # The clock is started at 4:15am then advanced forward below
+    # The clock is started at 4:16am then advanced forward below
     now = dt_util.utcnow()
-    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    test_time = datetime(now.year + 2, 1, 1, 4, 16, 0, tzinfo=tz)
     run_tasks_at_time(hass, test_time)
 
     with patch(
         "homeassistant.components.recorder.statistics.compile_statistics",
         return_value=True,
     ) as compile_statistics:
-        # Advance one hour, and the statistics task should run
-        test_time = test_time + timedelta(hours=1)
+        # Advance 5 minutes, and the statistics task should run
+        test_time = test_time + timedelta(minutes=5)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
 
         compile_statistics.reset_mock()
 
-        # Advance one hour, and the statistics task should run again
-        test_time = test_time + timedelta(hours=1)
+        # Advance 5 minutes, and the statistics task should run again
+        test_time = test_time + timedelta(minutes=5)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
 
         compile_statistics.reset_mock()
 
-        # Advance less than one full hour. The task should not run.
-        test_time = test_time + timedelta(minutes=50)
+        # Advance less than 5 minutes. The task should not run.
+        test_time = test_time + timedelta(minutes=3)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 0
 
-        # Advance to the next hour, and the statistics task should run again
-        test_time = test_time + timedelta(hours=1)
+        # Advance 5 minutes, and the statistics task should run again
+        test_time = test_time + timedelta(minutes=5)
         run_tasks_at_time(hass, test_time)
         assert len(compile_statistics.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
+
+
+def test_statistics_runs_initiated(hass_recorder):
+    """Test statistics_runs is initiated when DB is created."""
+    now = dt_util.utcnow()
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+        hass = hass_recorder()
+
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 1
+            last_run = process_timestamp(statistics_runs[0].start)
+            assert process_timestamp(last_run) == now.replace(
+                minute=now.minute - now.minute % 5, second=0, microsecond=0
+            ) - timedelta(minutes=5)
+
+
+def test_compile_missing_statistics(tmpdir):
+    """Test missing statistics are compiled on startup."""
+    now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
+
+        hass = get_test_home_assistant()
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 1
+            last_run = process_timestamp(statistics_runs[0].start)
+            assert last_run == now - timedelta(minutes=5)
+
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
+
+    with patch(
+        "homeassistant.components.recorder.dt_util.utcnow",
+        return_value=now + timedelta(hours=1),
+    ):
+
+        hass = get_test_home_assistant()
+        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            statistics_runs = list(session.query(StatisticsRuns))
+            assert len(statistics_runs) == 13  # 12 5-minute runs
+            last_run = process_timestamp(statistics_runs[1].start)
+            assert last_run == now
+
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
 
 def test_saving_sets_old_state(hass_recorder):

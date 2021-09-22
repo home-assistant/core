@@ -116,6 +116,7 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
 
     async def get(self, request):
         """Not implemented."""
+        # pylint: disable=no-self-use
         raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
     # pylint: disable=arguments-differ

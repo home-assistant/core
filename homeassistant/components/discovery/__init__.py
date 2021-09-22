@@ -46,7 +46,6 @@ CONFIG_ENTRY_HANDLERS = {
 
 # These have no config flows
 SERVICE_HANDLERS = {
-    SERVICE_NETGEAR: ("device_tracker", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_SABNZBD: ("sabnzbd", None),
     "yamaha": ("media_player", "yamaha"),
@@ -55,7 +54,6 @@ SERVICE_HANDLERS = {
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
-    "nanoleaf_aurora": ("light", "nanoleaf"),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
@@ -77,6 +75,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "kodi",
     SERVICE_KONNECTED,
     SERVICE_MOBILE_APP,
+    SERVICE_NETGEAR,
     SERVICE_OCTOPRINT,
     "philips_hue",
     SERVICE_SAMSUNG_PRINTER,
@@ -87,6 +86,7 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
+    "nanoleaf_aurora",
 ]
 
 DEFAULT_ENABLED = (

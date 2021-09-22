@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 
 import pytest
-from zwave_js_server.const import LogLevel
+from zwave_js_server.const import CommandClass, InclusionStrategy, LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import (
     FailedCommand,
@@ -12,6 +12,7 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
+from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
@@ -29,6 +30,7 @@ from homeassistant.components.zwave_js.api import (
     OPTED_IN,
     PROPERTY,
     PROPERTY_KEY,
+    SECURE,
     TYPE,
     VALUE,
 )
@@ -37,6 +39,8 @@ from homeassistant.components.zwave_js.const import (
     DOMAIN,
 )
 from homeassistant.helpers import device_registry as dr
+
+from .common import PROPERTY_ULTRAVIOLET
 
 
 async def test_network_status(hass, integration, hass_ws_client):
@@ -126,6 +130,28 @@ async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
     ws_client = await hass_ws_client(hass)
 
     node = multisensor_6
+
+    # Update a value and ensure it is reflected in the node state
+    value_id = get_value_id(node, CommandClass.SENSOR_MULTILEVEL, PROPERTY_ULTRAVIOLET)
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": PROPERTY_ULTRAVIOLET,
+                "newValue": 1,
+                "prevValue": 0,
+                "propertyName": PROPERTY_ULTRAVIOLET,
+            },
+        },
+    )
+    node.receive_event(event)
+
     await ws_client.send_json(
         {
             ID: 3,
@@ -135,7 +161,17 @@ async def test_node_state(hass, multisensor_6, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"] == node.data
+
+    # Assert that the data returned doesn't match the stale node state data
+    assert msg["result"] != node.data
+
+    # Replace data for the value we updated and assert the new node data is the same
+    # as what's returned
+    updated_node_data = node.data.copy()
+    for n, value in enumerate(updated_node_data["values"]):
+        if _get_value_id_from_dict(node, value) == value_id:
+            updated_node_data["values"][n] = node.values[value_id].data.copy()
+    assert msg["result"] == updated_node_data
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -318,6 +354,31 @@ async def test_ping_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_add_node_secure(
+    hass, nortek_thermostat_added_event, integration, client, hass_ws_client
+):
+    """Test the add_node websocket command with secure flag."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {ID: 1, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id, SECURE: True}
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"strategy": InclusionStrategy.SECURITY_S0},
+    }
+
+    client.async_send_command.reset_mock()
+
+
 async def test_add_node(
     hass, nortek_thermostat_added_event, integration, client, hass_ws_client
 ):
@@ -333,6 +394,12 @@ async def test_add_node(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {"strategy": InclusionStrategy.INSECURE},
+    }
 
     event = Event(
         type="inclusion started",
@@ -599,6 +666,52 @@ async def test_remove_node(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
+async def test_replace_failed_node_secure(
+    hass,
+    nortek_thermostat,
+    integration,
+    client,
+    hass_ws_client,
+):
+    """Test the replace_failed_node websocket command with secure flag."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    dev_reg = dr.async_get(hass)
+
+    # Create device registry entry for mock node
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-67")},
+        name="Node 67",
+    )
+
+    client.async_send_command.return_value = {"success": True}
+
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/replace_failed_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 67,
+            SECURE: True,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": nortek_thermostat.node_id,
+        "options": {"strategy": InclusionStrategy.SECURITY_S0},
+    }
+
+    client.async_send_command.reset_mock()
+
+
 async def test_replace_failed_node(
     hass,
     nortek_thermostat,
@@ -637,6 +750,15 @@ async def test_replace_failed_node(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert msg["result"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.replace_failed_node",
+        "nodeId": nortek_thermostat.node_id,
+        "options": {"strategy": InclusionStrategy.INSECURE},
+    }
+
+    client.async_send_command.reset_mock()
 
     event = Event(
         type="inclusion started",

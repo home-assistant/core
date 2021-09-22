@@ -1,7 +1,12 @@
 """Support for Xiaomi Miio binary sensors."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from enum import Enum
+from typing import Callable
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -13,6 +18,8 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODELS_HUMIDIFIER_MIIO,
+    MODELS_HUMIDIFIER_MIOT,
     MODELS_HUMIDIFIER_MJJSQ,
 )
 from .device import XiaomiCoordinatedMiioEntity
@@ -20,19 +27,31 @@ from .device import XiaomiCoordinatedMiioEntity
 ATTR_NO_WATER = "no_water"
 ATTR_WATER_TANK_DETACHED = "water_tank_detached"
 
+
+@dataclass
+class XiaomiMiioBinarySensorDescription(BinarySensorEntityDescription):
+    """A class that describes binary sensor entities."""
+
+    value: Callable | None = None
+
+
 BINARY_SENSOR_TYPES = (
-    BinarySensorEntityDescription(
+    XiaomiMiioBinarySensorDescription(
         key=ATTR_NO_WATER,
         name="Water Tank Empty",
         icon="mdi:water-off-outline",
     ),
-    BinarySensorEntityDescription(
+    XiaomiMiioBinarySensorDescription(
         key=ATTR_WATER_TANK_DETACHED,
-        name="Water Tank Detached",
-        icon="mdi:flask-empty-off-outline",
+        name="Water Tank",
+        icon="mdi:car-coolant-level",
+        device_class=DEVICE_CLASS_CONNECTIVITY,
+        value=lambda value: not value,
     ),
 )
 
+HUMIDIFIER_MIIO_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
+HUMIDIFIER_MIOT_BINARY_SENSORS = (ATTR_WATER_TANK_DETACHED,)
 HUMIDIFIER_MJJSQ_BINARY_SENSORS = (ATTR_NO_WATER, ATTR_WATER_TANK_DETACHED)
 
 
@@ -43,7 +62,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         model = config_entry.data[CONF_MODEL]
         sensors = []
-        if model in MODELS_HUMIDIFIER_MJJSQ:
+        if model in MODELS_HUMIDIFIER_MIIO:
+            sensors = HUMIDIFIER_MIIO_BINARY_SENSORS
+        elif model in MODELS_HUMIDIFIER_MIOT:
+            sensors = HUMIDIFIER_MIOT_BINARY_SENSORS
+        elif model in MODELS_HUMIDIFIER_MJJSQ:
             sensors = HUMIDIFIER_MJJSQ_BINARY_SENSORS
         for description in BINARY_SENSOR_TYPES:
             if description.key not in sensors:
@@ -74,9 +97,13 @@ class XiaomiGenericBinarySensor(XiaomiCoordinatedMiioEntity, BinarySensorEntity)
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._extract_value_from_attribute(
+        state = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
+        if self.entity_description.value is not None and state is not None:
+            return self.entity_description.value(state)
+
+        return state
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):

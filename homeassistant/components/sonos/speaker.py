@@ -50,6 +50,7 @@ from .const import (
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
     SONOS_SEEN,
+    SONOS_SPEAKER_ADDED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
     SONOS_STATE_UPDATED,
@@ -189,6 +190,8 @@ class SonosSpeaker:
         self.muted: bool | None = None
         self.night_mode: bool | None = None
         self.dialog_mode: bool | None = None
+        self.bass_level: int | None = None
+        self.treble_level: int | None = None
 
         # Grouping
         self.coordinator: SonosSpeaker | None = None
@@ -196,6 +199,7 @@ class SonosSpeaker:
         self.sonos_group_entities: list[str] = []
         self.soco_snapshot: Snapshot | None = None
         self.snapshot_group: list[SonosSpeaker] | None = None
+        self._group_members_missing: set[str] = set()
 
     def setup(self) -> None:
         """Run initial setup of the speaker."""
@@ -211,6 +215,11 @@ class SonosSpeaker:
         )
         self._reboot_dispatcher = dispatcher_connect(
             self.hass, f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted
+        )
+        self._group_dispatcher = dispatcher_connect(
+            self.hass,
+            SONOS_SPEAKER_ADDED,
+            self.update_group_for_uid,
         )
 
         if battery_info := fetch_battery_info_or_none(self.soco):
@@ -240,6 +249,7 @@ class SonosSpeaker:
         }
 
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
+        dispatcher_send(self.hass, SONOS_SPEAKER_ADDED, self.soco.uid)
 
     #
     # Entity management
@@ -313,6 +323,18 @@ class SonosSpeaker:
     async def async_subscribe(self) -> bool:
         """Initiate event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
+
+        # Create a polling task in case subscriptions fail or callback events do not arrive
+        if not self._poll_timer:
+            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
+                ),
+                SCAN_INTERVAL,
+            )
+
         try:
             await self.hass.async_add_executor_job(self.set_basic_info)
 
@@ -327,10 +349,10 @@ class SonosSpeaker:
                 for service in SUBSCRIPTION_SERVICES
             ]
             await asyncio.gather(*subscriptions)
-            return True
         except SoCoException as ex:
             _LOGGER.warning("Could not connect %s: %s", self.zone_name, ex)
             return False
+        return True
 
     async def _subscribe(
         self, target: SubscriptionBase, sub_callback: Callable
@@ -452,11 +474,26 @@ class SonosSpeaker:
         if "dialog_level" in variables:
             self.dialog_mode = variables["dialog_level"] == "1"
 
+        if "bass_level" in variables:
+            self.bass_level = variables["bass_level"]
+
+        if "treble_level" in variables:
+            self.treble_level = variables["treble_level"]
+
         self.async_write_entity_states()
 
     #
     # Speaker availability methods
     #
+    @callback
+    def _async_reset_seen_timer(self):
+        """Reset the _seen_timer scheduler."""
+        if self._seen_timer:
+            self._seen_timer()
+        self._seen_timer = self.hass.helpers.event.async_call_later(
+            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
+        )
+
     async def async_seen(self, soco: SoCo | None = None) -> None:
         """Record that this speaker was seen right now."""
         if soco is not None:
@@ -464,12 +501,7 @@ class SonosSpeaker:
 
         was_available = self.available
 
-        if self._seen_timer:
-            self._seen_timer()
-
-        self._seen_timer = self.hass.helpers.event.async_call_later(
-            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
-        )
+        self._async_reset_seen_timer()
 
         if was_available:
             self.async_write_entity_states()
@@ -481,39 +513,27 @@ class SonosSpeaker:
             self.soco.ip_address,
         )
 
-        self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            partial(
-                async_dispatcher_send,
-                self.hass,
-                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
-            ),
-            SCAN_INTERVAL,
-        )
-
         if self._is_ready and not self.subscriptions_failed:
             done = await self.async_subscribe()
             if not done:
-                assert self._seen_timer is not None
-                self._seen_timer()
                 await self.async_unseen()
 
         self.async_write_entity_states()
 
-    async def async_unseen(self, now: datetime.datetime | None = None) -> None:
+    async def async_unseen(
+        self, callback_timestamp: datetime.datetime | None = None
+    ) -> None:
         """Make this player unavailable when it was not seen recently."""
-        if self._seen_timer:
-            self._seen_timer()
-            self._seen_timer = None
-
-        hostname = uid_to_short_hostname(self.soco.uid)
-        zcname = f"{hostname}.{MDNS_SERVICE}"
-        aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
-        if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
-            # We can still see the speaker via zeroconf check again later.
-            self._seen_timer = self.hass.helpers.event.async_call_later(
-                SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
-            )
-            return
+        if callback_timestamp:
+            # Called by a _seen_timer timeout, check mDNS one more time
+            # This should not be checked in an "active" unseen scenario
+            hostname = uid_to_short_hostname(self.soco.uid)
+            zcname = f"{hostname}.{MDNS_SERVICE}"
+            aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
+            if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
+                # We can still see the speaker via zeroconf check again later.
+                self._async_reset_seen_timer()
+                return
 
         _LOGGER.debug(
             "No activity and could not locate %s on the network. Marking unavailable",
@@ -521,6 +541,10 @@ class SonosSpeaker:
         )
 
         self._share_link_plugin = None
+
+        if self._seen_timer:
+            self._seen_timer()
+            self._seen_timer = None
 
         if self._poll_timer:
             self._poll_timer()
@@ -541,20 +565,7 @@ class SonosSpeaker:
         await self.async_unsubscribe()
         self.soco = soco
         await self.async_subscribe()
-        if self._seen_timer:
-            self._seen_timer()
-        self._seen_timer = self.hass.helpers.event.async_call_later(
-            SEEN_EXPIRE_TIME.total_seconds(), self.async_unseen
-        )
-        if not self._poll_timer:
-            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-                partial(
-                    async_dispatcher_send,
-                    self.hass,
-                    f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
-                ),
-                SCAN_INTERVAL,
-            )
+        self._async_reset_seen_timer()
         self.async_write_entity_states()
 
     #
@@ -632,6 +643,16 @@ class SonosSpeaker:
         """Update group topology when polling."""
         self.hass.add_job(self.create_update_groups_coro())
 
+    def update_group_for_uid(self, uid: str) -> None:
+        """Update group topology if uid is missing."""
+        if uid not in self._group_members_missing:
+            return
+        missing_zone = self.hass.data[DATA_SONOS].discovered[uid].zone_name
+        _LOGGER.debug(
+            "%s was missing, adding to %s group", missing_zone, self.zone_name
+        )
+        self.update_groups()
+
     @callback
     def async_update_groups(self, event: SonosEvent) -> None:
         """Handle callback for topology change event."""
@@ -653,7 +674,7 @@ class SonosSpeaker:
                     slave_uids = [
                         p.uid
                         for p in self.soco.group.members
-                        if p.uid != coordinator_uid
+                        if p.uid != coordinator_uid and p.is_visible
                     ]
 
             return [coordinator_uid] + slave_uids
@@ -685,11 +706,19 @@ class SonosSpeaker:
             for uid in group:
                 speaker = self.hass.data[DATA_SONOS].discovered.get(uid)
                 if speaker:
+                    self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
                     entity_id = entity_registry.async_get_entity_id(
                         MP_DOMAIN, DOMAIN, uid
                     )
                     sonos_group_entities.append(entity_id)
+                else:
+                    self._group_members_missing.add(uid)
+                    _LOGGER.debug(
+                        "%s group member unavailable (%s), will try again",
+                        self.zone_name,
+                        uid,
+                    )
 
             if self.sonos_group_entities == sonos_group_entities:
                 # Useful in polling mode for speakers with stereo pairs or surrounds
@@ -874,10 +903,7 @@ class SonosSpeaker:
             for speaker in (s for s in speakers if s.snapshot_group):
                 assert speaker.snapshot_group is not None
                 if speaker.snapshot_group[0] == speaker:
-                    if (
-                        speaker.snapshot_group != speaker.sonos_group
-                        and speaker.snapshot_group != [speaker]
-                    ):
+                    if speaker.snapshot_group not in (speaker.sonos_group, [speaker]):
                         speaker.join(speaker.snapshot_group)
                     groups.append(speaker.snapshot_group.copy())
 
@@ -951,6 +977,8 @@ class SonosSpeaker:
         self.muted = self.soco.mute
         self.night_mode = self.soco.night_mode
         self.dialog_mode = self.soco.dialog_mode
+        self.bass_level = self.soco.bass
+        self.treble_level = self.soco.treble
 
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""

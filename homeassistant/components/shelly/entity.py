@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Callable, Final, cast
 
-import aioshelly
+from aioshelly.block_device import Block
 import async_timeout
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -23,9 +23,21 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
-from .utils import async_remove_shelly_entity, get_entity_name
+from . import BlockDeviceWrapper, RpcDeviceWrapper, ShellyDeviceRestWrapper
+from .const import (
+    AIOSHELLY_DEVICE_TIMEOUT_SEC,
+    BLOCK,
+    DATA_CONFIG_ENTRY,
+    DOMAIN,
+    REST,
+    RPC,
+)
+from .utils import (
+    async_remove_shelly_entity,
+    get_block_entity_name,
+    get_rpc_entity_name,
+    get_rpc_key_instances,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -38,9 +50,9 @@ async def async_setup_entry_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for attributes."""
-    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+    wrapper: BlockDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
-    ][COAP]
+    ][BLOCK]
 
     if wrapper.device.initialized:
         await async_setup_block_attribute_entities(
@@ -55,12 +67,14 @@ async def async_setup_entry_attribute_entities(
 async def async_setup_block_attribute_entities(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
-    wrapper: ShellyDeviceWrapper,
+    wrapper: BlockDeviceWrapper,
     sensors: dict[tuple[str, str], BlockAttributeDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for block attributes."""
     blocks = []
+
+    assert wrapper.device.blocks
 
     for block in wrapper.device.blocks:
         for sensor_id in block.sensor_ids:
@@ -97,7 +111,7 @@ async def async_restore_block_attribute_entities(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    wrapper: ShellyDeviceWrapper,
+    wrapper: BlockDeviceWrapper,
     sensors: dict[tuple[str, str], BlockAttributeDescription],
     sensor_class: Callable,
 ) -> None:
@@ -131,6 +145,45 @@ async def async_restore_block_attribute_entities(
         return
 
     async_add_entities(entities)
+
+
+async def async_setup_entry_rpc(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    sensors: dict[str, RpcAttributeDescription],
+    sensor_class: Callable,
+) -> None:
+    """Set up entities for REST sensors."""
+    wrapper: RpcDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][RPC]
+
+    entities = []
+    for sensor_id in sensors:
+        description = sensors[sensor_id]
+        key_instances = get_rpc_key_instances(wrapper.device.status, description.key)
+
+        for key in key_instances:
+            # Filter and remove entities that according to settings should not create an entity
+            if description.removal_condition and description.removal_condition(
+                wrapper.device.config, key
+            ):
+                domain = sensor_class.__module__.split(".")[-1]
+                unique_id = f"{wrapper.mac}-{key}-{sensor_id}"
+                await async_remove_shelly_entity(hass, domain, unique_id)
+            else:
+                entities.append((key, sensor_id, description))
+
+    if not entities:
+        return
+
+    async_add_entities(
+        [
+            sensor_class(wrapper, key, sensor_id, description)
+            for key, sensor_id, description in entities
+        ]
+    )
 
 
 async def async_setup_entry_rest(
@@ -175,11 +228,27 @@ class BlockAttributeDescription:
     device_class: str | None = None
     state_class: str | None = None
     default_enabled: bool = True
-    available: Callable[[aioshelly.Block], bool] | None = None
+    available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
-    removal_condition: Callable[[dict, aioshelly.Block], bool] | None = None
-    extra_state_attributes: Callable[[aioshelly.Block], dict | None] | None = None
-    last_reset: str | None = None
+    removal_condition: Callable[[dict, Block], bool] | None = None
+    extra_state_attributes: Callable[[Block], dict | None] | None = None
+
+
+@dataclass
+class RpcAttributeDescription:
+    """Class to describe a RPC sensor."""
+
+    key: str
+    name: str
+    icon: str | None = None
+    unit: str | None = None
+    value: Callable[[dict, Any], Any] | None = None
+    device_class: str | None = None
+    state_class: str | None = None
+    default_enabled: bool = True
+    available: Callable[[dict], bool] | None = None
+    removal_condition: Callable[[dict, str], bool] | None = None
+    extra_state_attributes: Callable[[dict], dict | None] | None = None
 
 
 @dataclass
@@ -197,13 +266,13 @@ class RestAttributeDescription:
 
 
 class ShellyBlockEntity(entity.Entity):
-    """Helper class to represent a block."""
+    """Helper class to represent a block entity."""
 
-    def __init__(self, wrapper: ShellyDeviceWrapper, block: aioshelly.Block) -> None:
+    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper.device, block)
+        self._name = get_block_entity_name(wrapper.device, block)
 
     @property
     def name(self) -> str:
@@ -262,13 +331,68 @@ class ShellyBlockEntity(entity.Entity):
             return None
 
 
+class ShellyRpcEntity(entity.Entity):
+    """Helper class to represent a rpc entity."""
+
+    def __init__(self, wrapper: RpcDeviceWrapper, key: str) -> None:
+        """Initialize Shelly entity."""
+        self.wrapper = wrapper
+        self.key = key
+        self._attr_should_poll = False
+        self._attr_device_info = {
+            "connections": {(device_registry.CONNECTION_NETWORK_MAC, wrapper.mac)}
+        }
+        self._attr_unique_id = f"{wrapper.mac}-{key}"
+        self._attr_name = get_rpc_entity_name(wrapper.device, key)
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        return self.wrapper.device.connected
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to HASS."""
+        self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
+
+    async def async_update(self) -> None:
+        """Update entity with latest info."""
+        await self.wrapper.async_request_refresh()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Handle device update."""
+        self.async_write_ha_state()
+
+    async def call_rpc(self, method: str, params: Any) -> Any:
+        """Call RPC method."""
+        _LOGGER.debug(
+            "Call RPC for entity %s, method: %s, params: %s",
+            self.name,
+            method,
+            params,
+        )
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                return await self.wrapper.device.call_rpc(method, params)
+        except asyncio.TimeoutError as err:
+            _LOGGER.error(
+                "Call RPC for entity %s failed, method: %s, params: %s, error: %s",
+                self.name,
+                method,
+                params,
+                repr(err),
+            )
+            self.wrapper.last_update_success = False
+            return None
+
+
 class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     """Helper class to represent a block attribute."""
 
     def __init__(
         self,
-        wrapper: ShellyDeviceWrapper,
-        block: aioshelly.Block,
+        wrapper: BlockDeviceWrapper,
+        block: Block,
         attribute: str,
         description: BlockAttributeDescription,
     ) -> None:
@@ -284,7 +408,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
 
         self._unit: None | str | Callable[[dict], str] = unit
         self._unique_id: str = f"{super().unique_id}-{self.attribute}"
-        self._name = get_entity_name(wrapper.device, block, self.description.name)
+        self._name = get_block_entity_name(wrapper.device, block, self.description.name)
 
     @property
     def unique_id(self) -> str:
@@ -345,7 +469,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
     def __init__(
         self,
-        wrapper: ShellyDeviceWrapper,
+        wrapper: BlockDeviceWrapper,
         attribute: str,
         description: RestAttributeDescription,
     ) -> None:
@@ -354,7 +478,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         self.wrapper = wrapper
         self.attribute = attribute
         self.description = description
-        self._name = get_entity_name(wrapper.device, None, self.description.name)
+        self._name = get_block_entity_name(wrapper.device, None, self.description.name)
         self._last_value = None
 
     @property
@@ -412,14 +536,66 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
 
+class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
+    """Helper class to represent a rpc attribute."""
+
+    def __init__(
+        self,
+        wrapper: RpcDeviceWrapper,
+        key: str,
+        attribute: str,
+        description: RpcAttributeDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(wrapper, key)
+        self.attribute = attribute
+        self.description = description
+
+        self._attr_unique_id = f"{super().unique_id}-{attribute}"
+        self._attr_name = get_rpc_entity_name(wrapper.device, key, description.name)
+        self._attr_entity_registry_enabled_default = description.default_enabled
+        self._attr_device_class = description.device_class
+        self._attr_icon = description.icon
+        self._last_value = None
+
+    @property
+    def attribute_value(self) -> StateType:
+        """Value of sensor."""
+        if callable(self.description.value):
+            self._last_value = self.description.value(
+                self.wrapper.device.status[self.key], self._last_value
+            )
+        return self._last_value
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        if not available or not self.description.available:
+            return available
+
+        return self.description.available(self.wrapper.device.status[self.key])
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if self.description.extra_state_attributes is None:
+            return None
+
+        return self.description.extra_state_attributes(
+            self.wrapper.device.status[self.key]
+        )
+
+
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
     """Represent a shelly sleeping block attribute entity."""
 
     # pylint: disable=super-init-not-called
     def __init__(
         self,
-        wrapper: ShellyDeviceWrapper,
-        block: aioshelly.Block,
+        wrapper: BlockDeviceWrapper,
+        block: Block | None,
         attribute: str,
         description: BlockAttributeDescription,
         entry: entity_registry.RegistryEntry | None = None,
@@ -430,7 +606,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         self.last_state: StateType = None
         self.wrapper = wrapper
         self.attribute = attribute
-        self.block = block
+        self.block: Block | None = block  # type: ignore[assignment]
         self.description = description
         self._unit = self.description.unit
 
@@ -439,7 +615,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 self._unit = self._unit(block.info(attribute))
 
             self._unique_id = f"{self.wrapper.mac}-{block.description}-{attribute}"
-            self._name = get_entity_name(
+            self._name = get_block_entity_name(
                 self.wrapper.device, block, self.description.name
             )
         elif entry is not None:
@@ -468,6 +644,8 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             return
 
         _, entity_block, entity_sensor = self.unique_id.split("-")
+
+        assert self.wrapper.device.blocks
 
         for block in self.wrapper.device.blocks:
             if block.description != entity_block:

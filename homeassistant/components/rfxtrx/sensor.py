@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -38,7 +39,6 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import callback
-from homeassistant.util import dt
 
 from . import (
     CONF_DATA_BITS,
@@ -75,7 +75,7 @@ class RfxtrxSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES = (
     RfxtrxSensorEntityDescription(
-        key="Barameter",
+        key="Barometer",
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PRESSURE_HPA,
@@ -145,8 +145,7 @@ SENSOR_TYPES = (
     RfxtrxSensorEntityDescription(
         key="Total usage",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
@@ -173,14 +172,12 @@ SENSOR_TYPES = (
     ),
     RfxtrxSensorEntityDescription(
         key="Count",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
-        state_class=STATE_CLASS_MEASUREMENT,
-        last_reset=dt.utc_from_timestamp(0),
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(

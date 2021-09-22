@@ -1,10 +1,14 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "manual": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
         }
+      },
+      "usb_confirm": {
+        "description": "Do you want to setup {name} with the Z-Wave JS add-on?"
       },
       "on_supervisor": {
         "title": "Select connection method",
@@ -44,7 +48,9 @@
       "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
       "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
       "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "discovery_requires_supervisor": "Discovery requires the supervisor.",
+      "not_zwave_device": "Discovered device is not a Z-Wave device."
     },
     "progress": {
       "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
@@ -104,6 +110,8 @@
       "event.value_notification.basic": "Basic CC event on {subtype}",
       "event.value_notification.central_scene": "Central Scene action on {subtype}",
       "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+      "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+      "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value",
       "state.node_status": "Node status changed"
     },
     "condition_type": {

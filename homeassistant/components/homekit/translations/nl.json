@@ -21,7 +21,8 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)"
+                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
+                    "devices": "Apparaten (triggers)"
                 },
                 "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
                 "title": "Geavanceerde configuratie"

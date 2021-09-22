@@ -83,9 +83,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_owm_weather(self):
         """Poll weather data from OWM."""
-        if (
-            self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY
-            or self._forecast_mode == FORECAST_MODE_ONECALL_DAILY
+        if self._forecast_mode in (
+            FORECAST_MODE_ONECALL_HOURLY,
+            FORECAST_MODE_ONECALL_DAILY,
         ):
             weather = await self.hass.async_add_executor_job(
                 self._owm_client.one_call, self._latitude, self._longitude

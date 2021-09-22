@@ -1,4 +1,6 @@
 """Support for Wink fans."""
+from __future__ import annotations
+
 import pywink
 
 from homeassistant.components.fan import (
@@ -67,7 +69,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
         return self.wink.state()
 
     @property
-    def speed(self) -> str:
+    def speed(self) -> str | None:
         """Return the current speed."""
         current_wink_speed = self.wink.current_fan_speed()
         if SPEED_AUTO == current_wink_speed:

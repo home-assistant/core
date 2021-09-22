@@ -179,6 +179,7 @@ def state(new_state):
 
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
+            # pylint: disable=protected-access
 
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION

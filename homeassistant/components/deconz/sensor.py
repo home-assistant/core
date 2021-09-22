@@ -17,6 +17,7 @@ from pydeconz.sensor import (
 from homeassistant.components.sensor import (
     DOMAIN,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -41,7 +42,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
@@ -68,7 +68,7 @@ ICON = {
 }
 
 STATE_CLASS = {
-    Consumption: STATE_CLASS_MEASUREMENT,
+    Consumption: STATE_CLASS_TOTAL_INCREASING,
     Humidity: STATE_CLASS_MEASUREMENT,
     Pressure: STATE_CLASS_MEASUREMENT,
     Temperature: STATE_CLASS_MEASUREMENT,
@@ -124,7 +124,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 + DoorLock.ZHATYPE
                 + Switch.ZHATYPE
                 + Thermostat.ZHATYPE
-                and sensor.uniqueid not in gateway.entities[DOMAIN]
+                and sensor.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
@@ -163,9 +163,6 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT.get(
             type(self._device)
         )
-
-        if device.type in Consumption.ZHATYPE:
-            self._attr_last_reset = dt_util.utc_from_timestamp(0)
 
     @callback
     def async_update_callback(self, force_update=False):
@@ -276,7 +273,7 @@ class DeconzBattery(DeconzDevice, SensorEntity):
         Normally there should only be one battery sensor per device from deCONZ.
         With specific Danfoss devices each endpoint can report its own battery state.
         """
-        if self._device.manufacturer == "Danfoss" and self._device.modelid in [
+        if self._device.manufacturer == "Danfoss" and self._device.model_id in [
             "0x8030",
             "0x8031",
             "0x8034",

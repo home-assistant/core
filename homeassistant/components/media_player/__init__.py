@@ -507,6 +507,7 @@ class MediaPlayerEntity(Entity):
 
         Must be implemented by integration.
         """
+        # pylint: disable=no-self-use
         return None, None
 
     @property
@@ -813,7 +814,6 @@ class MediaPlayerEntity(Entity):
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.toggle)
             return
 
@@ -828,7 +828,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_up"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_up)
             return
 
@@ -841,7 +840,6 @@ class MediaPlayerEntity(Entity):
         This method is a coroutine.
         """
         if hasattr(self, "volume_down"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.volume_down)
             return
 
@@ -851,7 +849,6 @@ class MediaPlayerEntity(Entity):
     async def async_media_play_pause(self):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
-            # pylint: disable=no-member
             await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
