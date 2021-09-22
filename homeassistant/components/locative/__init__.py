@@ -12,7 +12,6 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
 )
@@ -78,7 +77,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     if direction == "enter":
         async_dispatcher_send(hass, TRACKER_UPDATE, device, gps_location, location_name)
-        return web.Response(text=f"Setting location to {location_name}", status=HTTP_OK)
+        return web.Response(text=f"Setting location to {location_name}")
 
     if direction == "exit":
         current_state = hass.states.get(f"{DEVICE_TRACKER}.{device}")
@@ -88,7 +87,7 @@ async def handle_webhook(hass, webhook_id, request):
             async_dispatcher_send(
                 hass, TRACKER_UPDATE, device, gps_location, location_name
             )
-            return web.Response(text="Setting location to not home", status=HTTP_OK)
+            return web.Response(text="Setting location to not home")
 
         # Ignore the message if it is telling us to exit a zone that we
         # aren't currently in. This occurs when a zone is entered
@@ -96,13 +95,12 @@ async def handle_webhook(hass, webhook_id, request):
         # be sent first, then the exit message will be sent second.
         return web.Response(
             text=f"Ignoring exit from {location_name} (already in {current_state})",
-            status=HTTP_OK,
         )
 
     if direction == "test":
         # In the app, a test message can be sent. Just return something to
         # the user to let them know that it works.
-        return web.Response(text="Received test message.", status=HTTP_OK)
+        return web.Response(text="Received test message.")
 
     _LOGGER.error("Received unidentified message from Locative: %s", direction)
     return web.Response(

@@ -108,6 +108,9 @@ aioeagle==1.1.0
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
+# homeassistant.components.esphome
+aioesphomeapi==9.1.0
+
 # homeassistant.components.flo
 aioflo==0.4.1
 
@@ -161,10 +164,10 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==0.6.4
+aioshelly==1.0.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.5
+aioswitcher==2.0.6
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -174,6 +177,9 @@ aiotractive==0.5.2
 
 # homeassistant.components.unifi
 aiounifi==26
+
+# homeassistant.components.watttime
+aiowatttime==0.1.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
@@ -205,10 +211,12 @@ aprslib==0.6.46
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.7.0
 
+# homeassistant.components.yeelight
+async-upnp-client==0.21.2
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-# homeassistant.components.yeelight
 async-upnp-client==0.21.3
 
 # homeassistant.components.aurora
@@ -761,7 +769,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
-pyTibber==0.19.0
+pyTibber==0.19.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -815,7 +823,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.4.4
 
 # homeassistant.components.deconz
-pydeconz==83
+pydeconz==84
 
 # homeassistant.components.dexcom
 pydexcom==0.2.0
@@ -1386,13 +1394,13 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.4
+yeelight==0.7.5
 
 # homeassistant.components.youless
 youless-api==0.12
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.4
+zeroconf==0.36.6
 
 # homeassistant.components.zha
 zha-quirks==0.0.61

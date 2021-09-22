@@ -164,8 +164,8 @@ UPDATE_REQUEST_PROPERTIES = [
     "active_mode",
 ]
 
-BULB_NETWORK_EXCEPTIONS = (socket.error, asyncio.TimeoutError)
-BULB_EXCEPTIONS = (BulbException, *BULB_NETWORK_EXCEPTIONS)
+BULB_NETWORK_EXCEPTIONS = (socket.error,)
+BULB_EXCEPTIONS = (BulbException, asyncio.TimeoutError, *BULB_NETWORK_EXCEPTIONS)
 
 
 PLATFORMS = ["binary_sensor", "light"]
@@ -612,9 +612,6 @@ class YeelightDevice:
     @property
     def is_nightlight_enabled(self) -> bool:
         """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
         # Only ceiling lights have active_mode, from SDK docs:
         # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
         if self._active_mode is not None:
@@ -652,23 +649,22 @@ class YeelightDevice:
 
     async def _async_update_properties(self):
         """Read new properties from the device."""
-        if not self.bulb:
-            return
-
         try:
             await self.bulb.async_get_properties(UPDATE_REQUEST_PROPERTIES)
             self._available = True
             if not self._initialized:
                 self._initialized = True
                 async_dispatcher_send(self._hass, DEVICE_INITIALIZED.format(self._host))
-        except BULB_EXCEPTIONS as ex:
+        except BULB_NETWORK_EXCEPTIONS as ex:
             if self._available:  # just inform once
                 _LOGGER.error(
                     "Unable to update device %s, %s: %s", self._host, self.name, ex
                 )
             self._available = False
-
-        return self._available
+        except BULB_EXCEPTIONS as ex:
+            _LOGGER.debug(
+                "Unable to update device %s, %s: %s", self._host, self.name, ex
+            )
 
     async def async_setup(self):
         """Fetch capabilities and setup name if available."""

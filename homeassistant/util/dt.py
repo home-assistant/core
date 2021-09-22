@@ -132,8 +132,7 @@ def parse_datetime(dt_str: str) -> dt.datetime | None:
     with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
 
-    match = DATETIME_RE.match(dt_str)
-    if not match:
+    if not (match := DATETIME_RE.match(dt_str)):
         return None
     kws: dict[str, Any] = match.groupdict()
     if kws["microsecond"]:
@@ -269,16 +268,14 @@ def find_next_time_expression_time(
 
         Return None if no such value exists.
         """
-        left = bisect.bisect_left(arr, cmp)
-        if left == len(arr):
+        if (left := bisect.bisect_left(arr, cmp)) == len(arr):
             return None
         return arr[left]
 
     result = now.replace(microsecond=0)
 
     # Match next second
-    next_second = _lower_bound(seconds, result.second)
-    if next_second is None:
+    if (next_second := _lower_bound(seconds, result.second)) is None:
         # No second to match in this minute. Roll-over to next minute.
         next_second = seconds[0]
         result += dt.timedelta(minutes=1)

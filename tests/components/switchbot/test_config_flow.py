@@ -1,8 +1,12 @@
 """Test the switchbot config flow."""
 
-from unittest.mock import patch
-
 from homeassistant.components.switchbot.config_flow import NotConnectedError
+from homeassistant.components.switchbot.const import (
+    CONF_RETRY_COUNT,
+    CONF_RETRY_TIMEOUT,
+    CONF_SCAN_TIMEOUT,
+    CONF_TIME_BETWEEN_UPDATE_COMMAND,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.data_entry_flow import (
@@ -14,6 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     USER_INPUT,
+    USER_INPUT_CURTAIN,
     USER_INPUT_INVALID,
     USER_INPUT_UNSUPPORTED_DEVICE,
     YAML_CONFIG,
@@ -70,6 +75,33 @@ async def test_user_form_valid_mac(hass):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured_device"
+
+    # test curtain device creation.
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_CURTAIN,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test-name"
+    assert result["data"] == {
+        CONF_MAC: "e7:89:43:90:90:90",
+        CONF_NAME: "test-name",
+        CONF_PASSWORD: "test-password",
+        CONF_SENSOR_TYPE: "curtain",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_form_unsupported_device(hass):
@@ -165,35 +197,58 @@ async def test_user_form_exception(hass, switchbot_config_flow):
 
 async def test_options_flow(hass):
     """Test updating options."""
-    with patch("homeassistant.components.switchbot.PLATFORMS", []):
+    with _patch_async_setup_entry() as mock_setup_entry:
         entry = await init_integration(hass)
 
-    assert entry.options["update_time"] == 60
-    assert entry.options["retry_count"] == 3
-    assert entry.options["retry_timeout"] == 5
-    assert entry.options["scan_timeout"] == 5
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    with _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                "update_time": 60,
-                "retry_count": 3,
-                "retry_timeout": 5,
-                "scan_timeout": 5,
+                CONF_TIME_BETWEEN_UPDATE_COMMAND: 60,
+                CONF_RETRY_COUNT: 3,
+                CONF_RETRY_TIMEOUT: 5,
+                CONF_SCAN_TIMEOUT: 5,
             },
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["update_time"] == 60
-    assert result["data"]["retry_count"] == 3
-    assert result["data"]["retry_timeout"] == 5
-    assert result["data"]["scan_timeout"] == 5
+    assert result["data"][CONF_TIME_BETWEEN_UPDATE_COMMAND] == 60
+    assert result["data"][CONF_RETRY_COUNT] == 3
+    assert result["data"][CONF_RETRY_TIMEOUT] == 5
+    assert result["data"][CONF_SCAN_TIMEOUT] == 5
 
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # Test changing of entry options.
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        entry = await init_integration(hass)
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_TIME_BETWEEN_UPDATE_COMMAND: 66,
+                CONF_RETRY_COUNT: 6,
+                CONF_RETRY_TIMEOUT: 6,
+                CONF_SCAN_TIMEOUT: 6,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_TIME_BETWEEN_UPDATE_COMMAND] == 66
+    assert result["data"][CONF_RETRY_COUNT] == 6
+    assert result["data"][CONF_RETRY_TIMEOUT] == 6
+    assert result["data"][CONF_SCAN_TIMEOUT] == 6
+
+    assert len(mock_setup_entry.mock_calls) == 1

@@ -163,6 +163,9 @@ aioeagle==1.1.0
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
+# homeassistant.components.esphome
+aioesphomeapi==9.1.0
+
 # homeassistant.components.flo
 aioflo==0.4.1
 
@@ -237,10 +240,10 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.shelly
-aioshelly==0.6.4
+aioshelly==1.0.1
 
 # homeassistant.components.switcher_kis
-aioswitcher==2.0.5
+aioswitcher==2.0.6
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -250,6 +253,9 @@ aiotractive==0.5.2
 
 # homeassistant.components.unifi
 aiounifi==26
+
+# homeassistant.components.watttime
+aiowatttime==0.1.1
 
 # homeassistant.components.yandex_transport
 aioymaps==1.1.0
@@ -273,7 +279,7 @@ ambee==0.3.0
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.9.2
+amcrest==1.9.3
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.60
@@ -311,10 +317,12 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
+# homeassistant.components.yeelight
+async-upnp-client==0.21.2
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-# homeassistant.components.yeelight
 async-upnp-client==0.21.3
 
 # homeassistant.components.supla
@@ -1313,7 +1321,7 @@ pyRFXtrx==0.27.0
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.19.0
+pyTibber==0.19.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1412,7 +1420,7 @@ pydaikin==2.4.4
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==83
+pydeconz==84
 
 # homeassistant.components.delijn
 pydelijn==0.6.1
@@ -2445,7 +2453,7 @@ yalesmartalarmclient==0.3.4
 yalexs==1.1.13
 
 # homeassistant.components.yeelight
-yeelight==0.7.4
+yeelight==0.7.5
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
@@ -2460,7 +2468,7 @@ youtube_dl==2021.04.26
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.4
+zeroconf==0.36.6
 
 # homeassistant.components.zha
 zha-quirks==0.0.61

@@ -562,15 +562,13 @@ def validate_statistics(
         state = hass.states.get(entity_id)
         assert state is not None
 
-        metadata = statistics.get_metadata(hass, entity_id)
-        if not metadata:
-            continue
-
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        metadata_unit = metadata["unit_of_measurement"]
 
         if device_class not in UNIT_CONVERSIONS:
-
+            metadata = statistics.get_metadata(hass, entity_id)
+            if not metadata:
+                continue
+            metadata_unit = metadata["unit_of_measurement"]
             if state_unit != metadata_unit:
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(

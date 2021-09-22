@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLUME_GALLONS,
@@ -199,7 +198,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     async_dispatcher_send(hass, SENSOR_UPDATE, *(device_id, sensor_data))
 
-    return web.Response(text=f"Saving status for {device_id}", status=HTTP_OK)
+    return web.Response(text=f"Saving status for {device_id}")
 
 
 def _device_id(data):

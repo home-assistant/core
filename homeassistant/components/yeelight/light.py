@@ -6,7 +6,7 @@ import math
 
 import voluptuous as vol
 import yeelight
-from yeelight import Bulb, BulbException, Flow, RGBTransition, SleepTransition, flows
+from yeelight import Bulb, Flow, RGBTransition, SleepTransition, flows
 from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 
 from homeassistant.components.light import (
@@ -50,6 +50,7 @@ from . import (
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
+    BULB_EXCEPTIONS,
     BULB_NETWORK_EXCEPTIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
@@ -250,7 +251,7 @@ def _async_cmd(func):
             raise HomeAssistantError(
                 f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
             ) from ex
-        except BulbException as ex:
+        except BULB_EXCEPTIONS as ex:
             # The bulb likely responded but had an error
             raise HomeAssistantError(
                 f"Error when calling {func.__name__} for bulb {self.device.name} at {self.device.host}: {ex}"
