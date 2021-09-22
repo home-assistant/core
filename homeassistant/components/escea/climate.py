@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
 
 from pescea import Controller
 
@@ -35,6 +34,7 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     ESCEA,
+    ICON,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ async def async_setup_entry(
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device."""
-        conf: ConfigType = hass.data.get(DATA_CONFIG)
+        conf = hass.data.get(DATA_CONFIG)
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
@@ -76,46 +76,44 @@ async def async_setup_entry(
     return True
 
 
-def _return_on_connection_error(ret: Any = None):
-    def wrap(func: Callable):
-        def wrapped_f(*args, **kwargs):
-            if not args[0].available:
-                return ret
-            try:
-                return func(*args, **kwargs)
-            except ConnectionError:
-                return ret
-
-        return wrapped_f
-
-    return wrap
-
-
 class ControllerDevice(ClimateEntity):
     """Representation of Escea Controller."""
+
+    _attr_hvac_modes = [
+        HVAC_MODE_HEAT,
+        HVAC_MODE_OFF,
+    ]
+    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_temperature_unit = TEMP_CELSIUS
+
+    _attr_precision = PRECISION_WHOLE
+    _attr_icon = ICON
+    _attr_should_poll = False
 
     def __init__(self, controller: Controller) -> None:
         """Initialise ControllerDevice."""
         self._controller = controller
 
-        self._attr_supported_features = SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
+        self._attr_min_temp = controller.min_temp
+        self._attr_max_temp = controller.max_temp
 
         self._fan_to_pescea = {}
         for fan in controller.Fan:
             self._fan_to_pescea[_ESCEA_FAN_TO_HA[fan]] = fan
-        self._available = True
+        self._attr_fan_modes = list(self._fan_to_pescea)
 
-        self._device_info = {
-            "identifiers": {(ESCEA, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Escea",
-        }
+        self._attr_unique_id = controller.device_uid
+        self._attr_name = f"Escea Fireplace {self._attr_unique_id}"
+
+        self._attr_available = True
 
     async def async_added_to_hass(self):
         """Call on adding to hass.
-        
+
         Registers for connect/disconnect/update events
         """
+
         @callback
         def controller_disconnected(ctrl: Controller, ex: Exception) -> None:
             """Disconnected from controller."""
@@ -155,15 +153,10 @@ class ControllerDevice(ClimateEntity):
             )
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
     @callback
     def set_available(self, available: bool, ex: Exception = None) -> None:
         """Set availability for the controller."""
-        if self.available == available:
+        if self._attr_available == available:
             return
 
         if available:
@@ -175,47 +168,17 @@ class ControllerDevice(ClimateEntity):
                 ex,
             )
 
-        self._available = available
+        self._attr_available = available
         self.async_write_ha_state()
 
     @property
     def device_info(self):
         """Return the device info for the Escea system."""
-        return self._device_info
-
-    @property
-    def unique_id(self):
-        """Return the ID of the controller device."""
-        return self._controller.device_uid
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Escea Fireplace {self._controller.device_uid}"
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._supported_features
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
-
+        return {
+            "identifiers": {(ESCEA, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Escea",
+        }
 
     @property
     def hvac_mode(self) -> str:
@@ -223,46 +186,19 @@ class ControllerDevice(ClimateEntity):
         return HVAC_MODE_HEAT if self._controller.is_on else HVAC_MODE_OFF
 
     @property
-    @_return_on_connection_error([])
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available operation modes."""
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
-
-    @property
-    @_return_on_connection_error()
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._controller.current_temp
 
     @property
-    @_return_on_connection_error()
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._controller.desired_temp
 
     @property
-    @_return_on_connection_error()
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return _ESCEA_FAN_TO_HA[self._controller.fan]
-
-    @property
-    @_return_on_connection_error()
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        return list(self._fan_to_pescea)
-
-    @property
-    @_return_on_connection_error(4.0)
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self._controller.min_temp
-
-    @property
-    @_return_on_connection_error(30.0)
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return self._controller.max_temp
 
     async def wrap_and_catch(self, coro: Coroutine):
         """Catch any connection errors and set unavailable."""

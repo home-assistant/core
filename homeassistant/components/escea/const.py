@@ -1,6 +1,7 @@
 """Constants used by the escea component."""
 
 ESCEA = "escea"
+ICON = "mdi:fire"
 
 DATA_DISCOVERY_SERVICE = "escea_discovery"
 DATA_CONFIG = "escea_config"
