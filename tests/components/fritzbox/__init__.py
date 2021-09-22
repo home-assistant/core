@@ -108,6 +108,7 @@ class FritzDeviceSwitchMock(FritzDeviceBaseMock):
     battery_level = None
     device_lock = "fake_locked_device"
     energy = 1234
+    voltage = 230
     fw_version = "1.2.3"
     has_alarm = False
     has_powermeter = True
