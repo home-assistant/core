@@ -47,14 +47,17 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
     """A lock implementation for Sure Petcare Entities."""
 
     def __init__(
-        self, _id: int, coordinator: SurePetcareDataCoordinator, lock_state: LockState
+        self,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
+        lock_state: LockState,
     ) -> None:
         """Initialize a Sure Petcare lock."""
         super().__init__(coordinator)
 
-        self._id = _id
+        self._id = surepetcare_id
 
-        surepy_entity: SurepyEntity = coordinator.data[_id]
+        surepy_entity: SurepyEntity = coordinator.data[surepetcare_id]
 
         if surepy_entity.name:
             _device_name = surepy_entity.name.capitalize()
@@ -63,10 +66,12 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
 
         self._lock_state = lock_state.name.lower()
         self._attr_name = f"{_device_name} {self._lock_state.replace('_', ' ')}"
-        self._attr_unique_id = f"{surepy_entity.household_id}-{_id}-{self._lock_state}"
+        self._attr_unique_id = (
+            f"{surepy_entity.household_id}-{surepetcare_id}-{self._lock_state}"
+        )
         self._available = False
 
-        self._update_attr(coordinator.data[_id])
+        self._update_attr(coordinator.data[surepetcare_id])
 
     @property
     def available(self) -> bool:
