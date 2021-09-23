@@ -4,7 +4,7 @@ import logging
 import soco
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
@@ -38,13 +38,14 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
             return self.async_abort(reason="not_sonos_device")
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
         host = discovery_info[CONF_HOST]
+        mdns_name = discovery_info[CONF_NAME]
         properties = discovery_info["properties"]
         boot_seqnum = properties.get("bootseq")
         model = properties.get("model")
         uid = hostname_to_uid(hostname)
         if discovery_manager := self.hass.data.get(DATA_SONOS_DISCOVERY_MANAGER):
             discovery_manager.async_discovered_player(
-                "Zeroconf", properties, host, uid, boot_seqnum, model
+                "Zeroconf", properties, host, uid, boot_seqnum, model, mdns_name
             )
         return await self.async_step_discovery(discovery_info)
 
