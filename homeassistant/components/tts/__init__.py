@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import functools as ft
 import hashlib
+from http import HTTPStatus
 import io
 import logging
 import mimetypes
@@ -29,7 +30,6 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
-    HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
     PLATFORM_FORMAT,
 )
@@ -598,10 +598,10 @@ class TextToSpeechUrlView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON specified", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
         if not data.get(ATTR_PLATFORM) and data.get(ATTR_MESSAGE):
             return self.json_message(
-                "Must specify platform and message", HTTP_BAD_REQUEST
+                "Must specify platform and message", HTTPStatus.BAD_REQUEST
             )
 
         p_type = data[ATTR_PLATFORM]
@@ -616,7 +616,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             )
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
-            return self.json({"error": err}, HTTP_BAD_REQUEST)
+            return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
         base = self.tts.base_url or get_url(self.tts.hass)
         url = base + path

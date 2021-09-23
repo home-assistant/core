@@ -1,6 +1,7 @@
 """Event parser and human readable log generator."""
 from contextlib import suppress
 from datetime import timedelta
+from http import HTTPStatus
 from itertools import groupby
 import json
 import re
@@ -32,7 +33,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
-    HTTP_BAD_REQUEST,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
 from homeassistant.exceptions import InvalidEntityFormatError
@@ -198,7 +198,7 @@ class LogbookView(HomeAssistantView):
             datetime = dt_util.parse_datetime(datetime)
 
             if datetime is None:
-                return self.json_message("Invalid datetime", HTTP_BAD_REQUEST)
+                return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
         else:
             datetime = dt_util.start_of_local_day()
 
@@ -226,7 +226,7 @@ class LogbookView(HomeAssistantView):
             start_day = datetime
             end_day = dt_util.parse_datetime(end_time)
             if end_day is None:
-                return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
+                return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
 
@@ -235,7 +235,7 @@ class LogbookView(HomeAssistantView):
 
         if entity_ids and context_id:
             return self.json_message(
-                "Can't combine entity with context_id", HTTP_BAD_REQUEST
+                "Can't combine entity with context_id", HTTPStatus.BAD_REQUEST
             )
 
         def json_events():
