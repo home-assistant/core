@@ -129,7 +129,8 @@
       "set_config_parameter": "Set value of config parameter {subtype}",
       "set_value": "Set value of a Z-Wave Value",
       "refresh_value": "Refresh the value(s) for {entity_name}",
-      "ping": "Ping device"
+      "ping": "Ping device",
+      "reset_meter": "Reset meters on {subtype}"
     }
   }
 }

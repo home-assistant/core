@@ -23,7 +23,7 @@ async def test_get_actions(
     lock_schlage_be469: Node,
     integration: ConfigEntry,
 ) -> None:
-    """Test we get the expected actions from a zwave_js."""
+    """Test we get the expected actions from a zwave_js node."""
     node = lock_schlage_be469
     dev_reg = device_registry.async_get(hass)
     device = dev_reg.async_get_device({get_device_id(client, node)})
@@ -69,6 +69,22 @@ async def test_get_actions(
     actions = await async_get_device_automations(hass, "action", device.id)
     for action in expected_actions:
         assert action in actions
+
+
+async def test_get_actions_meter(
+    hass: HomeAssistant,
+    client: Client,
+    aeon_smart_switch_6: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test we get the expected meter actions from a zwave_js node."""
+    node = aeon_smart_switch_6
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({get_device_id(client, node)})
+    assert device
+    actions = await async_get_device_automations(hass, "action", device.id)
+    filtered_actions = [action for action in actions if action["type"] == "reset_meter"]
+    assert len(filtered_actions) > 0
 
 
 async def test_action(hass: HomeAssistant) -> None:
@@ -386,6 +402,34 @@ async def test_get_action_capabilities_lock_triggers(
         {"type": "string", "name": "code_slot", "required": True},
         {"type": "string", "name": "usercode", "required": True},
     ]
+
+
+async def test_get_action_capabilities_meter_triggers(
+    hass: HomeAssistant,
+    client: Client,
+    aeon_smart_switch_6: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test we get the expected action capabilities for meter triggers."""
+    node = aeon_smart_switch_6
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({get_device_id(client, node)})
+    assert device
+    capabilities = await device_action.async_get_action_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device.id,
+            "entity_id": "sensor.meter",
+            "type": "reset_meter",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [{"type": "string", "name": "value", "optional": True}]
 
 
 async def test_failure_scenarios(
