@@ -118,19 +118,20 @@ class ComfoConnectFan(FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        self.set_percentage(percentage)
+        if percentage is None:
+            self.set_percentage(1)  # Set fan speed to low
+        else:
+            self.set_percentage(percentage)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan (to away)."""
         self.set_percentage(0)
 
-    def set_percentage(self, percentage: int | None) -> None:
+    def set_percentage(self, percentage: int) -> None:
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
 
-        if percentage is None:
-            cmd = CMD_FAN_MODE_LOW
-        elif percentage == 0:
+        if percentage == 0:
             cmd = CMD_FAN_MODE_AWAY
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
