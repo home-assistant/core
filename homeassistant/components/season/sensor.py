@@ -16,10 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Season"
 
 EQUATOR = "equator"
-
 NORTHERN = "northern"
-
 SOUTHERN = "southern"
+
 STATE_AUTUMN = "autumn"
 STATE_SPRING = "spring"
 STATE_SUMMER = "summer"
@@ -76,12 +75,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-def get_season(date, hemisphere, season_tracking_type):
+def get_season(self):
     """Calculate the current season."""
-
-    if hemisphere == "equator":
-        return None
-
+    
+    date = self.datetime
+    hemisphere = self.hemisphere
+    season_tracking_type = self.type
+    
     if season_tracking_type == TYPE_ASTRONOMICAL:
         spring_start = ephem.next_equinox(str(date.year)).datetime()
         summer_start = ephem.next_solstice(str(date.year)).datetime()
@@ -93,19 +93,49 @@ def get_season(date, hemisphere, season_tracking_type):
         autumn_start = spring_start.replace(month=9)
         winter_start = spring_start.replace(month=12)
 
-    if spring_start <= date < summer_start:
-        season = STATE_SPRING
-    elif summer_start <= date < autumn_start:
-        season = STATE_SUMMER
-    elif autumn_start <= date < winter_start:
-        season = STATE_AUTUMN
-    elif winter_start <= date or spring_start > date:
+    if hemisphere == EQUATOR:
+        season = None
+        days_left = None
+        days_in = None
+        next_date = None
+    elif date < spring_start or date >= winter_start:
         season = STATE_WINTER
-
+        if date.month >= 12:
+            spring_start = ephem.next_equinox(str(date.year + 1)).datetime()
+        else:
+            winter_start = ephem.next_solstice(summer_start.replace(year=date.year-1)).datetime()
+        days_left = spring_start.date() - date.date()
+        days_in = date.date() - winter_start.date()
+        next_date = spring_start
+    elif date < summer_start:
+        season = STATE_SPRING
+        days_left = summer_start.date() - date.date()
+        days_in = date.date() - spring_start.date()
+        next_date = summer_start
+    elif date < autumn_start:
+        season = STATE_SUMMER
+        days_left = autumn_start.date() - date.date()
+        days_in = date.date() - summer_start.date()
+        next_date = autumn_start
+    elif date < winter_start:
+        season = STATE_AUTUMN
+        days_left = winter_start.date() - date.date()
+        days_in = date.date() - autumn_start.date()
+        next_date = winter_start
+        
     # If user is located in the southern hemisphere swap the season
-    if hemisphere == NORTHERN:
-        return season
-    return HEMISPHERE_SEASON_SWAP.get(season)
+    if hemisphere == SOUTHERN:
+        season = HEMISPHERE_SEASON_SWAP.get(season)
+
+    self.season = season
+    if hemisphere == EQUATOR:
+        self.days_left = days_left
+        self.days_in = days_in
+        self.next_date = next_date
+    else:
+        self.days_left = days_left.days
+        self.days_in = abs(days_in.days) + 1
+        self.next_date = next_date.strftime("%Y %b %d  %H:%M:%S")
 
 
 class Season(SensorEntity):
@@ -119,6 +149,9 @@ class Season(SensorEntity):
         self.datetime = None
         self.type = season_tracking_type
         self.season = None
+        self.days_left = None
+        self.days_in = None
+        self.next_date = None
 
     @property
     def name(self):
@@ -140,7 +173,18 @@ class Season(SensorEntity):
         """Icon to use in the frontend, if any."""
         return SEASON_ICONS.get(self.season, "mdi:cloud")
 
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = {}
+        if self.hemisphere != EQUATOR:
+            attr["days_left"] = self.days_left
+            attr["days_in"] = self.days_in
+            attr["next_date"] = self.next_date
+        return attr
+
     def update(self):
         """Update season."""
         self.datetime = utcnow().replace(tzinfo=None)
-        self.season = get_season(self.datetime, self.hemisphere, self.type)
+        get_season(self)
+        
