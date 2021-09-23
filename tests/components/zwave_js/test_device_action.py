@@ -316,6 +316,7 @@ async def test_get_action_capabilities(
         {
             "name": "value",
             "required": True,
+            "type": "integer",
             "valueMin": 0,
             "valueMax": 124,
         }
