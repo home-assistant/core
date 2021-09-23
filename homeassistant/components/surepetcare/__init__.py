@@ -189,6 +189,8 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator):
         """Get the latest data from Sure Petcare."""
         try:
             return await self.surepy.get_entities(refresh=True)
+        except SurePetcareAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Invalid username/password") from err
         except SurePetcareError as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
