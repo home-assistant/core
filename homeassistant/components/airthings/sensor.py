@@ -36,50 +36,50 @@ from .const import DOMAIN
 class AirthingsSensorEntityDescription(SensorEntityDescription):
     """Describes Airthings sensor entity."""
 
-    sensor_type: str | None = None
+    sensor_name: str | None = None
 
 
 SENSORS: dict[str, AirthingsSensorEntityDescription] = {
     "radonShortTermAvg": AirthingsSensorEntityDescription(
         key="radonShortTermAvg",
         native_unit_of_measurement="Bq/m³",
-        sensor_type="Radon",
+        sensor_name="Radon",
     ),
     "temp": AirthingsSensorEntityDescription(
         key="temp",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        sensor_type="Temperature",
+        sensor_name="Temperature",
     ),
     "humidity": AirthingsSensorEntityDescription(
         key="humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        sensor_type="Humidity",
+        sensor_name="Humidity",
     ),
     "pressure": AirthingsSensorEntityDescription(
         key="pressure",
         device_class=DEVICE_CLASS_PRESSURE,
         native_unit_of_measurement=PRESSURE_MBAR,
-        sensor_type="Pressure",
+        sensor_name="Pressure",
     ),
     "battery": AirthingsSensorEntityDescription(
         key="battery",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        sensor_type="Battery",
+        sensor_name="Battery",
     ),
     "co2": AirthingsSensorEntityDescription(
         key="co2",
         device_class=DEVICE_CLASS_CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        sensor_type="CO2",
+        sensor_name="CO2",
     ),
     "voc": AirthingsSensorEntityDescription(
         key="voc",
         device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        sensor_type="VOC",
+        sensor_name="VOC",
     ),
 }
 
@@ -92,11 +92,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         AirthingsHeaterEnergySensor(
             coordinator,
             airthings_device,
-            SENSORS[sensor_type],
+            SENSORS[sensor_name],
         )
         for airthings_device in coordinator.data.values()
-        for sensor_type in airthings_device.sensor_types
-        if sensor_type in SENSORS
+        for sensor_name in airthings_device.sensor_names
+        if sensor_name in SENSORS
     ]
     async_add_entities(entities)
 
@@ -117,7 +117,7 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = entity_description
 
-        self._attr_name = f"{airthings_device.name} {entity_description.sensor_type}"
+        self._attr_name = f"{airthings_device.name} {entity_description.sensor_name}"
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
         self._attr_device_info = {
