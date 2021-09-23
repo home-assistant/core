@@ -92,11 +92,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         AirthingsHeaterEnergySensor(
             coordinator,
             airthings_device,
-            SENSORS[sensor_name],
+            SENSORS[sensor_types],
         )
         for airthings_device in coordinator.data.values()
-        for sensor_name in airthings_device.sensor_names
-        if sensor_name in SENSORS
+        for sensor_types in airthings_device.sensor_types
+        if sensor_types in SENSORS
     ]
     async_add_entities(entities)
 
