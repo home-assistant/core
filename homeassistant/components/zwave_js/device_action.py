@@ -109,7 +109,7 @@ ACTION_SCHEMA = vol.Any(
 
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions for Z-Wave JS devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     actions = []
 
     node = async_get_node_from_device_id(hass, device_id)
