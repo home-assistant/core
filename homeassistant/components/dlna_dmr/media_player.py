@@ -552,7 +552,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return STATE_OFF
         if self._device.transport_state is None:
             return STATE_ON
-        if self._device.transport_state == TransportState.PLAYING:
+        if self._device.transport_state in (
+            TransportState.PLAYING,
+            TransportState.TRANSITIONING,
+        ):
             return STATE_PLAYING
         if self._device.transport_state in (
             TransportState.PAUSED_PLAYBACK,
