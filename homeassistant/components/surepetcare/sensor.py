@@ -47,9 +47,11 @@ class SureBattery(SurePetcareEntity, SensorEntity):
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
-    def __init__(self, _id: int, coordinator: SurePetcareDataCoordinator) -> None:
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
         """Initialize a Sure Petcare battery sensor."""
-        super().__init__(_id, coordinator)
+        super().__init__(surepetcare_id, coordinator)
 
         self._attr_name = f"{self._device_name} Battery Level"
         self._attr_unique_id = f"{self._device_id}-battery"

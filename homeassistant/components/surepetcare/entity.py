@@ -16,23 +16,23 @@ class SurePetcareEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        _id: int,
+        surepetcare_id: int,
         coordinator: SurePetcareDataCoordinator,
     ) -> None:
         """Initialize a Sure Petcare entity."""
         super().__init__(coordinator)
 
-        self._id = _id
+        self._id = surepetcare_id
 
-        surepy_entity: SurepyEntity = coordinator.data[_id]
+        surepy_entity: SurepyEntity = coordinator.data[surepetcare_id]
 
         if surepy_entity.name:
             self._device_name = surepy_entity.name.capitalize()
         else:
             self._device_name = surepy_entity.type.name.capitalize().replace("_", " ")
 
-        self._device_id = f"{surepy_entity.household_id}-{_id}"
-        self._update_attr(coordinator.data[_id])
+        self._device_id = f"{surepy_entity.household_id}-{surepetcare_id}"
+        self._update_attr(coordinator.data[surepetcare_id])
 
     @abstractmethod
     @callback
