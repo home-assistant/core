@@ -1,10 +1,9 @@
 """Test the Nanoleaf config flow."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from pynanoleaf import InvalidToken, NotAuthorizingNewTokens, Unavailable
-from pynanoleaf.pynanoleaf import NanoleafError
+from aionanoleaf import InvalidToken, NanoleafException, Unauthorized, Unavailable
 import pytest
 
 from homeassistant import config_entries
@@ -23,6 +22,21 @@ TEST_DEVICE_ID = "5E:2E:EA:XX:XX:XX"
 TEST_OTHER_DEVICE_ID = "5E:2E:EA:YY:YY:YY"
 
 
+def _mock_nanoleaf(
+    host: str = TEST_HOST,
+    auth_token: str = TEST_TOKEN,
+    authorize_error: Exception | None = None,
+    get_info_error: Exception | None = None,
+):
+    nanoleaf = MagicMock()
+    nanoleaf.name = TEST_NAME
+    nanoleaf.host = host
+    nanoleaf.auth_token = auth_token
+    nanoleaf.authorize = AsyncMock(side_effect=authorize_error)
+    nanoleaf.get_info = AsyncMock(side_effect=get_info_error)
+    return nanoleaf
+
+
 async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None:
     """Test we handle Unavailable in user and link step."""
     result = await hass.config_entries.flow.async_init(
@@ -30,7 +44,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
     )
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Unavailable("message"),
+        side_effect=Unavailable,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,7 +72,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Unavailable("message"),
+        side_effect=Unavailable,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,8 +85,8 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
 @pytest.mark.parametrize(
     "error, reason",
     [
-        (Unavailable("message"), "cannot_connect"),
-        (InvalidToken("message"), "invalid_token"),
+        (Unavailable, "cannot_connect"),
+        (InvalidToken, "invalid_token"),
         (Exception, "unknown"),
     ],
 )
@@ -85,7 +99,6 @@ async def test_user_error_setup_finish(
     )
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -98,9 +111,8 @@ async def test_user_error_setup_finish(
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        return_value=None,
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
         side_effect=error,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -117,19 +129,10 @@ async def test_user_not_authorizing_new_tokens_user_step_link_step(
     """Test we handle NotAuthorizingNewTokens in user step and link step."""
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(authorize_error=Unauthorized()),
     ) as mock_nanoleaf, patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
-        return_value={"name": TEST_NAME},
-    ), patch(
         "homeassistant.components.nanoleaf.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        nanoleaf = mock_nanoleaf.return_value
-        nanoleaf.authorize.side_effect = NotAuthorizingNewTokens(
-            "Not authorizing new tokens"
-        )
-        nanoleaf.host = TEST_HOST
-        nanoleaf.token = TEST_TOKEN
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -160,8 +163,7 @@ async def test_user_not_authorizing_new_tokens_user_step_link_step(
         assert result4["errors"] == {"base": "not_allowing_new_tokens"}
         assert result4["step_id"] == "link"
 
-        nanoleaf.authorize.side_effect = None
-        nanoleaf.authorize.return_value = None
+        mock_nanoleaf.return_value.authorize.side_effect = None
 
         result5 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -183,8 +185,8 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Exception,
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(authorize_error=Exception()),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -198,36 +200,29 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
     assert not result2["last_step"]
 
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        return_value=None,
-    ):
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(),
+    ) as mock_nanoleaf:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: TEST_HOST,
             },
         )
-    assert result3["step_id"] == "link"
+        assert result3["step_id"] == "link"
 
-    with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Exception,
-    ):
+        mock_nanoleaf.return_value.authorize.side_effect = Exception()
+
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
         )
-    assert result4["type"] == "form"
-    assert result4["step_id"] == "link"
-    assert result4["errors"] == {"base": "unknown"}
+        assert result4["type"] == "form"
+        assert result4["step_id"] == "link"
+        assert result4["errors"] == {"base": "unknown"}
 
-    with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
-        side_effect=Exception,
-    ):
+        mock_nanoleaf.return_value.authorize.side_effect = None
+        mock_nanoleaf.return_value.get_info.side_effect = Exception()
         result5 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -249,8 +244,7 @@ async def test_discovery_link_unavailable(
 ) -> None:
     """Test discovery and abort if device is unavailable."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
-        return_value={"name": TEST_NAME},
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.load_json",
         return_value={},
@@ -278,7 +272,7 @@ async def test_discovery_link_unavailable(
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Unavailable("message"),
+        side_effect=Unavailable,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == "abort"
@@ -287,10 +281,6 @@ async def test_discovery_link_unavailable(
 
 async def test_reauth(hass: HomeAssistant) -> None:
     """Test Nanoleaf reauth flow."""
-    nanoleaf = MagicMock()
-    nanoleaf.host = TEST_HOST
-    nanoleaf.token = TEST_TOKEN
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_NAME,
@@ -300,7 +290,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
-        return_value=nanoleaf,
+        return_value=_mock_nanoleaf(),
     ), patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
@@ -331,8 +321,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
 async def test_import_config(hass: HomeAssistant) -> None:
     """Test configuration import."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
-        return_value={"name": TEST_NAME},
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(TEST_HOST, TEST_TOKEN),
     ), patch(
         "homeassistant.components.nanoleaf.async_setup_entry",
         return_value=True,
@@ -355,17 +345,17 @@ async def test_import_config(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "error, reason",
     [
-        (Unavailable("message"), "cannot_connect"),
-        (InvalidToken("message"), "invalid_token"),
+        (Unavailable, "cannot_connect"),
+        (InvalidToken, "invalid_token"),
         (Exception, "unknown"),
     ],
 )
 async def test_import_config_error(
-    hass: HomeAssistant, error: NanoleafError, reason: str
+    hass: HomeAssistant, error: NanoleafException, reason: str
 ) -> None:
     """Test configuration import with errors in setup_finish."""
     with patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -432,8 +422,8 @@ async def test_import_discovery_integration(
         "homeassistant.components.nanoleaf.config_flow.load_json",
         return_value=dict(nanoleaf_conf_file),
     ), patch(
-        "homeassistant.components.nanoleaf.config_flow.pynanoleaf_get_info",
-        return_value={"name": TEST_NAME},
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(TEST_HOST, TEST_TOKEN),
     ), patch(
         "homeassistant.components.nanoleaf.config_flow.save_json",
         return_value=None,
