@@ -36,6 +36,8 @@ omit =
     homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airnow/__init__.py
     homeassistant/components/airnow/sensor.py
+    homeassistant/components/airthings/__init__.py
+    homeassistant/components/airthings/sensor.py
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/const.py
@@ -1005,6 +1007,7 @@ omit =
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/binary_sensor.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
@@ -1015,6 +1018,7 @@ omit =
     homeassistant/components/switchbot/const.py
     homeassistant/components/switchbot/entity.py
     homeassistant/components/switchbot/cover.py
+    homeassistant/components/switchbot/sensor.py
     homeassistant/components/switchbot/coordinator.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
