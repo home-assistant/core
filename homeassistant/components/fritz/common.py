@@ -1,7 +1,6 @@
 """Support for AVM FRITZ!Box classes."""
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
@@ -26,9 +25,10 @@ from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceEntry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
@@ -314,65 +314,73 @@ class FritzBoxTools:
                 device_hosts_list: list = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
                 )
-                ha_hosts_list: ValuesView[
-                    FritzDevice
-                ] = await self.hass.async_add_executor_job(
-                    lambda: self.devices.values()  # pylint: disable=unnecessary-lambda
-                )
 
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError("Service or parameter unknown") from ex
         except FritzConnectionException as ex:
             raise HomeAssistantError("Service not supported") from ex
 
+        entity_reg: EntityRegistry = (
+            await self.hass.helpers.entity_registry.async_get_registry()
+        )
+
+        ha_device_list: list[
+            RegistryEntry
+        ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
+            entity_reg, config_entry.entry_id
+        )
+        entity_removed: bool = False
+
         if mode == "stale":
-            dev_found: bool = False
-            dev_obj = None
-            for ha_host in ha_hosts_list:
-                for device in device_hosts_list:
-                    if (
-                        ha_host.hostname == device["name"]
-                        and ha_host.mac_address == device["mac"]
-                    ):
+            for ha_host in ha_device_list:
+                if not _cleanup_entity_filter(ha_host):
+                    continue
+                dev_found: bool = False
+                for device_host in device_hosts_list:
+                    if ha_host.unique_id.split("_")[0] == device_host["mac"]:
                         dev_found = True
-                        dev_obj = device
                         break
-                if not dev_found and dev_obj:
-                    _LOGGER.warning(
-                        "Device %s [%s] deleted",
-                        ha_host.hostname,
-                        ha_host.mac_address,
+                if not dev_found:
+                    _LOGGER.info(
+                        "Removing entity: %s", ha_host.name or ha_host.original_name
                     )
-                    entity_reg = (
-                        await self.hass.helpers.entity_registry.async_get_registry()
-                    )
-                    entity_reg.async_remove(dev_obj.entity_id)
-                else:
-                    _LOGGER.debug(
-                        "Device %s [%s] present on Fritz!Box device, nothing to do",
-                        ha_host.hostname,
-                        ha_host.mac_address,
-                    )
+                    entity_reg.async_remove(ha_host.entity_id)
+                    entity_removed = True
+
         elif mode == "disabled":
             if not config_entry.pref_disable_new_entities:
                 _LOGGER.info(
                     "System option 'Enable newly added entities' is on, nothing to do"
                 )
+                return
 
-            entity_reg = await self.hass.helpers.entity_registry.async_get_registry()
-            device_list: list[
-                DeviceEntry
-            ] = self.hass.helpers.entity_registry.async_entries_for_config_entry(
-                entity_reg, config_entry.entry_id
-            )
+            for ha_host in ha_device_list:
+                if ha_host.disabled and _cleanup_entity_filter(ha_host):
+                    _LOGGER.info("Removing entity: %s", ha_host.entity_id)
+                    entity_reg.async_remove(ha_host.entity_id)
+                    entity_removed = True
 
-            for device in device_list:
-                if (device.domain == DEVICE_TRACKER_DOMAIN and device.disabled) or (
-                    device.domain == DEVICE_SWITCH_DOMAIN
-                    and device.entity_id.endwith("internet")
-                ):
-                    _LOGGER.warning("Removing entity: %s", device.entity_id)
-                    entity_reg.async_remove(device.entity_id)
+        if entity_removed:
+            await self._remove_empty_device(entity_reg)
+
+    async def _remove_empty_device(self, entity_reg: EntityRegistry) -> None:
+        """Remove devices with no entities."""
+        device_reg: DeviceRegistry = (
+            await self.hass.helpers.device_registry.async_get_registry()
+        )
+        for device_entry in dict(device_reg.devices.items()).values():
+            if (
+                len(
+                    self.hass.helpers.entity_registry.async_entries_for_device(
+                        entity_reg,
+                        device_entry.id,
+                        include_disabled_entities=True,
+                    )
+                )
+                == 0
+            ):
+                _LOGGER.info("Removing device: %s", device_entry.name)
+                device_reg.async_remove_device(device_entry.id)
 
 
 @dataclass
