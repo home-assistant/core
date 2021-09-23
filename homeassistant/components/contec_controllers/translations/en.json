@@ -11,9 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "ip": "Controllers IP",
-                    "number_of_controllers": "Number of controllers",
-                    "port": "Controllers port"
+                    "controllers_ip": "IP Address",
+                    "controllers_port": "Port",
+                    "number_of_controllers": "Number of controllers"
                 }
             }
         }
