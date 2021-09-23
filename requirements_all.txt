@@ -2312,7 +2312,7 @@ tmb==0.0.4
 todoist-python==8.0.0
 
 # homeassistant.components.toon
-toonapi==0.2.0
+toonapi==0.2.1
 
 # homeassistant.components.totalconnect
 total_connect_client==0.57
