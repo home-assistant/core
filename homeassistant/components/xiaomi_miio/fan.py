@@ -990,7 +990,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
             self.async_write_ha_state()
 
 
-class XiaomiFanZA5(XiaomiGenericFan):
+class XiaomiFanZA5(XiaomiFanMiot):
     """Representation of a Xiaomi Fan ZA5."""
 
     @property
