@@ -40,12 +40,18 @@ DEFAULT_NAME = "ted"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
+VALID_MODES = [
+    "base",
+    "advanced",
+    "extended",
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODE, default="base"): cv.string,
+        vol.Optional(CONF_MODE, default=VALID_MODES[0]): vol.In(VALID_MODES),
     }
 )
 
@@ -58,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mode = config.get(CONF_MODE)
     url = f"http://{host}:{port}/api/LiveData.xml"
 
-    lvl = {"base": 1, "advanced": 2, "extended": 3}
+    lvl = {VALID_MODES[0]: 1, VALID_MODES[1]: 2, VALID_MODES[2]: 3}
 
     gateway = Ted5000Gateway(url)
 
