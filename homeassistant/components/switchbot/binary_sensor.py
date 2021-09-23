@@ -33,6 +33,9 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
+    if not coordinator.data[entry.unique_id].get("data"):
+        return
+
     async_add_entities(
         [
             SwitchBotBinarySensor(
