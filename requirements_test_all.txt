@@ -1354,7 +1354,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.4
+watchdog==2.1.5
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
