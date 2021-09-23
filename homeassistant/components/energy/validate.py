@@ -220,9 +220,7 @@ def _async_validate_cost_stat(
     ]
     if state_class not in supported_state_classes:
         result.append(
-            ValidationIssue(
-                "entity_unexpected_state_class", stat_id, state_class
-            )
+            ValidationIssue("entity_unexpected_state_class", stat_id, state_class)
         )
 
     if (
@@ -230,7 +228,7 @@ def _async_validate_cost_stat(
         and sensor.ATTR_LAST_RESET not in state.attributes
     ):
         result.append(
-            ValidationIssue("entity_state_class_measurement_no_last_reset", entity_id)
+            ValidationIssue("entity_state_class_measurement_no_last_reset", stat_id)
         )
 
 
