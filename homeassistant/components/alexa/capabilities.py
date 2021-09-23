@@ -1359,7 +1359,8 @@ class AlexaModeController(AlexaCapability):
                 self._resource.add_mode(
                     f"{fan.ATTR_PRESET_MODE}.{preset_mode}", [preset_mode]
                 )
-            # Avoid usecases with only one preset_mode
+            # Fans with a single preset_mode completely break Alexa discovery, add a
+            # fake preset (see issue #53832).
             if len(preset_modes) == 1:
                 self._resource.add_mode(
                     f"{fan.ATTR_PRESET_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
