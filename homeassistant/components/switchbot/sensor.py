@@ -49,12 +49,9 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    sensors = []
-
     if not coordinator.data[entry.unique_id].get("data"):
         return
-        
-        
+
     async_add_entities(
         [
             SwitchBotSensor(
@@ -68,7 +65,6 @@ async def async_setup_entry(
             if sensor in SENSOR_TYPES
         ]
     )
-
 
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
