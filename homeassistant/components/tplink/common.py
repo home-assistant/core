@@ -70,17 +70,17 @@ async def async_discover_devices(
     switches = []
 
     def process_devices() -> None:
-        for dev in devices.values():
+        for device in devices.values():
             # If this device already exists, ignore dynamic setup.
-            if existing_devices.has_device_with_host(dev.host):
+            if existing_devices.has_device_with_host(device.host):
                 continue
 
-            if dev.is_strip or dev.is_plug:
-                switches.append(dev)
-            if dev.is_bulb or dev.is_light_strip or dev.is_dimmer:
-                lights.append(dev)
+            if device.is_strip or device.is_plug:
+                switches.append(device)
+            if device.is_bulb or device.is_light_strip or device.is_dimmer:
+                lights.append(device)
             else:
-                _LOGGER.error("Unknown smart device type: %s", type(dev))
+                _LOGGER.error("Unknown smart device type: %s", type(device))
 
     devices: dict[str, SmartDevice] = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
@@ -124,13 +124,13 @@ async def get_static_devices(config_data) -> SmartDevices:
         for entry in config_data[type_]:
             host = entry["host"]
             try:
-                dev: SmartDevice = await Discover.discover_single(host)
-                if dev.is_bulb or dev.is_light_strip or dev.is_dimmer:
-                    _LOGGER.debug("Found static light: %s", dev)
-                    lights.append(dev)
-                elif dev.is_plug or dev.is_strip:
-                    _LOGGER.debug("Found static switch: %s", dev)
-                    switches.append(dev)
+                device: SmartDevice = await Discover.discover_single(host)
+                if device.is_bulb or device.is_light_strip or device.is_dimmer:
+                    _LOGGER.debug("Found static light: %s", device)
+                    lights.append(device)
+                elif device.is_plug or device.is_strip:
+                    _LOGGER.debug("Found static switch: %s", device)
+                    switches.append(device)
             except SmartDeviceException as sde:
                 _LOGGER.error(
                     "Failed to setup device %s due to %s; not retrying", host, sde

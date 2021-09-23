@@ -155,20 +155,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # prepare DataUpdateCoordinators
     hass_data[COORDINATORS]: dict[str, TPLinkDataUpdateCoordinator] = {}
-    for dev in switches + lights:
+    for device in switches + lights:
         try:
-            _ = await dev.update()
+            await device.update()
         except SmartDeviceException:
             _LOGGER.warning(
                 "Device at '%s' not reachable during setup, will retry later",
-                dev.host,
+                device.host,
             )
-            unavailable_devices.append(dev)
+            unavailable_devices.append(device)
             continue
 
         hass_data[COORDINATORS][
-            dev.device_id
-        ] = coordinator = TPLinkDataUpdateCoordinator(hass, dev)
+            device.device_id
+        ] = coordinator = TPLinkDataUpdateCoordinator(hass, device)
         await coordinator.async_config_entry_first_refresh()
 
     if unavailable_devices:
@@ -228,9 +228,9 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
                 data[CONF_EMETER_PARAMS] = {
                     # Power is always available, also on bulbs
                     ATTR_CURRENT_POWER_W: emeter_readings["power"],
-                    ATTR_TOTAL_ENERGY_KWH: emeter_readings.get("total", None),
-                    ATTR_VOLTAGE: emeter_readings.get("voltage", None),
-                    ATTR_CURRENT_A: emeter_readings.get("current", None),
+                    ATTR_TOTAL_ENERGY_KWH: emeter_readings.get("total"),
+                    ATTR_VOLTAGE: emeter_readings.get("voltage"),
+                    ATTR_CURRENT_A: emeter_readings.get("current"),
                 }
                 # TODO: check if the property getter can be used here
                 emeter_statics = await self.device.get_emeter_daily()

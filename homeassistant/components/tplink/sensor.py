@@ -93,13 +93,13 @@ async def async_setup_entry(
     ]
     switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
     lights: list[SmartBulb] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-    for dev in switches + lights:
-        coordinator: TPLinkDataUpdateCoordinator = coordinators[dev.device_id]
-        if not dev.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
+    for device in switches + lights:
+        coordinator: TPLinkDataUpdateCoordinator = coordinators[device.device_id]
+        if not device.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
             continue
         for description in ENERGY_SENSORS:
             if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
-                entities.append(SmartPlugSensor(dev, coordinator, description))
+                entities.append(SmartPlugSensor(device, coordinator, description))
 
     async_add_entities(entities)
 
