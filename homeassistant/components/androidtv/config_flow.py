@@ -186,17 +186,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def _save_config(self, data):
         """Save the updated options."""
-        for param in (
-            CONF_TURN_OFF_COMMAND,
-            CONF_TURN_ON_COMMAND,
-            CONF_STATE_DETECTION_RULES,
-        ):
-            value = data.get(param)
-            if value is not None:
-                value = value.strip()
-                if not value:
-                    data.pop(param)
-
         state_det_rules = data.get(CONF_STATE_DETECTION_RULES)
         if state_det_rules:
             json_rules = validate_state_det_rules(state_det_rules)
@@ -245,17 +234,27 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
                 vol.Optional(
                     CONF_TURN_OFF_COMMAND,
-                    default=self.config_entry.options.get(CONF_TURN_OFF_COMMAND, ""),
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_TURN_OFF_COMMAND, ""
+                        )
+                    },
                 ): str,
                 vol.Optional(
                     CONF_TURN_ON_COMMAND,
-                    default=self.config_entry.options.get(CONF_TURN_ON_COMMAND, ""),
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_TURN_ON_COMMAND, ""
+                        )
+                    },
                 ): str,
                 vol.Optional(
                     CONF_STATE_DETECTION_RULES,
-                    default=self.config_entry.options.get(
-                        CONF_STATE_DETECTION_RULES, ""
-                    ),
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_STATE_DETECTION_RULES, ""
+                        )
+                    },
                 ): str,
             }
         )
@@ -275,7 +274,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 if user_input.get(CONF_APP_DELETE, False):
                     self._apps.pop(app_id)
                 else:
-                    self._apps[app_id] = user_input.get(CONF_APP_NAME, "").strip()
+                    self._apps[app_id] = user_input.get(CONF_APP_NAME, "")
 
         return await self.async_step_init()
 
@@ -284,7 +283,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Return configuration form for apps."""
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_APP_NAME, default=self._apps.get(app_id, "")): str,
+                vol.Optional(
+                    CONF_APP_NAME,
+                    description={"suggested_value": self._apps.get(app_id, "")},
+                ): str,
             }
         )
         if app_id == APPS_NEW_ID:
