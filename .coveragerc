@@ -1006,6 +1006,7 @@ omit =
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/surepetcare/__init__.py
+    homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/binary_sensor.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
