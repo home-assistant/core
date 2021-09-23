@@ -18,6 +18,7 @@ from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_CONSIDER_HOME,
 )
+from homeassistant.components.device_tracker.legacy import DeviceScanner
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
@@ -52,7 +53,9 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> DeviceScanner | None:
     """Validate the configuration and return a Nmap scanner."""
     validated_config = config[DEVICE_TRACKER_DOMAIN]
 
@@ -87,6 +90,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         "Your Nmap Tracker configuration has been imported into the UI, "
         "please remove it from configuration.yaml. "
     )
+    return None
 
 
 async def async_setup_entry(

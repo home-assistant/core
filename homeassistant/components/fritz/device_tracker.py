@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.legacy import DeviceScanner
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -48,7 +49,9 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> DeviceScanner | None:
     """Import legacy FRITZ!Box configuration."""
     _LOGGER.debug("Import legacy FRITZ!Box configuration from YAML")
 
@@ -65,6 +68,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         "please remove it from configuration.yaml. "
         "Loading Fritz via scanner setup is now deprecated"
     )
+    return None
 
 
 async def async_setup_entry(
