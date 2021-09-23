@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from kasa import SmartBulb, SmartDevice, SmartPlug
+from kasa import SmartDevice
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -88,14 +88,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     entities: list[SmartPlugSensor] = []
-    coordinators: list[TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
+    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
-    switches: list[SmartPlug] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    lights: list[SmartBulb] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
+    switches: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
+    lights: list[SmartDevice] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
     for device in switches + lights:
         coordinator: TPLinkDataUpdateCoordinator = coordinators[device.device_id]
-        if not device.has_emeter and coordinator.data.get(CONF_EMETER_PARAMS) is None:
+        if not device.has_emeter:
             continue
         for description in ENERGY_SENSORS:
             if coordinator.data[CONF_EMETER_PARAMS].get(description.key) is not None:
