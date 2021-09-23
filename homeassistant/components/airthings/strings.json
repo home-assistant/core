@@ -5,7 +5,7 @@
         "data": {
           "id": "ID",
           "secret": "Secret",
-          "description": "Login at https://dashboard.airthings.com/integrations/api-integration to find your credentials"
+          "description": "Login at {url} to find your credentials"
         }
       }
     },
