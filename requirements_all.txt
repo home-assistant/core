@@ -1444,6 +1444,9 @@ pyeconet==0.1.14
 # homeassistant.components.edimax
 pyedimax==0.2.1
 
+# homeassistant.components.efergy
+pyefergy==0.0.1
+
 # homeassistant.components.eight_sleep
 pyeight==0.1.9
 

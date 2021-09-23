@@ -832,6 +832,9 @@ pydispatcher==2.0.5
 # homeassistant.components.econet
 pyeconet==0.1.14
 
+# homeassistant.components.efergy
+pyefergy==0.0.1
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
@@ -1075,6 +1078,9 @@ pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.3
+
+# homeassistant.components.tautulli
+pytautulli==21.8.1
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11
