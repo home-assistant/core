@@ -945,7 +945,6 @@ class XiaomiFanMiot(XiaomiGenericFan):
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        self._available = True
         self._state = self.coordinator.data.is_on
         self._preset_mode = self.coordinator.data.mode.name
         self._oscillating = self.coordinator.data.oscillate
