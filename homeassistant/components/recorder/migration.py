@@ -548,8 +548,11 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
             Statistics.__table__.create(engine)
 
         # Block 5-minute statistics for one hour from the last run, or it will overlap
-        # with existing hourly statistics.
-        if last_run_string := session.query(func.max(StatisticsRuns.start)).scalar():
+        # with existing hourly statistics. Don't block on a database with no existing
+        # statistics.
+        if session.query(Statistics.id).count() and (
+            last_run_string := session.query(func.max(StatisticsRuns.start)).scalar()
+        ):
             last_run_start_time = process_timestamp(last_run_string)
             if last_run_start_time:
                 fake_start_time = last_run_start_time + timedelta(minutes=5)
