@@ -39,12 +39,17 @@ def mock_pymodbus():
     """Mock pymodbus."""
     mock_pb = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        return_value=mock_pb,
+        autospec=True,
     ), mock.patch(
         "homeassistant.components.modbus.modbus.ModbusSerialClient",
         return_value=mock_pb,
+        autospec=True,
     ), mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_pb
+        "homeassistant.components.modbus.modbus.ModbusUdpClient",
+        return_value=mock_pb,
+        autospec=True,
     ):
         yield mock_pb
 
@@ -96,10 +101,16 @@ async def mock_modbus(
     }
     mock_pb = mock.MagicMock()
     with mock.patch(
-        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
+        "homeassistant.components.modbus.modbus.ModbusTcpClient",
+        return_value=mock_pb,
+        autospec=True,
     ):
         now = dt_util.utcnow()
-        with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+        with mock.patch(
+            "homeassistant.helpers.event.dt_util.utcnow",
+            return_value=now,
+            autospec=True,
+        ):
             result = await async_setup_component(hass, DOMAIN, config)
             assert result or not check_config_loaded
         await hass.async_block_till_done()
@@ -131,7 +142,9 @@ async def mock_pymodbus_return(hass, register_words, mock_modbus):
 async def mock_do_cycle(hass, mock_pymodbus_exception, mock_pymodbus_return):
     """Trigger update call with time_changed event."""
     now = dt_util.utcnow() + timedelta(seconds=90)
-    with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow", return_value=now, autospec=True
+    ):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 

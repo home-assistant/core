@@ -1,8 +1,6 @@
 """Tests for Broadlink heartbeats."""
 from unittest.mock import call, patch
 
-import pytest
-
 from homeassistant.components.broadlink.heartbeat import BroadlinkHeartbeat
 from homeassistant.util import dt
 
@@ -11,13 +9,6 @@ from . import get_device
 from tests.common import async_fire_time_changed
 
 DEVICE_PING = "homeassistant.components.broadlink.heartbeat.blk.ping"
-
-
-@pytest.fixture(autouse=True)
-def mock_heartbeat():
-    """Mock broadlink heartbeat."""
-    with patch("homeassistant.components.broadlink.heartbeat.blk.ping"):
-        yield
 
 
 async def test_heartbeat_trigger_startup(hass):

@@ -32,8 +32,8 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
 )
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
-from zwave_js_server.util.command_class import (
-    get_meter_scale_type,
+from zwave_js_server.util.command_class.meter import get_meter_scale_type
+from zwave_js_server.util.command_class.multilevel_sensor import (
     get_multilevel_sensor_type,
 )
 

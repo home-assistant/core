@@ -756,10 +756,7 @@ async def test_usb_discovery_already_running(hass, supervisor, addon_running):
 
 @pytest.mark.parametrize(
     "discovery_info",
-    [
-        NORTEK_ZIGBEE_DISCOVERY_INFO,
-        CP2652_ZIGBEE_DISCOVERY_INFO,
-    ],
+    [CP2652_ZIGBEE_DISCOVERY_INFO],
 )
 async def test_abort_usb_discovery_aborts_specific_devices(
     hass, supervisor, addon_options, discovery_info

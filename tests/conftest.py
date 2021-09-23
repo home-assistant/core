@@ -489,6 +489,16 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
 
 
 @pytest.fixture
+def mock_get_source_ip():
+    """Mock network util's async_get_source_ip."""
+    with patch(
+        "homeassistant.components.network.util.async_get_source_ip",
+        return_value="10.10.10.10",
+    ):
+        yield
+
+
+@pytest.fixture
 def mock_zeroconf():
     """Mock zeroconf."""
     with patch("homeassistant.components.zeroconf.HaZeroconf", autospec=True), patch(
@@ -626,9 +636,9 @@ def enable_statistics():
 def hass_recorder(enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
-    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     with patch(
-        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
         autospec=True,
     ):

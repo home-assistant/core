@@ -879,7 +879,7 @@ def get_device_list(api, config):
     if not login_response["success"] and login_response["errCode"] == "102":
         _LOGGER.error("Username, Password or URL may be incorrect!")
         return
-    user_id = login_response["userId"]
+    user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
         plant_info = api.plant_list(user_id)
         plant_id = plant_info["data"][0]["plantId"]

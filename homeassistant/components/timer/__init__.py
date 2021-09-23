@@ -271,7 +271,7 @@ class Timer(RestoreEntity):
             newduration = duration
 
         event = EVENT_TIMER_STARTED
-        if self._state == STATUS_ACTIVE or self._state == STATUS_PAUSED:
+        if self._state in (STATUS_ACTIVE, STATUS_PAUSED):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE

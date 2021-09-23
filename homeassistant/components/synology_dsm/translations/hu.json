@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "reauth_successful": "Az ism\u00e9telt hiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az ism\u00e9telt hiteles\u00edt\u00e9s sikeres volt",
+            "reconfigure_successful": "Az \u00fajrakonfigur\u00e1l\u00e1s sikeres"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

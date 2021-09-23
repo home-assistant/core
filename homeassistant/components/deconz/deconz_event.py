@@ -47,7 +47,7 @@ async def async_setup_events(gateway) -> None:
 
             if (
                 sensor.type not in Switch.ZHATYPE + AncillaryControl.ZHATYPE
-                or sensor.uniqueid in {event.unique_id for event in gateway.events}
+                or sensor.unique_id in {event.unique_id for event in gateway.events}
             ):
                 continue
 

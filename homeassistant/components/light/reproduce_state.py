@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Iterable
 import logging
 from types import MappingProxyType
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -71,14 +71,22 @@ COLOR_GROUP = [
     ATTR_KELVIN,
 ]
 
+
+class ColorModeAttr(NamedTuple):
+    """Map service data parameter to state attribute for a color mode."""
+
+    parameter: str
+    state_attr: str
+
+
 COLOR_MODE_TO_ATTRIBUTE = {
-    COLOR_MODE_COLOR_TEMP: (ATTR_COLOR_TEMP, ATTR_COLOR_TEMP),
-    COLOR_MODE_HS: (ATTR_HS_COLOR, ATTR_HS_COLOR),
-    COLOR_MODE_RGB: (ATTR_RGB_COLOR, ATTR_RGB_COLOR),
-    COLOR_MODE_RGBW: (ATTR_RGBW_COLOR, ATTR_RGBW_COLOR),
-    COLOR_MODE_RGBWW: (ATTR_RGBWW_COLOR, ATTR_RGBWW_COLOR),
-    COLOR_MODE_WHITE: (ATTR_WHITE, ATTR_BRIGHTNESS),
-    COLOR_MODE_XY: (ATTR_XY_COLOR, ATTR_XY_COLOR),
+    COLOR_MODE_COLOR_TEMP: ColorModeAttr(ATTR_COLOR_TEMP, ATTR_COLOR_TEMP),
+    COLOR_MODE_HS: ColorModeAttr(ATTR_HS_COLOR, ATTR_HS_COLOR),
+    COLOR_MODE_RGB: ColorModeAttr(ATTR_RGB_COLOR, ATTR_RGB_COLOR),
+    COLOR_MODE_RGBW: ColorModeAttr(ATTR_RGBW_COLOR, ATTR_RGBW_COLOR),
+    COLOR_MODE_RGBWW: ColorModeAttr(ATTR_RGBWW_COLOR, ATTR_RGBWW_COLOR),
+    COLOR_MODE_WHITE: ColorModeAttr(ATTR_WHITE, ATTR_BRIGHTNESS),
+    COLOR_MODE_XY: ColorModeAttr(ATTR_XY_COLOR, ATTR_XY_COLOR),
 }
 
 DEPRECATED_GROUP = [
@@ -162,17 +170,18 @@ async def _async_reproduce_state(
             # Remove deprecated white value if we got a valid color mode
             service_data.pop(ATTR_WHITE_VALUE, None)
             color_mode = state.attributes[ATTR_COLOR_MODE]
-            if parameter_state := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
-                parameter, state_attr = parameter_state
-                if state_attr not in state.attributes:
+            if color_mode_attr := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
+                if color_mode_attr.state_attr not in state.attributes:
                     _LOGGER.warning(
                         "Color mode %s specified but attribute %s missing for: %s",
                         color_mode,
-                        state_attr,
+                        color_mode_attr.state_attr,
                         state.entity_id,
                     )
                     return
-                service_data[parameter] = state.attributes[state_attr]
+                service_data[color_mode_attr.parameter] = state.attributes[
+                    color_mode_attr.state_attr
+                ]
         else:
             # Fall back to Choosing the first color that is specified
             for color_attr in COLOR_GROUP:

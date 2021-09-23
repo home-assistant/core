@@ -75,7 +75,7 @@ class RfxtrxSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES = (
     RfxtrxSensorEntityDescription(
-        key="Barameter",
+        key="Barometer",
         device_class=DEVICE_CLASS_PRESSURE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PRESSURE_HPA,

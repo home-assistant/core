@@ -207,12 +207,11 @@ async def test_available_template_with_entities(hass, start_ha):
     ],
 )
 async def test_invalid_availability_template_keeps_component_available(
-    hass, caplog, start_ha
+    hass, start_ha, caplog_setup_text
 ):
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
-    text = str([x.getMessage() for x in caplog.get_records("setup")])
-    assert ("UndefinedError: \\'x\\' is undefined") in text
+    assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -275,13 +274,11 @@ async def test_attribute_templates(hass, start_ha):
         )
     ],
 )
-async def test_invalid_attribute_template(hass, caplog, start_ha):
+async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
     """Test that errors are logged if rendering template fails."""
     assert len(hass.states.async_all()) == 1
-
-    text = str([x.getMessage() for x in caplog.get_records("setup")])
-    assert "test_attribute" in text
-    assert "TemplateError" in text
+    assert "test_attribute" in caplog_setup_text
+    assert "TemplateError" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
