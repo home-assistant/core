@@ -181,16 +181,16 @@ async def _async_process_requirements(
     if pkg_util.is_installed(req):
         return
 
-    def _install(req: str, kwargs: dict[str, Any]) -> bool:
-        """Install requirement."""
-        return pkg_util.install_package(req, **kwargs)
-
     if req in install_failure_history:
         _LOGGER.info(
             "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
             req,
         )
         raise RequirementsNotFound(name, [req])
+
+    def _install(req: str, kwargs: dict[str, Any]) -> bool:
+        """Install requirement."""
+        return pkg_util.install_package(req, **kwargs)
 
     for _ in range(MAX_INSTALL_FAILURES):
         if await hass.async_add_executor_job(_install, req, kwargs):
