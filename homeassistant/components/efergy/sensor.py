@@ -97,7 +97,6 @@ async def async_setup_platform(
     """Set up the Efergy sensor."""
     api = Efergy(
         config.get(CONF_APPTOKEN),
-        hass.loop,
         async_get_clientsession(hass),
         utc_offset=str(config.get(CONF_UTC_OFFSET)),
     )
