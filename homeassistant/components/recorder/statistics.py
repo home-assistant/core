@@ -460,7 +460,7 @@ def _configured_unit(unit: str, units: UnitSystem) -> str:
 
 def list_statistic_ids(
     hass: HomeAssistant,
-    statistic_type: Literal["mean"] | Literal["sum"] | None,
+    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> list[dict | None]:
     """Return all statistic_ids and unit of measurement.
 
