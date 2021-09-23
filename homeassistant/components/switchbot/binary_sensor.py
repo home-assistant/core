@@ -19,8 +19,6 @@ PARALLEL_UPDATES = 1
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(
         key="calibration",
-        device_class=None,
-        unit_of_measurement=None,
     ),
 }
 
