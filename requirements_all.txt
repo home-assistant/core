@@ -1308,9 +1308,6 @@ pyCEC==0.5.1
 # homeassistant.components.control4
 pyControl4==0.0.6
 
-# homeassistant.components.tplink
-python-kasa==0.4.0.dev4
-
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0
 
@@ -1894,6 +1891,9 @@ python-join-api==0.0.6
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
+
+# homeassistant.components.tplink
+python-kasa==0.4.0.dev4
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
