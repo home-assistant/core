@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-from datetime import datetime, timedelta
 import logging
 import os
 from typing import Any, cast
@@ -12,7 +11,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
-from homeassistant.util import dt as dt_util
 import homeassistant.util.package as pkg_util
 
 # mypy: disallow-any-generics
@@ -176,7 +174,7 @@ async def _async_process_requirements(
     hass: HomeAssistant,
     name: str,
     req: str,
-    install_failure_history: dict[str, datetime],
+    install_failure_history: dict[str, bool],
     kwargs: Any,
 ) -> None:
     """Install a requirement and save failures."""
@@ -188,21 +186,17 @@ async def _async_process_requirements(
         return pkg_util.install_package(req, **kwargs)
 
     if req in install_failure_history:
-        retry_time = install_failure_history[req] + timedelta(hours=24)
-        if retry_time > dt_util.utcnow():
-            _LOGGER.info(
-                "Multiple attempts to install %s failed, install will be retried after %s, next configuration check, or restart",
-                req,
-                retry_time,
-            )
-            raise RequirementsNotFound(name, [req])
-        del install_failure_history[req]
+        _LOGGER.info(
+            "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
+            req,
+        )
+        raise RequirementsNotFound(name, [req])
 
     for _ in range(MAX_INSTALL_FAILURES):
         if await hass.async_add_executor_job(_install, req, kwargs):
             return
 
-    install_failure_history[req] = dt_util.utcnow()
+    install_failure_history[req] = True
     raise RequirementsNotFound(name, [req])
 
 
