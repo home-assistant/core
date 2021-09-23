@@ -334,7 +334,11 @@ class Scanner:
         return domains
 
     async def _ssdp_listener_callback(
-        self, ssdp_device: SsdpDevice, dst: DeviceOrServiceType, source: SsdpSource
+        self,
+        changed: bool,
+        ssdp_device: SsdpDevice,
+        dst: DeviceOrServiceType,
+        source: SsdpSource,
     ) -> None:
         """Handle a device/service change."""
         _LOGGER.debug(
@@ -345,15 +349,19 @@ class Scanner:
         info_desc = await self._async_get_description_dict(location) or {}
         combined_headers = ssdp_device.combined_headers(dst)
         info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
-        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
 
         callbacks = self._async_get_matching_callbacks(combined_headers)
+        matching_domains = (
+            self._async_matching_domains(info_with_desc) if changed else []
+        )
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
+        if not callbacks and not matching_domains:
+            return
+
+        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
-
-        for domain in self._async_matching_domains(info_with_desc):
+        for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
-
             flow: SSDPFlow = {
                 "domain": domain,
                 "context": {"source": config_entries.SOURCE_SSDP},
