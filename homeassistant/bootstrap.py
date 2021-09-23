@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import datetime
+import faulthandler
 import logging
 import logging.handlers
 import os
@@ -40,6 +41,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = "home-assistant.log"
+FAULT_LOG_FILENAME = "home-assistant.faults"
 
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
@@ -324,6 +326,9 @@ def async_enable_logging(
 
     err_path_exists = os.path.isfile(err_log_path)
     err_dir = os.path.dirname(err_log_path)
+
+    fault_out = open(os.path.join(err_dir, FAULT_LOG_FILENAME), mode="w")
+    faulthandler.enable(fault_out)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
