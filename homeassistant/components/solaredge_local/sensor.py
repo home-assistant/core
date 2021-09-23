@@ -139,7 +139,7 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
     ),
 )
 
-SENSOR_TYPE_INVERTER_TEMPERATUR = SolarEdgeLocalSensorEntityDescription(
+SENSOR_TYPE_INVERTER_TEMPERATURE = SolarEdgeLocalSensorEntityDescription(
     key="invertertemperature",
     name="Inverter Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
@@ -211,7 +211,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = SolarEdgeData(hass, api)
 
     # Changing inverter temperature unit.
-    inverter_temp_description = copy(SENSOR_TYPE_INVERTER_TEMPERATUR)
+    inverter_temp_description = copy(SENSOR_TYPE_INVERTER_TEMPERATURE)
     if status.inverters.primary.temperature.units.farenheit:
         inverter_temp_description.native_unit_of_measurement = TEMP_FAHRENHEIT
 
