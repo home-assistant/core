@@ -534,7 +534,7 @@ class FanCapabilities(AlexaEntity):
             yield AlexaToggleController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
             )
-            range_controller = False
+            force_range_controller = False
         if supported & fan.SUPPORT_PRESET_MODE:
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
