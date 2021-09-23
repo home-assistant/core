@@ -3,7 +3,7 @@ config2/*
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log*
-tests/testing_config/home-assistant.fault
+tests/testing_config/home-assistant.faults
 
 # hass-release
 data/
