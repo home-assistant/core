@@ -30,7 +30,7 @@ PyRMVtransport==0.3.2
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
-PyTurboJPEG==1.5.2
+PyTurboJPEG==1.6.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -286,7 +286,7 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.7
+crownstone-cloud==1.4.8
 
 # homeassistant.components.crownstone
 crownstone-sse==2.0.2
