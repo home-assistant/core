@@ -191,13 +191,12 @@ async def _async_process_requirements(
         retry_time = install_failure_history[req] + timedelta(hours=24)
         if retry_time > dt_util.utcnow():
             _LOGGER.info(
-                "Multiple attempts to install %s failed, install will be retried after %s, next configuration check, or restart.",
+                "Multiple attempts to install %s failed, install will be retried after %s, next configuration check, or restart",
                 req,
                 retry_time,
             )
             raise RequirementsNotFound(name, [req])
-        else:
-            del install_failure_history[req]
+        del install_failure_history[req]
 
     for _ in range(MAX_INSTALL_FAILURES):
         if await hass.async_add_executor_job(_install, req, kwargs):
