@@ -52,11 +52,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Netatmo camera platform."""
-    if "access_camera" not in entry.data["token"]["scope"]:
-        _LOGGER.info(
-            "Cameras are currently not supported with this authentication method"
-        )
-
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
     await data_handler.register_data_class(

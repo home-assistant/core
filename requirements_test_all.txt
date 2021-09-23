@@ -30,7 +30,7 @@ PyRMVtransport==0.3.2
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
-PyTurboJPEG==1.5.2
+PyTurboJPEG==1.6.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -275,7 +275,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==5.0.1
+colorlog==6.4.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -292,7 +292,7 @@ coronavirus==1.1.1
 croniter==1.0.6
 
 # homeassistant.components.crownstone
-crownstone-cloud==1.4.7
+crownstone-cloud==1.4.8
 
 # homeassistant.components.crownstone
 crownstone-sse==2.0.2
@@ -456,7 +456,7 @@ habitipy==0.2.0
 hangups==0.4.14
 
 # homeassistant.components.cloud
-hass-nabucasa==0.49.0
+hass-nabucasa==0.50.0
 
 # homeassistant.components.tasmota
 hatasmota==0.2.20
@@ -477,7 +477,7 @@ hole==0.5.1
 holidays==0.11.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210911.0
+home-assistant-frontend==20210922.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1357,7 +1357,7 @@ wakeonlan==2.0.1
 wallbox==0.4.4
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.4
+watchdog==2.1.5
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
@@ -1401,7 +1401,7 @@ yeelight==0.7.5
 youless-api==0.12
 
 # homeassistant.components.zeroconf
-zeroconf==0.36.6
+zeroconf==0.36.7
 
 # homeassistant.components.zha
 zha-quirks==0.0.61
