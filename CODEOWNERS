@@ -29,6 +29,7 @@ homeassistant/components/aemet/* @noltari
 homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airnow/* @asymworks
+homeassistant/components/airthings/* @danielhiversen
 homeassistant/components/airtouch4/* @LonePurpleWolf
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
