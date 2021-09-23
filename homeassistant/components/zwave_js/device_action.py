@@ -187,7 +187,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
-                meter_endpoints[value.endpoint][CONF_ENTITY_ID] = entry.entity_id
+                meter_endpoints[value.endpoint].setdefault(
+                    CONF_ENTITY_ID, entry.entity_id
+                )
                 meter_endpoints[value.endpoint].setdefault(ATTR_METER_TYPE, set()).add(
                     get_meter_type(value)
                 )
