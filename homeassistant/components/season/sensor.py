@@ -187,4 +187,3 @@ class Season(SensorEntity):
         """Update season."""
         self.datetime = utcnow().replace(tzinfo=None)
         get_season(self)
-        
