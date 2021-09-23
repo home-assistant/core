@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import voluptuous as vol
-from zwave_js_server.const import ATTR_CODE_SLOT, ATTR_USERCODE, CommandClass
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.model.value import get_value_id
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -24,16 +25,16 @@ from .const import (
     ATTR_VALUE,
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
+    SERVICE_CLEAR_LOCK_USERCODE,
     SERVICE_PING,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
+    SERVICE_SET_LOCK_USERCODE,
     SERVICE_SET_VALUE,
+    VALUE_SCHEMA,
 )
-from .device_automation_helpers import VALUE_SCHEMA, get_config_parameter_value_schema
+from .device_automation_helpers import CONF_SUBTYPE, get_config_parameter_value_schema
 from .helpers import async_get_node_from_device_id
-from .lock import SERVICE_CLEAR_LOCK_USERCODE, SERVICE_SET_LOCK_USERCODE
-
-CONF_SUBTYPE = "subtype"
 
 ACTION_TYPES = {
     SERVICE_CLEAR_LOCK_USERCODE,
@@ -158,11 +159,10 @@ async def async_call_action_from_config(
 ) -> None:
     """Execute a device action."""
     action_type = service = config.pop(CONF_TYPE)
-    service_data = {k: v for k, v in config.items() if v not in (None, "")}
-
     if action_type not in ACTION_TYPES:
         raise HomeAssistantError(f"Unhandled action type {action_type}")
 
+    service_data = {k: v for k, v in config.items() if v not in (None, "")}
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
     )

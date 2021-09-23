@@ -23,12 +23,12 @@ from .const import (
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
+    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
     NODE_STATUSES,
-    VALUE_SCHEMA,
     get_config_parameter_value_schema,
 )
 from .helpers import (
