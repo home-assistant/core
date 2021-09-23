@@ -116,27 +116,33 @@ class DdWrtDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug("Checking ARP")
 
-        endpoint = "Wireless" if self.wireless_only else "Lan"
-        url = f"{self.protocol}://{self.host}/Status_{endpoint}.live.asp"
-        data = self.get_ddwrt_data(url)
+        url = f"{self.protocol}://{self.host}/Status_Wireless.live.asp"
+        data_wireless = self.get_ddwrt_data(url)
 
-        if not data:
+        if not self.wireless_only:
+            url = f"{self.protocol}://{self.host}/Status_Lan.live.asp"
+            data_lan = self.get_ddwrt_data(url)
+
+        if not (data_lan or data_wireless):
             return False
 
         self.last_results = []
 
-        if self.wireless_only:
-            active_clients = data.get("active_wireless")
-        else:
-            active_clients = data.get("arp_table")
-        if not active_clients:
+        active_clients_wireless = data_wireless.get("active_wireless")
+        if not self.wireless_only:
+            active_clients_lan = data_lan.get("arp_table")
+        if not (active_clients_wireless or active_clients_lan):
             return False
 
         # The DD-WRT UI uses its own data format and then
         # regex's out values so this is done here too
         # Remove leading and trailing single quotes.
-        clean_str = active_clients.strip().strip("'")
+        clean_str = active_clients_wireless.strip().strip("'")
         elements = clean_str.split("','")
+
+        if not self.wireless_only:
+            clean_str = active_clients_lan.strip().strip("'")
+            elements += clean_str.split("','")
 
         self.last_results.extend(item for item in elements if _MAC_REGEX.match(item))
 
