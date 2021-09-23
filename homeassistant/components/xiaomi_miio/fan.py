@@ -796,7 +796,6 @@ class XiaomiFan(XiaomiGenericFan):
     @property
     def operation_mode_class(self):
         """Hold operation mode class."""
-        pass
 
     @property
     def preset_mode(self):
