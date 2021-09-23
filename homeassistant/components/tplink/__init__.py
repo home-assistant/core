@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import time
 from typing import Any
 
-from kasa import SmartDevice, SmartDeviceException, SmartPlug, SmartStrip
+from kasa import SmartDevice, SmartDeviceException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -102,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_data[CONF_SWITCH] = []
     hass_data[UNAVAILABLE_DEVICES] = []
     lights: list[SmartDevice] = hass_data[CONF_LIGHT]
-    switches: list[SmartPlug | SmartStrip] = hass_data[CONF_SWITCH]
+    switches: list[SmartDevice] = hass_data[CONF_SWITCH]
     unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
 
     # Add static devices
@@ -226,25 +225,23 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
             if self.device.has_emeter:
                 emeter_readings = self.device.emeter_realtime
                 data[CONF_EMETER_PARAMS] = {
-                    # Power is always available, also on bulbs
-                    ATTR_CURRENT_POWER_W: emeter_readings["power"],
-                    ATTR_TOTAL_ENERGY_KWH: emeter_readings.get("total"),
-                    ATTR_VOLTAGE: emeter_readings.get("voltage"),
-                    ATTR_CURRENT_A: emeter_readings.get("current"),
+                    ATTR_CURRENT_POWER_W: emeter_readings.power,
+                    ATTR_TOTAL_ENERGY_KWH: emeter_readings.total,
+                    ATTR_VOLTAGE: emeter_readings.voltage,
+                    ATTR_CURRENT_A: emeter_readings.current,
                 }
-                # TODO: check if the property getter can be used here
-                emeter_statics = await self.device.get_emeter_daily()
-                if emeter_statics.get(int(time.strftime("%e"))):
-                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
-                        float(emeter_statics[int(time.strftime("%e"))]), 3
-                    )
-                else:
+
+                emeter_today = self.device.emeter_today
+                if emeter_today is None:
                     # today's consumption not available, when device was off all the day
                     # bulb's do not report this information, so filter it out
                     consumption_today = 0.0
                     if self.device.is_bulb:
                         consumption_today = None
-                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = consumption_today
+                else:
+                    consumption_today = emeter_today
+
+                data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = consumption_today
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
 

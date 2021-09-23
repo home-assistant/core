@@ -82,6 +82,9 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(device))
 
+    # TODO: Check if retries are necessary anymore as we could/should always
+    #       use the existing config entries on startup to load the devices & reloading
+    #       the integration should allow forcing the discovery
     devices: dict[str, SmartDevice] = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
         _LOGGER.debug(
