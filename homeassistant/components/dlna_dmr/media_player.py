@@ -425,19 +425,19 @@ class DlnaDmrEntity(MediaPlayerEntity):
             supported_features |= SUPPORT_VOLUME_SET
         if self._device.has_volume_mute:
             supported_features |= SUPPORT_VOLUME_MUTE
-        if self._device.has_play and self._device.can_play:
+        if self._device.can_play:
             supported_features |= SUPPORT_PLAY
-        if self._device.has_pause and self._device.can_pause:
+        if self._device.can_pause:
             supported_features |= SUPPORT_PAUSE
-        if self._device.has_stop and self._device.can_stop:
+        if self._device.can_stop:
             supported_features |= SUPPORT_STOP
-        if self._device.has_previous and self._device.can_previous:
+        if self._device.can_previous:
             supported_features |= SUPPORT_PREVIOUS_TRACK
-        if self._device.has_next and self._device.can_next:
+        if self._device.can_next:
             supported_features |= SUPPORT_NEXT_TRACK
         if self._device.has_play_media:
             supported_features |= SUPPORT_PLAY_MEDIA
-        if self._device.has_seek_rel_time and self._device.can_seek_rel_time:
+        if self._device.can_seek_rel_time:
             supported_features |= SUPPORT_SEEK
 
         return supported_features
