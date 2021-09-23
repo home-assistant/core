@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Coroutine
 from contextlib import suppress
 import fnmatch
-from ipaddress import IPv6Address, ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 import socket
 import sys
@@ -166,6 +166,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             for source_ip in await network.async_get_enabled_source_ips(hass)
             if not source_ip.is_loopback
             and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
+            and not (
+                isinstance(source_ip, IPv6Address)
+                and zc_args["ip_version"] == IPVersion.V4Only
+            )
+            and not (
+                isinstance(source_ip, IPv4Address)
+                and zc_args["ip_version"] == IPVersion.V6Only
+            )
         ]
 
     _LOGGER.warning("Zeroconf args: %s", zc_args)
