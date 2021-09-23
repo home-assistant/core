@@ -19,7 +19,12 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN, LOGGER
+from .const import (
+    CONF_BALANCING_AUTHORITY,
+    CONF_BALANCING_AUTHORITY_ABBREV,
+    DOMAIN,
+    LOGGER,
+)
 
 CONF_LOCATION_TYPE = "location_type"
 
@@ -57,7 +62,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 @callback
 def get_unique_id(data: dict[str, Any]) -> str:
-    """Get a unique ID from provided data."""
+    """Get a unique ID (if possible) from provided data."""
     return f"{data[CONF_LATITUDE]}, {data[CONF_LONGITUDE]}"
 
 
@@ -95,17 +100,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_USERNAME: username},
             )
 
-        # If an entry already exists, we're in a re-auth flow – store the new data and
-        # reload the config entry:
-        entry_unique_id = get_unique_id(self._data)
-        if existing_entry := await self.async_set_unique_id(entry_unique_id):
-            self.hass.config_entries.async_update_entry(existing_entry, data=self._data)
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
+        if CONF_LATITUDE in self._data:
+            # If coordinates already exist at this stage, we're in an existing flow and
+            # should reauth:
+            entry_unique_id = get_unique_id(self._data)
+            if existing_entry := await self.async_set_unique_id(entry_unique_id):
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=self._data
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(existing_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
 
-        # ...otherwise, we're setting up a new config entry:
+        # ...otherwise, we're in a new flow:
         self._data[CONF_USERNAME] = username
         self._data[CONF_PASSWORD] = password
         return await self.async_step_location()
@@ -147,10 +155,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=unique_id,
             data={
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
+                CONF_USERNAME: self._data[CONF_USERNAME],
+                CONF_PASSWORD: self._data[CONF_PASSWORD],
                 CONF_LATITUDE: user_input[CONF_LATITUDE],
                 CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                CONF_BALANCING_AUTHORITY: grid_region["name"],
                 CONF_BALANCING_AUTHORITY_ABBREV: grid_region["abbrev"],
             },
         )
