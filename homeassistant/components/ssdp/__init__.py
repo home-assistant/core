@@ -353,7 +353,7 @@ class Scanner:
         matching_domains: set[str] = set()
 
         # If there is no changes, do not trigger a config flow
-        if source != SsdpChange.SEARCH_ALIVE:
+        if source != SsdpSource.SEARCH_ALIVE:
             matching_domains = self._async_matching_domains(info_with_desc)
 
         if not callbacks and not matching_domains:
