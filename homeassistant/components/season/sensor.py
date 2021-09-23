@@ -77,11 +77,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_season(self):
     """Calculate the current season."""
-    
+
     date = self.datetime
     hemisphere = self.hemisphere
     season_tracking_type = self.type
-    
+
     if season_tracking_type == TYPE_ASTRONOMICAL:
         spring_start = ephem.next_equinox(str(date.year)).datetime()
         summer_start = ephem.next_solstice(str(date.year)).datetime()
@@ -103,7 +103,9 @@ def get_season(self):
         if date.month >= 12:
             spring_start = ephem.next_equinox(str(date.year + 1)).datetime()
         else:
-            winter_start = ephem.next_solstice(summer_start.replace(year=date.year-1)).datetime()
+            winter_start = ephem.next_solstice(
+                summer_start.replace(year=date.year - 1)
+            ).datetime()
         days_left = spring_start.date() - date.date()
         days_in = date.date() - winter_start.date()
         next_date = spring_start
@@ -122,7 +124,7 @@ def get_season(self):
         days_left = winter_start.date() - date.date()
         days_in = date.date() - autumn_start.date()
         next_date = winter_start
-        
+
     # If user is located in the southern hemisphere swap the season
     if hemisphere == SOUTHERN:
         season = HEMISPHERE_SEASON_SWAP.get(season)
@@ -135,7 +137,7 @@ def get_season(self):
     else:
         self.days_left = days_left.days
         self.days_in = abs(days_in.days) + 1
-        self.next_date = next_date.strftime("%Y %b %d  %H:%M:%S")
+        self.next_date = next_date.strftime("%Y %b %d %H:%M:%S")
 
 
 class Season(SensorEntity):
