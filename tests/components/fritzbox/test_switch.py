@@ -26,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -137,3 +138,18 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
 
     assert device.update.call_count == 2
     assert fritz().login.call_count == 2
+
+
+async def test_assume_device_unavailable(hass: HomeAssistant, fritz: Mock):
+    """Test assume device as unavailable."""
+    device = FritzDeviceSwitchMock()
+    device.voltage = 0
+    device.energy = 0
+    device.power = 0
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
