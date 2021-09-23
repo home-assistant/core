@@ -1,8 +1,6 @@
 """Support for Airthings sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
@@ -31,55 +29,47 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-
-@dataclass
-class AirthingsSensorEntityDescription(SensorEntityDescription):
-    """Describes Airthings sensor entity."""
-
-    sensor_name: str | None = None
-
-
-SENSORS: dict[str, AirthingsSensorEntityDescription] = {
-    "radonShortTermAvg": AirthingsSensorEntityDescription(
+SENSORS: dict[str, SensorEntityDescription] = {
+    "radonShortTermAvg": SensorEntityDescription(
         key="radonShortTermAvg",
         native_unit_of_measurement="Bq/m³",
-        sensor_name="Radon",
+        name="Radon",
     ),
-    "temp": AirthingsSensorEntityDescription(
+    "temp": SensorEntityDescription(
         key="temp",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        sensor_name="Temperature",
+        name="Temperature",
     ),
-    "humidity": AirthingsSensorEntityDescription(
+    "humidity": SensorEntityDescription(
         key="humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
-        sensor_name="Humidity",
+        name="Humidity",
     ),
-    "pressure": AirthingsSensorEntityDescription(
+    "pressure": SensorEntityDescription(
         key="pressure",
         device_class=DEVICE_CLASS_PRESSURE,
         native_unit_of_measurement=PRESSURE_MBAR,
-        sensor_name="Pressure",
+        name="Pressure",
     ),
-    "battery": AirthingsSensorEntityDescription(
+    "battery": SensorEntityDescription(
         key="battery",
         device_class=DEVICE_CLASS_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-        sensor_name="Battery",
+        name="Battery",
     ),
-    "co2": AirthingsSensorEntityDescription(
+    "co2": SensorEntityDescription(
         key="co2",
         device_class=DEVICE_CLASS_CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        sensor_name="CO2",
+        name="CO2",
     ),
-    "voc": AirthingsSensorEntityDescription(
+    "voc": SensorEntityDescription(
         key="voc",
         device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
-        sensor_name="VOC",
+        name="VOC",
     ),
 }
 
@@ -110,14 +100,14 @@ class AirthingsHeaterEnergySensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         airthings_device: AirthingsDevice,
-        entity_description: AirthingsSensorEntityDescription,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.entity_description = entity_description
 
-        self._attr_name = f"{airthings_device.name} {entity_description.sensor_name}"
+        self._attr_name = f"{airthings_device.name} {entity_description.name}"
         self._attr_unique_id = f"{airthings_device.device_id}_{entity_description.key}"
         self._id = airthings_device.device_id
         self._attr_device_info = {
