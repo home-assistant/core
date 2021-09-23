@@ -26,6 +26,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
     ),
     "battery": SensorEntityDescription(
         key="battery",
