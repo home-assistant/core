@@ -36,4 +36,5 @@ TUYA_APP_TYPE = {"tuyaSmart": "TuyaSmart", "smartlife": "Smart Life"}
 
 PLATFORMS = [
     "switch",
+    "climate"
 ]
