@@ -1,42 +1,35 @@
 """Support for Amber Electric."""
 
-import logging
-
 from amberelectric import ApiException, Configuration
 from amberelectric.api import amber_api
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigError
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN
-
-PLATFORMS = ["sensor"]
-LOGGER = logging.getLogger(__package__)
+from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Amber Electric from a config entry."""
-    configuration = Configuration(access_token=entry.data.get(CONF_API_TOKEN))
+    configuration = Configuration(access_token=entry.data[CONF_API_TOKEN])
     api_instance = amber_api.AmberApi.create(configuration)
+    site_id = entry.data[CONF_SITE_ID]
 
     try:
-        site_id = entry.data.get(CONF_SITE_ID)
         sites = await hass.async_add_executor_job(api_instance.get_sites)
         filtered = list(filter(lambda site: site.id == site_id, sites))
         if len(filtered) == 0:
             LOGGER.error("Site not found")
-            raise ConfigEntryNotReady
+            return False
 
     except ApiException as api_exception:
         if api_exception.status == 403:
             LOGGER.error("API KEY Invalid")
-            raise ConfigEntryNotReady from api_exception
+            return False
 
-        LOGGER.error("Unknown error")
-        raise ConfigEntryNotReady from api_exception
+        LOGGER.error("Unknown error: %s", api_exception.status)
+        raise ConfigError from api_exception
 
-    hass.data[DOMAIN] = {"entry": entry}
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 

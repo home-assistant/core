@@ -8,3 +8,4 @@ CONF_SITE_ID = "site_id"
 CONF_SITE_NMI = "site_nmi"
 
 LOGGER = logging.getLogger(__package__)
+PLATFORMS = ["sensor"]
