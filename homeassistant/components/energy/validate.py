@@ -135,10 +135,18 @@ def _async_validate_usage_stat(
     if state_class not in allowed_state_classes:
         result.append(
             ValidationIssue(
-                "entity_unexpected_state_class_total_increasing",
+                "entity_unexpected_state_class",
                 stat_value,
                 state_class,
             )
+        )
+
+    if (
+        state_class == sensor.STATE_CLASS_MEASUREMENT
+        and sensor.ATTR_LAST_RESET not in state.attributes
+    ):
+        result.append(
+            ValidationIssue("entity_state_class_measurement_no_last_reset", stat_value)
         )
 
 
@@ -212,9 +220,15 @@ def _async_validate_cost_stat(
     ]
     if state_class not in supported_state_classes:
         result.append(
-            ValidationIssue(
-                "entity_unexpected_state_class_total_increasing", stat_id, state_class
-            )
+            ValidationIssue("entity_unexpected_state_class", stat_id, state_class)
+        )
+
+    if (
+        state_class == sensor.STATE_CLASS_MEASUREMENT
+        and sensor.ATTR_LAST_RESET not in state.attributes
+    ):
+        result.append(
+            ValidationIssue("entity_state_class_measurement_no_last_reset", stat_id)
         )
 
 
