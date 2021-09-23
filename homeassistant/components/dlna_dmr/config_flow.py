@@ -255,7 +255,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except UpnpError as err:
             raise ConnectError("could_not_connect") from err
 
-        if device.device_type not in DmrDevice.DEVICE_TYPES:
+        if not DmrDevice.is_profile_device(device):
             raise ConnectError("not_dmr")
 
         discovery = {
