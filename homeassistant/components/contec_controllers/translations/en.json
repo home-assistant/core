@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "ip": "Controllers IP",
-                    "numberOfControllers": "Number of controllers",
+                    "number_of_controllers": "Number of controllers",
                     "port": "Controllers port"
                 }
             }

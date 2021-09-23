@@ -11,33 +11,33 @@ from homeassistant.data_entry_flow import FlowResult
 async def test_form(hass) -> None:
     """Tests the normal config flow."""
 
-    async def validateFlowResult(flow_result):
+    async def _validate_flow_result(flow_result):
         assert flow_result["type"] == "create_entry"
         assert flow_result["title"] == "ContecControllers"
         assert flow_result["data"] == _flow_data()
         await hass.config_entries.async_unload(flow_result["result"].entry_id)
 
-    await _run_config_scenario(hass, validateFlowResult, True, None)
+    await _run_config_scenario(hass, _validate_flow_result, True, None)
 
 
 async def test_form_cant_connect(hass) -> None:
     """Test connection issue with the controllers."""
 
-    async def validateFlowResult(flow_result):
+    async def _validate_flow_result(flow_result):
         assert flow_result["type"] == "form"
         assert flow_result["errors"] == {"base": "cannot_connect"}
 
-    await _run_config_scenario(hass, validateFlowResult, False, None)
+    await _run_config_scenario(hass, _validate_flow_result, False, None)
 
 
 async def test_form_unexpected_error(hass) -> None:
     """Test unexpected issue."""
 
-    async def validateFlowResult(flow_result):
+    async def _validate_flow_result(flow_result):
         assert flow_result["type"] == "form"
         assert flow_result["errors"] == {"base": "unknown"}
 
-    await _run_config_scenario(hass, validateFlowResult, None, Exception)
+    await _run_config_scenario(hass, _validate_flow_result, None, Exception)
 
 
 async def _run_config_scenario(
@@ -54,17 +54,17 @@ async def _run_config_scenario(
 
     with patch(
         "ContecControllers.ControllerManager.ControllerManager.IsConnected",
-        return_value=_bool_coroutine(is_connected_return_value),
+        return_value=is_connected_return_value,
         side_effect=is_connected_side_effect,
     ), patch(
         "ContecControllers.ControllerManager.ControllerManager.DiscoverEntitiesAsync",
-        return_value=_bool_coroutine(True),
+        return_value=True,
     ), patch(
         "ContecControllers.ControllerManager.ControllerManager.Init",
         return_value=None,
     ), patch(
         "ContecControllers.ControllerManager.ControllerManager.CloseAsync",
-        return_value=_bool_coroutine(True),
+        return_value=True,
     ):
         flow_result: FlowResult = await hass.config_entries.flow.async_configure(
             initial_flow_result["flow_id"], _flow_data()
@@ -75,7 +75,3 @@ async def _run_config_scenario(
 
 def _flow_data() -> dict[str, str]:
     return {"ip": "1.1.1.1", "port": 1234, "numberOfControllers": 2}
-
-
-def _bool_coroutine(return_value: bool) -> bool:
-    return return_value

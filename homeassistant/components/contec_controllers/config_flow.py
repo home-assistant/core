@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required("ip"): str,
-        vol.Required("numberOfControllers"): int,
+        vol.Required("number_of_controllers"): int,
         vol.Required("port"): int,
     }
 )
@@ -36,27 +36,27 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    numberOfControllers: int = data["numberOfControllers"]
-    controllersIp: str = data["ip"]
-    controllersPort: int = data["port"]
-    controllerManager: ControllerManager = ControllerManager(
+    number_of_controllers: int = data["number_of_controllers"]
+    controllers_ip: str = data["ip"]
+    controllers_port: int = data["port"]
+    controller_manager: ControllerManager = ControllerManager(
         ContecTracer(logging.getLogger("ContecControllers")),
         ContecConectivityConfiguration(
-            numberOfControllers,
-            controllersIp,
-            controllersPort,
+            number_of_controllers,
+            controllers_ip,
+            controllers_port,
         ),
     )
 
     try:
-        controllerManager.Init()
-        if not await controllerManager.IsConnected(timedelta(seconds=7)):
+        controller_manager.Init()
+        if not await controller_manager.IsConnected(timedelta(seconds=7)):
             _LOGGER.warning(
-                f"Failed to connect to Contec Controllers at address {controllersIp},{controllersPort}"
+                f"Failed to connect to Contec Controllers at address {controllers_ip},{controllers_port}"
             )
             raise CannotConnect
     finally:
-        await controllerManager.CloseAsync()
+        await controller_manager.CloseAsync()
 
     return {"title": "ContecControllers"}
 

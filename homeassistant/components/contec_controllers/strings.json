@@ -3,9 +3,9 @@
     "step": {
       "user": {
         "data": {
-          "controllersIp": "[%key:common::config_flow::data::ip%]",
-          "numberOfControllers": "numberOfControllers",
-          "controllersPort": "[%key:common::config_flow::data::port%]"
+          "controllers_ip": "[%key:common::config_flow::data::ip%]",
+          "number_of_controllers": "Number of controllers",
+          "controllers_port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

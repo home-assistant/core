@@ -25,29 +25,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Contec Controllers from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    numberOfControllers: int = entry.data["numberOfControllers"]
-    controllersIp: str = entry.data["ip"]
-    controllersPort: int = entry.data["port"]
-    controllerManager: ControllerManager = ControllerManager(
+    number_of_controllers: int = entry.data["number_of_controllers"]
+    controllers_ip: str = entry.data["ip"]
+    controllers_port: int = entry.data["port"]
+    controller_manager: ControllerManager = ControllerManager(
         ContecTracer(logging.getLogger("ContecControllers")),
         ContecConectivityConfiguration(
-            numberOfControllers,
-            controllersIp,
-            controllersPort,
+            number_of_controllers,
+            controllers_ip,
+            controllers_port,
         ),
     )
 
-    controllerManager.Init()
-    if not await controllerManager.IsConnected(timedelta(seconds=7)):
+    controller_manager.Init()
+    if not await controller_manager.IsConnected(timedelta(seconds=7)):
         _LOGGER.warning(
-            f"Failed to connect to Contec Controllers at address {controllersIp},{controllersPort}"
+            f"Failed to connect to Contec Controllers at address {controllers_ip},{controllers_port}"
         )
-        await controllerManager.CloseAsync()
+        await controller_manager.CloseAsync()
         raise ConfigEntryNotReady
 
-    await controllerManager.DiscoverEntitiesAsync()
+    await controller_manager.DiscoverEntitiesAsync()
 
-    hass.data[DOMAIN][entry.entry_id] = controllerManager
+    hass.data[DOMAIN][entry.entry_id] = controller_manager
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -55,9 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    controllerManager: ControllerManager = hass.data[DOMAIN][entry.entry_id]
-    if controllerManager is not None:
-        await controllerManager.CloseAsync()
+    controller_manager: ControllerManager = hass.data[DOMAIN][entry.entry_id]
+    if controller_manager is not None:
+        await controller_manager.CloseAsync()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

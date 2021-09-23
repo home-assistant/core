@@ -22,11 +22,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Contec Lights."""
-    controllerManager: ControllerManager = hass.data[DOMAIN][config_entry.entry_id]
-    allLights: List[ContecLight] = [
-        ContecLight(onOff) for onOff in controllerManager.OnOffActivations
+    controller_manager: ControllerManager = hass.data[DOMAIN][config_entry.entry_id]
+    all_lights: List[ContecLight] = [
+        ContecLight(on_off) for on_off in controller_manager.OnOffActivations
     ]
-    async_add_entities(allLights)
+    async_add_entities(all_lights)
 
 
 class ContecLight(LightEntity):
