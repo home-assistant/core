@@ -50,6 +50,16 @@ GAS_SENSOR_ATTRIBUTES = {
 }
 
 
+@pytest.fixture(autouse=True)
+def set_time_zone():
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
+    yield
+    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
+
+
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,mean,min,max",
     [
@@ -338,28 +348,43 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
         "unit_of_measurement": unit,
         "last_reset": None,
     }
-    seq = [10, 15, 15, 15, 20, 20, 20, 10]
+    seq = [10, 15, 15, 15, 20, 20, 20, 25]
     # Make sure the sequence has consecutive equal states
     assert seq[1] == seq[2] == seq[3]
 
+    # Make sure the first and last state differ
+    assert seq[0] != seq[-1]
+
     states = {"sensor.test1": []}
+
+    # Insert states for a 1st statistics period
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
         _states = record_meter_state(
-            hass, one, "sensor.test1", attributes, seq[i : i + 1]
+            hass, one, dt_util.as_local(one), "sensor.test1", attributes, seq[i : i + 1]
+        )
+        states["sensor.test1"].extend(_states["sensor.test1"])
+
+    # Insert states for a 2nd statistics period
+    two = zero + timedelta(minutes=5)
+    for i in range(len(seq)):
+        two = two + timedelta(seconds=5)
+        _states = record_meter_state(
+            hass, two, dt_util.as_local(two), "sensor.test1", attributes, seq[i : i + 1]
         )
         states["sensor.test1"].extend(_states["sensor.test1"])
 
     hist = history.get_significant_states(
         hass,
         zero - timedelta.resolution,
-        one + timedelta.resolution,
+        two + timedelta.resolution,
         significant_changes_only=False,
     )
     assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
 
     recorder.do_adhoc_statistics(start=zero)
+    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=5))
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -375,11 +400,26 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(one),
+                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (sum(seq) - seq[0])),
                 "sum_decrease": approx(factor * 0.0),
                 "sum_increase": approx(factor * (sum(seq) - seq[0])),
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(
+                    zero + timedelta(minutes=5)
+                ),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=10)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(two)),
+                "state": approx(factor * seq[7]),
+                "sum": approx(factor * (2 * sum(seq) - seq[0])),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * (2 * sum(seq) - seq[0])),
             },
         ]
     }
@@ -414,7 +454,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
         _states = record_meter_state(
-            hass, one, "sensor.test1", attributes, seq[i : i + 1]
+            hass, one, one, "sensor.test1", attributes, seq[i : i + 1]
         )
         states["sensor.test1"].extend(_states["sensor.test1"])
 
@@ -1685,7 +1725,12 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         start_meter = start
         for j in range(len(seq)):
             _states = record_meter_state(
-                hass, start_meter, "sensor.test4", sum_attributes, seq[j : j + 1]
+                hass,
+                start_meter,
+                dt_util.as_local(start_meter),
+                "sensor.test4",
+                sum_attributes,
+                seq[j : j + 1],
             )
             start_meter = start + timedelta(minutes=1)
             states["sensor.test4"] += _states["sensor.test4"]
@@ -1955,7 +2000,7 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
     return four, eight, states
 
 
-def record_meter_state(hass, zero, entity_id, _attributes, seq):
+def record_meter_state(hass, zero, last_reset, entity_id, _attributes, seq):
     """Record test state.
 
     We inject a state update for meter sensor.
@@ -1969,7 +2014,7 @@ def record_meter_state(hass, zero, entity_id, _attributes, seq):
 
     attributes = dict(_attributes)
     if "last_reset" in _attributes:
-        attributes["last_reset"] = zero.isoformat()
+        attributes["last_reset"] = last_reset.isoformat()
 
     states = {entity_id: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=zero):

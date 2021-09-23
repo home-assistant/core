@@ -312,6 +312,21 @@ def _wanted_statistics(
     return wanted_statistics
 
 
+def _last_reset_as_utc_isoformat(
+    last_reset_s: str | None, entity_id: str
+) -> str | None:
+    """Parse last_reset and convert it to UTC."""
+    if last_reset_s is None:
+        return None
+    last_reset = dt_util.parse_datetime(last_reset_s)
+    if last_reset is None:
+        _LOGGER.warning(
+            "Ignoring illegal last reset %s for %s", last_reset_s, entity_id
+        )
+        return None
+    return dt_util.as_utc(last_reset).isoformat()
+
+
 def compile_statistics(  # noqa: C901
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> list[StatisticResult]:
@@ -424,7 +439,11 @@ def compile_statistics(  # noqa: C901
                 reset = False
                 if (
                     state_class != STATE_CLASS_TOTAL_INCREASING
-                    and (last_reset := state.attributes.get("last_reset"))
+                    and (
+                        last_reset := _last_reset_as_utc_isoformat(
+                            state.attributes.get("last_reset"), entity_id
+                        )
+                    )
                     != old_last_reset
                 ):
                     if old_state is None:
