@@ -724,11 +724,10 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         else:
             self._device_features = FEATURE_FLAGS_FAN
         self._supported_features = (
-            SUPPORT_SET_SPEED
-            | SUPPORT_OSCILLATE
-            | SUPPORT_PRESET_MODE
-            | SUPPORT_DIRECTION
+            SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_PRESET_MODE
         )
+        if self._model != MODEL_FAN_1C:
+            self._supported_features = self._supported_features | SUPPORT_DIRECTION
         self._preset_mode = None
         self._oscillating = None
         self._percentage = None
