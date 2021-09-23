@@ -70,12 +70,12 @@ SsdpCallback = Callable[[Mapping[str, Any], SsdpChange], Awaitable]
 
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
-    SsdpSource.SEARCH: SsdpChange.ALIVE,
+    SsdpSource.SEARCH_ALIVE: SsdpChange.ALIVE,
+    SsdpSource.SEARCH_CHANGED: SsdpChange.ALIVE,
     SsdpSource.ADVERTISEMENT_ALIVE: SsdpChange.ALIVE,
     SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
     SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
 }
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -335,14 +335,13 @@ class Scanner:
 
     async def _ssdp_listener_callback(
         self,
-        changed: bool,
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
         source: SsdpSource,
     ) -> None:
         """Handle a device/service change."""
         _LOGGER.debug(
-            "Change, ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
+            "SSDP: ssdp_device: %s, dst: %s, source: %s", ssdp_device, dst, source
         )
 
         location = ssdp_device.location
@@ -351,15 +350,19 @@ class Scanner:
         info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
 
         callbacks = self._async_get_matching_callbacks(combined_headers)
-        matching_domains = (
-            self._async_matching_domains(info_with_desc) if changed else []
-        )
-        ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
+        matching_domains: set[str] = set()
+
+        # If there is no changes, do not trigger a config flow
+        if source != SsdpChange.SEARCH_ALIVE:
+            matching_domains = self._async_matching_domains(info_with_desc)
+
         if not callbacks and not matching_domains:
             return
 
         discovery_info = discovery_info_from_headers_and_description(info_with_desc)
+        ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
+
         for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
             flow: SSDPFlow = {
