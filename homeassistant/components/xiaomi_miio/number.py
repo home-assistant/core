@@ -36,10 +36,7 @@ from .const import (
     FEATURE_SET_FAVORITE_RPM,
     FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_1,
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_30,
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_140_STEP_30,
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_150_STEP_30,
+    FEATURE_SET_OSCILLATION_ANGLE,
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
@@ -91,6 +88,15 @@ class XiaomiMiioNumberDescription(NumberEntityDescription):
     method: str | None = None
 
 
+@dataclass
+class OscillationAngleValues:
+    """A class that describes oscillation angle values."""
+
+    max_value: float | None = None
+    min_value: float | None = None
+    step: float | None = None
+
+
 NUMBER_TYPES = {
     FEATURE_SET_MOTOR_SPEED: XiaomiMiioNumberDescription(
         key=ATTR_MOTOR_SPEED,
@@ -130,7 +136,7 @@ NUMBER_TYPES = {
         step=1,
         method="async_set_volume",
     ),
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_1: XiaomiMiioNumberDescription(
+    FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
         name="Oscillation Angle",
         icon="mdi:angle-acute",
@@ -138,36 +144,6 @@ NUMBER_TYPES = {
         min_value=1,
         max_value=120,
         step=1,
-        method="async_set_oscillation_angle",
-    ),
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_120_STEP_30: XiaomiMiioNumberDescription(
-        key=ATTR_OSCILLATION_ANGLE,
-        name="Oscillation Angle",
-        icon="mdi:angle-acute",
-        unit_of_measurement=DEGREE,
-        min_value=1,
-        max_value=120,
-        step=30,
-        method="async_set_oscillation_angle",
-    ),
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_140_STEP_30: XiaomiMiioNumberDescription(
-        key=ATTR_OSCILLATION_ANGLE,
-        name="Oscillation Angle",
-        icon="mdi:angle-acute",
-        unit_of_measurement=DEGREE,
-        min_value=30,
-        max_value=140,
-        step=30,
-        method="async_set_oscillation_angle",
-    ),
-    FEATURE_SET_OSCILLATION_ANGLE_MAX_150_STEP_30: XiaomiMiioNumberDescription(
-        key=ATTR_OSCILLATION_ANGLE,
-        name="Oscillation Angle",
-        icon="mdi:angle-acute",
-        unit_of_measurement=DEGREE,
-        min_value=30,
-        max_value=150,
-        step=30,
         method="async_set_oscillation_angle",
     ),
     FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
@@ -226,6 +202,14 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_FAN_ZA5: FEATURE_FLAGS_FAN_ZA5,
 }
 
+OSCILLATION_ANLGE_VALUES = {
+    MODEL_FAN_P5: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_ZA5: OscillationAngleValues(max_value=120, min_value=30, step=30),
+    MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
+    MODEL_FAN_P10: OscillationAngleValues(max_value=140, min_value=30, step=30),
+    MODEL_FAN_P11: OscillationAngleValues(max_value=140, min_value=30, step=30),
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Selectors from a config entry."""
@@ -246,6 +230,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for feature, description in NUMBER_TYPES.items():
         if feature & features:
+            if (
+                description.key == ATTR_OSCILLATION_ANGLE
+                and model in OSCILLATION_ANLGE_VALUES
+            ):
+                description.max_value = OSCILLATION_ANLGE_VALUES[model].max_value
+                description.min_value = OSCILLATION_ANLGE_VALUES[model].min_value
+                description.step = OSCILLATION_ANLGE_VALUES[model].step
             entities.append(
                 XiaomiNumberEntity(
                     f"{config_entry.title} {description.name}",
