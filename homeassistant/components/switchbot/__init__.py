@@ -28,7 +28,7 @@ from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     ATTR_BOT: ["switch"],
-    ATTR_CURTAIN: ["cover"],
+    ATTR_CURTAIN: ["cover", "binary_sensor"],
 }
 
 

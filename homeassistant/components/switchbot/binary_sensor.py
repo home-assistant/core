@@ -1,19 +1,28 @@
 """Support for SwitchBot binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER, BinarySensorType
+from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 1
+
+BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
+    "calibration": BinarySensorEntityDescription(
+        key="calibration",
+        device_class=None,
+        unit_of_measurement=None,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -27,15 +36,13 @@ async def async_setup_entry(
     binary_sensors = []
 
     if coordinator.data[entry.unique_id].get("data"):
-        for sensor in coordinator.data[entry.unique_id].get("data"):
-            if sensor in BinarySensorType.__members__:
-                device_class = getattr(BinarySensorType, sensor).value
+        for binary_sensor in coordinator.data[entry.unique_id].get("data"):
+            if binary_sensor in BINARY_SENSOR_TYPES:
                 binary_sensors.append(
                     SwitchBotBinarySensor(
                         coordinator,
                         entry.unique_id,
-                        sensor,
-                        device_class,
+                        binary_sensor,
                         entry.data[CONF_MAC],
                         entry.data[CONF_NAME],
                     )
@@ -44,7 +51,7 @@ async def async_setup_entry(
     async_add_entities(binary_sensors)
 
 
-class SwitchBotBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
 
     coordinator: SwitchbotDataUpdateCoordinator
@@ -53,28 +60,19 @@ class SwitchBotBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
         idx: str | None,
-        sensor: str,
-        device_class: str,
+        binary_sensor: str,
         mac: str,
         switchbot_name: str,
     ) -> None:
         """Initialize the Switchbot sensor."""
-        super().__init__(coordinator)
-        self._idx = idx
-        self._sensor = sensor
-        self._mac = mac
-        self._attr_device_class = device_class
-        self._model = self.coordinator.data[self._idx]["modelName"]
-        self._attr_unique_id = f"{idx}-{sensor}"
-        self._attr_name = f"{switchbot_name}.{sensor}"
-        self._attr_device_info: DeviceInfo = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": switchbot_name,
-            "model": self._model,
-            "manufacturer": MANUFACTURER,
-        }
+        super().__init__(
+            coordinator, idx, mac, name=f"{switchbot_name}.{binary_sensor}"
+        )
+        self._sensor = binary_sensor
+        self._attr_unique_id = f"{idx}-{binary_sensor}"
+        self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
 
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.coordinator.data[self._idx]["data"][self._sensor]
+        return self.data["data"][self._sensor]
