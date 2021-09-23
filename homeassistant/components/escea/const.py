@@ -4,7 +4,6 @@ ESCEA = "escea"
 ICON = "mdi:fire"
 
 DATA_DISCOVERY_SERVICE = "escea_discovery"
-DATA_CONFIG = "escea_config"
 
 DISPATCH_CONTROLLER_DISCOVERED = "escea_controller_discovered"
 DISPATCH_CONTROLLER_DISCONNECTED = "escea_controller_disconnected"

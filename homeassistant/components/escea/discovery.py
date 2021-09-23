@@ -1,4 +1,4 @@
-"""Internal discovery service for  Escea AC."""
+"""Internal discovery service for  Escea Fireplace."""
 from pescea import Controller, Listener, discovery_service
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP

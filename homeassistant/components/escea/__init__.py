@@ -1,29 +1,13 @@
 """Platform for the Escea fireplace."""
-import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_CONFIG, ESCEA
+from .const import ESCEA
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
 PLATFORMS = ["climate"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        ESCEA: vol.Schema(
-            {
-                vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -31,8 +15,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(ESCEA)
     if not conf:
         return True
-
-    hass.data[DATA_CONFIG] = conf
 
     # Explicitly added in the config file, create a config entry.
     hass.async_create_task(

@@ -1,4 +1,4 @@
-"""Support for the Escea HVAC."""
+"""Support for the Escea Fireplace."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -16,18 +16,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_EXCLUDE,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    DATA_CONFIG,
     DATA_DISCOVERY_SERVICE,
     DISPATCH_CONTROLLER_DISCONNECTED,
     DISPATCH_CONTROLLER_DISCOVERED,
@@ -55,12 +49,7 @@ async def async_setup_entry(
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device."""
-        conf = hass.data.get(DATA_CONFIG)
 
-        # Filter out any entities excluded in the config file
-        if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
-            _LOGGER.info("Controller UID=%s ignored as excluded", ctrl.device_uid)
-            return
         _LOGGER.info("Controller UID=%s discovered", ctrl.device_uid)
 
         device = ControllerDevice(ctrl)
@@ -222,11 +211,12 @@ class ControllerDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
-            await self.wrap_and_catch(self._controller.set_on(False))
-        elif hvac_mode == HVAC_MODE_HEAT:
-            await self.wrap_and_catch(self._controller.set_on(True))
+        await self.wrap_and_catch(self._controller.set_on(hvac_mode == HVAC_MODE_HEAT))
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self.wrap_and_catch(self._controller.set_on(True))
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        await self.wrap_and_catch(self._controller.set_on(False))
