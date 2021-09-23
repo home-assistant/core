@@ -185,7 +185,7 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
 
         return fetched_data
 
-    async def _async_write_data(self, module_id: str, value: Dict[str, str]) -> bool:
+    async def _async_write_data(self, module_id: str, value: dict[str, str]) -> bool:
         client = self._plenticore.client
 
         if not self._fetch or client is None:
