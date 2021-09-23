@@ -68,7 +68,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         super().__init__(coordinator, idx, mac, name=switchbot_name)
         self._sensor = binary_sensor
         self._attr_unique_id = f"{idx}-{binary_sensor}"
-        self._attr_name = f"{switchbot_name}.{binary_sensor}"
+        self._attr_name = f"{switchbot_name} {binary_sensor.title()}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
 
     @property
