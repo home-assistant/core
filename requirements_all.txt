@@ -263,6 +263,9 @@ aioymaps==1.1.0
 # homeassistant.components.airly
 airly==1.1.0
 
+# homeassistant.components.airthings
+airthings_cloud==0.0.1
+
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
