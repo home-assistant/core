@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
+    COLOR_MODE_ONOFF,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -55,9 +56,9 @@ async def async_setup_entry(
         COORDINATORS
     ]
     devs: list[SmartBulb] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-    for dev in devs:
-        coordinator = coordinators[dev.device_id]
-        entities.append(TPLinkSmartBulb(dev, coordinator))
+    for device in devs:
+        coordinator = coordinators[device.device_id]
+        entities.append(TPLinkSmartBulb(device, coordinator))
 
     async_add_entities(entities)
 
@@ -86,8 +87,8 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         """Turn the light on."""
         _LOGGER.debug("Turning on %s", kwargs)
 
-        transition = kwargs.get(ATTR_TRANSITION, None)
-        brightness = kwargs.get(ATTR_BRIGHTNESS, None)
+        transition = kwargs.get(ATTR_TRANSITION)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
             brightness = int(brightness_to_percentage(brightness))
 
@@ -103,8 +104,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         # Handling turning to hs color mode
         if ATTR_HS_COLOR in kwargs:
             # TP-Link requires integers.
-            hue_sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
-            hue, sat = hue_sat
+            hue, sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
             await self.device.set_hsv(hue, sat, brightness, transition=transition)
             return
 
@@ -162,6 +162,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             modes.add(COLOR_MODE_HS)
         if self.device.is_dimmable:
             modes.add(COLOR_MODE_BRIGHTNESS)
+
+        if not modes:
+            modes.add(COLOR_MODE_ONOFF)
 
         return modes
 
