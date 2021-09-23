@@ -154,6 +154,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             and not (isinstance(source_ip, IPv6Address) and source_ip.is_global)
         ]
 
+    _LOGGER.warning("Zeroconf args: %s", zc_args)
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
     zeroconf_types, homekit_models = await asyncio.gather(
