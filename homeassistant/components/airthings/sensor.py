@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     StateType,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -17,11 +18,12 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     PERCENTAGE,
     PRESSURE_MBAR,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -67,14 +69,17 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "voc": SensorEntityDescription(
         key="voc",
-        device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="VOC",
     ),
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Airthings sensor."""
 
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
