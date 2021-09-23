@@ -321,7 +321,7 @@ def _last_reset_as_utc_isoformat(
     last_reset = dt_util.parse_datetime(last_reset_s)
     if last_reset is None:
         _LOGGER.warning(
-            "Ignoring illegal last reset %s for %s", last_reset_s, entity_id
+            "Ignoring illegal last reset '%s' for %s", last_reset_s, entity_id
         )
         return None
     return dt_util.as_utc(last_reset).isoformat()

@@ -361,8 +361,10 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(one).isoformat()
         _states = record_meter_state(
-            hass, one, dt_util.as_local(one), "sensor.test1", attributes, seq[i : i + 1]
+            hass, one, "sensor.test1", attributes, seq[i : i + 1]
         )
         states["sensor.test1"].extend(_states["sensor.test1"])
 
@@ -370,8 +372,10 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     two = zero + timedelta(minutes=5)
     for i in range(len(seq)):
         two = two + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(two).isoformat()
         _states = record_meter_state(
-            hass, two, dt_util.as_local(two), "sensor.test1", attributes, seq[i : i + 1]
+            hass, two, "sensor.test1", attributes, seq[i : i + 1]
         )
         states["sensor.test1"].extend(_states["sensor.test1"])
 
@@ -433,6 +437,80 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
         ("energy", "kWh", "kWh", 1),
     ],
 )
+def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
+    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+):
+    """Test compiling hourly statistics."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": state_class,
+        "unit_of_measurement": unit,
+        "last_reset": None,
+    }
+    seq = [10, 15, 15, 15, 20, 20, 20, 25]
+
+    states = {"sensor.test1": []}
+
+    # Insert states
+    one = zero
+    for i in range(len(seq)):
+        one = one + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(one).isoformat()
+        if i == 3:
+            attributes["last_reset"] = "festivus"  # not a valid time
+        _states = record_meter_state(
+            hass, one, "sensor.test1", attributes, seq[i : i + 1]
+        )
+        states["sensor.test1"].extend(_states["sensor.test1"])
+
+    hist = history.get_significant_states(
+        hass,
+        zero - timedelta.resolution,
+        one + timedelta.resolution,
+        significant_changes_only=False,
+    )
+    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
+                "state": approx(factor * seq[7]),
+                "sum": approx(factor * (sum(seq) - seq[0])),
+                "sum_decrease": approx(factor * 0.0),
+                "sum_increase": approx(factor * (sum(seq) - seq[0])),
+            },
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    assert "Ignoring illegal last reset 'festivus' for sensor.test1" in caplog.text
+
+
+@pytest.mark.parametrize("state_class", ["measurement"])
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,factor",
+    [
+        ("energy", "kWh", "kWh", 1),
+    ],
+)
 def test_compile_hourly_sum_statistics_nan_inf_state(
     hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
 ):
@@ -453,8 +531,10 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(one).isoformat()
         _states = record_meter_state(
-            hass, one, one, "sensor.test1", attributes, seq[i : i + 1]
+            hass, one, "sensor.test1", attributes, seq[i : i + 1]
         )
         states["sensor.test1"].extend(_states["sensor.test1"])
 
@@ -1727,7 +1807,6 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
             _states = record_meter_state(
                 hass,
                 start_meter,
-                dt_util.as_local(start_meter),
                 "sensor.test4",
                 sum_attributes,
                 seq[j : j + 1],
@@ -2000,7 +2079,7 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
     return four, eight, states
 
 
-def record_meter_state(hass, zero, last_reset, entity_id, _attributes, seq):
+def record_meter_state(hass, zero, entity_id, attributes, seq):
     """Record test state.
 
     We inject a state update for meter sensor.
@@ -2011,10 +2090,6 @@ def record_meter_state(hass, zero, last_reset, entity_id, _attributes, seq):
         hass.states.set(entity_id, state, **kwargs)
         wait_recording_done(hass)
         return hass.states.get(entity_id)
-
-    attributes = dict(_attributes)
-    if "last_reset" in _attributes:
-        attributes["last_reset"] = last_reset.isoformat()
 
     states = {entity_id: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=zero):
