@@ -206,7 +206,7 @@ androidtv[async]==0.0.60
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.4
+apprise==0.9.5.1
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -304,7 +304,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.4.1
+debugpy==1.4.3
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1289,7 +1289,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.3.10
 
 # homeassistant.components.toon
-toonapi==0.2.0
+toonapi==0.2.1
 
 # homeassistant.components.totalconnect
 total_connect_client==0.57
