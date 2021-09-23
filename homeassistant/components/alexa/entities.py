@@ -546,9 +546,10 @@ class FanCapabilities(AlexaEntity):
             )
             range_controller = False
 
-        # AlexaRangeController controls the Fan Speed Percentage. When there is no speed support it will only allow to be set at 0 and 100%.
-        # If no other controller is activated AlexRangeController will not be needed unless there is speed support and will be initialized
-        # to make the fan controllable.
+        # AlexaRangeController controls the Fan Speed Percentage.
+        # For fans which only support on/off, no controller is added. This makes the
+        # fan impossible to turn on or off through Alexa, most likely due to a bug in Alexa.
+        # As a workaround, we add a range controller which can only be set to 0% or 100%.
         if range_controller or supported & fan.SUPPORT_SET_SPEED:
             yield AlexaRangeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PERCENTAGE}"
