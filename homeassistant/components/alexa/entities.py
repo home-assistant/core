@@ -539,7 +539,7 @@ class FanCapabilities(AlexaEntity):
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}"
             )
-            range_controller = False
+            force_range_controller = False
         if supported & fan.SUPPORT_DIRECTION:
             yield AlexaModeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
