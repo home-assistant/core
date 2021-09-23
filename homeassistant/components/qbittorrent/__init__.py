@@ -8,7 +8,7 @@ from requests.exceptions import RequestException
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_per_platform
 
 from .client import create_client
@@ -52,11 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
-        return
+        return False
 
     except RequestException as err:
         _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
+        raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.data[CONF_URL]] = {
         DATA_KEY_CLIENT: client,

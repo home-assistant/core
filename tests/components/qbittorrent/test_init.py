@@ -1,5 +1,4 @@
 """Test the Qbittorrent Init."""
-
 from unittest.mock import MagicMock, patch
 
 from qbittorrent.client import LoginRequired
@@ -33,7 +32,7 @@ def _create_mocked_client(raise_request_exception=False, raise_login_exception=F
     if raise_request_exception:
         mocked_client.login.side_effect = RequestException("Mocked Exception")
     if raise_login_exception:
-        mocked_client.login.side_effect = LoginRequired()
+        mocked_client.login.side_effect = LoginRequired
     return mocked_client
 
 
@@ -104,3 +103,21 @@ async def test_unload_entry(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_invalid_imported_server(hass: HomeAssistant):
+    """Test setup invalid imported server."""
+    # Create a mock entry so we don't have to go through config flow
+    config_entry = MOCK_ENTRY
+    config_entry.add_to_hass(hass)
+    mocked_client = _create_mocked_client(True, False)
+
+    with patch(
+        "homeassistant.components.qbittorrent.client.Client", return_value=mocked_client
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(qbittorrent.DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.data.get(qbittorrent.DOMAIN)
