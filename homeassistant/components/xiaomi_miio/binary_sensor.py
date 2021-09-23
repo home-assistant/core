@@ -73,7 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensors = []
         if model in MODEL_FAN_ZA5:
             sensors = FAN_ZA5_BINARY_SENSORS
-        if model in MODELS_HUMIDIFIER_MIIO:
+        elif model in MODELS_HUMIDIFIER_MIIO:
             sensors = HUMIDIFIER_MIIO_BINARY_SENSORS
         elif model in MODELS_HUMIDIFIER_MIOT:
             sensors = HUMIDIFIER_MIOT_BINARY_SENSORS
