@@ -4,7 +4,7 @@ import logging
 from typing import Callable, NamedTuple
 from unittest.mock import Mock, PropertyMock, patch
 
-from pyHS100 import SmartDeviceException
+from kasa import SmartDeviceException
 import pytest
 
 from homeassistant.components import tplink
@@ -23,7 +23,6 @@ from homeassistant.components.tplink.const import (
     CONF_DISCOVERY,
     CONF_LIGHT,
 )
-from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -692,30 +691,6 @@ async def test_update_failure(
         caplog.set_level(logging.WARNING)
         await hass.helpers.entity_component.async_update_entity("light.light1")
         assert "Could not read state for 123.123.123.123|light1" in caplog.text
-
-    get_state_call_count = 0
-
-    def get_light_state_side_effect():
-        nonlocal get_state_call_count
-        get_state_call_count += 1
-
-        if get_state_call_count == 1:
-            raise SmartDeviceException()
-
-        return light_mock_data.light_state
-
-    light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
-
-    with patch("homeassistant.components.tplink.light", MAX_ATTEMPTS=2, SLEEP_TIME=0):
-        caplog.clear()
-        caplog.set_level(logging.DEBUG)
-
-        await update_entity(hass, "light.light1")
-        assert (
-            f"Retrying in {SLEEP_TIME} seconds for 123.123.123.123|light1"
-            in caplog.text
-        )
-        assert "Device 123.123.123.123|light1 responded after " in caplog.text
 
 
 async def test_async_setup_entry_unavailable(
