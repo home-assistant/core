@@ -5,21 +5,6 @@ from aiomusiccast import MusicCastConnectionException
 import pytest
 
 
-@pytest.fixture(autouse=True)
-async def autouse_mock_ssdp(mock_ssdp):
-    """Auto use mock_ssdp."""
-    yield
-
-
-@pytest.fixture(autouse=True)
-def mock_setup_entry():
-    """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
-    ):
-        yield
-
-
 @pytest.fixture
 def mock_get_device_info_valid():
     """Mock getting valid device info from musiccast API."""

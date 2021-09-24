@@ -30,6 +30,12 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.fixture(autouse=True)
+async def autouse_mock_ssdp(mock_ssdp):
+    """Auto use mock_ssdp."""
+    yield
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_get_source_ip")
 async def test_flow_ssdp(hass: HomeAssistant, set_ssdp_discovery):
     """Test config flow: discovered + configured through ssdp."""

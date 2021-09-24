@@ -74,12 +74,6 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         yield mock_soco
 
 
-@pytest.fixture(autouse=True)
-async def autouse_mock_ssdp(mock_ssdp):
-    """Auto use mock_ssdp."""
-    yield
-
-
 @pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""

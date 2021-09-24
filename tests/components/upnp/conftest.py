@@ -139,12 +139,6 @@ def mock_setup_entry():
         yield mock_setup
 
 
-@pytest.fixture(autouse=True)
-async def autouse_mock_ssdp(mock_ssdp):
-    """Auto use mock_ssdp."""
-    yield
-
-
 @pytest.fixture
 async def ssdp_instant_discovery():
     """Trigger SSDP discovery on callback register."""

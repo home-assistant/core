@@ -1,4 +1,8 @@
 """Test config flow."""
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
@@ -6,6 +10,22 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+async def autouse_mock_ssdp(mock_ssdp):
+    """Auto use mock_ssdp."""
+    yield
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry():
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.yamaha_musiccast.async_setup_entry", return_value=True
+    ):
+        yield
+
 
 # User Flows
 

@@ -22,6 +22,17 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 
 
+@pytest.fixture(autouse=True)
+async def silent_ssdp_listener():
+    """Patch SsdpListener class, preventing any actual SSDP traffic."""
+    with patch("homeassistant.components.ssdp.SsdpListener.async_start"), patch(
+        "homeassistant.components.ssdp.SsdpListener.async_stop"
+    ), patch("homeassistant.components.ssdp.SsdpListener.async_search"):
+        # Fixtures are initialized before patches. When the component is started here,
+        # certain functions/methods might not be patched in time.
+        yield SsdpListener
+
+
 def _ssdp_headers(headers):
     return CaseInsensitiveDict(
         headers, _timestamp=datetime(2021, 1, 1, 12, 00), _udn=udn_from_headers(headers)

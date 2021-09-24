@@ -17,6 +17,12 @@ from .conftest import TEST_DISCOVERY
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+async def autouse_mock_ssdp(mock_ssdp):
+    """Auto use mock_ssdp."""
+    yield
+
+
 @pytest.mark.usefixtures("mock_get_source_ip")
 async def test_async_setup_entry_default(hass: HomeAssistant, set_ssdp_discovery):
     """Test async_setup_entry."""
