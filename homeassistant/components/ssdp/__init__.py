@@ -188,6 +188,9 @@ class IntegrationMatchers:
                         matchers_by_key.setdefault(match_value, []).append(
                             (domain, matcher)
                         )
+        import pprint
+
+        pprint.pprint(self._match_by_key)
 
     @core_callback
     def async_matching_domains(self, info_with_desc: CaseInsensitiveDict) -> set[str]:
@@ -198,6 +201,8 @@ class IntegrationMatchers:
             if not (match_value := info_with_desc.get(key)):
                 continue
             for domain, matcher in matchers_by_key.get(match_value, []):
+                if domain in domains:
+                    continue
                 if all(info_with_desc.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
         return domains
