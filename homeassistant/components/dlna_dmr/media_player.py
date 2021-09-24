@@ -139,7 +139,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmrDevice | None = None
-    _remove_ssdp_callbacks: list[Callable] = []
+    _remove_ssdp_callbacks: list[Callable]
     check_available: bool = False
 
     # Track BOOTID in SSDP advertisements for device changes
@@ -167,6 +167,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.poll_availability = poll_availability
         self.location = location
         self._device_lock = asyncio.Lock()
+        self._remove_ssdp_callbacks = []
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
@@ -200,6 +201,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Handle removal."""
         for callback in self._remove_ssdp_callbacks:
             callback()
+        self._remove_ssdp_callbacks.clear()
         await self._device_disconnect()
 
     async def async_ssdp_callback(
