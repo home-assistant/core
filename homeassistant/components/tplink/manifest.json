@@ -3,7 +3,7 @@
   "name": "TP-Link Kasa Smart",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink",
-  "requirements": ["python-kasa==0.4.0.dev4"],
+  "requirements": ["python-kasa==0.4.0.dev5"],
   "codeowners": ["@rytilahti", "@thegardenmonkey"],
   "iot_class": "local_polling",
   "dhcp": [
