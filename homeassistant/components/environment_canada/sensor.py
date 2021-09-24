@@ -90,7 +90,7 @@ class ECAlertSensor(ECBaseEntity, SensorEntity):
     def native_value(self):
         """Return the state."""
         value = self._coordinator.data.alerts.get(self._alert_name[0], {}).get("value")
-        if not value:
+        if value is None:
             return None
 
         self._alert_attrs = {}
