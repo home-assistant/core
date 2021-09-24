@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import slugify
 
 from .const import CONF_API_TOKEN, CONF_SITE_ID, LOGGER
-from .coordinator import AmberDataService
+from .coordinator import AmberUpdateCoordinator
 
 ATTRIBUTION = "Data provided by Amber Electric"
 
@@ -43,7 +43,7 @@ class AmberPriceSensor(CoordinatorEntity, SensorEntity):
         platform_name: str,
         site_id: str,
         channel_type: str,
-        data_service: AmberDataService,
+        data_service: AmberUpdateCoordinator,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Sensor."""
@@ -131,7 +131,7 @@ class AmberEnergyPriceSensor(CoordinatorEntity, SensorEntity):
         platform_name: str,
         site_id: str,
         channel_type: str,
-        data_service: AmberDataService,
+        data_service: AmberUpdateCoordinator,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Sensor."""
@@ -199,7 +199,7 @@ class AmberRenewablesSensor(CoordinatorEntity, SensorEntity):
         self,
         platform_name: str,
         site_id: str,
-        data_service: AmberDataService,
+        data_service: AmberUpdateCoordinator,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Sensor."""
@@ -252,7 +252,7 @@ class AmberForecastSensor(CoordinatorEntity, SensorEntity):
         platform_name: str,
         site_id: str,
         channel_type: ChannelType,
-        data_service: AmberDataService,
+        data_service: AmberUpdateCoordinator,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Sensor."""
@@ -347,7 +347,7 @@ class AmberPriceSpikeSensor(CoordinatorEntity, SensorEntity):
         self,
         platform_name: str,
         site_id: str,
-        data_service: AmberDataService,
+        data_service: AmberUpdateCoordinator,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Sensor."""
@@ -408,7 +408,7 @@ class AmberFactory:
     ) -> None:
         """Initialise the factory."""
         self._platform_name = platform_name
-        self.data_service = AmberDataService(hass, api, site_id)
+        self.data_service = AmberUpdateCoordinator(hass, api, site_id)
         self._site_id = site_id
 
     def build_sensors(self) -> list[SensorEntity]:

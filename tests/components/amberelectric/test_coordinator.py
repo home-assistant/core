@@ -7,7 +7,7 @@ from amberelectric.model.channel import Channel, ChannelType
 from amberelectric.model.site import Site
 import pytest
 
-from homeassistant.components.amberelectric.coordinator import AmberDataService
+from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -61,52 +61,70 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
     """Test fetching a site with only a general channel."""
 
     current_price_api.get_current_price.return_value = GENERAL_CHANNEL
-    data_service = AmberDataService(hass, current_price_api, GENERAL_ONLY_SITE_ID)
-    await data_service.async_update_data()
+    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    result = await data_service.async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
     )
 
-    assert data_service.data == GENERAL_CHANNEL
-    assert data_service.current_prices[ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert data_service.forecasts[ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert data_service.current_prices[ChannelType.CONTROLLED_LOAD] is None
-    assert data_service.forecasts[ChannelType.CONTROLLED_LOAD] == []
-    assert data_service.current_prices[ChannelType.FEED_IN] is None
-    assert data_service.forecasts[ChannelType.FEED_IN] == []
+    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
+    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
+    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
+    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
+    assert result["prices:current"][ChannelType.FEED_IN] is None
+    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
+    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
+    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
+
+
+async def test_fetch_no_general_site(
+    hass: HomeAssistant, current_price_api: Mock
+) -> None:
+    """Test fetching a site with no general channel."""
+
+    current_price_api.get_current_price.return_value = CONTROLLED_LOAD_CHANNEL
+    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    with pytest.raises(UpdateFailed):
+        await data_service.async_update_data()
+
+    current_price_api.get_current_price.assert_called_with(
+        GENERAL_ONLY_SITE_ID, next=48
+    )
 
 
 async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> None:
     """Test that the old values are maintained if a second call fails."""
 
     current_price_api.get_current_price.return_value = GENERAL_CHANNEL
-    data_service = AmberDataService(hass, current_price_api, GENERAL_ONLY_SITE_ID)
-    await data_service.async_update_data()
+    data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
+    result = await data_service.async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
     )
 
-    assert data_service.data == GENERAL_CHANNEL
-    assert data_service.current_prices[ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert data_service.forecasts[ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert data_service.current_prices[ChannelType.CONTROLLED_LOAD] is None
-    assert data_service.forecasts[ChannelType.CONTROLLED_LOAD] == []
-    assert data_service.current_prices[ChannelType.FEED_IN] is None
-    assert data_service.forecasts[ChannelType.FEED_IN] == []
+    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
+    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
+    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
+    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
+    assert result["prices:current"][ChannelType.FEED_IN] is None
+    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
+    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
+    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
 
     current_price_api.get_current_price.side_effect = ApiException(status=403)
     with pytest.raises(UpdateFailed):
         await data_service.async_update_data()
 
-    assert data_service.data == GENERAL_CHANNEL
-    assert data_service.current_prices[ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert data_service.forecasts[ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert data_service.current_prices[ChannelType.CONTROLLED_LOAD] is None
-    assert data_service.forecasts[ChannelType.CONTROLLED_LOAD] == []
-    assert data_service.current_prices[ChannelType.FEED_IN] is None
-    assert data_service.forecasts[ChannelType.FEED_IN] == []
+    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
+    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
+    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
+    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
+    assert result["prices:current"][ChannelType.FEED_IN] is None
+    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
+    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
+    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
 
 
 async def test_fetch_general_and_controlled_load_site(
@@ -117,27 +135,28 @@ async def test_fetch_general_and_controlled_load_site(
     current_price_api.get_current_price.return_value = (
         GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
     )
-    data_service = AmberDataService(
+    data_service = AmberUpdateCoordinator(
         hass, current_price_api, GENERAL_AND_CONTROLLED_SITE_ID
     )
-    await data_service.async_update_data()
+    result = await data_service.async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_AND_CONTROLLED_SITE_ID, next=48
     )
 
-    assert data_service.data == GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
-    assert data_service.current_prices[ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert data_service.forecasts[ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
+    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
+    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
     assert (
-        data_service.current_prices[ChannelType.CONTROLLED_LOAD]
+        result["prices:current"][ChannelType.CONTROLLED_LOAD]
         == CONTROLLED_LOAD_CHANNEL[1]
     )
-    assert data_service.forecasts[ChannelType.CONTROLLED_LOAD] == [
+    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == [
         CONTROLLED_LOAD_CHANNEL[2]
     ]
-    assert data_service.current_prices[ChannelType.FEED_IN] is None
-    assert data_service.forecasts[ChannelType.FEED_IN] == []
+    assert result["prices:current"][ChannelType.FEED_IN] is None
+    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
+    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
+    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
 
 
 async def test_fetch_general_and_feed_in_site(
@@ -146,19 +165,20 @@ async def test_fetch_general_and_feed_in_site(
     """Test fetching a site with a general and feed_in channel."""
 
     current_price_api.get_current_price.return_value = GENERAL_CHANNEL + FEED_IN_CHANNEL
-    data_service = AmberDataService(
+    data_service = AmberUpdateCoordinator(
         hass, current_price_api, GENERAL_AND_FEED_IN_SITE_ID
     )
-    await data_service.async_update_data()
+    result = await data_service.async_update_data()
 
     current_price_api.get_current_price.assert_called_with(
         GENERAL_AND_FEED_IN_SITE_ID, next=48
     )
 
-    assert data_service.data == GENERAL_CHANNEL + FEED_IN_CHANNEL
-    assert data_service.current_prices[ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert data_service.forecasts[ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert data_service.current_prices[ChannelType.CONTROLLED_LOAD] is None
-    assert data_service.forecasts[ChannelType.CONTROLLED_LOAD] == []
-    assert data_service.current_prices[ChannelType.FEED_IN] == FEED_IN_CHANNEL[1]
-    assert data_service.forecasts[ChannelType.FEED_IN] == [FEED_IN_CHANNEL[2]]
+    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
+    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
+    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
+    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
+    assert result["prices:current"][ChannelType.FEED_IN] == FEED_IN_CHANNEL[1]
+    assert result["prices:forecasts"][ChannelType.FEED_IN] == [FEED_IN_CHANNEL[2]]
+    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
+    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
