@@ -83,9 +83,7 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
     """Test that light or switch platform list is filled correctly."""
     with patch(
         "homeassistant.components.tplink.common.Discover.discover"
-    ) as discover, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
+    ) as discover, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
         "homeassistant.components.tplink.light.async_setup_entry",
         return_value=True,
     ):
@@ -126,9 +124,7 @@ async def test_configuring_devices_from_multiple_sources(hass):
     """Test static and discover devices are not duplicated."""
     with patch(
         "homeassistant.components.tplink.common.Discover.discover"
-    ) as discover, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
+    ) as discover, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ):
         discover_device_fail = SmartPlug("123.123.123.123")
@@ -169,9 +165,9 @@ async def test_is_dimmable(hass):
         "homeassistant.components.tplink.light.async_setup_entry",
         return_value=mock_coro(True),
     ) as setup, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
+        "kasa.smartdevice.SmartDevice._query_helper"
     ), patch(
-        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", True
+        "kasa.smartplug.SmartPlug.is_dimmable", True
     ):
         dimmable_switch = SmartPlug("123.123.123.123")
         discover.return_value = {"host": dimmable_switch}
@@ -214,13 +210,11 @@ async def test_platforms_are_initialized(hass: HomeAssistant):
 
     with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
         "homeassistant.components.tplink.get_static_devices"
-    ) as get_static_devices, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
+    ) as get_static_devices, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
         "homeassistant.components.tplink.light.async_setup_entry",
         return_value=mock_coro(True),
     ), patch(
-        "homeassistant.components.tplink.common.SmartPlug.is_dimmable",
+        "kasa.smartplug.SmartPlug.is_dimmable",
         False,
     ):
 
@@ -271,13 +265,11 @@ async def test_smartplug_without_consumption_sensors(hass: HomeAssistant):
 
     with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
         "homeassistant.components.tplink.get_static_devices"
-    ) as get_static_devices, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
+    ) as get_static_devices, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
         "homeassistant.components.tplink.light.async_setup_entry",
         return_value=mock_coro(True),
     ), patch(
-        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+        "kasa.smartplug.SmartPlug.is_dimmable", False
     ):
 
         switch = SmartPlug("321.321.321.321")
@@ -310,10 +302,8 @@ async def test_smartstrip_device(hass: HomeAssistant):
 
     with patch(
         "homeassistant.components.tplink.common.Discover.discover"
-    ) as discover, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
-        "homeassistant.components.tplink.common.SmartPlug.get_sysinfo",
+    ) as discover, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
+        "kasa.smartplug.SmartPlug.get_sysinfo",
         return_value=SMARTSTRIP_KP303_DATA["sysinfo"],
     ):
 
@@ -350,13 +340,11 @@ async def test_not_available_at_startup(hass: HomeAssistant):
 
     with patch("homeassistant.components.tplink.common.Discover.discover"), patch(
         "homeassistant.components.tplink.get_static_devices"
-    ) as get_static_devices, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
+    ) as get_static_devices, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
         "homeassistant.components.tplink.light.async_setup_entry",
         return_value=mock_coro(True),
     ), patch(
-        "homeassistant.components.tplink.common.SmartPlug.is_dimmable", False
+        "kasa.smartplug.SmartPlug.is_dimmable", False
     ):
 
         switch = SmartPlug("321.321.321.321")
@@ -407,9 +395,7 @@ async def test_unload(hass, platform):
 
     with patch(
         "homeassistant.components.tplink.get_static_devices"
-    ) as get_static_devices, patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper"
-    ), patch(
+    ) as get_static_devices, patch("kasa.smartdevice.SmartDevice._query_helper"), patch(
         f"homeassistant.components.tplink.{platform}.async_setup_entry",
         return_value=mock_coro(True),
     ) as async_setup_entry:
