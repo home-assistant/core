@@ -16,12 +16,16 @@ from homeassistant.components.filter.sensor import (
     TimeThrottleFilter,
 )
 from homeassistant.components.sensor import (
-    ATTR_DEVICE_CLASS,
     ATTR_STATE_CLASS,
     DEVICE_CLASS_TEMPERATURE,
     STATE_CLASS_TOTAL_INCREASING,
 )
-from homeassistant.const import SERVICE_RELOAD, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
