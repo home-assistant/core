@@ -6,10 +6,15 @@ import ephem
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, CONF_TYPE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.dt import utcnow
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_TYPE,
+)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +32,14 @@ STATE_WINTER = "winter"
 TYPE_ASTRONOMICAL = "astronomical"
 TYPE_METEOROLOGICAL = "meteorological"
 
-VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
+ATTR_DAYS_LEFT = "days_left"
+ATTR_DAYS_IN = "days_in"
+ATTR_NEXT_SEASON_UTC = "next_season_utc"
+
+VALID_TYPES = [
+    TYPE_ASTRONOMICAL, 
+    TYPE_METEOROLOGICAL,
+]
 
 HEMISPHERE_SEASON_SWAP = {
     STATE_WINTER: STATE_SUMMER,
@@ -180,12 +192,12 @@ class Season(SensorEntity):
         """Return the state attributes of the device."""
         attr = {}
         if self.hemisphere != EQUATOR:
-            attr["days_left"] = self.days_left
-            attr["days_in"] = self.days_in
-            attr["next_date"] = self.next_date
+            attr[ATTR_DAYS_LEFT] = self.days_left
+            attr[ATTR_DAYS_IN] = self.days_in
+            attr[ATTR_NEXT_SEASON_UTC] = self.next_date
         return attr
 
     def update(self):
         """Update season."""
-        self.datetime = utcnow().replace(tzinfo=None)
+        self.datetime = datetime.utcnow()
         get_season(self)
