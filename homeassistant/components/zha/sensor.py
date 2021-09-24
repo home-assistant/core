@@ -269,6 +269,24 @@ class SmartEnergyMetering(Sensor):
     SENSOR_ATTR = "instantaneous_demand"
     _device_class = DEVICE_CLASS_POWER
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        se_channel = channels[0]
+        if cls.SENSOR_ATTR in se_channel.cluster.unsupported_attributes:
+            return None
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
         return self._channel.formatter_function(value)

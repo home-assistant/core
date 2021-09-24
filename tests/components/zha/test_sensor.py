@@ -372,3 +372,46 @@ async def test_electrical_measurement_init(
     assert channel.divisor == 10
     assert channel.multiplier == 20
     assert hass.states.get(entity_id).state == "60.0"
+
+
+@pytest.mark.parametrize(
+    "cluster_id, unsupported_attributes",
+    (
+        (
+            smartenergy.Metering.cluster_id,
+            {
+                "instantaneous_demand",
+            },
+        ),
+    ),
+)
+async def test_unsupported_attributes_sensor(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined_restored,
+    cluster_id,
+    unsupported_attributes,
+):
+    """Test zha sensor platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
+        }
+    )
+    cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
+    if cluster_id == smartenergy.Metering.cluster_id:
+        # this one is mains powered
+        zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+    for attr in unsupported_attributes:
+        cluster.add_unsupported_attribute(attr)
+    zha_device = await zha_device_joined_restored(zigpy_device)
+
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    await hass.async_block_till_done()
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is None
