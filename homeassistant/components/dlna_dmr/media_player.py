@@ -213,21 +213,29 @@ class DlnaDmrEntity(MediaPlayerEntity):
             info.get(ssdp.ATTR_SSDP_LOCATION),
         )
 
-        if change == ssdp.SsdpChange.UPDATE:
-            # This is an announcement that bootid is about to change. We'll deal
-            # with it when the ssdp:alive message comes through.
-            return
-
         try:
             bootid_str = info[ssdp.ATTR_SSDP_BOOTID]
-            bootid = int(bootid_str, 10)
+            bootid: int | None = int(bootid_str, 10)
         except (KeyError, ValueError):
-            pass
-        else:
-            if self._bootid is not None and self._bootid != bootid and self._device:
-                # Device has rebooted, drop existing connection and maybe reconnect
-                await self._device_disconnect()
-            self._bootid = bootid
+            bootid = None
+
+        if change == ssdp.SsdpChange.UPDATE:
+            # This is an announcement that bootid is about to change
+            if self._bootid is not None and self._bootid == bootid:
+                # Store the new value (because our old value matches) so that we
+                # can ignore subsequent ssdp:alive messages
+                try:
+                    next_bootid_str = info[ssdp.ATTR_SSDP_NEXTBOOTID]
+                    self._bootid = int(next_bootid_str, 10)
+                except (KeyError, ValueError):
+                    pass
+            # Nothing left to do until ssdp:alive comes through
+            return
+
+        if self._bootid is not None and self._bootid != bootid and self._device:
+            # Device has rebooted, drop existing connection and maybe reconnect
+            await self._device_disconnect()
+        self._bootid = bootid
 
         if change == ssdp.SsdpChange.BYEBYE and self._device:
             # Device is going away, disconnect
