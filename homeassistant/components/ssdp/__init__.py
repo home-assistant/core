@@ -189,9 +189,6 @@ class IntegrationMatchers:
                         matchers_by_key.setdefault(match_value, []).append(
                             (domain, matcher)
                         )
-        import pprint
-
-        pprint.pprint(self._match_by_key)
 
     @core_callback
     def async_matching_domains(self, info_with_desc: CaseInsensitiveDict) -> set[str]:
