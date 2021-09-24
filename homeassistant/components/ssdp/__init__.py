@@ -323,7 +323,6 @@ class Scanner:
         requester = AiohttpSessionRequester(session, True, 10)
         self._description_cache = DescriptionCache(requester)
         self._flow_dispatcher = FlowDispatcher(self.hass)
-        self._integration_matchers = await async_get_ssdp(self.hass)
 
         await self._async_start_ssdp_listeners()
 
