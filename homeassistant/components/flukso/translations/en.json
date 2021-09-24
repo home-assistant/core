@@ -3,11 +3,9 @@
     "step": {
       "user": {
         "title": "Flukso",
-        "description": "Please enter the Flukso serial and hash.",
+        "description": "Please enter the Flukso device hash.",
         "data": {
-          "device_serial": "Serial number",
-          "device_hash": "Hash",
-          "device_firmware": "Version"
+          "device_hash": "Hash"
         }
       }
     },

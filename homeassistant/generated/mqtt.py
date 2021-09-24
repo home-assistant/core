@@ -7,7 +7,7 @@ To update, run python3 -m script.hassfest
 
 MQTT = {
     "flukso": [
-        "/device/+/test/tap"
+        "/device/+/config/+"
     ],
     "tasmota": [
         "tasmota/discovery/#"

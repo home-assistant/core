@@ -1,38 +1,29 @@
 """The Flukso integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DEVICE_FIRMWARE, CONF_DEVICE_HASH, CONF_DEVICE_SERIAL, DOMAIN
-from .discovery import async_get_configs
-
-PLATFORMS: list[str] = ["binary_sensor", "sensor"]
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_DEVICE_HASH, DOMAIN, PLATFORMS
+from .discovery import async_discover_device
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Create a Genius Hub system."""
+    """Set up Flukso integration."""
     hass.data[DOMAIN] = {}
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flukso from a config entry."""
-    hass.data[DOMAIN][entry.entry_id] = {
-        "device": entry.data[CONF_DEVICE_HASH],
-        "serial": entry.data[CONF_DEVICE_SERIAL],
-        "firmware": entry.data[CONF_DEVICE_FIRMWARE],
-        "sensor": {},
-        "kube": {},
-        "flx": {},
-    }
+    for _, data in hass.data[DOMAIN].items():
+        if entry.data[CONF_DEVICE_HASH] == data[CONF_DEVICE_HASH]:
+            return False
 
-    # get all sensor configs
-    await async_get_configs(hass, entry)
+    hass.data[DOMAIN][entry.entry_id] = {CONF_DEVICE_HASH: entry.data[CONF_DEVICE_HASH]}
+
+    await async_discover_device(hass, entry)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -40,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload a Flukso config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

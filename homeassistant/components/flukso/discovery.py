@@ -2,10 +2,10 @@
 import asyncio
 import json
 import logging
+import re
 
-from homeassistant.components import mqtt
 from homeassistant.components.binary_sensor import DEVICE_CLASS_PROBLEM
-from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC
+from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, subscription
 from homeassistant.components.mqtt.binary_sensor import (
     CONF_OFF_DELAY,
     PLATFORM_SCHEMA as MQTT_BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -58,11 +58,49 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import DEFAULT_TIMEOUT, DOMAIN
+from .const import (
+    CONF_DEVICE_FIRMWARE,
+    CONF_DEVICE_HASH,
+    CONF_DEVICE_SERIAL,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIGS = ["kube", "flx", "sensor"]
+
+DATA_TYPE_MAP = {
+    "electricity": {
+        "gauge": {
+            "pf": ["gauge"],
+            "vrms": ["gauge"],
+            "irms": ["gauge"],
+            "vthd": ["gauge"],
+            "ithd": ["gauge"],
+            "alpha": ["gauge"],
+        },
+        "counter": {
+            "q1": ["gauge", "counter"],
+            "q2": ["gauge", "counter"],
+            "q3": ["gauge", "counter"],
+            "q4": ["gauge", "counter"],
+            "pplus": ["gauge", "counter"],
+            "pminus": ["gauge", "counter"],
+        },
+    },
+    "gas": {"counter": ["gauge", "counter"]},
+    "water": {"counter": ["gauge", "counter"]},
+    "temperature": {"gauge": ["gauge"]},
+    "pressure": {"gauge": ["gauge"]},
+    "battery": {"gauge": ["gauge"]},
+    "light": {"gauge": ["gauge"]},
+    "humidity": {"gauge": ["gauge"]},
+    "error": {"gauge": ["gauge"]},
+    "proximity": {"counter": ["gauge"]},
+    "movement": {"counter": ["gauge"]},
+    "vibration": {"counter": ["gauge"]},
+}
 
 UNIT_OF_MEASUREMENT_MAP = {
     "electricity": {
@@ -137,6 +175,8 @@ STATE_CLASS_MAP = {
     "humidity": STATE_CLASS_MEASUREMENT,
     "error": STATE_CLASS_MEASUREMENT,
     "proximity": STATE_CLASS_MEASUREMENT,
+    "movement": STATE_CLASS_MEASUREMENT,
+    "vibration": STATE_CLASS_MEASUREMENT,
 }
 
 
@@ -158,14 +198,16 @@ def _get_sensor_name(sensor, entry_data):
     name = "unknown"
     if "class" in sensor and sensor["class"] == "kube":
         if (
-            "name" in entry_data["kube"][str(sensor["kid"])]
+            "kube" in entry_data
+            and "name" in entry_data["kube"][str(sensor["kid"])]
             and entry_data["kube"][str(sensor["kid"])]["name"]
         ):
             name = entry_data["kube"][str(sensor["kid"])]["name"]
     else:
         if "port" in sensor:
             if (
-                "name" in entry_data["flx"][str(sensor["port"][0])]
+                "flx" in entry_data
+                and "name" in entry_data["flx"][str(sensor["port"][0])]
                 and entry_data["flx"][str(sensor["port"][0])]["name"]
             ):
                 name = entry_data["flx"][str(sensor["port"][0])]["name"]
@@ -210,7 +252,7 @@ def _get_binary_sensor_entities(entry_data, device_info):
         sensorconfig[CONF_QOS] = 0
         sensorconfig[CONF_FORCE_UPDATE] = False
         discovery_hash = (
-            entry_data["device"],
+            entry_data[CONF_DEVICE_HASH],
             sensor["id"],
             sensor["data_type"],
         )
@@ -260,7 +302,7 @@ def _get_sensor_config(sensor, entry_data, device_info):
     sensorconfig[CONF_QOS] = 0
     sensorconfig[CONF_FORCE_UPDATE] = True
     discovery_hash = (
-        entry_data["serial"].lower(),
+        entry_data[CONF_DEVICE_HASH],
         sensor["id"],
         sensor["data_type"],
     )
@@ -299,15 +341,11 @@ def _get_sensor_entities(entry_data, device_info):
         if _is_binary_sensor(sensor):
             continue
 
-        sensorconfig = _get_sensor_config(sensor, entry_data, device_info)
-        entities.append(MQTT_SENSOR_PLATFORM_SCHEMA(sensorconfig))
-
-        if "class" not in sensor or sensor["class"] != "kube":
-            # Add electricity, water and gas sensors 2 times: 1 gauge and 1 counter
-            if "tmpo" in sensor and sensor["tmpo"] == 1:
-                sensor["data_type"] = "gauge"
-                sensorconfig2 = _get_sensor_config(sensor, entry_data, device_info)
-                entities.append(MQTT_SENSOR_PLATFORM_SCHEMA(sensorconfig2))
+        for dt in _get_sensor_detail(sensor, DATA_TYPE_MAP):
+            s = sensor.copy()
+            s["data_type"] = dt
+            config = _get_sensor_config(s, entry_data, device_info)
+            entities.append(MQTT_SENSOR_PLATFORM_SCHEMA(config))
 
     return entities
 
@@ -316,12 +354,12 @@ def _get_device_info(entry_data):
     return {
         CONF_CONNECTIONS: [],
         CONF_IDENTIFIERS: {
-            # (DOMAIN, entry_data["serial"]),
-            (DOMAIN, entry_data["device"]),
+            # (DOMAIN, entry_data[CONF_DEVICE_SERIAL]),
+            (DOMAIN, entry_data[CONF_DEVICE_HASH]),
         },
         CONF_MANUFACTURER: "Flukso",
-        CONF_NAME: entry_data["serial"],
-        CONF_SW_VERSION: entry_data["firmware"],
+        CONF_NAME: entry_data.get(CONF_DEVICE_SERIAL, entry_data[CONF_DEVICE_HASH]),
+        CONF_SW_VERSION: entry_data.get(CONF_DEVICE_FIRMWARE, "unknown"),
     }
 
 
@@ -336,9 +374,11 @@ def get_entities_for_platform(platform, entry_data):
     return entities
 
 
-async def async_get_configs(hass, entry):
+async def async_discover_device(hass, entry):
     """Get the Flukso configs JSON's using MQTT."""
-    futures = {config: asyncio.Future() for config in CONFIGS}
+    config_futures = {config: asyncio.Future() for config in CONFIGS}
+    tap_future = asyncio.Future()
+    sub_state = None
 
     @callback
     def config_message_received(msg):
@@ -347,18 +387,46 @@ async def async_get_configs(hass, entry):
         device = splitted_topic[2]
         conftype = splitted_topic[4]
 
-        _LOGGER.debug("storing type %s for device %s", conftype, device)
+        _LOGGER.debug("storing config type %s for device %s", conftype, device)
         hass.data[DOMAIN][entry.entry_id][conftype] = json.loads(msg.payload)
 
-        if conftype in futures:
-            futures[conftype].set_result(True)
+        if conftype in config_futures:
+            config_futures[conftype].set_result(True)
 
-    unsubscribe = await mqtt.async_subscribe(
+    @callback
+    def tap_message_received(msg):
+        serial = re.findall("# serial: (.*)", msg.payload)[0]
+        firmware = re.findall("# firmware: (.*)", msg.payload)[0]
+
+        _LOGGER.debug("Found device with serial %s and firmware %s", serial, firmware)
+        hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_SERIAL] = serial
+        hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_FIRMWARE] = firmware
+
+        tap_future.set_result(True)
+
+    sub_state = await subscription.async_subscribe_topics(
         hass,
-        f'/device/{hass.data[DOMAIN][entry.entry_id]["device"]}/config/+',
-        config_message_received,
+        sub_state,
+        {
+            f"tap_topic_{hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_HASH]}": {
+                "topic": f"/device/{hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_HASH]}/test/tap",
+                "msg_callback": tap_message_received,
+            },
+            f"config_topic_{hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_HASH]}": {
+                "topic": f"/device/{hass.data[DOMAIN][entry.entry_id][CONF_DEVICE_HASH]}/config/+",
+                "msg_callback": config_message_received,
+            },
+        },
     )
 
-    await asyncio.wait(futures.values())
-    _LOGGER.debug("all configs received")
-    unsubscribe()
+    # give it 2 seconds to complete
+    _, pending = await asyncio.wait(config_futures.values(), timeout=2)
+    if len(pending) == 1 and config_futures["kube"] == pending[0]:
+        _LOGGER.debug("kube config pending, FLM02?")
+
+    _, pending = await asyncio.wait([tap_future], timeout=2)
+    if len(pending) == 1:
+        _LOGGER.debug("test tap pending, FLM02?")
+
+    _LOGGER.debug("all configs and tap received")
+    await subscription.async_unsubscribe_topics(hass, sub_state)
