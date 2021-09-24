@@ -600,9 +600,9 @@ class Recorder(threading.Thread):
         self.queue.put(UpdateStatisticsMetadataTask(statistic_id, unit_of_measurement))
 
     @callback
-    def async_external_statistics(self, metadata, statistics):
+    def async_external_statistics(self, metadata, stats):
         """Schedule external statistics."""
-        self.queue.put(ExternalStatisticsTask(metadata, statistics))
+        self.queue.put(ExternalStatisticsTask(metadata, stats))
 
     @callback
     def _async_setup_periodic_tasks(self):

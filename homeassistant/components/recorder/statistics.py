@@ -990,8 +990,6 @@ def add_external_statistics(
     if _statistics_id_claimed(instance.hass, metadata):
         return True
 
-    _LOGGER.error("add_external_statistics %s, %s", metadata, statistics)
-
     # TODO:
     # - Should we block if statistics has already been provided for a certain time, or update?
     # - Convert all times to UTC
