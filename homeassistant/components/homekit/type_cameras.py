@@ -314,6 +314,14 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self):
         """Find the camera stream source url."""
+        camera_state = self.hass.states.get(self.entity_id)
+        try:
+            stream_source = camera_state.attributes.get("stream_source")
+            if stream_source:
+                return stream_source
+        except Exception:  # pylint: disable=broad-except
+            pass
+
         stream_source = self.config.get(CONF_STREAM_SOURCE)
         if stream_source:
             return stream_source
