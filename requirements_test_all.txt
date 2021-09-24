@@ -420,7 +420,7 @@ gios==2.0.0
 glances_api==0.2.0
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -1044,7 +1044,7 @@ pyserial-asyncio==0.5
 pyserial==3.5
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0
+pysiaalarm==3.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
