@@ -35,6 +35,23 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
 
+MOCK_ENERGY_DATA = {
+    "smartlife.iot.common.emeter": {
+        "get_daystat": {
+            "day_list": [
+                {"day": 23, "energy_wh": 2, "month": 9, "year": 2021},
+                {"day": 24, "energy_wh": 66, "month": 9, "year": 2021},
+            ],
+            "err_code": 0,
+        },
+        "get_monthstat": {
+            "err_code": 0,
+            "month_list": [{"energy_wh": 68, "month": 9, "year": 2021}],
+        },
+        "get_realtime": {"err_code": 0, "power_mw": 10800},
+    }
+}
+
 
 class LightMockData(NamedTuple):
     """Mock light data."""
@@ -64,25 +81,6 @@ class SmartSwitchMockData(NamedTuple):
 @pytest.fixture(name="unknown_light_mock_data")
 def unknown_light_mock_data_fixture() -> None:
     """Create light mock data."""
-    sys_info = {
-        "sw_ver": "1.2.3",
-        "hw_ver": "2.3.4",
-        "mac": "aa:bb:cc:dd:ee:ff",
-        "mic_mac": "00:11:22:33:44",
-        "type": "light",
-        "hwId": "1234",
-        "fwId": "4567",
-        "oemId": "891011",
-        "dev_name": "light1",
-        "rssi": 11,
-        "latitude": "0",
-        "longitude": "0",
-        "is_color": True,
-        "is_dimmable": True,
-        "is_variable_color_temp": True,
-        "model": "Foo",
-        "alias": "light1",
-    }
     light_state = {
         "on_off": True,
         "dft_on_state": {
@@ -95,6 +93,26 @@ def unknown_light_mock_data_fixture() -> None:
         "color_temp": 3300,
         "hue": 110,
         "saturation": 90,
+    }
+    sys_info = {
+        "sw_ver": "1.2.3",
+        "type": "smartbulb",
+        "hw_ver": "2.3.4",
+        "mac": "aa:bb:cc:dd:ee:ff",
+        "mic_mac": "00:11:22:33:44",
+        "hwId": "1234",
+        "fwId": "4567",
+        "oemId": "891011",
+        "dev_name": "light1",
+        "rssi": 11,
+        "latitude": "0",
+        "longitude": "0",
+        "is_color": True,
+        "is_dimmable": True,
+        "is_variable_color_temp": True,
+        "model": "Foo",
+        "alias": "light1",
+        "light_state": light_state,
     }
 
     def set_light_state(state) -> None:
@@ -158,7 +176,7 @@ def unknown_light_mock_data_fixture() -> None:
     )
     query_patch = patch(
         "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
-        return_value={"system": {"get_sysinfo": sys_info}},
+        return_value={"system": {"get_sysinfo": sys_info}, **MOCK_ENERGY_DATA},
     )
     with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
@@ -273,7 +291,7 @@ def light_mock_data_fixture() -> None:
     )
     query_patch = patch(
         "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
-        return_value={"system": {"get_sysinfo": sys_info}},
+        return_value={"system": {"get_sysinfo": sys_info}, **MOCK_ENERGY_DATA},
     )
     with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
@@ -352,7 +370,7 @@ def dimmer_switch_mock_data_fixture() -> None:
     )
     query_patch = patch(
         "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
-        return_value={"system": {"get_sysinfo": sys_info}},
+        return_value={"system": {"get_sysinfo": sys_info}, **MOCK_ENERGY_DATA},
     )
     with query_patch as query_mock, brightness_patch as brightness_mock, is_on_patch as is_on_mock, sys_info_patch as sys_info_mock:
         yield SmartSwitchMockData(
