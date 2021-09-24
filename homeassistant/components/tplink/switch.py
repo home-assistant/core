@@ -34,7 +34,7 @@ async def async_setup_entry(
         coordinator = coordinators[switch.device_id]
         entities.append(SmartPlugSwitch(switch, coordinator))
         if switch.is_strip:
-            _LOGGER.info("initializing strip with %s sockets", len(switch.children))
+            _LOGGER.debug("Initializing strip with %s sockets", len(switch.children))
             for child in switch.children:
                 entities.append(SmartPlugSwitch(child, coordinator))
 
@@ -50,6 +50,12 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
         await self._async_device_workarounds()
         await self._async_refresh_with_children()
 
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self.device.turn_off()
+        await self._async_device_workarounds()
+        await self._async_refresh_with_children()
+
     async def _async_device_workarounds(self) -> None:
         # Workaround for delayed device state update on HS210: #55190
         if "HS210" in self.device.model:
@@ -58,9 +64,3 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     async def _async_refresh_with_children(self) -> None:
         self.coordinator.update_children = False
         await self.coordinator.async_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self.device.turn_off()
-        await self._async_device_workarounds()
-        await self._async_refresh_with_children()
