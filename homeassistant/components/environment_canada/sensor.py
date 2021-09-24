@@ -2,21 +2,9 @@
 import datetime
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    CONF_NAME,
-    LENGTH_INCHES,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    LENGTH_MILLIMETERS,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    SPEED_MILES_PER_HOUR,
-)
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.const import CONF_NAME
 
-from . import ECBaseEntity
+from . import ECBaseEntity, convert
 from .const import AQHI_SENSOR, DEFAULT_NAME, DOMAIN, SENSOR_TYPES
 
 ALERTS = [
@@ -72,36 +60,13 @@ class ECSensor(ECBaseEntity, SensorEntity):
         """Return the state."""
         key = self._entity_description.key
         value = self._coordinator.data.current if key == "aqhi" else self.get_value(key)
-
-        if value is None:
-            return None
-
-        if key == "pressure":
-            value = int(value * 10)  # Convert kPa to hPa
-        elif key == "tendency":
-            value = value.title()
-        elif isinstance(value, str) and len(value) > 254:
-            value = value[:254]
-
-        if self._is_metric:
-            return value
-
-        unit_of_measurement = self._entity_description.unit_convert
-        if unit_of_measurement in [SPEED_MILES_PER_HOUR, LENGTH_MILES]:
-            value = round(
-                convert_distance(float(value), LENGTH_KILOMETERS, LENGTH_MILES), 2
-            )
-        elif unit_of_measurement == LENGTH_INCHES:
-            value = round(
-                convert_distance(float(value), LENGTH_MILLIMETERS, LENGTH_INCHES), 2
-            )
-        elif unit_of_measurement == PRESSURE_INHG:
-            value = round(
-                convert_pressure(float(value), PRESSURE_HPA, PRESSURE_INHG), 2
-            )
-        elif unit_of_measurement == PERCENTAGE:
-            value = round(float(value))
-        return value
+        return convert(
+            key,
+            value,
+            self._is_metric,
+            self._entity_description.native_unit_of_measurement,
+            self._entity_description.unit_convert,
+        )
 
     @property
     def icon(self):
