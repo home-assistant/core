@@ -18,6 +18,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_EXTRA,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
@@ -57,7 +58,9 @@ from .const import (
     CONF_POLL_AVAILABILITY,
     DOMAIN,
     LOGGER as _LOGGER,
+    MEDIA_METADATA_DIDL,
     MEDIA_TYPE_MAP,
+    MEDIA_UPNP_CLASS_MAP,
 )
 from .data import EventListenAddr, get_domain_data
 
@@ -445,7 +448,21 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not state_variables:
             # Indicates a failure to resubscribe, check if device is still available
             self.check_available = True
-        self.async_write_ha_state()
+
+        force_refresh = False
+
+        if service.service_id == "urn:upnp-org:serviceId:AVTransport":
+            for state_variable in state_variables:
+                # Force a state refresh when player begins or pauses playback
+                # to update the position info.
+                if (
+                    state_variable.name == "TransportState"
+                    and state_variable.value
+                    in (TransportState.PLAYING, TransportState.PAUSED_PLAYBACK)
+                ):
+                    force_refresh = True
+
+        self.async_schedule_update_ha_state(force_refresh)
 
     @property
     def available(self) -> bool:
@@ -584,23 +601,44 @@ class DlnaDmrEntity(MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
-        title = "Home Assistant"
-
         assert self._device is not None
+        extra: dict[str, Any] = kwargs.get(ATTR_MEDIA_EXTRA) or {}
+        metadata: dict[str, Any] = extra.get("metadata") or {}
+
+        title = extra.get("title") or metadata.get("title") or "Home Assistant"
+        thumb = extra.get("thumb")
+        if thumb:
+            metadata["album_art_uri"] = thumb
+
+        # Translate metadata keys from HA names to DIDL-Lite names
+        for hass_key, didl_key in MEDIA_METADATA_DIDL.items():
+            if hass_key in metadata:
+                metadata[didl_key] = metadata.pop(hass_key)
+
+        # Create metadata specific to the given media type; different fields are
+        # available depending on what the upnp_class is.
+        upnp_class = MEDIA_UPNP_CLASS_MAP.get(media_type)
+        didl_metadata = await self._device.construct_play_media_metadata(
+            media_url=media_id,
+            media_title=title,
+            override_upnp_class=upnp_class,
+            meta_data=metadata,
+        )
 
         # Stop current playing media
         if self._device.can_stop:
             await self.async_media_stop()
 
         # Queue media
-        await self._device.async_set_transport_uri(media_id, title)
-        await self._device.async_wait_for_can_play()
+        await self._device.async_set_transport_uri(media_id, title, didl_metadata)
 
-        # If already playing, no need to call Play
-        if self._device.transport_state == TransportState.PLAYING:
+        # If already playing, or don't want to autoplay, no need to call Play
+        autoplay = extra.get("autoplay", True)
+        if self._device.transport_state == TransportState.PLAYING or not autoplay:
             return
 
         # Play it
+        await self._device.async_wait_for_can_play()
         await self.async_media_play()
 
     @catch_request_errors

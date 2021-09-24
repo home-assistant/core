@@ -58,3 +58,41 @@ MEDIA_TYPE_MAP: Mapping[str, str] = {
     "object.container.storageFolder": _mp_const.MEDIA_TYPE_PLAYLIST,
     "object.container.bookmarkFolder": _mp_const.MEDIA_TYPE_PLAYLIST,
 }
+
+# Map media_player media_content_type to UPnP class. Not everything will map
+# directly, in which case it's not specified and other defaults will be used.
+MEDIA_UPNP_CLASS_MAP: Mapping[str, str] = {
+    _mp_const.MEDIA_TYPE_ALBUM: "object.container.album.musicAlbum",
+    _mp_const.MEDIA_TYPE_ARTIST: "object.container.person.musicArtist",
+    _mp_const.MEDIA_TYPE_CHANNEL: "object.item.videoItem.videoBroadcast",
+    _mp_const.MEDIA_TYPE_CHANNELS: "object.container.channelGroup",
+    _mp_const.MEDIA_TYPE_COMPOSER: "object.container.person.musicArtist",
+    _mp_const.MEDIA_TYPE_CONTRIBUTING_ARTIST: "object.container.person.musicArtist",
+    _mp_const.MEDIA_TYPE_EPISODE: "object.item.epgItem.videoProgram",
+    _mp_const.MEDIA_TYPE_GENRE: "object.container.genre",
+    _mp_const.MEDIA_TYPE_IMAGE: "object.item.imageItem",
+    _mp_const.MEDIA_TYPE_MOVIE: "object.item.videoItem.movie",
+    _mp_const.MEDIA_TYPE_MUSIC: "object.item.audioItem.musicTrack",
+    _mp_const.MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
+    _mp_const.MEDIA_TYPE_PODCAST: "object.item.audioItem.audioBook",
+    _mp_const.MEDIA_TYPE_SEASON: "object.item.epgItem.videoProgram",
+    _mp_const.MEDIA_TYPE_TRACK: "object.item.audioItem.musicTrack",
+    _mp_const.MEDIA_TYPE_TVSHOW: "object.item.videoItem.videoBroadcast",
+    _mp_const.MEDIA_TYPE_URL: "object.item.bookmarkItem",
+    _mp_const.MEDIA_TYPE_VIDEO: "object.item.videoItem",
+}
+
+# Translation of MediaMetadata keys to DIDL-Lite keys.
+# See https://developers.google.com/cast/docs/reference/messages#MediaData via
+# https://www.home-assistant.io/integrations/media_player/ for HA keys.
+# See http://www.upnp.org/specs/av/UPnP-av-ContentDirectory-v4-Service.pdf for
+# DIDL-Lite keys.
+MEDIA_METADATA_DIDL: Mapping[str, str] = {
+    "subtitle": "longDescription",
+    "releaseDate": "date",
+    "studio": "publisher",
+    "season": "episodeSeason",
+    "episode": "episodeNumber",
+    "albumName": "album",
+    "trackNumber": "originalTrackNumber",
+}

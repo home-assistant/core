@@ -595,63 +595,6 @@ async def test_services(
         blocking=True,
     )
     dmr_device_mock.async_seek_rel_time.assert_awaited_once_with(timedelta(seconds=33))
-
-
-async def test_play_media_service(
-    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
-) -> None:
-    """Test play_media service call."""
-    # play_media performs a few calls to the device for setup and play
-    # Start from stopped, and device can stop too
-    dmr_device_mock.can_stop = True
-    dmr_device_mock.transport_state = TransportState.STOPPED
-    dmr_device_mock.async_stop.reset_mock()
-    dmr_device_mock.async_set_transport_uri.reset_mock()
-    dmr_device_mock.async_wait_for_can_play.reset_mock()
-    dmr_device_mock.async_play.reset_mock()
-    await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
-        },
-        blocking=True,
-    )
-    dmr_device_mock.async_stop.assert_awaited_once_with()
-    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant"
-    )
-    dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
-    dmr_device_mock.async_play.assert_awaited_once_with()
-
-    # play_media again, while the device is already playing and can't stop
-    dmr_device_mock.can_stop = False
-    dmr_device_mock.transport_state = TransportState.PLAYING
-    dmr_device_mock.async_stop.reset_mock()
-    dmr_device_mock.async_set_transport_uri.reset_mock()
-    dmr_device_mock.async_wait_for_can_play.reset_mock()
-    dmr_device_mock.async_play.reset_mock()
-    await hass.services.async_call(
-        MP_DOMAIN,
-        mp_const.SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
-            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
-            mp_const.ATTR_MEDIA_ENQUEUE: False,
-        },
-        blocking=True,
-    )
-    dmr_device_mock.async_stop.assert_not_awaited()
-    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
-        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant"
-    )
-    dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
-    dmr_device_mock.async_play.assert_not_awaited()
-
     await hass.services.async_call(
         MP_DOMAIN,
         mp_const.SERVICE_SELECT_SOUND_MODE,
@@ -659,6 +602,163 @@ async def test_play_media_service(
         blocking=True,
     )
     dmr_device_mock.async_select_preset.assert_awaited_once_with("Default")
+
+
+async def test_play_media_stopped(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media, starting from stopped and the device can stop."""
+    # play_media performs a few calls to the device for setup and play
+    dmr_device_mock.can_stop = True
+    dmr_device_mock.transport_state = TransportState.STOPPED
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+        },
+        blocking=True,
+    )
+
+    dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
+        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_title="Home Assistant",
+        override_upnp_class="object.item.audioItem.musicTrack",
+        meta_data={},
+    )
+    dmr_device_mock.async_stop.assert_awaited_once_with()
+    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+    )
+    dmr_device_mock.async_wait_for_can_play.assert_awaited_once_with()
+    dmr_device_mock.async_play.assert_awaited_once_with()
+
+
+async def test_play_media_playing(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media, device is already playing and can't stop."""
+    dmr_device_mock.can_stop = False
+    dmr_device_mock.transport_state = TransportState.PLAYING
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+        },
+        blocking=True,
+    )
+
+    dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
+        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_title="Home Assistant",
+        override_upnp_class="object.item.audioItem.musicTrack",
+        meta_data={},
+    )
+    dmr_device_mock.async_stop.assert_not_awaited()
+    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+    )
+    dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
+    dmr_device_mock.async_play.assert_not_awaited()
+
+
+async def test_play_media_no_autoplay(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media with autoplay=False."""
+    # play_media performs a few calls to the device for setup and play
+    dmr_device_mock.can_stop = True
+    dmr_device_mock.transport_state = TransportState.STOPPED
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+            mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
+        },
+        blocking=True,
+    )
+
+    dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
+        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_title="Home Assistant",
+        override_upnp_class="object.item.audioItem.musicTrack",
+        meta_data={},
+    )
+    dmr_device_mock.async_stop.assert_awaited_once_with()
+    dmr_device_mock.async_set_transport_uri.assert_awaited_once_with(
+        "http://192.88.99.20:8200/MediaItems/17621.mp3", "Home Assistant", ANY
+    )
+    dmr_device_mock.async_wait_for_can_play.assert_not_awaited()
+    dmr_device_mock.async_play.assert_not_awaited()
+
+
+async def test_play_media_metadata(
+    hass: HomeAssistant, dmr_device_mock: Mock, mock_entity_id: str
+) -> None:
+    """Test play_media constructs useful metadata from user params."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+            mp_const.ATTR_MEDIA_EXTRA: {
+                "title": "Mock song",
+                "thumb": "http://192.88.99.20:8200/MediaItems/17621.jpg",
+                "metadata": {"artist": "Mock artist", "album": "Mock album"},
+            },
+        },
+        blocking=True,
+    )
+
+    dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
+        media_url="http://192.88.99.20:8200/MediaItems/17621.mp3",
+        media_title="Mock song",
+        override_upnp_class="object.item.audioItem.musicTrack",
+        meta_data={
+            "artist": "Mock artist",
+            "album": "Mock album",
+            "album_art_uri": "http://192.88.99.20:8200/MediaItems/17621.jpg",
+        },
+    )
+
+    # Check again for a different media type
+    dmr_device_mock.construct_play_media_metadata.reset_mock()
+    await hass.services.async_call(
+        MP_DOMAIN,
+        mp_const.SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: mock_entity_id,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_TVSHOW,
+            mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/123.mkv",
+            mp_const.ATTR_MEDIA_ENQUEUE: False,
+            mp_const.ATTR_MEDIA_EXTRA: {
+                "title": "Mock show",
+                "metadata": {"season": 1, "episode": 12},
+            },
+        },
+        blocking=True,
+    )
+
+    dmr_device_mock.construct_play_media_metadata.assert_awaited_once_with(
+        media_url="http://192.88.99.20:8200/MediaItems/123.mkv",
+        media_title="Mock show",
+        override_upnp_class="object.item.videoItem.videoBroadcast",
+        meta_data={"episodeSeason": 1, "episodeNumber": 12},
+    )
 
 
 async def test_shuffle_repeat_modes(
