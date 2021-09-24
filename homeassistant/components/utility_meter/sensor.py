@@ -18,7 +18,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
-    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -46,6 +46,7 @@ from .const import (
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
     DAILY,
+    DATA_TARIFF_SENSORS,
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
@@ -96,19 +97,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_TARIFF_ENTITY
         )
         conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
-
-        meters.append(
-            UtilityMeterSensor(
-                conf_meter_source,
-                conf.get(CONF_NAME),
-                conf_meter_type,
-                conf_meter_offset,
-                conf_meter_net_consumption,
-                conf.get(CONF_TARIFF),
-                conf_meter_tariff_entity,
-                conf_cron_pattern,
-            )
+        meter_sensor = UtilityMeterSensor(
+            meter,
+            conf_meter_source,
+            conf.get(CONF_NAME),
+            conf_meter_type,
+            conf_meter_offset,
+            conf_meter_net_consumption,
+            conf.get(CONF_TARIFF),
+            conf_meter_tariff_entity,
+            conf_cron_pattern,
         )
+        meters.append(meter_sensor)
+
+        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
 
@@ -126,6 +128,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
     def __init__(
         self,
+        parent_meter,
         source_entity,
         name,
         meter_type,
@@ -136,6 +139,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         cron_pattern=None,
     ):
         """Initialize the Utility Meter sensor."""
+        self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
         self._state = None
         self._last_period = 0
@@ -153,11 +157,27 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
 
+    def start(self, unit):
+        """Initialize unit and state upon source initial update."""
+        self._unit_of_measurement = unit
+        self._state = 0
+        self.async_write_ha_state()
+
     @callback
     def async_reading(self, event):
         """Handle the sensor state changes."""
         old_state = event.data.get("old_state")
         new_state = event.data.get("new_state")
+
+        if (
+            self._unit_of_measurement is None or self._state is None
+        ) and new_state.state:
+            source_state = self.hass.states.get(self._sensor_source_id)
+            for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
+                DATA_TARIFF_SENSORS
+            ]:
+                sensor.start(source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+
         if (
             old_state is None
             or new_state is None
@@ -317,15 +337,6 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         @callback
         def async_source_tracking(event):
             """Wait for source to be ready, then start meter."""
-            source_state = self.hass.states.get(self._sensor_source_id)
-            if (
-                self._unit_of_measurement is None or self._state is None
-            ) and source_state:
-                self._unit_of_measurement = source_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-                self._state = 0
-                self.async_write_ha_state()
             if self._tariff_entity is not None:
                 _LOGGER.debug(
                     "<%s> tracks utility meter %s", self.name, self._tariff_entity
@@ -349,7 +360,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
             )
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, async_source_tracking
+            EVENT_HOMEASSISTANT_START, async_source_tracking
         )
 
     @property
