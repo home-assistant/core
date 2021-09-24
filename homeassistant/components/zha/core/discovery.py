@@ -46,7 +46,8 @@ async def async_add_entities(
     """Add entities helper."""
     if not entities:
         return
-    to_add = [ent_cls(*args) for ent_cls, args in entities]
+    to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
+    to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 

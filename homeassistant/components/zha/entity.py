@@ -173,6 +173,20 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        return cls(unique_id, zha_device, channels, **kwargs)
+
     @property
     def available(self) -> bool:
         """Return entity availability."""
@@ -251,6 +265,16 @@ class ZhaGroupEntity(BaseZhaEntity):
     def available(self) -> bool:
         """Return entity availability."""
         return self._available
+
+    @classmethod
+    def create_entity(
+        cls, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+    ) -> ZhaGroupEntity | None:
+        """Group Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        return cls(entity_ids, unique_id, group_id, zha_device, **kwargs)
 
     async def _handle_group_membership_changed(self):
         """Handle group membership changed."""
