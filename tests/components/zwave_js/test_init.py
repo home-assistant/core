@@ -656,3 +656,81 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
 
     entity = ent_reg.async_get(EATON_RF9640_ENTITY)
     assert dev_reg.async_get(entity.device_id).area_id is not None
+
+
+async def test_node_removed(hass, multisensor_6_state, client, integration):
+    """Test that device gets removed when node gets removed."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, multisensor_6_state)
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": False}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has been removed
+    assert not dev_reg.async_get(old_device.id)
+
+
+async def test_replace_same_node(hass, multisensor_6_state, client, integration):
+    """Test when a node is replaced with itself that the device remains."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, multisensor_6_state)
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+
+async def test_replace_different_node(
+    hass, multisensor_6_state, hank_binary_switch_state, client, integration
+):
+    """Test when a node is replaced with a different node."""
+    hank_binary_switch_state["nodeId"] = multisensor_6_state["nodeId"]
+    dev_reg = dr.async_get(hass)
+    old_node = Node(client, multisensor_6_state)
+    device_id = f"{client.driver.controller.home_id}-{old_node.node_id}"
+    new_node = Node(client, hank_binary_switch_state)
+    event = {"node": old_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+
+    event = {"node": old_node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+
+    event = {"node": new_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get(device.id)
+    # assert device is new
+    assert device
+    assert device.manufacturer == "HANK Electronics Ltd."
