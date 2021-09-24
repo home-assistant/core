@@ -68,19 +68,6 @@ async def async_discover_devices(
     lights = []
     switches = []
 
-    def process_devices() -> None:
-        for device in devices.values():
-            # If this device already exists, ignore dynamic setup.
-            if existing_devices.has_device_with_host(device.host):
-                continue
-
-            if device.is_strip or device.is_plug:
-                switches.append(device)
-            if device.is_bulb or device.is_light_strip or device.is_dimmer:
-                lights.append(device)
-            else:
-                _LOGGER.error("Unknown smart device type: %s", type(device))
-
     # We do retries since UDP packets over wifi can get lost
     devices: dict[str, SmartDevice] = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
@@ -90,7 +77,7 @@ async def async_discover_devices(
             MAX_DISCOVERY_RETRIES,
         )
         discovered_devices = await async_get_discoverable_devices(hass)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Discovered %s TP-Link of expected %s smart home device(s)",
             len(discovered_devices),
             target_device_count,
@@ -99,18 +86,28 @@ async def async_discover_devices(
             devices[device_ip] = discovered_devices[device_ip]
 
         if len(discovered_devices) >= target_device_count:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Discovered at least as many devices on the network as exist in our device registry, no need to retry"
             )
             break
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Found %s unique TP-Link smart home device(s) after %s discovery attempts",
         len(devices),
         attempt,
     )
 
-    process_devices()
+    for device in devices.values():
+        # If this device already exists, ignore dynamic setup.
+        if existing_devices.has_device_with_host(device.host):
+            continue
+
+        if device.is_strip or device.is_plug:
+            switches.append(device)
+        if device.is_bulb or device.is_light_strip or device.is_dimmer:
+            lights.append(device)
+        else:
+            _LOGGER.error("Unknown smart device type: %s", type(device))
 
     return SmartDevices(lights, switches)
 
