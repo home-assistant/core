@@ -92,16 +92,16 @@ class TariffSelect(SelectEntity, RestoreEntity):
         _LOGGER.debug("reset meter %s", self.entity_id)
         async_dispatcher_send(self.hass, SIGNAL_RESET_METER, self.entity_id)
 
-    async def async_select_option(self, tariff: str) -> None:
-        """Select new option."""
-        if tariff not in self._tariffs:
+    async def async_select_option(self, option: str) -> None:
+        """Select new tariff (option)."""
+        if option not in self._tariffs:
             _LOGGER.warning(
                 "Invalid tariff: %s (possible tariffs: %s)",
-                tariff,
+                option,
                 ", ".join(self._tariffs),
             )
             return
-        self._current_tariff = tariff
+        self._current_tariff = option
         self.async_write_ha_state()
 
     async def async_next_tariff(self):
