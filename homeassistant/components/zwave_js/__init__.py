@@ -318,7 +318,7 @@ async def async_setup_entry(  # noqa: C901
     def async_on_node_removed(event: dict) -> None:
         """Handle node removed event."""
         node: ZwaveNode = event["node"]
-        replaced: bool = event["replaced"]
+        replaced: bool = event.get("replaced", False)
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
