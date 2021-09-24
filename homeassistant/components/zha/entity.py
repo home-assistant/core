@@ -41,12 +41,16 @@ UPDATE_GROUP_FROM_CHILD_DELAY = 0.5
 class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
+    _unique_id_suffix: str | None = None
+
     def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs) -> None:
         """Init ZHA entity."""
         self._name: str = ""
         self._force_update: bool = False
         self._should_poll: bool = False
         self._unique_id: str = unique_id
+        if self._unique_id_suffix:
+            self._unique_id += f"-{self._unique_id_suffix}"
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
@@ -141,6 +145,16 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
+
+    def __init_subclass__(cls, id_suffix: str | None = None, **kwargs) -> None:
+        """Initialize subclass.
+
+        :param id_suffix: suffix to add to the unique_id of the entity. Used for multi
+                          entities using the same channel/cluster id for the entity.
+        """
+        super().__init_subclass__(**kwargs)
+        if id_suffix:
+            cls._unique_id_suffix = id_suffix
 
     def __init__(
         self,
