@@ -255,5 +255,6 @@ SENSOR_TYPES = {
             0,
             None,
         ],
+        "StorageDemand": ["HwcDemand", None, "mdi:toggle-switch", 2, None],
     },
 }
