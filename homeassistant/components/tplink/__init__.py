@@ -3,24 +3,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import time
 from typing import Any
 
-from pyHS100.smartdevice import SmartDevice, SmartDeviceException
-from pyHS100.smartplug import SmartPlug
+from kasa import SmartDevice, SmartDeviceException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    CONF_ALIAS,
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_STATE,
-)
+from homeassistant.const import ATTR_VOLTAGE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -37,9 +28,7 @@ from .const import (
     CONF_DISCOVERY,
     CONF_EMETER_PARAMS,
     CONF_LIGHT,
-    CONF_MODEL,
     CONF_STRIP,
-    CONF_SW_VERSION,
     CONF_SWITCH,
     COORDINATORS,
     PLATFORMS,
@@ -112,13 +101,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_data[CONF_SWITCH] = []
     hass_data[UNAVAILABLE_DEVICES] = []
     lights: list[SmartDevice] = hass_data[CONF_LIGHT]
-    switches: list[SmartPlug] = hass_data[CONF_SWITCH]
+    switches: list[SmartDevice] = hass_data[CONF_SWITCH]
     unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
 
     # Add static devices
     static_devices = SmartDevices()
     if config_data is not None:
-        static_devices = get_static_devices(config_data)
+        static_devices = await get_static_devices(config_data)
 
         lights.extend(static_devices.lights)
         switches.extend(static_devices.switches)
@@ -154,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for device in unavailable_devices:
             try:
-                await hass.async_add_executor_job(device.get_sysinfo)
+                await device.update()
             except SmartDeviceException:
                 continue
             _LOGGER.debug(
@@ -164,22 +153,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             break
 
     # prepare DataUpdateCoordinators
-    hass_data[COORDINATORS] = {}
-    for switch in switches:
-
+    hass_data[COORDINATORS]: dict[str, TPLinkDataUpdateCoordinator] = {}
+    for device in switches + lights:
         try:
-            info = await hass.async_add_executor_job(switch.get_sysinfo)
+            await device.update()
         except SmartDeviceException:
             _LOGGER.warning(
                 "Device at '%s' not reachable during setup, will retry later",
-                switch.host,
+                device.host,
             )
-            unavailable_devices.append(switch)
+            unavailable_devices.append(device)
             continue
 
         hass_data[COORDINATORS][
-            switch.context or switch.mac
-        ] = coordinator = SmartPlugDataUpdateCoordinator(hass, switch, info["alias"])
+            device.device_id
+        ] = coordinator = TPLinkDataUpdateCoordinator(hass, device)
         await coordinator.async_config_entry_first_refresh()
 
     if unavailable_devices:
@@ -208,73 +196,54 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class SmartPlugDataUpdateCoordinator(DataUpdateCoordinator):
+class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for specific SmartPlug."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        smartplug: SmartPlug,
-        alias: str,
+        device: SmartDevice,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
-        self.smartplug = smartplug
+        self.device = device
 
         update_interval = timedelta(seconds=30)
         super().__init__(
             hass,
             _LOGGER,
-            name=alias,
+            name=device.alias,
             update_interval=update_interval,
         )
 
-    def _update_data(self) -> dict:
+    async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
         try:
-            info = self.smartplug.sys_info
-            data = {
-                CONF_HOST: self.smartplug.host,
-                CONF_MAC: info["mac"],
-                CONF_MODEL: info["model"],
-                CONF_SW_VERSION: info["sw_ver"],
-            }
-            if self.smartplug.context is None:
-                data[CONF_ALIAS] = info["alias"]
-                data[CONF_DEVICE_ID] = info["mac"]
-                data[CONF_STATE] = bool(info["relay_state"])
-            else:
-                plug_from_context = next(
-                    c
-                    for c in self.smartplug.sys_info["children"]
-                    if c["id"] == self.smartplug.context
-                )
-                data[CONF_ALIAS] = plug_from_context["alias"]
-                data[CONF_DEVICE_ID] = self.smartplug.context
-                data[CONF_STATE] = plug_from_context["state"] == 1
+            await self.device.update()
+            data = {}
 
             # Check if the device has emeter
-            if "ENE" in info["feature"]:
-                emeter_readings = self.smartplug.get_emeter_realtime()
+            if self.device.has_emeter:
+                emeter_readings = self.device.emeter_realtime
                 data[CONF_EMETER_PARAMS] = {
-                    ATTR_CURRENT_POWER_W: round(float(emeter_readings["power"]), 2),
-                    ATTR_TOTAL_ENERGY_KWH: round(float(emeter_readings["total"]), 3),
-                    ATTR_VOLTAGE: round(float(emeter_readings["voltage"]), 1),
-                    ATTR_CURRENT_A: round(float(emeter_readings["current"]), 2),
+                    ATTR_CURRENT_POWER_W: emeter_readings.power,
+                    ATTR_TOTAL_ENERGY_KWH: emeter_readings.total,
+                    ATTR_VOLTAGE: emeter_readings.voltage,
+                    ATTR_CURRENT_A: emeter_readings.current,
                 }
-                emeter_statics = self.smartplug.get_emeter_daily()
-                if emeter_statics.get(int(time.strftime("%e"))):
-                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = round(
-                        float(emeter_statics[int(time.strftime("%e"))]), 3
-                    )
-                else:
+
+                emeter_today = self.device.emeter_today
+                if emeter_today is None:
                     # today's consumption not available, when device was off all the day
-                    data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = 0.0
+                    # bulb's do not report this information, so filter it out
+                    consumption_today = 0.0
+                    if self.device.is_bulb:
+                        consumption_today = None
+                else:
+                    consumption_today = emeter_today
+
+                data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = consumption_today
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
 
-        self.name = data[CONF_ALIAS]
+        self.name = self.device.alias
         return data
-
-    async def _async_update_data(self) -> dict:
-        """Fetch all device and sensor data from api."""
-        return await self.hass.async_add_executor_job(self._update_data)

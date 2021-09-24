@@ -753,9 +753,6 @@ py17track==3.2.1
 # homeassistant.components.control4
 pyControl4==0.0.6
 
-# homeassistant.components.tplink
-pyHS100==0.3.5.2
-
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0
 
@@ -1084,6 +1081,9 @@ python-izone==1.1.6
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
+
+# homeassistant.components.tplink
+python-kasa==0.4.0.dev4
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.8
