@@ -98,13 +98,14 @@ async def async_setup_platform(
     api = Efergy(
         config.get(CONF_APPTOKEN),
         async_get_clientsession(hass),
-        utc_offset=str(config.get(CONF_UTC_OFFSET)),
+        utc_offset=config[CONF_UTC_OFFSET],
     )
 
     dev = []
+    sensors = await api.get_sids()
     for variable in config[CONF_MONITORED_VARIABLES]:
         if variable[CONF_TYPE] == CONF_CURRENT_VALUES:
-            for sensor in await api.get_sids():
+            for sensor in sensors:
                 dev.append(
                     EfergySensor(
                         api,
@@ -147,7 +148,7 @@ class EfergySensor(SensorEntity):
         if description.key == CONF_COST:
             self._attr_native_unit_of_measurement = f"{currency}/{period}"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""
         self._attr_native_value = await self.api.async_get_reading(
             self.entity_description.key, period=self.period, sid=self.sid
