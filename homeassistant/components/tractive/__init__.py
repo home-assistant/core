@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 class Trackables:
     """A class that describes trackables."""
 
-    tracker: aiotractive.Tracker | None = None
+    tracker: aiotractive.tracker.Tracker | None = None
     trackable: dict | None = None
     tracker_details: dict | None = None
     hw_info: dict | None = None
