@@ -182,7 +182,6 @@ class SettingDataUpdateCoordinator(PlenticoreUpdateCoordinator):
         _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
 
         fetched_data = await client.get_setting_values(self._fetch)
-
         return fetched_data
 
     async def _async_write_data(self, module_id: str, value: dict[str, str]) -> bool:

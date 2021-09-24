@@ -632,13 +632,13 @@ SWITCH_SETTINGS_DATA = [
         "Battery:SmartBatteryControl:Enable",
         "Battery SmartBatteryControl Enable",
         {},
-        "format_round",
+        "1",
     ),
     (
         "devices:local",
         "Battery:TimeControl:Enable",
         "Battery TimeControl Enable",
         {},
-        "format_round",
+        "1",
     ),
 ]
