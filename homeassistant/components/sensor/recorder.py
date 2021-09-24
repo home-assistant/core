@@ -490,6 +490,7 @@ def _compile_statistics(  # noqa: C901
 
         # Set meta data
         meta: StatisticMetaData = {
+            "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
             "unit_of_measurement": unit,
             "has_mean": "mean" in wanted_statistics[entity_id],

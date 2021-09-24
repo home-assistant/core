@@ -22,7 +22,8 @@ from homeassistant.const import (
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
@@ -30,7 +31,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DOMAIN
+from .const import DATA_INSTANCE, DOMAIN
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -100,6 +101,7 @@ QUERY_STATISTICS_SUMMARY_SUM_LEGACY = [
 QUERY_STATISTIC_META = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
+    StatisticsMeta.source,
     StatisticsMeta.unit_of_measurement,
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
@@ -208,10 +210,7 @@ def _update_or_add_metadata(
         hass, session, statistic_ids=[statistic_id]
     )
     if not old_metadata_dict:
-        unit = new_metadata["unit_of_measurement"]
-        has_mean = new_metadata["has_mean"]
-        has_sum = new_metadata["has_sum"]
-        meta = StatisticsMeta.from_meta(DOMAIN, statistic_id, unit, has_mean, has_sum)
+        meta = StatisticsMeta.from_meta(new_metadata)
         session.add(meta)
         session.flush()  # Flush to get the metadata id assigned
         _LOGGER.debug(
@@ -396,16 +395,13 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     # Insert collected statistics in the database
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
-            metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
-            for stat in stats["stat"]:
-                try:
-                    session.add(StatisticsShortTerm.from_stats(metadata_id, stat))
-                except SQLAlchemyError:
-                    _LOGGER.exception(
-                        "Unexpected exception when inserting statistics %s:%s ",
-                        metadata_id,
-                        stats,
-                    )
+            _insert_statistics(
+                instance.hass,
+                session,
+                StatisticsShortTerm,
+                stats["meta"],
+                stats["stat"],
+            )
 
         if start.minute == 55:
             # A full hour is ready, summarize it
@@ -414,6 +410,26 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
         session.add(StatisticsRuns(start=start))
 
     return True
+
+
+def _insert_statistics(
+    hass: HomeAssistant,
+    session: scoped_session,
+    table: type[Statistics | StatisticsShortTerm],
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Insert statistics in the database."""
+    metadata_id = _update_or_add_metadata(hass, session, metadata)
+    for stat in statistics:
+        try:
+            session.add(table.from_stats(metadata_id, stat))
+        except SQLAlchemyError:
+            _LOGGER.exception(
+                "Unexpected exception when inserting statistics %s:%s ",
+                metadata_id,
+                stat,
+            )
 
 
 def get_metadata_with_session(
@@ -433,16 +449,17 @@ def get_metadata_with_session(
     """
 
     def _meta(metas: list, wanted_metadata_id: str) -> StatisticMetaData | None:
-        meta: StatisticMetaData | None = None
-        for metadata_id, statistic_id, unit, has_mean, has_sum in metas:
+        """Find metadata for a given metadata_id and store it in a StatisticMetaData."""
+        for metadata_id, statistic_id, source, unit, has_mean, has_sum in metas:
             if metadata_id == wanted_metadata_id:
-                meta = {
+                return {
+                    "source": source,
                     "statistic_id": statistic_id,
                     "unit_of_measurement": unit,
                     "has_mean": has_mean,
                     "has_sum": has_sum,
                 }
-        return meta
+        return None
 
     # Fetch metatadata from the database
     baked_query = hass.data[STATISTICS_META_BAKERY](
@@ -919,3 +936,67 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
             continue
         platform_validation.update(platform.validate_statistics(hass))
     return platform_validation
+
+
+def _statistics_id_claimed(hass: HomeAssistant, metadata: StatisticMetaData) -> bool:
+    """Return True if the statistic_id is claimed by recorder or another integration."""
+    old_metadata = get_metadata(hass, metadata["statistic_id"])
+    if old_metadata and old_metadata["source"] != metadata["source"]:
+        _LOGGER.warning(
+            "Failed to insert statistics for %s, source %s differs from %s",
+            metadata["statistic_id"],
+            metadata["source"],
+            old_metadata["source"],
+        )
+        return True
+
+    return False
+
+
+def async_add_external_statistics(
+    hass: HomeAssistant,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> None:
+    """Add hourly statistics from an external source.
+
+    This inserts an add_external_statistics job in the recorder's queue.
+    """
+    # The statistic_id has same limitations as an entity_id
+    if not valid_entity_id(metadata["statistic_id"]):
+        raise HomeAssistantError
+
+    # The source must not be empty
+    if not metadata["source"]:
+        raise HomeAssistantError
+
+    # TODO:
+    # - Do we allow statistic_id such as `sensor.no_such_sensor` or `sensor.will_never_have_statistics`?
+    # - reject if start times are not an hourly boundary (minutes, seconds, µs should all be 0)
+    # - reject if sum_increase is not >= sum
+
+    # Insert job in recorder's queue
+    hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
+
+
+@retryable_database_job("statistics")
+def add_external_statistics(
+    instance: Recorder,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> bool:
+    """Process an add_statistics job."""
+    # Check if the statistic_id is or will be claimed by recorder
+    if _statistics_id_claimed(instance.hass, metadata):
+        return True
+
+    _LOGGER.error("add_external_statistics %s, %s", metadata, statistics)
+
+    # TODO:
+    # - Should we block if statistics has already been provided for a certain time, or update?
+    # - Convert all times to UTC
+
+    with session_scope(session=instance.get_session()) as session:  # type: ignore
+        _insert_statistics(instance.hass, session, Statistics, metadata, statistics)
+
+    return True

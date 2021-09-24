@@ -13,6 +13,7 @@ from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
     get_last_statistics,
     statistics_during_period,
 )
@@ -299,6 +300,51 @@ def test_statistics_duplicated(hass_recorder, caplog):
         assert "Compiling statistics for" not in caplog.text
         assert "Statistics already compiled" in caplog.text
         caplog.clear()
+
+
+def test_external_statistics(hass_recorder, caplog):
+    """Test statistics with same start time is not compiled."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+
+    statistics = {
+        "start": period1,
+        "last_reset": None,
+        "state": 0,
+        "sum": 2,
+    }
+
+    metadata = {
+        "source": "test",
+        "statistic_id": "test.total_energy_import",
+        "unit_of_measurement": "kWh",
+        "has_mean": False,
+        "has_sum": True,
+    }
+
+    async_add_external_statistics(hass, metadata, (statistics,))
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="hour")
+    assert stats == {
+        "test.total_energy_import": [
+            {
+                "statistic_id": "test.total_energy_import",
+                "start": period1.isoformat(),
+                "end": (period1 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(0.0),
+                "sum": approx(2.0),
+            }
+        ]
+    }
 
 
 def record_states(hass):

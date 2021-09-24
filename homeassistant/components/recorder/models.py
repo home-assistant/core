@@ -310,6 +310,7 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
+    source: str
     statistic_id: str
     unit_of_measurement: str | None
     has_mean: bool
@@ -331,21 +332,9 @@ class StatisticsMeta(Base):  # type: ignore
     has_sum = Column(Boolean)
 
     @staticmethod
-    def from_meta(
-        source: str,
-        statistic_id: str,
-        unit_of_measurement: str | None,
-        has_mean: bool,
-        has_sum: bool,
-    ) -> StatisticsMeta:
+    def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        return StatisticsMeta(
-            source=source,
-            statistic_id=statistic_id,
-            unit_of_measurement=unit_of_measurement,
-            has_mean=has_mean,
-            has_sum=has_sum,
-        )
+        return StatisticsMeta(**meta)
 
 
 class RecorderRuns(Base):  # type: ignore
