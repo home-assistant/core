@@ -198,9 +198,7 @@ class IntegrationMatchers:
         for key, matchers_by_key in self._match_by_key.items():
             if not (match_value := info_with_desc.get(key)):
                 continue
-            if not (matchers := matchers_by_key.get(match_value)):
-                continue
-            for domain, matcher in matchers:
+            for domain, matcher in matchers_by_key.get(match_value, []):
                 if all(info_with_desc.get(k) == v for (k, v) in matcher.items()):
                     domains.add(domain)
         return domains
