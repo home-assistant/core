@@ -50,7 +50,7 @@ class Trackables:
     tracker_details: dict | None = None
     hw_info: dict | None = None
     pos_report: dict | None = None
-    tracker: aiotractive.Tracker = None
+    tracker: aiotractive.Tracker | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
