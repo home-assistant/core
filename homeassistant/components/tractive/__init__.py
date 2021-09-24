@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
 import aiotractive
@@ -21,9 +22,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    CLIENT,
     DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
+    TRACKABLES,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_POSITION_UPDATED,
@@ -35,11 +38,21 @@ PLATFORMS = ["device_tracker", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class Trackables:
+    """A class that describes trackables."""
+
+    trackable: dict | None = None
+    tracker_details: dict | None = None
+    hw_info: dict | None = None
+    pos_report: dict | None = None
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up tractive from a config entry."""
     data = entry.data
 
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
 
     client = aiotractive.Tractive(
         data[CONF_EMAIL], data[CONF_PASSWORD], session=async_get_clientsession(hass)
@@ -56,7 +69,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tractive = TractiveClient(hass, client, creds["user_id"])
     tractive.subscribe()
 
-    hass.data[DOMAIN][entry.entry_id] = tractive
+    try:
+        trackable_objects = await client.trackable_objects()
+        trackables = await asyncio.gather(
+            *(_generate_trackables(client, item) for item in trackable_objects)
+        )
+    except aiotractive.exceptions.TractiveError as error:
+        await tractive.unsubscribe()
+        raise ConfigEntryNotReady from error
+
+    # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
+    # So we have to remove None values from trackables list.
+    trackables = [item for item in trackables if item]
+
+    hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
+    hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -70,12 +97,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def _generate_trackables(client, trackable):
+    """Generate trackables."""
+    trackable = await trackable.details()
+
+    # Check that the pet has tracker linked.
+    if not trackable["device_id"]:
+        return
+
+    tracker = client.tracker(trackable["device_id"])
+
+    tracker_details, hw_info, pos_report = await asyncio.gather(
+        tracker.details(), tracker.hw_info(), tracker.pos_report()
+    )
+
+    return Trackables(trackable, tracker_details, hw_info, pos_report)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        tractive = hass.data[DOMAIN].pop(entry.entry_id)
+        tractive = hass.data[DOMAIN][entry.entry_id].pop(CLIENT)
         await tractive.unsubscribe()
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 

@@ -829,6 +829,9 @@ pydispatcher==2.0.5
 # homeassistant.components.econet
 pyeconet==0.1.14
 
+# homeassistant.components.efergy
+pyefergy==0.0.3
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
@@ -1329,7 +1332,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.1
+velbus-aio==2021.9.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
