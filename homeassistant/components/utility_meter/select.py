@@ -2,15 +2,12 @@
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ATTR_TARIFF,
     ATTR_TARIFFS,
     CONF_METER,
     CONF_TARIFFS,
@@ -40,7 +37,7 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
 
     platform.async_register_entity_service(
         SERVICE_SELECT_TARIFF,
-        {vol.Required(ATTR_TARIFF): cv.string},
+        {"option": cv.string},
         "async_select_option",
     )
 

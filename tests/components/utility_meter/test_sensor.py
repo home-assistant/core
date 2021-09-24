@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
 )
 from homeassistant.components.utility_meter.const import (
-    ATTR_TARIFF,
     ATTR_VALUE,
     DAILY,
     DOMAIN,
@@ -113,7 +112,7 @@ async def test_state(hass):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SELECT_TARIFF,
-        {ATTR_ENTITY_ID: "select.energy_bill", ATTR_TARIFF: "offpeak"},
+        {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )
 

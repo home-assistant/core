@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
-    ATTR_TARIFF,
     DOMAIN,
     SERVICE_RESET,
     SERVICE_SELECT_NEXT_TARIFF,
@@ -115,14 +114,14 @@ async def test_services(hass):
     assert state.state == "1"
 
     # Change tariff
-    data = {ATTR_ENTITY_ID: "select.energy_bill", ATTR_TARIFF: "wrong_tariff"}
+    data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
     assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
-    data = {ATTR_ENTITY_ID: "select.energy_bill", ATTR_TARIFF: "peak"}
+    data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
     await hass.async_block_till_done()
 
