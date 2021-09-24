@@ -39,6 +39,7 @@ from tests.common import async_fire_time_changed
 class LightMockData(NamedTuple):
     """Mock light data."""
 
+    query: Mock
     sys_info: dict
     light_state: dict
     set_light_state: Callable[[dict], None]
@@ -53,8 +54,9 @@ class LightMockData(NamedTuple):
 class SmartSwitchMockData(NamedTuple):
     """Mock smart switch data."""
 
+    query: Mock
     sys_info: dict
-    state_mock: Mock
+    is_on_mock: Mock
     brightness_mock: Mock
     sys_info_mock: Mock
 
@@ -118,7 +120,7 @@ def unknown_light_mock_data_fixture() -> None:
     )
     sys_info_patch = patch(
         "kasa.smartdevice.SmartDevice.sys_info",
-        return_value=sys_info,
+        sys_info,
     )
     get_emeter_daily_patch = patch(
         "kasa.smartdevice.SmartDevice.get_emeter_daily",
@@ -154,9 +156,13 @@ def unknown_light_mock_data_fixture() -> None:
             12: 2.12,
         },
     )
-
-    with set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
+    query_patch = patch(
+        "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
+        return_value={"system": {"get_sysinfo": sys_info}},
+    )
+    with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
+            query=query_mock,
             sys_info=sys_info,
             light_state=light_state,
             set_light_state=set_light_state,
@@ -229,7 +235,7 @@ def light_mock_data_fixture() -> None:
     )
     sys_info_patch = patch(
         "kasa.smartdevice.SmartDevice.sys_info",
-        return_value=sys_info,
+        sys_info,
     )
     get_emeter_daily_patch = patch(
         "kasa.smartdevice.SmartDevice.get_emeter_daily",
@@ -265,9 +271,13 @@ def light_mock_data_fixture() -> None:
             12: 2.12,
         },
     )
-
-    with set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
+    query_patch = patch(
+        "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
+        return_value={"system": {"get_sysinfo": sys_info}},
+    )
+    with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
+            query=query_mock,
             sys_info=sys_info,
             light_state=light_state,
             set_light_state=set_light_state,
@@ -293,6 +303,7 @@ def dimmer_switch_mock_data_fixture() -> None:
         "fwId": "4567",
         "oemId": "891011",
         "dev_name": "dimmer1",
+        "led_off": 1,
         "rssi": 11,
         "latitude": "0",
         "longitude": "0",
@@ -306,7 +317,7 @@ def dimmer_switch_mock_data_fixture() -> None:
         "brightness": 13,
     }
 
-    def state(*args, **kwargs):
+    def is_on(*args, **kwargs):
         nonlocal sys_info
         if len(args) == 0:
             return sys_info["relay_state"]
@@ -327,23 +338,28 @@ def dimmer_switch_mock_data_fixture() -> None:
 
     sys_info_patch = patch(
         "kasa.smartdevice.SmartDevice.sys_info",
-        return_value=sys_info,
+        sys_info,
     )
-    state_patch = patch(
-        "kasa.smartdimmer.SmartDimmer.state",
+    is_on_patch = patch(
+        "kasa.smartdimmer.SmartDimmer.is_on",
         new_callable=PropertyMock,
-        side_effect=state,
+        side_effect=is_on,
     )
     brightness_patch = patch(
         "kasa.smartdimmer.SmartDimmer.brightness",
         new_callable=PropertyMock,
         side_effect=brightness,
     )
-    with brightness_patch as brightness_mock, state_patch as state_mock, sys_info_patch as sys_info_mock:
+    query_patch = patch(
+        "kasa.smartdevice.TPLinkSmartHomeProtocol.query",
+        return_value={"system": {"get_sysinfo": sys_info}},
+    )
+    with query_patch as query_mock, brightness_patch as brightness_mock, is_on_patch as is_on_mock, sys_info_patch as sys_info_mock:
         yield SmartSwitchMockData(
+            query=query_mock,
             sys_info=sys_info,
             brightness_mock=brightness_mock,
-            state_mock=state_mock,
+            is_on_mock=is_on_mock,
             sys_info_mock=sys_info_mock,
         )
 
