@@ -97,7 +97,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         # Handle turning to temp mode
         if ATTR_COLOR_TEMP in kwargs:
             color_tmp = mired_to_kelvin(int(kwargs[ATTR_COLOR_TEMP]))
-            _LOGGER.info("Changing color temp to %s", color_tmp)
+            _LOGGER.debug("Changing color temp to %s", color_tmp)
             await self.device.set_color_temp(
                 color_tmp, brightness=brightness, transition=transition
             )
