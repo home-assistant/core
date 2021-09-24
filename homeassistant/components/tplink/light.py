@@ -97,6 +97,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             await self.device.set_color_temp(
                 color_tmp, brightness=brightness, transition=transition
             )
+            await self.coordinator.async_refresh()
             return
 
         # Handling turning to hs color mode
@@ -104,6 +105,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             # TP-Link requires integers.
             hue, sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
             await self.device.set_hsv(hue, sat, brightness, transition=transition)
+            await self.coordinator.async_refresh()
             return
 
         # Fallback to adjusting brightness or turning the bulb on
