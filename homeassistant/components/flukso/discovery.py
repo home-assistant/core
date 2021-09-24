@@ -354,7 +354,6 @@ def _get_device_info(entry_data):
     return {
         CONF_CONNECTIONS: [],
         CONF_IDENTIFIERS: {
-            # (DOMAIN, entry_data[CONF_DEVICE_SERIAL]),
             (DOMAIN, entry_data[CONF_DEVICE_HASH]),
         },
         CONF_MANUFACTURER: "Flukso",
@@ -419,7 +418,6 @@ async def async_discover_device(hass, entry):
         },
     )
 
-    # give it 2 seconds to complete
     _, pending = await asyncio.wait(config_futures.values(), timeout=2)
     if len(pending) == 1 and config_futures["kube"] == pending[0]:
         _LOGGER.debug("kube config pending, FLM02?")
