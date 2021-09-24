@@ -68,14 +68,13 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
         GENERAL_ONLY_SITE_ID, next=48
     )
 
-    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
-    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
-    assert result["prices:current"][ChannelType.FEED_IN] is None
-    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
-    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
-    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
+    assert result["current"].get("general") == GENERAL_CHANNEL[1]
+    assert result["forecasts"].get("general") == [GENERAL_CHANNEL[2]]
+    assert result["current"].get("controlled_load") is None
+    assert result["forecasts"].get("controlled_load") is None
+    assert result["current"].get("feed_in") is None
+    assert result["forecasts"].get("feed_in") is None
+    assert result["grid"]["renewables"] == GENERAL_CHANNEL[1].renewables
 
 
 async def test_fetch_no_general_site(
@@ -104,27 +103,25 @@ async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> 
         GENERAL_ONLY_SITE_ID, next=48
     )
 
-    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
-    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
-    assert result["prices:current"][ChannelType.FEED_IN] is None
-    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
-    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
-    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
+    assert result["current"].get("general") == GENERAL_CHANNEL[1]
+    assert result["forecasts"].get("general") == [GENERAL_CHANNEL[2]]
+    assert result["current"].get("controlled_load") is None
+    assert result["forecasts"].get("controlled_load") is None
+    assert result["current"].get("feed_in") is None
+    assert result["forecasts"].get("feed_in") is None
+    assert result["grid"]["renewables"] == GENERAL_CHANNEL[1].renewables
 
     current_price_api.get_current_price.side_effect = ApiException(status=403)
     with pytest.raises(UpdateFailed):
         await data_service.async_update_data()
 
-    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
-    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
-    assert result["prices:current"][ChannelType.FEED_IN] is None
-    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
-    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
-    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
+    assert result["current"].get("general") == GENERAL_CHANNEL[1]
+    assert result["forecasts"].get("general") == [GENERAL_CHANNEL[2]]
+    assert result["current"].get("controlled_load") is None
+    assert result["forecasts"].get("controlled_load") is None
+    assert result["current"].get("feed_in") is None
+    assert result["forecasts"].get("feed_in") is None
+    assert result["grid"]["renewables"] == GENERAL_CHANNEL[1].renewables
 
 
 async def test_fetch_general_and_controlled_load_site(
@@ -144,19 +141,13 @@ async def test_fetch_general_and_controlled_load_site(
         GENERAL_AND_CONTROLLED_SITE_ID, next=48
     )
 
-    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert (
-        result["prices:current"][ChannelType.CONTROLLED_LOAD]
-        == CONTROLLED_LOAD_CHANNEL[1]
-    )
-    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == [
-        CONTROLLED_LOAD_CHANNEL[2]
-    ]
-    assert result["prices:current"][ChannelType.FEED_IN] is None
-    assert result["prices:forecasts"][ChannelType.FEED_IN] == []
-    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
-    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
+    assert result["current"].get("general") == GENERAL_CHANNEL[1]
+    assert result["forecasts"].get("general") == [GENERAL_CHANNEL[2]]
+    assert result["current"].get("controlled_load") is CONTROLLED_LOAD_CHANNEL[1]
+    assert result["forecasts"].get("controlled_load") == [CONTROLLED_LOAD_CHANNEL[2]]
+    assert result["current"].get("feed_in") is None
+    assert result["forecasts"].get("feed_in") is None
+    assert result["grid"]["renewables"] == GENERAL_CHANNEL[1].renewables
 
 
 async def test_fetch_general_and_feed_in_site(
@@ -174,11 +165,10 @@ async def test_fetch_general_and_feed_in_site(
         GENERAL_AND_FEED_IN_SITE_ID, next=48
     )
 
-    assert result["prices:current"][ChannelType.GENERAL] == GENERAL_CHANNEL[1]
-    assert result["prices:forecasts"][ChannelType.GENERAL] == [GENERAL_CHANNEL[2]]
-    assert result["prices:current"][ChannelType.CONTROLLED_LOAD] is None
-    assert result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] == []
-    assert result["prices:current"][ChannelType.FEED_IN] == FEED_IN_CHANNEL[1]
-    assert result["prices:forecasts"][ChannelType.FEED_IN] == [FEED_IN_CHANNEL[2]]
-    assert result["grid:renewables"] == GENERAL_CHANNEL[1].renewables
-    assert result["status:spike"] == GENERAL_CHANNEL[1].spike_status
+    assert result["current"].get("general") == GENERAL_CHANNEL[1]
+    assert result["forecasts"].get("general") == [GENERAL_CHANNEL[2]]
+    assert result["current"].get("controlled_load") is None
+    assert result["forecasts"].get("controlled_load") is None
+    assert result["current"].get("feed_in") is FEED_IN_CHANNEL[1]
+    assert result["forecasts"].get("feed_in") == [FEED_IN_CHANNEL[2]]
+    assert result["grid"]["renewables"] == GENERAL_CHANNEL[1].renewables

@@ -70,56 +70,45 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         self._api = api
         self._site_id = site_id
 
-    def update(self) -> dict[str, Any]:
+    def update(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
         try:
-            result: dict[str, Any] = {}
-            data = self._api.get_current_price(self._site_id, next=48)
-            result["prices:current"] = {
-                ChannelType.GENERAL: None,
-                ChannelType.CONTROLLED_LOAD: None,
-                ChannelType.FEED_IN: None,
+            result: dict[str, dict[str, Any]] = {
+                "current": {},
+                "forecasts": {},
+                "grid": {},
             }
 
-            result["prices:forecasts"] = {
-                ChannelType.GENERAL: [],
-                ChannelType.CONTROLLED_LOAD: [],
-                ChannelType.FEED_IN: [],
-            }
-            result["grid:renewables"] = None
-            result["status:spike"] = None
+            data = self._api.get_current_price(self._site_id, next=48)
 
             current = [interval for interval in data if is_current(interval)]
             forecasts = [interval for interval in data if is_forecast(interval)]
+            general = [interval for interval in current if is_general(interval)]
 
-            general = first([interval for interval in current if is_general(interval)])
-            if general is None:
+            if len(general) == 0:
                 raise UpdateFailed("No general channel configured")
 
-            result["prices:current"][ChannelType.GENERAL] = general
-
-            result["prices:current"][ChannelType.CONTROLLED_LOAD] = first(
-                [interval for interval in current if is_controlled_load(interval)]
-            )
-
-            result["prices:current"][ChannelType.FEED_IN] = first(
-                [interval for interval in current if is_feed_in(interval)]
-            )
-
-            result["prices:forecasts"][ChannelType.GENERAL] = [
+            result["current"]["general"] = general[0]
+            result["forecasts"]["general"] = [
                 interval for interval in forecasts if is_general(interval)
             ]
+            result["grid"]["renewables"] = general[0].renewables
 
-            result["prices:forecasts"][ChannelType.CONTROLLED_LOAD] = [
-                interval for interval in forecasts if is_controlled_load(interval)
+            controlled_load = [
+                interval for interval in current if is_controlled_load(interval)
             ]
+            if controlled_load:
+                result["current"]["controlled_load"] = controlled_load[0]
+                result["forecasts"]["controlled_load"] = [
+                    interval for interval in forecasts if is_controlled_load(interval)
+                ]
 
-            result["prices:forecasts"][ChannelType.FEED_IN] = [
-                interval for interval in forecasts if is_feed_in(interval)
-            ]
-
-            result["grid:renewables"] = general.renewables
-            result["status:spike"] = general.spike_status
+            feed_in = [interval for interval in current if is_feed_in(interval)]
+            if feed_in:
+                result["current"]["feed_in"] = feed_in[0]
+                result["forecasts"]["feed_in"] = [
+                    interval for interval in forecasts if is_feed_in(interval)
+                ]
 
             LOGGER.debug("Fetched new Amber data: %s", data)
             return result
