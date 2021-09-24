@@ -83,6 +83,7 @@ CURRENT_HVAC_COOL = "cooling"
 CURRENT_HVAC_DRY = "drying"
 CURRENT_HVAC_IDLE = "idle"
 CURRENT_HVAC_FAN = "fan"
+CURRENT_HVAC_AUTO = "auto"
 
 
 # A list of possible HVAC actions.
@@ -93,6 +94,7 @@ CURRENT_HVAC_ACTIONS = [
     CURRENT_HVAC_DRY,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_FAN,
+    CURRENT_HVAC_AUTO,
 ]
 
 
