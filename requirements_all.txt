@@ -718,7 +718,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
