@@ -202,7 +202,7 @@ MODEL_TO_FEATURES_MAP = {
     MODEL_FAN_ZA5: FEATURE_FLAGS_FAN_ZA5,
 }
 
-OSCILLATION_ANLGE_VALUES = {
+OSCILLATION_ANGLE_VALUES = {
     MODEL_FAN_P5: OscillationAngleValues(max_value=140, min_value=30, step=30),
     MODEL_FAN_ZA5: OscillationAngleValues(max_value=120, min_value=30, step=30),
     MODEL_FAN_P9: OscillationAngleValues(max_value=150, min_value=30, step=30),
@@ -232,11 +232,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if feature & features:
             if (
                 description.key == ATTR_OSCILLATION_ANGLE
-                and model in OSCILLATION_ANLGE_VALUES
+                and model in OSCILLATION_ANGLE_VALUES
             ):
-                description.max_value = OSCILLATION_ANLGE_VALUES[model].max_value
-                description.min_value = OSCILLATION_ANLGE_VALUES[model].min_value
-                description.step = OSCILLATION_ANLGE_VALUES[model].step
+                description.max_value = OSCILLATION_ANGLE_VALUES[model].max_value
+                description.min_value = OSCILLATION_ANGLE_VALUES[model].min_value
+                description.step = OSCILLATION_ANGLE_VALUES[model].step
             entities.append(
                 XiaomiNumberEntity(
                     f"{config_entry.title} {description.name}",
