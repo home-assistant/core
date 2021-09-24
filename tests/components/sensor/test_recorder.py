@@ -1952,6 +1952,7 @@ def test_compile_hourly_statistics_changing_statistics(
             {
                 "has_mean": True,
                 "has_sum": False,
+                "source": "recorder",
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
             },
@@ -1977,6 +1978,7 @@ def test_compile_hourly_statistics_changing_statistics(
             {
                 "has_mean": False,
                 "has_sum": True,
+                "source": "recorder",
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
             },
