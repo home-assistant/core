@@ -28,8 +28,8 @@ from .const import DOMAIN
 # RANDOMISED = petname
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = "SWITCH"
-DEFAULT_HOST = "131.155.106.81"
+PLATFORMS = "switch"
+DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 4444
 
 

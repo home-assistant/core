@@ -1,4 +1,6 @@
 """Constants for the Oocsi for HomeAssistant integration."""
 
 DOMAIN = "oocsi"
-DATA_OOCSI = DOMAIN
+DATA_OOCSI = "oocsi_api"
+DEVICES = None
+DATA_INTERVIEW = "weird"
