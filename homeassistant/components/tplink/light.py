@@ -83,7 +83,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self._async_turn_on(kwargs)
+        await self._async_turn_on(**kwargs)
         await self.coordinator.async_refresh()
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
