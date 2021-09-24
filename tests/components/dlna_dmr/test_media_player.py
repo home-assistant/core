@@ -285,7 +285,7 @@ async def test_available_device(
         (None, ha_const.STATE_ON),
         (TransportState.STOPPED, ha_const.STATE_IDLE),
         (TransportState.PLAYING, ha_const.STATE_PLAYING),
-        (TransportState.TRANSITIONING, ha_const.STATE_IDLE),
+        (TransportState.TRANSITIONING, ha_const.STATE_PLAYING),
         (TransportState.PAUSED_PLAYBACK, ha_const.STATE_PAUSED),
         (TransportState.PAUSED_RECORDING, ha_const.STATE_PAUSED),
         (TransportState.RECORDING, ha_const.STATE_IDLE),
