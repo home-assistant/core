@@ -322,13 +322,17 @@ async def async_setup_entry(  # noqa: C901
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
+        # We assert because we know the device exists
+        assert device
         if not replaced:
-            remove_device(device)  # type: ignore
+            remove_device(device)
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        # We assert because we know the device exists
+        assert device
         raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
@@ -339,7 +343,7 @@ async def async_setup_entry(  # noqa: C901
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
@@ -358,11 +362,13 @@ async def async_setup_entry(  # noqa: C901
     ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        # We assert because we know the device exists
+        assert device
         event_data = {
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: client.driver.controller.home_id,
-            ATTR_DEVICE_ID: device.id,  # type: ignore
+            ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
@@ -401,6 +407,8 @@ async def async_setup_entry(  # noqa: C901
         disc_info = value_updates_disc_info[value.value_id]
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
+        # We assert because we know the device exists
+        assert device
 
         unique_id = get_unique_id(
             client.driver.controller.home_id, disc_info.primary_value.value_id
@@ -416,7 +424,7 @@ async def async_setup_entry(  # noqa: C901
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,

@@ -725,6 +725,8 @@ async def test_replace_different_node(
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
+    # Device should still be there after the node was removed
+    assert device
 
     event = {"node": new_node}
 
