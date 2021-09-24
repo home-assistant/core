@@ -47,16 +47,11 @@ class SmartDevices:
 
     def has_device_with_host(self, host: str) -> bool:
         """Check if a devices exists with a specific host."""
-        for device in self.lights + self.switches:
-            if device.host == host:
-                return True
-
-        return False
+        return any(device.host == host for device in self.lights + self.switches)
 
 
 async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Return if there are devices that can be discovered."""
-
     return await Discover.discover()
 
 
