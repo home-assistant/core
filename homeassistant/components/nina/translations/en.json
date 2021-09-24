@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "NINA is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "title" : "Select city/county",
+                "data": {
+                    "regions": "city/county",
+                    "slots": "Maximum warnings per city/county",
+                    "corona_filter": "Remove Corona Warnings"
+                }
+            }
+        }
+    }
+}

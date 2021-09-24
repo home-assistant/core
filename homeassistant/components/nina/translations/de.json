@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "NINA wurde schon konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung zu NINA konnte nicht hergestellt werden",
+            "unknown": "Ein unbekannter Fehler ist aufgetreten"
+        },
+        "step": {
+            "user": {
+                "title" : "Wähle Städte/Landkreise",
+                "data": {
+                    "regions": "Städte/Landkreise",
+                    "slots": "Maximale Warnungen pro Stadt/Landkreis",
+                    "corona_filter": "Corona Warnungen entfernen"
+                }
+            }
+        }
+    }
+}
