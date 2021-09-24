@@ -83,6 +83,10 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
+        await self._async_turn_on(kwargs)
+        await self.coordinator.async_refresh()
+
+    async def _async_turn_on(self, **kwargs: Any) -> None:
         _LOGGER.debug("Turning on %s", kwargs)
 
         transition = kwargs.get(ATTR_TRANSITION)
@@ -97,7 +101,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             await self.device.set_color_temp(
                 color_tmp, brightness=brightness, transition=transition
             )
-            await self.coordinator.async_refresh()
             return
 
         # Handling turning to hs color mode
@@ -105,7 +108,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             # TP-Link requires integers.
             hue, sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
             await self.device.set_hsv(hue, sat, brightness, transition=transition)
-            await self.coordinator.async_refresh()
             return
 
         # Fallback to adjusting brightness or turning the bulb on
@@ -113,8 +115,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             await self.device.set_brightness(brightness, transition=transition)
         else:
             await self.device.turn_on(transition=transition)
-
-        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
