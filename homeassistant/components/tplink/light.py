@@ -44,23 +44,21 @@ ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 
-# TODO: this is c&p from switch.py, refactor
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    entities: list[TPLinkSmartBulb] = []
     coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
         COORDINATORS
     ]
-    devs: list[SmartBulb] = hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-    for device in devs:
-        coordinator = coordinators[device.device_id]
-        entities.append(TPLinkSmartBulb(device, coordinator))
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            TPLinkSmartBulb(device, coordinators[device.device_id])
+            for device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]
+        ]
+    )
 
 
 def brightness_to_percentage(byt):

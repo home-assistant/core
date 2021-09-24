@@ -206,7 +206,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
-
+        self.update_children = True
         update_interval = timedelta(seconds=30)
         super().__init__(
             hass,
@@ -218,32 +218,32 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
         try:
-            await self.device.update()
-            data = {}
-
-            # Check if the device has emeter
-            if self.device.has_emeter:
-                emeter_readings = self.device.emeter_realtime
-                data[CONF_EMETER_PARAMS] = {
-                    ATTR_CURRENT_POWER_W: emeter_readings.power,
-                    ATTR_TOTAL_ENERGY_KWH: emeter_readings.total,
-                    ATTR_VOLTAGE: emeter_readings.voltage,
-                    ATTR_CURRENT_A: emeter_readings.current,
-                }
-
-                emeter_today = self.device.emeter_today
-                if emeter_today is None:
-                    # today's consumption not available, when device was off all the day
-                    # bulb's do not report this information, so filter it out
-                    consumption_today = 0.0
-                    if self.device.is_bulb:
-                        consumption_today = None
-                else:
-                    consumption_today = emeter_today
-
-                data[CONF_EMETER_PARAMS][ATTR_TODAY_ENERGY_KWH] = consumption_today
+            await self.device.update(update_children=self.update_children)
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
+        else:
+            self.update_children = True
 
         self.name = self.device.alias
-        return data
+
+        # Check if the device has emeter
+        if not self.device.has_emeter:
+            return {}
+
+        if (emeter_today := self.device.emeter_today) is not None:
+            consumption_today = emeter_today
+        else:
+            # today's consumption not available, when device was off all the day
+            # bulb's do not report this information, so filter it out
+            consumption_today = None if self.device.is_bulb else 0.0
+
+        emeter_readings = self.device.emeter_realtime
+        return {
+            CONF_EMETER_PARAMS: {
+                ATTR_CURRENT_POWER_W: emeter_readings.power,
+                ATTR_TOTAL_ENERGY_KWH: emeter_readings.total,
+                ATTR_VOLTAGE: emeter_readings.voltage,
+                ATTR_CURRENT_A: emeter_readings.current,
+                ATTR_TODAY_ENERGY_KWH: consumption_today,
+            }
+        }
