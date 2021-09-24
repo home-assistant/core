@@ -40,7 +40,7 @@ class HMDevice(Entity):
         self._hmdevice = None
         self._connected = False
         self._available = False
-        self._channel_map = set()
+        self._channel_map = {}
 
         # Set parameter to uppercase
         if self._state:
@@ -114,7 +114,7 @@ class HMDevice(Entity):
         has_changed = False
 
         # Is data needed for this instance?
-        if f"{attribute}:{device.partition(':')[2]}" in self._channel_map:
+        if device.partition(':')[2] == self._channel_map.get(attribute):
             self._data[attribute] = value
             has_changed = True
 
@@ -130,12 +130,12 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         for metadata in (
-            self._hmdevice.SENSORNODE,
-            self._hmdevice.BINARYNODE,
-            self._hmdevice.ATTRIBUTENODE,
-            self._hmdevice.WRITENODE,
-            self._hmdevice.EVENTNODE,
             self._hmdevice.ACTIONNODE,
+            self._hmdevice.EVENTNODE,
+            self._hmdevice.WRITENODE,
+            self._hmdevice.ATTRIBUTENODE,
+            self._hmdevice.BINARYNODE,
+            self._hmdevice.SENSORNODE,
         ):
             for node, channels in metadata.items():
                 # Data is needed for this instance
@@ -146,7 +146,9 @@ class HMDevice(Entity):
                     else:
                         channel = self._channel
                     # Remember the channel for this attribute to ignore invalid events later
-                    self._channel_map.add(f"{node}:{channel!s}")
+                    self._channel_map[node] = str(channel)
+
+        _LOGGER.debug(f"Channel map for {self._address}: {str(self._channel_map)}")
 
         # Set callbacks
         self._hmdevice.setEventCallback(callback=self._hm_event_callback, bequeath=True)
