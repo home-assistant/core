@@ -26,6 +26,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ValloxStateProxy
 from .const import (
+    CELL_STATES,
     DOMAIN,
     METRIC_KEY_MODE,
     MODE_ON,
@@ -160,6 +161,28 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         self._attr_native_value = (now + days_remaining_delta).isoformat()
 
 
+class ValloxCellStateSensor(ValloxSensor):
+    """Child class for reporting the state of the heat recovery cell."""
+
+    async def async_update(self) -> None:
+        """Fetch state from the ventilation unit."""
+        metric_key = self.entity_description.metric_key
+
+        if metric_key is None:
+            self._attr_available = False
+            _LOGGER.error("Error updating sensor. Empty metric key")
+            return
+
+        try:
+            raw_state = self._state_proxy.fetch_metric(metric_key)
+            self._attr_native_value = CELL_STATES.get(raw_state, f"unknown {raw_state}")
+            self._attr_available = True
+
+        except (OSError, KeyError) as err:
+            self._attr_available = False
+            _LOGGER.error("Error updating sensor: %s", err)
+
+
 @dataclass
 class ValloxSensorEntityDescription(SensorEntityDescription):
     """Describes Vallox sensor entity."""
@@ -246,6 +269,13 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_CO2,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    ValloxSensorEntityDescription(
+        key="cell_state",
+        name="Cell State",
+        metric_key="A_CYC_CELL_STATE",
+        icon="mdi:rhombus",
+        sensor_type=ValloxCellStateSensor,
     ),
 )
 
