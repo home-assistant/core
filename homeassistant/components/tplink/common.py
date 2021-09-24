@@ -104,7 +104,7 @@ async def async_discover_devices(
 
         if device.is_strip or device.is_plug:
             switches.append(device)
-        if device.is_bulb or device.is_light_strip or device.is_dimmer:
+        elif device.is_bulb or device.is_light_strip or device.is_dimmer:
             lights.append(device)
         else:
             _LOGGER.error("Unknown smart device type: %s", type(device))
