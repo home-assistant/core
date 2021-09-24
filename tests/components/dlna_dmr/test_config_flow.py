@@ -50,9 +50,12 @@ MOCK_CONFIG_IMPORT_DATA = {
     CONF_URL: MOCK_DEVICE_LOCATION,
 }
 
+MOCK_ROOT_DEVICE_UDN = "ROOT_DEVICE"
+
 MOCK_DISCOVERY = {
     ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-    ssdp.ATTR_UPNP_UDN: MOCK_DEVICE_UDN,
+    ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+    ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
     ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
 }
@@ -515,7 +518,29 @@ async def test_ssdp_flow_existing(
         context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
-            ssdp.ATTR_UPNP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_UPNP_UDN: MOCK_ROOT_DEVICE_UDN,
+            ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_mock.data[CONF_URL] == NEW_DEVICE_LOCATION
+
+
+async def test_ssdp_flow_upnp_udn(
+    hass: HomeAssistant, config_entry_mock: MockConfigEntry
+) -> None:
+    """Test that SSDP discovery ignores the root device's UDN."""
+    config_entry_mock.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DLNA_DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
+            ssdp.ATTR_SSDP_UDN: MOCK_DEVICE_UDN,
+            ssdp.ATTR_UPNP_UDN: "DIFFERENT_ROOT_DEVICE",
             ssdp.ATTR_UPNP_DEVICE_TYPE: MOCK_DEVICE_TYPE,
             ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_DEVICE_NAME,
         },
