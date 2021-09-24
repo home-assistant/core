@@ -44,15 +44,6 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
     return interval.channel_type == ChannelType.FEED_IN
 
 
-def first(
-    intervals: ActualInterval | CurrentInterval | ForecastInterval,
-) -> ActualInterval | CurrentInterval | ForecastInterval | None:
-    """Return the first element if it exists, otherwise return None."""
-    if len(intervals) > 0:
-        return intervals[0]
-    return None
-
-
 class AmberUpdateCoordinator(DataUpdateCoordinator):
     """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
 
