@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.util.dt import utcnow
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ VALID_TYPES = [
     TYPE_ASTRONOMICAL,
     TYPE_METEOROLOGICAL,
 ]
-
+ 
 HEMISPHERE_SEASON_SWAP = {
     STATE_WINTER: STATE_SUMMER,
     STATE_SPRING: STATE_AUTUMN,
@@ -193,5 +194,5 @@ class Season(SensorEntity):
 
     def update(self):
         """Update season."""
-        self.datetime = datetime.utcnow()
+        self.datetime = utcnow().replace(tzinfo=None)
         get_season(self)
