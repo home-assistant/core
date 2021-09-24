@@ -3,6 +3,7 @@
 import logging
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.components.select.const import ATTR_OPTION
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -23,10 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, conf, async_add_entities, discovery_info=None):
     """Set up the utility meter select."""
-    if discovery_info is None:
-        _LOGGER.error("This platform is only available through discovery")
-        return
-
     async_add_entities(
         [TariffSelect(discovery_info[CONF_METER], discovery_info[CONF_TARIFFS])]
     )
@@ -37,7 +34,7 @@ async def async_setup_platform(hass, conf, async_add_entities, discovery_info=No
 
     platform.async_register_entity_service(
         SERVICE_SELECT_TARIFF,
-        {"option": cv.string},
+        {ATTR_OPTION: cv.string},
         "async_select_option",
     )
 
@@ -70,8 +67,6 @@ class TariffSelect(SelectEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        if self._current_tariff is not None:
-            return
 
         state = await self.async_get_last_state()
         if not state or state.state not in self._tariffs:
