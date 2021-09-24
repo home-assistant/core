@@ -28,7 +28,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
+# todo: Autocomplete mac addresses
 
 def _btle_connect(mac: str) -> dict:
     """Scan for BTLE advertisement data."""
