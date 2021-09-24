@@ -6,6 +6,7 @@ from solax import real_time_api
 from solax.inverter import InverterError
 import voluptuous as vol
 
+from homeassistant import config_entries, core
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
@@ -14,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
+    CONF_PASSWORD,
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
@@ -27,6 +29,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
+from .const import DOMAIN
+
 DEFAULT_PORT = 80
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -39,12 +43,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup."""
-    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
-    endpoint = RealTimeDataEndpoint(hass, api)
+async def async_setup_entry(
+    hass: core.HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities,
+):
+    """Entry setup."""
+    config = hass.data[DOMAIN][config_entry.entry_id]
+    api = await real_time_api(
+        config[CONF_IP_ADDRESS], config[CONF_PORT], config[CONF_PASSWORD]
+    )
+    await __async_private_setup(hass, async_add_entities, api)
+
+
+async def __async_private_setup(hass: core.HomeAssistant, async_add_entities, api):
     resp = await api.get_data()
     serial = resp.serial_number
+    endpoint = RealTimeDataEndpoint(hass, api)
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
@@ -73,6 +88,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         devices.append(Inverter(uid, serial, sensor, unit, state_class, device_class))
     endpoint.sensors = devices
     async_add_entities(devices)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform setup."""
+    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
+    await __async_private_setup(hass, async_add_entities, api)
 
 
 class RealTimeDataEndpoint:
