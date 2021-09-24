@@ -1,5 +1,20 @@
 """The tests for Efergy sensor platform."""
 
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
+)
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CURRENCY_DOLLAR,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -67,11 +82,31 @@ async def test_single_sensor_readings(
     assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.energy_consumed").state == "38.21"
-    assert hass.states.get("sensor.energy_usage").state == "1580"
-    assert hass.states.get("sensor.energy_budget").state == "ok"
-    assert hass.states.get("sensor.energy_cost").state == "5.27"
-    assert hass.states.get("sensor.efergy_728386").state == "1628"
+    state = hass.states.get("sensor.energy_usage")
+    assert state.state == "1580"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    state = hass.states.get("sensor.energy_consumed")
+    assert state.state == "38.21"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    state = hass.states.get("sensor.energy_budget")
+    assert state.state == "ok"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_DOLLAR
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+    state = hass.states.get("sensor.energy_cost")
+    assert state.state == "5.27"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "$/day"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    state = hass.states.get("sensor.efergy_728386")
+    assert state.state == "1628"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
 
 
 async def test_multi_sensor_readings(
@@ -82,6 +117,18 @@ async def test_multi_sensor_readings(
     assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.efergy_728386").state == "218"
-    assert hass.states.get("sensor.efergy_0").state == "1808"
-    assert hass.states.get("sensor.efergy_728387").state == "312"
+    state = hass.states.get("sensor.efergy_728386")
+    assert state.state == "218"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    state = hass.states.get("sensor.efergy_0")
+    assert state.state == "1808"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    state = hass.states.get("sensor.efergy_728387")
+    assert state.state == "312"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT

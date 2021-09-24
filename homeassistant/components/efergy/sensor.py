@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_CURRENCY,
     CONF_MONITORED_VARIABLES,
     CONF_TYPE,
+    CURRENCY_DOLLAR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
@@ -59,11 +60,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     CONF_BUDGET: SensorEntityDescription(
         key=CONF_BUDGET,
         name="Energy Budget",
+        device_class=DEVICE_CLASS_MONETARY,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
     ),
     CONF_COST: SensorEntityDescription(
         key=CONF_COST,
         name="Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_CURRENT_VALUES: SensorEntityDescription(
