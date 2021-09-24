@@ -21,10 +21,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.util import dt
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
 
-from . import ECBaseEntity
+from . import ECBaseEntity, convert
 from .const import DEFAULT_NAME, DOMAIN, EC_ICON_TO_HA_CONDITION_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,13 +88,7 @@ class ECWeather(ECBaseEntity, WeatherEntity):
     def pressure(self):
         """Return the pressure."""
         value = self.get_value("pressure")
-        if value is None:
-            return None
-        pressure_hpa = 10 * value
-        if self._is_metric:
-            return pressure_hpa
-
-        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
+        return convert("pressure", value, self._is_metric, PRESSURE_HPA, PRESSURE_INHG)
 
     @property
     def humidity(self):
@@ -106,12 +98,10 @@ class ECWeather(ECBaseEntity, WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        speed_km_h = self.get_value("wind_speed")
-        if self._is_metric or speed_km_h is None:
-            return speed_km_h
-
-        speed_mi_h = convert_distance(speed_km_h, LENGTH_KILOMETERS, LENGTH_MILES)
-        return int(round(speed_mi_h))
+        value = self.get_value("wind_speed")
+        return convert(
+            "wind_speed", value, self._is_metric, LENGTH_KILOMETERS, LENGTH_MILES
+        )
 
     @property
     def wind_bearing(self):
@@ -121,12 +111,10 @@ class ECWeather(ECBaseEntity, WeatherEntity):
     @property
     def visibility(self):
         """Return the visibility."""
-        visibility = self.get_value("visibility")
-        if self._is_metric or visibility is None:
-            return visibility
-
-        visibility = convert_distance(visibility, LENGTH_KILOMETERS, LENGTH_MILES)
-        return visibility
+        value = self.get_value("visibility")
+        return convert(
+            "visibility", value, self._is_metric, LENGTH_KILOMETERS, LENGTH_MILES
+        )
 
     @property
     def forecast(self):

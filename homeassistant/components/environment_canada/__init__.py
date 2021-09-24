@@ -10,11 +10,18 @@ from homeassistant.const import (
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    PRESSURE_INHG,
+    SPEED_MILES_PER_HOUR,
 )
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.pressure import convert as convert_pressure
 
 from .const import (
     ATTR_OBSERVATION_TIME,
@@ -97,6 +104,32 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
+def convert(key, value, is_metric, from_units, to_units):
+    """Massage a value from EC; from metric."""
+    if value is None:
+        return None
+
+    if key == "pressure":
+        value = int(value * 10)  # Convert kPa to hPa
+    elif key == "tendency":
+        value = value.title()
+    elif isinstance(value, str) and len(value) > 254:
+        value = value[:254]
+
+    if is_metric:
+        return value
+
+    if to_units in [SPEED_MILES_PER_HOUR, LENGTH_MILES]:
+        value = round(
+            convert_distance(float(value), LENGTH_KILOMETERS, LENGTH_MILES), 2
+        )
+    elif to_units == LENGTH_INCHES:
+        value = round(convert_distance(float(value), from_units, to_units), 2)
+    elif to_units == PRESSURE_INHG:
+        value = round(convert_pressure(float(value), from_units, to_units), 2)
+    return value
+
+
 class ECDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching EC data."""
 
@@ -173,7 +206,6 @@ class ECBaseEntity(CoordinatorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        # return True  # FIX ME
         return False
 
     @property
@@ -196,7 +228,3 @@ class ECBaseEntity(CoordinatorEntity):
             "default_name": "Environment Canada Weather",
             "entry_type": "service",
         }
-
-
-class ECUpdateFailed(Exception):
-    """Raised when an update fails to get data from Environment Canada."""
