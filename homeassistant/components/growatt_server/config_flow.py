@@ -47,7 +47,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not login_response["success"] and login_response["errCode"] == "102":
             return self._async_show_user_form({"base": "invalid_auth"})
-        self.user_id = login_response["userId"]
+        self.user_id = login_response["user"]["id"]
 
         self.data = user_input
         return await self.async_step_plant()

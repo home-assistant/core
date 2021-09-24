@@ -11,6 +11,9 @@ ATTR_LIVE_TRACKING_REMAINING = "live_tracking_remaining"
 ATTR_MINUTES_ACTIVE = "minutes_active"
 ATTR_TRACKER_STATE = "tracker_state"
 
+CLIENT = "client"
+TRACKABLES = "trackables"
+
 TRACKER_HARDWARE_STATUS_UPDATED = f"{DOMAIN}_tracker_hardware_status_updated"
 TRACKER_POSITION_UPDATED = f"{DOMAIN}_tracker_position_updated"
 TRACKER_ACTIVITY_STATUS_UPDATED = f"{DOMAIN}_tracker_activity_updated"

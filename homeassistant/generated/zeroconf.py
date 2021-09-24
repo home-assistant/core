@@ -131,6 +131,11 @@ ZEROCONF = {
             "name": "shelly*"
         }
     ],
+    "_hue._tcp.local.": [
+        {
+            "domain": "hue"
+        }
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp"

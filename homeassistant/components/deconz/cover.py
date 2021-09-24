@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for light in lights:
             if (
                 light.type in COVER_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN]
+                and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzCover(light, gateway))
 

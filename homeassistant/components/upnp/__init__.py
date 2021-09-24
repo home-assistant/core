@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from ipaddress import ip_address
 from typing import Any
@@ -11,12 +12,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -31,9 +34,7 @@ from .const import (
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_CONFIG,
     DOMAIN_DEVICES,
-    DOMAIN_LOCAL_IP,
     LOGGER,
 )
 from .device import Device
@@ -44,27 +45,27 @@ NOTIFICATION_TITLE = "UPnP/IGD Setup"
 PLATFORMS = ["binary_sensor", "sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-            },
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                vol.All(
+                    cv.deprecated(CONF_LOCAL_IP),
+                    {
+                        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
+                    },
+                )
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up UPnP component."""
-    LOGGER.debug("async_setup, config: %s", config)
-    conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-    conf = config.get(DOMAIN, conf_default)
-    local_ip = await async_get_source_ip(hass, PUBLIC_TARGET_IP)
     hass.data[DOMAIN] = {
-        DOMAIN_CONFIG: conf,
         DOMAIN_DEVICES: {},
-        DOMAIN_LOCAL_IP: conf.get(CONF_LOCAL_IP, local_ip),
     }
 
     # Only start if set up via configuration.yaml.
@@ -90,16 +91,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_discovered_event = asyncio.Event()
     discovery_info: Mapping[str, Any] | None = None
 
-    @callback
-    def device_discovered(info: Mapping[str, Any]) -> None:
+    async def device_discovered(headers: Mapping[str, Any], change: SsdpChange) -> None:
+        if change == SsdpChange.BYEBYE:
+            return
+
         nonlocal discovery_info
         LOGGER.debug(
-            "Device discovered: %s, at: %s", usn, info[ssdp.ATTR_SSDP_LOCATION]
+            "Device discovered: %s, at: %s", usn, headers[ssdp.ATTR_SSDP_LOCATION]
         )
-        discovery_info = info
+        discovery_info = headers
         device_discovered_event.set()
 
-    cancel_discovered_callback = ssdp.async_register_callback(
+    cancel_discovered_callback = await ssdp.async_register_callback(
         hass,
         device_discovered,
         {
@@ -174,9 +177,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Enabling sensors")
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    # Start device updater.
-    await device.async_start()
-
     return True
 
 
@@ -184,11 +184,22 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
-    if coordinator := hass.data[DOMAIN].pop(config_entry.entry_id, None):
-        await coordinator.device.async_stop()
-
     LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+@dataclass
+class UpnpBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """A class that describes UPnP entities."""
+
+    format: str = "s"
+
+
+@dataclass
+class UpnpSensorEntityDescription(SensorEntityDescription):
+    """A class that describes a sensor UPnP entities."""
+
+    format: str = "s"
 
 
 class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
@@ -211,24 +222,40 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             self.device.async_get_status(),
         )
 
-        data = dict(update_values[0])
-        data.update(update_values[1])
-
-        return data
+        return {
+            **update_values[0],
+            **update_values[1],
+        }
 
 
 class UpnpEntity(CoordinatorEntity):
     """Base class for UPnP/IGD entities."""
 
     coordinator: UpnpDataUpdateCoordinator
+    entity_description: UpnpSensorEntityDescription | UpnpBinarySensorEntityDescription
 
-    def __init__(self, coordinator: UpnpDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: UpnpDataUpdateCoordinator,
+        entity_description: UpnpSensorEntityDescription
+        | UpnpBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the base entities."""
         super().__init__(coordinator)
         self._device = coordinator.device
+        self.entity_description = entity_description
+        self._attr_name = f"{coordinator.device.name} {entity_description.name}"
+        self._attr_unique_id = f"{coordinator.device.udn}_{entity_description.key}"
         self._attr_device_info = {
             "connections": {(dr.CONNECTION_UPNP, coordinator.device.udn)},
             "name": coordinator.device.name,
             "manufacturer": coordinator.device.manufacturer,
             "model": coordinator.device.model_name,
         }
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and (
+            self.coordinator.data.get(self.entity_description.key) or False
+        )

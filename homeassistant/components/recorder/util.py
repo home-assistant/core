@@ -25,6 +25,7 @@ from .models import (
     TABLE_STATISTICS,
     TABLE_STATISTICS_META,
     TABLE_STATISTICS_RUNS,
+    TABLE_STATISTICS_SHORT_TERM,
     RecorderRuns,
     process_timestamp,
 )
@@ -185,7 +186,12 @@ def basic_sanity_check(cursor):
 
     for table in ALL_TABLES:
         # The statistics tables may not be present in old databases
-        if table in [TABLE_STATISTICS, TABLE_STATISTICS_META, TABLE_STATISTICS_RUNS]:
+        if table in [
+            TABLE_STATISTICS,
+            TABLE_STATISTICS_META,
+            TABLE_STATISTICS_RUNS,
+            TABLE_STATISTICS_SHORT_TERM,
+        ]:
             continue
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection

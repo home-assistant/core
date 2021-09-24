@@ -151,6 +151,12 @@ SSDP = {
             "manufacturer": "konnected.io"
         }
     ],
+    "netgear": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "NETGEAR, Inc."
+        }
+    ],
     "roku": [
         {
             "deviceType": "urn:roku-com:device:player:1-0",

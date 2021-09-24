@@ -75,7 +75,7 @@
             "addon_start_failed": "No se ha podido iniciar el complemento Z-Wave JS.",
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
-            "different_device": "El dispositivo USB conectado no es el mismo que el configurado anteriormente para esta entrada de configuraci\u00f3n. Por favor, cree una nueva entrada de configuraci\u00f3n para el nuevo dispositivo."
+            "different_device": "El dispositivo USB conectado no es el mismo que el configurado anteriormente para esta entrada de configuraci\u00f3n. Por favor, crea una nueva entrada de configuraci\u00f3n para el nuevo dispositivo."
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -83,8 +83,8 @@
             "unknown": "Error inesperado"
         },
         "progress": {
-            "install_addon": "Por favor, espere mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Esto puede tardar varios minutos.",
-            "start_addon": "Por favor, espere mientras se completa el inicio del complemento Z-Wave JS. Esto puede tardar algunos segundos."
+            "install_addon": "Por favor, espera mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Esto puede tardar varios minutos.",
+            "start_addon": "Por favor, espera mientras se completa el inicio del complemento Z-Wave JS. Esto puede tardar algunos segundos."
         },
         "step": {
             "configure_addon": {
@@ -98,6 +98,9 @@
             },
             "install_addon": {
                 "title": "La instalaci\u00f3n del complemento Z-Wave JS ha comenzado"
+            },
+            "on_supervisor": {
+                "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
             }
         }
     },

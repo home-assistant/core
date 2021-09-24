@@ -132,16 +132,14 @@ def get_arguments() -> argparse.Namespace:
 def daemonize() -> None:
     """Move current process to daemon process."""
     # Create first fork
-    pid = os.fork()
-    if pid > 0:
+    if os.fork() > 0:
         sys.exit(0)
 
     # Decouple fork
     os.setsid()
 
     # Create second fork
-    pid = os.fork()
-    if pid > 0:
+    if os.fork() > 0:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull

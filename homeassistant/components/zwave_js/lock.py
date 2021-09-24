@@ -6,12 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import (
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
     ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
-    CommandClass,
     DoorLockMode,
 )
 from zwave_js_server.model.value import Value as ZwaveValue

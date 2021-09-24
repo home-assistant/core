@@ -307,7 +307,7 @@ async def websocket_node_state(
     """Get the state data of a Z-Wave JS node."""
     connection.send_result(
         msg[ID],
-        node.data,
+        {**node.data, "values": [value.data for value in node.values.values()]},
     )
 
 
@@ -1274,6 +1274,7 @@ class DumpView(HomeAssistantView):
 
     async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
         """Dump the state of Z-Wave."""
+        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         hass = request.app["hass"]

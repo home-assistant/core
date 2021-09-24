@@ -11,11 +11,12 @@ from renault_api.kamereon.exceptions import (
     KamereonResponseException,
     NotSupportedException,
 )
+from renault_api.kamereon.models import KamereonVehicleDataAttributes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-T = TypeVar("T")
+T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):

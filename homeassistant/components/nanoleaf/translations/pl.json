@@ -9,12 +9,14 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "not_allowing_new_tokens": "Nanoleaf nie zezwala na nowe tokeny, post\u0119puj zgodnie z powy\u017cszymi instrukcjami.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "{name}",
         "step": {
             "link": {
-                "title": "Po\u0142\u0105cz Nanoleaf"
+                "description": "Naci\u015bnij i przytrzymaj przycisk zasilania na Nanoleaf przez 5 sekund, a\u017c dioda LED przycisku zacznie miga\u0107, a nast\u0119pnie kliknij **WY\u015aLIJ** w ci\u0105gu 30 sekund.",
+                "title": "Po\u0142\u0105czenie z Nanoleaf"
             },
             "user": {
                 "data": {

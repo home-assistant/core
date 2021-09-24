@@ -81,7 +81,7 @@ async def async_setup(hass, config):
     options = {}
     mode = conf.get(CONF_MODE, MODE_ROUTER)
     for name, value in conf.items():
-        if name in ([CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]):
+        if name in [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]:
             if name == CONF_REQUIRE_IP and mode != MODE_AP:
                 continue
             options[name] = value

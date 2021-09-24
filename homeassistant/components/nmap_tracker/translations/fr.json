@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Secondes \u00e0 attendre avant de marquer un tracker d'appareil comme n'\u00e9tant pas \u00e0 la maison apr\u00e8s ne pas avoir \u00e9t\u00e9 vu.",
                     "exclude": "Adresses r\u00e9seau (s\u00e9par\u00e9es par des virgules) \u00e0 exclure de l'analyse",
                     "home_interval": "Nombre minimum de minutes entre les analyses des appareils actifs (pr\u00e9server la batterie)",
                     "hosts": "Adresses r\u00e9seau (s\u00e9par\u00e9es par des virgules) \u00e0 analyser",

@@ -30,6 +30,9 @@
                 "title": "Synology DSM"
             },
             "reauth": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
                 "description": "Raz\u00f3n: {details}",
                 "title": "Synology DSM Volver a autenticar la integraci\u00f3n"
             },

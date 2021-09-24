@@ -390,9 +390,9 @@ async def test_setup_and_stop(hass):
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call, patch(
+    with patch("scapy.sendrecv.AsyncSniffer.start") as start_call, patch(
         "homeassistant.components.dhcp._verify_l2socket_setup",
-    ), patch("homeassistant.components.dhcp.compile_filter",), patch(
+    ), patch("scapy.arch.common.compile_filter"), patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -461,12 +461,10 @@ async def test_setup_fails_with_broken_libpcap(hass, caplog):
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp._verify_l2socket_setup",), patch(
-        "homeassistant.components.dhcp.compile_filter",
+    with patch("homeassistant.components.dhcp._verify_l2socket_setup"), patch(
+        "scapy.arch.common.compile_filter",
         side_effect=ImportError,
-    ) as compile_filter, patch(
-        "homeassistant.components.dhcp.AsyncSniffer",
-    ) as async_sniffer, patch(
+    ) as compile_filter, patch("scapy.sendrecv.AsyncSniffer") as async_sniffer, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

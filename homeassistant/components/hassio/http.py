@@ -10,6 +10,7 @@ import aiohttp
 from aiohttp import web
 from aiohttp.client import ClientTimeout
 from aiohttp.hdrs import (
+    CACHE_CONTROL,
     CONTENT_ENCODING,
     CONTENT_LENGTH,
     CONTENT_TYPE,
@@ -50,6 +51,8 @@ NO_AUTH_ONBOARDING = re.compile(
 NO_AUTH = re.compile(
     r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r"|addons/[^/]+/icon" r")$"
 )
+
+NO_STORE = re.compile(r"^(?:" r"|app/entrypoint.js" r")$")
 
 
 class HassIOView(HomeAssistantView):
@@ -104,7 +107,7 @@ class HassIOView(HomeAssistantView):
 
             # Stream response
             response = web.StreamResponse(
-                status=client.status, headers=_response_header(client)
+                status=client.status, headers=_response_header(client, path)
             )
             response.content_type = client.content_type
 
@@ -139,7 +142,7 @@ def _init_header(request: web.Request) -> dict[str, str]:
     return headers
 
 
-def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
+def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
     """Create response header."""
     headers = {}
 
@@ -152,6 +155,9 @@ def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
         ):
             continue
         headers[name] = value
+
+    if NO_STORE.match(path):
+        headers[CACHE_CONTROL] = "no-store, max-age=0"
 
     return headers
 

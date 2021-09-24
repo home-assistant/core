@@ -86,25 +86,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
+    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+
     def __init__(self, name, open_garage, device_id):
         """Initialize the cover."""
-        self._name = name
+        self._attr_name = name
         self._open_garage = open_garage
         self._state = None
         self._state_before_move = None
         self._extra_state_attributes = {}
-        self._available = True
-        self._device_id = device_id
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
+        self._attr_unique_id = device_id
 
     @property
     def extra_state_attributes(self):
@@ -116,7 +108,21 @@ class OpenGarageCover(CoverEntity):
         """Return if the cover is closed."""
         if self._state is None:
             return None
-        return self._state in [STATE_CLOSED, STATE_OPENING]
+        return self._state == STATE_CLOSED
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing."""
+        if self._state is None:
+            return None
+        return self._state == STATE_CLOSING
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening."""
+        if self._state is None:
+            return None
+        return self._state == STATE_OPENING
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
@@ -139,11 +145,11 @@ class OpenGarageCover(CoverEntity):
         status = await self._open_garage.update_state()
         if status is None:
             _LOGGER.error("Unable to connect to OpenGarage device")
-            self._available = False
+            self._attr_available = False
             return
 
-        if self._name is None and status["name"] is not None:
-            self._name = status["name"]
+        if self.name is None and status["name"] is not None:
+            self._attr_name = status["name"]
         state = STATES_MAP.get(status.get("door"))
         if self._state_before_move is not None:
             if self._state_before_move != state:
@@ -152,7 +158,7 @@ class OpenGarageCover(CoverEntity):
         else:
             self._state = state
 
-        _LOGGER.debug("%s status: %s", self._name, self._state)
+        _LOGGER.debug("%s status: %s", self.name, self._state)
         if status.get("rssi") is not None:
             self._extra_state_attributes[ATTR_SIGNAL_STRENGTH] = status.get("rssi")
         if status.get("dist") is not None:
@@ -160,7 +166,7 @@ class OpenGarageCover(CoverEntity):
         if self._state is not None:
             self._extra_state_attributes[ATTR_DOOR_STATE] = self._state
 
-        self._available = True
+        self._attr_available = True
 
     async def _push_button(self):
         """Send commands to API."""
@@ -171,24 +177,9 @@ class OpenGarageCover(CoverEntity):
             return
 
         if result == 2:
-            _LOGGER.error("Unable to control %s: Device key is incorrect", self._name)
+            _LOGGER.error("Unable to control %s: Device key is incorrect", self.name)
         elif result > 2:
-            _LOGGER.error("Unable to control %s: Error code %s", self._name, result)
+            _LOGGER.error("Unable to control %s: Error code %s", self.name, result)
 
         self._state = self._state_before_move
         self._state_before_move = None
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device_id

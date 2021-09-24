@@ -3,9 +3,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
+from sonarr.models import (
+    CommandItem,
+    Disk,
+    Episode,
+    QueueItem,
+    SeriesItem,
+    WantedResults,
+)
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -106,7 +113,7 @@ class SonarrCommandsSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Commands sensor."""
-        self._commands = []
+        self._commands: list[CommandItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -124,7 +131,7 @@ class SonarrCommandsSensor(SonarrSensor):
         self._commands = await self.sonarr.commands()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -144,7 +151,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Disk Space sensor."""
-        self._disks = []
+        self._disks: list[Disk] = []
         self._total_free = 0
 
         super().__init__(
@@ -165,7 +172,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         self._total_free = sum(disk.free for disk in self._disks)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -192,7 +199,7 @@ class SonarrQueueSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Queue sensor."""
-        self._queue = []
+        self._queue: list[QueueItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -210,7 +217,7 @@ class SonarrQueueSensor(SonarrSensor):
         self._queue = await self.sonarr.queue()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -233,7 +240,7 @@ class SonarrSeriesSensor(SonarrSensor):
 
     def __init__(self, sonarr: Sonarr, entry_id: str) -> None:
         """Initialize Sonarr Series sensor."""
-        self._items = []
+        self._items: list[SeriesItem] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -251,7 +258,7 @@ class SonarrSeriesSensor(SonarrSensor):
         self._items = await self.sonarr.series()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -272,7 +279,7 @@ class SonarrUpcomingSensor(SonarrSensor):
     def __init__(self, sonarr: Sonarr, entry_id: str, days: int = 1) -> None:
         """Initialize Sonarr Upcoming sensor."""
         self._days = days
-        self._upcoming = []
+        self._upcoming: list[Episode] = []
 
         super().__init__(
             sonarr=sonarr,
@@ -294,7 +301,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -315,7 +322,7 @@ class SonarrWantedSensor(SonarrSensor):
     def __init__(self, sonarr: Sonarr, entry_id: str, max_items: int = 10) -> None:
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
-        self._results = None
+        self._results: WantedResults | None = None
         self._total: int | None = None
 
         super().__init__(
@@ -335,9 +342,9 @@ class SonarrWantedSensor(SonarrSensor):
         self._total = self._results.total
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
-        attrs = {}
+        attrs: dict[str, str] = {}
 
         if self._results is not None:
             for episode in self._results.episodes:

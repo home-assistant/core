@@ -1,7 +1,6 @@
 """Support for Tractive sensors."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
@@ -20,8 +19,10 @@ from .const import (
     ATTR_LIVE_TRACKING_REMAINING,
     ATTR_MINUTES_ACTIVE,
     ATTR_TRACKER_STATE,
+    CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
+    TRACKABLES,
     TRACKER_ACTIVITY_STATUS_UPDATED,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
@@ -32,7 +33,6 @@ from .entity import TractiveEntity
 class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
-    attributes: tuple = ()
     entity_class: type[TractiveSensor] | None = None
 
 
@@ -43,6 +43,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         """Initialize sensor entity."""
         super().__init__(user_id, trackable, tracker_details)
 
+        self._attr_name = f"{trackable['details']['name']} {description.name}"
         self._attr_unique_id = unique_id
         self.entity_description = description
 
@@ -55,11 +56,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 
 class TractiveHardwareSensor(TractiveSensor):
     """Tractive hardware sensor."""
-
-    def __init__(self, user_id, trackable, tracker_details, unique_id, description):
-        """Initialize sensor entity."""
-        super().__init__(user_id, trackable, tracker_details, unique_id, description)
-        self._attr_name = f"{self._tracker_id} {description.name}"
 
     @callback
     def handle_hardware_status_update(self, event):
@@ -93,19 +89,10 @@ class TractiveHardwareSensor(TractiveSensor):
 class TractiveActivitySensor(TractiveSensor):
     """Tractive active sensor."""
 
-    def __init__(self, user_id, trackable, tracker_details, unique_id, description):
-        """Initialize sensor entity."""
-        super().__init__(user_id, trackable, tracker_details, unique_id, description)
-        self._attr_name = f"{trackable['details']['name']} {description.name}"
-
     @callback
     def handle_activity_status_update(self, event):
         """Handle activity status update."""
         self._attr_native_value = event[self.entity_description.key]
-        self._attr_extra_state_attributes = {
-            attr: event[attr] if attr in event else None
-            for attr in self.entity_description.attributes
-        }
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -155,37 +142,35 @@ SENSOR_TYPES = (
         name="Minutes Active",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=TIME_MINUTES,
-        attributes=(ATTR_DAILY_GOAL,),
+        entity_class=TractiveActivitySensor,
+    ),
+    TractiveSensorEntityDescription(
+        key=ATTR_DAILY_GOAL,
+        name="Daily Goal",
+        icon="mdi:flag-checkered",
+        native_unit_of_measurement=TIME_MINUTES,
         entity_class=TractiveActivitySensor,
     ),
 )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Tractive sensors."""
-    client = hass.data[DOMAIN][entry.entry_id]
-
-    trackables = await client.trackable_objects()
+    """Set up Tractive device trackers."""
+    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
+    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = []
 
-    async def _prepare_sensor_entity(item):
-        """Prepare sensor entities."""
-        trackable = await item.details()
-        tracker = client.tracker(trackable["device_id"])
-        tracker_details = await tracker.details()
+    for item in trackables:
         for description in SENSOR_TYPES:
-            unique_id = f"{trackable['_id']}_{description.key}"
             entities.append(
                 description.entity_class(
                     client.user_id,
-                    trackable,
-                    tracker_details,
-                    unique_id,
+                    item.trackable,
+                    item.tracker_details,
+                    f"{item.trackable['_id']}_{description.key}",
                     description,
                 )
             )
-
-    await asyncio.gather(*(_prepare_sensor_entity(item) for item in trackables))
 
     async_add_entities(entities)

@@ -9,6 +9,7 @@ from miio import (
     AirHumidifierMiot,
     AirHumidifierMjjsq,
     AirPurifier,
+    AirPurifierMB4,
     AirPurifierMiot,
     DeviceException,
     Fan,
@@ -31,6 +32,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRPURIFIER_3C,
     MODEL_FAN_P5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -139,6 +141,8 @@ async def async_create_miio_device_and_coordinator(
         device = AirHumidifier(host, token, model=model)
         migrate = True
     # Airpurifiers and Airfresh
+    elif model in MODEL_AIRPURIFIER_3C:
+        device = AirPurifierMB4(host, token)
     elif model in MODELS_PURIFIER_MIOT:
         device = AirPurifierMiot(host, token)
     elif model.startswith("zhimi.airpurifier."):
@@ -171,12 +175,23 @@ async def async_create_miio_device_and_coordinator(
 
     async def async_update_data():
         """Fetch data from the device using async_add_executor_job."""
-        try:
+
+        async def _async_fetch_data():
+            """Fetch data from the device."""
             async with async_timeout.timeout(10):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
 
+        try:
+            return await _async_fetch_data()
+        except DeviceException as ex:
+            if getattr(ex, "code", None) != -9999:
+                raise UpdateFailed(ex) from ex
+            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+        # Try to fetch the data a second time after error code -9999
+        try:
+            return await _async_fetch_data()
         except DeviceException as ex:
             raise UpdateFailed(ex) from ex
 

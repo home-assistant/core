@@ -1,6 +1,7 @@
 """Tests for wemo_device.py."""
 import asyncio
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import call, patch
 
 import async_timeout
 import pytest
@@ -14,8 +15,11 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .conftest import MOCK_HOST
+
+from tests.common import async_fire_time_changed
 
 asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(True))
 
@@ -148,3 +152,53 @@ async def test_async_update_data_subscribed(
     pywemo_device.get_state.reset_mock()
     await device._async_update_data()
     pywemo_device.get_state.assert_not_called()
+
+
+class TestInsight:
+    """Tests specific to the WeMo Insight device."""
+
+    @pytest.fixture
+    def pywemo_model(self):
+        """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
+        return "Insight"
+
+    @pytest.fixture(name="pywemo_device")
+    def pywemo_device_fixture(self, pywemo_device):
+        """Fixture for WeMoDevice instances."""
+        pywemo_device.insight_params = {
+            "currentpower": 1.0,
+            "todaymw": 200000000.0,
+            "state": 0,
+            "onfor": 0,
+            "ontoday": 0,
+            "ontotal": 0,
+            "powerthreshold": 0,
+        }
+        yield pywemo_device
+
+    @pytest.mark.parametrize(
+        "subscribed,state,expected_calls",
+        [
+            (False, 0, [call(), call(True), call(), call()]),
+            (False, 1, [call(), call(True), call(), call()]),
+            (True, 0, [call(), call(True), call(), call()]),
+            (True, 1, [call(), call(), call()]),
+        ],
+    )
+    async def test_should_poll(
+        self,
+        hass,
+        subscribed,
+        state,
+        expected_calls,
+        wemo_entity,
+        pywemo_device,
+        pywemo_registry,
+    ):
+        """Validate the should_poll returns the correct value."""
+        pywemo_registry.is_subscribed.return_value = subscribed
+        pywemo_device.get_state.reset_mock()
+        pywemo_device.get_state.return_value = state
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+        await hass.async_block_till_done()
+        pywemo_device.get_state.assert_has_calls(expected_calls)

@@ -22,7 +22,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 light.type in LOCK_TYPES
-                and light.uniqueid not in gateway.entities[DOMAIN]
+                and light.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLock(light, gateway))
 
@@ -44,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             if (
                 sensor.type in LOCK_TYPES
-                and sensor.uniqueid not in gateway.entities[DOMAIN]
+                and sensor.unique_id not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzLock(sensor, gateway))
 

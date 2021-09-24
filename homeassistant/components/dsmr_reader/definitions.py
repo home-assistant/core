@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Final
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -23,6 +23,9 @@ from homeassistant.const import (
     POWER_KILO_WATT,
     VOLUME_CUBIC_METERS,
 )
+
+PRICE_EUR_KWH: Final = f"EUR/{ENERGY_KILO_WATT_HOUR}"
+PRICE_EUR_M3: Final = f"EUR/{VOLUME_CUBIC_METERS}"
 
 
 def dsmr_transform(value):
@@ -301,31 +304,31 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         key="dsmr/day-consumption/energy_supplier_price_electricity_delivered_1",
         name="Low tariff delivered price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_delivered_2",
         name="High tariff delivered price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_returned_1",
         name="Low tariff returned price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_electricity_returned_2",
         name="High tariff returned price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_KWH,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/energy_supplier_price_gas",
         name="Gas price",
         icon="mdi:currency-eur",
-        native_unit_of_measurement=CURRENCY_EURO,
+        native_unit_of_measurement=PRICE_EUR_M3,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/fixed_cost",

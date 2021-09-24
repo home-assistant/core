@@ -1,4 +1,6 @@
 """The test for light device automation."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import device_automation
@@ -441,6 +443,28 @@ async def test_async_get_device_automations_all_devices_action(
     result = await device_automation.async_get_device_automations(hass, "action")
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 3
+
+
+async def test_async_get_device_automations_all_devices_action_exception_throw(
+    hass, device_reg, entity_reg, caplog
+):
+    """Test we get can fetch all the actions when no device id is passed and can handle one throwing an exception."""
+    await async_setup_component(hass, "device_automation", {})
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
+    with patch(
+        "homeassistant.components.light.device_trigger.async_get_triggers",
+        side_effect=KeyError,
+    ):
+        result = await device_automation.async_get_device_automations(hass, "trigger")
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 0
+    assert "KeyError" in caplog.text
 
 
 async def test_websocket_get_trigger_capabilities(

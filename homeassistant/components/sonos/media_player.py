@@ -223,6 +223,7 @@ async def async_setup_entry(
         {
             vol.Required(ATTR_ALARM_ID): cv.positive_int,
             vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_VOLUME): cv.small_float,
             vol.Optional(ATTR_ENABLED): cv.boolean,
             vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
         },

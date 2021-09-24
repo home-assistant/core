@@ -74,6 +74,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
 
         self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        self._attr_is_closed = False
 
         # If we read cover status from coil, and not from optional status register,
         # we interpret boolean value False as closed cover, and value True as open cover.
