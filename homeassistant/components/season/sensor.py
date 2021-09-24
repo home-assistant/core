@@ -8,8 +8,8 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE
-from homeassistant.util.dt import utcnow
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
