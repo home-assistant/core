@@ -501,7 +501,7 @@ def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
-    assert "Ignoring illegal last reset 'festivus' for sensor.test1" in caplog.text
+    assert "Ignoring invalid last reset 'festivus' for sensor.test1" in caplog.text
 
 
 @pytest.mark.parametrize("state_class", ["measurement"])
