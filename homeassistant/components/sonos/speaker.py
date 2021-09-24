@@ -59,7 +59,7 @@ from .const import (
     SUBSCRIPTION_TIMEOUT,
 )
 from .favorites import SonosFavorites
-from .helpers import soco_error, uid_to_short_hostname
+from .helpers import soco_error
 
 EVENT_CHARGING = {
     "CHARGING": True,
@@ -524,11 +524,10 @@ class SonosSpeaker:
         self, callback_timestamp: datetime.datetime | None = None
     ) -> None:
         """Make this player unavailable when it was not seen recently."""
-        if callback_timestamp:
+        data = self.hass.data[DATA_SONOS]
+        if callback_timestamp and (zcname := data.mdns_names.get(self.soco.uid)):
             # Called by a _seen_timer timeout, check mDNS one more time
             # This should not be checked in an "active" unseen scenario
-            hostname = uid_to_short_hostname(self.soco.uid)
-            zcname = f"{hostname}.{MDNS_SERVICE}"
             aiozeroconf = await zeroconf.async_get_async_instance(self.hass)
             if await aiozeroconf.async_get_service_info(MDNS_SERVICE, zcname):
                 # We can still see the speaker via zeroconf check again later.

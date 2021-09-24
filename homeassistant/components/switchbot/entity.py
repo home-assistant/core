@@ -30,7 +30,7 @@ class SwitchbotEntity(CoordinatorEntity, Entity):
         self._attr_name = name
         self._attr_device_info: DeviceInfo = {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": self._attr_name,
+            "name": name,
             "model": self.data["modelName"],
             "manufacturer": MANUFACTURER,
         }

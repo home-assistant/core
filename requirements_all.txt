@@ -218,6 +218,9 @@ aiomodernforms==0.1.8
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.9.2
 
+# homeassistant.components.nanoleaf
+aionanoleaf==0.0.1
+
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
 
@@ -262,6 +265,9 @@ aioymaps==1.1.0
 
 # homeassistant.components.airly
 airly==1.1.0
+
+# homeassistant.components.airthings
+airthings_cloud==0.0.1
 
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
@@ -712,7 +718,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.goalzero
-goalzero==0.1.7
+goalzero==0.2.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
@@ -1444,6 +1450,9 @@ pyeconet==0.1.14
 # homeassistant.components.edimax
 pyedimax==0.2.1
 
+# homeassistant.components.efergy
+pyefergy==0.0.3
+
 # homeassistant.components.eight_sleep
 pyeight==0.1.9
 
@@ -1646,9 +1655,6 @@ pymyq==3.1.4
 # homeassistant.components.mysensors
 pymysensors==0.21.0
 
-# homeassistant.components.nanoleaf
-pynanoleaf==0.1.0
-
 # homeassistant.components.nello
 pynello==2.0.3
 
@@ -1785,7 +1791,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.sia
-pysiaalarm==3.0.0
+pysiaalarm==3.0.1
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.4
@@ -2361,7 +2367,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.velbus
-velbus-aio==2021.9.1
+velbus-aio==2021.9.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.14
