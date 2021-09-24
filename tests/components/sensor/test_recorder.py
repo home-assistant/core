@@ -609,6 +609,76 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+@pytest.mark.parametrize("state_class", ["total_increasing"])
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,factor",
+    [
+        ("energy", "kWh", "kWh", 1),
+    ],
+)
+def test_compile_hourly_sum_statistics_negative_state(
+    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+):
+    """Test compiling hourly statistics with negative states."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": state_class,
+        "unit_of_measurement": unit,
+    }
+    seq = [10, 11, 15, 16, 20, -20, 20, 10]
+
+    states = {"sensor.test1": []}
+    one = zero
+    for i in range(len(seq)):
+        one = one + timedelta(seconds=5)
+        _states = record_meter_state(
+            hass, one, "sensor.test1", attributes, seq[i : i + 1]
+        )
+        states["sensor.test1"].extend(_states["sensor.test1"])
+
+    hist = history.get_significant_states(
+        hass,
+        zero - timedelta.resolution,
+        one + timedelta.resolution,
+        significant_changes_only=False,
+    )
+    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(factor * seq[7]),
+                "sum": approx(factor * 40),  # (20 - 10) + (10 - (-20))
+                "sum_decrease": approx(factor * 20.0),
+                "sum_increase": approx(factor * 60),
+            },
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    assert (
+        "Entity sensor.test1 has state class total_increasing, but its state is negative"
+        in caplog.text
+    )
+
+
 @pytest.mark.parametrize(
     "device_class,unit,native_unit,factor",
     [
