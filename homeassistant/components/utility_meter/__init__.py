@@ -66,10 +66,10 @@ def period_or_cron(config):
 
 
 def max_31_days(config):
-    """Check that time period does not include more then 31 days."""
-    if config.days >= 31:
+    """Check that time period does not include more then 28 days."""
+    if config.days >= 28:
         raise vol.Invalid(
-            "Unsupported offset of more then 31 days, please use a cron pattern. Continuing without offset"
+            "Unsupported offset of more then 28 days, please use a cron pattern. Continuing without offset"
         )
 
     return config
