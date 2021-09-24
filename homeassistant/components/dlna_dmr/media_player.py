@@ -51,6 +51,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     LOGGER as _LOGGER,
+    MEDIA_TYPE_MAP,
 )
 from .data import EventListenAddr, get_domain_data
 
@@ -552,7 +553,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
         """Title of current playing media."""
         if not self._device:
             return None
-        return self._device.media_title
+        # Use the best available title
+        return self._device.media_program_title or self._device.media_title
 
     @property
     def media_image_url(self) -> str | None:
@@ -584,6 +586,20 @@ class DlnaDmrEntity(MediaPlayerEntity):
         return STATE_IDLE
 
     @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        if not self._device:
+            return None
+        return self._device.current_track_uri
+
+    @property
+    def media_content_type(self) -> str | None:
+        """Content type of current playing media."""
+        if not self._device or not self._device.media_class:
+            return None
+        return MEDIA_TYPE_MAP.get(self._device.media_class)
+
+    @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if not self._device:
@@ -606,6 +622,85 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
         return self._device.media_position_updated_at
+
+    @property
+    def media_artist(self) -> str | None:
+        """Artist of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_artist
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Album name of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_album_name
+
+    @property
+    def media_album_artist(self) -> str | None:
+        """Album artist of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_album_artist
+
+    @property
+    def media_track(self) -> int | None:
+        """Track number of current playing media, music track only."""
+        if not self._device:
+            return None
+        return self._device.media_track_number
+
+    @property
+    def media_series_title(self) -> str | None:
+        """Title of series of current playing media, TV show only."""
+        if not self._device:
+            return None
+        return self._device.media_series_title
+
+    @property
+    def media_season(self) -> str | None:
+        """Season number, starting at 1, of current playing media, TV show only."""
+        if not self._device:
+            return None
+        # Some DMRs, like Kodi, leave this as 0 and encode the season & episode
+        # in the episode_number metadata, as {season:d}{episode:02d}
+        if (
+            not self._device.media_season_number
+            or self._device.media_season_number == "0"
+        ) and self._device.media_episode_number:
+            try:
+                episode = int(self._device.media_episode_number, 10)
+                if episode > 100:
+                    return str(episode // 100)
+            except ValueError:
+                pass
+        return self._device.media_season_number
+
+    @property
+    def media_episode(self) -> str | None:
+        """Episode number of current playing media, TV show only."""
+        if not self._device:
+            return None
+        # Complement to media_season math above
+        if (
+            not self._device.media_season_number
+            or self._device.media_season_number == "0"
+        ) and self._device.media_episode_number:
+            try:
+                episode = int(self._device.media_episode_number, 10)
+                if episode > 100:
+                    return str(episode % 100)
+            except ValueError:
+                pass
+        return self._device.media_episode_number
+
+    @property
+    def media_channel(self) -> str | None:
+        """Channel name currently playing."""
+        if not self._device:
+            return None
+        return self._device.media_channel_name
 
     @property
     def unique_id(self) -> str:
