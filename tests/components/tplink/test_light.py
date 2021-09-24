@@ -196,26 +196,6 @@ def unknown_light_mock_data_fixture() -> None:
 @pytest.fixture(name="light_mock_data")
 def light_mock_data_fixture() -> None:
     """Create light mock data."""
-    sys_info = {
-        "sw_ver": "1.2.3",
-        "hw_ver": "2.3.4",
-        "mac": "aa:bb:cc:dd:ee:ff",
-        "mic_mac": "00:11:22:33:44",
-        "type": "light",
-        "hwId": "1234",
-        "fwId": "4567",
-        "oemId": "891011",
-        "dev_name": "light1",
-        "rssi": 11,
-        "latitude": "0",
-        "longitude": "0",
-        "is_color": True,
-        "is_dimmable": True,
-        "is_variable_color_temp": True,
-        "model": "LB120",
-        "alias": "light1",
-    }
-
     light_state = {
         "on_off": True,
         "dft_on_state": {
@@ -228,6 +208,26 @@ def light_mock_data_fixture() -> None:
         "color_temp": 3300,
         "hue": 110,
         "saturation": 90,
+    }
+    sys_info = {
+        "sw_ver": "1.2.3",
+        "hw_ver": "2.3.4",
+        "mac": "aa:bb:cc:dd:ee:ff",
+        "mic_mac": "00:11:22:33:44",
+        "type": "smartbulb",
+        "hwId": "1234",
+        "fwId": "4567",
+        "oemId": "891011",
+        "dev_name": "light1",
+        "rssi": 11,
+        "latitude": "0",
+        "longitude": "0",
+        "is_color": True,
+        "is_dimmable": True,
+        "is_variable_color_temp": True,
+        "model": "LB120",
+        "alias": "light1",
+        "light_state": light_state,
     }
 
     def set_light_state(state) -> None:
@@ -316,7 +316,7 @@ def dimmer_switch_mock_data_fixture() -> None:
         "hw_ver": "2.3.4",
         "mac": "aa:bb:cc:dd:ee:ff",
         "mic_mac": "00:11:22:33:44",
-        "type": "switch",
+        "type": "smartplug",
         "hwId": "1234",
         "fwId": "4567",
         "oemId": "891011",
