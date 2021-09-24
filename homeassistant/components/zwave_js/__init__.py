@@ -522,9 +522,7 @@ async def async_setup_entry(  # noqa: C901
         # listen for nodes being removed from the mesh
         # NOTE: This will not remove nodes that were removed when HA was not running
         entry.async_on_unload(
-            client.driver.controller.on(
-                "node removed", lambda event: async_on_node_removed(event)
-            )
+            client.driver.controller.on("node removed", async_on_node_removed)
         )
 
     platform_task = hass.async_create_task(start_platforms())
