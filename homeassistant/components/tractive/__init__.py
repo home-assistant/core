@@ -50,6 +50,7 @@ class Trackables:
     tracker_details: dict | None = None
     hw_info: dict | None = None
     pos_report: dict | None = None
+    tracker: aiotractive.Tracker = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -115,7 +116,7 @@ async def _generate_trackables(client, trackable):
         tracker.details(), tracker.hw_info(), tracker.pos_report()
     )
 
-    return Trackables(trackable, tracker_details, hw_info, pos_report)
+    return Trackables(trackable, tracker_details, hw_info, pos_report, tracker)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

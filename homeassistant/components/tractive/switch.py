@@ -1,7 +1,6 @@
 """Support for Tractive switches."""
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -16,8 +15,10 @@ from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
+    CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
+    TRACKABLES,
     TRACKER_HARDWARE_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -56,31 +57,23 @@ SWITCH_TYPES = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Tractive switches."""
-    client = hass.data[DOMAIN][entry.entry_id]
-
-    trackables = await client.trackable_objects()
+    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
+    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
 
     entities = []
 
-    async def _prepare_switch_entity(item):
-        """Prepare switch entities."""
-        trackable = await item.details()
-        tracker = client.tracker(trackable["device_id"])
-        tracker_details = await tracker.details()
+    for item in trackables:
         for description in SWITCH_TYPES:
-            unique_id = f"{trackable['_id']}_{description.key}"
             entities.append(
                 TractiveSwitch(
                     client.user_id,
-                    trackable,
-                    tracker,
-                    tracker_details,
-                    unique_id,
+                    item.trackable,
+                    item.tracker,
+                    item.tracker_details,
+                    f"{item.trackable['_id']}_{description.key}",
                     description,
                 )
             )
-
-    await asyncio.gather(*(_prepare_switch_entity(item) for item in trackables))
 
     async_add_entities(entities)
 
