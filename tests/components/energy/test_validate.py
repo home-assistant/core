@@ -39,7 +39,16 @@ async def test_validation_empty_config(hass):
     }
 
 
-async def test_validation(hass, mock_energy_manager):
+@pytest.mark.parametrize(
+    "state_class, extra",
+    [
+        ("total_increasing", {}),
+        ("total", {}),
+        ("total", {"last_reset": "abc"}),
+        ("measurement", {"last_reset": "abc"}),
+    ],
+)
+async def test_validation(hass, mock_energy_manager, state_class, extra):
     """Test validating success."""
     for key in ("device_cons", "battery_import", "battery_export", "solar_production"):
         hass.states.async_set(
@@ -48,7 +57,8 @@ async def test_validation(hass, mock_energy_manager):
             {
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
-                "state_class": "total_increasing",
+                "state_class": state_class,
+                **extra,
             },
         )
 
@@ -183,6 +193,35 @@ async def test_validation_device_consumption_recorder_not_tracked(
                 {
                     "type": "recorder_untracked",
                     "identifier": "sensor.not_recorded",
+                    "value": None,
+                }
+            ]
+        ],
+    }
+
+
+async def test_validation_device_consumption_no_last_reset(hass, mock_energy_manager):
+    """Test validating device based on untracked entity."""
+    await mock_energy_manager.async_update(
+        {"device_consumption": [{"stat_consumption": "sensor.no_last_reset"}]}
+    )
+    hass.states.async_set(
+        "sensor.no_last_reset",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "measurement",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [],
+        "device_consumption": [
+            [
+                {
+                    "type": "entity_state_class_measurement_no_last_reset",
+                    "identifier": "sensor.no_last_reset",
                     "value": None,
                 }
             ]
@@ -332,12 +371,22 @@ async def test_validation_grid(hass, mock_energy_manager, mock_is_entity_recorde
                     "value": None,
                 },
                 {
+                    "type": "entity_not_defined",
+                    "identifier": "sensor.grid_cost_1",
+                    "value": None,
+                },
+                {
                     "type": "entity_unexpected_unit_energy",
                     "identifier": "sensor.grid_production_1",
                     "value": "beers",
                 },
                 {
                     "type": "recorder_untracked",
+                    "identifier": "sensor.grid_compensation_1",
+                    "value": None,
+                },
+                {
+                    "type": "entity_not_defined",
                     "identifier": "sensor.grid_compensation_1",
                     "value": None,
                 },
@@ -555,6 +604,11 @@ async def test_validation_gas(hass, mock_energy_manager, mock_is_entity_recorded
                 },
                 {
                     "type": "recorder_untracked",
+                    "identifier": "sensor.gas_cost_1",
+                    "value": None,
+                },
+                {
+                    "type": "entity_not_defined",
                     "identifier": "sensor.gas_cost_1",
                     "value": None,
                 },

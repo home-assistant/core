@@ -27,8 +27,8 @@ from .const import (
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    ATTR_BOT: ["switch"],
-    ATTR_CURTAIN: ["cover"],
+    ATTR_BOT: ["switch", "sensor"],
+    ATTR_CURTAIN: ["cover", "binary_sensor", "sensor"],
 }
 
 

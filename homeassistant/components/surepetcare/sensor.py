@@ -11,12 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
+from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
+from .entity import SurePetcareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +26,7 @@ async def async_setup_entry(
 
     entities: list[SureBattery] = []
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     for surepy_entity in coordinator.data.values():
 
@@ -43,38 +41,24 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SureBattery(CoordinatorEntity, SensorEntity):
+class SureBattery(SurePetcareEntity, SensorEntity):
     """A sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, coordinator: DataUpdateCoordinator) -> None:
-        """Initialize a Sure Petcare sensor."""
-        super().__init__(coordinator)
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
 
-        self._id = _id
+    def __init__(
+        self, surepetcare_id: int, coordinator: SurePetcareDataCoordinator
+    ) -> None:
+        """Initialize a Sure Petcare battery sensor."""
+        super().__init__(surepetcare_id, coordinator)
 
-        surepy_entity: SurepyEntity = coordinator.data[_id]
-
-        self._attr_device_class = DEVICE_CLASS_BATTERY
-        if surepy_entity.name:
-            self._attr_name = f"{surepy_entity.type.name.capitalize()} {surepy_entity.name.capitalize()} Battery Level"
-        else:
-            self._attr_name = f"{surepy_entity.type.name.capitalize()}  Battery Level"
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_unique_id = (
-            f"{surepy_entity.household_id}-{surepy_entity.id}-battery"
-        )
-        self._update_attr()
+        self._attr_name = f"{self._device_name} Battery Level"
+        self._attr_unique_id = f"{self._device_id}-battery"
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._update_attr()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_attr(self) -> None:
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state and attributes."""
-        surepy_entity = self.coordinator.data[self._id]
         state = surepy_entity.raw_data()["status"]
 
         try:
@@ -94,4 +78,3 @@ class SureBattery(CoordinatorEntity, SensorEntity):
             }
         else:
             self._attr_extra_state_attributes = {}
-        _LOGGER.debug("%s -> state: %s", self.name, state)

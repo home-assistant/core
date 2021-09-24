@@ -1,6 +1,7 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -223,7 +224,23 @@ class States(Base):  # type: ignore
             return None
 
 
-class StatisticData(TypedDict, total=False):
+class StatisticResult(TypedDict):
+    """Statistic result data class.
+
+    Allows multiple datapoints for the same statistic_id.
+    """
+
+    meta: StatisticMetaData
+    stat: Iterable[StatisticData]
+
+
+class StatisticDataBase(TypedDict):
+    """Mandatory fields for statistic data class."""
+
+    start: datetime
+
+
+class StatisticData(StatisticDataBase, total=False):
     """Statistic data class."""
 
     mean: float
@@ -260,11 +277,10 @@ class StatisticsBase:
     sum_increase = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(cls, metadata_id: str, start: datetime, stats: StatisticData):
+    def from_stats(cls, metadata_id: str, stats: StatisticData):
         """Create object from a statistics."""
         return cls(  # type: ignore
             metadata_id=metadata_id,
-            start=start,
             **stats,
         )
 
@@ -293,7 +309,7 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
 
-class StatisticMetaData(TypedDict, total=False):
+class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
     statistic_id: str

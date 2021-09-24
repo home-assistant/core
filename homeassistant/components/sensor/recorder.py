@@ -9,6 +9,11 @@ import math
 from typing import Callable
 
 from homeassistant.components.recorder import history, statistics
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMetaData,
+    StatisticResult,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_ENERGY,
@@ -307,14 +312,29 @@ def _wanted_statistics(
     return wanted_statistics
 
 
+def _last_reset_as_utc_isoformat(
+    last_reset_s: str | None, entity_id: str
+) -> str | None:
+    """Parse last_reset and convert it to UTC."""
+    if last_reset_s is None:
+        return None
+    last_reset = dt_util.parse_datetime(last_reset_s)
+    if last_reset is None:
+        _LOGGER.warning(
+            "Ignoring invalid last reset '%s' for %s", last_reset_s, entity_id
+        )
+        return None
+    return dt_util.as_utc(last_reset).isoformat()
+
+
 def compile_statistics(  # noqa: C901
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
-) -> dict:
+) -> list[StatisticResult]:
     """Compile statistics for all entities during start-end.
 
     Note: This will query the database and must not be run in the event loop
     """
-    result: dict = {}
+    result: list[StatisticResult] = []
 
     entities = _get_entities(hass)
 
@@ -375,21 +395,20 @@ def compile_statistics(  # noqa: C901
                     )
                 continue
 
-        result[entity_id] = {}
-
         # Set meta data
-        result[entity_id]["meta"] = {
+        meta: StatisticMetaData = {
+            "statistic_id": entity_id,
             "unit_of_measurement": unit,
             "has_mean": "mean" in wanted_statistics[entity_id],
             "has_sum": "sum" in wanted_statistics[entity_id],
         }
 
         # Make calculations
-        stat: dict = {}
+        stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*fstates), 1))
+            stat["max"] = max(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*fstates), 1))
+            stat["min"] = min(*itertools.islice(zip(*fstates), 1))  # type: ignore[typeddict-item]
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(fstates, start, end)
@@ -420,7 +439,11 @@ def compile_statistics(  # noqa: C901
                 reset = False
                 if (
                     state_class != STATE_CLASS_TOTAL_INCREASING
-                    and (last_reset := state.attributes.get("last_reset"))
+                    and (
+                        last_reset := _last_reset_as_utc_isoformat(
+                            state.attributes.get("last_reset"), entity_id
+                        )
+                    )
                     != old_last_reset
                 ):
                     if old_state is None:
@@ -480,12 +503,10 @@ def compile_statistics(  # noqa: C901
             # Deprecated, will be removed in Home Assistant 2021.11
             if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
                 # No valid updates
-                result.pop(entity_id)
                 continue
 
             if new_state is None or old_state is None:
                 # No valid updates
-                result.pop(entity_id)
                 continue
 
             # Update the sum with the last state
@@ -497,7 +518,7 @@ def compile_statistics(  # noqa: C901
             stat["sum_increase"] = sum_increase
             stat["state"] = new_state
 
-        result[entity_id]["stat"] = stat
+        result.append({"meta": meta, "stat": (stat,)})
 
     return result
 
