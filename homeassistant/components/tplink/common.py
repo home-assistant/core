@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from kasa import Discover, SmartDevice, SmartDeviceException
 
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -19,7 +19,6 @@ from .const import (
     CONF_LIGHT,
     CONF_STRIP,
     CONF_SWITCH,
-    DOMAIN as TPLINK_DOMAIN,
     MAX_DISCOVERY_RETRIES,
 )
 
@@ -82,9 +81,7 @@ async def async_discover_devices(
             else:
                 _LOGGER.error("Unknown smart device type: %s", type(device))
 
-    # TODO: Check if retries are necessary anymore as we could/should always
-    #       use the existing config entries on startup to load the devices & reloading
-    #       the integration should allow forcing the discovery
+    # We do retries since UDP packets over wifi can get lost
     devices: dict[str, SmartDevice] = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
         _LOGGER.debug(
@@ -139,37 +136,6 @@ async def get_static_devices(config_data) -> SmartDevices:
                     "Failed to setup device %s due to %s; not retrying", host, sde
                 )
     return SmartDevices(lights, switches)
-
-
-# TODO is this still needed?
-async def add_available_devices(
-    hass: HomeAssistant, device_type: str, device_class: Callable
-) -> list[Entity]:
-    """Get sysinfo for all devices."""
-
-    devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][device_type]
-
-    if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
-        devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][
-            f"{device_type}_remaining"
-        ]
-
-    entities_ready: list[Entity] = []
-    devices_unavailable: list[SmartDevice] = []
-    for device in devices:
-        try:
-            await device.update()
-            entities_ready.append(device_class(device))
-        except SmartDeviceException as ex:
-            devices_unavailable.append(device)
-            _LOGGER.warning(
-                "Unable to communicate with device %s: %s",
-                device.host,
-                ex,
-            )
-
-    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = devices_unavailable
-    return entities_ready
 
 
 class CoordinatedTPLinkEntity(CoordinatorEntity):
