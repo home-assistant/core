@@ -179,7 +179,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         name="Wind Direction",
         icon="mdi:compass-rose",
         device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=None,  # statistics currently doesn't handle circular statistics
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
     ),
