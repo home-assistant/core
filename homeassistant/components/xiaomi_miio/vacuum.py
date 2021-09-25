@@ -228,15 +228,11 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
             # We want to keep returning an error until it has been cleared.
             if self.coordinator.data.status.got_error:
                 return STATE_ERROR
-            try:
-                return STATE_CODE_TO_STATE[int(self.coordinator.data.status.state_code)]
-            except KeyError:
-                _LOGGER.error(
-                    "STATE not supported: %s, state_code: %s",
-                    self.coordinator.data.status.state,
-                    self.coordinator.data.status.state_code,
-                )
+
+            if int(self.coordinator.data.status.state_code) not in STATE_CODE_TO_STATE:
                 return None
+
+            return STATE_CODE_TO_STATE[int(self.coordinator.data.status.state_code)]
 
     @property
     def battery_level(self):
@@ -426,3 +422,13 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
             await self.hass.async_add_executor_job(self._device.zoned_clean, zone)
         except (OSError, DeviceException) as exc:
             _LOGGER.error("Unable to send zoned_clean command to the vacuum: %s", exc)
+
+    def _handle_coordinator_update(self) -> None:
+        if int(self.coordinator.data.status.state_code) not in STATE_CODE_TO_STATE:
+            _LOGGER.error(
+                "STATE not supported: %s, state_code: %s",
+                self.coordinator.data.status.state,
+                self.coordinator.data.status.state_code,
+            )
+
+        super()._handle_coordinator_update()
