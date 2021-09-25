@@ -130,7 +130,7 @@ async def async_setup_entry(
             for description in USER_SENSOR_DESCRIPTIONS
         ]
     )
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class FluNearYouSensor(CoordinatorEntity, SensorEntity):
@@ -156,14 +156,26 @@ class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self.update_from_latest_data()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.update_from_latest_data()
+
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the sensor."""
+        raise NotImplementedError
 
 
 class CdcSensor(FluNearYouSensor):
     """Define a sensor for CDC reports."""
 
-    async def async_update(self) -> None:
-        """Update the state."""
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the sensor."""
         self._attr_extra_state_attributes.update(
             {
                 ATTR_REPORTED_DATE: self.coordinator.data["week_date"],
@@ -176,8 +188,9 @@ class CdcSensor(FluNearYouSensor):
 class UserSensor(FluNearYouSensor):
     """Define a sensor for user reports."""
 
-    async def async_update(self) -> None:
-        """Update the state."""
+    @callback
+    def update_from_latest_data(self) -> None:
+        """Update the sensor."""
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: self.coordinator.data["local"]["city"].split("(")[0],
