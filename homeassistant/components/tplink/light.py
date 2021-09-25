@@ -175,7 +175,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             if self.device.color_temp:
                 return COLOR_MODE_COLOR_TEMP
             return COLOR_MODE_HS
-        elif self.device.is_variable_color_temp:
+        if self.device.is_variable_color_temp:
             return COLOR_MODE_COLOR_TEMP
 
         return COLOR_MODE_BRIGHTNESS
