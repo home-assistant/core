@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import SmartBulb
+from kasa import SmartBulb, SmartPlug, SmartStrip
 from kasa.exceptions import SmartDeviceException
 
 MODULE = "homeassistant.components.tplink"
@@ -21,16 +21,64 @@ def _mocked_bulb() -> SmartBulb:
     bulb.alias = ALIAS
     bulb.model = MODEL
     bulb.host = IP_ADDRESS
-    bulb.brightness = 255
+    bulb.brightness = 50
     bulb.color_temp = 4000
+    bulb.is_color = True
+    bulb.is_strip = False
+    bulb.is_plug = False
+    bulb.hsv = (10, 30, 5)
     bulb.device_id = MAC_ADDRESS
-    bulb.valid_temperature_range.min = 9000
-    bulb.valid_temperature_range.max = 4000
+    bulb.valid_temperature_range.min = 4000
+    bulb.valid_temperature_range.max = 9000
     bulb.hw_info = {"sw_ver": "1.0.0"}
+    bulb.turn_off = AsyncMock()
+    bulb.turn_on = AsyncMock()
+    bulb.set_brightness = AsyncMock()
+    bulb.set_hsv = AsyncMock()
+    bulb.set_color_temp = AsyncMock()
     return bulb
 
 
-def _patch_discovery(no_device=False):
+def _mocked_plug() -> SmartPlug:
+    plug = MagicMock(auto_spec=SmartPlug)
+    plug.update = AsyncMock()
+    plug.mac = MAC_ADDRESS
+    plug.alias = "My Plug"
+    plug.model = MODEL
+    plug.host = IP_ADDRESS
+    plug.is_light_strip = False
+    plug.is_bulb = False
+    plug.is_dimmer = False
+    plug.is_strip = False
+    plug.is_plug = True
+    plug.device_id = MAC_ADDRESS
+    plug.hw_info = {"sw_ver": "1.0.0"}
+    plug.turn_off = AsyncMock()
+    plug.turn_on = AsyncMock()
+    return plug
+
+
+def _mocked_strip() -> SmartStrip:
+    strip = MagicMock(auto_spec=SmartStrip)
+    strip.update = AsyncMock()
+    strip.mac = MAC_ADDRESS
+    strip.alias = "My Strip"
+    strip.model = MODEL
+    strip.host = IP_ADDRESS
+    strip.is_light_strip = False
+    strip.is_bulb = False
+    strip.is_dimmer = False
+    strip.is_strip = True
+    strip.is_plug = True
+    strip.device_id = MAC_ADDRESS
+    strip.hw_info = {"sw_ver": "1.0.0"}
+    strip.turn_off = AsyncMock()
+    strip.turn_on = AsyncMock()
+    strip.children = [_mocked_plug()]
+    return strip
+
+
+def _patch_discovery(device=None, no_device=False):
     async def _discovery(*_):
         if no_device:
             return {}
@@ -39,11 +87,11 @@ def _patch_discovery(no_device=False):
     return patch("homeassistant.components.tplink.Discover.discover", new=_discovery)
 
 
-def _patch_single_discovery(no_device=False):
+def _patch_single_discovery(device=None, no_device=False):
     async def _discover_single(*_):
         if no_device:
             raise SmartDeviceException
-        return _mocked_bulb()
+        return device if device else _mocked_bulb()
 
     return patch(
         "homeassistant.components.tplink.Discover.discover_single", new=_discover_single
