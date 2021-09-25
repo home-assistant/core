@@ -48,7 +48,8 @@ async def async_setup_entry(
                 tile,
             )
             for tile_uuid, tile in hass.data[DOMAIN][DATA_TILE][entry.entry_id].items()
-        ]
+        ],
+        True,
     )
 
 
@@ -132,12 +133,10 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
-        self._update_from_latest_data()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-    @callback
-    def _update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
+    async def async_update(self) -> None:
+        """Update the state."""
         self._attr_extra_state_attributes.update(
             {
                 ATTR_ALTITUDE: self._tile.altitude,
@@ -147,8 +146,3 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
                 ATTR_VOIP_STATE: self._tile.voip_state,
             }
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self._update_from_latest_data()
