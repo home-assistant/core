@@ -2,16 +2,13 @@
 from datetime import timedelta
 import logging
 from typing import Callable, NamedTuple
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from kasa import SmartDeviceException
 import pytest
 
 from homeassistant.components import tplink
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -28,6 +25,8 @@ from homeassistant.const import (
     CONF_HOST,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -56,7 +55,7 @@ MOCK_ENERGY_DATA = {
 class LightMockData(NamedTuple):
     """Mock light data."""
 
-    query: Mock
+    query_mock: AsyncMock
     sys_info: dict
     light_state: dict
     set_light_state: Callable[[dict], None]
@@ -71,7 +70,7 @@ class LightMockData(NamedTuple):
 class SmartSwitchMockData(NamedTuple):
     """Mock smart switch data."""
 
-    query: Mock
+    query_mock: AsyncMock
     sys_info: dict
     is_on_mock: Mock
     brightness_mock: Mock
@@ -180,7 +179,7 @@ def unknown_light_mock_data_fixture() -> None:
     )
     with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
-            query=query_mock,
+            query_mock=query_mock,
             sys_info=sys_info,
             light_state=light_state,
             set_light_state=set_light_state,
@@ -295,7 +294,7 @@ def light_mock_data_fixture() -> None:
     )
     with query_patch as query_mock, set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, sys_info_patch as sys_info_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
         yield LightMockData(
-            query=query_mock,
+            query_mock=query_mock,
             sys_info=sys_info,
             light_state=light_state,
             set_light_state=set_light_state,
@@ -384,12 +383,8 @@ def dimmer_switch_mock_data_fixture() -> None:
 
 async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Run an update action for an entity."""
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
 
@@ -701,7 +696,6 @@ async def test_update_failure(
 ):
     """Test that update failures are logged."""
 
-    await async_setup_component(hass, HA_DOMAIN, {})
     await hass.async_block_till_done()
 
     await async_setup_component(
@@ -715,16 +709,19 @@ async def test_update_failure(
         },
     )
     await hass.async_block_till_done()
+    assert hass.states.get("light.light1").state == STATE_ON
+
     caplog.clear()
     caplog.set_level(logging.WARNING)
-    await hass.helpers.entity_component.async_update_entity("light.light1")
+    await update_entity(hass, "light.light1")
     assert caplog.text == ""
+    assert hass.states.get("light.light1").state == STATE_ON
 
-    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 0):
-        caplog.clear()
-        caplog.set_level(logging.WARNING)
-        await hass.helpers.entity_component.async_update_entity("light.light1")
-        assert "Could not read state for 123.123.123.123|light1" in caplog.text
+    light_mock_data.query_mock.side_effect = SmartDeviceException
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await update_entity(hass, "light.light1")
+    assert hass.states.get("light.light1").state == STATE_UNAVAILABLE
 
 
 async def test_async_setup_entry_unavailable(
@@ -738,7 +735,6 @@ async def test_async_setup_entry_unavailable(
         "kasa.smartdevice.SmartDevice.sys_info",
         side_effect=SmartDeviceException,
     ):
-        await async_setup_component(hass, HA_DOMAIN, {})
         await hass.async_block_till_done()
 
         await async_setup_component(
