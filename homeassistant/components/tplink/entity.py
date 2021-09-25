@@ -40,7 +40,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        data = {
+        return {
             "name": self.device.alias,
             "model": self.device.model,
             "manufacturer": "TP-Link",
@@ -48,10 +48,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             "sw_version": self.device.hw_info["sw_ver"],
         }
-        if self.device.is_strip_socket:
-            data["via_device"] = self.device.parent.device_id
-
-        return data
 
     @property
     def is_on(self) -> bool | None:
