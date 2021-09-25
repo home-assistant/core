@@ -71,9 +71,7 @@ def async_migrate_legacy_entries(
 def async_migrate_yaml_entries(hass: HomeAssistant, conf: ConfigType) -> None:
     """Migrate yaml to config entries."""
     for device_type in (CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER):
-        if device_type not in conf:
-            continue
-        for device in conf[device_type]:
+        for device in conf.get(device_type, []):
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
