@@ -15,7 +15,6 @@ from homeassistant.const import ATTR_VOLTAGE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -33,7 +32,6 @@ from .const import (
     COORDINATORS,
     PLATFORMS,
     UNAVAILABLE_DEVICES,
-    UNAVAILABLE_RETRY_DELAY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_data[UNAVAILABLE_DEVICES] = []
     lights: list[SmartDevice] = hass_data[CONF_LIGHT]
     switches: list[SmartDevice] = hass_data[CONF_SWITCH]
-    unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
 
     # Add static devices
     static_devices = SmartDevices()
@@ -133,53 +130,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ", ".join(d.host for d in switches),
         )
 
-    async def async_retry_devices(self) -> None:
-        """Retry unavailable devices."""
-        unavailable_devices: list[SmartDevice] = hass_data[UNAVAILABLE_DEVICES]
-        _LOGGER.debug(
-            "retry during setup unavailable devices: %s",
-            [d.host for d in unavailable_devices],
+    # prepare DataUpdateCoordinators
+    coordinators: dict[str, TPLinkDataUpdateCoordinator] = {}
+    hass_data[COORDINATORS] = coordinators
+    for device in switches + lights:
+        coordinator = coordinators[device.device_id] = TPLinkDataUpdateCoordinator(
+            hass, device
         )
 
-        for device in unavailable_devices:
-            try:
-                await device.update()
-            except SmartDeviceException:
-                continue
-            _LOGGER.debug(
-                "at least one device is available again, so reload integration"
-            )
-            await hass.config_entries.async_reload(entry.entry_id)
-            break
-
-    # prepare DataUpdateCoordinators
-    hass_data[COORDINATORS]: dict[str, TPLinkDataUpdateCoordinator] = {}
-    for device in switches + lights:
         try:
-            await device.update()
+            await coordinator.async_refresh()
         except SmartDeviceException:
             _LOGGER.warning(
-                "Device at '%s' not reachable during setup, will retry later",
+                "Device at '%s' not reachable during setup, retry not yet implemented",
                 device.host,
             )
-            unavailable_devices.append(device)
             continue
-
-        hass_data[COORDINATORS][
-            device.device_id
-        ] = coordinator = TPLinkDataUpdateCoordinator(hass, device)
-        await coordinator.async_config_entry_first_refresh()
-
-    if unavailable_devices:
-        entry.async_on_unload(
-            async_track_time_interval(
-                hass, async_retry_devices, UNAVAILABLE_RETRY_DELAY
-            )
-        )
-        unavailable_devices_hosts = [d.host for d in unavailable_devices]
-        hass_data[CONF_SWITCH] = [
-            s for s in switches if s.host not in unavailable_devices_hosts
-        ]
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
