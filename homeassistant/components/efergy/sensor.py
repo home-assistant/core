@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_CURRENCY,
     CONF_MONITORED_VARIABLES,
     CONF_TYPE,
-    CURRENCY_DOLLAR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
@@ -61,13 +60,13 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=CONF_BUDGET,
         name="Energy Budget",
         device_class=DEVICE_CLASS_MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement="USD",
     ),
     CONF_COST: SensorEntityDescription(
         key=CONF_COST,
         name="Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
-        native_unit_of_measurement=CURRENCY_DOLLAR,
+        native_unit_of_measurement="USD",
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_CURRENT_VALUES: SensorEntityDescription(
@@ -155,8 +154,8 @@ class EfergySensor(SensorEntity):
         self.period = period
         if sid:
             self._attr_name = f"efergy_{sid}"
-        if description.key == CONF_COST:
-            self._attr_native_unit_of_measurement = f"{currency}/{period}"
+        if description.key == (CONF_COST or CONF_BUDGET):
+            self._attr_native_unit_of_measurement = currency
 
     async def async_update(self) -> None:
         """Get the Efergy monitor data from the web service."""

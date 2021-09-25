@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    CURRENCY_DOLLAR,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
@@ -32,7 +31,7 @@ ONE_SENSOR_CONFIG = {
         {"type": "amount", "period": "day"},
         {"type": "instant_readings"},
         {"type": "budget"},
-        {"type": "cost", "period": "day", "currency": "$"},
+        {"type": "cost", "period": "day", "currency": "USD"},
         {"type": "current_values"},
     ],
 }
@@ -95,12 +94,12 @@ async def test_single_sensor_readings(
     state = hass.states.get("sensor.energy_budget")
     assert state.state == "ok"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_DOLLAR
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get("sensor.energy_cost")
     assert state.state == "5.27"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "$/day"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.efergy_728386")
     assert state.state == "1628"
