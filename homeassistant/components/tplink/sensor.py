@@ -107,7 +107,6 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(device, coordinator)
-        self.device = device
         self.entity_description = description
 
     @property
