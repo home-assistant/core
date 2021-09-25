@@ -82,7 +82,7 @@ DEFAULT_HSV_V2 = {
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up tuya light dynamically through tuya discovery."""
     _LOGGER.debug("light init")
 
@@ -90,9 +90,9 @@ async def async_setup_entry(
         DEVICE_DOMAIN
     ] = TUYA_SUPPORT_TYPE
 
-    async def async_discover_device(dev_ids):
+    async def async_discover_device(dev_ids: list[str]):
         """Discover and add a discovered tuya light."""
-        _LOGGER.debug(f"light add-> {dev_ids}")
+        _LOGGER.debug("light add-> %s", dev_ids)
         if not dev_ids:
             return
         entities = _setup_entities(hass, entry, dev_ids)
@@ -157,12 +157,8 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
         commands = []
-        _LOGGER.debug(f"light kwargs-> {kwargs}")
-        # if (
-        #     ATTR_BRIGHTNESS not in kwargs
-        #     and ATTR_HS_COLOR not in kwargs
-        #     and ATTR_COLOR_TEMP not in kwargs
-        # ):
+        _LOGGER.debug("light kwargs-> %s", kwargs)
+
         if (
             DPCODE_LIGHT in self.tuya_device.status
             and DPCODE_SWITCH not in self.tuya_device.status
@@ -190,7 +186,6 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
                     )
                 )
                 commands += [{"code": self.dp_code_bright, "value": tuya_brightness}]
-                # commands += [{'code': DPCODE_WORK_MODE, 'value': self._work_mode()}]
 
         if ATTR_HS_COLOR in kwargs:
             colour_data = self._get_hsv()
@@ -262,9 +257,10 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         brightness = self.tuya_device.status.get(self.dp_code_bright, 0)
 
         _LOGGER.debug(
-            f"""brightness id-> {self.tuya_device.id},
-            work_mode-> {self._work_mode()},
-            check true-> {self._work_mode().startswith(WORK_MODE_COLOUR)}"""
+            "brightness id-> %s, work_mode-> %s, check true-> %s", 
+            self.tuya_device.id, 
+            self._work_mode(), 
+            self._work_mode().startswith(WORK_MODE_COLOUR)
         )
 
         if self._work_mode().startswith(WORK_MODE_COLOUR):
@@ -357,8 +353,7 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
                 or colour_data.get("s") > 255
             ):
                 return DEFAULT_HSV_V2
-            else:
-                return DEFAULT_HSV
+            return DEFAULT_HSV
 
         return hsv_data
 
@@ -384,19 +379,3 @@ class TuyaHaLight(TuyaHaEntity, LightEntity):
         ):
             color_modes.append(COLOR_MODE_HS)
         return set(color_modes)
-
-    # @property
-    # def supported_features(self):
-    #     """Flag supported features."""
-    #     supports = 0
-    #     if self.dp_code_bright in self.tuya_device.status:
-    #         supports = supports | SUPPORT_BRIGHTNESS
-
-    # if (
-    #     self.dp_code_colour in self.tuya_device.status
-    #     and len(self.tuya_device.status[self.dp_code_colour]) > 0
-    # ):
-    #     supports = supports | SUPPORT_COLOR
-    # if self.dp_code_temp in self.tuya_device.status:
-    #     supports = supports | SUPPORT_COLOR_TEMP
-    # return supports
