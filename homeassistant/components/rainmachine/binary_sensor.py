@@ -133,15 +133,15 @@ async def async_setup_entry(
         [
             async_get_sensor(description.api_category)(controller, description)
             for description in BINARY_SENSOR_DESCRIPTIONS
-        ]
+        ],
+        True,
     )
 
 
 class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     """Define a binary sensor that handles current restrictions data."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE:
             self._attr_is_on = self.coordinator.data["freeze"]
@@ -160,8 +160,7 @@ class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
 class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
     """Define a binary sensor that handles provisioning data."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FLOW_SENSOR:
             self._attr_is_on = self.coordinator.data["system"].get("useFlowSensor")
@@ -170,8 +169,7 @@ class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
 class UniversalRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     """Define a binary sensor that handles universal restrictions data."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE_PROTECTION:
             self._attr_is_on = self.coordinator.data["freezeProtectEnabled"]

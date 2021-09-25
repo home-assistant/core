@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -210,7 +210,7 @@ async def async_setup_entry(
         ]
     )
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class RainMachineSwitch(RainMachineEntity, SwitchEntity):
@@ -322,8 +322,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchEntity):
         await self._controller.watering.unpause_all()
         await async_update_programs_and_zones(self.hass, self._entry)
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         self._data = self.coordinator.data[self.entity_description.uid]
         self._is_active = self._data["active"]
@@ -349,10 +348,9 @@ class RainMachineProgram(RainMachineSwitch):
             self._controller.programs.start(self.entity_description.uid)
         )
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
-        super().update_from_latest_data()
+        await super().async_update()
 
         self._attr_is_on = bool(self._data["status"])
 
@@ -396,10 +394,9 @@ class RainMachineZone(RainMachineSwitch):
             )
         )
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
-        super().update_from_latest_data()
+        await super().async_update()
 
         self._attr_is_on = bool(self._data["state"])
 

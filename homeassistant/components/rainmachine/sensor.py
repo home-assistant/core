@@ -116,15 +116,15 @@ async def async_setup_entry(
         [
             async_get_sensor(description.api_category)(controller, description)
             for description in SENSOR_DESCRIPTIONS
-        ]
+        ],
+        True,
     )
 
 
 class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
     """Define a sensor that handles provisioning data."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FLOW_SENSOR_CLICK_M3:
             self._attr_native_value = self.coordinator.data["system"].get(
@@ -153,8 +153,7 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
 class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
     """Define a sensor that handles universal restrictions data."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE_TEMP:
             self._attr_native_value = self.coordinator.data["freezeProtectTemp"]

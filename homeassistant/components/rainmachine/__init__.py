@@ -208,15 +208,4 @@ class RainMachineEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Respond to a DataUpdateCoordinator update."""
-        self.update_from_latest_data()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the state."""
-        raise NotImplementedError
+        self.async_schedule_update_ha_state(force_refresh=True)
