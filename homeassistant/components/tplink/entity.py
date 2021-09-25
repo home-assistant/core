@@ -39,7 +39,8 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
     @property
     def data(self) -> dict[str, Any]:
         """Return data from DataUpdateCoordinator."""
-        return cast(dict[str, Any], self.coordinator.data)
+        data: dict[str, Any] = self.coordinator.data
+        return data
 
     @property
     def unique_id(self) -> str:
