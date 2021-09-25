@@ -1,6 +1,7 @@
 """Support for the Xiaomi vacuum cleaner robot."""
 from functools import partial
 import logging
+from typing import Optional
 
 from miio import DeviceException
 import voluptuous as vol
@@ -219,6 +220,7 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
     ):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         super().__init__(name, device, entry, unique_id, coordinator)
+        self._state: Optional[str] = None
 
     @property
     def state(self):
@@ -229,10 +231,7 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
             if self.coordinator.data.status.got_error:
                 return STATE_ERROR
 
-            if int(self.coordinator.data.status.state_code) not in STATE_CODE_TO_STATE:
-                return None
-
-            return STATE_CODE_TO_STATE[int(self.coordinator.data.status.state_code)]
+            return self._state
 
     @property
     def battery_level(self):
@@ -430,5 +429,10 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
                 self.coordinator.data.status.state,
                 self.coordinator.data.status.state_code,
             )
+            self._state = None
+        else:
+            self._state = STATE_CODE_TO_STATE[
+                int(self.coordinator.data.status.state_code)
+            ]
 
         super()._handle_coordinator_update()
