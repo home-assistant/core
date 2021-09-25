@@ -212,16 +212,16 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
     attr = state.attributes
     assert attr["options"] == [
         "Off",
-        "Strobe Lights Only",
-        "Siren Only",
-        "Strobe Lights and Siren",
+        "Strobe ONLY",
+        "Siren ONLY",
+        "Siren & Strobe FULL Alarm",
     ]
 
     # Test select option with string value
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": MULTILEVEL_SWITCH_SELECT_ENTITY, "option": "Strobe Lights Only"},
+        {"entity_id": MULTILEVEL_SWITCH_SELECT_ENTITY, "option": "Strobe ONLY"},
         blocking=True,
     )
 
@@ -271,4 +271,4 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
     node.receive_event(event)
 
     state = hass.states.get(MULTILEVEL_SWITCH_SELECT_ENTITY)
-    assert state.state == "Strobe Lights Only"
+    assert state.state == "Strobe ONLY"

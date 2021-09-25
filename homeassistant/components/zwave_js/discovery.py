@@ -364,16 +364,16 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="select",
         hint="multilevel_switch",
-        manufacturer_id={132},
-        product_id={264, 267},
-        product_type={785, 787},
+        manufacturer_id={0x0084},
+        product_id={0x0107, 0x0108, 0x010b, 0x0205},
+        product_type={0x0311, 0x0313, 0x0341, 0x0343},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=BaseDiscoverySchemaDataTemplate(
             {
                 0: "Off",
-                33: "Strobe Lights Only",
-                66: "Siren Only",
-                99: "Strobe Lights and Siren",
+                33: "Strobe ONLY",
+                66: "Siren ONLY",
+                99: "Siren & Strobe FULL Alarm",
             },
         ),
     ),
