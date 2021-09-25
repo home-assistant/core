@@ -69,11 +69,6 @@ class TuyaHAScene(Scene):
         """Return if the scene is enabled."""
         return self.scene.enabled
 
-    @property
-    def current_activity(self) -> str | None:
-        """Active activity."""
-        return self.scene.name
-
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.home_manager.trigger_scene(self.scene.home_id, self.scene.scene_id)
