@@ -5,7 +5,6 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.tplink import DOMAIN
-from homeassistant.components.tplink.const import CONF_LEGACY_ENTRY_ID
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
@@ -415,7 +414,6 @@ async def test_migration_device_online(hass: HomeAssistant):
     config = {
         CONF_MAC: MAC_ADDRESS,
         CONF_NAME: ALIAS,
-        CONF_LEGACY_ENTRY_ID: config_entry.entry_id,
     }
 
     with _patch_discovery(), _patch_single_discovery(), patch(
@@ -432,7 +430,6 @@ async def test_migration_device_online(hass: HomeAssistant):
     assert result["title"] == ALIAS
     assert result["data"] == {
         CONF_HOST: IP_ADDRESS,
-        CONF_LEGACY_ENTRY_ID: config_entry.entry_id,
     }
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -456,7 +453,6 @@ async def test_migration_device_offline(hass: HomeAssistant):
     config = {
         CONF_MAC: MAC_ADDRESS,
         CONF_NAME: ALIAS,
-        CONF_LEGACY_ENTRY_ID: config_entry.entry_id,
     }
 
     with _patch_discovery(no_device=True), _patch_single_discovery(
@@ -473,6 +469,5 @@ async def test_migration_device_offline(hass: HomeAssistant):
     assert result["title"] == ALIAS
     assert result["data"] == {
         CONF_HOST: None,
-        CONF_LEGACY_ENTRY_ID: config_entry.entry_id,
     }
     assert len(mock_setup_entry.mock_calls) == 2
