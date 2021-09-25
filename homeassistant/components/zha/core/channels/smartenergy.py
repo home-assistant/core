@@ -1,6 +1,8 @@
 """Smart energy channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
+import enum
+
 from zigpy.zcl.clusters import smartenergy
 
 from homeassistant.const import (
@@ -13,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
-from ..const import REPORT_CONFIG_DEFAULT
+from ..const import REPORT_CONFIG_ASAP, REPORT_CONFIG_DEFAULT, REPORT_CONFIG_OP
 from .base import ZigbeeChannel
 
 
@@ -61,12 +63,18 @@ class Messaging(ZigbeeChannel):
 class Metering(ZigbeeChannel):
     """Metering channel."""
 
-    REPORT_CONFIG = ({"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT},)
+    REPORT_CONFIG = (
+        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_OP},
+        {"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "status", "config": REPORT_CONFIG_ASAP},
+    )
     ZCL_INIT_ATTRS = {
-        "divisor": True,
-        "multiplier": True,
-        "unit_of_measure": True,
         "demand_formatting": True,
+        "divisor": True,
+        "metering_device_type": True,
+        "multiplier": True,
+        "summa_formatting": True,
+        "unit_of_measure": True,
     }
 
     unit_of_measure_map = {
@@ -85,6 +93,40 @@ class Metering(ZigbeeChannel):
         0x0C: f"MJ/{TIME_SECONDS}",
     }
 
+    metering_device_type = {
+        0: "Electric Metering",
+        1: "Gas Metering",
+        2: "Water Metering",
+        3: "Thermal Metering",
+        4: "Pressure Metering",
+        5: "Heat Metering",
+        6: "Cooling Metering",
+        128: "Mirrored Gas Metering",
+        129: "Mirrored Water Metering",
+        130: "Mirrored Thermal Metering",
+        131: "Mirrored Pressure Metering",
+        132: "Mirrored Heat Metering",
+        133: "Mirrored Cooling Metering",
+    }
+
+    class DeviceStatusElectric(enum.IntFlag):
+        """Metering Device Status."""
+
+        NO_ALARMS = 0
+        CHECK_METER = 1
+        LOW_BATTERY = 2
+        TAMPER_DETECT = 4
+        POWER_FAILURE = 8
+        POWER_QUALITY = 16
+        LEAK_DETECT = 32  # Really?
+        SERVICE_DISCONNECT = 64
+        RESERVED = 128
+
+    class DeviceStatusDefault(enum.IntFlag):
+        """Metering Device Status."""
+
+        NO_ALARMS = 0
+
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
@@ -98,9 +140,28 @@ class Metering(ZigbeeChannel):
         return self.cluster.get("divisor") or 1
 
     @property
+    def device_type(self) -> int | None:
+        """Return metering device type."""
+        dev_type = self.cluster.get("metering_device_type")
+        if dev_type is None:
+            return None
+        return self.metering_device_type.get(dev_type)
+
+    @property
     def multiplier(self) -> int:
         """Return multiplier for the value."""
         return self.cluster.get("multiplier") or 1
+
+    @property
+    def status(self) -> int | None:
+        """Return metering device status."""
+        status = self.cluster.get("status")
+        if status is None:
+            return None
+        if self.device_type == 0:
+            # Electric metering device type
+            return self.DeviceStatusElectric(status)
+        return self.DeviceStatusDefault(status)
 
     @callback
     def attribute_updated(self, attrid: int, value: int) -> None:
