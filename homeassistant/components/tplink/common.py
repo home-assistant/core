@@ -2,26 +2,23 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Any
 
-from pyHS100 import (
-    Discover,
-    SmartBulb,
-    SmartDevice,
-    SmartDeviceException,
-    SmartPlug,
-    SmartStrip,
-)
+from kasa import Discover, SmartDevice, SmartDeviceException
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_DIMMER,
     CONF_LIGHT,
     CONF_STRIP,
     CONF_SWITCH,
-    DOMAIN as TPLINK_DOMAIN,
     MAX_DISCOVERY_RETRIES,
 )
 
@@ -50,20 +47,12 @@ class SmartDevices:
 
     def has_device_with_host(self, host: str) -> bool:
         """Check if a devices exists with a specific host."""
-        for device in self.lights + self.switches:
-            if device.host == host:
-                return True
-
-        return False
+        return any(device.host == host for device in self.lights + self.switches)
 
 
 async def async_get_discoverable_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Return if there are devices that can be discovered."""
-
-    def discover() -> dict[str, SmartDevice]:
-        return Discover.discover()
-
-    return await hass.async_add_executor_job(discover)
+    return await Discover.discover()
 
 
 async def async_discover_devices(
@@ -74,29 +63,7 @@ async def async_discover_devices(
     lights = []
     switches = []
 
-    def process_devices() -> None:
-        for dev in devices.values():
-            # If this device already exists, ignore dynamic setup.
-            if existing_devices.has_device_with_host(dev.host):
-                continue
-
-            if isinstance(dev, SmartStrip):
-                for plug in dev.plugs.values():
-                    switches.append(plug)
-            elif isinstance(dev, SmartPlug):
-                try:
-                    if dev.is_dimmable:  # Dimmers act as lights
-                        lights.append(dev)
-                    else:
-                        switches.append(dev)
-                except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
-
-            elif isinstance(dev, SmartBulb):
-                lights.append(dev)
-            else:
-                _LOGGER.error("Unknown smart device type: %s", type(dev))
-
+    # We do retries since UDP packets over wifi can get lost
     devices: dict[str, SmartDevice] = {}
     for attempt in range(1, MAX_DISCOVERY_RETRIES + 1):
         _LOGGER.debug(
@@ -105,7 +72,7 @@ async def async_discover_devices(
             MAX_DISCOVERY_RETRIES,
         )
         discovered_devices = await async_get_discoverable_devices(hass)
-        _LOGGER.info(
+        _LOGGER.debug(
             "Discovered %s TP-Link of expected %s smart home device(s)",
             len(discovered_devices),
             target_device_count,
@@ -114,24 +81,34 @@ async def async_discover_devices(
             devices[device_ip] = discovered_devices[device_ip]
 
         if len(discovered_devices) >= target_device_count:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Discovered at least as many devices on the network as exist in our device registry, no need to retry"
             )
             break
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Found %s unique TP-Link smart home device(s) after %s discovery attempts",
         len(devices),
         attempt,
     )
-    await hass.async_add_executor_job(process_devices)
+
+    for device in devices.values():
+        # If this device already exists, ignore dynamic setup.
+        if existing_devices.has_device_with_host(device.host):
+            continue
+
+        if device.is_strip or device.is_plug:
+            switches.append(device)
+        elif device.is_bulb or device.is_light_strip or device.is_dimmer:
+            lights.append(device)
+        else:
+            _LOGGER.error("Unknown smart device type: %s", type(device))
 
     return SmartDevices(lights, switches)
 
 
-def get_static_devices(config_data) -> SmartDevices:
+async def get_static_devices(config_data) -> SmartDevices:
     """Get statically defined devices in the config."""
-    _LOGGER.debug("Getting static devices")
     lights = []
     switches = []
 
@@ -139,16 +116,13 @@ def get_static_devices(config_data) -> SmartDevices:
         for entry in config_data[type_]:
             host = entry["host"]
             try:
-                if type_ == CONF_LIGHT:
-                    lights.append(SmartBulb(host))
-                elif type_ == CONF_SWITCH:
-                    switches.append(SmartPlug(host))
-                elif type_ == CONF_STRIP:
-                    for plug in SmartStrip(host).plugs.values():
-                        switches.append(plug)
-                # Dimmers need to be defined as smart plugs to work correctly.
-                elif type_ == CONF_DIMMER:
-                    lights.append(SmartPlug(host))
+                device: SmartDevice = await Discover.discover_single(host)
+                if device.is_bulb or device.is_light_strip or device.is_dimmer:
+                    _LOGGER.debug("Found static light: %s", device)
+                    lights.append(device)
+                elif device.is_plug or device.is_strip:
+                    _LOGGER.debug("Found static switch: %s", device)
+                    switches.append(device)
             except SmartDeviceException as sde:
                 _LOGGER.error(
                     "Failed to setup device %s due to %s; not retrying", host, sde
@@ -156,31 +130,46 @@ def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
-def add_available_devices(
-    hass: HomeAssistant, device_type: str, device_class: Callable
-) -> list[Entity]:
-    """Get sysinfo for all devices."""
+class CoordinatedTPLinkEntity(CoordinatorEntity):
+    """Common base class for all coordinated tplink entities."""
 
-    devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][device_type]
+    def __init__(self, device: SmartDevice, coordinator: DataUpdateCoordinator) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator)
+        self.device = device
 
-    if f"{device_type}_remaining" in hass.data[TPLINK_DOMAIN]:
-        devices: list[SmartDevice] = hass.data[TPLINK_DOMAIN][
-            f"{device_type}_remaining"
-        ]
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return data from DataUpdateCoordinator."""
+        return self.coordinator.data
 
-    entities_ready: list[Entity] = []
-    devices_unavailable: list[SmartDevice] = []
-    for device in devices:
-        try:
-            device.get_sysinfo()
-            entities_ready.append(device_class(device))
-        except SmartDeviceException as ex:
-            devices_unavailable.append(device)
-            _LOGGER.warning(
-                "Unable to communicate with device %s: %s",
-                device.host,
-                ex,
-            )
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return self.device.device_id
 
-    hass.data[TPLINK_DOMAIN][f"{device_type}_remaining"] = devices_unavailable
-    return entities_ready
+    @property
+    def name(self) -> str | None:
+        """Return the name of the Smart Plug."""
+        return self.device.alias
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return information about the device."""
+        data = {
+            "name": self.device.alias,
+            "model": self.device.model,
+            "manufacturer": "TP-Link",
+            # Note: mac instead of device_id here to connect subdevices to the main device
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            "sw_version": self.device.hw_info["sw_ver"],
+        }
+        if self.device.is_strip_socket:
+            data["via_device"] = self.device.parent.device_id
+
+        return data
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.device.is_on
