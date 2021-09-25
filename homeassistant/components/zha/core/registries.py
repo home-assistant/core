@@ -246,7 +246,9 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
-        self._multi_entity_registry: RegistryDictType = collections.defaultdict(dict)
+        self._multi_entity_registry: RegistryDictType = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )
         self._group_registry: GroupRegistryDictType = {}
 
     def get_entity(
@@ -282,8 +284,8 @@ class ZHAEntityRegistry:
             for match in sorted(matches, key=lambda x: x.weight, reverse=True):
                 if match.strict_matched(manufacturer, model, [primary_channel]):
                     claimed.extend(match.claim_channels(aux_channels))
-                    ent_class = self._multi_entity_registry[component][match]
-                    result[component].append(ent_class)
+                    ent_classes = self._multi_entity_registry[component][match]
+                    result[component].extend(ent_classes)
 
         return result, claimed
 
@@ -336,7 +338,7 @@ class ZHAEntityRegistry:
 
             All non empty fields of a match rule must match.
             """
-            self._multi_entity_registry[component][rule] = zha_entity
+            self._multi_entity_registry[component][rule].append(zha_entity)
             return zha_entity
 
         return decorator

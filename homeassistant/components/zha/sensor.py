@@ -308,6 +308,17 @@ class SmartEnergyMetering(Sensor):
         return attrs
 
 
+@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
+    """Smart Energy Metering summation sensor."""
+
+    SENSOR_ATTR = "current_summ_delivered"
+
+    def formatter(self, value: int) -> int | float:
+        """Pass through channel formatter."""
+        return self._channel.summa_formatter(value)
+
+
 @STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""

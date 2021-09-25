@@ -169,6 +169,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         ch_names = [ch.cluster.ep_attribute for ch in channels]
         ch_names = ", ".join(sorted(ch_names))
         self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
+        if self._unique_id_suffix:
+            self._name += f" {self._unique_id_suffix}"
         self.cluster_channels: dict[str, ChannelType] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
