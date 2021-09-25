@@ -91,14 +91,12 @@ ENTITY_DESCRIPTIONS = {
     Pressure: SensorEntityDescription(
         key="pressure",
         device_class=DEVICE_CLASS_PRESSURE,
-        icon="mdi:gauge",
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement=PRESSURE_HPA,
     ),
     Temperature: SensorEntityDescription(
         key="temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        icon="mdi:thermometer",
         state_class=STATE_CLASS_MEASUREMENT,
         unit_of_measurement=TEMP_CELSIUS,
     ),
