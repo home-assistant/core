@@ -1,7 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, cast
 
 from kasa import SmartDevice
 
@@ -120,8 +120,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     @property
     def native_value(self) -> float:
         """Return the sensors state."""
-        value: float = self.data[CONF_EMETER_PARAMS][self.entity_description.key]
-        return value
+        return cast(float, self.data[CONF_EMETER_PARAMS][self.entity_description.key])
 
     @property
     def unique_id(self) -> str:
