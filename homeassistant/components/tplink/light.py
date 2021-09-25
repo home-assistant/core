@@ -54,8 +54,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         transition = kwargs.get(ATTR_TRANSITION)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             brightness = round((brightness * 100.0) / 255.0)
 
         # Handle turning to temp mode
