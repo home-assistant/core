@@ -275,15 +275,13 @@ class ZHAEntityRegistry:
         components: set | None = None,
     ) -> tuple[dict[str, list[CALLABLE_T]], list[ChannelType]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
-        result: dict[str, list[CALLABLE_T]] = collections.defaultdict[list]
+        result: dict[str, list[CALLABLE_T]] = collections.defaultdict(list)
         claimed: list[ChannelType] = []
         for component in components or self._multi_entity_registry:
             matches = self._multi_entity_registry[component]
             for match in sorted(matches, key=lambda x: x.weight, reverse=True):
                 if match.strict_matched(manufacturer, model, [primary_channel]):
-                    claimed.extend(
-                        match.claim_channels([primary_channel, *aux_channels])
-                    )
+                    claimed.extend(match.claim_channels(aux_channels))
                     ent_class = self._multi_entity_registry[component][match]
                     result[component].append(ent_class)
 

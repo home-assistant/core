@@ -179,7 +179,7 @@ class ProbeEndpoint:
                 channel,
                 remaining_channels,
             )
-            if not matches:
+            if not claimed:
                 continue
 
             channel_pool.claim_channels(claimed)
