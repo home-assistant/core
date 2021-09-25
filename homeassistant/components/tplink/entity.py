@@ -1,7 +1,7 @@
 """Common code for tplink."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from kasa import SmartDevice
 
@@ -20,22 +20,22 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
-        self.device = device
+        self.device: SmartDevice = device
 
     @property
     def data(self) -> dict[str, Any]:
         """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
+        return cast(dict[str, Any], self.coordinator.data)
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.device.device_id
+        return cast(str, self.device.device_id)
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the Smart Plug."""
-        return self.device.alias
+        return cast(str, self.device.alias)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -50,6 +50,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
         }
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.device.is_on
+        return bool(self.device.is_on)

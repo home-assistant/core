@@ -90,7 +90,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for entry in hass.config_entries.async_entries(DOMAIN):
         if async_entry_is_legacy(entry):
             legacy_entry = entry
-        else:
+        elif entry.unique_id:
             config_entries_by_mac[entry.unique_id] = entry
 
     domain_data[DISCOVERED_DEVICES] = {

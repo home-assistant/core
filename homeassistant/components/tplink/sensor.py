@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_CURRENT_A,
@@ -98,10 +97,12 @@ async def async_setup_entry(
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
 
+    coordinator: TPLinkDataUpdateCoordinator
+
     def __init__(
         self,
         device: SmartDevice,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TPLinkDataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the switch."""
@@ -110,7 +111,7 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the Smart Plug.
 
         Overridden to include the description.
@@ -118,11 +119,12 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         return f"{self.device.alias} {self.entity_description.name}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the sensors state."""
-        return self.data[CONF_EMETER_PARAMS][self.entity_description.key]
+        value: float = self.data[CONF_EMETER_PARAMS][self.entity_description.key]
+        return value
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self.device.device_id}_{self.entity_description.key}"
