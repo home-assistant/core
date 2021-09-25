@@ -127,11 +127,7 @@ class IQVIAEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if not self.coordinator.last_update_success:
-            return
-
-        self.update_from_latest_data()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -143,10 +139,3 @@ class IQVIAEntity(CoordinatorEntity):
                     TYPE_ALLERGY_OUTLOOK
                 ].async_add_listener(self._handle_coordinator_update)
             )
-
-        self.update_from_latest_data()
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the entity from the latest data."""
-        raise NotImplementedError

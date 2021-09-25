@@ -145,7 +145,7 @@ async def async_setup_entry(
         ]
     )
 
-    async_add_entities(sensors)
+    async_add_entities(sensors, True)
 
 
 @callback
@@ -168,9 +168,8 @@ def calculate_trend(indices: list[float]) -> str:
 class ForecastSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to forecast data."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the sensor."""
+    async def async_update(self) -> None:
+        """Update the state."""
         if not self.available:
             return
 
@@ -217,9 +216,8 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
 class IndexSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to indices."""
 
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the sensor."""
+    async def async_update(self) -> None:
+        """Update the state."""
         if not self.coordinator.last_update_success:
             return
 
