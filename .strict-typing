@@ -108,6 +108,7 @@ homeassistant.components.tag.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
+homeassistant.components.tplink.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
 homeassistant.components.upcloud.*
