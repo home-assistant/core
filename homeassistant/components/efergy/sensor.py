@@ -64,7 +64,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=CONF_COST,
         name="Energy Cost",
         device_class=DEVICE_CLASS_MONETARY,
-        native_unit_of_measurement="USD",
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     CONF_CURRENT_VALUES: SensorEntityDescription(
@@ -81,7 +80,7 @@ TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 SENSORS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TYPE): TYPES_SCHEMA,
-        vol.Optional(CONF_CURRENCY, default=""): cv.string,
+        vol.Optional(CONF_CURRENCY): cv.currency,
         vol.Optional(CONF_PERIOD, default=DEFAULT_PERIOD): cv.string,
     }
 )
@@ -117,7 +116,7 @@ async def async_setup_platform(
                     EfergySensor(
                         api,
                         variable[CONF_PERIOD],
-                        variable[CONF_CURRENCY],
+                        variable.get(CONF_CURRENCY),
                         SENSOR_TYPES[variable[CONF_TYPE]],
                         sid=sensor["sid"],
                     )
@@ -126,7 +125,7 @@ async def async_setup_platform(
             EfergySensor(
                 api,
                 variable[CONF_PERIOD],
-                variable[CONF_CURRENCY],
+                variable.get(CONF_CURRENCY),
                 SENSOR_TYPES[variable[CONF_TYPE]],
             )
         )
