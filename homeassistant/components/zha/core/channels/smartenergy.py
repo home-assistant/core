@@ -145,7 +145,7 @@ class Metering(ZigbeeChannel):
         dev_type = self.cluster.get("metering_device_type")
         if dev_type is None:
             return None
-        return self.metering_device_type.get(dev_type)
+        return self.metering_device_type.get(dev_type, dev_type)
 
     @property
     def multiplier(self) -> int:
@@ -158,7 +158,7 @@ class Metering(ZigbeeChannel):
         status = self.cluster.get("status")
         if status is None:
             return None
-        if self.device_type == 0:
+        if self.cluster.get("metering_device_type") == 0:
             # Electric metering device type
             return self.DeviceStatusElectric(status)
         return self.DeviceStatusDefault(status)

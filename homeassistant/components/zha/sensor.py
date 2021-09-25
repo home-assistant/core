@@ -297,6 +297,16 @@ class SmartEnergyMetering(Sensor):
         """Return Unit of measurement."""
         return self._channel.unit_of_measurement
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device state attrs for battery sensors."""
+        attrs = {}
+        if self._channel.device_type is not None:
+            attrs["device_type"] = self._channel.device_type
+        if self._channel.status is not None:
+            attrs["status"] = self._channel.status.name or f"{self._channel.status}"
+        return attrs
+
 
 @STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
