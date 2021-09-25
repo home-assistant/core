@@ -1,7 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch energy sensors."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Final
 
 from kasa import SmartDevice
 
@@ -116,11 +116,6 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         Overridden to include the description.
         """
         return f"{self.device.alias} {self.entity_description.name}"
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return data from DataUpdateCoordinator."""
-        return self.coordinator.data
 
     @property
     def native_value(self) -> float | None:
