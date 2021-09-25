@@ -8,6 +8,7 @@ from systembridge import Bridge
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_UPDATE,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -30,7 +31,7 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
         name="New Version Available",
-        icon="mdi:counter",
+        device_class=DEVICE_CLASS_UPDATE,
         value=lambda bridge: bridge.information.updates.available,
     ),
 )

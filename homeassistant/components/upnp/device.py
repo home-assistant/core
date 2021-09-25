@@ -3,25 +3,23 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from ipaddress import IPv4Address
 from typing import Any
 from urllib.parse import urlparse
 
-from async_upnp_client import UpnpFactory
+from async_upnp_client import UpnpDevice, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.device_updater import DeviceUpdater
 from async_upnp_client.profiles.igd import IgdDevice
 
+from homeassistant.components import ssdp
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
-    CONF_LOCAL_IP,
-    DOMAIN,
-    DOMAIN_CONFIG,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
@@ -32,54 +30,61 @@ from .const import (
 )
 
 
-def _get_local_ip(hass: HomeAssistant) -> IPv4Address | None:
-    """Get the configured local ip."""
-    if DOMAIN in hass.data and DOMAIN_CONFIG in hass.data[DOMAIN]:
-        local_ip = hass.data[DOMAIN][DOMAIN_CONFIG].get(CONF_LOCAL_IP)
-        if local_ip:
-            return IPv4Address(local_ip)
-    return None
-
-
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
-    def __init__(self, igd_device: IgdDevice, device_updater: DeviceUpdater) -> None:
+    def __init__(self, hass: HomeAssistant, igd_device: IgdDevice) -> None:
         """Initialize UPnP/IGD device."""
+        self.hass = hass
         self._igd_device = igd_device
-        self._device_updater = device_updater
+        self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_create_device(
+    async def async_create_upnp_device(
         cls, hass: HomeAssistant, ssdp_location: str
-    ) -> Device:
-        """Create UPnP/IGD device."""
+    ) -> UpnpDevice:
+        """Create UPnP device."""
         # Build async_upnp_client requester.
         session = async_get_clientsession(hass)
         requester = AiohttpSessionRequester(session, True, 10)
 
         # Create async_upnp_client device.
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
-        upnp_device = await factory.async_create_device(ssdp_location)
+        return await factory.async_create_device(ssdp_location)
+
+    @classmethod
+    async def async_create_device(
+        cls, hass: HomeAssistant, ssdp_location: str
+    ) -> Device:
+        """Create UPnP/IGD device."""
+        upnp_device = await Device.async_create_upnp_device(hass, ssdp_location)
 
         # Create profile wrapper.
         igd_device = IgdDevice(upnp_device, None)
+        device = cls(hass, igd_device)
 
-        # Create updater.
-        local_ip = _get_local_ip(hass)
-        device_updater = DeviceUpdater(
-            device=upnp_device, factory=factory, source_ip=local_ip
+        # Register SSDP callback for updates.
+        usn = f"{upnp_device.udn}::{upnp_device.device_type}"
+        await ssdp.async_register_callback(
+            hass, device.async_ssdp_callback, {ssdp.ATTR_SSDP_USN: usn}
         )
 
-        return cls(igd_device, device_updater)
+        return device
 
-    async def async_start(self) -> None:
-        """Start the device updater."""
-        await self._device_updater.async_start()
+    async def async_ssdp_callback(
+        self, headers: Mapping[str, Any], change: SsdpChange
+    ) -> None:
+        """SSDP callback, update if needed."""
+        if change != SsdpChange.UPDATE or ssdp.ATTR_SSDP_LOCATION not in headers:
+            return
 
-    async def async_stop(self) -> None:
-        """Stop the device updater."""
-        await self._device_updater.async_stop()
+        location = headers[ssdp.ATTR_SSDP_LOCATION]
+        device = self._igd_device.device
+        if location == device.device_url:
+            return
+
+        new_upnp_device = Device.async_create_upnp_device(self.hass, location)
+        device.reinit(new_upnp_device)
 
     @property
     def udn(self) -> str:

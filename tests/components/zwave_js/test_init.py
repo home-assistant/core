@@ -3,6 +3,7 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
+from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
 
@@ -124,10 +125,43 @@ async def test_listen_failure(hass, client, error):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_new_entity_on_value_added(hass, multisensor_6, client, integration):
+    """Test we create a new entity if a value is added after the fact."""
+    node: Node = multisensor_6
+
+    # Add a value on a random endpoint so we can be sure we should get a new entity
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 10,
+                "property": "Ultraviolet",
+                "propertyName": "Ultraviolet",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Ultraviolet",
+                    "ccSpecific": {"sensorType": 27, "scale": 0},
+                },
+                "value": 0,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
+
+
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
     """Test we handle a ready node added event."""
     dev_reg = dr.async_get(hass)
-    node = Node(client, multisensor_6_state)
+    node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
@@ -622,3 +656,85 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
 
     entity = ent_reg.async_get(EATON_RF9640_ENTITY)
     assert dev_reg.async_get(entity.device_id).area_id is not None
+
+
+async def test_node_removed(hass, multisensor_6_state, client, integration):
+    """Test that device gets removed when node gets removed."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": False}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has been removed
+    assert not dev_reg.async_get(old_device.id)
+
+
+async def test_replace_same_node(hass, multisensor_6_state, client, integration):
+    """Test when a node is replaced with itself that the device remains."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    # Assert device has remained
+    assert dev_reg.async_get(old_device.id)
+
+
+async def test_replace_different_node(
+    hass, multisensor_6_state, hank_binary_switch_state, client, integration
+):
+    """Test when a node is replaced with a different node."""
+    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
+    multisensor_6_state = deepcopy(multisensor_6_state)
+    hank_binary_switch_state["nodeId"] = multisensor_6_state["nodeId"]
+    dev_reg = dr.async_get(hass)
+    old_node = Node(client, multisensor_6_state)
+    device_id = f"{client.driver.controller.home_id}-{old_node.node_id}"
+    new_node = Node(client, hank_binary_switch_state)
+    event = {"node": old_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+
+    event = {"node": old_node, "replaced": True}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Device should still be there after the node was removed
+    assert device
+
+    event = {"node": new_node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    device = dev_reg.async_get(device.id)
+    # assert device is new
+    assert device
+    assert device.manufacturer == "HANK Electronics Ltd."

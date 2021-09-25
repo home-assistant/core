@@ -636,9 +636,9 @@ def enable_statistics():
 def hass_recorder(enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
-    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     with patch(
-        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
         autospec=True,
     ):

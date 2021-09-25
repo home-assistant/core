@@ -40,6 +40,11 @@
                 "title": "Configurar FRITZ!Box Tools - obligatorio"
             },
             "user": {
+                "data": {
+                    "host": "Anfitri\u00f3n",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto"
+                },
                 "description": "Configure las herramientas de FRITZ! Box para controlar su FRITZ! Box.\n M\u00ednimo necesario: nombre de usuario, contrase\u00f1a.",
                 "title": "Configurar las herramientas de FRITZ! Box"
             }

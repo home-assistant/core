@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 
         for light in lights:
 
-            if light.type in FANS and light.uniqueid not in gateway.entities[DOMAIN]:
+            if light.type in FANS and light.unique_id not in gateway.entities[DOMAIN]:
                 entities.append(DeconzFan(light, gateway))
 
         if entities:

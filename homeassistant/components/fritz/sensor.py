@@ -9,6 +9,7 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
     FritzConnectionException,
+    FritzInternalError,
     FritzServiceError,
 )
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -273,7 +274,12 @@ async def async_setup_entry(
             "GetInfo",
         )
         dsl = dslinterface["NewEnable"]
-    except (FritzActionError, FritzActionFailedError, FritzServiceError):
+    except (
+        FritzInternalError,
+        FritzActionError,
+        FritzActionFailedError,
+        FritzServiceError,
+    ):
         pass
 
     for sensor_type, sensor_data in SENSOR_DATA.items():

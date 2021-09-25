@@ -34,6 +34,7 @@ from .common import (
     send_attribute_report,
     send_attributes_report,
 )
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 
 async def async_test_humidity(hass, cluster, entity_id):
@@ -163,9 +164,9 @@ async def test_sensor(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [cluster_id, general.Basic.cluster_id],
-                "out_cluster": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -284,12 +285,12 @@ async def test_temp_uom(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [
+                SIG_EP_INPUT: [
                     measurement.TemperatureMeasurement.cluster_id,
                     general.Basic.cluster_id,
                 ],
-                "out_cluster": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -327,9 +328,9 @@ async def test_electrical_measurement_init(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [cluster_id, general.Basic.cluster_id],
-                "out_cluster": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: [cluster_id, general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )

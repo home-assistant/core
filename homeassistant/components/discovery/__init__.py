@@ -46,7 +46,6 @@ CONFIG_ENTRY_HANDLERS = {
 
 # These have no config flows
 SERVICE_HANDLERS = {
-    SERVICE_NETGEAR: ("device_tracker", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
     SERVICE_SABNZBD: ("sabnzbd", None),
     "yamaha": ("media_player", "yamaha"),
@@ -76,6 +75,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "kodi",
     SERVICE_KONNECTED,
     SERVICE_MOBILE_APP,
+    SERVICE_NETGEAR,
     SERVICE_OCTOPRINT,
     "philips_hue",
     SERVICE_SAMSUNG_PRINTER,

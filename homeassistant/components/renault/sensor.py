@@ -20,9 +20,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -39,6 +41,7 @@ from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
 from .renault_coordinator import T
 from .renault_entities import RenaultDataEntity, RenaultEntityDescription
 from .renault_hub import RenaultHub
+from .renault_vehicle import RenaultVehicleProxy
 
 
 @dataclass
@@ -56,6 +59,7 @@ class RenaultSensorEntityDescription(
     """Class describing Renault sensor entities."""
 
     icon_lambda: Callable[[RenaultSensor[T]], str] | None = None
+    condition_lambda: Callable[[RenaultVehicleProxy], bool] | None = None
     requires_fuel: bool = False
     value_lambda: Callable[[RenaultSensor[T]], StateType] | None = None
 
@@ -73,6 +77,7 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
         and (not description.requires_fuel or vehicle.details.uses_fuel())
+        and (not description.condition_lambda or description.condition_lambda(vehicle))
     ]
     async_add_entities(entities)
 
@@ -106,9 +111,7 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
 
 def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
     """Return the charging_power of this entity."""
-    if entity.vehicle.details.reports_charging_power_in_watts():
-        return cast(float, entity.data) / 1000
-    return entity.data
+    return cast(float, entity.data) / 1000
 
 
 def _get_charge_state_formatted(entity: RenaultSensor[T]) -> str | None:
@@ -177,6 +180,18 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
     ),
     RenaultSensorEntityDescription(
         key="charging_power",
+        condition_lambda=lambda a: not a.details.reports_charging_power_in_watts(),
+        coordinator="battery",
+        data_key="chargingInstantaneousPower",
+        device_class=DEVICE_CLASS_CURRENT,
+        entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
+        name="Charging Power",
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="charging_power",
+        condition_lambda=lambda a: a.details.reports_charging_power_in_watts(),
         coordinator="battery",
         data_key="chargingInstantaneousPower",
         device_class=DEVICE_CLASS_POWER,

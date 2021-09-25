@@ -9,7 +9,10 @@ from hatasmota.models import DiscoveryHashType
 from hatasmota.trigger import TasmotaTrigger, TasmotaTriggerConfig
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +52,7 @@ class TriggerInstance:
     """Attached trigger settings."""
 
     action: AutomationActionType = attr.ib()
-    automation_info: dict = attr.ib()
+    automation_info: AutomationTriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -93,7 +96,7 @@ class Trigger:
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(
-        self, action: AutomationActionType, automation_info: dict
+        self, action: AutomationActionType, automation_info: AutomationTriggerInfo
     ) -> Callable[[], None]:
         """Add Tasmota trigger."""
         instance = TriggerInstance(action, automation_info, self)
@@ -289,7 +292,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: Callable,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a device trigger."""
     if DEVICE_TRIGGERS not in hass.data:

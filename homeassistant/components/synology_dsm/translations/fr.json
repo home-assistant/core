@@ -39,6 +39,12 @@
                 "description": "Raison: {details}",
                 "title": "Synology DSM R\u00e9-authentifier l'int\u00e9gration"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",

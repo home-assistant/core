@@ -153,9 +153,9 @@ def async_describe_events(
         interface = None
         data = event.data.get(CONF_EVENT) or event.data.get(CONF_GESTURE, "")
 
-        if data and deconz_event.device.modelid in REMOTES:
+        if data and deconz_event.device.model_id in REMOTES:
             action, interface = _get_device_event_description(
-                deconz_event.device.modelid, data
+                deconz_event.device.model_id, data
             )
 
         # Unknown event

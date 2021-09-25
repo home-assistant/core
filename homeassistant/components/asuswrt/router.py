@@ -373,7 +373,7 @@ class AsusWrtRouter:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
-            if name in (CONF_REQ_RELOAD):
+            if name in CONF_REQ_RELOAD:
                 old_opt = self._options.get(name)
                 if not old_opt or old_opt != new_opt:
                     req_reload = True

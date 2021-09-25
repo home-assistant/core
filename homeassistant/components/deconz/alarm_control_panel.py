@@ -55,7 +55,7 @@ DECONZ_TO_ALARM_STATE = {
 
 def get_alarm_system_for_unique_id(gateway, unique_id: str):
     """Retrieve alarm system unique ID is registered to."""
-    for alarm_system in gateway.api.alarm_systems.values():
+    for alarm_system in gateway.api.alarmsystems.values():
         if unique_id in alarm_system.devices:
             return alarm_system
 
@@ -77,8 +77,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 
             if (
                 sensor.type in AncillaryControl.ZHATYPE
-                and sensor.uniqueid not in gateway.entities[DOMAIN]
-                and get_alarm_system_for_unique_id(gateway, sensor.uniqueid)
+                and sensor.unique_id not in gateway.entities[DOMAIN]
+                and get_alarm_system_for_unique_id(gateway, sensor.unique_id)
             ):
 
                 entities.append(DeconzAlarmControlPanel(sensor, gateway))
@@ -110,7 +110,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     def __init__(self, device, gateway) -> None:
         """Set up alarm control panel device."""
         super().__init__(device, gateway)
-        self.alarm_system = get_alarm_system_for_unique_id(gateway, device.uniqueid)
+        self.alarm_system = get_alarm_system_for_unique_id(gateway, device.unique_id)
 
     @callback
     def async_update_callback(self, force_update: bool = False) -> None:

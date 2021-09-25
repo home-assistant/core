@@ -33,7 +33,8 @@
             "button": "Button",
             "button1": "First button",
             "button2": "Second button",
-            "button3": "Third button"
+            "button3": "Third button",
+            "button4": "Fourth button"
         },
         "trigger_type": {
             "double": "{subtype} double clicked",
@@ -41,7 +42,12 @@
             "long_single": "{subtype} long clicked and then single clicked",
             "single": "{subtype} single clicked",
             "single_long": "{subtype} single clicked and then long clicked",
-            "triple": "{subtype} triple clicked"
+            "triple": "{subtype} triple clicked",
+            "btn_down": "{subtype} button down",
+            "btn_up": "{subtype} button up",
+            "single_push": "{subtype} single push",
+            "double_push": "{subtype} double push",
+            "long_push": " {subtype} long push"
         }
     }
 }

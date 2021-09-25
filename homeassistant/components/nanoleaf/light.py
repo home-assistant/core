@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from pynanoleaf import Unavailable
+from aiohttp import ServerDisconnectedError
+from aionanoleaf import Unavailable
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -153,7 +154,7 @@ class NanoleafLight(LightEntity):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._state
+        return self._light.is_on
 
     @property
     def hs_color(self):
@@ -165,7 +166,7 @@ class NanoleafLight(LightEntity):
         """Flag supported features."""
         return SUPPORT_NANOLEAF
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -175,57 +176,61 @@ class NanoleafLight(LightEntity):
 
         if hs_color:
             hue, saturation = hs_color
-            self._light.hue = int(hue)
-            self._light.saturation = int(saturation)
+            await self._light.set_hue(int(hue))
+            await self._light.set_saturation(int(saturation))
         if color_temp_mired:
-            self._light.color_temperature = mired_to_kelvin(color_temp_mired)
-
+            await self._light.set_color_temperature(mired_to_kelvin(color_temp_mired))
         if transition:
             if brightness:  # tune to the required brightness in n seconds
-                self._light.brightness_transition(
-                    int(brightness / 2.55), int(transition)
+                await self._light.set_brightness(
+                    int(brightness / 2.55), transition=int(kwargs[ATTR_TRANSITION])
                 )
             else:  # If brightness is not specified, assume full brightness
-                self._light.brightness_transition(100, int(transition))
+                await self._light.set_brightness(
+                    100, transition=int(kwargs[ATTR_TRANSITION])
+                )
         else:  # If no transition is occurring, turn on the light
-            self._light.on = True
+            await self._light.turn_on()
             if brightness:
-                self._light.brightness = int(brightness / 2.55)
-
+                await self._light.set_brightness(int(brightness / 2.55))
         if effect:
             if effect not in self._effects_list:
                 raise ValueError(
                     f"Attempting to apply effect not in the effect list: '{effect}'"
                 )
-            self._light.effect = effect
+            await self._light.set_effect(effect)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         transition = kwargs.get(ATTR_TRANSITION)
         if transition:
-            self._light.brightness_transition(0, int(transition))
+            await self._light.set_brightness(0, transition=int(transition))
         else:
-            self._light.on = False
+            await self._light.turn_off()
 
-    def update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
-            self._available = self._light.available
-            self._brightness = self._light.brightness
-            self._effects_list = self._light.effects
-            # Nanoleaf api returns non-existent effect named "*Solid*" when light set to solid color.
-            # This causes various issues with scening (see https://github.com/home-assistant/core/issues/36359).
-            # Until fixed at the library level, we should ensure the effect exists before saving to light properties
-            self._effect = (
-                self._light.effect if self._light.effect in self._effects_list else None
-            )
-            if self._effect is None:
-                self._color_temp = self._light.color_temperature
-                self._hs_color = self._light.hue, self._light.saturation
-            else:
-                self._color_temp = None
-                self._hs_color = None
-            self._state = self._light.on
-        except Unavailable as err:
-            _LOGGER.error("Could not update status for %s (%s)", self.name, err)
+            await self._light.get_info()
+        except ServerDisconnectedError:
+            # Retry the request once if the device disconnected
+            await self._light.get_info()
+        except Unavailable:
             self._available = False
+            return
+        self._available = True
+        self._brightness = self._light.brightness
+        self._effects_list = self._light.effects_list
+        # Nanoleaf api returns non-existent effect named "*Solid*" when light set to solid color.
+        # This causes various issues with scening (see https://github.com/home-assistant/core/issues/36359).
+        # Until fixed at the library level, we should ensure the effect exists before saving to light properties
+        self._effect = (
+            self._light.effect if self._light.effect in self._effects_list else None
+        )
+        if self._effect is None:
+            self._color_temp = self._light.color_temperature
+            self._hs_color = self._light.hue, self._light.saturation
+        else:
+            self._color_temp = None
+            self._hs_color = None
+        self._state = self._light.is_on

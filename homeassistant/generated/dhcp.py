@@ -260,21 +260,6 @@ DHCP = [
         "hostname": "tado*"
     },
     {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "4CFCAA*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "044EAF*"
-    },
-    {
-        "domain": "tesla",
-        "hostname": "tesla_*",
-        "macaddress": "98ED5C*"
-    },
-    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"

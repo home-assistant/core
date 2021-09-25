@@ -374,15 +374,16 @@ class AmcrestCam(Camera):
         try:
             if self._brand is None:
                 resp = self._api.vendor_information.strip()
-                if resp.startswith("vendor="):
-                    self._brand = resp.split("=")[-1]
+                _LOGGER.debug("Assigned brand=%s", resp)
+                if resp:
+                    self._brand = resp
                 else:
                     self._brand = "unknown"
             if self._model is None:
                 resp = self._api.device_type.strip()
-                _LOGGER.debug("Device_type=%s", resp)
-                if resp.startswith("type="):
-                    self._model = resp.split("=")[-1]
+                _LOGGER.debug("Assigned model=%s", resp)
+                if resp:
+                    self._model = resp
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:

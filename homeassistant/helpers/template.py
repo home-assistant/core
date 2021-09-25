@@ -1397,10 +1397,15 @@ def regex_search(value, find="", ignorecase=False):
 
 def regex_findall_index(value, find="", index=0, ignorecase=False):
     """Find all matches using regex and then pick specific match index."""
+    return regex_findall(value, find, ignorecase)[index]
+
+
+def regex_findall(value, find="", ignorecase=False):
+    """Find all matches using regex."""
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return re.findall(find, value, flags)[index]
+    return re.findall(find, value, flags)
 
 
 def bitwise_and(first_value, second_value):
@@ -1565,6 +1570,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_match"] = regex_match
         self.filters["regex_replace"] = regex_replace
         self.filters["regex_search"] = regex_search
+        self.filters["regex_findall"] = regex_findall
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
