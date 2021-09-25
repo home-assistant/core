@@ -59,8 +59,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     CONF_BUDGET: SensorEntityDescription(
         key=CONF_BUDGET,
         name="Energy Budget",
-        device_class=DEVICE_CLASS_MONETARY,
-        native_unit_of_measurement="USD",
     ),
     CONF_COST: SensorEntityDescription(
         key=CONF_COST,
@@ -154,7 +152,7 @@ class EfergySensor(SensorEntity):
         self.period = period
         if sid:
             self._attr_name = f"efergy_{sid}"
-        if description.key == (CONF_COST or CONF_BUDGET):
+        if description.key == CONF_COST:
             self._attr_native_unit_of_measurement = currency
 
     async def async_update(self) -> None:

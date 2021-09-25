@@ -93,8 +93,8 @@ async def test_single_sensor_readings(
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     state = hass.states.get("sensor.energy_budget")
     assert state.state == "ok"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get("sensor.energy_cost")
     assert state.state == "5.27"
