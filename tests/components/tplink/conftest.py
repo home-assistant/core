@@ -4,6 +4,8 @@ import pytest
 
 from . import _patch_discovery
 
+from tests.common import mock_device_registry, mock_registry
+
 
 @pytest.fixture
 def mock_discovery():
@@ -11,3 +13,15 @@ def mock_discovery():
     with _patch_discovery() as mock_discover:
         mock_discover.return_value = {}
         yield mock_discover
+
+
+@pytest.fixture(name="device_reg")
+def device_reg_fixture(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture(name="entity_reg")
+def entity_reg_fixture(hass):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)

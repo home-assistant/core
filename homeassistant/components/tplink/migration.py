@@ -6,21 +6,15 @@ from datetime import datetime
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_DIMMER,
-    CONF_LEGACY_ENTRY_ID,
-    CONF_LIGHT,
-    CONF_STRIP,
-    CONF_SWITCH,
-    DOMAIN,
-)
+from .const import CONF_DIMMER, CONF_LIGHT, CONF_STRIP, CONF_SWITCH, DOMAIN
 
 MAC_ADDRESS_LEN = 17
+CLEANUP_DELAY = 60
 
 
 async def async_cleanup_legacy_entry(
@@ -50,30 +44,27 @@ def async_migrate_legacy_entries(
         if len(reg_entity.unique_id) != MAC_ADDRESS_LEN:
             continue
         mac = dr.format_mac(reg_entity.unique_id)
-        if mac in config_entries_by_mac:
-            continue
-
-        domain = (split_entity_id(reg_entity.entity_id))[0]
-        if domain not in ("switch", "light"):
-            continue
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "migration"},
-                data={
-                    CONF_LEGACY_ENTRY_ID: reg_entity.config_entry_id,
-                    CONF_MAC: mac,
-                    CONF_NAME: reg_entity.name
-                    or reg_entity.original_name
-                    or f"TP-Link device {mac}",
-                },
+        if mac not in config_entries_by_mac and reg_entity.domain in (
+            "switch",
+            "light",
+        ):
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": "migration"},
+                    data={
+                        CONF_MAC: mac,
+                        CONF_NAME: reg_entity.name
+                        or reg_entity.original_name
+                        or f"TP-Link device {mac}",
+                    },
+                )
             )
-        )
 
     async def _async_cleanup_legacy_entry(_now: datetime) -> None:
         await async_cleanup_legacy_entry(hass, legacy_entry.entry_id)
 
-    async_call_later(hass, 60, _async_cleanup_legacy_entry)
+    async_call_later(hass, CLEANUP_DELAY, _async_cleanup_legacy_entry)
 
 
 @callback
@@ -125,8 +116,3 @@ async def async_migrate_entities_devices(
                 device_registry._async_update_device(  # pylint: disable=protected-access
                     dev_entry.id, add_config_entry_id=new_entry.entry_id
                 )
-
-    hass.config_entries.async_update_entry(
-        new_entry,
-        data={k: v for k, v in new_entry.data.items() if k != CONF_LEGACY_ENTRY_ID},
-    )
