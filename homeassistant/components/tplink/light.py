@@ -72,7 +72,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._async_turn_on(**kwargs)
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         _LOGGER.debug("Turning on %s", kwargs)
@@ -107,7 +107,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.device.turn_off(transition=kwargs.get(ATTR_TRANSITION))
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
 
     @property
     def min_mireds(self) -> int:

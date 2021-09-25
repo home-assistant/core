@@ -8,6 +8,7 @@ from kasa import SmartDevice, SmartDeviceException
 
 from homeassistant.const import ATTR_VOLTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -19,6 +20,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+REQUEST_REFRESH_DELAY = 0.35
 
 
 class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
@@ -38,6 +41,11 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=device.host,
             update_interval=update_interval,
+            # We don't want an immediate refresh since the device and
+            # take a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
 
     @callback
