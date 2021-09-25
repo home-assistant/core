@@ -1,11 +1,12 @@
 """Support for Tuya Climate."""
 
-from homeassistant.helpers.entity import Entity
+from __future__ import annotations
 import json
 import logging
 
-from homeassistant.components.climate import DOMAIN as DEVICE_DOMAIN
-from homeassistant.components.climate import ClimateEntity
+from tuya_iot import TuyaDevice, TuyaDeviceManager
+
+from homeassistant.components.climate import DOMAIN as DEVICE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
@@ -27,8 +28,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from .base import TuyaHaEntity
 from .const import (
@@ -51,7 +52,7 @@ DPCODE_MODE = "mode"
 DPCODE_HUMIDITY_SET = "humidity_set"
 DPCODE_FAN_SPEED_ENUM = "fan_speed_enum"
 
-# Temerature unit
+# Temperature unit
 DPCODE_TEMP_UNIT_CONVERT = "temp_unit_convert"
 DPCODE_C_F = "c_f"
 
@@ -104,10 +105,12 @@ async def async_setup_entry(
 
     async def async_discover_device(dev_ids):
         """Discover and add a discovered tuya climate."""
-        _LOGGER.debug(f"climate add->{dev_ids}")
+        _LOGGER.debug("climate add-> %s", dev_ids)
         if not dev_ids:
             return
-        entities = await hass.async_add_executor_job(_setup_entities, hass, entry, dev_ids)
+        entities = await hass.async_add_executor_job(
+            _setup_entities, hass, entry, dev_ids
+        )
         async_add_entities(entities)
 
     entry.async_on_unload(
@@ -124,10 +127,12 @@ async def async_setup_entry(
     await async_discover_device(device_ids)
 
 
-def _setup_entities(hass: HomeAssistant, entry:ConfigEntry, device_ids: list[str]) -> list[Entity]:
+def _setup_entities(
+    hass: HomeAssistant, entry: ConfigEntry, device_ids: list[str]
+) -> list[Entity]:
     """Set up Tuya Climate."""
     device_manager = hass.data[DOMAIN][entry.entry_id][TUYA_DEVICE_MANAGER]
-    entities = []
+    entities: list[Entity] = []
     for device_id in device_ids:
         device = device_manager.device_map[device_id]
         if device is None:
@@ -140,7 +145,9 @@ def _setup_entities(hass: HomeAssistant, entry:ConfigEntry, device_ids: list[str
 class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
     """Tuya Switch Device."""
 
-    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager):
+    def __init__(
+        self, device: TuyaDevice, device_manager: TuyaDeviceManager
+    ) -> None:
         """Init Tuya Ha Climate."""
         super().__init__(device, device_manager)
         if DPCODE_C_F in self.tuya_device.status:
@@ -218,7 +225,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        _LOGGER.debug(f"climate temp->{kwargs}")
+        _LOGGER.debug("climate temp-> %s", kwargs)
         code = DPCODE_TEMP_SET if self.__is_celsius() else DPCODE_TEMP_SET_F
         self._send_command(
             [
@@ -237,7 +244,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
             and self.tuya_device.status.get(self.dp_temp_unit).lower() == "c"
         ):
             return True
-        elif (
+        if (
             DPCODE_TEMP_SET in self.tuya_device.status
             or DPCODE_TEMP_CURRENT in self.tuya_device.status
         ):
@@ -252,7 +259,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (
             DPCODE_TEMP_CURRENT not in self.tuya_device.status
@@ -375,7 +382,7 @@ class TuyaHaClimate(TuyaHaEntity, ClimateEntity):
             "range"
         )
 
-        _LOGGER.debug(f"hvac_modes->{modes}")
+        _LOGGER.debug("hvac_modes-> %s", modes)
         hvac_modes = [HVAC_MODE_OFF]
         for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items():
             if tuya_mode in modes:
