@@ -38,7 +38,7 @@ async def async_setup_entry(
                 sensors.append(EzvizSensor(coordinator, idx, name, sensor_type_name))
 
     async_add_entities(sensors)
-
+#to do : entity description
 
 class EzvizSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Ezviz sensor."""
