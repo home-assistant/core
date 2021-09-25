@@ -5,7 +5,6 @@ from typing import Any
 
 from kasa import SmartDevice, SmartDeviceException
 from kasa.discover import Discover
-from kasa.protocol import TPLinkSmartHomeProtocol
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -119,16 +118,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if legacy_entry_id := entry.data.get(CONF_LEGACY_ENTRY_ID):
         await async_migrate_entities_devices(hass, legacy_entry_id, entry)
 
-    protocol = TPLinkSmartHomeProtocol(entry.data[CONF_HOST])
     try:
-        info = await protocol.query(Discover.DISCOVERY_QUERY)
+        device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    device_class = Discover._get_device_class(info)  # pylint: disable=protected-access
-    device = device_class(entry.data[CONF_HOST])
     coordinator = TPLinkDataUpdateCoordinator(hass, device)
-    await coordinator.async_config_entry_first_refresh()
+    coordinator.data = coordinator.async_data_from_device()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
