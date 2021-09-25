@@ -162,7 +162,7 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
             )
         )
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         key = next(key for key, val in self._lookup_map.items() if val == option)
         await self.info.node.async_set_value(self._target_value, int(key))
