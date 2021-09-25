@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity
+from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,12 +41,12 @@ class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 
     coordinator: TPLinkDataUpdateCoordinator
 
+    @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.device.turn_on()
-        await self.coordinator.async_request_refresh_without_children()
 
+    @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.device.turn_off()
-        await self.coordinator.async_request_refresh_without_children()

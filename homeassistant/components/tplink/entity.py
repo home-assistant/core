@@ -1,7 +1,7 @@
 """Common code for tplink."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 from kasa import SmartDevice
 
@@ -12,8 +12,22 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import TPLinkDataUpdateCoordinator
 
 
+def async_refresh_after(func: Callable) -> Callable:
+    """Define a wrapper to refresh after."""
+
+    async def _async_wrap(
+        self: CoordinatedTPLinkEntity, *args: Any, **kwargs: Any
+    ) -> None:
+        await func(self, *args, **kwargs)
+        await self.coordinator.async_request_refresh_without_children()
+
+    return _async_wrap
+
+
 class CoordinatedTPLinkEntity(CoordinatorEntity):
     """Common base class for all coordinated tplink entities."""
+
+    coordinator: TPLinkDataUpdateCoordinator
 
     def __init__(
         self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
