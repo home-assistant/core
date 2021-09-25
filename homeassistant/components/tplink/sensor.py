@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.components.tplink import TPLinkDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -28,7 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import CoordinatedTPLinkEntity
 from .const import (
     ATTR_CURRENT_A,
     ATTR_CURRENT_POWER_W,
@@ -37,6 +35,8 @@ from .const import (
     CONF_EMETER_PARAMS,
     DOMAIN,
 )
+from .coordinator import TPLinkDataUpdateCoordinator
+from .entity import CoordinatedTPLinkEntity
 
 ENERGY_SENSORS: Final[list[SensorEntityDescription]] = [
     SensorEntityDescription(
