@@ -31,3 +31,21 @@ async def test_locks(hass, surepetcare) -> None:
         assert state.state == "unlocked"
         entity = entity_registry.async_get(entity_id)
         assert entity.unique_id == unique_id
+
+        await hass.services.async_call(
+            "lock", "unlock", {"entity_id": entity_id}, blocking=True
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "unlocked"
+
+        await hass.services.async_call(
+            "lock", "lock", {"entity_id": entity_id}, blocking=True
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "locked"
+
+        await hass.services.async_call(
+            "lock", "unlock", {"entity_id": entity_id}, blocking=True
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "unlocked"

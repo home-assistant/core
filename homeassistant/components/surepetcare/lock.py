@@ -6,16 +6,15 @@ from typing import Any, cast
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
-from surepy.exceptions import SurePetcareError
 
 from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN
+from .entity import SurePetcareEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SurePetcareLock(CoordinatorEntity, LockEntity):
+class SurePetcareLock(SurePetcareEntity, LockEntity):
     """A lock implementation for Sure Petcare Entities."""
 
     def __init__(
@@ -57,25 +56,13 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
         lock_state: LockState,
     ) -> None:
         """Initialize a Sure Petcare lock."""
-        super().__init__(coordinator)
-
-        self._id = surepetcare_id
-
-        surepy_entity: SurepyEntity = coordinator.data[surepetcare_id]
-
-        if surepy_entity.name:
-            _device_name = surepy_entity.name.capitalize()
-        else:
-            _device_name = surepy_entity.type.name.capitalize().replace("_", " ")
-
         self._lock_state = lock_state.name.lower()
-        self._attr_name = f"{_device_name} {self._lock_state.replace('_', ' ')}"
-        self._attr_unique_id = (
-            f"{surepy_entity.household_id}-{surepetcare_id}-{self._lock_state}"
-        )
         self._available = False
 
-        self._update_attr(coordinator.data[surepetcare_id])
+        super().__init__(surepetcare_id, coordinator)
+
+        self._attr_name = f"{self._device_name} {self._lock_state.replace('_', ' ')}"
+        self._attr_unique_id = f"{self._device_id}-{self._lock_state}"
 
     @property
     def available(self) -> bool:
@@ -93,22 +80,12 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
 
         self._available = bool(status.get("online"))
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._update_attr(self.coordinator.data[self._id])
-        self.async_write_ha_state()
-
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         if self.state == STATE_LOCKED:
             return
         coordinator = cast(SurePetcareDataCoordinator, self.coordinator)
-        try:
-            await coordinator.lock_states[self._lock_state](self._id)
-        except SurePetcareError:
-            _LOGGER.error("Failed to lock %s", self.name)
-            return
+        await coordinator.lock_states_callbacks[self._lock_state](self._id)
         self._attr_is_locked = True
         self.async_write_ha_state()
 
@@ -117,10 +94,6 @@ class SurePetcareLock(CoordinatorEntity, LockEntity):
         if self.state == STATE_UNLOCKED:
             return
         coordinator = cast(SurePetcareDataCoordinator, self.coordinator)
-        try:
-            await coordinator.surepy.sac.unlock(self._id)
-        except SurePetcareError:
-            _LOGGER.error("Failed to unlock %s", self.name)
-            return
+        await coordinator.surepy.sac.unlock(self._id)
         self._attr_is_locked = False
         self.async_write_ha_state()
