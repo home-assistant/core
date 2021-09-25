@@ -1,16 +1,14 @@
 """Tests for light platform."""
 from datetime import timedelta
-import logging
 from typing import Callable, NamedTuple
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
-from kasa import SmartDeviceException
 import pytest
 
 from homeassistant.components import tplink
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.tplink.const import CONF_DISCOVERY, CONF_LIGHT
-from homeassistant.const import CONF_HOST, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -394,36 +392,3 @@ async def test_unknown_light(
     assert state.state == "on"
     assert state.attributes["min_mireds"] == 200
     assert state.attributes["max_mireds"] == 370
-
-
-async def test_update_failure(
-    hass: HomeAssistant, light_mock_data: LightMockData, mock_discovery: Mock, caplog
-):
-    """Test that update failures are logged."""
-
-    await hass.async_block_till_done()
-
-    await async_setup_component(
-        hass,
-        tplink.DOMAIN,
-        {
-            tplink.DOMAIN: {
-                CONF_DISCOVERY: False,
-                CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("light.light1").state == STATE_ON
-
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-    await update_entity(hass, "light.light1")
-    assert caplog.text == ""
-    assert hass.states.get("light.light1").state == STATE_ON
-
-    light_mock_data.query_mock.side_effect = SmartDeviceException
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-    await update_entity(hass, "light.light1")
-    assert hass.states.get("light.light1").state == STATE_UNAVAILABLE
