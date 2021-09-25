@@ -1096,11 +1096,8 @@ omit =
     homeassistant/components/totalconnect/binary_sensor.py
     homeassistant/components/totalconnect/const.py
     homeassistant/components/touchline/climate.py
-    homeassistant/components/tplink/__init__.py
     homeassistant/components/tplink/coordinator.py
-    homeassistant/components/tplink/entity.py
     homeassistant/components/tplink/light.py
-    homeassistant/components/tplink/sensor.py
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py

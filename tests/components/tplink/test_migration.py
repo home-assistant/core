@@ -4,6 +4,7 @@ from datetime import timedelta
 from homeassistant import setup
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.components.tplink.migration import CLEANUP_DELAY
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -91,7 +92,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
     config_entry.add_to_hass(hass)
 
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     device = device_reg.async_get_or_create(
