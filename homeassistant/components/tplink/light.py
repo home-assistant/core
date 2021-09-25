@@ -1,7 +1,6 @@
 """Support for TPLink lights."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -30,18 +29,11 @@ from homeassistant.util.color import (
 )
 
 from .common import CoordinatedTPLinkEntity
-from .const import CONF_LIGHT, COORDINATORS, DOMAIN as TPLINK_DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=5)
-CURRENT_POWER_UPDATE_INTERVAL = timedelta(seconds=60)
-HISTORICAL_POWER_UPDATE_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
-ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 
 async def async_setup_entry(
@@ -50,15 +42,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinators: dict[str, TPLinkDataUpdateCoordinator] = hass.data[TPLINK_DOMAIN][
-        COORDINATORS
-    ]
-    async_add_entities(
-        [
-            TPLinkSmartBulb(device, coordinators[device.device_id])
-            for device in hass.data[TPLINK_DOMAIN][CONF_LIGHT]
-        ]
-    )
+    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device = coordinator.device
+    if not device.is_bulb and not device.is_light_strip and not device.is_dimmer:
+        return
+    async_add_entities([TPLinkSmartBulb(device, coordinator)])
 
 
 def brightness_to_percentage(byt):
