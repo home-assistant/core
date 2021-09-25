@@ -89,6 +89,6 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator):
             await self.device.update(update_children=self.update_children)
         except SmartDeviceException as ex:
             raise UpdateFailed(ex) from ex
-        else:
+        finally:
             self.update_children = True
         return self.async_data_from_device()
