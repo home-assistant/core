@@ -21,7 +21,12 @@ def _mocked_bulb() -> SmartBulb:
     bulb.alias = ALIAS
     bulb.model = MODEL
     bulb.host = IP_ADDRESS
-    bulb.hw_info = {"sw_version": "1.0.0"}
+    bulb.brightness = 255
+    bulb.color_temp = 4000
+    bulb.device_id = MAC_ADDRESS
+    bulb.valid_temperature_range.min = 9000
+    bulb.valid_temperature_range.max = 4000
+    bulb.hw_info = {"sw_ver": "1.0.0"}
     return bulb
 
 

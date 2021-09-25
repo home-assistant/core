@@ -1100,7 +1100,6 @@ omit =
     homeassistant/components/tplink/coordinator.py
     homeassistant/components/tplink/entity.py
     homeassistant/components/tplink/light.py
-    homeassistant/components/tplink/migration.py
     homeassistant/components/tplink/sensor.py
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*

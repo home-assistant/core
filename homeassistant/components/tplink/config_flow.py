@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_LEGACY_ENTRY_ID, DISCOVERED_DEVICES, DOMAIN
+from .const import DISCOVERED_DEVICES, DOMAIN
 from .utils import async_entry_is_legacy
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,7 +153,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=name,
             data={
                 CONF_HOST: host,
-                CONF_LEGACY_ENTRY_ID: migration_input[CONF_LEGACY_ENTRY_ID],
             },
         )
 

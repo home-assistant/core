@@ -18,7 +18,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_DIMMER,
     CONF_DISCOVERY,
-    CONF_LEGACY_ENTRY_ID,
     CONF_LIGHT,
     CONF_STRIP,
     CONF_SWITCH,
@@ -115,8 +114,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if async_entry_is_legacy(entry):
         return True
 
-    if legacy_entry_id := entry.data.get(CONF_LEGACY_ENTRY_ID):
-        await async_migrate_entities_devices(hass, legacy_entry_id, entry)
+    legacy_entry: ConfigEntry | None = None
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if async_entry_is_legacy(config_entry):
+            legacy_entry = config_entry
+            break
+
+    if legacy_entry is not None:
+        await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     try:
         device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
